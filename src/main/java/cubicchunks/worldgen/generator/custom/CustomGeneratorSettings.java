@@ -46,6 +46,7 @@ import com.google.gson.JsonPrimitive;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
 import com.google.gson.JsonSyntaxException;
+import com.google.gson.annotations.SerializedName;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 import cubicchunks.CCFixType;
@@ -139,6 +140,11 @@ public class CustomGeneratorSettings {
     /**
      * Terrain shape
      */
+    // TODO: needed until I make data fixers work correctly
+    public boolean useExpectedHeights = true;
+    public float expectedBaseHeight = 64;
+    public float expectedHeightVariation = 64;
+    public float actualHeight = 256;
 
     public float heightVariationFactor = 64;
     public float specialHeightVariationFactorBelowAverageY = 0.25f;

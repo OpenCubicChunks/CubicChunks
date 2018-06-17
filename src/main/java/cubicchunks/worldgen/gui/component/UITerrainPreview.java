@@ -33,7 +33,6 @@ import cubicchunks.util.MathUtil;
 import cubicchunks.worldgen.generator.custom.ConversionUtils;
 import cubicchunks.worldgen.generator.custom.CustomGeneratorSettings;
 import cubicchunks.worldgen.gui.CustomCubicGui;
-import cubicchunks.worldgen.gui.CustomCubicGuiUtils;
 import cubicchunks.worldgen.gui.render.DynamicTexture;
 import net.malisis.core.client.gui.ClipArea;
 import net.malisis.core.client.gui.GuiRenderer;
@@ -56,7 +55,6 @@ import org.lwjgl.util.vector.Matrix4f;
 import org.lwjgl.util.vector.Vector2f;
 import org.lwjgl.util.vector.Vector3f;
 
-import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -65,15 +63,69 @@ import java.util.Random;
 
 public class UITerrainPreview extends UIShaderComponent<UITerrainPreview> implements ITransformable.Scale, IClipable {
 
+    private static ShaderManager shader;
+    private static final BufferedImage perlinTexture;
+
+    static {
+        int texSize = 256;
+        int samplesPerPreiod = 8;
+        float freq = 1.0f / samplesPerPreiod;
+        int sampleCount = texSize / samplesPerPreiod;
+
+        perlinTexture = new BufferedImage(texSize, texSize, BufferedImage.TYPE_INT_ARGB);
+
+        // replicate seed selection logic in CustomTerrainGenerator
+        Random rnd = new Random(123456);
+        long rawSeedSel = rnd.nextLong();
+        long rawSeedLow = rnd.nextLong();
+        long rawSeedHigh = rnd.nextLong();
+        long rawSeedDepth = rnd.nextLong();
+        int seedSel = (int) ((rawSeedSel & 0xFFFFFFFF) ^ (rawSeedSel >>> 32));
+        int seedLow = (int) ((rawSeedLow & 0xFFFFFFFF) ^ (rawSeedLow >>> 32));
+        int seedHigh = (int) ((rawSeedHigh & 0xFFFFFFFF) ^ (rawSeedHigh >>> 32));
+        int seedDepth = (int) ((rawSeedDepth & 0xFFFFFFFF) ^ (rawSeedDepth >>> 32));
+
+        float max = 0, min = 0;
+        for (int x = 0; x < perlinTexture.getWidth(); x++) {
+            for (int y = 0; y < perlinTexture.getHeight(); y++) {
+                float sel = (float) gradientCoherentNoise3DTileable(
+                        x * freq, y * freq, 0,
+                        seedSel, NoiseQuality.BEST, texSize - 1);
+                float low = (float) gradientCoherentNoise3DTileable(
+                        x * freq, y * freq, 0,
+                        seedLow, NoiseQuality.BEST, texSize - 1);
+                float high = (float) gradientCoherentNoise3DTileable(
+                        x * freq, y * freq, 0,
+                        seedHigh, NoiseQuality.BEST, texSize - 1);
+                float depth = (float) gradientCoherentNoise3DTileable(
+                        x * freq, y * freq, 0,
+                        seedDepth, NoiseQuality.BEST, texSize - 1);
+
+                int r = MathUtil.to8bitComponent(sel);
+                int g = MathUtil.to8bitComponent(low);
+                int b = MathUtil.to8bitComponent(high);
+                int a = MathUtil.to8bitComponent(depth);
+                int col = MathUtil.packColorARGB(r, g, b, a);
+                perlinTexture.setRGB(x, y, col);
+            }
+        }
+    }
     private Matrix4f previewTransform = new Matrix4f();
     private Animation<Scale> zoomAnim;
     private float biomeScale = 0.01f, biomeOffset = 0;
     private EnumFacing.Axis shownAxis;
 
     public UITerrainPreview(CustomCubicGui gui) {
-        super(gui, createShader(gui));
+        super(gui, getShaderAndInitGL(gui));
         this.icon.flip(false, true);
         this.previewTransform.m31 = 64; // set y offset
+    }
+
+    private static ShaderManager getShaderAndInitGL(CustomCubicGui gui) {
+        if (shader == null) {
+            shader = createShader(gui);
+        }
+        return shader;
     }
 
     public void setBiomeScale(float biomeScale) {
@@ -393,50 +445,7 @@ public class UITerrainPreview extends UIShaderComponent<UITerrainPreview> implem
     }
 
     private static DynamicTexture generateNoiseTexture() {
-        int texSize = 256;
-        int samplesPerPreiod = 8;
-        float freq = 1.0f / samplesPerPreiod;
-        int sampleCount = texSize / samplesPerPreiod;
-
-        BufferedImage data = new BufferedImage(texSize, texSize, BufferedImage.TYPE_INT_ARGB);
-
-
-        // replicate seed selection logic in CustomTerrainGenerator
-        Random rnd = new Random(123456);
-        long rawSeedSel = rnd.nextLong();
-        long rawSeedLow = rnd.nextLong();
-        long rawSeedHigh = rnd.nextLong();
-        long rawSeedDepth = rnd.nextLong();
-        int seedSel = (int) ((rawSeedSel & 0xFFFFFFFF) ^ (rawSeedSel >>> 32));
-        int seedLow = (int) ((rawSeedLow & 0xFFFFFFFF) ^ (rawSeedLow >>> 32));
-        int seedHigh = (int) ((rawSeedHigh & 0xFFFFFFFF) ^ (rawSeedHigh >>> 32));
-        int seedDepth = (int) ((rawSeedDepth & 0xFFFFFFFF) ^ (rawSeedDepth >>> 32));
-
-        float max = 0, min = 0;
-        for (int x = 0; x < data.getWidth(); x++) {
-            for (int y = 0; y < data.getHeight(); y++) {
-                float sel = (float) gradientCoherentNoise3DTileable(
-                        x * freq, y * freq, 0,
-                        seedSel, NoiseQuality.BEST, texSize - 1);
-                float low = (float) gradientCoherentNoise3DTileable(
-                        x * freq, y * freq, 0,
-                        seedLow, NoiseQuality.BEST, texSize - 1);
-                float high = (float) gradientCoherentNoise3DTileable(
-                        x * freq, y * freq, 0,
-                        seedHigh, NoiseQuality.BEST, texSize - 1);
-                float depth = (float) gradientCoherentNoise3DTileable(
-                        x * freq, y * freq, 0,
-                        seedDepth, NoiseQuality.BEST, texSize - 1);
-
-                int r = MathUtil.to8bitComponent(sel);
-                int g = MathUtil.to8bitComponent(low);
-                int b = MathUtil.to8bitComponent(high);
-                int a = MathUtil.to8bitComponent(depth);
-                int col = MathUtil.packColorARGB(r, g, b, a);
-                data.setRGB(x, y, col);
-            }
-        }
-        DynamicTexture img = new DynamicTexture(data, GL11.GL_LINEAR);
+        DynamicTexture img = new DynamicTexture(perlinTexture, GL11.GL_LINEAR);
         img.loadTexture(null);
         return img;
     }
@@ -470,6 +479,7 @@ public class UITerrainPreview extends UIShaderComponent<UITerrainPreview> implem
 
             data.setRGB(x, 0, MathUtil.packColorARGB(r, g, b, a));
         }
+
 
         DynamicTexture obj = new DynamicTexture(data, GL11.GL_NEAREST);
         obj.loadTexture(null);

@@ -89,6 +89,7 @@ cubicchunks.gui.customcubic.spacing_height=Height Spacing:
 ### advanced terrain settings ###
 #################################
 
+cubicchunks.gui.customcubic.lock_expected_heights=Lock expected heights
 cubicchunks.gui.customcubic.keep_preview_visible=Keep preview visible
 cubicchunks.gui.customcubic.biome_scale=Preview biome size
 cubicchunks.gui.customcubic.biome_offset=Preview biome offset

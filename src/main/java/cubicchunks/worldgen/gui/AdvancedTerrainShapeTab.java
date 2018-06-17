@@ -29,6 +29,7 @@ import static cubicchunks.worldgen.gui.CustomCubicGui.VERTICAL_INSETS;
 import static cubicchunks.worldgen.gui.CustomCubicGui.WIDTH_1_COL;
 import static cubicchunks.worldgen.gui.CustomCubicGui.WIDTH_2_COL;
 import static cubicchunks.worldgen.gui.CustomCubicGui.WIDTH_3_COL;
+import static cubicchunks.worldgen.gui.CustomCubicGuiUtils.floatInput;
 import static cubicchunks.worldgen.gui.CustomCubicGuiUtils.label;
 import static cubicchunks.worldgen.gui.CustomCubicGuiUtils.makeCheckbox;
 import static cubicchunks.worldgen.gui.CustomCubicGuiUtils.makeExponentialSlider;
@@ -48,6 +49,7 @@ import net.malisis.core.client.gui.component.container.UIContainer;
 import net.malisis.core.client.gui.component.interaction.UICheckBox;
 import net.malisis.core.client.gui.component.interaction.UISelect;
 import net.malisis.core.client.gui.component.interaction.UISlider;
+import net.malisis.core.client.gui.component.interaction.UITextField;
 import net.malisis.core.client.gui.event.ComponentEvent;
 import net.minecraft.util.EnumFacing;
 import net.minecraftforge.fml.common.registry.ForgeRegistries;
@@ -57,6 +59,11 @@ import java.util.Arrays;
 class AdvancedTerrainShapeTab {
 
     private final UIContainer<?> container;
+
+    private final UICheckBox lockExpectedHeights;
+    private final UITextField expectedBaseHeight;
+    private final UITextField expectedHeightVariation;
+    private final UITextField actualHeight;
 
     private final UISlider<Float> heightVariationFactor;
     private final UISlider<Float> heightVariationSpecialFactor;
@@ -110,9 +117,24 @@ class AdvancedTerrainShapeTab {
 
         table.setInsets(VERTICAL_INSETS, VERTICAL_INSETS, HORIZONTAL_INSETS, HORIZONTAL_INSETS)
                 .setRightPadding(6)
+
+                //expected heights
+                .add(label(gui, malisisText("expected_heights_group")),
+                        new UIVerticalTableLayout.GridLocation(WIDTH_1_COL * 0, gridY += 2, WIDTH_1_COL))
+                .add(this.lockExpectedHeights = makeCheckbox(gui, malisisText("lock_expected_heights"), true),
+                        new UIVerticalTableLayout.GridLocation(WIDTH_2_COL * 0, ++gridY, WIDTH_2_COL))
+                .add(floatInput(gui, malisisText("actual_height"),
+                        this.actualHeight = new UITextField(gui, ""), settings.actualHeight),
+                        new UIVerticalTableLayout.GridLocation(WIDTH_2_COL * 1, gridY, WIDTH_2_COL))
+                .add(floatInput(gui, malisisText("expected_base_height"),
+                        this.expectedBaseHeight = new UITextField(gui, ""), settings.expectedBaseHeight),
+                        new UIVerticalTableLayout.GridLocation(WIDTH_2_COL * 0, ++gridY, WIDTH_2_COL))
+                .add(floatInput(gui, malisisText("expected_height_variation"),
+                        this.expectedHeightVariation = new UITextField(gui, ""), settings.expectedHeightVariation),
+                        new UIVerticalTableLayout.GridLocation(WIDTH_2_COL * 1, gridY, WIDTH_2_COL))
                 // height variation
                 .add(label(gui, malisisText("height_variation_group")),
-                        new UIVerticalTableLayout.GridLocation(WIDTH_1_COL * 0, gridY += 2, WIDTH_1_COL))
+                        new UIVerticalTableLayout.GridLocation(WIDTH_1_COL * 0, ++gridY, WIDTH_1_COL))
                 .add(this.heightVariationFactor = makeExponentialSlider(
                         gui, malisisText("height_variation_factor_slider", ": %.2f"),
                         Float.NaN, Float.NaN, 0, 20, settings.heightVariationFactor),
@@ -290,6 +312,24 @@ class AdvancedTerrainShapeTab {
         UISplitLayout<?> rootSplit = new UISplitLayout(gui, UISplitLayout.Type.STACKED, previewSplitView, table);
         rootSplit.setSize(UIComponent.INHERITED, UIComponent.INHERITED).setMinimumUserComponentSize(UISplitLayout.Pos.SECOND, 64);
 
+        heightFactor.register(new Object() {
+            @Subscribe
+            public void onUpdate(ComponentEvent.ValueChange<UISlider<Float>, Float> evt) {
+                updateExpectedHeightsIfNeeded();
+            }
+        });
+        heightOffset.register(new Object() {
+            @Subscribe
+            public void onUpdate(ComponentEvent.ValueChange<UISlider<Float>, Float> evt) {
+                updateExpectedHeightsIfNeeded();
+            }
+        });
+        lockExpectedHeights.register(new Object() {
+            @Subscribe
+            public void onUpdate(UICheckBox.CheckEvent evt) {
+                updateExpectedHeightsIfNeeded();
+            }
+        });
         biomeScaleSlider.register(new Object() {
             @Subscribe
             public void onUpdate(ComponentEvent.ValueChange<UISlider<Float>, Float> evt) {
@@ -392,6 +432,17 @@ class AdvancedTerrainShapeTab {
         this.container = rootSplit;
     }
 
+    private void updateExpectedHeightsIfNeeded() {
+        if (this.lockExpectedHeights.isChecked()) {
+            this.expectedBaseHeight.setText(String.format("%.1f", this.heightOffset.getValue()));
+            this.expectedHeightVariation.setText(String.format("%.1f", this.heightFactor.getValue()));
+            float actualHeight = (this.heightOffset.getValue() + this.heightVariationOffset.getValue() +
+                    Math.max(this.heightFactor.getValue() * 2 + this.heightVariationFactor.getValue(),
+                            this.heightFactor.getValue() + this.heightVariationFactor.getValue() * 2));
+            this.actualHeight.setText(String.format("%.1f", actualHeight));
+        }
+    }
+
     private void setLockedXZ(boolean lock) {
         this.depthNoisePeriodZ.setEnabled(!lock);
         this.lowNoisePeriodZ.setEnabled(!lock);
@@ -411,6 +462,10 @@ class AdvancedTerrainShapeTab {
     }
 
     void writeConfig(CustomGeneratorSettings conf) {
+        conf.expectedBaseHeight = Float.parseFloat(this.expectedBaseHeight.getText());
+        conf.expectedHeightVariation = Float.parseFloat(this.expectedHeightVariation.getText());
+        conf.actualHeight = Float.parseFloat(this.actualHeight.getText());
+
         conf.heightVariationFactor = this.heightVariationFactor.getValue();
         conf.specialHeightVariationFactorBelowAverageY = this.heightVariationSpecialFactor.getValue();
         conf.heightVariationOffset = this.heightVariationOffset.getValue();

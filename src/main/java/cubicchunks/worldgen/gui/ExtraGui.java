@@ -33,8 +33,10 @@ import net.malisis.core.util.MouseButton;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 
+import java.lang.ref.WeakReference;
 import java.lang.reflect.Field;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.WeakHashMap;
@@ -81,12 +83,18 @@ public abstract class ExtraGui extends MalisisGui {
 
     @Override public void clearScreen() {
         addedComponents.clear();
+        set.clear();
         super.clearScreen();
     }
 
     @Override
     public void update(int mouseX, int mouseY, float partialTick) {
-        set.values().forEach(tc -> tc.tick(mouseX, mouseY, partialTick));
+        for (Iterator<DragTickableWrapper> iterator = set.values().iterator(); iterator.hasNext(); ) {
+            DragTickableWrapper wrapper = iterator.next();
+            if (!wrapper.tick(mouseX, mouseY, partialTick)) {
+                iterator.remove();
+            }
+        }
         if (!debug) {
             addedComponents.forEach(this::layout);
         }
@@ -113,19 +121,24 @@ public abstract class ExtraGui extends MalisisGui {
 
     public static final class DragTickableWrapper {
 
-        private final IDragTickable component;
+        private final WeakReference<IDragTickable> component;
         private boolean beforeClickHovered = false;
 
         public DragTickableWrapper(IDragTickable component) {
-            this.component = component;
+            this.component = new WeakReference<>(component);
         }
 
-        void tick(int mouseX, int mouseY, float partialTick) {
-            if (((UIComponent<?>) component).isFocused() && beforeClickHovered && Mouse.isButtonDown(MouseButton.LEFT.getCode())) {
-                component.onDragTick(mouseX, mouseY, partialTick);
-            } else {
-                beforeClickHovered = ((UIComponent<?>) component).isHovered();
+        boolean tick(int mouseX, int mouseY, float partialTick) {
+            IDragTickable tickable = component.get();
+            if (tickable == null) {
+                return false;
             }
+            if (((UIComponent<?>) tickable).isFocused() && beforeClickHovered && Mouse.isButtonDown(MouseButton.LEFT.getCode())) {
+                tickable.onDragTick(mouseX, mouseY, partialTick);
+            } else {
+                beforeClickHovered = ((UIComponent<?>) tickable).isHovered();
+            }
+            return true;
         }
     }
 }
