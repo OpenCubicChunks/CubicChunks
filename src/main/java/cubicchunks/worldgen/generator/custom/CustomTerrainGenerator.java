@@ -94,7 +94,7 @@ public class CustomTerrainGenerator extends BasicCubeGenerator {
 
     //TODO: Implement more structures
     @Nonnull private CubicCaveGenerator caveGenerator = new CubicCaveGenerator();
-    @Nonnull private CubicStructureGenerator ravineGenerator = new CubicRavineGenerator();
+    @Nonnull private CubicStructureGenerator ravineGenerator;
     @Nonnull private CubicFeatureGenerator strongholds;
 
     public CustomTerrainGenerator(ICubicWorld world, final long seed) {
@@ -111,6 +111,7 @@ public class CustomTerrainGenerator extends BasicCubeGenerator {
         }
 
         this.strongholds = new CubicStrongholdGenerator(conf);
+        this.ravineGenerator = new CubicRavineGenerator(conf);
 
         this.biomeSource = new BiomeSource(world, conf.createBiomeBlockReplacerConfig(), world.getBiomeProvider(), 2);
         initGenerator(seed);

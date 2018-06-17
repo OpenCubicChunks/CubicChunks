@@ -73,7 +73,8 @@ public class CustomCubicWorldType extends WorldType implements ICubicWorldType {
     @Override public IntRange calculateGenerationHeightRange(WorldServer world) {
         String string = world.getWorldInfo().getGeneratorOptions();
         CustomGeneratorSettings opts = CustomGeneratorSettings.fromJson(string);
-        return new IntRange(opts.getMinHeight(), opts.getRealMaxHeight());
+        // TODO: better handling of min height
+        return new IntRange(0, (int) opts.actualHeight);
     }
 
     @Override public boolean hasCubicGeneratorForWorld(World w) {

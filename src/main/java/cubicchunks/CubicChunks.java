@@ -110,7 +110,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @Mod.EventBusSubscriber
 public class CubicChunks {
 
-    public static final int FIXER_VERSION = 0;
+    public static final int FIXER_VERSION = 1;
 
     public static final VersionRange SUPPORTED_SERVER_VERSIONS;
     public static final VersionRange SUPPORTED_CLIENT_VERSIONS;

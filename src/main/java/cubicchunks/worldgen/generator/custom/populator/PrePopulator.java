@@ -86,7 +86,7 @@ public class PrePopulator implements ICubicPopulator {
         final double yOffset = 0.723583275161355;
         final double valueScale = 0.00599930877922822;
 
-        double normalizedY = (y - cfg.heightOffset) / cfg.heightFactor;
+        double normalizedY = (y - cfg.expectedBaseHeight) / cfg.expectedHeightVariation;
         double vanillaY = normalizedY * 64 + 64;
         return (Math.atan(vanillaY * yScale + yOffset) + Math.PI / 2) * valueScale;
     }

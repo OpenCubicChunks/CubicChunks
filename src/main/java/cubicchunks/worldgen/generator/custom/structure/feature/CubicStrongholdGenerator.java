@@ -167,8 +167,8 @@ public class CubicStrongholdGenerator extends CubicFeatureGenerator {
 
         double angle = rand.nextDouble() * Math.PI * 2.0D;
 
-        int minCubeY = blockToCube(conf.getMinHeight());
-        int maxCubeY = blockCeilToCube(conf.getAverageHeight());
+        int minCubeY = blockToCube(conf.expectedBaseHeight - conf.expectedHeightVariation);
+        int maxCubeY = blockCeilToCube(MathHelper.ceil(conf.expectedBaseHeight));
 
         int distFactor = 0;
         int ringStep = 0;

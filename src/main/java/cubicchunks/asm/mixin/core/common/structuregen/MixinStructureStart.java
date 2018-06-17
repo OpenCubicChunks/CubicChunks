@@ -32,6 +32,7 @@ import cubicchunks.world.cube.Cube;
 import cubicchunks.worldgen.generator.custom.CustomGeneratorSettings;
 import cubicchunks.worldgen.generator.custom.structure.feature.ICubicStructureStart;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
 import net.minecraft.world.gen.structure.StructureBoundingBox;
 import net.minecraft.world.gen.structure.StructureComponent;
@@ -114,7 +115,7 @@ public abstract class MixinStructureStart implements ICubicStructureStart {
             }
             return;
         }
-        int maxY = conf.getAverageHeight() - minDepth;
+        int maxY = Math.round(conf.expectedBaseHeight - minDepth);
         int originalY = this.boundingBox.minY;
         int newY = localToBlock(getChunkPosY(), rand == null ? this.randY : rand.nextInt(Cube.SIZE));
 
