@@ -167,7 +167,6 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
      * Loads from disk if possible, otherwise generates new Column.
      */
     @Override
-
     public Chunk provideColumn(int cubeX, int cubeZ) {
         return getColumn(cubeX, cubeZ, Requirement.GENERATE);
     }
@@ -578,8 +577,8 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
         return sb.toString();
     }
 
-    public void flush() throws IOException {
-        this.cubeIO.flush();
+    @Nonnull public ICubeIO getCubeIO() {
+        return cubeIO;
     }
 
     Iterator<Cube> cubesIterator() {

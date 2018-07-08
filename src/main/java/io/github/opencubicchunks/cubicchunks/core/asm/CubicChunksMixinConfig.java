@@ -80,7 +80,7 @@ public class CubicChunksMixinConfig implements IMixinConfigPlugin {
                 optifineVersion = "D1";
             }
         }
-        
+
         if(optifineVersion.equalsIgnoreCase("ignore"))
             optifineState = OptifineState.NOT_LOADED;
         else if (optifineVersion.compareTo("D1") >= 0)
@@ -123,7 +123,7 @@ public class CubicChunksMixinConfig implements IMixinConfigPlugin {
     public boolean shouldApplyMixin(String targetClassName, String mixinClassName) {
         return this.shouldApplyMixin(mixinClassName);
     }
-    
+
     public boolean shouldApplyMixin(String mixinClassName) {
         for (BoolOptions configOption : BoolOptions.values()) {
             for (String mixinClassNameOnTrue : configOption.mixinClassNamesOnTrue) {
@@ -272,7 +272,7 @@ public class CubicChunksMixinConfig implements IMixinConfigPlugin {
         if (expectingOptionsNumber != 0)
             this.writeConfigToJson(configFile);
     }
-    
+
     private enum OptifineState {
         NOT_LOADED,
         LOADED_C7,

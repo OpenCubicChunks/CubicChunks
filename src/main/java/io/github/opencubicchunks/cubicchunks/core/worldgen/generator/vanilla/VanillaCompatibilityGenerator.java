@@ -28,6 +28,7 @@ import io.github.opencubicchunks.cubicchunks.core.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.api.util.Box;
 import io.github.opencubicchunks.cubicchunks.api.util.Coords;
 import io.github.opencubicchunks.cubicchunks.api.world.ICubicWorld;
+import io.github.opencubicchunks.cubicchunks.core.CubicChunksConfig;
 import io.github.opencubicchunks.cubicchunks.core.asm.mixin.ICubicWorldInternal;
 import io.github.opencubicchunks.cubicchunks.core.world.cube.Cube;
 import io.github.opencubicchunks.cubicchunks.api.worldgen.CubePrimer;
@@ -280,7 +281,7 @@ public class VanillaCompatibilityGenerator implements ICubeGenerator {
                     CubicChunks.LOGGER.error("Error while populating. Likely known mod issue, ignoring...", ex);
                 }
             }
-            if (CubicChunks.Config.BoolOptions.USE_VANILLA_CHUNK_WORLD_GENERATORS.getValue()) {
+            if (CubicChunksConfig.useVanillaChunkWorldGenerators) {
                 GameRegistry.generateWorld(cube.getX(), cube.getZ(), (World) world, vanilla, ((World) world).getChunkProvider());
             }
         }

@@ -23,10 +23,10 @@
  */
 package io.github.opencubicchunks.cubicchunks.core.server;
 
+import io.github.opencubicchunks.cubicchunks.api.world.ICubeProviderServer;
 import io.github.opencubicchunks.cubicchunks.core.CubicChunks;
-import io.github.opencubicchunks.cubicchunks.core.CubicChunks.Config;
-import io.github.opencubicchunks.cubicchunks.core.IConfigUpdateListener;
 import io.github.opencubicchunks.cubicchunks.api.world.IColumn;
+import io.github.opencubicchunks.cubicchunks.core.CubicChunksConfig;
 import io.github.opencubicchunks.cubicchunks.core.world.cube.Cube;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.world.chunk.Chunk;
@@ -41,21 +41,19 @@ import javax.annotation.ParametersAreNonnullByDefault;
  */
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
-public class ChunkGc implements IConfigUpdateListener {
+public class ChunkGc {
 
     private final CubeProviderServer cubeCache;
 
     private int tick = 0;
-    private volatile int updateInterval = 20 * 10;
 
     public ChunkGc(CubeProviderServer cubeCache) {
         this.cubeCache = cubeCache;
-        CubicChunks.addConfigChangeListener(this);
     }
 
     public void tick() {
         tick++;
-        if (tick > updateInterval) {
+        if (tick > CubicChunksConfig.chunkGCInterval) {
             tick = 0;
             chunkGc();
         }
@@ -110,10 +108,5 @@ public class ChunkGc implements IConfigUpdateListener {
                 columnIt.remove();
             }
         }
-    }
-
-    @Override
-    public void onConfigUpdate(Config config) {
-        this.updateInterval = config.getChunkGCInterval();
     }
 }

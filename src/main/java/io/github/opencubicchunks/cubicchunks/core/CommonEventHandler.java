@@ -76,12 +76,27 @@ public class CommonEventHandler {
         WorldServer world = (WorldServer) evt.getObject();
 
         WorldSavedCubicChunksData savedData =
-                (WorldSavedCubicChunksData) evt.getObject().getMapStorage().getOrLoadData(WorldSavedCubicChunksData.class, "cubicChunksData");
-        boolean forcedCubicChunks = ((ICubicWorldSettings)world.getWorldInfo()).isCubic();
-        // if it's our world type - always cubic chunks
-        // is stored in WorldSavedData - it's already existing cubic chunks world
-        // if forced cubic chunks - cubic chunks has been enabled by user on this world
-        if (!(evt.getObject().getWorldType() instanceof ICubicWorldType) && savedData == null && !forcedCubicChunks) {
+                (WorldSavedCubicChunksData) evt.getObject().getPerWorldStorage().getOrLoadData(WorldSavedCubicChunksData.class, "cubicChunksData");
+        boolean ccWorldType = evt.getObject().getWorldType() instanceof ICubicWorldType;
+        boolean ccGenerator = ccWorldType && ((ICubicWorldType) evt.getObject().getWorldType()).hasCubicGeneratorForWorld(evt.getObject());
+        boolean savedCC = savedData != null;
+        boolean ccNewWorld = ((ICubicWorldSettings) world.getWorldInfo()).isCubic();
+        boolean excludeCC = CubicChunksConfig.isDimensionExcluded(evt.getObject().provider.getDimension());
+        boolean forceExclusions = CubicChunksConfig.forceDimensionExcludes;
+        // these espressions are generated using Quine McCluskey algorithm
+        // using the JQM v1.2.0 (Java QuineMcCluskey) program:
+        // IS_CC := CC_GEN OR CC_TYPE AND NOT(EXCLUDED) OR SAVED_CC AND NOT(EXCLUDED) OR SAVED_CC AND NOT(F_EX) OR CC_NEW AND NOT(EXCLUDED);
+        // ERROR := CC_GEN AND NOT(CC_TYPE);
+        boolean impossible = ccGenerator && !ccWorldType;
+        if (impossible) {
+            throw new Error("Trying to use cubic chunks generator without cubic chunks world type.");
+        }
+        boolean isCC = ccGenerator
+                        || (ccWorldType && !excludeCC)
+                        || (savedCC && !excludeCC)
+                        || (savedCC && !forceExclusions)
+                        || (ccNewWorld && !excludeCC);
+        if (!isCC) {
             return;
         }
 
@@ -105,8 +120,8 @@ public class CommonEventHandler {
         int maxHeight = savedData.maxHeight;
         ((ICubicWorldInternal.Server) world).initCubicWorldServer(new IntRange(minHeight, maxHeight), generationRange);
         savedData.markDirty();
-        evt.getObject().getMapStorage().setData("cubicChunksData", savedData);
-        evt.getObject().getMapStorage().saveAllData();
+        evt.getObject().getPerWorldStorage().setData("cubicChunksData", savedData);
+        evt.getObject().getPerWorldStorage().saveAllData();
     }
 
     @SubscribeEvent
@@ -141,7 +156,7 @@ public class CommonEventHandler {
     
     @SubscribeEvent
     public void onCreateWorldSettings(CreateNewWorldEvent event) {
-        ((ICubicWorldSettings) (Object) event.settings).setCubic(CubicChunks.Config.BoolOptions.FORCE_CUBIC_CHUNKS.getValue());
+        ((ICubicWorldSettings) (Object) event.settings).setCubic(CubicChunksConfig.forceCubicChunks);
     }
 
     @SuppressWarnings("unchecked")

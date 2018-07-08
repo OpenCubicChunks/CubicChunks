@@ -31,6 +31,14 @@ public class IntRange {
         this.max = max;
     }
 
+    public static IntRange single(int i) {
+        return new IntRange(i, i);
+    }
+
+    public static IntRange of(int a, int b) {
+        return new IntRange(Math.min(a, b), Math.max(a, b));
+    }
+
     public int getMin() {
         return min;
     }

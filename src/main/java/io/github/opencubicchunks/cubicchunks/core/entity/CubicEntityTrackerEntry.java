@@ -23,6 +23,7 @@
  */
 package io.github.opencubicchunks.cubicchunks.core.entity;
 
+import io.github.opencubicchunks.cubicchunks.api.world.ICubicWorld;
 import io.github.opencubicchunks.cubicchunks.core.server.PlayerCubeMap;
 import io.github.opencubicchunks.cubicchunks.core.server.PlayerCubeMap;
 import net.minecraft.entity.Entity;
@@ -38,6 +39,9 @@ public class CubicEntityTrackerEntry extends EntityTrackerEntry {
 
     @Override
     public boolean isVisibleTo(EntityPlayerMP playerMP) {
+        if (!((ICubicWorld) playerMP.getServerWorld()).isCubicWorld()) {
+            return super.isVisibleTo(playerMP);
+        }
         double dx = playerMP.posX - (double) this.encodedPosX / 4096.0D;
         double dz = playerMP.posZ - (double) this.encodedPosZ / 4096.0D;
         double dy = playerMP.posY - (double) this.encodedPosY / 4096.0D;
@@ -51,6 +55,10 @@ public class CubicEntityTrackerEntry extends EntityTrackerEntry {
 
     @Override
     protected boolean isPlayerWatchingThisChunk(EntityPlayerMP player) {
+        // workaround for transfer between cubicchunks and non-cubic-chunks dimension
+        if (!((ICubicWorld) player.getServerWorld()).isCubicWorld()) {
+            return super.isPlayerWatchingThisChunk(player);
+        }
         return ((PlayerCubeMap) player.getServerWorld().getPlayerChunkMap())
                 .isPlayerWatchingCube(player, this.trackedEntity.chunkCoordX, this.trackedEntity.chunkCoordY, this.trackedEntity.chunkCoordZ);
     }

@@ -102,6 +102,15 @@ class IONbtWriter {
         // column properties
         nbt.setByte("v", (byte) 1);
         nbt.setLong("InhabitedTime", column.getInhabitedTime());
+
+        if (((Chunk) column).getCapabilities() != null) {
+            try {
+                nbt.setTag("ForgeCaps", ((Chunk) column).getCapabilities().serializeNBT());
+            } catch (Exception exception) {
+                CubicChunks.LOGGER.error("A capability provider has thrown an exception trying to write state. It will not persist. "
+                                + "Report this to the mod author", exception);
+            }
+        }
     }
 
     private static void writeBiomes(Chunk column, NBTTagCompound nbt) {// biomes

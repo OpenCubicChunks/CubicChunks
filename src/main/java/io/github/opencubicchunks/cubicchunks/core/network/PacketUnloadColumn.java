@@ -24,9 +24,14 @@
 package io.github.opencubicchunks.cubicchunks.core.network;
 
 import com.google.common.base.Preconditions;
+import io.github.opencubicchunks.cubicchunks.api.world.ICubicWorld;
+import io.github.opencubicchunks.cubicchunks.core.client.CubeProviderClient;
+import io.github.opencubicchunks.cubicchunks.core.util.PacketUtils;
 import io.netty.buffer.ByteBuf;
 import mcp.MethodsReturnNonnullByDefault;
+import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.util.IThreadListener;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
@@ -66,7 +71,19 @@ public class PacketUnloadColumn implements IMessage {
 
         @Nullable @Override
         public IMessage handleClientMessage(EntityPlayer player, PacketUnloadColumn message, MessageContext ctx) {
-            ClientHandler.getInstance().handle(message);
+            PacketUtils.ensureMainThread(this, player, message, ctx);
+
+            ICubicWorld worldClient = (ICubicWorld) Minecraft.getMinecraft().world;
+            if (!worldClient.isCubicWorld()) {
+                // Workaround for vanilla: when going between dimensions, chunk unload packets are received for the old dimension
+                // are received when client already has the new dimension. In vanilla it just happens to cause no issues but it breaks cubic chunks
+                // if we don't check for it
+                return null;
+            }
+            CubeProviderClient cubeCache = (CubeProviderClient) worldClient.getCubeCache();
+
+            ChunkPos chunkPos = message.getColumnPos();
+            cubeCache.unloadChunk(chunkPos.x, chunkPos.z);
             return null;
         }
     }

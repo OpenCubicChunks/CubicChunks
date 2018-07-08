@@ -21,36 +21,44 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package io.github.opencubicchunks.cubicchunks.core.client;
+package io.github.opencubicchunks.cubicchunks.core.asm.mixin.core.common;
 
+import io.github.opencubicchunks.cubicchunks.core.world.ICubicSaveHandler;
 import io.github.opencubicchunks.cubicchunks.core.CubicChunks;
+import io.github.opencubicchunks.cubicchunks.core.server.chunkio.ICubeIO;
 import mcp.MethodsReturnNonnullByDefault;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiScreen;
-import net.minecraftforge.fml.client.IModGuiFactory;
+import net.minecraft.world.chunk.storage.AnvilSaveHandler;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import java.util.Set;
+import java.io.IOException;
 
-import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 
-@MethodsReturnNonnullByDefault
+// a hook for flush()
+// many mods already assume AnvilSaveHandler is always used, so we assume the same and hope for the best
 @ParametersAreNonnullByDefault
-public class GuiFactory implements IModGuiFactory {
+@MethodsReturnNonnullByDefault
+@Mixin(AnvilSaveHandler.class)
+public class MixinAnvilSaveHandler implements ICubicSaveHandler {
 
-    @Override public void initialize(Minecraft minecraftInstance) {
+    private ICubeIO cubeIo;
 
+    @Inject(method = "flush", at = @At("RETURN"))
+    public void onClearRefs(CallbackInfo cbi) throws IOException {
+        if (cubeIo == null) {
+            CubicChunks.bigWarning("cubeIo not initializes in save handler! If this happens frequently it's likely a major issue!");
+            return;
+        }
+        cubeIo.flush();
     }
 
-    @Override public boolean hasConfigGui() {
-        return true;
-    }
-
-    @Override public GuiScreen createConfigGui(GuiScreen parentScreen) {
-        return new CubicChunks.Config.GUI(parentScreen);
-    }
-
-    @Nullable @Override public Set<RuntimeOptionCategoryElement> runtimeGuiCategories() {
-        return null;
+    @Override public void initCubic(ICubeIO cubeIo) {
+        if (this.cubeIo == null) {
+            CubicChunks.LOGGER.debug("Initializing cubeIo for cubic chunks save handler!");
+            this.cubeIo = cubeIo;
+        }
     }
 }

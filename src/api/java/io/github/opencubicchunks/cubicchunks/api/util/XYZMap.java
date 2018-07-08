@@ -51,9 +51,19 @@ public class XYZMap<T extends XYZAddressable> implements Iterable<T> {
     private static final int HASH_SEED = 1183822147;
 
     /**
-     * backing array containing all elements of this map
+     * Backing array containing all elements of this map, accessed by pointers.
+     * This array contain no gaps with {@code null}, therefore it is possible to
+     * iterate thru elements using simple index increment. Added to optimize map
+     * iterator.
      */
-    @Nonnull private XYZAddressable[] buckets;
+    @Nonnull private XYZAddressable[] bucketsByPointer;
+    /**
+     * Backing array containing all elements of this map, accessed by hash.
+     * Elements of this array accessed a same way as regular Java HashSet and
+     * HashMap items, fastest way possible. It is used to optimize
+     * {@code get(III)} function.
+     */
+    @Nonnull private XYZAddressable[] bucketsByHash;
     @Nonnull private int[] pointers;
     /**
      * the current number of elements in this map
@@ -96,7 +106,8 @@ public class XYZMap<T extends XYZAddressable> implements Iterable<T> {
         while (tCapacity < capacity) {
             tCapacity <<= 1;
         }
-        this.buckets = new XYZAddressable[tCapacity];
+        this.bucketsByPointer = new XYZAddressable[tCapacity];
+        this.bucketsByHash = new XYZAddressable[tCapacity];
         this.pointers = new int[tCapacity];
 
         this.refreshFields();
@@ -177,17 +188,19 @@ public class XYZMap<T extends XYZAddressable> implements Iterable<T> {
         int index = pointers[pointerIndex];
 
         while (index != 0) {
-            XYZAddressable bucket = this.buckets[index];
+            XYZAddressable bucket = this.bucketsByPointer[index];
             if (bucket.getX() == x && bucket.getY() == y && bucket.getZ() == z) {
-                this.buckets[index] = value;
+                this.bucketsByPointer[index] = value;
+                this.bucketsByHash[pointerIndex] = value;
                 return (T) bucket;
             }
             pointerIndex = this.getNextPointerIndex(pointerIndex);
             index = pointers[pointerIndex];
         }
-        this.buckets[++size] = value;
-        pointers[pointerIndex] = size;
-
+        this.bucketsByPointer[++size] = value;
+        this.bucketsByHash[pointerIndex] = value;
+        this.pointers[pointerIndex] = size;
+        
         // If the load threshold has been reached, increase the map's size.
         if (this.size > this.loadThreshold)
             grow();
@@ -215,7 +228,7 @@ public class XYZMap<T extends XYZAddressable> implements Iterable<T> {
         // index up to the next free slot must
         // be checked.
         while (index != 0) {
-            XYZAddressable bucket = this.buckets[index];
+            XYZAddressable bucket = this.bucketsByPointer[index];
             // If the correct bucket was found, remove it.
             if (bucket.getX() == x && bucket.getY() == y && bucket.getZ() == z) {
                 this.collapseBucket(pointerIndex, index);
@@ -258,17 +271,17 @@ public class XYZMap<T extends XYZAddressable> implements Iterable<T> {
     @Nullable
     @SuppressWarnings("unchecked")
     public T get(int x, int y, int z) {
-        int pointerIndex = this.getPointerIndex(x, y, z);
-        int index = pointers[pointerIndex];
+        int index = this.getPointerIndex(x, y, z);
+        XYZAddressable bucket = this.bucketsByHash[index];
+        while (bucket != null) {
 
-        while (index != 0) {
-            XYZAddressable bucket = this.buckets[index];
             // If the correct bucket was found, return it.
             if (bucket.getX() == x && bucket.getY() == y && bucket.getZ() == z) {
                 return (T) bucket;
             }
-            pointerIndex = this.getNextPointerIndex(pointerIndex);
-            index = pointers[pointerIndex];
+
+            index = getNextPointerIndex(index);
+            bucket = this.bucketsByHash[index];
         }
 
         // nothing was found
@@ -287,17 +300,17 @@ public class XYZMap<T extends XYZAddressable> implements Iterable<T> {
      *         coordinates in this map
      */
     public boolean contains(int x, int y, int z) {
-        int pointerIndex = this.getPointerIndex(x, y, z);
-        int index = pointers[pointerIndex];
+        int index = this.getPointerIndex(x, y, z);
+        XYZAddressable bucket = this.bucketsByHash[index];
+        while (bucket != null) {
 
-        while (index != 0) {
-            XYZAddressable bucket = this.buckets[index];
             // If the correct bucket was found, return it.
             if (bucket.getX() == x && bucket.getY() == y && bucket.getZ() == z) {
                 return true;
             }
-            pointerIndex = this.getNextPointerIndex(pointerIndex);
-            index = pointers[pointerIndex];
+
+            index = getNextPointerIndex(index);
+            bucket = this.bucketsByHash[index];
         }
 
         // nothing was found
@@ -322,19 +335,22 @@ public class XYZMap<T extends XYZAddressable> implements Iterable<T> {
      * values accordingly.
      */
     private void grow() {
-        int newLength = this.buckets.length * 2;
+        int newLength = this.bucketsByPointer.length * 2;
         int newMask = newLength - 1;
-        XYZAddressable[] newBuckets = new XYZAddressable[newLength];
+        XYZAddressable[] newBucketsByPointer = new XYZAddressable[newLength];
+        XYZAddressable[] newBucketsByHash = new XYZAddressable[newLength];
         int[] newPointers = new int[newLength];
         for (int i = 1; i <= size; i++) {
-            XYZAddressable bucket = buckets[i];
-            newBuckets[i] = bucket;
+            XYZAddressable bucket = bucketsByPointer[i];
+            newBucketsByPointer[i] = bucket;
             int pointerIndex = hash(bucket.getX(), bucket.getY(), bucket.getZ()) & newMask;
             while (newPointers[pointerIndex] != 0)
                 pointerIndex = ++pointerIndex & newMask;
             newPointers[pointerIndex] = i;
+            newBucketsByHash[pointerIndex] = bucket;
         }
-        buckets = newBuckets;
+        bucketsByPointer = newBucketsByPointer;
+        bucketsByHash = newBucketsByHash;
         pointers = newPointers;
         mask=newMask;
         loadThreshold = (int) (newLength * this.loadFactor) - 2;
@@ -356,16 +372,18 @@ public class XYZMap<T extends XYZAddressable> implements Iterable<T> {
 
         this.pointers[oldLastPointerIndex] = holeIndex;
         this.pointers[holePointerIndex] = 0;
-        this.buckets[holeIndex] = this.buckets[lastElement];
-        size--;
+        this.bucketsByPointer[holeIndex] = this.bucketsByPointer[lastElement];
+        this.bucketsByHash[holePointerIndex] = null;
+        this.size--;
 
         int pointerIndex = this.getNextPointerIndex(holePointerIndex);
         int index = pointers[pointerIndex];
         while (index != 0) {
-            XYZAddressable bucket = this.buckets[index];
+            XYZAddressable bucket = this.bucketsByPointer[index];
             nextPointersBuckets.add(bucket);
             nextBucketIndexes.add(index);
-            pointers[pointerIndex] = 0;
+            this.pointers[pointerIndex] = 0;
+            this.bucketsByHash[pointerIndex] = null;
             pointerIndex = this.getNextPointerIndex(pointerIndex);
             index = pointers[pointerIndex];
         }
@@ -381,13 +399,14 @@ public class XYZMap<T extends XYZAddressable> implements Iterable<T> {
                 newBucketPointerIndex = this.getNextPointerIndex(newBucketPointerIndex);
                 newIndex = pointers[newBucketPointerIndex];
             }
-            pointers[newBucketPointerIndex] = nextBucketIndexes.get(i);
+            this.pointers[newBucketPointerIndex] = nextBucketIndexes.get(i);
+            this.bucketsByHash[newBucketPointerIndex] = bucket;
         }
 
     }
 
     private int getElementPointerIndex(int index) {
-        XYZAddressable lastElement = this.buckets[index];
+        XYZAddressable lastElement = this.bucketsByPointer[index];
         int pointerIndex = this.getPointerIndex(lastElement.getX(), lastElement.getY(), lastElement.getZ());
         while (pointers[pointerIndex] != index) {
             pointerIndex = this.getNextPointerIndex(pointerIndex);
@@ -400,9 +419,9 @@ public class XYZMap<T extends XYZAddressable> implements Iterable<T> {
      * array's current size.
      */
     private void refreshFields() {
-        // we need that 1 extra space, make shore it will be there
-        this.loadThreshold = (int) (this.buckets.length * this.loadFactor) - 2;
-        this.mask = this.buckets.length - 1;
+        // we need that 1 extra space, make sure it will be there
+        this.loadThreshold = (int) (this.bucketsByPointer.length * this.loadFactor) - 2;
+        this.mask = this.bucketsByPointer.length - 1;
     }
 
     // Interface: Iterable<T>
@@ -422,7 +441,7 @@ public class XYZMap<T extends XYZAddressable> implements Iterable<T> {
             @Override
             @SuppressWarnings("unchecked")
             public T next() {
-                return (T) buckets[at++];
+                return (T) bucketsByPointer[at++];
             }
 
             @Override
@@ -462,7 +481,7 @@ public class XYZMap<T extends XYZAddressable> implements Iterable<T> {
             @SuppressWarnings("unchecked")
             public T next() {
                 start = false;
-                T toReturn = (T) buckets[at++];
+                T toReturn = (T) bucketsByPointer[at++];
                 if (at > size)
                     at = 1;
                 return toReturn;

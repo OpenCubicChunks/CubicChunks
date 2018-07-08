@@ -23,35 +23,25 @@
  */
 package io.github.opencubicchunks.cubicchunks.core.asm.mixin.core.common;
 
+import io.github.opencubicchunks.cubicchunks.core.CubicChunksConfig;
+import io.github.opencubicchunks.cubicchunks.core.world.ICubicSaveHandler;
 import io.github.opencubicchunks.cubicchunks.core.entity.CubicEntityTracker;
 import io.github.opencubicchunks.cubicchunks.core.lighting.FirstLightProcessor;
 import io.github.opencubicchunks.cubicchunks.core.server.ChunkGc;
 import io.github.opencubicchunks.cubicchunks.core.server.CubeProviderServer;
 import io.github.opencubicchunks.cubicchunks.core.server.PlayerCubeMap;
 import io.github.opencubicchunks.cubicchunks.core.world.CubeWorldEntitySpawner;
-import io.github.opencubicchunks.cubicchunks.core.world.CubicSaveHandler;
 import io.github.opencubicchunks.cubicchunks.core.world.FastCubeWorldEntitySpawner;
 import io.github.opencubicchunks.cubicchunks.core.world.cube.Cube;
 import io.github.opencubicchunks.cubicchunks.core.world.provider.ICubicWorldProvider;
 import io.github.opencubicchunks.cubicchunks.api.world.ICubeProviderServer;
-import io.github.opencubicchunks.cubicchunks.core.CubicChunks;
-import io.github.opencubicchunks.cubicchunks.core.entity.CubicEntityTracker;
-import io.github.opencubicchunks.cubicchunks.core.lighting.FirstLightProcessor;
-import io.github.opencubicchunks.cubicchunks.core.server.ChunkGc;
-import io.github.opencubicchunks.cubicchunks.core.server.CubeProviderServer;
-import io.github.opencubicchunks.cubicchunks.core.server.PlayerCubeMap;
 import io.github.opencubicchunks.cubicchunks.api.util.Bits;
 import io.github.opencubicchunks.cubicchunks.api.util.Coords;
 import io.github.opencubicchunks.cubicchunks.api.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.api.util.IntRange;
-import io.github.opencubicchunks.cubicchunks.core.world.CubeWorldEntitySpawner;
-import io.github.opencubicchunks.cubicchunks.core.world.CubicSaveHandler;
-import io.github.opencubicchunks.cubicchunks.core.world.FastCubeWorldEntitySpawner;
 import io.github.opencubicchunks.cubicchunks.api.world.ICubicWorldServer;
 import io.github.opencubicchunks.cubicchunks.core.asm.mixin.ICubicWorldInternal;
 import io.github.opencubicchunks.cubicchunks.api.util.NotCubicChunksWorldException;
-import io.github.opencubicchunks.cubicchunks.core.world.cube.Cube;
-import io.github.opencubicchunks.cubicchunks.core.world.provider.ICubicWorldProvider;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.Block;
 import net.minecraft.entity.EntityLivingBase;
@@ -99,7 +89,8 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
     @Override public void initCubicWorldServer(IntRange heightRange, IntRange generationRange) {
         super.initCubicWorld(heightRange, generationRange);
         this.isCubicWorld = true;
-        this.entitySpawner = new CubeWorldEntitySpawner();
+        this.entitySpawner = CubicChunksConfig.useFastEntitySpawner ?
+                new FastCubeWorldEntitySpawner() : new CubeWorldEntitySpawner();
 
         this.chunkProvider = new CubeProviderServer((WorldServer) (Object) this,
                 ((ICubicWorldProvider) this.provider).createCubeGenerator());
@@ -107,16 +98,8 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
         this.playerChunkMap = new PlayerCubeMap((WorldServer) (Object) this);
         this.chunkGc = new ChunkGc(getCubeCache());
 
-        this.saveHandler = new CubicSaveHandler((WorldServer) (Object) this, this.getSaveHandler());
-
         this.firstLightProcessor = new FirstLightProcessor((WorldServer) (Object) this);
         this.entityTracker = new CubicEntityTracker(this);
-        CubicChunks.addConfigChangeListener(conf -> {
-            if(conf.useFastEntitySpawner() && this.entitySpawner instanceof CubeWorldEntitySpawner)
-                this.entitySpawner = new FastCubeWorldEntitySpawner();
-            else if(!conf.useFastEntitySpawner() && this.entitySpawner instanceof FastCubeWorldEntitySpawner)
-                this.entitySpawner = new CubeWorldEntitySpawner();
-        });
     }
 
     @Override public void tickCubicWorld() {
@@ -125,6 +108,15 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
         }
         assert chunkGc != null;
         this.chunkGc.tick();
+        // update world entity spawner
+        if (CubicChunksConfig.useFastEntitySpawner != (entitySpawner.getClass() == FastCubeWorldEntitySpawner.class)) {
+            this.entitySpawner = CubicChunksConfig.useFastEntitySpawner ?
+                    new FastCubeWorldEntitySpawner() : new CubeWorldEntitySpawner();
+        }
+        // do it every tick so it also works when something replaces the save handler
+        // TODO: go with the vanilla way and have one global region cache.
+        // region cache per world is likely to run out of file handles with many dimensions
+        ((ICubicSaveHandler) saveHandler).initCubic(getCubeCache().getCubeIO());
     }
 
     @Override public CubeProviderServer getCubeCache() {

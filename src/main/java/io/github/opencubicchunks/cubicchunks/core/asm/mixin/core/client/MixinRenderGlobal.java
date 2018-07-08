@@ -34,16 +34,12 @@ import io.github.opencubicchunks.cubicchunks.core.world.cube.BlankCube;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.client.renderer.RenderGlobal;
 import net.minecraft.client.renderer.ViewFrustum;
-import net.minecraft.client.renderer.chunk.RenderChunk;
 import net.minecraft.client.renderer.culling.ICamera;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.ClassInheritanceMultiMap;
-import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.chunk.Chunk;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Constant;
@@ -103,51 +99,6 @@ public class MixinRenderGlobal {
     }
 
     /**
-     * Optifine-specific version of the above method. Up to version 1.12.2_HD_U_C6
-     */
-    @SuppressWarnings("UnresolvedMixinReference")
-    @Group(name = "renderEntitiesFix")
-    @Inject(method = "renderEntities",
-            at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/chunk/RenderChunk;getChunk(Lnet/minecraft/world/World;)Lnet/minecraft/world/chunk/Chunk;"),
-            locals = LocalCapture.CAPTURE_FAILHARD,
-            remap = false)
-    public void onGetPositionOptifine_Old(Entity renderViewEntity, ICamera camera, float partialTicks,
-            CallbackInfo ci, int pass, double d0, double d1, double d2,
-            Entity entity, double d3, double d4, double d5,
-            List list, boolean forgeEntityPass, boolean forgeTileEntityPass, boolean isShaders, boolean oldFancyGraphics, List list1, List list2,
-            BlockPos.PooledMutableBlockPos pos, Iterator iterInfosEntities,
-            RenderGlobal.ContainerLocalRenderInformation info) {
-        ICubicWorld world = (ICubicWorld) info.renderChunk.getWorld();
-        if (world.isCubicWorld()) {
-            this.position = info.renderChunk.getPosition();
-        } else {
-            this.position = null;
-        }
-    }
-
-    /**
-     * Optifine-specific version of the above method. Versions 1.12.2_HD_U_C7_pre and up
-     */
-    @SuppressWarnings("UnresolvedMixinReference")
-    @Group(name = "renderEntitiesFix")
-    @Inject(method = "renderEntities",
-            at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/chunk/RenderChunk;getChunk()Lnet/minecraft/world/chunk/Chunk;"),
-            locals = LocalCapture.CAPTURE_FAILHARD,
-            remap = false)
-    public void onGetPositionOptifine_New(Entity renderViewEntity, ICamera camera, float partialTicks,
-            CallbackInfo ci, int pass, double d0, double d1, double d2,
-            Entity entity, double d3, double d4, double d5,
-            List list, boolean forgeEntityPass, boolean forgeTileEntityPass, boolean isShaders, boolean oldFancyGraphics, List list1, List list2,
-            BlockPos.PooledMutableBlockPos pos, Iterator var22, RenderGlobal.ContainerLocalRenderInformation info) {
-        ICubicWorld world = (ICubicWorld) info.renderChunk.getWorld();
-        if (world.isCubicWorld()) {
-            this.position = info.renderChunk.getPosition();
-        } else {
-            this.position = null;
-        }
-    }
-
-    /**
      * After chunk.getEntityLists() renderGlobal needs to get correct element of the array.
      * The array element number is calculated using renderChunk.getPosition().getY() / 16.
      * getY() is redirected to this method to always return 0.
@@ -184,23 +135,6 @@ public class MixinRenderGlobal {
         }
 
         return new ClassInheritanceMultiMap[]{cube.getEntitySet()};
-    }
-
-    /**
-     * Overwrite getRenderChunk(For)Offset to support extended height.
-     *
-     * @author Barteks2x
-     * @reason Remove hardcoded height checks, it's a simple method and doing it differently would be problematic and
-     * confusing (Inject with local capture into BlockPos.getX() and redirect of BlockPos.getY())
-     */
-    @Nullable
-    @Overwrite
-    private RenderChunk getRenderChunkOffset(BlockPos playerPos, RenderChunk renderChunkBase, EnumFacing facing) {
-        BlockPos blockpos = renderChunkBase.getBlockPosOffset16(facing);
-        return MathHelper.abs(playerPos.getX() - blockpos.getX()) > this.renderDistanceChunks * 16 ? null :
-                MathHelper.abs(playerPos.getY() - blockpos.getY()) > this.renderDistanceChunks * 16 ? null :
-                        MathHelper.abs(playerPos.getZ() - blockpos.getZ()) > this.renderDistanceChunks * 16 ? null :
-                                this.viewFrustum.getRenderChunk(blockpos);
     }
 
     @ModifyConstant(

@@ -106,7 +106,7 @@ public class CubicChunks {
 
     @EventHandler
     public void init(FMLInitializationEvent event) throws IllegalArgumentException, IllegalAccessException, NoSuchFieldException, SecurityException {
-        proxy.registerEvents();
+        proxy.init();
 
         PacketDispatcher.registerPackets();
         CubeGeneratorsRegistry.computeSortedGeneratorList();

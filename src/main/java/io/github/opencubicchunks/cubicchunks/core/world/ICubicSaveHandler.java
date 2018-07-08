@@ -21,18 +21,11 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package io.github.opencubicchunks.cubicchunks.core;
+package io.github.opencubicchunks.cubicchunks.core.world;
 
-import mcp.MethodsReturnNonnullByDefault;
 
-import javax.annotation.ParametersAreNonnullByDefault;
+import io.github.opencubicchunks.cubicchunks.core.server.chunkio.ICubeIO;
 
-@ParametersAreNonnullByDefault
-@MethodsReturnNonnullByDefault
-public interface IConfigUpdateListener {
-
-    /**
-     * Called when config value is changed. This method may be called from any thread.
-     */
-    void onConfigUpdate(CubicChunks.Config config);
+public interface ICubicSaveHandler {
+    public void initCubic(ICubeIO cubeIo);
 }

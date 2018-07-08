@@ -64,7 +64,7 @@ public class IONbtReader {
         readOpacityIndex(level, column);
 
         column.setModified(false); // its exactly the same as on disk so its not modified
-        return column;
+        return column; // TODO: use Chunk, not IColumn, whenever possible
     }
 
     @Nullable
@@ -88,6 +88,10 @@ public class IONbtReader {
 
         // read the rest of the column properties
         column.setInhabitedTime(nbt.getLong("InhabitedTime"));
+
+        if (column.getCapabilities() != null && nbt.hasKey("ForgeCaps")) {
+            column.getCapabilities().deserializeNBT(nbt.getCompoundTag("ForgeCaps"));
+        }
         return column;
     }
 

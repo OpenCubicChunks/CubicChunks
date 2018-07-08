@@ -62,4 +62,8 @@ public class VanillaCubicWorldType extends WorldType implements ICubicWorldType 
     @Override public IntRange calculateGenerationHeightRange(WorldServer world) {
         return new IntRange(0, ((ICubicWorldProvider) world.provider).getOriginalActualHeight());
     }
+
+    @Override public boolean hasCubicGeneratorForWorld(World object) {
+        return false;
+    }
 }

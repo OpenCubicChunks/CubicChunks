@@ -41,7 +41,7 @@ public abstract class CommonProxy {
      */
     public abstract EntityPlayer getPlayerEntity(MessageContext ctx);
 
-    public void registerEvents() {
+    public void init() {
         MinecraftForge.EVENT_BUS.register(new CommonEventHandler());
     }
 

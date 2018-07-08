@@ -41,7 +41,5 @@ public interface ICubicWorldType {
 
     IntRange calculateGenerationHeightRange(WorldServer world);
 
-    default boolean hasCubicGeneratorForWorld(World workd) {
-        return true;
-    }
+    boolean hasCubicGeneratorForWorld(World object);
 }
