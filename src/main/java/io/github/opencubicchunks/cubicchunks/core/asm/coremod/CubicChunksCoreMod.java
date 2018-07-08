@@ -21,10 +21,9 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package io.github.opencubicchunks.cubicchunks.core.asm;
+package io.github.opencubicchunks.cubicchunks.core.asm.coremod;
 
 import mcp.MethodsReturnNonnullByDefault;
-import net.minecraft.launchwrapper.Launch;
 import net.minecraftforge.common.ForgeVersion;
 import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.relauncher.IFMLLoadingPlugin;
@@ -38,6 +37,8 @@ import java.util.Map;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 
+// this needs to be in separate package because the package with the coremod is added to transformer exclusions
+// and we need mixins to still be transformed for runtime deobfuscation
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
 // the mcVersion value is inlined at compile time, so this MC version check may still fail

@@ -101,7 +101,7 @@ minecraft {
     replaceIn("cubicchunks/CubicChunks.java")
 
     val args = listOf(
-            "-Dfml.coreMods.load=io.github.opencubicchunks.cubicchunks.core.asm.CubicChunksCoreMod", //the core mod class, needed for mixins
+            "-Dfml.coreMods.load=io.github.opencubicchunks.cubicchunks.core.asm.coremod.CubicChunksCoreMod", //the core mod class, needed for mixins
             "-Dmixin.env.compatLevel=JAVA_8", //needed to use java 8 when using mixins
             "-Dmixin.debug.verbose=true", //verbose mixin output for easier debugging of mixins
             "-Dmixin.debug.export=true", //export classes from mixin to runDirectory/.mixin.out
@@ -373,7 +373,7 @@ jar.apply {
     exclude("LICENSE.txt", "log4j2.xml")
 
     manifest.attributes["FMLAT"] = "cubicchunks_at.cfg"
-    manifest.attributes["FMLCorePlugin"] = "io.github.opencubicchunks.cubicchunks.core.asm.CubicChunksCoreMod"
+    manifest.attributes["FMLCorePlugin"] = "io.github.opencubicchunks.cubicchunks.core.asm.coremod.CubicChunksCoreMod"
     manifest.attributes["TweakClass"] = "org.spongepowered.asm.launch.MixinTweaker"
     manifest.attributes["TweakOrder"] = "0"
     manifest.attributes["ForceLoadAsMod"] = "true"
