@@ -28,12 +28,14 @@ import static io.github.opencubicchunks.cubicchunks.core.lighting.LightingManage
 import com.google.common.base.Throwables;
 import io.github.opencubicchunks.cubicchunks.core.lighting.LightingManager;
 import io.github.opencubicchunks.cubicchunks.core.world.cube.Cube;
+import io.github.opencubicchunks.cubicchunks.api.world.ClientHeightMapUpdateEvent;
 import io.github.opencubicchunks.cubicchunks.api.world.IHeightMap;
 import io.github.opencubicchunks.cubicchunks.api.util.Coords;
 import io.github.opencubicchunks.cubicchunks.core.world.cube.Cube;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.chunk.Chunk;
+import net.minecraftforge.common.MinecraftForge;
 
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
@@ -62,9 +64,12 @@ public class ClientHeightMap implements IHeightMap {
     }
 
     @Override
-    public void onOpacityChange(int localX, int blockY, int localZ, int opacity) {
-        writeNewTopBlockY(localX, blockY, localZ, opacity, getTopBlockY(localX, localZ));
-    }
+	public void onOpacityChange(int localX, int blockY, int localZ, int opacity) {
+		BlockPos pos = new BlockPos(Coords.localToBlock(column.x, localX), blockY,
+				Coords.localToBlock(column.z, localZ));
+		MinecraftForge.EVENT_BUS.post(new ClientHeightMapUpdateEvent(this, pos, opacity));
+		writeNewTopBlockY(localX, blockY, localZ, opacity, getTopBlockY(localX, localZ));
+	}
 
     private void writeNewTopBlockY(int localX, int changeY, int localZ, int newOpacity, int oldTopY) {
         //to avoid unnecessary delay when breaking blocks client needs to figure out new height before
