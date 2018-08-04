@@ -18,6 +18,7 @@
         "common.MixinRandomPositionGenerator",
         "common.MixinPathNavigateGround",
         "common.MixinTeleporter",
+        "common.MixinTileEntityBeacon",
         "common.MixinTileEntityEndGateway",
         "common.MixinPacketBufferBlockPosWrite",
         "common.MixinNetHandlerPlayServer",
