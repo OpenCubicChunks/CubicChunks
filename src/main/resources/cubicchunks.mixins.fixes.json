@@ -10,6 +10,7 @@
         "common.EntityBat_AiHeightLimit",
         "common.MixinWalkNodeProcessor_HeightLimit",
         "common.MixinEntityMinecart_KillFix",
+         "common.MixinEntityBoat",
         "common.MixinBlockFalling_HeightLimits",
         "common.MixinBlockLilyPad_HeightLimits",
         "common.MixinBlockPortal_Size_HeightLimits",
