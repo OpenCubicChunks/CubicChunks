@@ -53,6 +53,7 @@ public abstract class MixinBlock_FastCollision {
      *
      * @author Foghrye4
      **/
+    @SuppressWarnings("rawtypes")
     @Redirect(method = "<init>", at = @At(value = "INVOKE", target = "Lnet/minecraft/block/Block;createBlockState()Lnet/minecraft/block/state/BlockStateContainer;"))
     public BlockStateContainer alterBlockStateCollection(Block block) {
         BlockStateContainer oldBlockStateContainer = this.createBlockState();
@@ -62,8 +63,15 @@ public abstract class MixinBlock_FastCollision {
             return oldBlockStateContainer;
         try {
             if (block instanceof BlockStairs) {
-                return new BlockStairsFieldBasedBlockStateContainer(block,
-                        new IProperty[] {BlockStairs.FACING, BlockStairs.HALF, BlockStairs.SHAPE});
+                Collection<IProperty<?>> properties = oldBlockStateContainer.getProperties();
+                IProperty[] defaultStairsProperties = new IProperty[] {BlockStairs.FACING, BlockStairs.HALF, BlockStairs.SHAPE};
+                if (properties.size() != defaultStairsProperties.length)
+                    return oldBlockStateContainer;
+                for (IProperty property : defaultStairsProperties) {
+                    if (!properties.contains(property))
+                        return oldBlockStateContainer;
+                }
+                return new BlockStairsFieldBasedBlockStateContainer(block, defaultStairsProperties);
             }
             Collection<IProperty<?>> properties = oldBlockStateContainer.getProperties();
             boolean isFullBlock = true;
