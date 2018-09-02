@@ -1,1 +1,14 @@
 itemGroup.cubic_chunks_debug_tab=Cubic Chunks debug items
+
+#################################
+###        general gui        ###
+#################################
+
+cubicchunks.gui.worldmenu.cc_enable=CubicChunks: Yes
+cubicchunks.gui.worldmenu.cc_disable=CubicChunks: No
+
+#################################
+###          options          ###
+#################################
+
+cubicchunks.gui.vertical_cube_load_distance=Vertical Distance: %d cubes
