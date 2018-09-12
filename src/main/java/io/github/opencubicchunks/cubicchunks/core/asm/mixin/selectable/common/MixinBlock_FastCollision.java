@@ -53,45 +53,50 @@ public abstract class MixinBlock_FastCollision {
      *
      * @author Foghrye4
      **/
+    @SuppressWarnings("rawtypes")
     @Redirect(method = "<init>", at = @At(value = "INVOKE", target = "Lnet/minecraft/block/Block;createBlockState()Lnet/minecraft/block/state/BlockStateContainer;"))
     public BlockStateContainer alterBlockStateCollection(Block block) {
         BlockStateContainer oldBlockStateContainer = this.createBlockState();
-        // If someone already add a custom implementation, we should not do that.
+        // If someone already add a custom implementation, we should not do
+        // that.
         if (oldBlockStateContainer.getClass() != BlockStateContainer.class)
             return oldBlockStateContainer;
-        if (block instanceof BlockStairs) {
-            return new BlockStairsFieldBasedBlockStateContainer(block,
-                    new IProperty[] {BlockStairs.FACING, BlockStairs.HALF, BlockStairs.SHAPE});
-        }
-        Collection<IProperty<?>> properties = oldBlockStateContainer.getProperties();
-        boolean isFullBlock = true;
-        for (IBlockState state : oldBlockStateContainer.getValidStates()) {
-            if (!state.isFullCube())
-                isFullBlock = false;
-        }
-        if (isFullBlock)
-            return new FullBlockBlockStateContainer(block, properties.toArray(new IProperty<?>[0]));
-        boolean isNonCollideableBlock = false;
-        if (block instanceof BlockBush ||
-                block instanceof BlockAir ||
-                block instanceof BlockButton ||
-                block instanceof BlockLiquid ||
-                block instanceof BlockFire) {
-            isNonCollideableBlock = true;
-            List<AxisAlignedBB> collidingBoxes = new ArrayList<AxisAlignedBB>();
-            try {
+        try {
+            if (block instanceof BlockStairs) {
+                Collection<IProperty<?>> properties = oldBlockStateContainer.getProperties();
+                IProperty[] defaultStairsProperties = new IProperty[] {BlockStairs.FACING, BlockStairs.HALF, BlockStairs.SHAPE};
+                if (properties.size() != defaultStairsProperties.length)
+                    return oldBlockStateContainer;
+                for (IProperty property : defaultStairsProperties) {
+                    if (!properties.contains(property))
+                        return oldBlockStateContainer;
+                }
+                return new BlockStairsFieldBasedBlockStateContainer(block, defaultStairsProperties);
+            }
+            Collection<IProperty<?>> properties = oldBlockStateContainer.getProperties();
+            boolean isFullBlock = true;
+            for (IBlockState state : oldBlockStateContainer.getValidStates()) {
+                if (!state.isFullCube())
+                    isFullBlock = false;
+            }
+            if (isFullBlock)
+                return new FullBlockBlockStateContainer(block, properties.toArray(new IProperty<?>[0]));
+            if (block instanceof BlockBush ||
+                    block instanceof BlockAir ||
+                    block instanceof BlockButton ||
+                    block instanceof BlockLiquid ||
+                    block instanceof BlockFire) {
+                List<AxisAlignedBB> collidingBoxes = new ArrayList<AxisAlignedBB>();
                 for (IBlockState state : oldBlockStateContainer.getValidStates())
                     state.addCollisionBoxToList(null, BlockPos.ORIGIN, Block.FULL_BLOCK_AABB, collidingBoxes, null, false);
                 if (!collidingBoxes.isEmpty())
-                    isNonCollideableBlock = false;
+                    return oldBlockStateContainer;
+                return new NonCollidingBlockStateContainer(block, properties.toArray(new IProperty<?>[0]));
             }
             // Catch all cases of modded extended classes accessing world here
-            catch (Exception e) {
-                isNonCollideableBlock = false;
-            }
+        } catch (Exception e) {
+            return oldBlockStateContainer;
         }
-        if (isNonCollideableBlock)
-            return new NonCollidingBlockStateContainer(block, properties.toArray(new IProperty<?>[0]));
         return oldBlockStateContainer;
     }
 
