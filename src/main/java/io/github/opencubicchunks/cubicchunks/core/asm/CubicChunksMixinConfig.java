@@ -101,6 +101,28 @@ public class CubicChunksMixinConfig implements IMixinConfigPlugin {
         modDependencyConditions.put(
                 "io.github.opencubicchunks.cubicchunks.core.asm.mixin.selectable.client.MixinRenderGlobalOptifineSpecificD1",
                 optifineState == OptifineState.LOADED_D1);
+				
+		//BetterFps FastBeacon Handling
+		boolean enableBeaconFix = true;
+		try{
+			Class betterFpsConditions = Class.forName("guichaguri.betterfps.transformers.Conditions");
+			Method getFixSetting = betterFpsConditions.getMethod("shouldPatch", String.class);
+			boolean betterFpsFastBeaconActive = (boolean) getFixSetting.invoke(null, "fastBeacon");
+			if(betterFpsFastBeaconActive){
+				enableBeaconFix = false;
+				LOGGER.info("BetterFps FastBeacon active, will disable CC mixin for beacons.");
+			}else{
+				LOGGER.info("BetterFps is installed, but FastBeacon is not active. CC mixin fix will be enabled");
+			}
+		} catch (ClassNotFoundException e) {
+			LOGGER.info("No BetterFps Conditions class detected. Enabling usage of CubicChunks fix.");
+		} catch (Exception e) {
+			LOGGER.info("Problem trying to detect BetterFps settings. Keeping fix active. In case of issues, change manual setting.");
+		}
+		modDependencyConditions.put(
+                "io.github.opencubicchunks.cubicchunks.core.asm.mixin.selectable.common.MixinTileEntityBeacon",
+                enableBeaconFix); //Overrides default return value - can not manually turn on when betterFps FastBeacon is detected active
+				
         File folder = new File(".", "config");
         folder.mkdirs();
         File configFile = new File(folder, "cubicchunks_mixin_config.json");
@@ -194,7 +216,11 @@ public class CubicChunksMixinConfig implements IMixinConfigPlugin {
                 new String[] {"io.github.opencubicchunks.cubicchunks.core.asm.mixin.selectable.common.MixinWorldServer_UpdateBlocks"},
                 "If set to true, random tick wil be launched from cube instance instead of chunk."
                         + " Cube based random tick may slightly reduce server lag."
-                        + " You need to restart Minecraft to apply changes.");
+                        + " You need to restart Minecraft to apply changes."),
+		ENABLE_BEACON_FIX(true, 
+                new String[] {"io.github.opencubicchunks.cubicchunks.core.asm.mixin.selectable.common.MixinTileEntityBeacon"},
+                new String[] {},
+                "If set to true, will Enable a fix for Beacon bases going to y<0.");
 
         private final boolean defaultValue;
         // Load this Mixin class only if option is false.
