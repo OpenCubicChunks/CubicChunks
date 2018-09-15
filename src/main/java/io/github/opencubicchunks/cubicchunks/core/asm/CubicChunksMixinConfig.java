@@ -184,11 +184,10 @@ public class CubicChunksMixinConfig implements IMixinConfigPlugin {
                         + " You need to restart Minecraft to apply changes."),
         USE_FAST_COLLISION_CHECK(false, 
                 new String[] {"io.github.opencubicchunks.cubicchunks.core.asm.mixin.selectable.common.MixinWorld_SlowCollisionCheck"},
-                new String[] {"io.github.opencubicchunks.cubicchunks.core.asm.mixin.selectable.common.MixinWorld_CollisionCheck",
-                        "cubicchunks.asm.mixin.selectable.common.MixinBlock_FastCollision"},
+                new String[] {"io.github.opencubicchunks.cubicchunks.core.asm.mixin.selectable.common.MixinWorld_CollisionCheck"},
                 "Enabling this option allow using fast collision check."
                         + " Fast collision check can reduce server lag."
-                        + " You need to restart Minecraft to apply changes. DO NOT USE UNTIL FIXED!"),
+                        + " You need to restart Minecraft to apply changes."),
         RANDOM_TICK_IN_CUBE(true, 
                 new String[] {},
                 new String[] {"io.github.opencubicchunks.cubicchunks.core.asm.mixin.selectable.common.MixinWorldServer_UpdateBlocks"},
