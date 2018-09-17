@@ -65,11 +65,6 @@ public class WorldGenEntitySpawner {
 
             for (int i = 0; i < groupCount; ++i) {
                 for (int j = 0; j < 4; ++j) {
-                    do {
-                        randX = initRandX + random.nextInt(5) - random.nextInt(5);
-                        randZ = initRandZ + random.nextInt(5) - random.nextInt(5);
-                    } while (randX < blockX || randX >= blockX + sizeX || randZ < blockZ || randZ >= blockZ + sizeZ);
-
                     BlockPos pos = ((ICubicWorld)world).findTopBlock(new BlockPos(randX, blockY + sizeY + ICube.SIZE / 2, randZ),
                             blockY, blockY + sizeY - 1, ICubicWorld.SurfaceType.SOLID);
                     if (pos == null) {
@@ -91,6 +86,13 @@ public class WorldGenEntitySpawner {
                         data = spawnedEntity.onInitialSpawn(world.getDifficultyForLocation(new BlockPos(spawnedEntity)), data);
                         break;
                     }
+                    randX += random.nextInt(5) - random.nextInt(5);
+                    randZ += random.nextInt(5) - random.nextInt(5);
+                    while (randX < blockX || randX >= blockX + sizeX || randZ < blockZ || randZ >= blockZ + sizeZ) {
+                        randX = initRandX + random.nextInt(5) - random.nextInt(5);
+                        randZ = initRandZ + random.nextInt(5) - random.nextInt(5);
+                    }
+
                 }
             }
         }
