@@ -23,6 +23,7 @@
  */
 package io.github.opencubicchunks.cubicchunks.api.worldgen.populator;
 
+import io.github.opencubicchunks.cubicchunks.CubicChunksConfig;
 import io.github.opencubicchunks.cubicchunks.api.world.ICube;
 import io.github.opencubicchunks.cubicchunks.api.world.ICubicWorld;
 import mcp.MethodsReturnNonnullByDefault;
@@ -48,6 +49,8 @@ public class WorldGenEntitySpawner {
 
     public static void initialWorldGenSpawn(WorldServer world, Biome biome, int blockX, int blockY, int blockZ,
             int sizeX, int sizeY, int sizeZ, Random random) {
+        if(!CubicChunksConfig.worldgenMobSpawn)
+            return;
         List<Biome.SpawnListEntry> spawnList = biome.getSpawnableList(EnumCreatureType.CREATURE);
 
         if (spawnList.isEmpty()) {

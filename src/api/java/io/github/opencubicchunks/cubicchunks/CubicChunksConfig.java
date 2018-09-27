@@ -21,10 +21,11 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package io.github.opencubicchunks.cubicchunks.core;
+package io.github.opencubicchunks.cubicchunks;
 
 import com.google.common.collect.Range;
 import com.google.common.collect.TreeRangeSet;
+
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraftforge.common.config.Config;
 import net.minecraftforge.common.config.ConfigManager;
@@ -39,8 +40,8 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-@Mod.EventBusSubscriber(modid = CubicChunks.MODID)
-@Config(modid = CubicChunks.MODID, category = "general")
+@Mod.EventBusSubscriber(modid = "cubicchunks")
+@Config(modid = "cubicchunks", category = "general")
 public class CubicChunksConfig {
 
     @Config.Comment("Chunk garbage collector update interval. Lower value will increase CPU usage, but can reduce memory usage.")
@@ -53,6 +54,11 @@ public class CubicChunksConfig {
             + "set in world creation GUI when creating cubic chunks world with non-cubicchunks world type. This doesn't affect already created "
             + "worlds.")
     public static boolean forceCubicChunks = false;
+    
+    @Config.LangKey("cubicchunks.config.worldgen_spawn")
+    @Config.Comment("Disabling this will disable spawn of a entities on a cube generation stage. "
+            + "Any mobs and animals will be spawned according regular respawn rules.")
+    public static boolean worldgenMobSpawn = true;
 
     @Config.LangKey("cubicchunks.config.cubegen_per_tick")
     @Config.Comment("The maximum number of cubic chunks to generate per tick.")
@@ -99,7 +105,7 @@ public class CubicChunksConfig {
     private static TreeRangeSet<Integer> excludedDimensionsRanges = null;
 
     public static void sync() {
-        ConfigManager.sync(CubicChunks.MODID, Config.Type.INSTANCE);
+        ConfigManager.sync("cubicchunks", Config.Type.INSTANCE);
 
         initDimensionRanges();
     }
@@ -129,7 +135,7 @@ public class CubicChunksConfig {
 
     @SubscribeEvent
     public static void onConfigChanged(ConfigChangedEvent.OnConfigChangedEvent event) {
-        if (event.getModID().equals(CubicChunks.MODID)) {
+        if (event.getModID().equals("cubicchunks")) {
             sync();
         }
     }
