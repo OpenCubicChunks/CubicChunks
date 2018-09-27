@@ -33,7 +33,7 @@ import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
-import io.github.opencubicchunks.cubicchunks.core.CubicChunksConfig;
+
 import io.github.opencubicchunks.cubicchunks.core.lighting.LightingManager;
 import io.github.opencubicchunks.cubicchunks.core.network.PacketCubes;
 import io.github.opencubicchunks.cubicchunks.core.network.PacketDispatcher;
@@ -45,6 +45,7 @@ import io.github.opencubicchunks.cubicchunks.core.entity.CubicEntityTracker;
 import io.github.opencubicchunks.cubicchunks.core.lighting.LightingManager;
 import io.github.opencubicchunks.cubicchunks.core.network.PacketCubes;
 import io.github.opencubicchunks.cubicchunks.core.network.PacketDispatcher;
+import io.github.opencubicchunks.cubicchunks.CubicChunksConfig;
 import io.github.opencubicchunks.cubicchunks.api.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.api.util.XYZMap;
 import io.github.opencubicchunks.cubicchunks.api.util.XZMap;

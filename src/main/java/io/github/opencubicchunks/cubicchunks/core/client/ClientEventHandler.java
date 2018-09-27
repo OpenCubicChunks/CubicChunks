@@ -23,8 +23,8 @@
  */
 package io.github.opencubicchunks.cubicchunks.core.client;
 
+import io.github.opencubicchunks.cubicchunks.CubicChunksConfig;
 import io.github.opencubicchunks.cubicchunks.api.util.MathUtil;
-import io.github.opencubicchunks.cubicchunks.core.CubicChunksConfig;
 import io.github.opencubicchunks.cubicchunks.core.server.ICubicPlayerList;
 import io.github.opencubicchunks.cubicchunks.core.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.core.server.ICubicPlayerList;

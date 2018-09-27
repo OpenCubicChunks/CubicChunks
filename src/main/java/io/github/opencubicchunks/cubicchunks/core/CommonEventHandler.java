@@ -36,6 +36,7 @@ import io.github.opencubicchunks.cubicchunks.core.network.PacketDispatcher;
 import io.github.opencubicchunks.cubicchunks.core.event.CreateNewWorldEvent;
 import io.github.opencubicchunks.cubicchunks.core.network.PacketCubicWorldData;
 import io.github.opencubicchunks.cubicchunks.core.server.SpawnCubes;
+import io.github.opencubicchunks.cubicchunks.CubicChunksConfig;
 import io.github.opencubicchunks.cubicchunks.api.util.IntRange;
 import io.github.opencubicchunks.cubicchunks.core.util.ReflectionUtil;
 import io.github.opencubicchunks.cubicchunks.api.world.ICubicWorld;
