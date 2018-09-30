@@ -443,6 +443,7 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
             // a check for populators that populate more than one cube (vanilla compatibility generator)
             if (!fullPopulationCube.isPopulated()) {
                 cubeGen.populate(fullPopulationCube);
+                fullPopulationCube.setPopulated(true);
             }
         });
         
