@@ -36,6 +36,8 @@ import net.minecraft.world.World;
 import net.minecraft.world.WorldEntitySpawner;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.biome.Biome;
+import net.minecraftforge.event.ForgeEventFactory;
+import net.minecraftforge.fml.common.eventhandler.Event;
 
 import java.util.List;
 import java.util.Random;
@@ -65,6 +67,12 @@ public class WorldGenEntitySpawner {
 
             for (int i = 0; i < groupCount; ++i) {
                 for (int j = 0; j < 4; ++j) {
+                    randX += random.nextInt(5) - random.nextInt(5);
+                    randZ += random.nextInt(5) - random.nextInt(5);
+                    while (randX < blockX || randX >= blockX + sizeX || randZ < blockZ || randZ >= blockZ + sizeZ) {
+                        randX = initRandX + random.nextInt(5) - random.nextInt(5);
+                        randZ = initRandZ + random.nextInt(5) - random.nextInt(5);
+                    }
                     BlockPos pos = ((ICubicWorld)world).findTopBlock(new BlockPos(randX, blockY + sizeY + ICube.SIZE / 2, randZ),
                             blockY, blockY + sizeY - 1, ICubicWorld.SurfaceType.SOLID);
                     if (pos == null) {
@@ -82,17 +90,15 @@ public class WorldGenEntitySpawner {
                         }
 
                         spawnedEntity.setLocationAndAngles(randX + 0.5, pos.getY(), randZ + 0.5, random.nextFloat() * 360.0F, 0.0F);
+                        Event.Result forgeCanSpawn = ForgeEventFactory.canEntitySpawn(spawnedEntity, world, randX + 0.5f, (float) pos.getY(), randZ + 0.5f, null);
+                        if (forgeCanSpawn == Event.Result.DENY) {
+                            spawnedEntity.setDead();
+                            continue;
+                        }
                         world.spawnEntity(spawnedEntity);
                         data = spawnedEntity.onInitialSpawn(world.getDifficultyForLocation(new BlockPos(spawnedEntity)), data);
                         break;
                     }
-                    randX += random.nextInt(5) - random.nextInt(5);
-                    randZ += random.nextInt(5) - random.nextInt(5);
-                    while (randX < blockX || randX >= blockX + sizeX || randZ < blockZ || randZ >= blockZ + sizeZ) {
-                        randX = initRandX + random.nextInt(5) - random.nextInt(5);
-                        randZ = initRandZ + random.nextInt(5) - random.nextInt(5);
-                    }
-
                 }
             }
         }
