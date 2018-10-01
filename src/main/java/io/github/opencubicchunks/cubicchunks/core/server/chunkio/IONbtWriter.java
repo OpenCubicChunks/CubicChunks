@@ -26,8 +26,10 @@ package io.github.opencubicchunks.cubicchunks.core.server.chunkio;
 import static io.github.opencubicchunks.cubicchunks.core.util.WorldServerAccess.getPendingTickListEntriesHashSet;
 import static io.github.opencubicchunks.cubicchunks.core.util.WorldServerAccess.getPendingTickListEntriesThisTick;
 
+import io.github.opencubicchunks.cubicchunks.api.world.IHeightMap;
 import io.github.opencubicchunks.cubicchunks.core.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.api.util.Coords;
+import io.github.opencubicchunks.cubicchunks.core.world.ClientHeightMap;
 import io.github.opencubicchunks.cubicchunks.core.world.ServerHeightMap;
 import io.github.opencubicchunks.cubicchunks.api.world.IColumn;
 import io.github.opencubicchunks.cubicchunks.core.world.cube.Cube;
@@ -118,7 +120,12 @@ class IONbtWriter {
     }
 
     private static void writeOpacityIndex(Chunk column, NBTTagCompound nbt) {// light index
-        nbt.setByteArray("OpacityIndex", ((ServerHeightMap) ((IColumn) column).getOpacityIndex()).getData());
+        IHeightMap hmap = ((IColumn) column).getOpacityIndex();
+        if (hmap instanceof ServerHeightMap) {
+            nbt.setByteArray("OpacityIndex", ((ServerHeightMap) hmap).getData());
+        } else {
+            nbt.setByteArray("OpacityIndexClient", ((ClientHeightMap) hmap).getData());
+        }
     }
 
     private static void writeBaseCube(Cube cube, NBTTagCompound cubeNbt) {
@@ -227,9 +234,9 @@ class IONbtWriter {
     private static List<NextTickListEntry> getScheduledTicks(Cube cube) {
         ArrayList<NextTickListEntry> out = new ArrayList<>();
 
-        // make sure this is a server
+        // make sure this is a server, otherwise don't save these, writing to client cache
         if (!(cube.getWorld() instanceof WorldServer)) {
-            throw new Error("Column is not on the server!");
+            return out;
         }
         WorldServer worldServer = (WorldServer) cube.getWorld();
 

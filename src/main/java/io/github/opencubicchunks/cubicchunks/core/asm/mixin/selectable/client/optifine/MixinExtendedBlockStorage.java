@@ -21,24 +21,13 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package optifine;
+package io.github.opencubicchunks.cubicchunks.core.asm.mixin.selectable.client.optifine;
 
-import net.minecraft.launchwrapper.IClassTransformer;
+import io.github.opencubicchunks.cubicchunks.core.asm.optifine.IOptifineExtendedBlockStorage;
+import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
+import org.spongepowered.asm.mixin.Mixin;
 
-// this is needed only in dev environment to get deobfuscated version of OptiFine running
-public class OptifineDevTransformerWrapper implements IClassTransformer {
-
-    final IClassTransformer ofTransformer;
-
-    {
-        try {
-            ofTransformer = (IClassTransformer) Class.forName("optifine.OptiFineClassTransformer").newInstance();
-        } catch (Exception e) {
-            throw new Error(e);
-        }
-    }
-
-    @Override public byte[] transform(String name, String transformedName, byte[] basicClass) {
-        return ofTransformer.transform(name == null ? null : name.replace(".", "/"), transformedName, basicClass);
-    }
+@Mixin(ExtendedBlockStorage.class)
+public abstract class MixinExtendedBlockStorage implements IOptifineExtendedBlockStorage {
+    // method implemented by OptiFine
 }

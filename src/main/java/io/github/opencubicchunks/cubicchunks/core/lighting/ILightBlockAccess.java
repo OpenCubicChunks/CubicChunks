@@ -61,7 +61,7 @@ public interface ILightBlockAccess {
         }
         BlockPos.PooledMutableBlockPos currentPos = BlockPos.PooledMutableBlockPos.retain();
         int maxValue = 0;
-        for (EnumFacing enumfacing : EnumFacing.values()) {
+        for (EnumFacing enumfacing : EnumFacing.VALUES) {
             currentPos.setPos(pos).move(enumfacing);
             int currentValue = this.getLightFor(EnumSkyBlock.SKY, currentPos) - lightSubtract;
 
@@ -85,7 +85,7 @@ public interface ILightBlockAccess {
     default int getLightFromNeighbors(EnumSkyBlock type, BlockPos pos) {
         //TODO: use MutableBlockPos?
         int max = 0;
-        for (EnumFacing direction : EnumFacing.values()) {
+        for (EnumFacing direction : EnumFacing.VALUES) {
             int light = getLightFor(type, pos.offset(direction));
             if (light > max) {
                 max = light;

@@ -21,30 +21,12 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package optifine;
+package io.github.opencubicchunks.cubicchunks.core.asm.optifine;
 
-import net.minecraft.launchwrapper.ITweaker;
-import net.minecraft.launchwrapper.LaunchClassLoader;
+import io.github.opencubicchunks.cubicchunks.api.world.ICube;
 
-import java.io.File;
-import java.util.List;
+public interface IOptifineRenderChunk {
+    ICube getCube();
 
-// this is needed only in dev environment to get deobfuscated version of OptiFine running
-public class OptifineDevTweakerWrapper implements ITweaker {
-
-    @Override public void acceptOptions(List<String> args, File gameDir, File assetsDir, String profile) {
-
-    }
-
-    @Override public void injectIntoClassLoader(LaunchClassLoader classLoader) {
-        classLoader.registerTransformer("optifine.OptifineDevTransformerWrapper");
-    }
-
-    @Override public String getLaunchTarget() {
-        return "net.minecraft.client.main.Main";
-    }
-
-    @Override public String[] getLaunchArguments() {
-        return new String[0];
-    }
+    boolean isCubic();
 }
