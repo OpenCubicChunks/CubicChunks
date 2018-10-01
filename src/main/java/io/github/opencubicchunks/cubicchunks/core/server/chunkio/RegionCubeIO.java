@@ -30,10 +30,12 @@ import cubicchunks.regionlib.impl.EntryLocation3D;
 import cubicchunks.regionlib.impl.SaveCubeColumns;
 import io.github.opencubicchunks.cubicchunks.api.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.core.world.cube.Cube;
+import net.minecraft.client.Minecraft;
 import net.minecraft.nbt.CompressedStreamTools;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.datafix.FixTypes;
 import net.minecraft.util.math.ChunkPos;
+import net.minecraft.world.World;
 import net.minecraft.world.WorldProvider;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.chunk.Chunk;
@@ -45,6 +47,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Iterator;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
@@ -59,12 +62,12 @@ public class RegionCubeIO implements ICubeIO {
     private static final long MB = kB * 1024;
     private static final Logger LOGGER = CubicChunks.LOGGER;
 
-    @Nonnull private WorldServer world;
+    @Nonnull private World world;
     @Nonnull private SaveCubeColumns save;
     @Nonnull private ConcurrentMap<ChunkPos, SaveEntry<EntryLocation2D>> columnsToSave;
     @Nonnull private ConcurrentMap<CubePos, SaveEntry<EntryLocation3D>> cubesToSave;
     
-    public RegionCubeIO(WorldServer world) throws IOException {
+    public RegionCubeIO(World world) throws IOException {
         this.world = world;
 
         initSave();
@@ -75,10 +78,16 @@ public class RegionCubeIO implements ICubeIO {
     }
 
     private void initSave() throws IOException {
-        WorldProvider prov = world.provider;
-        Path path = this.world.getSaveHandler().getWorldDirectory().toPath();
-        if (prov.getSaveFolder() != null) {
-            path = path.resolve(prov.getSaveFolder());
+        // TODO: make path a constructor argument
+        Path path;
+        if (world instanceof WorldServer) {
+            WorldProvider prov = world.provider;
+            path = this.world.getSaveHandler().getWorldDirectory().toPath();
+            if (prov.getSaveFolder() != null) {
+                path = path.resolve(prov.getSaveFolder());
+            }
+        } else {
+            path = Paths.get(".").toAbsolutePath().resolve("clientCache").resolve("DIM" + world.provider.getDimension());
         }
         this.save = SaveCubeColumns.create(path);
     }

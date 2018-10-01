@@ -36,7 +36,9 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.chunk.Chunk;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
 
 import javax.annotation.Nonnull;
@@ -123,6 +125,22 @@ public class ClientHeightMap implements IHeightMap {
 
     public void setHeight(int localX, int localZ, int height) {
         hmap.set(getIndex(localX, localZ), height);
+    }
+
+    public byte[] getData() {
+        try {
+            ByteArrayOutputStream buf = new ByteArrayOutputStream();
+            DataOutputStream out = new DataOutputStream(buf);
+
+            for (int i = 0; i < Cube.SIZE * Cube.SIZE; i++) {
+                out.writeInt(hmap.get(i));
+            }
+
+            out.close();
+            return buf.toByteArray();
+        } catch (IOException e) {
+            throw Throwables.propagate(e);
+        }
     }
 
     public void setData(@Nonnull byte[] data) {
