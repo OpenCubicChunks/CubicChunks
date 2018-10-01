@@ -38,6 +38,8 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
+import net.optifine.render.ChunkVisibility;
+import org.spongepowered.asm.mixin.Dynamic;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -51,28 +53,28 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
-@Mixin(targets = "net.optifine.render.ChunkVisibility")
+@Mixin(ChunkVisibility.class)
 public class MixinChunkVisibility {
 
     /**
      * Quadrant counter
      */
-    @Shadow private static int counter = 0;
+    @Dynamic @Shadow private static int counter = 0;
     /**
      * Current max Y for quadrants already scanned in this scan.
      */
-    @Shadow private static int iMaxStatic = -1;
+    @Dynamic @Shadow private static int iMaxStatic = -1;
     /**
      * Max Y after final test of all quadrants
      */
-    @Shadow private static int iMaxStaticFinal = Coords.blockToCube(Integer.MAX_VALUE) - 1;
+    @Dynamic @Shadow private static int iMaxStaticFinal = Coords.blockToCube(Integer.MAX_VALUE) - 1;
 
-    @Shadow private static World worldLast = null;
-    @Shadow private static int pcxLast = -2147483648;
+    @Dynamic @Shadow private static World worldLast = null;
+    @Dynamic @Shadow private static int pcxLast = -2147483648;
     private static int pcyLast = -2147483648;
-    @Shadow private static int pczLast = -2147483648;
+    @Dynamic @Shadow private static int pczLast = -2147483648;
 
-    @Inject(method = "getMaxChunkY", at = @At("HEAD"), cancellable = true)
+    @Dynamic @Inject(method = "getMaxChunkY", at = @At("HEAD"), cancellable = true)
     private static void getMaxChunkYCC(World world, Entity viewEntity, int renderDistanceChunks, CallbackInfoReturnable<Integer> cbi) {
         if (!((ICubicWorld) world).isCubicWorld()) {
             return;

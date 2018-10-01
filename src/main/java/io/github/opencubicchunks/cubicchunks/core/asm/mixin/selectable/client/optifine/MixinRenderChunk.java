@@ -31,6 +31,7 @@ import net.minecraft.client.renderer.chunk.RenderChunk;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
+import org.spongepowered.asm.mixin.Dynamic;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -45,8 +46,8 @@ public abstract class MixinRenderChunk implements IOptifineRenderChunk {
 
     @Shadow @Final private BlockPos.MutableBlockPos position;
     @Shadow private World world;
-    @Shadow private RenderChunk[] renderChunkNeighboursValid;
-    @Shadow private RenderChunk[] renderChunkNeighbours;
+    @Dynamic @Shadow private RenderChunk[] renderChunkNeighboursValid;
+    @Dynamic @Shadow private RenderChunk[] renderChunkNeighbours;
 
     @Shadow public abstract BlockPos getPosition();
 
@@ -58,13 +59,14 @@ public abstract class MixinRenderChunk implements IOptifineRenderChunk {
         this.isCubic = ((ICubicWorld) worldIn).isCubicWorld();
     }
 
-    @Inject(method = "setPosition", at = @At(value = "FIELD", target = "chunk"))
+    @Dynamic @Inject(method = "setPosition",
+            at = @At(value = "FIELD", target = "Lnet/minecraft/client/renderer/chunk/RenderChunk;chunk:Lnet/minecraft/world/Chunk;", remap = false))
     private void onSetChunk(int x, int y, int z, CallbackInfo cbi) {
         this.cube = null;
         this.isCubic = ((ICubicWorld) world).isCubicWorld();
     }
 
-    @Inject(method = "updateRenderChunkNeighboursValid", at = @At("HEAD"))
+    @Dynamic @Inject(method = "updateRenderChunkNeighboursValid", at = @At("HEAD"))
     private void onUpdateNeighbors(CallbackInfo cbi) {
         if (!isCubic) {
             return;
@@ -78,7 +80,7 @@ public abstract class MixinRenderChunk implements IOptifineRenderChunk {
                 this.renderChunkNeighbours[down] : null;
     }
 
-    @ModifyArg(method = "preRenderBlocks",
+    @Dynamic @ModifyArg(method = "preRenderBlocks",
             at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/BufferBuilder;setTranslation(DDD)V", ordinal = 0),
             index = 1
     )

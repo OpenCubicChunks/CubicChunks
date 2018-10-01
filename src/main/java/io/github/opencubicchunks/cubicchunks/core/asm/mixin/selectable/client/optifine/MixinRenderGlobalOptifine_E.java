@@ -31,6 +31,7 @@ import net.minecraft.client.renderer.ViewFrustum;
 import net.minecraft.client.renderer.culling.ICamera;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.math.BlockPos;
+import org.spongepowered.asm.mixin.Dynamic;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -61,9 +62,7 @@ public class MixinRenderGlobalOptifine_E {
      *
      * This method sets position for MixinRenderGlobal#getRenderChunkYPos to use
      */
-    @SuppressWarnings("UnresolvedMixinReference")
-    @Group(name = "renderEntitiesFix")
-    @Inject(method = "renderEntities",
+    @Dynamic @Group(name = "renderEntitiesFix") @Inject(method = "renderEntities",
             at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/chunk/RenderChunk;getChunk()Lnet/minecraft/world/chunk/Chunk;"),
             locals = LocalCapture.CAPTURE_FAILHARD)
     public void onGetPositionOptifine_New(Entity renderViewEntity, ICamera camera, float partialTicks,
@@ -79,7 +78,7 @@ public class MixinRenderGlobalOptifine_E {
         }
     }
 
-    @ModifyConstant(method = "setupTerrain", constant = @Constant(intValue = 256))
+    @Dynamic @ModifyConstant(method = "setupTerrain", constant = @Constant(intValue = 256))
     public int getMaxWorldHeight(int _256) {
         return ((IMinMaxHeight) world).getMaxHeight();
     }
