@@ -48,6 +48,8 @@ public abstract class MixinRenderChunk implements IOptifineRenderChunk {
     @Shadow private World world;
     @Dynamic @Shadow private RenderChunk[] renderChunkNeighboursValid;
     @Dynamic @Shadow private RenderChunk[] renderChunkNeighbours;
+    private int regionY;
+    @Dynamic @Shadow private int regionX;
 
     @Shadow public abstract BlockPos getPosition();
 
@@ -64,6 +66,7 @@ public abstract class MixinRenderChunk implements IOptifineRenderChunk {
     private void onSetChunk(int x, int y, int z, CallbackInfo cbi) {
         this.cube = null;
         this.isCubic = ((ICubicWorld) world).isCubicWorld();
+        this.regionY = y & ~255;
     }
 
     @Dynamic @Inject(method = "updateRenderChunkNeighboursValid", at = @At("HEAD"))
@@ -85,7 +88,7 @@ public abstract class MixinRenderChunk implements IOptifineRenderChunk {
             index = 1
     )
     private double getRegionY(double dy) {
-        return 0;
+        return dy;
     }
 
     @Override public ICube getCube() {
@@ -94,6 +97,14 @@ public abstract class MixinRenderChunk implements IOptifineRenderChunk {
 
     @Override public boolean isCubic() {
         return isCubic;
+    }
+
+    @Override public int getRegionY() {
+        return this.regionY;
+    }
+
+    @Override public int getRegionX() {
+        return this.regionX;
     }
 
     private ICube getCube(BlockPos posIn) {

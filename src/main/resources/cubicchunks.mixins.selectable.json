@@ -20,7 +20,9 @@
         "client.optifine.MixinRenderChunk",
         "client.optifine.MixinRenderChunkUtils",
         "client.optifine.MixinExtendedBlockStorage",
-        "client.optifine.MixinChunkVisibility"
+        "client.optifine.MixinChunkVisibility",
+        "client.optifine.MixinRenderList",
+        "client.optifine.MixinViewFrustum"
     ],
     "server": [
     ],

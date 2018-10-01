@@ -23,14 +23,49 @@
  */
 package io.github.opencubicchunks.cubicchunks.core.asm.optifine;
 
-import io.github.opencubicchunks.cubicchunks.api.world.ICube;
 
-public interface IOptifineRenderChunk {
-    ICube getCube();
+import net.minecraft.util.math.ChunkPos;
 
-    boolean isCubic();
+public class ChunkPos3 extends ChunkPos {
 
-    int getRegionX();
+    private final int y;
 
-    int getRegionY();
+    public ChunkPos3(int x, int y, int z) {
+        super(x, z);
+        this.y = y;
+    }
+
+    @Override public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof ChunkPos3)) {
+            return false;
+        }
+        if (!super.equals(o)) {
+            return false;
+        }
+
+        ChunkPos3 chunkPos3 = (ChunkPos3) o;
+
+        if (x != chunkPos3.x) {
+            return false;
+        }
+        if (z != chunkPos3.z) {
+            return false;
+        }
+        if (y != chunkPos3.y) {
+            return false;
+        }
+
+        return true;
+    }
+
+    @Override public int hashCode() {
+        int result = super.hashCode();
+        result = 31 * result + x;
+        result = 31 * result + z;
+        result = 31 * result + y;
+        return result;
+    }
 }
