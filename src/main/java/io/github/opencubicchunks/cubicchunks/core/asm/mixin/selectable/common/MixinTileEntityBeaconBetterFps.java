@@ -31,7 +31,7 @@ import net.minecraft.tileentity.TileEntityBeacon;
 import net.minecraft.tileentity.TileEntityLockable;
 
 @Mixin(TileEntityBeacon.class)
-public abstract class MixinTileEntityBeacon extends TileEntityLockable {
+public abstract class MixinTileEntityBeaconBetterFps extends TileEntityLockable {
     
     @ModifyConstant(method = "updateLevels", constant = @Constant(expandZeroConditions = Constant.Condition.LESS_THAN_ZERO))
     private int updateLevelsYValue(int orig) {
