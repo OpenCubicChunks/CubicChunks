@@ -101,6 +101,28 @@ public class CubicChunksMixinConfig implements IMixinConfigPlugin {
         modDependencyConditions.put(
                 "io.github.opencubicchunks.cubicchunks.core.asm.mixin.selectable.client.MixinRenderGlobalOptifineSpecificD1",
                 optifineState == OptifineState.LOADED_D1);
+
+        //BetterFps FastBeacon Handling
+        boolean enableBetterFpsBeaconFix = false;
+        try{
+            Class betterFpsConditions = Class.forName("guichaguri.betterfps.transformers.Conditions");
+            Method getFixSetting = betterFpsConditions.getMethod("shouldPatch", String.class);
+            boolean betterFpsFastBeaconActive = (boolean) getFixSetting.invoke(null, "fastBeacon");
+            if(betterFpsFastBeaconActive){
+                enableBetterFpsBeaconFix = true;
+                LOGGER.info("BetterFps FastBeacon active, will activate mixin for beacons with FastBeacon.");
+            }else{
+                LOGGER.info("BetterFps is installed, but FastBeacon is not active. Will not enable FastBeacon mixin.");
+            }
+        } catch (ClassNotFoundException e) {
+            LOGGER.info("BetterFps is NOT installed. Will not enable FastBeacon mixin.");
+        } catch (Exception e) {
+            LOGGER.info("Problem trying to detect BetterFps settings. Will not enable FastBeacon mixin.");
+        }
+        modDependencyConditions.put(
+                "io.github.opencubicchunks.cubicchunks.core.asm.mixin.selectable.common.MixinTileEntityBeaconBetterFps", 
+                enableBetterFpsBeaconFix);
+
         File folder = new File(".", "config");
         folder.mkdirs();
         File configFile = new File(folder, "cubicchunks_mixin_config.json");
@@ -184,10 +206,11 @@ public class CubicChunksMixinConfig implements IMixinConfigPlugin {
                         + " You need to restart Minecraft to apply changes."),
         USE_FAST_COLLISION_CHECK(false, 
                 new String[] {"io.github.opencubicchunks.cubicchunks.core.asm.mixin.selectable.common.MixinWorld_SlowCollisionCheck"},
-                new String[] {"io.github.opencubicchunks.cubicchunks.core.asm.mixin.selectable.common.MixinWorld_CollisionCheck"},
+                new String[] {"io.github.opencubicchunks.cubicchunks.core.asm.mixin.selectable.common.MixinWorld_CollisionCheck",
+                        "cubicchunks.asm.mixin.selectable.common.MixinBlock_FastCollision"},
                 "Enabling this option allow using fast collision check."
                         + " Fast collision check can reduce server lag."
-                        + " You need to restart Minecraft to apply changes."),
+                        + " You need to restart Minecraft to apply changes. DO NOT USE UNTIL FIXED!"),
         RANDOM_TICK_IN_CUBE(true, 
                 new String[] {},
                 new String[] {"io.github.opencubicchunks.cubicchunks.core.asm.mixin.selectable.common.MixinWorldServer_UpdateBlocks"},
