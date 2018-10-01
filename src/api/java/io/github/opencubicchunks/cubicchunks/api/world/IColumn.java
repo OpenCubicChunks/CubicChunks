@@ -79,7 +79,7 @@ public interface IColumn {
      * @param startY initial cube y position
      * @param endY last cube y position
      *
-     * @return an iterator over all loaded cubes between {@code startY} and {@code endY}
+     * @return an iterator over all loaded cubes between {@code startY} and {@code endY} (inclusive)
      */
     Iterable<? extends ICube> getLoadedCubes(int startY, int endY);
 

@@ -109,7 +109,7 @@ public class MixinRenderGlobal {
     @Redirect(method = "renderEntities", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/math/BlockPos;getY()I"), require = 1)
     public int getRenderChunkYPos(BlockPos pos) {
         //position is null when it's not cubic chunks renderer
-        if (this.position != null) {
+        if (this.position != null) { // also set from optifine specific mixins
             return 0;//must be 0 (or anything between 0 and 15)
         }
         return pos.getY();

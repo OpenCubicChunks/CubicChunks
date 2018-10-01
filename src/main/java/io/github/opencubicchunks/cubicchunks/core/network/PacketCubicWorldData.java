@@ -34,6 +34,8 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.world.WorldServer;
+import net.minecraftforge.fml.client.FMLClientHandler;
+import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 
@@ -124,6 +126,14 @@ public class PacketCubicWorldData implements IMessage {
                             new IntRange(message.getMinHeight(), message.getMaxHeight()),
                             new IntRange(message.getMinGenerationHeight(), message.getMaxGenerationHeight())
                     );
+                    if (FMLClientHandler.instance().hasOptifine()) {
+                        // OptiFine optimizes RenderChunk to contain references to it's neighbors
+                        // These references are first updated before the world is marked as cubic chunks world
+                        // This means there are going to be null values in unexpected places
+                        // after making the world CubicChunks world without updating that
+                        // This updates the renderers to avoid the issue
+                        Minecraft.getMinecraft().renderGlobal.setWorldAndLoadRenderers(world);
+                    }
                 }
             }
             return null;

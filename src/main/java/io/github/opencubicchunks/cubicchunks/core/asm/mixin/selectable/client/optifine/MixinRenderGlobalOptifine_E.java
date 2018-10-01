@@ -21,10 +21,11 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package io.github.opencubicchunks.cubicchunks.core.asm.mixin.selectable.client;
+package io.github.opencubicchunks.cubicchunks.core.asm.mixin.selectable.client.optifine;
 
 import io.github.opencubicchunks.cubicchunks.api.world.ICubicWorld;
-import mcp.MethodsReturnNonnullByDefault;
+import io.github.opencubicchunks.cubicchunks.api.world.IMinMaxHeight;
+import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.client.renderer.RenderGlobal;
 import net.minecraft.client.renderer.ViewFrustum;
 import net.minecraft.client.renderer.culling.ICamera;
@@ -33,9 +34,10 @@ import net.minecraft.util.math.BlockPos;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Constant;
 import org.spongepowered.asm.mixin.injection.Group;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.ModifyConstant;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
@@ -43,27 +45,21 @@ import java.util.Iterator;
 import java.util.List;
 
 import javax.annotation.Nullable;
-import javax.annotation.ParametersAreNonnullByDefault;
 
-/**
- * Fixes renderEntities crashing when rendering cubes
- * that are not at existing array index in chunk.getEntityLists(),
- * <p>
- * Allows to render cubes outside of 0..256 height range.
- */
-@MethodsReturnNonnullByDefault
-@ParametersAreNonnullByDefault
 @Mixin(RenderGlobal.class)
-public class MixinRenderGlobalOptifineSpecific {
-
+public class MixinRenderGlobalOptifine_E {
     @Nullable private BlockPos position;
 
     @Shadow private int renderDistanceChunks;
 
     @Shadow private ViewFrustum viewFrustum;
 
+    @Shadow private WorldClient world;
+
     /**
      * Optifine-specific version of the entity render fix. Versions 1.12.2_HD_U_C7_pre and up
+     *
+     * This method sets position for MixinRenderGlobal#getRenderChunkYPos to use
      */
     @SuppressWarnings("UnresolvedMixinReference")
     @Group(name = "renderEntitiesFix")
@@ -81,5 +77,10 @@ public class MixinRenderGlobalOptifineSpecific {
         } else {
             this.position = null;
         }
+    }
+
+    @ModifyConstant(method = "setupTerrain", constant = @Constant(intValue = 256))
+    public int getMaxWorldHeight(int _256) {
+        return ((IMinMaxHeight) world).getMaxHeight();
     }
 }

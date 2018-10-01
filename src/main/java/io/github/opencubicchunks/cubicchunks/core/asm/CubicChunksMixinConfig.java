@@ -63,8 +63,8 @@ public class CubicChunksMixinConfig implements IMixinConfigPlugin {
     @Override
     public void onLoad(String mixinPackage) {
         OptifineState optifineState = OptifineState.NOT_LOADED;
-        String optifineVersion = System.getProperty("cubicchunks.optifineVersion", "empty");
-        if (optifineVersion.equals("empty")) {
+        String optifineVersion = System.getProperty("cubicchunks.optifineVersion", null);
+        if (optifineVersion == null) {
             try {
                 Class optifineInstallerClass = Class.forName("optifine.Installer");
                 Method getVersionHandler = optifineInstallerClass.getMethod("getOptiFineVersion", new Class[0]);
@@ -73,34 +73,41 @@ public class CubicChunksMixinConfig implements IMixinConfigPlugin {
                 optifineVersion = optifineVersion.substring(optifineVersion.length() - 2, optifineVersion.length());
                 LOGGER.info("Detected Optifine version: " + optifineVersion);
             } catch (ClassNotFoundException e) {
-                optifineVersion = "ignore";
+                optifineVersion = null;
                 LOGGER.info("No Optifine detected");
             } catch (Exception e) {
-                LOGGER.info("Optifine detected, but have incompatible build. Optifine D1 specific mixins will be loaded.");
-                optifineVersion = "D1";
+                LOGGER.error("Optifine detected, but could not detect version. It may not work. Assuming Optifine E1...", e);
+                optifineVersion = "E1";
             }
         }
 
-        if(optifineVersion.equalsIgnoreCase("ignore"))
+        if (optifineVersion == null) {
             optifineState = OptifineState.NOT_LOADED;
-        else if (optifineVersion.compareTo("D1") >= 0)
-            optifineState = OptifineState.LOADED_D1;
-        else
-            optifineState = OptifineState.LOADED_C7;
+        } else if (optifineVersion.compareTo("E3") >= 0) {
+            LOGGER.error("Unknown optifine version: " + optifineVersion + ", it may not work. Assuming E1.");
+            optifineState = OptifineState.LOADED_E1;
+        } else if (optifineVersion.compareTo("E1") >= 0) {
+            optifineState = OptifineState.LOADED_E1;
+        } else {
+            throw new RuntimeException("Unsupported optifine version " + optifineVersion);
+        }
 
         modDependencyConditions.defaultReturnValue(true);
         modDependencyConditions.put(
                 "io.github.opencubicchunks.cubicchunks.core.asm.mixin.selectable.client.MixinRenderGlobalNoOptifine",
                 optifineState == OptifineState.NOT_LOADED);
         modDependencyConditions.put(
-                "io.github.opencubicchunks.cubicchunks.core.asm.mixin.selectable.client.MixinRenderGlobalOptifineSpecific",
+                "io.github.opencubicchunks.cubicchunks.core.asm.mixin.selectable.client.optifine.MixinRenderGlobalOptifine_E",
                 optifineState != OptifineState.NOT_LOADED);
         modDependencyConditions.put(
-                "io.github.opencubicchunks.cubicchunks.core.asm.mixin.selectable.client.MixinRenderGlobalOptifineSpecificC7",
-                optifineState == OptifineState.LOADED_C7);
+                "io.github.opencubicchunks.cubicchunks.core.asm.mixin.selectable.client.optifine.MixinRenderChunk",
+                optifineState != OptifineState.NOT_LOADED);
         modDependencyConditions.put(
-                "io.github.opencubicchunks.cubicchunks.core.asm.mixin.selectable.client.MixinRenderGlobalOptifineSpecificD1",
-                optifineState == OptifineState.LOADED_D1);
+                "io.github.opencubicchunks.cubicchunks.core.asm.mixin.selectable.client.optifine.MixinRenderChunkUtils",
+                optifineState != OptifineState.NOT_LOADED);
+        modDependencyConditions.put(
+                "io.github.opencubicchunks.cubicchunks.core.asm.mixin.selectable.client.optifine.MixinExtendedBlockStorage",
+                optifineState != OptifineState.NOT_LOADED);
 
         //BetterFps FastBeacon Handling
         boolean enableBetterFpsBeaconFix = false;
@@ -296,7 +303,6 @@ public class CubicChunksMixinConfig implements IMixinConfigPlugin {
 
     private enum OptifineState {
         NOT_LOADED,
-        LOADED_C7,
-        LOADED_D1
+        LOADED_E1
     }
 }
