@@ -11,7 +11,8 @@
         "common.command.MixinCommandBase",
         "common.command.MixinCommandFill",
         "common.command.MixinCommandsHeightLimits",
-        "common.MixinBlockPistonBase_HeightFix"
+        "common.MixinBlockPistonBase_HeightFix",
+        "common.MixinTileEntityBeacon"
     ],
     "client": [
         "client.MixinViewFrustum_VertViewDistance",
