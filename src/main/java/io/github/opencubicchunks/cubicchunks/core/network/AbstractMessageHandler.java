@@ -27,6 +27,8 @@ import io.github.opencubicchunks.cubicchunks.core.CubicChunks;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.network.ThreadQuickExitException;
+import net.minecraftforge.fml.client.FMLClientHandler;
+import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
@@ -83,6 +85,12 @@ public abstract class AbstractMessageHandler<T extends IMessage> implements IMes
         } catch (ThreadQuickExitException ex) {
             // ignore
             return null;
+        } catch (Throwable t) {
+            // catch *EVERYTHING* because Minecraft is dumb and will only print the stacktrace and continue
+            // catch all and ask forge to shut down
+            t.printStackTrace();
+            FMLCommonHandler.instance().exitJava(-1, false);
+            throw t;
         }
     }
 }

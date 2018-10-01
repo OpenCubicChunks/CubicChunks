@@ -315,7 +315,7 @@ public class Cube implements ICube {
             }
         }
 
-        if (!tryToTickFaster.getAsBoolean() && this.cubeLightUpdateInfo != null) {
+        if (this.cubeLightUpdateInfo != null && this.cubeLightUpdateInfo.hasUpdates() && !tryToTickFaster.getAsBoolean()) {
             this.cubeLightUpdateInfo.tick();
         }
     }
