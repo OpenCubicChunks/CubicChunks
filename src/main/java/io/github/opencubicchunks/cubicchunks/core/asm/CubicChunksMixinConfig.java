@@ -109,6 +109,27 @@ public class CubicChunksMixinConfig implements IMixinConfigPlugin {
                 "io.github.opencubicchunks.cubicchunks.core.asm.mixin.selectable.client.optifine.MixinExtendedBlockStorage",
                 optifineState != OptifineState.NOT_LOADED);
 
+        //BetterFps FastBeacon Handling
+        boolean enableBetterFpsBeaconFix = false;
+        try{
+            Class betterFpsConditions = Class.forName("guichaguri.betterfps.transformers.Conditions");
+            Method getFixSetting = betterFpsConditions.getMethod("shouldPatch", String.class);
+            boolean betterFpsFastBeaconActive = (boolean) getFixSetting.invoke(null, "fastBeacon");
+            if(betterFpsFastBeaconActive){
+                enableBetterFpsBeaconFix = true;
+                LOGGER.info("BetterFps FastBeacon active, will activate mixin for beacons with FastBeacon.");
+            }else{
+                LOGGER.info("BetterFps is installed, but FastBeacon is not active. Will not enable FastBeacon mixin.");
+            }
+        } catch (ClassNotFoundException e) {
+            LOGGER.info("BetterFps is NOT installed. Will not enable FastBeacon mixin.");
+        } catch (Exception e) {
+            LOGGER.info("Problem trying to detect BetterFps settings. Will not enable FastBeacon mixin.");
+        }
+        modDependencyConditions.put(
+                "io.github.opencubicchunks.cubicchunks.core.asm.mixin.selectable.common.MixinTileEntityBeaconBetterFps", 
+                enableBetterFpsBeaconFix);
+
         File folder = new File(".", "config");
         folder.mkdirs();
         File configFile = new File(folder, "cubicchunks_mixin_config.json");
