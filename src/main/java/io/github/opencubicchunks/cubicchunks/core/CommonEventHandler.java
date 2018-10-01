@@ -165,7 +165,9 @@ public class CommonEventHandler {
             WorldServerMulti.class,
             // non-existing classes will be Objects
             ReflectionUtil.getClassOrDefault("WorldServerOF", Object.class), // OptiFine's WorldServer, no package
-            ReflectionUtil.getClassOrDefault("WorldServerMultiOF", Object.class) // OptiFine's WorldServerMulti, no package
+            ReflectionUtil.getClassOrDefault("WorldServerMultiOF", Object.class), // OptiFine's WorldServerMulti, no package
+            ReflectionUtil.getClassOrDefault("net.optifine.override.WorldServerOF", Object.class), // OptiFine's WorldServerMulti, no package
+            ReflectionUtil.getClassOrDefault("net.optifine.override.WorldServerMultiOF", Object.class) // OptiFine's WorldServerMulti, no package
     });
 
     @SuppressWarnings("unchecked")

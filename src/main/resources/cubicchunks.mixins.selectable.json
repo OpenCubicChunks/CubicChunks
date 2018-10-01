@@ -15,9 +15,11 @@
     ],
     "client": [
         "client.MixinRenderGlobalNoOptifine",
-        "client.MixinRenderGlobalOptifineSpecific",
-        "client.MixinRenderGlobalOptifineSpecificC7",
-        "client.MixinRenderGlobalOptifineSpecificD1"
+        "client.optifine.MixinRenderGlobalOptifine_E",
+        "client.optifine.MixinRenderChunk",
+        "client.optifine.MixinRenderChunkUtils",
+        "client.optifine.MixinExtendedBlockStorage",
+        "client.optifine.MixinChunkVisibility"
     ],
     "server": [
     ],
