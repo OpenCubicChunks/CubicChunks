@@ -160,14 +160,14 @@ public class CommonEventHandler {
     }
 
     @SuppressWarnings("unchecked")
-    private final List<Class<? extends World>> allowedServerWorldClasses = ImmutableList.copyOf(new Class[]{
+    private final List<Class<?>> allowedServerWorldClasses = ImmutableList.copyOf(new Class[]{
             WorldServer.class,
             WorldServerMulti.class,
             // non-existing classes will be Objects
             ReflectionUtil.getClassOrDefault("WorldServerOF", Object.class), // OptiFine's WorldServer, no package
             ReflectionUtil.getClassOrDefault("WorldServerMultiOF", Object.class), // OptiFine's WorldServerMulti, no package
-            ReflectionUtil.getClassOrDefault("net.optifine.override.WorldServerOF", Object.class), // OptiFine's WorldServerMulti, no package
-            ReflectionUtil.getClassOrDefault("net.optifine.override.WorldServerMultiOF", Object.class) // OptiFine's WorldServerMulti, no package
+            ReflectionUtil.getClassOrDefault("net.optifine.override.WorldServerOF", Object.class), // OptiFine's WorldServer
+            ReflectionUtil.getClassOrDefault("net.optifine.override.WorldServerMultiOF", Object.class) // OptiFine's WorldServerMulti
     });
 
     @SuppressWarnings("unchecked")
