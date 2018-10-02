@@ -38,11 +38,13 @@ import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Constant;
+import org.spongepowered.asm.mixin.injection.Group;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyArg;
 import org.spongepowered.asm.mixin.injection.ModifyConstant;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.Surrogate;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.nio.IntBuffer;
@@ -79,11 +81,25 @@ public abstract class MixinRenderList extends ChunkRenderContainer {
     }
 
 
+    @Group(name = "preRenderRegion", min = 1, max = 1)
     @Dynamic @ModifyArg(method = "preRenderRegion",
             at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/GlStateManager;translate(FFF)V"),
             index = 1,
-            remap = false)
-    private float drawRegionRedirect(float zero) {
+            remap = false,
+            require = 0
+    )
+    private float drawRegionRedirect_deobf(float zero) {
+        return (float) (renderChunkLayer_regionY - this.viewEntityY);
+    }
+
+    @Group(name = "preRenderRegion", min = 1, max = 1)
+    @Dynamic @ModifyArg(method = "preRenderRegion",
+            at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/GlStateManager;func_179109_b(FFF)V"),
+            index = 1,
+            remap = false,
+            require = 0
+    )
+    private float drawRegionRedirect_obf(float zero) {
         return (float) (renderChunkLayer_regionY - this.viewEntityY);
     }
 
