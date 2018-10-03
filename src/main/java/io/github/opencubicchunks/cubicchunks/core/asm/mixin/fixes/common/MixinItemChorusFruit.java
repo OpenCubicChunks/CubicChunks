@@ -52,7 +52,7 @@ public abstract class MixinItemChorusFruit extends ItemFood {
         return (double)((ICubicWorld) worldIn).getMinHeight();
     }
     
-    @Redirect (method = "onItemUseFinish", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/World;getActualHeight()I"))
+    @Redirect(method = "onItemUseFinish", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/World;getActualHeight()I"))
     private int getMaxHeight(World world) {
         return ((ICubicWorld)world).isCubicWorld() ? world.getHeight() : world.getActualHeight();
     }
