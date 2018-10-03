@@ -21,7 +21,7 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package io.github.opencubicchunks.cubicchunks.core.asm.mixin.fixes.common.isblockloaded;
+package io.github.opencubicchunks.cubicchunks.core.asm.mixin.fixes.common;
 
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.entity.Entity;
@@ -30,6 +30,9 @@ import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.ModifyArg;
+import org.spongepowered.asm.mixin.injection.Constant;
+import org.spongepowered.asm.mixin.injection.ModifyConstant;
+import io.github.opencubicchunks.cubicchunks.api.world.ICubicWorld;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -52,5 +55,10 @@ public abstract class MixinEntityLivingBase extends Entity {
     )
     public double moveEntityWithHeading_getReplacedY(double y) {
         return this.posY;
+    }
+    
+    @ModifyConstant(method = "attemptTeleport", constant = @Constant(expandZeroConditions = Constant.Condition.GREATER_THAN_ZERO))
+    private int getMinHeight(int orig) {
+        return ((ICubicWorld) world).getMinHeight();
     }
 }
