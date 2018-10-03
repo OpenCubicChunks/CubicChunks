@@ -34,6 +34,7 @@ import cubicchunks.api.worldgen.populator.ICubicPopulator;
 import cubicchunks.util.Box;
 import cubicchunks.util.Coords;
 import cubicchunks.util.CubePos;
+import cubicchunks.util.XYZMap;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.cube.Cube;
 import cubicchunks.worldgen.generator.BasicCubeGenerator;
@@ -61,7 +62,9 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import org.lwjgl.input.Keyboard;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.function.ToIntFunction;
 
@@ -80,6 +83,7 @@ public class CustomTerrainGenerator extends BasicCubeGenerator {
     private static final int CACHE_SIZE_3D = 16 * 16 * 16;
     private static final ToIntFunction<Vec3i> HASH_2D = (v) -> v.getX() + v.getZ() * 5;
     private static final ToIntFunction<Vec3i> HASH_3D = (v) -> v.getX() + v.getZ() * 5 + v.getY() * 25;
+    private final Map<CustomGeneratorSettings.IntAABB, CustomTerrainGenerator> areaGenerators = new HashMap<>();
     // Number of octaves for the noise function
     private IBuilder terrainBuilder;
     private final BiomeSource biomeSource;
@@ -91,15 +95,23 @@ public class CustomTerrainGenerator extends BasicCubeGenerator {
     @Nonnull private CubicFeatureGenerator strongholds;
 
     public CustomTerrainGenerator(ICubicWorld world, final long seed) {
-        super(world);
+        this(world, CustomGeneratorSettings.fromJson(world.getWorldInfo().getGeneratorOptions()), seed);
+    }
 
-        String json = world.getWorldInfo().getGeneratorOptions();
-        this.conf = CustomGeneratorSettings.fromJson(json);
+    public CustomTerrainGenerator(ICubicWorld world, CustomGeneratorSettings settings, final long seed) {
+        super(world);
+        this.conf = settings;
 
         this.strongholds = new CubicStrongholdGenerator(conf);
 
         this.biomeSource = new BiomeSource(world, conf.createBiomeBlockReplacerConfig(), world.getBiomeProvider(), 2);
         initGenerator(seed);
+
+        if (settings.cubeAreas != null) {
+            for (CustomGeneratorSettings.IntAABB aabb : settings.cubeAreas.keySet()) {
+                this.areaGenerators.put(aabb, new CustomTerrainGenerator(world, settings.cubeAreas.get(aabb), seed));
+            }
+        }
     }
 
     private void initGenerator(long seed) {
@@ -153,11 +165,19 @@ public class CustomTerrainGenerator extends BasicCubeGenerator {
 
         this.terrainBuilder = selector
                 .lerp(low, high).add(randomHeight2d).mul(volatility).add(height)
-                .sub((x, y, z) -> y)
+                .sub(volatility.signum().mul((x, y, z) -> y))
                 .cached(CACHE_SIZE_3D, HASH_3D);
     }
 
     @Override public ICubePrimer generateCube(int cubeX, int cubeY, int cubeZ) {
+        if (!areaGenerators.isEmpty()) {
+            for (CustomGeneratorSettings.IntAABB aabb : areaGenerators.keySet()) {
+                if (!aabb.contains(cubeX, cubeY, cubeZ)) {
+                    continue;
+                }
+                return areaGenerators.get(aabb).generateCube(cubeX, cubeY, cubeZ);
+            }
+        }
         ICubePrimer primer = new CubePrimer();
         generate(primer, cubeX, cubeY, cubeZ);
         generateStructures(primer, new CubePos(cubeX, cubeY, cubeZ));
@@ -165,6 +185,15 @@ public class CustomTerrainGenerator extends BasicCubeGenerator {
     }
 
     @Override public void populate(Cube cube) {
+        if (!areaGenerators.isEmpty()) {
+            for (CustomGeneratorSettings.IntAABB aabb : areaGenerators.keySet()) {
+                if (!aabb.contains(cube.getX(), cube.getY(), cube.getZ())) {
+                    continue;
+                }
+                areaGenerators.get(aabb).populate(cube);
+                return;
+            }
+        }
         /**
          * If event is not canceled we will use default biome decorators and
          * cube populators from registry.
@@ -213,7 +242,7 @@ public class CustomTerrainGenerator extends BasicCubeGenerator {
      * @param cubeY cube y location
      * @param cubeZ cube z location
      */
-    public void generate(final ICubePrimer cubePrimer, int cubeX, int cubeY, int cubeZ) {
+    private void generate(final ICubePrimer cubePrimer, int cubeX, int cubeY, int cubeZ) {
         // when debugging is enabled, allow reloading generator settings after pressing L
         // no need to restart after applying changes.
         // Seed it changed to some constant because world isn't easily accessible here

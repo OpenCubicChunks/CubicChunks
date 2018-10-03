@@ -67,15 +67,15 @@ public class OceanWaterReplacer implements IBiomeBlockReplacer {
             private final ResourceLocation OCEAN_LEVEL = CubicChunks.location("water_level");
 
             @Override public IBiomeBlockReplacer create(ICubicWorld world, CubicBiome biome, BiomeBlockReplacerConfig conf) {
-                IBlockState oceanBlock = Block.getBlockFromName(conf.getString(OCEAN_BLOCK)).getDefaultState();
+                IBlockState oceanBlock = conf.getBlockstate(OCEAN_BLOCK);
                 int oceanHeight = (int) Math.round(conf.getDouble(OCEAN_LEVEL));
                 return new OceanWaterReplacer(oceanBlock, oceanHeight);
             }
 
             @Override public Set<ConfigOptionInfo> getPossibleConfigOptions() {
                 return Sets.newHashSet(
-                        new ConfigOptionInfo(OCEAN_BLOCK, Blocks.WATER.getRegistryName().toString()),
-                        new ConfigOptionInfo(OCEAN_LEVEL, 63)
+                        new ConfigOptionInfo(OCEAN_BLOCK, Blocks.WATER.getDefaultState()),
+                        new ConfigOptionInfo(OCEAN_LEVEL, 63.0)
                 );
             }
         };

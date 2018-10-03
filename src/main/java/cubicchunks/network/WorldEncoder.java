@@ -82,7 +82,7 @@ class WorldEncoder {
         cubes.forEach(cube -> {
             if (!cube.isEmpty()) {
                 byte[] heightmaps = ((ServerHeightMap) cube.getColumn().getOpacityIndex()).getDataForClient();
-                assert heightmaps.length == 256 * Integer.BYTES;
+                assert heightmaps.length == Cube.SIZE * Cube.SIZE * Integer.BYTES;
                 out.writeBytes(heightmaps);
             }
         });
@@ -149,7 +149,7 @@ class WorldEncoder {
         for (int i = 0; i < cubes.size(); i++) {
             if (!isEmpty[i]) {
                 Cube cube = cubes.get(i);
-                byte[] heightmaps = new byte[256 * Integer.BYTES];
+                byte[] heightmaps = new byte[Cube.SIZE * Cube.SIZE * Integer.BYTES];
                 in.readBytes(heightmaps);
                 ClientHeightMap coi = ((ClientHeightMap) cube.getColumn().getOpacityIndex());
                 coi.setData(heightmaps);

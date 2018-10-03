@@ -38,7 +38,10 @@ public interface ILightBlockAccess {
 
     int getLightFor(EnumSkyBlock lightType, BlockPos pos);
 
-    void setLightFor(EnumSkyBlock lightType, BlockPos pos, int val);
+    /**
+     * @return success (if cube is loaded)
+     */
+    boolean setLightFor(EnumSkyBlock lightType, BlockPos pos, int val);
 
     /**
      * Faster version of world.getRawLight that works for skylight
@@ -91,4 +94,6 @@ public interface ILightBlockAccess {
         int decrease = Math.max(1, getBlockLightOpacity(pos));
         return Math.max(0, max - decrease);
     }
+
+    void markEdgeNeedLightUpdate(BlockPos offset, EnumSkyBlock type);
 }

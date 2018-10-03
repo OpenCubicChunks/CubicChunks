@@ -94,6 +94,7 @@ public abstract class MixinWorld implements ICubicWorld {
     @Shadow @Final @Mutable protected ISaveHandler saveHandler;
     @Shadow protected boolean findingSpawnPoint;
     @Shadow protected WorldInfo worldInfo;
+    @Shadow protected int updateLCG;
 
     @Shadow protected abstract boolean isChunkLoaded(int i, int i1, boolean allowEmpty);
 
@@ -249,7 +250,7 @@ public abstract class MixinWorld implements ICubicWorld {
     }
 
     @Override public boolean isBlockColumnLoaded(BlockPos pos, boolean allowEmpty) {
-        return this.isChunkLoaded(pos.getX() >> 4, pos.getZ() >> 4, allowEmpty);
+        return this.isChunkLoaded(blockToCube(pos.getX()), blockToCube(pos.getZ()), allowEmpty);
     }
 
     //vanilla methods

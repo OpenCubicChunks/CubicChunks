@@ -21,37 +21,25 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package cubicchunks.client;
+package cubicchunks.asm.mixin.fixes.common;
 
-import cubicchunks.CubicChunks;
-import mcp.MethodsReturnNonnullByDefault;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiScreen;
-import net.minecraftforge.fml.client.IModGuiFactory;
+import com.google.common.primitives.Doubles;
+import com.google.common.primitives.Floats;
+import net.minecraft.network.NetHandlerPlayServer;
+import net.minecraft.network.play.client.CPacketPlayer;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Overwrite;
 
-import java.util.Set;
+@Mixin(NetHandlerPlayServer.class)
+public class MixinNetHandlerPlayServer {
 
-import javax.annotation.Nullable;
-import javax.annotation.ParametersAreNonnullByDefault;
-
-@MethodsReturnNonnullByDefault
-@ParametersAreNonnullByDefault
-public class GuiFactory implements IModGuiFactory {
-
-    @Override public void initialize(Minecraft minecraftInstance) {
-
-    }
-
-    @Override public Class<? extends GuiScreen> mainConfigGuiClass() {
-        return CubicChunks.Config.GUI.class;
-    }
-
-    @Nullable @Override public Set<RuntimeOptionCategoryElement> runtimeGuiCategories() {
-        return null;
-    }
-
-    @Nullable @Deprecated @Override
-    public RuntimeOptionGuiHandler getHandlerFor(RuntimeOptionCategoryElement element) {
-        return null;
+    @Overwrite
+    private static boolean isMovePlayerPacketInvalid(CPacketPlayer packetIn) {
+        if (Doubles.isFinite(packetIn.getX(0.0D)) && Doubles.isFinite(packetIn.getY(0.0D)) && Doubles.isFinite(packetIn.getZ(0.0D)) && Floats
+                .isFinite(packetIn.getPitch(0.0F)) && Floats.isFinite(packetIn.getYaw(0.0F))) {
+            return Math.abs(packetIn.getX(0.0D)) > 3.0E7D /*|| Math.abs(packetIn.getY(0.0D)) > 3.0E7D*/ || Math.abs(packetIn.getZ(0.0D)) > 3.0E7D;
+        } else {
+            return true;
+        }
     }
 }

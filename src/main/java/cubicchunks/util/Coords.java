@@ -35,7 +35,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @MethodsReturnNonnullByDefault
 public class Coords {
 
-    public static final int NO_HEIGHT = Integer.MIN_VALUE / 2;
+    public static final int NO_HEIGHT = Integer.MIN_VALUE + 32;
 
     public static BlockPos midPos(BlockPos p1, BlockPos p2) {
         //bitshift instead of / - round always down

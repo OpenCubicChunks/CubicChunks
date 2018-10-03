@@ -65,14 +65,18 @@ public class CustomCubicWorldType extends WorldType implements ICubicWorldType {
         super("CustomCubic");
     }
 
-    public static void create() {
-        new CustomCubicWorldType();
+    public static CustomCubicWorldType create() {
+        return new CustomCubicWorldType();
     }
 
     @Override public IntRange calculateGenerationHeightRange(WorldServer world) {
         String string = world.getWorldInfo().getGeneratorOptions();
         CustomGeneratorSettings opts = CustomGeneratorSettings.fromJson(string);
         return new IntRange(opts.getMinHeight(), opts.getRealMaxHeight());
+    }
+
+    @Override public boolean hasCubicGeneratorForWorld(World w) {
+        return w.provider.getDimension() == 0;
     }
 
     public BiomeProvider getBiomeProvider(World world) {

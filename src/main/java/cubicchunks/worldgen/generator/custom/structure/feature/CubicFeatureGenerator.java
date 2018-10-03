@@ -28,6 +28,7 @@ import static cubicchunks.util.Coords.cubeToCenterBlock;
 import cubicchunks.util.CubePos;
 import cubicchunks.util.XYZMap;
 import cubicchunks.world.ICubicWorld;
+import cubicchunks.world.cube.Cube;
 import cubicchunks.worldgen.generator.ICubePrimer;
 import cubicchunks.worldgen.generator.custom.structure.CubicStructureGenerator;
 import mcp.MethodsReturnNonnullByDefault;
@@ -113,9 +114,9 @@ public abstract class CubicFeatureGenerator extends CubicStructureGenerator {
             // TODO: cubic chunks version of isValidForPostProcess and notifyPostProcess (mixin)
             if (structStart.isSizeableStructure() && structStart.isValidForPostProcess(cubePos.chunkPos())
                     && structStart.getBoundingBox().intersectsWith(
-                    new StructureBoundingBox(centerX, centerY, centerZ, centerX + 15, centerY + 15, centerZ + 15))) {
+                    new StructureBoundingBox(centerX, centerY, centerZ, centerX + Cube.SIZE - 1, centerY + Cube.SIZE - 1, centerZ + Cube.SIZE - 1))) {
                 structStart.generateStructure(world, rand,
-                        new StructureBoundingBox(centerX, centerY, centerZ, centerX + 15, centerY + 15, centerZ + 15));
+                        new StructureBoundingBox(centerX, centerY, centerZ, centerX + Cube.SIZE - 1, centerY + Cube.SIZE - 1, centerZ + Cube.SIZE - 1));
                 structStart.notifyPostProcessAt(cubePos.chunkPos());
                 generated = true;
                 this.setStructureStart(structStart.getChunkPosX(), cubicStructureStart.getChunkPosY(), structStart.getChunkPosZ(), structStart);

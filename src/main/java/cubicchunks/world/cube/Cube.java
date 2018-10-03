@@ -23,19 +23,15 @@
  */
 package cubicchunks.world.cube;
 
-import static cubicchunks.util.Coords.blockToLocal;
-import static cubicchunks.util.Coords.localToBlock;
-
 import cubicchunks.CubicChunks;
+import cubicchunks.debug.Dbg;
 import cubicchunks.lighting.LightingManager;
 import cubicchunks.util.AddressTools;
-import cubicchunks.util.Coords;
 import cubicchunks.util.CubePos;
 import cubicchunks.util.XYZAddressable;
 import cubicchunks.util.ticket.TicketList;
 import cubicchunks.world.EntityContainer;
 import cubicchunks.world.ICubicWorld;
-import cubicchunks.world.ICubicWorldServer;
 import cubicchunks.world.IHeightMap;
 import cubicchunks.world.column.IColumn;
 import cubicchunks.worldgen.generator.ICubePrimer;
@@ -46,16 +42,15 @@ import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.init.Blocks;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.NextTickListEntry;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
+import scala.actors.threadpool.Arrays;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -63,8 +58,6 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
-import java.util.SortedSet;
-import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.function.BooleanSupplier;
@@ -76,6 +69,8 @@ import javax.annotation.ParametersAreNonnullByDefault;
 import org.apache.logging.log4j.LogManager;
 
 import com.google.common.collect.Sets;
+
+import static cubicchunks.util.Coords.*;
 
 /**
  * A cube is our extension of minecraft's chunk system to three dimensions. Each cube encloses a cubic area in the world
@@ -93,6 +88,9 @@ public class Cube implements XYZAddressable {
      * Side length of a cube
      */
     public static final int SIZE = 16;
+
+    public static final double SIZE_D = 16.0D;
+
 
     /**
      * Tickets keep this chunk loaded and ticking. See the docs of {@link TicketList} and {@link
@@ -116,6 +114,10 @@ public class Cube implements XYZAddressable {
      * Has the initial light map been calculated?
      */
     private boolean isInitialLightingDone = false;
+    /**
+     * Do neighbor need a sky light update when it is loaded?
+     */
+    public boolean[] edgeNeedSkyLightUpdate = new boolean[6];
     /**
      * The world of this cube
      */
@@ -151,14 +153,19 @@ public class Cube implements XYZAddressable {
      * Is this cube loaded and not queued for unload
      */
     private boolean isCubeLoaded;
-    
+
     /**
      * Contains the current Linear Congruential Generator seed for block updates. Used with an A value of 3 and a C
      * value of 0x3c6ef35f, producing a highly planar series of values ill-suited for choosing random blocks in a
      * 16x16x16 field.
      */
     protected int updateLCG = (new Random()).nextInt();
-    
+
+    /**
+     * True only if all the blocks have been added to server height map. Always true clientside.
+     */
+    private boolean isSurfaceTracked = true;
+
     /**
      * Create a new cube in the specified column at the specified location. The newly created cube will only contain air
      * blocks.
@@ -194,13 +201,13 @@ public class Cube implements XYZAddressable {
     public Cube(IColumn column, int cubeY, ICubePrimer primer) {
         this(column, cubeY);
 
-        int miny = Coords.cubeToMinBlock(cubeY);
+        int miny = cubeToMinBlock(cubeY);
         IHeightMap opindex = column.getOpacityIndex();
 
-        for (int x = 0; x < 16; x++) {
-            for (int z = 0; z < 16; z++) {
+        for (int x = 0; x < Cube.SIZE; x++) {
+            for (int z = 0; z < Cube.SIZE; z++) {
 
-                for (int y = 15; y >= 0; y--) {
+                for (int y = Cube.SIZE - 1; y >= 0; y--) {
                     IBlockState newstate = primer.getBlockState(x, y, z);
 
                     if (newstate.getMaterial() != Material.AIR) {
@@ -217,6 +224,7 @@ public class Cube implements XYZAddressable {
                 }
             }
         }
+        isSurfaceTracked = true;
         isModified = true;
     }
 
@@ -394,7 +402,7 @@ public class Cube implements XYZAddressable {
             if (ntle.scheduledTime > world.getTotalWorldTime())
                 return;
             BlockPos pos = ntle.position;
-            IBlockState iblockstate = this.storage.get(pos.getX() & 15, pos.getY() & 15, pos.getZ() & 15);
+            IBlockState iblockstate = this.storage.get(blockToLocal(pos.getX()), blockToLocal(pos.getY()), blockToLocal(pos.getZ()));
             if (iblockstate.getMaterial() != Material.AIR && iblockstate.getBlock() == ntle.getBlock()) {
                 iblockstate.getBlock().updateTick((WorldServer) world, ntle.position, iblockstate, rand);
             }
@@ -408,7 +416,7 @@ public class Cube implements XYZAddressable {
             pti.remove();
         }
     }
-    
+
     /**
      * Launch random ticks of a blocks of a cube. Plant growing and other events goes here.
      * @param worldServer - world where random tick is launched
@@ -417,9 +425,9 @@ public class Cube implements XYZAddressable {
     public void randomTick(WorldServer worldServer, Random rand) {
         this.updateLCG = this.updateLCG * 3 + 1013904223;
         int j1 = updateLCG >> 2;
-        int localX = j1 & 15;
-        int localY = j1 >> 8 & 15;
-        int localZ = j1 >> 16 & 15;
+        int localX = AddressTools.getLocalX(j1);
+        int localY = AddressTools.getLocalY(j1);
+        int localZ = AddressTools.getLocalZ(j1);
         IBlockState iblockstate = this.storage.get(localX, localY, localZ);
         Block block = iblockstate.getBlock();
         if (block.getTickRandomly()) {
@@ -463,9 +471,9 @@ public class Cube implements XYZAddressable {
      * @return the block position
      */
     public BlockPos localAddressToBlockPos(int localAddress) {
-        int x = Coords.localToBlock(this.coords.getX(), AddressTools.getLocalX(localAddress));
-        int y = Coords.localToBlock(this.coords.getY(), AddressTools.getLocalY(localAddress));
-        int z = Coords.localToBlock(this.coords.getZ(), AddressTools.getLocalZ(localAddress));
+        int x = localToBlock(this.coords.getX(), AddressTools.getLocalX(localAddress));
+        int y = localToBlock(this.coords.getY(), AddressTools.getLocalY(localAddress));
+        int z = localToBlock(this.coords.getZ(), AddressTools.getLocalZ(localAddress));
         return new BlockPos(x, y, z);
     }
 
@@ -525,9 +533,9 @@ public class Cube implements XYZAddressable {
      * @return <code>true</code> if the position is within this cube, <code>false</code> otherwise
      */
     public boolean containsBlockPos(BlockPos blockPos) {
-        return this.coords.getX() == Coords.blockToCube(blockPos.getX())
-                && this.coords.getY() == Coords.blockToCube(blockPos.getY())
-                && this.coords.getZ() == Coords.blockToCube(blockPos.getZ());
+        return this.coords.getX() == blockToCube(blockPos.getX())
+                && this.coords.getY() == blockToCube(blockPos.getY())
+                && this.coords.getZ() == blockToCube(blockPos.getZ());
     }
 
     @Nullable public ExtendedBlockStorage getStorage() {
@@ -540,7 +548,7 @@ public class Cube implements XYZAddressable {
     }
 
     private void newStorage() {
-        storage = new ExtendedBlockStorage(Coords.cubeToMinBlock(getY()), !world.getProvider().hasNoSky());
+        storage = new ExtendedBlockStorage(cubeToMinBlock(getY()), !world.getProvider().hasNoSky());
     }
 
     /**
@@ -573,6 +581,27 @@ public class Cube implements XYZAddressable {
         this.world.addTileEntities(this.tileEntityMap.values());
         this.world.loadEntities(this.entities.getEntities());
         this.isCubeLoaded = true;
+        if (!isSurfaceTracked) {
+            trackSurface();
+        }
+    }
+
+    private void trackSurface() {
+        IHeightMap opindex = column.getOpacityIndex();
+        int miny = getCoords().getMinBlockY();
+
+        for (int x = 0; x < Cube.SIZE; x++) {
+            for (int z = 0; z < Cube.SIZE; z++) {
+
+                for (int y = Cube.SIZE - 1; y >= 0; y--) {
+                    IBlockState newstate = this.getBlockState(x, y, z);
+
+                    column.setModified(true); //TODO: maybe ServerHeightMap needs its own isModified?
+                    opindex.onOpacityChange(x, miny + y, z, newstate.getLightOpacity());
+                }
+            }
+        }
+        isSurfaceTracked = true;
     }
 
     /**
@@ -639,8 +668,8 @@ public class Cube implements XYZAddressable {
 
     public void markForRenderUpdate() {
         this.world.markBlockRangeForRenderUpdate(
-                Coords.cubeToMinBlock(this.coords.getX()), Coords.cubeToMinBlock(this.coords.getY()), Coords.cubeToMinBlock(this.coords.getZ()),
-                Coords.cubeToMaxBlock(this.coords.getX()), Coords.cubeToMaxBlock(this.coords.getY()), Coords.cubeToMaxBlock(this.coords.getZ())
+                cubeToMinBlock(this.coords.getX()), cubeToMinBlock(this.coords.getY()), cubeToMinBlock(this.coords.getZ()),
+                cubeToMaxBlock(this.coords.getX()), cubeToMaxBlock(this.coords.getY()), cubeToMaxBlock(this.coords.getZ())
         );
     }
 
@@ -671,6 +700,7 @@ public class Cube implements XYZAddressable {
         this.isPopulated = true;
         this.isFullyPopulated = true;
         this.isInitialLightingDone = true;
+        this.isSurfaceTracked = true;
     }
 
     /**
@@ -720,6 +750,20 @@ public class Cube implements XYZAddressable {
     }
 
     /**
+     * Sets internal isSurfaceTracked value. Intended to be used only for deserialization.
+     */
+    public void setSurfaceTracked(boolean value) {
+        this.isSurfaceTracked = value;
+    }
+
+    /**
+     * Gets internal isSurfaceTracked value. Intended to be used only for serialization.
+     */
+    public boolean isSurfaceTracked() {
+        return this.isSurfaceTracked;
+    }
+
+    /**
      * Check whether this cube's initial diffuse skylight has been calculated
      *
      * @return <code>true</code> if it has been calculated, <code>false</code> otherwise
@@ -747,5 +791,9 @@ public class Cube implements XYZAddressable {
     public boolean hasLightUpdates() {
         LightingManager.CubeLightUpdateInfo info = this.getCubeLightUpdateInfo();
         return info != null && info.hasUpdates();
+    }
+
+    public void markEdgeNeedSkyLightUpdate(EnumFacing side) {
+        this.edgeNeedSkyLightUpdate[side.ordinal()] = true;
     }
 }

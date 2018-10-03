@@ -13,6 +13,9 @@ dist
 lib
 out
 run
+run/**
+.mixin.out
+.mixin.out/**
 target
 *.com
 *.class

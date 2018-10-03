@@ -25,6 +25,8 @@ package cubicchunks.server;
 
 import com.google.common.base.Predicate;
 import cubicchunks.CubicChunks;
+import cubicchunks.api.CubeUnWatchEvent;
+import cubicchunks.api.CubeWatchEvent;
 import cubicchunks.lighting.LightingManager;
 import cubicchunks.network.PacketCubeBlockChange;
 import cubicchunks.network.PacketDispatcher;
@@ -49,6 +51,7 @@ import net.minecraft.network.Packet;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.common.ForgeModContainer;
+import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 
 import java.util.function.Consumer;
@@ -104,7 +107,6 @@ public class CubeWatcher implements XYZAddressable, ITicket {
             playerCubeMap.getWorld()
                     .getCubicEntityTracker()
                     .sendLeashedEntitiesInCube(player, this.getCube());
-            //TODO: cube watch event?
         }
     }
 
@@ -133,8 +135,7 @@ public class CubeWatcher implements XYZAddressable, ITicket {
         }
 
         this.players.remove(player.getEntityId());
-        //TODO: Cube unwatch event
-        //net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.event.world.ChunkWatchEvent.UnWatch(this.pos, player));
+        MinecraftForge.EVENT_BUS.post(new CubeUnWatchEvent(cube, cubePos, this, player));
 
         if (this.players.isEmpty()) {
             playerCubeMap.removeEntry(this);
@@ -146,7 +147,7 @@ public class CubeWatcher implements XYZAddressable, ITicket {
         if (loading) {
             return false;
         }
-        if (this.cube != null && (!canGenerate || (cube.isFullyPopulated() && cube.isInitialLightingDone()))) {
+        if (this.cube != null && (!canGenerate || (cube.isFullyPopulated() && cube.isInitialLightingDone() && !cube.hasLightUpdates()))) {
             return true;
         }
         int cubeX = cubePos.getX();
@@ -180,31 +181,31 @@ public class CubeWatcher implements XYZAddressable, ITicket {
     }
 
     // CHECKED: 1.10.2-12.18.1.2092
-    boolean sendToPlayers() {
+    SendToPlayersResult sendToPlayers() {
         if (this.sentToPlayers) {
-            return true;
+            return SendToPlayersResult.ALREADY_DONE;
         }
-        if (this.cube == null || !this.cube.isFullyPopulated() || !this.cube.isInitialLightingDone() || this.cube.hasLightUpdates()) {
-            return false;
+        if (this.cube == null || !this.cube.isFullyPopulated() || !this.cube.isInitialLightingDone()) {
+            return SendToPlayersResult.WAITING;
+        }
+        if (this.cube.hasLightUpdates()) {
+            return SendToPlayersResult.WAITING_LIGHT;
         }
         ColumnWatcher columnEntry = playerCubeMap.getColumnWatcher(this.cubePos.chunkPos());
         //can't send cubes before columns
         if (columnEntry == null || !columnEntry.isSentToPlayers()) {
-            return false;
+            return SendToPlayersResult.WAITING;
         }
         this.dirtyBlocks.clear();
         //set to true before adding to queue so that sendToPlayer can actually add it
         this.sentToPlayers = true;
 
         for (WatcherPlayerEntry playerEntry : this.players.valueCollection()) {
-            //Sending entities per cube.
-            this.playerCubeMap.getWorld()
-                    .getCubicEntityTracker()
-                    .sendLeashedEntitiesInCube(playerEntry.player, cube);
+            MinecraftForge.EVENT_BUS.post(new CubeWatchEvent(cube, cubePos, this, playerEntry.player));
             sendToPlayer(playerEntry.player);
         }
 
-        return true;
+        return SendToPlayersResult.CUBE_SENT;
     }
 
     // CHECKED: 1.10.2-12.18.1.2092
@@ -242,7 +243,7 @@ public class CubeWatcher implements XYZAddressable, ITicket {
         // forge sends only TEs that have changed,
         // so we need to know all changed blocks. So add everything
         // it's a set so no need to check for duplicates
-        this.dirtyBlocks.add(AddressTools.getLocalAddress(localX, localY, localZ));
+        this.dirtyBlocks.add((short) AddressTools.getLocalAddress(localX, localY, localZ));
     }
 
     // CHECKED: 1.10.2-12.18.1.2092
@@ -296,6 +297,10 @@ public class CubeWatcher implements XYZAddressable, ITicket {
     boolean hasPlayerMatching(Predicate<EntityPlayerMP> predicate) {
         //if any of them is true - stop and return false, then negate the result to get true
         return !this.players.forEachValue(value -> !predicate.apply(value.player));
+    }
+    
+    boolean hasPlayerMatchingInRange(Predicate<EntityPlayerMP> predicate, int range) {
+        return !this.players.forEachValue(value -> !(predicate.apply(value.player) && this.getDistanceSq(getCubePos(), value.player) < range * range));
     }
 
     private double getDistanceSq(CubePos cubePos, Entity entity) {
@@ -360,5 +365,9 @@ public class CubeWatcher implements XYZAddressable, ITicket {
 
     @Override public boolean shouldTick() {
         return true; // Cubes that players can see should tick
+    }
+
+    public enum SendToPlayersResult {
+        ALREADY_DONE, CUBE_SENT, WAITING, WAITING_LIGHT
     }
 }

@@ -70,10 +70,11 @@ public interface ICubeGenerator {
 
     /**
      * Populate a cube with multi-block structures that can cross cube boundaries such as trees and ore veins.
-     * Population should* be done with the restriction that it may not affect cubes whose call to {@link
-     * ICubeGenerator#getPopulationRequirement(Cube)} would does include {@code cube}.<br> <br> *Note: Unlike vanilla
-     * this method will NEVER cause recursive generation, thus the area that it populates is not as strict. Generation
-     * should still be restricted as the player might see something generate in a chunk they have already been sent
+     * Population should* be done with the restriction that it may not affect cubes whose call to
+     * {@link ICubeGenerator#getPopulationRequirement(Cube)} would does include {@code cube}.
+     *
+     * Note: Unlike vanilla this method will NEVER cause recursive generation, thus the area that it populates is not as strict.
+     * Generation should still be restricted as the player might see something generate in a chunk they have already been sent
      *
      * @param cube the cube to populate
      */
@@ -81,8 +82,8 @@ public interface ICubeGenerator {
 
     /**
      * Get the bounding box defining a range of cubes whose population contributes to {@code cube} being fully
-     * populated.<br> Consider the following example: A call to some implementation of {@link
-     * ICubeGenerator#populate(Cube)} populates a 16x16x16 block area in a 2x2x2 area of cubes around the center.
+     * populated.<br> Consider the following example: A call to some implementation of
+     * {@link ICubeGenerator#populate(Cube)} populates a 16x16x16 block area in a 2x2x2 area of cubes around the center.
      * <pre>
      * +----------+----------+  . .  The chunk provided as a parameter
      * |          | . . . . .|  . .  to this method (getPopulationRequirement).
@@ -123,9 +124,9 @@ public interface ICubeGenerator {
      * Shown: The area enclosed by the population requirement of the target cube
      *
      * </pre>
-     * This method would return <code>{(-1,-1,-1), (0, 0, 0)}</code>, indicating that populate calls to all cubes in
+     * This method would return {@code {(-1,-1,-1), (0, 0, 0)}}, indicating that populate calls to all cubes in
      * that area write to this cube.<br> <br>
-     * <p>
+     *
      * Note: Large ranges are not recommended. If you need to generate a large structure like a nether fort, do not use
      * a populator.
      *
@@ -136,8 +137,8 @@ public interface ICubeGenerator {
     Box getPopulationRequirement(Cube cube);
 
     /**
-     * Called to reload structures that apply to {@code cube}. Mostly used to prepare calls to {@link
-     * ICubeGenerator#getPossibleCreatures(EnumCreatureType, BlockPos))} <br>
+     * Called to reload structures that apply to {@code cube}. Mostly used to prepare calls to
+     * {@link ICubeGenerator#getPossibleCreatures(EnumCreatureType, BlockPos)} <br>
      *
      * @param cube The cube being loaded
      *
@@ -146,8 +147,8 @@ public interface ICubeGenerator {
     void recreateStructures(Cube cube);
 
     /**
-     * Called to reload structures that apply to {@code column}. Mostly used to prepare calls to {@link
-     * ICubeGenerator#getPossibleCreatures(EnumCreatureType, BlockPos))} <br>
+     * Called to reload structures that apply to {@code column}. Mostly used to prepare calls to
+     * {@link ICubeGenerator#getPossibleCreatures(EnumCreatureType, BlockPos)} <br>
      *
      * @param column The column being loaded
      *

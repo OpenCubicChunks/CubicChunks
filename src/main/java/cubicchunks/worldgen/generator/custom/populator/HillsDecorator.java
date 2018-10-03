@@ -53,14 +53,14 @@ public class HillsDecorator implements ICubicPopulator {
     @Override public void generate(ICubicWorld world, Random random, CubePos pos, CubicBiome biome) {
         // TODO: Find less awful way to do it
         CustomGeneratorSettings cfg = CustomGeneratorSettings.fromJson(world.getWorldInfo().getGeneratorOptions());
-
+/*
         genOreUniform(world, cfg, random, pos, cfg.hillsEmeraldOreSpawnTries, cfg.hillsEmeraldOreSpawnProbability,
                 new WorldGenEmerald(), cfg.hillsEmeraldOreSpawnMinHeight, cfg.hillsEmeraldOreSpawnMaxHeight);
 
         WorldGenerator silverfishStoneGen = new WorldGenMinable(Blocks.MONSTER_EGG.getDefaultState()
                 .withProperty(BlockSilverfish.VARIANT, BlockSilverfish.EnumType.STONE), cfg.hillsSilverfishStoneSpawnSize);
         genOreUniform(world, cfg, random, pos, cfg.hillsSilverfishStoneSpawnTries, cfg.hillsSilverfishStoneSpawnProbability,
-                silverfishStoneGen, cfg.hillsSilverfishStoneSpawnMinHeight, cfg.hillsSilverfishStoneSpawnMaxHeight);
+                silverfishStoneGen, cfg.hillsSilverfishStoneSpawnMinHeight, cfg.hillsSilverfishStoneSpawnMaxHeight);*/
     }
 
     private static class WorldGenEmerald extends WorldGenerator {

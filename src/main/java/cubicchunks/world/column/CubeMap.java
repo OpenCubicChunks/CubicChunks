@@ -75,8 +75,8 @@ public class CubeMap implements Iterable<Cube> {
     }
 
     /**
-     * Iterate over all cubes between <code>startY</code> and <code>endY</code> in this storage in order. If
-     * <code>startY < endY</code>, order is bottom to top, otherwise order is top to bottom.
+     * Iterate over all cubes between {@code startY} and {@code endY} in this storage in order. If
+     * {@code startY < endY}, order is bottom to top, otherwise order is top to bottom.
      *
      * @param startY initial cube y position
      * @param endY last cube y position

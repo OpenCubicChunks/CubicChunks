@@ -27,7 +27,12 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import javax.annotation.Nonnull;
@@ -41,6 +46,7 @@ import org.spongepowered.asm.mixin.extensibility.IMixinInfo;
 
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
+import cubicchunks.CubicChunks;
 
 /**
  * This Mixin configuration plugin class launched from cubicchunks.mixin.selectable.json.
@@ -51,9 +57,49 @@ public class CubicChunksMixinConfig implements IMixinConfigPlugin {
 
     @Nonnull
     public static Logger LOGGER = LogManager.getLogger("CubicChunksMixinConfig");
+    private final Map<String, Boolean> modDependencyConditions = new HashMap<>();
 
+    @SuppressWarnings({"unchecked", "rawtypes"})
     @Override
     public void onLoad(String mixinPackage) {
+        OptifineState optifineState = OptifineState.NOT_LOADED;
+        String optifineVersion = System.getProperty("cubicchunks.optifineVersion", "empty");
+        if (optifineVersion.equals("empty")) {
+            try {
+                Class optifineInstallerClass = Class.forName("optifine.Installer");
+                Method getVersionHandler = optifineInstallerClass.getMethod("getOptiFineVersion", new Class[0]);
+                optifineVersion = (String) getVersionHandler.invoke(null, new Object[0]);
+                optifineVersion = optifineVersion.replace("_pre", "");
+                optifineVersion = optifineVersion.substring(optifineVersion.length() - 2, optifineVersion.length());
+                CubicChunks.LOGGER.info("Detected Optifine version: " + optifineVersion);
+            } catch (ClassNotFoundException e) {
+                optifineVersion = "ignore";
+                CubicChunks.LOGGER.info("No Optifine detected");
+            } catch (Exception e) {
+                CubicChunks.LOGGER.info("Optifine detected, but have incompatible build. Optifine D1 specific mixins will be loaded.");
+                optifineVersion = "D1";
+            }
+        }
+        
+        if(optifineVersion.equalsIgnoreCase("ignore"))
+            optifineState = OptifineState.NOT_LOADED;
+        else if (optifineVersion.compareTo("D1") >= 0)
+            optifineState = OptifineState.LOADED_D1;
+        else
+            optifineState = OptifineState.LOADED_C7;
+
+        modDependencyConditions.put(
+                "cubicchunks.asm.mixin.selectable.client.MixinRenderGlobalNoOptifine",
+                optifineState == OptifineState.NOT_LOADED);
+        modDependencyConditions.put(
+                "cubicchunks.asm.mixin.selectable.client.MixinRenderGlobalOptifineSpecific",
+                optifineState != OptifineState.NOT_LOADED);
+        modDependencyConditions.put(
+                "cubicchunks.asm.mixin.selectable.client.MixinRenderGlobalOptifineSpecificC7",
+                optifineState == OptifineState.LOADED_C7);
+        modDependencyConditions.put(
+                "cubicchunks.asm.mixin.selectable.client.MixinRenderGlobalOptifineSpecificD1",
+                optifineState == OptifineState.LOADED_D1);
         File folder = new File(".", "config");
         folder.mkdirs();
         File configFile = new File(folder, "cubicchunks_mixin_config.json");
@@ -74,17 +120,20 @@ public class CubicChunksMixinConfig implements IMixinConfigPlugin {
 
     @Override
     public boolean shouldApplyMixin(String targetClassName, String mixinClassName) {
-        LOGGER.info("Checking config option for "+mixinClassName);
+        return this.shouldApplyMixin(mixinClassName);
+    }
+    
+    public boolean shouldApplyMixin(String mixinClassName) {
         for (BoolOptions configOption : BoolOptions.values()) {
-            if (configOption.mixinClassNameOnTrue != null
-                    && mixinClassName.equals(configOption.mixinClassNameOnTrue))
-                return configOption.value;
+            for (String mixinClassNameOnTrue : configOption.mixinClassNamesOnTrue)
+                if (mixinClassName.equals(mixinClassNameOnTrue))
+                    return configOption.value && modDependencyConditions.getOrDefault(mixinClassName, true);
 
-            if (configOption.mixinClassNameOnFalse != null
-                    && mixinClassName.equals(configOption.mixinClassNameOnFalse))
-                return !configOption.value;
+            for (String mixinClassNameOnFalse : configOption.mixinClassNamesOnFalse)
+                if (mixinClassName.equals(mixinClassNameOnFalse))
+                    return !configOption.value && modDependencyConditions.getOrDefault(mixinClassName, true);
         }
-        return true;
+        return modDependencyConditions.getOrDefault(mixinClassName, true);
     }
 
     @Override
@@ -105,31 +154,49 @@ public class CubicChunksMixinConfig implements IMixinConfigPlugin {
     }
 
     public static enum BoolOptions {
-        USE_FAST_COLLISION_CHECK(true, 
-                "cubicchunks.asm.mixin.selectable.common.MixinWorld_SlowCollisionCheck", 
-                "cubicchunks.asm.mixin.selectable.common.MixinWorld_CollisionCheck",
+        OPTIMIZE_PATH_NAVIGATOR(false, 
+                new String[] {},
+                new String[] {"cubicchunks.asm.mixin.selectable.common.MixinPathNavigate",
+                        "cubicchunks.asm.mixin.selectable.common.MixinWalkNodeProcessor"},
+                "Enabling this option will optimize work of vanilla path navigator."
+                        + "Using this option in some cases turn entity AI a little dumber."
+                        + " Mob standing in a single axis aligned line with player in a middle of a"
+                        + " chunk will not try to seek path to player outside of chunks if direct path is blocked."
+                        + " You need to restart Minecraft to apply changes."),
+        USE_CUBE_ARRAYS_INSIDE_CHUNK_CACHE(true, 
+                new String[] {},
+                new String[] {"cubicchunks.asm.mixin.selectable.common.MixinWorld_ChunkCache"},
+                "Enabling this option will mix cube array into chunk cache"
+                        + " for using in entity path navigator."
+                        + " Potentially this will slightly reduce server tick time"
+                        + " in presence of huge amount of living entities."
+                        + " You need to restart Minecraft to apply changes."),
+        USE_FAST_COLLISION_CHECK(false, 
+                new String[] {"cubicchunks.asm.mixin.selectable.common.MixinWorld_SlowCollisionCheck"},
+                new String[] {"cubicchunks.asm.mixin.selectable.common.MixinWorld_CollisionCheck",
+                        "cubicchunks.asm.mixin.selectable.common.MixinBlock_FastCollision"},
                 "Enabling this option allow using fast collision check."
                         + " Fast collision check can reduce server lag."
-                        + " You need to restart Minecraft to apply changes."),
+                        + " You need to restart Minecraft to apply changes. DO NOT USE UNTIL FIXED!"),
         RANDOM_TICK_IN_CUBE(true, 
-                null,
-                "cubicchunks.asm.mixin.selectable.common.MixinWorldServer_UpdateBlocks",
+                new String[] {},
+                new String[] {"cubicchunks.asm.mixin.selectable.common.MixinWorldServer_UpdateBlocks"},
                 "If set to true, random tick wil be launched from cube instance instead of chunk."
                         + " Cube based random tick may slightly reduce server lag."
                         + " You need to restart Minecraft to apply changes.");
 
         private final boolean defaultValue;
-        // Load this Mixin class only if option is false. Can be null.
-        @Nullable private final String mixinClassNameOnFalse;
-        // Load this Mixin class only if option is true. Can be null.
-        @Nullable private final String mixinClassNameOnTrue;
+        // Load this Mixin class only if option is false.
+        private final String[] mixinClassNamesOnFalse;
+        // Load this Mixin class only if option is true.
+        private final String[] mixinClassNamesOnTrue;
         private final String description;
         private boolean value;
 
-        private BoolOptions(boolean defaultValue1, String mixinClassNameOnFalse1, String mixinClassNameOnTrue1, String description1) {
+        private BoolOptions(boolean defaultValue1, String[] mixinClassNamesOnFalse1, String[] mixinClassNamesOnTrue1, String description1) {
             defaultValue = defaultValue1;
-            mixinClassNameOnFalse = mixinClassNameOnFalse1;
-            mixinClassNameOnTrue = mixinClassNameOnTrue1;
+            mixinClassNamesOnFalse = mixinClassNamesOnFalse1;
+            mixinClassNamesOnTrue = mixinClassNamesOnTrue1;
             description = description1;
             value = defaultValue;
         }
@@ -171,6 +238,7 @@ public class CubicChunksMixinConfig implements IMixinConfigPlugin {
     }
     
     private void readConfigFromJson(File configFile) throws IOException {
+        int expectingOptionsNumber = BoolOptions.values().length;
         JsonReader reader = new JsonReader(new FileReader(configFile));
         reader.beginArray();
         while(reader.hasNext()){
@@ -179,6 +247,7 @@ public class CubicChunksMixinConfig implements IMixinConfigPlugin {
                 String name = reader.nextName();
                 for(BoolOptions option:BoolOptions.values()){
                     if(option.name().equals(name)){
+                        expectingOptionsNumber--;
                         option.value = reader.nextBoolean();
                         continue next_object;
                     }
@@ -189,5 +258,13 @@ public class CubicChunksMixinConfig implements IMixinConfigPlugin {
         }
         reader.endArray();
         reader.close();
+        if (expectingOptionsNumber != 0)
+            this.writeConfigToJson(configFile);
+    }
+    
+    private enum OptifineState {
+        NOT_LOADED,
+        LOADED_C7,
+        LOADED_D1
     }
 }

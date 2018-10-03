@@ -24,7 +24,9 @@
 package cubicchunks.server;
 
 import cubicchunks.CubicChunks;
+import cubicchunks.CubicChunksConfig;
 import cubicchunks.asm.CubicChunksMixinConfig;
+import cubicchunks.lighting.LightingManager;
 import cubicchunks.server.chunkio.ICubeIO;
 import cubicchunks.server.chunkio.RegionCubeIO;
 import cubicchunks.server.chunkio.async.forge.AsyncWorldIOExecutor;
@@ -194,13 +196,16 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
     @Override
     public boolean tick() {
         // NOTE: the return value is completely ignored
-        profiler.startSection("providerTick("+cubeMap.getSize()+")");
+        profiler.startSection("providerTick");
         long i = System.currentTimeMillis();
         int randomTickSpeed = this.world.getGameRules().getInt("randomTickSpeed");
         Random rand = this.world.rand;
-        for (Cube cube : cubeMap) {
+        PlayerCubeMap playerCubeMap = ((PlayerCubeMap) this.world.getPlayerChunkMap());
+        Iterator<Cube> watchersIterator = playerCubeMap.getCubeIterator();
+        while (watchersIterator.hasNext()) {
+            Cube cube = watchersIterator.next();
             cube.tickCubeServer(() -> System.currentTimeMillis() - i > 40, rand);
-            if (cube.isEmpty() || !doRandomBlockTicksHere)
+            if (!doRandomBlockTicksHere)
                 continue;
             int randomTickCounter = randomTickSpeed;
             while (randomTickCounter-- > 0)
@@ -418,6 +423,8 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
         int cubeY = cube.getY();
         int cubeZ = cube.getZ();
 
+        // TODO: redo this part properly. It's broken.
+
         cubeGen.getPopulationRequirement(cube).forEachPoint((x, y, z) -> {
             Cube popcube = getCube(x + cubeX, y + cubeY, z + cubeZ);
             if (!popcube.isPopulated()) {
@@ -426,7 +433,7 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
             }
         });
         
-        if (!(cubeGen instanceof VanillaCompatibilityGenerator) && CubicChunks.Config.BoolOptions.USE_VANILLA_CHUNK_WORLD_GENERATORS.getValue()) {
+        if (!(cubeGen instanceof VanillaCompatibilityGenerator) && CubicChunksConfig.useVanillaChunkWorldGenerators) {
             for (int x = 0; x < 2; x++) {
                 for (int z = 0; z < 2; z++) {
                     for (int y = 15; y >= 0; y--) {
@@ -450,6 +457,10 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
      * @param cube The cube to light up
      */
     private void calculateDiffuseSkylight(Cube cube) {
+        if (LightingManager.NO_SUNLIGHT_PROPAGATION) {
+            cube.setInitialLightingDone(true);
+            return;
+        }
         int cubeX = cube.getX();
         int cubeY = cube.getY();
         int cubeZ = cube.getZ();
@@ -568,8 +579,8 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
         return sb.toString();
     }
 
-    public void flush() throws IOException {
-        this.cubeIO.flush();
+    @Nonnull public ICubeIO getCubeIO() {
+        return cubeIO;
     }
 
     Iterator<Cube> cubesIterator() {

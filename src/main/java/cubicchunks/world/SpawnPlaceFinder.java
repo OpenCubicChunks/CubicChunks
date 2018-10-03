@@ -24,6 +24,7 @@
 package cubicchunks.world;
 
 import cubicchunks.CubicChunks;
+import cubicchunks.world.cube.Cube;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
@@ -106,7 +107,7 @@ public class SpawnPlaceFinder {
 
     private BlockPos findMinPos(Chunk chunk, BlockPos pos) {
         // go down twice as much each time until we hit filled space
-        int dy = 16;
+        int dy = Cube.SIZE;
         BlockPos p;
         while ((p = findNonEmpty(chunk, pos.down(dy))) == null) {
             dy *= 2;
@@ -120,7 +121,7 @@ public class SpawnPlaceFinder {
 
     private BlockPos findMaxPos(Chunk chunk, BlockPos pos) {
         // go up twice as much each time until we hit filled space
-        int dy = 16;
+        int dy = Cube.SIZE;
         BlockPos p;
         while ((p = findEmpty(chunk, pos.up(dy))) == null) {
             dy *= 2;

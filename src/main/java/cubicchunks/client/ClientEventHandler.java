@@ -23,13 +23,11 @@
  */
 package cubicchunks.client;
 
-import cubicchunks.CommonEventHandler;
 import cubicchunks.CubicChunks;
-import cubicchunks.CubicChunks.Config.IntOptions;
-import cubicchunks.event.CreateNewWorldEvent;
+import cubicchunks.CubicChunksConfig;
 import cubicchunks.server.ICubicPlayerList;
+import cubicchunks.util.MathUtil;
 import cubicchunks.world.ICubicWorld;
-import cubicchunks.world.ICubicWorldSettings;
 import cubicchunks.world.type.ICubicWorldType;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.client.Minecraft;
@@ -40,7 +38,6 @@ import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.GuiVideoSettings;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.resources.I18n;
-import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.WorldType;
 import net.minecraftforge.client.event.GuiScreenEvent;
@@ -50,6 +47,8 @@ import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
+
+import net.minecraftforge.fml.relauncher.Side;
 
 import java.util.List;
 import java.util.Optional;
@@ -77,7 +76,7 @@ public class ClientEventHandler {
         // no need to check side, this is only registered in client proxy
         ICubicPlayerList playerList = ((ICubicPlayerList)FMLCommonHandler.instance().getMinecraftServerInstance().getPlayerList());
         int prevDist = playerList.getVerticalViewDistance();
-        int newDist = IntOptions.VERTICAL_CUBE_LOAD_DISTANCE.getValue();
+        int newDist = CubicChunksConfig.verticalCubeLoadDistance;
         if (prevDist != newDist) {
             CubicChunks.LOGGER.info("Changing vertical view distance to {}, from {}", newDist, prevDist);
             playerList.setVerticalViewDistance(newDist);
@@ -92,15 +91,14 @@ public class ClientEventHandler {
             GuiVideoSettings gvs = (GuiVideoSettings) currentGui;
             try {
                 GuiOptionsRowList gowl = (GuiOptionsRowList) gvs.optionsRowList;
-                GuiOptionsRowList.Row row = this.createRow(100, CubicChunks.Config.IntOptions.VERTICAL_CUBE_LOAD_DISTANCE, gvs.width);
+                GuiOptionsRowList.Row row = this.createRow(100, gvs.width);
                 gowl.options.add(1, row);
             } catch (NoSuchFieldError err) {
                 int idx = 3;
                 int btnSpacing = 20;
                 CubicChunks.LOGGER.error("Couldn't add vertical view distance options, maybe optifine is installed? Attempting optifine-specific "
                         + "option add", err.toString());
-                gvs.buttonList.add(idx, new GuiCustomSlider(100, gvs.width / 2 - 155 + 160, gvs.height / 6 + btnSpacing * (idx / 2) - 12,
-                        CubicChunks.Config.IntOptions.VERTICAL_CUBE_LOAD_DISTANCE));
+                gvs.buttonList.add(idx, new VertViewDistanceSlider(100, gvs.width / 2 - 155 + 160, gvs.height / 6 + btnSpacing * (idx / 2) - 12));
                 // reposition all buttons except the last 4 (last 3 and done)
                 for (int i = 0; i < gvs.buttonList.size() - 4; i++) {
                     GuiButton btn = gvs.buttonList.get(i);
@@ -131,24 +129,22 @@ public class ClientEventHandler {
         }
     }
 
-    private GuiOptionsRowList.Row createRow(int buttonId, CubicChunks.Config.IntOptions option, int width) {
-        GuiCustomSlider slider = new GuiCustomSlider(buttonId, width / 2 - 155 + 160, 0, option);
+    private GuiOptionsRowList.Row createRow(int buttonId, int width) {
+        VertViewDistanceSlider slider = new VertViewDistanceSlider(buttonId, width / 2 - 155 + 160, 0);
         return new GuiOptionsRowList.Row(slider, null);
     }
 
 
-    private class GuiCustomSlider extends GuiButton {
+    private class VertViewDistanceSlider extends GuiButton {
 
         private float sliderValue;
         public boolean dragging;
-        private final IntOptions option;
 
-        public GuiCustomSlider(int buttonId, int x, int y, CubicChunks.Config.IntOptions optionIn) {
+        public VertViewDistanceSlider(int buttonId, int x, int y) {
             super(buttonId, x, y, 150, 20, "");
             this.sliderValue = 1.0F;
-            this.option = optionIn;
-            this.sliderValue = optionIn.getNormalValue();
-            this.displayString = this.createDisplayString(option);
+            this.sliderValue = CubicChunksConfig.verticalCubeLoadDistance;
+            this.displayString = this.createDisplayString();
         }
 
         /**
@@ -168,9 +164,10 @@ public class ClientEventHandler {
                 if (this.dragging) {
                     this.sliderValue = (float) (mouseX - (this.xPosition + 4)) / (float) (this.width - 8);
                     this.sliderValue = MathHelper.clamp(this.sliderValue, 0.0F, 1.0F);
-                    this.option.setValueFromNormal(this.sliderValue);
-                    this.sliderValue = this.option.getNormalValue();
-                    this.displayString = this.createDisplayString(option);
+                    CubicChunksConfig.setVerticalViewDistance(
+                            Math.round(MathUtil.lerp(this.sliderValue, 2, 32)));
+                    this.sliderValue = MathUtil.unlerp(CubicChunksConfig.verticalCubeLoadDistance, 2, 32);
+                    this.displayString = this.createDisplayString();
                 }
 
                 mc.getTextureManager().bindTexture(BUTTON_TEXTURES);
@@ -188,8 +185,10 @@ public class ClientEventHandler {
             if (super.mousePressed(mc, mouseX, mouseY)) {
                 this.sliderValue = (float) (mouseX - (this.xPosition + 4)) / (float) (this.width - 8);
                 this.sliderValue = MathHelper.clamp(this.sliderValue, 0.0F, 1.0F);
-                this.option.setValueFromNormal(this.sliderValue);
-                this.displayString = this.createDisplayString(option);
+                CubicChunksConfig.setVerticalViewDistance(
+                        Math.round(MathUtil.lerp(this.sliderValue, 2, 32)));
+                this.sliderValue = MathUtil.unlerp(CubicChunksConfig.verticalCubeLoadDistance, 2, 32);
+                this.displayString = this.createDisplayString();
                 this.dragging = true;
                 return true;
             } else {
@@ -197,8 +196,8 @@ public class ClientEventHandler {
             }
         }
 
-        private String createDisplayString(IntOptions option2) {
-            return I18n.format(CubicChunks.MODID + ".gui." + CubicChunks.Config.getNicelyFormattedName(option.name()), option.getValue());
+        private String createDisplayString() {
+            return I18n.format(CubicChunks.MODID + ".gui.vertical_cube_load_distance", CubicChunksConfig.verticalCubeLoadDistance);
         }
 
         /**
@@ -210,7 +209,7 @@ public class ClientEventHandler {
         }
     }
 
-    @Mod.EventBusSubscriber
+    @Mod.EventBusSubscriber(Side.CLIENT)
     public static class WorldSelectionCubicChunks {
 
         private static final int MAP_TYPE_ID = 5;
@@ -251,7 +250,7 @@ public class ClientEventHandler {
         }
         private static void refreshText(GuiCreateWorld gui, GuiButton enableBtn) {
             enableBtn.displayString = I18n.format("cubicchunks.gui.worldmenu." +
-                    (CubicChunks.Config.BoolOptions.FORCE_CUBIC_CHUNKS.getValue() ? "cc_enable" : "cc_disable"));
+                    (CubicChunksConfig.forceCubicChunks ? "cc_enable" : "cc_disable"));
         }
 
         @SubscribeEvent
@@ -279,16 +278,12 @@ public class ClientEventHandler {
                         break;
                     }
                     case CC_ENABLE_BUTTON_ID: {
-                        CubicChunks.Config.BoolOptions.FORCE_CUBIC_CHUNKS.flip();
+                        CubicChunksConfig.flipForceCubicChunks();
                         refreshText((GuiCreateWorld) gui, button);
                         break;
                     }
                 }
             }
-        }
-
-        @SubscribeEvent public static void onCreateWorldSettings(CreateNewWorldEvent event) {
-            ((ICubicWorldSettings) (Object) event.settings).setCubic(CubicChunks.Config.BoolOptions.FORCE_CUBIC_CHUNKS.getValue());
         }
 
         private static boolean isCreateWorldGui(GuiScreen gui) {

@@ -87,33 +87,6 @@ public class ClientHandler implements INetHandler {
         WorldEncoder.decodeColumn(new PacketBuffer(buf), column);
     }
 
-    public void handle(final PacketUnloadCube packet) {
-        IThreadListener taskQueue = Minecraft.getMinecraft();
-        if (!taskQueue.isCallingFromMinecraftThread()) {
-            taskQueue.addScheduledTask(() -> handle(packet));
-            return;
-        }
-
-        ICubicWorldClient worldClient = (ICubicWorldClient) Minecraft.getMinecraft().world;
-        CubeProviderClient cubeCache = worldClient.getCubeCache();
-
-        cubeCache.unloadCube(packet.getCubePos());
-    }
-
-    public void handle(final PacketUnloadColumn packet) {
-        IThreadListener taskQueue = Minecraft.getMinecraft();
-        if (!taskQueue.isCallingFromMinecraftThread()) {
-            taskQueue.addScheduledTask(() -> handle(packet));
-            return;
-        }
-
-        ICubicWorldClient worldClient = (ICubicWorldClient) Minecraft.getMinecraft().world;
-        CubeProviderClient cubeCache = worldClient.getCubeCache();
-
-        ChunkPos chunkPos = packet.getColumnPos();
-        cubeCache.unloadChunk(chunkPos.chunkXPos, chunkPos.chunkZPos);
-    }
-
     public void handle(final PacketCubeBlockChange packet) {
         IThreadListener taskQueue = Minecraft.getMinecraft();
         if (!taskQueue.isCallingFromMinecraftThread()) {
@@ -178,7 +151,9 @@ public class ClientHandler implements INetHandler {
 
             int oldHeight = index.getTopBlockY(x, z);
             index.setHeight(x, z, height);
-            lm.onHeightMapUpdate(column, x, z, oldHeight, height);
+            // Disable due to huge client side performance loss on accepting freshly generated cubes light updates.
+            // More info at  https://github.com/OpenCubicChunks/CubicChunks/pull/328
+            //lm.onHeightMapUpdate(column, x, z, oldHeight, height);
         }
     }
 

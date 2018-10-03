@@ -38,6 +38,11 @@ import javax.annotation.ParametersAreNonnullByDefault;
 public class MixinRandomPositionGenerator {
 	// TODO: Find where it is in 1.10.2
     /*
+
+    /**
+     * @author Barteks2x
+     * @reason original function does not check if area is loaded when iterate thru vertical block positions.
+     * /
 	@Overwrite
 	private static BlockPos moveAboveSolid(BlockPos pos, EntityCreature entity) {
 		if (!entity.world.getBlockState(pos).getMaterial().isSolid()) {

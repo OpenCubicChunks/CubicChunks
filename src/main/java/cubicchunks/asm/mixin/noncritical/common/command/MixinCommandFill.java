@@ -29,6 +29,7 @@ import static cubicchunks.asm.JvmNames.WORLD_IS_BLOCK_LOADED;
 
 import cubicchunks.asm.MixinUtils;
 import cubicchunks.world.ICubicWorld;
+import cubicchunks.world.cube.Cube;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
@@ -104,7 +105,7 @@ public class MixinCommandFill {
             //if the above injection somehow fails, fall back to something reasonable
             return ((ICubicWorld) world).isBlockColumnLoaded(pos);
         }
-        for (int blockY = minY; blockY <= maxY; blockY += 16) {
+        for (int blockY = minY; blockY <= maxY; blockY += Cube.SIZE) {
             if (!world.isBlockLoaded(new BlockPos(pos.getX(), blockY, pos.getZ()))) {
                 return false;
             }

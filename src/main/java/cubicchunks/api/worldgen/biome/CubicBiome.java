@@ -162,7 +162,7 @@ public final class CubicBiome extends IForgeRegistryEntry.Impl<CubicBiome> {
     }
 
     public static IBiomeBlockReplacerProvider terrainShapeReplacer() {
-        return IBiomeBlockReplacerProvider.of(new TerrainShapeReplacer());
+        return TerrainShapeReplacer.provider();
     }
 
     public static IBiomeBlockReplacerProvider oceanWaterReplacer() {

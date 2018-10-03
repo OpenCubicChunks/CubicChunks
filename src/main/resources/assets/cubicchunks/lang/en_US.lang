@@ -33,7 +33,7 @@ cubicchunks.gui.customcubic.presets.cancel=Cancel
 ###          options          ###
 #################################
 
-cubicchunks.gui.verticalCubeLoadDistance=Vertical Distance: %d cubes
+cubicchunks.gui.vertical_cube_load_distance=Vertical Distance: %d cubes
 
 #################################
 ###   flat terrain layers     ###
@@ -73,28 +73,29 @@ cubicchunks.gui.customcubic.riverSize=River Size
 ###  ore generation settings  ###
 #################################
 
-cubicchunks.gui.customcubic.dirt_group=Dirt:
-cubicchunks.gui.customcubic.gravel_group=Gravel:
-cubicchunks.gui.customcubic.granite_group=Granite:
-cubicchunks.gui.customcubic.diorite_group=Diorite:
-cubicchunks.gui.customcubic.andesite_group=Andesite:
-cubicchunks.gui.customcubic.coal_ore_group=Coal Ore:
-cubicchunks.gui.customcubic.iron_ore_group=Iron Ore:
-cubicchunks.gui.customcubic.gold_ore_group=Gold Ore:
-cubicchunks.gui.customcubic.redstone_ore_group=Redstone Ore:
-cubicchunks.gui.customcubic.diamond_ore_group=Diamond Ore:
-cubicchunks.gui.customcubic.lapis_lazuli_ore_group=Lapis Lazuli Ore:
+cubicchunks.gui.customcubic.add_ore=Add ore
+cubicchunks.gui.customcubic.delete=Delete
 
 cubicchunks.gui.customcubic.spawn_size=Spawn Size:
 cubicchunks.gui.customcubic.spawn_tries=Spawn Tries:
 cubicchunks.gui.customcubic.spawn_probability=Probability:
+cubicchunks.gui.customcubic.spawn_maxprobability=Max. Probability:
 cubicchunks.gui.customcubic.spawn_range=Height %.2f%%%% to %.2f%%%%
 
-cubicchunks.gui.customcubic.mean_height=Mean Height:
-cubicchunks.gui.customcubic.height_std_dev=Height Std. Deviation:
+cubicchunks.gui.customcubic.mean_height=Center of first Belt:
+cubicchunks.gui.customcubic.height_std_dev=Height Std. Dev. Factor:
+cubicchunks.gui.customcubic.spacing_height=Height Spacing:
 #################################
 ### advanced terrain settings ###
 #################################
+
+cubicchunks.gui.customcubic.keep_preview_visible=Keep preview visible
+cubicchunks.gui.customcubic.biome_scale=Preview biome size
+cubicchunks.gui.customcubic.biome_offset=Preview biome offset
+cubicchunks.gui.customcubic.lock_xz_together=Set period Z=X
+cubicchunks.gui.customcubic.preview_horizontal_axis=Show horizontal axis
+cubicchunks.gui.customcubic.preview_disabled=(preview disabled)
+cubicchunks.gui.customcubic.show_preview=Show preview
 
 cubicchunks.gui.customcubic.height_variation_group=Height variation:
 cubicchunks.gui.customcubic.height_variation_factor_slider=Factor

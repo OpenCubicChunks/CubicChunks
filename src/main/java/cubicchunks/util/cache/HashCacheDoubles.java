@@ -39,7 +39,7 @@ public class HashCacheDoubles<K> {
     private final ToIntFunction<K> hashFunction;
     private final ToDoubleFunction<K> source;
 
-    @SuppressWarnings("uncecked")
+    @SuppressWarnings("unchecked")
     private HashCacheDoubles(int size, ToIntFunction<K> hashCode, ToDoubleFunction<K> source) {
         this.cache = new double[size];
         this.keys = (K[]) new Object[size];

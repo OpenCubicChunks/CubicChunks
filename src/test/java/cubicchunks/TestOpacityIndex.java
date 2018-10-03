@@ -27,14 +27,11 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
 import com.google.common.collect.Lists;
-import cubicchunks.util.Bits;
 import cubicchunks.util.Coords;
 import cubicchunks.world.IHeightMap;
 import cubicchunks.world.ServerHeightMap;
 import mcp.MethodsReturnNonnullByDefault;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.spongepowered.lwts.runner.LaunchWrapperTestRunner;
 
 import java.lang.reflect.Field;
 import java.util.Arrays;

@@ -75,17 +75,29 @@ public class PopulatorUtils {
         }
     }
 
-    public static void genOreGaussian(ICubicWorld world, CustomGeneratorSettings cfg, Random random, CubePos pos,
-            int count, double probability, WorldGenerator generator, double mean, double stdDev) {
+    public static void genOreBellCurve(ICubicWorld world, CustomGeneratorSettings cfg, Random random, CubePos pos, int count,
+                                      double probability, WorldGenerator generator, double mean, double stdDevFactor, double spacing, double minY, double maxY) {
+
+        int factor = (cfg.getMaxHeight() - cfg.getMinHeight()) / 2;
+        int minBlockY = Math.round((float) (minY * factor + cfg.heightOffset));
+        int maxBlockY = Math.round((float) (maxY * factor+ cfg.heightOffset));
+        //temporary fix for slider becoming 0 at minimum position
+        if(spacing == 0.0){
+            spacing = 0.5;
+        }
+        int iSpacing = Math.round((float) (spacing * factor));
+        int iMean = Math.round((float) (mean * factor + cfg.heightOffset));
+		double scaledStdDev = stdDevFactor * factor;
         for (int i = 0; i < count; ++i) {
-            if (random.nextDouble() > probability) {
-                continue;
-            }
             int yOffset = random.nextInt(Cube.SIZE) + Cube.SIZE / 2;
             int blockY = pos.getMinBlockY() + yOffset;
-            //noinspection SuspiciousNameCombination
-            double prob = MathUtil.gaussianProbabilityDensity(blockY, mean, stdDev);
-            if (random.nextDouble() > prob) {
+            //skip all potential spawns outside the spawn range
+            if((blockY > maxBlockY) || (blockY < minBlockY)){
+                continue;
+            }
+            double modifier = MathUtil.bellCurveProbabilityCyclic(blockY, iMean, scaledStdDev, iSpacing);
+            //Modify base probability with the curve
+            if (random.nextDouble() > (probability * modifier)) {
                 continue;
             }
             int xOffset = random.nextInt(Cube.SIZE);

@@ -57,7 +57,7 @@ public class Bits {
     }
 
     public static int unpackSigned(long packed, int size, int offset) {
-        // first, offset to the far left and back so we can preserve the two's complement
+        // first, scrollOffset to the far left and back so we can preserve the two's complement
         int complementOffset = 64 - offset - size;
         packed = packed << complementOffset >> complementOffset;
 
@@ -72,7 +72,7 @@ public class Bits {
     }
 
     public static int unpackSigned(int packed, int size, int offset) {
-        // first, offset to the far left and back so we can preserve the two's complement
+        // first, scrollOffset to the far left and back so we can preserve the two's complement
         int complementOffset = 64 - offset - size;
         packed = packed << complementOffset >> complementOffset;
 

@@ -242,14 +242,14 @@ public class CubeWorldEntitySpawner extends WorldEntitySpawner {
     }
 
     private static BlockPos getRandomChunkPosition(ICubicWorldServer world, CubePos pos) {
-        int blockX = pos.getMinBlockX() + world.getRand().nextInt(16);
-        int blockZ = pos.getMinBlockZ() + world.getRand().nextInt(16);
+        int blockX = pos.getMinBlockX() + world.getRand().nextInt(Cube.SIZE);
+        int blockZ = pos.getMinBlockZ() + world.getRand().nextInt(Cube.SIZE);
 
         int height = world.getEffectiveHeight(blockX, blockZ);
         if (pos.getMinBlockY() > height) {
             return null;
         }
-        int blockY = pos.getMinBlockY() + world.getRand().nextInt(16);
+        int blockY = pos.getMinBlockY() + world.getRand().nextInt(Cube.SIZE);
         return new BlockPos(blockX, blockY, blockZ);
     }
 

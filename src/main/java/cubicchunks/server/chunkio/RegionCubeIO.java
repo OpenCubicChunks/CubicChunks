@@ -24,7 +24,7 @@
 package cubicchunks.server.chunkio;
 
 import cubicchunks.CubicChunks;
-import cubicchunks.regionlib.IKey;
+import cubicchunks.regionlib.api.region.key.IKey;
 import cubicchunks.regionlib.impl.EntryLocation2D;
 import cubicchunks.regionlib.impl.EntryLocation3D;
 import cubicchunks.regionlib.impl.SaveCubeColumns;
@@ -66,17 +66,21 @@ public class RegionCubeIO implements ICubeIO {
     
     public RegionCubeIO(ICubicWorldServer world) throws IOException {
         this.world = world;
+
+        initSave();
+
+        // init chunk save queue
+        this.columnsToSave = new ConcurrentHashMap<>();
+        this.cubesToSave = new ConcurrentHashMap<>();
+    }
+
+    private void initSave() throws IOException {
         WorldProvider prov = world.getProvider();
-        
         Path path = this.world.getSaveHandler().getWorldDirectory().toPath();
         if (prov.getSaveFolder() != null) {
             path = path.resolve(prov.getSaveFolder());
         }
         this.save = SaveCubeColumns.create(path);
-
-        // init chunk save queue
-        this.columnsToSave = new ConcurrentHashMap<>();
-        this.cubesToSave = new ConcurrentHashMap<>();
     }
 
     @Override public void flush() throws IOException {
@@ -87,12 +91,17 @@ public class RegionCubeIO implements ICubeIO {
             }
         }
 
-        this.save.close();
-        //if (!this.save.isClosed()) {
-        //	this.db.close();
-        //} else {
-        //	err("DB already closed!");
-        //}
+        try {
+            this.save.close();
+        } catch(IllegalStateException alreadyClosed) {
+            // ignore
+        } catch (Exception ex) {
+            CubicChunks.LOGGER.catching(ex);
+        }
+        // TODO: hack! fix this properly in RegionLib by adding flush()
+        // this avoids Already closed exceptions when vanilla calls flush without the intent to actually close anything
+        // This also needs a lot of testing on windows
+        this.initSave();
     }
 
     @Override @Nullable public IColumn loadColumn(int chunkX, int chunkZ) throws IOException {

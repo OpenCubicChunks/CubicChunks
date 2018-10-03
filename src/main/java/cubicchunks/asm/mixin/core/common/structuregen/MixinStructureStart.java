@@ -123,7 +123,7 @@ public abstract class MixinStructureStart implements ICubicStructureStart {
             newY -= newYMaxBound - maxY;
         }
         int offset = newY - originalY;
-        // offset down by originalY, and then up to cube pos
+        // scrollOffset down by originalY, and then up to cube pos
         this.boundingBox.offset(0, offset, 0);
 
         for (StructureComponent component : this.components) {

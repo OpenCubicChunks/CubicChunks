@@ -104,9 +104,9 @@ public class FastCubeWorldEntitySpawner extends WorldEntitySpawner {
                 // If we found nice spawnpoint in this attempt we will raise
                 // 'maxSpawnAttempts' and 'maxPackSize' values.
                 for (int spawnAttempt = 0; spawnAttempt < maxSpawnAttempts && spawned <= maxPackSize; spawnAttempt++) {
-                    int blockX = minBlockX + rand.nextInt(16);
-                    int blockY = minBlockY + rand.nextInt(16);
-                    int blockZ = minBlockZ + rand.nextInt(16);
+                    int blockX = minBlockX + rand.nextInt(Cube.SIZE);
+                    int blockY = minBlockY + rand.nextInt(Cube.SIZE);
+                    int blockZ = minBlockZ + rand.nextInt(Cube.SIZE);
                     int height = world.getEffectiveHeight(blockX, blockZ) + 1;
                     if (minBlockY > height) {
                         blockY = height;

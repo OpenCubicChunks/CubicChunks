@@ -85,7 +85,7 @@ class SkyLightUpdateCubeSelector {
         //attempt to update lighting only in loaded cubes
         for (Cube cube : column.getLoadedCubes()) {
             int cubeY = cube.getY();
-            int minCubeBlockY = cubeY * 16;
+            int minCubeBlockY = cubeY * Cube.SIZE;
 
             //do we even need to do anything here?
             if (maxBlockY < minCubeBlockY) {

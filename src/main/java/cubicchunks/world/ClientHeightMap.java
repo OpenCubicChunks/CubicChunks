@@ -127,7 +127,7 @@ public class ClientHeightMap implements IHeightMap {
             ByteArrayInputStream buf = new ByteArrayInputStream(data);
             DataInputStream in = new DataInputStream(buf);
 
-            for (int i = 0; i < 256; i++) {
+            for (int i = 0; i < Cube.SIZE * Cube.SIZE; i++) {
                 hmap.set(i, in.readInt());
             }
 

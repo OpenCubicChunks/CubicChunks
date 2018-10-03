@@ -55,7 +55,7 @@ public class IONbtReader {
     @Nullable
     static IColumn readColumn(ICubicWorld world, int x, int z, NBTTagCompound nbt) {
         NBTTagCompound level = nbt.getCompoundTag("Level");
-        IColumn column = readBaseColumn(world, x, z, level);
+        Chunk column = readBaseColumn(world, x, z, level);
         if (column == null) {
             return null;
         }
@@ -63,11 +63,11 @@ public class IONbtReader {
         readOpacityIndex(level, column);
 
         column.setModified(false); // its exactly the same as on disk so its not modified
-        return column;
+        return (IColumn) column; // TODO: use Chunk, not IColumn, whenever possible
     }
 
     @Nullable
-    private static IColumn readBaseColumn(ICubicWorld world, int x, int z, NBTTagCompound nbt) {// check the version number
+    private static Chunk readBaseColumn(ICubicWorld world, int x, int z, NBTTagCompound nbt) {// check the version number
         byte version = nbt.getByte("v");
         if (version != 1) {
             throw new IllegalArgumentException(String.format("Column has wrong version: %d", version));
@@ -83,19 +83,20 @@ public class IONbtReader {
         }
 
         // create the column
-        IColumn column = (IColumn) new Chunk((World) world, x, z);
+        Chunk column = new Chunk((World) world, x, z);
 
         // read the rest of the column properties
         column.setInhabitedTime(nbt.getLong("InhabitedTime"));
+
         return column;
     }
 
-    private static void readBiomes(NBTTagCompound nbt, IColumn column) {// biomes
-        System.arraycopy(nbt.getByteArray("Biomes"), 0, column.getBiomeArray(), 0, 256);
+    private static void readBiomes(NBTTagCompound nbt, Chunk column) {// biomes
+        System.arraycopy(nbt.getByteArray("Biomes"), 0, column.getBiomeArray(), 0, Cube.SIZE * Cube.SIZE);
     }
 
-    private static void readOpacityIndex(NBTTagCompound nbt, IColumn IColumn) {// biomes
-        ((ServerHeightMap) IColumn.getOpacityIndex()).readData(nbt.getByteArray("OpacityIndex"));
+    private static void readOpacityIndex(NBTTagCompound nbt, Chunk chunk) {// biomes
+        ((ServerHeightMap) ((IColumn) chunk).getOpacityIndex()).readData(nbt.getByteArray("OpacityIndex"));
     }
 
     @Nullable
@@ -157,6 +158,7 @@ public class IONbtReader {
 
         // set the worldgen stage
         cube.setPopulated(nbt.getBoolean("populated"));
+        cube.setSurfaceTracked(nbt.getBoolean("isSurfaceTracked")); // previous versions will get their surface tracking redone. This is intended
         cube.setFullyPopulated(nbt.getBoolean("fullyPopulated"));
 
         cube.setInitialLightingDone(nbt.getBoolean("initLightDone"));
@@ -251,6 +253,12 @@ public class IONbtReader {
         NBTTagCompound lightingInfo = nbt.getCompoundTag("LightingInfo");
         int[] lastHeightMap = lightingInfo.getIntArray("LastHeightMap"); // NO NO NO! TODO: Why is hightmap being stored in Cube's data?! kill it!
         int[] currentHeightMap = cube.getColumn().getHeightMap();
+        byte edgeNeedSkyLightUpdate = 0x3F;
+        if (lightingInfo.hasKey("EdgeNeedSkyLightUpdate"))
+            edgeNeedSkyLightUpdate = lightingInfo.getByte("EdgeNeedSkyLightUpdate");
+        for (int i = 0; i < cube.edgeNeedSkyLightUpdate.length; i++) {
+            cube.edgeNeedSkyLightUpdate[i] = (edgeNeedSkyLightUpdate >>> i & 1) == 1;
+        }
 
         // assume changes outside of this cube have no effect on this cube.
         // In practice changes up to 15 blocks above can affect it,

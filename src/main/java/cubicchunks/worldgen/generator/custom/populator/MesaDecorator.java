@@ -44,9 +44,10 @@ public class MesaDecorator implements ICubicPopulator {
 
     @Override public void generate(ICubicWorld world, Random random, CubePos pos, CubicBiome biome) {
         // TODO: less awful way to get generator settings
+        /*
         CustomGeneratorSettings cfg = CustomGeneratorSettings.fromJson(world.getWorldInfo().getGeneratorOptions());
         genOreUniform(world, cfg, random, pos, cfg.mesaAddedGoldOreSpawnTries, cfg.mesaAddedGoldOreSpawnProbability,
                 new WorldGenMinable(Blocks.GOLD_ORE.getDefaultState(), cfg.mesaAddedGoldOreSpawnSize),
-                cfg.mesaAddedGoldOreSpawnMinHeight, cfg.mesaAddedGoldOreSpawnMaxHeight);
+                cfg.mesaAddedGoldOreSpawnMinHeight, cfg.mesaAddedGoldOreSpawnMaxHeight);*/
     }
 }

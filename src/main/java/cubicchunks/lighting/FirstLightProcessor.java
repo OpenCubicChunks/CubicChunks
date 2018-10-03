@@ -98,7 +98,7 @@ public class FirstLightProcessor {
     @Nonnull private final ICubeProvider cache;
 
     @Nonnull private final LightPropagator propagator = new LightPropagator();
-    @Nonnull private final FirstLightUpdateTracker tracker;
+    @Nonnull private final LightUpdateTracker tracker;
 
 
     /**
@@ -106,9 +106,9 @@ public class FirstLightProcessor {
      *
      * @param world the world for which the FirstLightProcessor will be used
      */
-    public FirstLightProcessor(ICubicWorld world) {
+    public FirstLightProcessor(ICubicWorldServer world) {
         this.cache = world.getCubeCache();
-        this.tracker = new FirstLightUpdateTracker(((ICubicWorldServer) world).getPlayerCubeMap());
+        this.tracker = new LightUpdateTracker(world.getPlayerCubeMap());
     }
 
 
@@ -150,6 +150,9 @@ public class FirstLightProcessor {
      * @param cube the cube whose skylight is to be initialized
      */
     public void diffuseSkylight(Cube cube) {
+        if (LightingManager.NO_SUNLIGHT_PROPAGATION) {
+            return;
+        }
         if (cube.getCubicWorld().getProvider().hasNoSky()) {
             cube.setInitialLightingDone(true);
             return;
@@ -157,8 +160,8 @@ public class FirstLightProcessor {
         ICubicWorld world = cube.getCubicWorld();
 
         // Cache min/max Y, generating them may be expensive
-        int[][] minBlockYArr = new int[16][16];
-        int[][] maxBlockYArr = new int[16][16];
+        int[][] minBlockYArr = new int[Cube.SIZE][Cube.SIZE];
+        int[][] maxBlockYArr = new int[Cube.SIZE][Cube.SIZE];
 
         int minBlockX = cubeToMinBlock(cube.getX());
         int maxBlockX = cubeToMaxBlock(cube.getX());

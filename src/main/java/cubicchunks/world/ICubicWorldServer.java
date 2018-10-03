@@ -23,9 +23,9 @@
  */
 package cubicchunks.world;
 
-import cubicchunks.IConfigUpdateListener;
 import cubicchunks.entity.CubicEntityTracker;
 import cubicchunks.lighting.FirstLightProcessor;
+import cubicchunks.server.ChunkGc;
 import cubicchunks.server.CubeProviderServer;
 import cubicchunks.server.PlayerCubeMap;
 import cubicchunks.util.IntRange;
@@ -39,7 +39,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public interface ICubicWorldServer extends ICubicWorld, IConfigUpdateListener {
+public interface ICubicWorldServer extends ICubicWorld {
 
     /**
      * Initializes the world to be a CubicChunks world. Must be done before any players are online and before any chunks
@@ -64,4 +64,6 @@ public interface ICubicWorldServer extends ICubicWorld, IConfigUpdateListener {
     boolean canCreatureTypeSpawnHere(EnumCreatureType type, Biome.SpawnListEntry entry, BlockPos pos);
 
     CubicEntityTracker getCubicEntityTracker();
+    
+    ChunkGc getChunkGarbageCollector();
 }

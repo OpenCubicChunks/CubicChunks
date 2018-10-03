@@ -92,8 +92,5 @@ public class JvmNames {
         WORLD_IS_CHUNK_LOADED = WORLD + "isChunkLoaded(IIZ)Z",
         WORLD_SERVER_GET_ACTUAL_HEIGHT = WORLD_SERVER + "getActualHeight()I";
 
-    // optifine methods
-    public static final String
-        OPTIFINE_RENDER_CHUNK_GET_CHUNK = RENDER_CHUNK + "getChunk(" + WORLD + ")" + CHUNK;
     // @formatter:on
 }

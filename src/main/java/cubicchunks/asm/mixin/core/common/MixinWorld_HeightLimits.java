@@ -124,7 +124,7 @@ public abstract class MixinWorld_HeightLimits implements ICubicWorld {
     @Group(name = "getLightHeightOverride", max = 4)
     @ModifyConstant(
             method = "getLight(Lnet/minecraft/util/math/BlockPos;Z)I",
-            constant = @Constant(intValue = 0, expandZeroConditions = Constant.Condition.LESS_THAN_ZERO),
+            constant = @Constant(intValue = 0, expandZeroConditions = Constant.Condition.LESS_THAN_ZERO, ordinal = 0),
             slice = @Slice(
                     from = @At(value = "INVOKE", target = "Lnet/minecraft/util/math/BlockPos;getY()I"),
                     to = @At(value = "INVOKE",

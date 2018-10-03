@@ -47,7 +47,8 @@ public abstract class MixinPathNavigateGround extends PathNavigate {
     }
 
     /**
-     * @author
+     * @author Barteks2x
+     * @reason original function not only uses {@code > 0} check, but also does not check if area is loaded.
      */
     @Overwrite
     public Path getPathToPos(BlockPos posIn) {

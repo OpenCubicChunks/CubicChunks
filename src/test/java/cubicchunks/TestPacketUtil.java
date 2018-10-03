@@ -25,10 +25,20 @@ package cubicchunks;
 
 import static org.junit.Assert.assertEquals;
 
+import com.flowpowered.noise.module.source.Perlin;
+import cubicchunks.util.MathUtil;
 import cubicchunks.util.PacketUtils;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
+import net.minecraft.util.math.MathHelper;
 import org.junit.Test;
+
+import java.awt.image.BufferedImage;
+import java.awt.image.DataBufferUShort;
+import java.io.File;
+import java.io.IOException;
+
+import javax.imageio.ImageIO;
 
 public class TestPacketUtil {
 

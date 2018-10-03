@@ -79,9 +79,9 @@ public class FlatTerrainProcessor extends BasicCubeGenerator {
             int fromY = layer.fromY - floorY;
             int toY = layer.toY - floorY;
             IBlockState iBlockState = layer.blockState;
-            for (int y = fromY > 0 ? fromY : 0; y < (toY < 16 ? toY : 16); y++) {
-                for (int x = 0; x < 16; x++) {
-                    for (int z = 0; z < 16; z++) {
+            for (int y = fromY > 0 ? fromY : 0; y < (toY < Cube.SIZE ? toY : Cube.SIZE); y++) {
+                for (int x = 0; x < Cube.SIZE; x++) {
+                    for (int z = 0; z < Cube.SIZE; z++) {
                         primer.setBlockState(x, y, z, iBlockState);
                     }
                 }
