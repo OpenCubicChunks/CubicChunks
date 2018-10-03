@@ -55,8 +55,8 @@ public class PopulatorUtils {
 
     public static void genOreUniform(ICubicWorld world, CustomGeneratorSettings cfg, Random random, CubePos pos,
             int count, double probability, WorldGenerator generator, double minY, double maxY) {
-        int minBlockY = Math.round((float) (minY * cfg.heightFactor + cfg.heightOffset));
-        int maxBlockY = Math.round((float) (maxY * cfg.heightFactor + cfg.heightOffset));
+        int minBlockY = Math.round((float) (minY * cfg.expectedHeightVariation + cfg.expectedBaseHeight));
+        int maxBlockY = Math.round((float) (maxY * cfg.expectedHeightVariation + cfg.expectedBaseHeight));
         if (pos.getMinBlockY() > maxBlockY || pos.getMaxBlockY() < minBlockY) {
             return;
         }
@@ -78,16 +78,15 @@ public class PopulatorUtils {
     public static void genOreBellCurve(ICubicWorld world, CustomGeneratorSettings cfg, Random random, CubePos pos, int count,
                                       double probability, WorldGenerator generator, double mean, double stdDevFactor, double spacing, double minY, double maxY) {
 
-        int factor = (cfg.getMaxHeight() - cfg.getMinHeight()) / 2;
-        int minBlockY = Math.round((float) (minY * factor + cfg.heightOffset));
-        int maxBlockY = Math.round((float) (maxY * factor+ cfg.heightOffset));
+        int minBlockY = Math.round((float) (minY * cfg.expectedHeightVariation + cfg.expectedBaseHeight));
+        int maxBlockY = Math.round((float) (maxY * cfg.expectedHeightVariation + cfg.expectedBaseHeight));
         //temporary fix for slider becoming 0 at minimum position
         if(spacing == 0.0){
             spacing = 0.5;
         }
-        int iSpacing = Math.round((float) (spacing * factor));
-        int iMean = Math.round((float) (mean * factor + cfg.heightOffset));
-		double scaledStdDev = stdDevFactor * factor;
+        int iSpacing = Math.round((float) (spacing * cfg.expectedHeightVariation));
+        int iMean = Math.round((float) (mean * cfg.expectedHeightVariation + cfg.expectedBaseHeight));
+		double scaledStdDev = stdDevFactor * cfg.expectedHeightVariation;
         for (int i = 0; i < count; ++i) {
             int yOffset = random.nextInt(Cube.SIZE) + Cube.SIZE / 2;
             int blockY = pos.getMinBlockY() + yOffset;

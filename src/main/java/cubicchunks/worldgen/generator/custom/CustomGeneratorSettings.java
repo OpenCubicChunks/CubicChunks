@@ -46,6 +46,7 @@ import com.google.gson.JsonPrimitive;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
 import com.google.gson.JsonSyntaxException;
+import com.google.gson.annotations.SerializedName;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 import cubicchunks.CCFixType;
@@ -142,6 +143,11 @@ public class CustomGeneratorSettings {
     /**
      * Terrain shape
      */
+    // TODO: needed until I make data fixers work correctly
+    //public boolean useExpectedHeights = true;
+    public float expectedBaseHeight = 64;
+    public float expectedHeightVariation = 64;
+    public float actualHeight = 256;
 
     public float heightVariationFactor = 64;
     public float specialHeightVariationFactorBelowAverageY = 0.25f;
@@ -187,8 +193,8 @@ public class CustomGeneratorSettings {
 
     public BiomeBlockReplacerConfig createBiomeBlockReplacerConfig() {
         replacerConfig.setDefault(CubicChunks.MODID, "water_level", (double) this.waterLevel);
-        replacerConfig.setDefault(CubicChunks.MODID, "height_scale", (double) this.heightFactor);
-        replacerConfig.setDefault(CubicChunks.MODID, "height_offset", (double) this.heightOffset);
+        replacerConfig.setDefault(CubicChunks.MODID, "height_scale", (double) this.expectedHeightVariation);
+        replacerConfig.setDefault(CubicChunks.MODID, "height_offset", (double) this.expectedBaseHeight);
         return replacerConfig;
     }
 
@@ -309,31 +315,11 @@ public class CustomGeneratorSettings {
         return obj;
     }
 
-    public int getMinHeight() {
-        return (int) (this.heightOffset - getMaxHeightOffset());
-    }
-
-    public int getMaxHeight() {
-        return (int) (this.heightOffset + getMaxHeightOffset());
-    }
-
-    public int getAverageHeight() {
-        return (int) this.heightOffset;
-    }
-
-    private int getMaxHeightOffset() {
-        return (int) Math.max(heightFactor, Math.abs(heightVariationFactor) + Math.abs(heightVariationOffset));
-    }
-
-    public int getRealMaxHeight() {
-        return (int) (this.heightOffset + heightVariationOffset +
-                Math.max(this.heightFactor * 2 + this.heightVariationFactor, this.heightFactor + this.heightVariationFactor * 2));
-    }
-
+    // TODO: datafixers
     public static void registerDataFixers(ModFixs fixes) {
         fixes.registerFix(CCFixType.forWorldType("CustomCubic"), new IFixableData() {
             @Override public int getFixVersion() {
-                return -1;
+                return 0;
             }
 
             @Override public NBTTagCompound fixTagCompound(NBTTagCompound compound) {
@@ -343,8 +329,13 @@ public class CustomGeneratorSettings {
                 JsonReader reader = new JsonReader(new StringReader(generatorOptions));
                 JsonObject root = new JsonParser().parse(reader).getAsJsonObject();
 
-                JsonArray standardOres = new JsonArray();
-                JsonArray periodicGaussianOres = new JsonArray();
+                // some old saves are broken, especially 1.11.2 ones from the 1.12.2->1.11.2 backport, build 847
+                // this preserves the existing ores
+                JsonArray standardOres =
+                        root.has("standardOres") ? root.getAsJsonArray("standardOres") : new JsonArray();
+                JsonArray periodicGaussianOres =
+                        root.has("periodicGaussianOres") ?
+                                root.getAsJsonArray("periodicGaussianOres") : new JsonArray();
 
                 // kind of ugly but I don'twant to make a special class just so store these 3 objects...
                 String[] standard = {
@@ -396,9 +387,15 @@ public class CustomGeneratorSettings {
                                 Biomes.MUTATED_MESA_ROCK},//mesa gold
                 };
                 for (int i = 0; i < standard.length; i++) {
-                    standardOres.add(convertStandardOre(gson, root, standard[i], standardBlockstates[i], standardBiomes[i]));
+                    JsonObject obj = convertStandardOre(gson, root, standard[i], standardBlockstates[i], standardBiomes[i]);
+                    if (obj != null) {
+                        standardOres.add(obj);
+                    }
                 }
-                periodicGaussianOres.add(convertGaussianPeriodicOre(gson, root, "lapisLazuli", Blocks.LAPIS_ORE.getDefaultState(), null));
+                JsonObject lapis = convertGaussianPeriodicOre(gson, root, "lapisLazuli", Blocks.LAPIS_ORE.getDefaultState(), null);
+                if (lapis != null) {
+                    periodicGaussianOres.add(lapis);
+                }
                 root.add("standardOres", standardOres);
                 root.add("periodicGaussianOres", periodicGaussianOres);
                 compound.setString("generatorOptions", gson.toJson(root));
@@ -406,12 +403,22 @@ public class CustomGeneratorSettings {
             }
 
             private JsonObject convertStandardOre(Gson gson, JsonObject root, String ore, IBlockState state, Biome[] biomes) {
+                if (!root.has(ore + "SpawnTries")) {
+                    // some old saves are broken, especially 1.11.2 ones from the 1.12.2->1.11.2 backport, build 847
+                    // this avoids adding a lot of air ores
+                    return null;
+                }
                 JsonObject obj = new JsonObject();
                 obj.add("blockstate", gson.toJsonTree(state));
                 if (biomes != null) {
                     obj.add("biomes", gson.toJsonTree(biomes));
                 }
-                obj.add("spawnSize", root.remove(ore + "SpawnSize"));
+                if (root.has(ore + "SpawnSize")) {
+                    obj.add("spawnSize", root.remove(ore + "SpawnSize"));
+                } else {
+                    // emerald doesn't have size defined in the old format
+                    obj.add("spawnSize", new JsonPrimitive(3));
+                }
                 obj.add("spawnTries", root.remove(ore + "SpawnTries"));
                 obj.add("spawnProbability", root.remove(ore + "SpawnProbability"));
                 obj.add("minHeight", root.remove(ore + "SpawnMinHeight"));
@@ -421,12 +428,84 @@ public class CustomGeneratorSettings {
 
             private JsonObject convertGaussianPeriodicOre(Gson gson, JsonObject root, String ore, IBlockState state, Biome[] biomes) {
                 JsonObject obj = convertStandardOre(gson, root, ore, state, biomes);
+                if (obj == null) {
+                    return null;
+                }
                 obj.add("heightMean", root.remove(ore + "HeightMean"));
                 obj.add("heightStdDeviation", root.remove(ore + "HeightStdDeviation"));
                 obj.add("heightSpacing", root.remove(ore + "HeightSpacing"));
                 return obj;
             }
         });
+        fixes.registerFix(CCFixType.forWorldType("CustomCubic"), new IFixableData() {
+            @Override public int getFixVersion() {
+                return 1;
+            }
+
+            @Override public NBTTagCompound fixTagCompound(NBTTagCompound compound) {
+                String generatorOptions = compound.getString("generatorOptions");
+                Gson gson = gson();
+
+                JsonReader reader = new JsonReader(new StringReader(generatorOptions));
+                JsonObject root = new JsonParser().parse(reader).getAsJsonObject();
+
+                float heightVariationOffset = root.get("heightVariationOffset").getAsFloat();
+                float offset = root.get("heightOffset").getAsFloat();
+                float factor = root.get("heightFactor").getAsFloat();
+                if (!root.has("expectedBaseHeight")) {
+                    root.add("expectedBaseHeight", root.get("heightOffset"));
+                }
+                if (!root.has("expectedHeightVariation")) {
+                    root.add("expectedHeightVariation", root.get("heightFactor"));
+                }
+                if (!root.has("actualHeight")) {
+                    root.add("actualHeight", new JsonPrimitive(
+                            (offset + heightVariationOffset +
+                                    Math.max(factor * 2 + heightVariationOffset, factor + heightVariationOffset * 2))
+                    ));
+                }
+                if (!root.has("cubeAreas")) {
+                    root.add("cubeAreas", new JsonObject());
+                }
+                if (!root.has("replacerConfig")) {
+                    JsonObject replacerConf = new JsonObject();
+                    {
+                        JsonObject defaults = new JsonObject();
+                        {
+                            defaults.add("cubicchunks:horizontal_gradient_depth_decrease_weight", new JsonPrimitive(1.0f));
+                            defaults.add("cubicchunks:height_offset", new JsonPrimitive(offset));
+                            JsonObject terrainfill = new JsonObject();
+                            {
+                                JsonObject properties = new JsonObject();
+                                properties.add("variant", new JsonPrimitive("stone"));
+                                terrainfill.add("Properties", properties);
+                                terrainfill.add("Name", new JsonPrimitive("minecraft:stone"));
+                            }
+                            JsonObject oceanblock = new JsonObject();
+                            {
+                                JsonObject properties = new JsonObject();
+                                properties.add("level", new JsonPrimitive("0"));
+                                oceanblock.add("Properties", properties);
+                                oceanblock.add("Name", new JsonPrimitive("minecraft:water"));
+                            }
+                            defaults.add("cubicchunks:biome_fill_depth_offset", new JsonPrimitive(3.0f));
+                            defaults.add("cubicchunks:biome_fill_noise_octaves", new JsonPrimitive(4.0f));
+                            defaults.add("cubicchunks:height_scale", new JsonPrimitive(factor));
+                            defaults.add("cubicchunks:biome_fill_depth_factor", new JsonPrimitive(2.3333333333333335f));
+                            defaults.add("cubicchunks:mesa_depth", new JsonPrimitive(16.0f));
+                            defaults.add("cubicchunks:water_level", root.get("waterLevel"));
+                            defaults.add("cubicchunks:biome_fill_noise_freq", new JsonPrimitive(0.0078125f));
+                        }
+                        replacerConf.add("defaults", defaults);
+                        replacerConf.add("overrides", new JsonObject());
+                    }
+                    root.add("replacerConfig", replacerConf);
+                }
+                compound.setString("generatorOptions", gson.toJson(root));
+                return compound;
+            }
+        });
+
     }
 
     public static Gson gson() {

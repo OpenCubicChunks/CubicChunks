@@ -38,6 +38,7 @@ import cubicchunks.worldgen.generator.custom.CustomGeneratorSettings;
 import cubicchunks.worldgen.generator.custom.CustomGeneratorSettings.PeriodicGaussianOreConfig;
 import cubicchunks.worldgen.gui.component.UIBlockStateButton;
 import cubicchunks.worldgen.gui.component.UIBlockStateSelect;
+import cubicchunks.worldgen.gui.component.UICheckboxNoAutoSize;
 import cubicchunks.worldgen.gui.component.UILayout;
 import cubicchunks.worldgen.gui.component.UIList;
 import cubicchunks.worldgen.gui.component.UIRangeSlider;
@@ -221,10 +222,10 @@ class OreSettingsTab {
             });
             this.type.select(OreGenType.UNIFORM);
 
+            setupThis(gui, deleteTypeArea, mainArea, biomesArea);
             setupMainArea(mainArea);
             allowSelectBiomes(biomesArea, this.selectBiomes.isChecked());
             setupBiomeArea(config, biomesArea);
-            setupThis(gui, deleteTypeArea, mainArea, biomesArea);
         }
 
         private CustomGeneratorSettings.StandardOreConfig toConfig() {
@@ -286,7 +287,7 @@ class OreSettingsTab {
         }
 
         private UICheckBox makeBiomeCheckbox(Biome biome) {
-            return new UICheckBox(getGui(), String.format("%s (%s)", biome.getBiomeName(), biome.getRegistryName()));
+            return new UICheckboxNoAutoSize(getGui(), String.format("%s (%s)", biome.getBiomeName(), biome.getRegistryName()));
         }
 
         private UIContainer<?> makeLabel(ExtraGui gui, CustomGeneratorSettings.StandardOreConfig config) {
@@ -505,7 +506,7 @@ class OreSettingsTab {
         }
 
         private UICheckBox makeBiomeCheckbox(Biome biome) {
-            return new UICheckBox(getGui(), String.format("%s (%s)", biome.getBiomeName(), biome.getRegistryName()));
+            return new UICheckboxNoAutoSize(getGui(), String.format("%s (%s)", biome.getBiomeName(), biome.getRegistryName()));
         }
 
         private UIContainer<?> makeLabel(ExtraGui gui, CustomGeneratorSettings.PeriodicGaussianOreConfig config) {

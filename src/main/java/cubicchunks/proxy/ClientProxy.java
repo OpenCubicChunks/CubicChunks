@@ -54,8 +54,8 @@ public class ClientProxy extends CommonProxy {
                 ctx.getServerHandler().player);
     }
 
-    @Override public void registerEvents() {
-        super.registerEvents();
+    @Override public void init() {
+        super.init();
         MinecraftForge.EVENT_BUS.register(new ClientEventHandler());
     }
 

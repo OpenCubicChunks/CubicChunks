@@ -99,10 +99,10 @@ public class BiomeBlockReplacerConfig {
     }
 
     private Object getValue(ResourceLocation location) {
-        if (defaults.containsKey(location)) {
-            return defaults.get(location);
+        if (overrides.containsKey(location)) {
+            return overrides.get(location);
         }
-        return this.overrides.get(location);
+        return this.defaults.get(location);
     }
 
     public void fillDefaults() {

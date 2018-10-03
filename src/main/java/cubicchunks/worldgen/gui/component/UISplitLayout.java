@@ -41,6 +41,9 @@ import javax.annotation.Nullable;
  */
 public class UISplitLayout<T extends UISplitLayout<T>> extends UIStandardLayout<T, UISplitLayout.Pos> {
 
+    // cached for fast access, because sometimes map access is too slow
+    private UIComponent<?> first, second;
+
     private Type splitType;
 
     private SizeMode sizeMode;
@@ -167,10 +170,30 @@ public class UISplitLayout<T extends UISplitLayout<T>> extends UIStandardLayout<
 
     @Override protected void onAdd(UIComponent<?> comp, Pos at) {
         comp.register(onVisibilityChange);
+        switch (at) {
+            case FIRST:
+                this.first = comp;
+                break;
+            case SECOND:
+                this.second = comp;
+                break;
+            default:
+                throw new Error(at.toString());
+        }
     }
 
     @Override protected void onRemove(UIComponent<?> comp, Pos at) {
         comp.unregister(onVisibilityChange);
+        switch (at) {
+            case FIRST:
+                this.first = null;
+                break;
+            case SECOND:
+                this.second = null;
+                break;
+            default:
+                throw new Error(at.toString());
+        }
     }
 
     @Override protected Pos findNextLocation() {
@@ -363,12 +386,12 @@ public class UISplitLayout<T extends UISplitLayout<T>> extends UIStandardLayout<
 
     @Nullable
     public UIComponent<?> getFirst() {
-        return locationToComponentMap().get(Pos.FIRST);
+        return first;
     }
 
     @Nullable
     public UIComponent<?> getSecond() {
-        return locationToComponentMap().get(Pos.SECOND);
+        return second;
     }
 
     private int getTotalAvailableSize() {

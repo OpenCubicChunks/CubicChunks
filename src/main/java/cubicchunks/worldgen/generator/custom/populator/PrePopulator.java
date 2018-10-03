@@ -46,9 +46,13 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @MethodsReturnNonnullByDefault
 public class PrePopulator implements ICubicPopulator {
 
-    @Override public void generate(ICubicWorld world, Random random, CubePos pos, CubicBiome cubicBiome) {
-        CustomGeneratorSettings cfg = CustomGeneratorSettings.fromJson(world.getWorldInfo().getGeneratorOptions());
+    private final CustomGeneratorSettings cfg;
 
+    public PrePopulator(CustomGeneratorSettings cfg) {
+        this.cfg = cfg;
+    }
+
+    @Override public void generate(ICubicWorld world, Random random, CubePos pos, CubicBiome cubicBiome) {
         Biome biome = cubicBiome.getBiome();
         if (biome != Biomes.DESERT && biome != Biomes.DESERT_HILLS && cfg.waterLakes && random.nextInt(cfg.waterLakeRarity) == 0) {
             (new WorldGenLakes(Blocks.WATER)).generate((World) world, random, pos.randomPopulationPos(random));
@@ -82,7 +86,7 @@ public class PrePopulator implements ICubicPopulator {
         final double yOffset = 0.723583275161355;
         final double valueScale = 0.00599930877922822;
 
-        double normalizedY = (y - cfg.heightOffset) / cfg.heightFactor;
+        double normalizedY = (y - cfg.expectedBaseHeight) / cfg.expectedHeightVariation;
         double vanillaY = normalizedY * 64 + 64;
         return (Math.atan(vanillaY * yScale + yOffset) + Math.PI / 2) * valueScale;
     }

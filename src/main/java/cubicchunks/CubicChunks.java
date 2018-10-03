@@ -24,18 +24,11 @@
 package cubicchunks;
 
 import static cubicchunks.api.worldgen.biome.CubicBiome.oceanWaterReplacer;
-import static cubicchunks.api.worldgen.biome.CubicBiome.surfaceDefaultReplacer;
 import static cubicchunks.api.worldgen.biome.CubicBiome.terrainShapeReplacer;
 
-import com.google.common.collect.BoundType;
-import com.google.common.collect.Range;
-import com.google.common.collect.TreeRangeSet;
-import cubicchunks.debug.DebugTools;
 import cubicchunks.debug.DebugWorldType;
 import cubicchunks.network.PacketDispatcher;
 import cubicchunks.proxy.CommonProxy;
-import cubicchunks.server.chunkio.async.forge.AsyncWorldIOExecutor;
-import cubicchunks.util.IntRange;
 import cubicchunks.world.type.CustomCubicWorldType;
 import cubicchunks.world.type.FlatCubicWorldType;
 import cubicchunks.world.type.VanillaCubicWorldType;
@@ -50,16 +43,13 @@ import cubicchunks.worldgen.generator.custom.biome.replacer.TaigaSurfaceReplacer
 import cubicchunks.worldgen.generator.custom.populator.DefaultDecorator;
 import cubicchunks.worldgen.generator.custom.populator.DesertDecorator;
 import cubicchunks.worldgen.generator.custom.populator.ForestDecorator;
-import cubicchunks.worldgen.generator.custom.populator.HillsDecorator;
 import cubicchunks.worldgen.generator.custom.populator.JungleDecorator;
-import cubicchunks.worldgen.generator.custom.populator.MesaDecorator;
 import cubicchunks.worldgen.generator.custom.populator.PlainsDecorator;
 import cubicchunks.worldgen.generator.custom.populator.SavannaDecorator;
 import cubicchunks.worldgen.generator.custom.populator.SnowBiomeDecorator;
 import cubicchunks.worldgen.generator.custom.populator.SwampDecorator;
 import cubicchunks.worldgen.generator.custom.populator.TaigaDecorator;
 import mcp.MethodsReturnNonnullByDefault;
-import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.BiomeBeach;
@@ -79,13 +69,8 @@ import net.minecraft.world.biome.BiomeSnow;
 import net.minecraft.world.biome.BiomeStoneBeach;
 import net.minecraft.world.biome.BiomeSwamp;
 import net.minecraft.world.biome.BiomeTaiga;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.common.config.ConfigElement;
-import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.common.util.ModFixs;
 import net.minecraftforge.event.RegistryEvent;
-import net.minecraftforge.fml.client.config.GuiConfig;
-import net.minecraftforge.fml.client.event.ConfigChangedEvent;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
@@ -98,7 +83,6 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.network.NetworkCheckHandler;
 import net.minecraftforge.fml.common.registry.ForgeRegistries;
 import net.minecraftforge.fml.common.versioning.ArtifactVersion;
-import net.minecraftforge.fml.common.versioning.ComparableVersion;
 import net.minecraftforge.fml.common.versioning.DefaultArtifactVersion;
 import net.minecraftforge.fml.common.versioning.InvalidVersionSpecificationException;
 import net.minecraftforge.fml.common.versioning.VersionRange;
@@ -107,17 +91,8 @@ import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.WeakHashMap;
 import java.util.function.Consumer;
-import java.util.function.Predicate;
-import java.util.regex.Pattern;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -131,7 +106,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @Mod.EventBusSubscriber
 public class CubicChunks {
 
-    public static final int FIXER_VERSION = 0;
+    public static final int FIXER_VERSION = 1;
 
     public static final VersionRange SUPPORTED_SERVER_VERSIONS;
     public static final VersionRange SUPPORTED_CLIENT_VERSIONS;
@@ -187,13 +162,13 @@ public class CubicChunks {
                 .decorator(new ForestDecorator()).defaultDecorators());
         autoRegister(event, BiomeHills.class, b -> b
                 .addDefaultBlockReplacers()
-                .defaultDecorators().decorator(new HillsDecorator()));
+                .defaultDecorators());
         autoRegister(event, BiomeJungle.class, b -> b
                 .addDefaultBlockReplacers()
                 .defaultDecorators().decorator(new JungleDecorator()));
         autoRegister(event, BiomeMesa.class, b -> b
                 .addBlockReplacer(terrainShapeReplacer()).addBlockReplacer(MesaSurfaceReplacer.provider()).addBlockReplacer(oceanWaterReplacer())
-                .decorator(new DefaultDecorator.Ores()).decorator(new MesaDecorator()).decorator(new DefaultDecorator()));
+                .decoratorProvider(DefaultDecorator.Ores::new).decoratorProvider(DefaultDecorator::new));
         autoRegister(event, BiomeMushroomIsland.class, b -> b
                 .addDefaultBlockReplacers()
                 .defaultDecorators());
@@ -256,7 +231,7 @@ public class CubicChunks {
 
     @EventHandler
     public void init(FMLInitializationEvent event) throws IllegalArgumentException, IllegalAccessException, NoSuchFieldException, SecurityException {
-        proxy.registerEvents();
+        proxy.init();
 
         PacketDispatcher.registerPackets();
         CubeGeneratorsRegistry.computeSortedGeneratorList();

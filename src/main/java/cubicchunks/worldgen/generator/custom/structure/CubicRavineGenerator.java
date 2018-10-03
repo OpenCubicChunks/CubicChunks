@@ -29,11 +29,13 @@ import static net.minecraft.util.math.MathHelper.cos;
 import static net.minecraft.util.math.MathHelper.floor;
 import static net.minecraft.util.math.MathHelper.sin;
 
+import cubicchunks.util.Coords;
 import cubicchunks.util.CubePos;
 import cubicchunks.util.StructureGenUtil;
 import cubicchunks.world.ICubicWorld;
 import cubicchunks.world.cube.Cube;
 import cubicchunks.worldgen.generator.ICubePrimer;
+import cubicchunks.worldgen.generator.custom.CustomGeneratorSettings;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
@@ -55,8 +57,6 @@ public class CubicRavineGenerator extends CubicStructureGenerator {
      * Multiply by 16 and divide by 8: 16 cubes in vanilla chunks, only one in 8 cubes has structures generated
      */
     private static final int RAVINE_RARITY = 50 * 16 / (2 * 2 * 2);
-
-    private static final int MAX_CUBE_Y = 2;
 
     /**
      * Add this value to lava height (Y below which lava exists)
@@ -129,6 +129,8 @@ public class CubicRavineGenerator extends CubicStructureGenerator {
     @Nonnull private static final Predicate<IBlockState> isBlockReplaceable = (state ->
             state.getBlock() == Blocks.STONE || state.getBlock() == Blocks.DIRT || state.getBlock() == Blocks.GRASS);
 
+    private final int maxCubeY;
+
     /**
      * Contains values of ravine widths at each height.
      * <p>
@@ -136,14 +138,15 @@ public class CubicRavineGenerator extends CubicStructureGenerator {
      */
     @Nonnull private float[] widthDecreaseFactors = new float[1024];
 
-    public CubicRavineGenerator() {
+    public CubicRavineGenerator(CustomGeneratorSettings cfg) {
         super(2);
+        this.maxCubeY = Coords.blockToCube(cfg.expectedBaseHeight);
     }
 
     @Override
     protected void generate(ICubicWorld world, ICubePrimer cube, int structureX, int structureY, int structureZ,
             CubePos generatedCubePos) {
-        if (rand.nextInt(RAVINE_RARITY) != 0 || structureY > MAX_CUBE_Y) {
+        if (rand.nextInt(RAVINE_RARITY) != 0 || structureY > maxCubeY) {
             return;
         }
         double startX = localToBlock(structureX, rand.nextInt(Cube.SIZE));
