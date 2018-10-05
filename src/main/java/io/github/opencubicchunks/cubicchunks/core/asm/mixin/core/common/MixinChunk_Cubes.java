@@ -27,6 +27,7 @@ import static io.github.opencubicchunks.cubicchunks.api.util.Coords.blockToCube;
 import static io.github.opencubicchunks.cubicchunks.api.util.Coords.blockToLocal;
 
 import com.google.common.base.Predicate;
+import io.github.opencubicchunks.cubicchunks.core.CubicChunksConfig;
 import io.github.opencubicchunks.cubicchunks.core.world.ClientHeightMap;
 import io.github.opencubicchunks.cubicchunks.core.world.ServerHeightMap;
 import io.github.opencubicchunks.cubicchunks.core.world.column.ColumnTileEntityMap;
@@ -814,5 +815,20 @@ public abstract class MixinChunk_Cubes implements IColumn {
         }
         ICube cube = this.getLoadedCube(blockToCube(pos.getY()));
         return cube != null && cube.isCubeLoaded();
+    }
+
+    // ==============================================
+    //             enqueueRelightChecks
+    // ==============================================
+
+    @Inject(method = "enqueueRelightChecks", at = @At(value = "HEAD"), cancellable = true)
+    private void enqueueRelightChecks_CubicChunks(CallbackInfo cbi) {
+        if (!isColumn) {
+            return;
+        }
+        cbi.cancel();
+        if (!world.isRemote || CubicChunksConfig.doClientLightFixes) {
+            cubeMap.enqueueRelightChecks();
+        }
     }
 }

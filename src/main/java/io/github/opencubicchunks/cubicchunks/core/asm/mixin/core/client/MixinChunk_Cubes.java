@@ -87,16 +87,4 @@ public abstract class MixinChunk_Cubes implements IColumn {
             throw new UnsupportedOperationException("setting storage arrays it not supported with cubic chunks");
         }
     }
-
-    // ==============================================
-    //             enqueueRelightChecks
-    // ==============================================
-
-    @Inject(method = "enqueueRelightChecks", at = @At(value = "HEAD"), cancellable = true)
-    private void enqueueRelightChecks_CubicChunks_NotSupported(CallbackInfo cbi) {
-        if (isColumn) {
-            // todo: enqueueRelightChecks
-            cbi.cancel();
-        }
-    }
 }
