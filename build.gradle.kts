@@ -94,7 +94,7 @@ minecraft {
     isUseDepAts = true
 
     replace("@@VERSION@@", project.version)
-    replaceIn("cubicchunks/CubicChunks.java")
+    replaceIn("io/github/opencubicchunks/cubicchunks/core/CubicChunks.java")
 
     val args = listOf(
             "-Dfml.coreMods.load=io.github.opencubicchunks.cubicchunks.core.asm.coremod.CubicChunksCoreMod", //the core mod class, needed for mixins
