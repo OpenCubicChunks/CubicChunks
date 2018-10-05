@@ -57,7 +57,7 @@ public class MixinAnvilSaveHandler implements ICubicSaveHandler {
     }
 
     @Override public void initCubic(ICubeIO cubeIo) {
-        if (this.cubeIo != null) {
+        if (this.cubeIo == null) {
             CubicChunks.LOGGER.debug("Initializing cubeIo for cubic chunks save handler!");
             this.cubeIo = cubeIo;
         }

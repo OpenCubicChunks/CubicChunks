@@ -43,9 +43,7 @@ import cubicchunks.worldgen.generator.custom.biome.replacer.TaigaSurfaceReplacer
 import cubicchunks.worldgen.generator.custom.populator.DefaultDecorator;
 import cubicchunks.worldgen.generator.custom.populator.DesertDecorator;
 import cubicchunks.worldgen.generator.custom.populator.ForestDecorator;
-import cubicchunks.worldgen.generator.custom.populator.HillsDecorator;
 import cubicchunks.worldgen.generator.custom.populator.JungleDecorator;
-import cubicchunks.worldgen.generator.custom.populator.MesaDecorator;
 import cubicchunks.worldgen.generator.custom.populator.PlainsDecorator;
 import cubicchunks.worldgen.generator.custom.populator.SavannaDecorator;
 import cubicchunks.worldgen.generator.custom.populator.SnowBiomeDecorator;
@@ -72,6 +70,7 @@ import net.minecraft.world.biome.BiomeStoneBeach;
 import net.minecraft.world.biome.BiomeSwamp;
 import net.minecraft.world.biome.BiomeTaiga;
 import net.minecraftforge.event.RegistryEvent;
+import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
 import net.minecraftforge.fml.common.SidedProxy;
@@ -106,7 +105,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @Mod.EventBusSubscriber
 public class CubicChunks {
 
-    public static final int FIXER_VERSION = 0;
+    public static final int FIXER_VERSION = 1;
 
     public static final VersionRange SUPPORTED_SERVER_VERSIONS;
     public static final VersionRange SUPPORTED_CLIENT_VERSIONS;
@@ -162,13 +161,13 @@ public class CubicChunks {
                 .decorator(new ForestDecorator()).defaultDecorators());
         autoRegister(event, BiomeHills.class, b -> b
                 .addDefaultBlockReplacers()
-                .defaultDecorators().decorator(new HillsDecorator()));
+                .defaultDecorators());
         autoRegister(event, BiomeJungle.class, b -> b
                 .addDefaultBlockReplacers()
                 .defaultDecorators().decorator(new JungleDecorator()));
         autoRegister(event, BiomeMesa.class, b -> b
                 .addBlockReplacer(terrainShapeReplacer()).addBlockReplacer(MesaSurfaceReplacer.provider()).addBlockReplacer(oceanWaterReplacer())
-                .decorator(new DefaultDecorator.Ores()).decorator(new MesaDecorator()).decorator(new DefaultDecorator()));
+                .decoratorProvider(DefaultDecorator.Ores::new).decoratorProvider(DefaultDecorator::new));
         autoRegister(event, BiomeMushroomIsland.class, b -> b
                 .addDefaultBlockReplacers()
                 .defaultDecorators());
@@ -230,7 +229,7 @@ public class CubicChunks {
 
     @EventHandler
     public void init(FMLInitializationEvent event) throws IllegalArgumentException, IllegalAccessException, NoSuchFieldException, SecurityException {
-        proxy.registerEvents();
+        proxy.init();
 
         PacketDispatcher.registerPackets();
         CubeGeneratorsRegistry.computeSortedGeneratorList();

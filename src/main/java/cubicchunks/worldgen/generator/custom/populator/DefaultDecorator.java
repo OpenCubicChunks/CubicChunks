@@ -61,16 +61,26 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @MethodsReturnNonnullByDefault
 public final class DefaultDecorator implements ICubicPopulator {
 
+    private final CustomGeneratorSettings cfg;
+
+    public DefaultDecorator(CustomGeneratorSettings cfg) {
+        this.cfg = cfg;
+    }
+
     public static class Ores implements ICubicPopulator {
 
-        @Override public void generate(ICubicWorld world, Random random, CubePos pos, CubicBiome biome) {
-            CustomGeneratorSettings cfg = CustomGeneratorSettings.fromJson(world.getWorldInfo().getGeneratorOptions());
-            generateOres(world, cfg, random, pos);
+        private final CustomGeneratorSettings cfg;
+
+        public Ores(CustomGeneratorSettings cfg) {
+            this.cfg = cfg;
         }
 
-        private void generateOres(ICubicWorld world, CustomGeneratorSettings cfg, Random random, CubePos pos) {
+        @Override public void generate(ICubicWorld world, Random random, CubePos pos, CubicBiome biome) {
             // TODO: allow interleaved order
             for (CustomGeneratorSettings.StandardOreConfig c : cfg.standardOres) {
+                if (c.biomes != null && !c.biomes.contains(biome.getBiome())) {
+                    continue;
+                }
                 Set<IBlockState> states = c.genInBlockstates;
                 WorldGenMinable gen = states == null ?
                         new WorldGenMinable(c.blockstate, c.spawnSize) :
@@ -78,6 +88,9 @@ public final class DefaultDecorator implements ICubicPopulator {
                 genOreUniform(world, cfg, random, pos, c.spawnTries, c.spawnProbability, gen, c.minHeight, c.maxHeight);
             }
             for (CustomGeneratorSettings.PeriodicGaussianOreConfig c : cfg.periodicGaussianOres) {
+                if (c.biomes != null && !c.biomes.contains(biome.getBiome())) {
+                    continue;
+                }
                 Set<IBlockState> states = c.genInBlockstates;
                 WorldGenMinable gen = states == null ?
                         new WorldGenMinable(c.blockstate, c.spawnSize) :
@@ -89,8 +102,6 @@ public final class DefaultDecorator implements ICubicPopulator {
     }
 
     @Override public void generate(ICubicWorld world, Random random, CubePos pos, CubicBiome biome) {
-        CustomGeneratorSettings cfg = CustomGeneratorSettings.fromJson(world.getWorldInfo().getGeneratorOptions());
-
         // TODO: Biome decoration events?
         BiomeDecorator dec = biome.getBiome().theBiomeDecorator;
         generateOnTop(world, random, pos, dec.sandPerChunk2, dec.sandGen);
@@ -296,7 +307,7 @@ public final class DefaultDecorator implements ICubicPopulator {
         final double yOffset = 0.723583275161355;
         final double valueScale = 0.00599930877922822;
 
-        double normalizedY = (y - cfg.heightOffset) / cfg.heightFactor;
+        double normalizedY = (y - cfg.expectedBaseHeight) / cfg.expectedHeightVariation;
         double vanillaY = normalizedY * 64 + 64;
         return (Math.atan(vanillaY * yScale + yOffset) + Math.PI / 2) * valueScale;
     }
@@ -309,7 +320,7 @@ public final class DefaultDecorator implements ICubicPopulator {
         final double yOffset = 1.01588640105311;
         final double valueScale = 0.0127618337650875;
 
-        double normalizedY = (y - cfg.heightOffset) / cfg.heightFactor;
+        double normalizedY = (y - cfg.expectedBaseHeight) / cfg.expectedHeightVariation;
         double vanillaY = normalizedY * 64 + 64;
         return (Math.atan(vanillaY * yScale + yOffset) + Math.PI / 2) * valueScale;
     }

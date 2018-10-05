@@ -330,10 +330,6 @@ dependencies {
     }
 
     embed("io.github.opencubicchunks:regionlib:0.51.0-SNAPSHOT")
-
-    deobfCompile("net.malisis:malisiscore:$malisisCoreVersion") {
-        isTransitive = false
-    }
 }
 
 // TODO: coremod dependency extraction
