@@ -24,8 +24,12 @@
 package io.github.opencubicchunks.cubicchunks.core.world.column;
 
 import com.google.common.collect.Lists;
+import io.github.opencubicchunks.cubicchunks.core.CubicChunksConfig;
+import io.github.opencubicchunks.cubicchunks.core.util.AddressTools;
 import io.github.opencubicchunks.cubicchunks.core.world.cube.Cube;
 import mcp.MethodsReturnNonnullByDefault;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 
 import java.util.ArrayList;
@@ -207,5 +211,38 @@ public class CubeMap implements Iterable<Cube> {
         }
 
         return start; // not found :(
+    }
+
+    private int relightCubeIdx = 0;
+    private int relightCubeBlockIdx = (int) (Math.random() * 4096);
+
+    public void enqueueRelightChecks() {
+        if (cubes.isEmpty()) {
+            return;
+        }
+        int count = CubicChunksConfig.relightChecksPerTickPerColumn;
+        for (int i = 0; i < count; i++) {
+            if (relightCubeIdx >= cubes.size()) {
+                relightCubeIdx = 0;
+                relightCubeBlockIdx++;
+                if (relightCubeBlockIdx >= 4096) {
+                    relightCubeBlockIdx = 0;
+                }
+            }
+            // taking the bits in reverse order means we will still visit every possible position, but jumping around the cube
+            // order of coords: 0, 8, 4, 12, 2, 10, 6, 14, 1, 9, 5, 13, 3, 11, 7, 15
+            int reversedBits = Integer.reverse(relightCubeBlockIdx) >>> (32 - 12);
+            assert reversedBits < 4096 && reversedBits >= 0;
+
+            final Cube cube = cubes.get(relightCubeIdx);
+            final int x = AddressTools.getLocalX(relightCubeBlockIdx);
+            final int y = AddressTools.getLocalY(relightCubeBlockIdx);
+            final int z = AddressTools.getLocalZ(relightCubeBlockIdx);
+            final BlockPos min = cube.getCoords().getMinBlockPos();
+
+            cube.getWorld().checkLight(min.add(x, y, z));
+
+            relightCubeIdx++;
+        }
     }
 }
