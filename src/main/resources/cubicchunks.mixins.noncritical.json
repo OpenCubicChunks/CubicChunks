@@ -1,6 +1,6 @@
 {
     "required": false,
-    "package": "cubicchunks.asm.mixin.noncritical",
+    "package": "io.github.opencubicchunks.cubicchunks.core.asm.mixin.noncritical",
     "refmap": "cubicchunks.mixins.refmap.json",
     "compatibilityLevel": "JAVA_8",
     "minVersion": "0.6.15-SNAPSHOT",
@@ -11,7 +11,8 @@
         "common.command.MixinCommandBase",
         "common.command.MixinCommandFill",
         "common.command.MixinCommandsHeightLimits",
-        "common.MixinBlockPistonBase_HeightFix"
+        "common.MixinBlockPistonBase_HeightFix",
+        "common.MixinTileEntityBeacon"
     ],
     "client": [
         "client.MixinViewFrustum_VertViewDistance",

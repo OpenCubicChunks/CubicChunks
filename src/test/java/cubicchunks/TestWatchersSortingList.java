@@ -25,7 +25,7 @@ package cubicchunks;
 
 import static org.junit.Assert.*;
 
-import cubicchunks.util.WatchersSortingList;
+import io.github.opencubicchunks.cubicchunks.core.util.WatchersSortingList;
 import mcp.MethodsReturnNonnullByDefault;
 import org.junit.Test;
 import java.util.ArrayList;
