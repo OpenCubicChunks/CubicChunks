@@ -94,6 +94,17 @@ public class CubicChunksConfig {
     @Config.Comment("If this is set to true, cubic chunks will respect excluded dimensions even for already existing worlds. If this results in a "
             + "existing dimension switching between cubic chunks and vanilla, the contents of that dimension won't be converted.")
     public static boolean forceDimensionExcludes = false;
+    
+    @Config.LangKey("cubicchunks.config.relight_checks_per_tick_per_column")
+    @Config.Comment("In an attempt to fix lighting glicthes over time, cubic chunks will keep updating light in specified amount of blocks per "
+            + "column (chunk) per tick. Default value of 1 doesn't cause noticeable performance drop, but still fixes most major issues relatively "
+            + "quickly.")
+    public static int relightChecksPerTickPerColumn = 1;
+
+    @Config.LangKey("cubicchunks.config.do_client_light_fixes")
+    @Config.Comment("By default cubic chunks will attempt to go over all the blocks over time to fix lighting only on server. Enable this to also "
+            + "fix lighting on the clientside.")
+    public static boolean doClientLightFixes = false;
 
     //@Config.Ignore
     private static TreeRangeSet<Integer> excludedDimensionsRanges = null;
