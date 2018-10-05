@@ -100,9 +100,7 @@ minecraft {
     isUseDepAts = true
 
     replace("@@VERSION@@", project.version)
-    replace("\"/*@@DEPS_PLACEHOLDER@@*/", ";after:malisiscore@[$malisisCoreMinVersion,)\"")
-    replace("@@MALISIS_VERSION@@", malisisCoreMinVersion)
-    replaceIn("cubicchunks/CubicChunks.java")
+    replaceIn("io/github/opencubicchunks/cubicchunks/core/CubicChunks.java")
 
     val args = listOf(
             "-Dfml.coreMods.load=io.github.opencubicchunks.cubicchunks.core.asm.coremod.CubicChunksCoreMod", //the core mod class, needed for mixins
