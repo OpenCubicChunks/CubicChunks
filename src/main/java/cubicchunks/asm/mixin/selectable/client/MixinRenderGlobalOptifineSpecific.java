@@ -29,10 +29,14 @@ import cubicchunks.world.ICubicWorld;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.client.renderer.RenderGlobal;
 import net.minecraft.client.renderer.ViewFrustum;
+import net.minecraft.client.renderer.chunk.RenderChunk;
 import net.minecraft.client.renderer.culling.ICamera;
 import net.minecraft.entity.Entity;
+import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.MathHelper;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Group;
@@ -83,5 +87,23 @@ public class MixinRenderGlobalOptifineSpecific {
         } else {
             this.position = null;
         }
+    }
+
+
+    /**
+     * Overwrite getRenderChunk(For)Offset to support extended height.
+     *
+     * @author Barteks2x
+     * @reason Remove hardcoded height checks, it's a simple method and doing it differently would be problematic and
+     * confusing (Inject with local capture into BlockPos.getX() and redirect of BlockPos.getY())
+     */
+    @Nullable
+    @Overwrite
+    private RenderChunk getRenderChunkOffset(BlockPos playerPos, RenderChunk renderChunkBase, EnumFacing facing) {
+        BlockPos blockpos = renderChunkBase.getBlockPosOffset16(facing);
+        return MathHelper.abs(playerPos.getX() - blockpos.getX()) > this.renderDistanceChunks * 16 ? null :
+                MathHelper.abs(playerPos.getY() - blockpos.getY()) > this.renderDistanceChunks * 16 ? null :
+                        MathHelper.abs(playerPos.getZ() - blockpos.getZ()) > this.renderDistanceChunks * 16 ? null :
+                                this.viewFrustum.getRenderChunk(blockpos);
     }
 }

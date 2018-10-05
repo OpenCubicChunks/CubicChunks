@@ -63,30 +63,21 @@ public class CubicChunksMixinConfig implements IMixinConfigPlugin {
     @Override
     public void onLoad(String mixinPackage) {
         OptifineState optifineState = OptifineState.NOT_LOADED;
-        String optifineVersion = System.getProperty("cubicchunks.optifineVersion", "empty");
-        if (optifineVersion.equals("empty")) {
-            try {
-                Class optifineInstallerClass = Class.forName("optifine.Installer");
-                Method getVersionHandler = optifineInstallerClass.getMethod("getOptiFineVersion", new Class[0]);
-                optifineVersion = (String) getVersionHandler.invoke(null, new Object[0]);
-                optifineVersion = optifineVersion.replace("_pre", "");
-                optifineVersion = optifineVersion.substring(optifineVersion.length() - 2, optifineVersion.length());
-                CubicChunks.LOGGER.info("Detected Optifine version: " + optifineVersion);
-            } catch (ClassNotFoundException e) {
-                optifineVersion = "ignore";
-                CubicChunks.LOGGER.info("No Optifine detected");
-            } catch (Exception e) {
-                CubicChunks.LOGGER.info("Optifine detected, but have incompatible build. Optifine D1 specific mixins will be loaded.");
-                optifineVersion = "D1";
-            }
+        try {
+            Class optifineInstallerClass = Class.forName("optifine.Installer");
+            Method getVersionHandler = optifineInstallerClass.getMethod("getOptiFineVersion", new Class[0]);
+            String optifineVersion = (String) getVersionHandler.invoke(null, new Object[0]);
+            optifineVersion = optifineVersion.replace("_pre", "");
+            optifineVersion = optifineVersion.substring(optifineVersion.length() - 2);
+            CubicChunks.LOGGER.info("Detected Optifine version: " + optifineVersion);
+            optifineState = OptifineState.LOADED;
+        } catch (ClassNotFoundException e) {
+            CubicChunks.LOGGER.info("No Optifine detected");
+        } catch (Exception e) {
+            e.printStackTrace();
+            CubicChunks.LOGGER.info("Unknown error detecting OptiFine, assuming OptiFine is installed");
+            optifineState = OptifineState.LOADED;
         }
-        
-        if(optifineVersion.equalsIgnoreCase("ignore"))
-            optifineState = OptifineState.NOT_LOADED;
-        else if (optifineVersion.compareTo("D1") >= 0)
-            optifineState = OptifineState.LOADED_D1;
-        else
-            optifineState = OptifineState.LOADED_C7;
 
         modDependencyConditions.put(
                 "cubicchunks.asm.mixin.selectable.client.MixinRenderGlobalNoOptifine",
@@ -94,12 +85,6 @@ public class CubicChunksMixinConfig implements IMixinConfigPlugin {
         modDependencyConditions.put(
                 "cubicchunks.asm.mixin.selectable.client.MixinRenderGlobalOptifineSpecific",
                 optifineState != OptifineState.NOT_LOADED);
-        modDependencyConditions.put(
-                "cubicchunks.asm.mixin.selectable.client.MixinRenderGlobalOptifineSpecificC7",
-                optifineState == OptifineState.LOADED_C7);
-        modDependencyConditions.put(
-                "cubicchunks.asm.mixin.selectable.client.MixinRenderGlobalOptifineSpecificD1",
-                optifineState == OptifineState.LOADED_D1);
         File folder = new File(".", "config");
         folder.mkdirs();
         File configFile = new File(folder, "cubicchunks_mixin_config.json");
@@ -264,7 +249,6 @@ public class CubicChunksMixinConfig implements IMixinConfigPlugin {
     
     private enum OptifineState {
         NOT_LOADED,
-        LOADED_C7,
-        LOADED_D1
+        LOADED
     }
 }

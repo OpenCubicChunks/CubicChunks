@@ -16,9 +16,7 @@
     ],
     "client": [
         "client.MixinRenderGlobalNoOptifine",
-        "client.MixinRenderGlobalOptifineSpecific",
-        "client.MixinRenderGlobalOptifineSpecificC7",
-        "client.MixinRenderGlobalOptifineSpecificD1"
+        "client.MixinRenderGlobalOptifineSpecific"
     ],
     "server": [
     ],
