@@ -159,6 +159,9 @@ public class MathUtil {
 
     /**
      * Converts normalized 0-1 color component to 8-bit integer
+     *
+     * @param value 0-1 color component
+     * @return 8-bit (0-255) integer color component
      */
     public static int to8bitComponent(float value) {
         return MathHelper.clamp(Math.round(value * 255), 0, 255);

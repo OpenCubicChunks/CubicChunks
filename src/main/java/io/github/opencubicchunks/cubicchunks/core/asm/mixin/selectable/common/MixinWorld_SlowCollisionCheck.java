@@ -48,9 +48,9 @@ public abstract class MixinWorld_SlowCollisionCheck implements ICubicWorld {
 
     @Shadow public abstract WorldBorder getWorldBorder();
 
-    @Shadow protected abstract boolean isBlockLoaded(BlockPos pos);
+    @Shadow public abstract boolean isBlockLoaded(BlockPos pos);
 
-    @Shadow protected abstract IBlockState getBlockState(BlockPos pos);
+    @Shadow public abstract IBlockState getBlockState(BlockPos pos);
 
     /**
      * @author Barteks2x

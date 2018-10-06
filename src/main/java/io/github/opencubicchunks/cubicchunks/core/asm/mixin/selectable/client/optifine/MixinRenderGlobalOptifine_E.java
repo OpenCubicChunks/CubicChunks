@@ -64,7 +64,7 @@ public class MixinRenderGlobalOptifine_E {
      */
     @Dynamic @Group(name = "renderEntitiesFix") @Inject(method = "renderEntities",
             at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/chunk/RenderChunk;getChunk()Lnet/minecraft/world/chunk/Chunk;"),
-            locals = LocalCapture.CAPTURE_FAILHARD)
+            locals = LocalCapture.CAPTURE_FAILHARD, remap = false)
     public void onGetPositionOptifine_New(Entity renderViewEntity, ICamera camera, float partialTicks,
             CallbackInfo ci, int pass, double d0, double d1, double d2,
             Entity entity, double d3, double d4, double d5,

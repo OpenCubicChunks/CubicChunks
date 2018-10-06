@@ -70,7 +70,7 @@ public class CubicChunksMixinConfig implements IMixinConfigPlugin {
                 Method getVersionHandler = optifineInstallerClass.getMethod("getOptiFineVersion", new Class[0]);
                 optifineVersion = (String) getVersionHandler.invoke(null, new Object[0]);
                 optifineVersion = optifineVersion.replace("_pre", "");
-                optifineVersion = optifineVersion.substring(optifineVersion.length() - 2, optifineVersion.length());
+                optifineVersion = optifineVersion.substring(optifineVersion.length() - 2);
                 LOGGER.info("Detected Optifine version: " + optifineVersion);
             } catch (ClassNotFoundException e) {
                 optifineVersion = null;

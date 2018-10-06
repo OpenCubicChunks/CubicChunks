@@ -42,7 +42,7 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 @Mixin(ViewFrustum.class)
 public class MixinViewFrustum {
 
-    @Dynamic @Redirect(method = "updateVboRegion",
+    @Dynamic @Redirect(method = "updateVboRegion(Lnet/minecraft/client/renderer/chunk/RenderChunk;)V",
             at = @At(value = "NEW", target = "net/minecraft/util/math/ChunkPos"))
     private ChunkPos getChunkPos(int x, int z, RenderChunk renderChunk) {
         return new ChunkPos3(x, renderChunk.getPosition().getY() & ~255, z);

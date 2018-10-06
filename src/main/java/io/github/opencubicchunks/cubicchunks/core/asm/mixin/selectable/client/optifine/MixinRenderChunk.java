@@ -46,10 +46,10 @@ public abstract class MixinRenderChunk implements IOptifineRenderChunk {
 
     @Shadow @Final private BlockPos.MutableBlockPos position;
     @Shadow private World world;
-    @Dynamic @Shadow private RenderChunk[] renderChunkNeighboursValid;
-    @Dynamic @Shadow private RenderChunk[] renderChunkNeighbours;
+    @Dynamic @Shadow(remap = false) private RenderChunk[] renderChunkNeighboursValid;
+    @Dynamic @Shadow(remap = false) private RenderChunk[] renderChunkNeighbours;
     private int regionY;
-    @Dynamic @Shadow private int regionX;
+    @Dynamic @Shadow(remap = false) private int regionX;
 
     @Shadow public abstract BlockPos getPosition();
 
@@ -62,14 +62,15 @@ public abstract class MixinRenderChunk implements IOptifineRenderChunk {
     }
 
     @Dynamic @Inject(method = "setPosition",
-            at = @At(value = "FIELD", target = "Lnet/minecraft/client/renderer/chunk/RenderChunk;chunk:Lnet/minecraft/world/chunk/Chunk;"))
+            at = @At(value = "FIELD", target = "Lnet/minecraft/client/renderer/chunk/RenderChunk;chunk:Lnet/minecraft/world/chunk/Chunk;"),
+            remap = false)
     private void onSetChunk(int x, int y, int z, CallbackInfo cbi) {
         this.cube = null;
         this.isCubic = ((ICubicWorld) world).isCubicWorld();
         this.regionY = y & ~255;
     }
 
-    @Dynamic @Inject(method = "updateRenderChunkNeighboursValid", at = @At("HEAD"))
+    @Dynamic @Inject(method = "updateRenderChunkNeighboursValid()V", at = @At("HEAD"), remap = false)
     private void onUpdateNeighbors(CallbackInfo cbi) {
         if (!isCubic) {
             return;

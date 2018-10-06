@@ -61,7 +61,7 @@ public class MixinDebugRenderChunkBorder {
         double playerX = player.lastTickPosX + (player.posX - player.lastTickPosX) * (double) partialTicks;
         double playerY = player.lastTickPosY + (player.posY - player.lastTickPosY) * (double) partialTicks;
         double playerZ = player.lastTickPosZ + (player.posZ - player.lastTickPosZ) * (double) partialTicks;
-        double yOffset = (Math.round((int) playerY / 16)) * 16 - 128; // Offset the grid's y coord to based on the player's y coord
+        double yOffset = (Math.round(playerY / 16)) * 16 - 128; // Offset the grid's y coord to based on the player's y coord
         double minY = (0.0D - playerY) + yOffset; // add the offset
         double maxY = (256.0D - playerY) + yOffset;
         GlStateManager.disableTexture2D();

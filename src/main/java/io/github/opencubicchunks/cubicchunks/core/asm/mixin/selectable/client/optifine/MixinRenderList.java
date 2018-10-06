@@ -70,7 +70,7 @@ public abstract class MixinRenderList extends ChunkRenderContainer {
                     value = "FIELD",
                     target = "Lnet/minecraft/client/renderer/chunk/RenderChunk;regionX:I",
                     ordinal = 0
-            ))
+            ), remap = false)
     private int getHackedRegionX(RenderChunk rc) {
         int regionY = renderChunkLayer_regionY;
         int rcRegY = ((IOptifineRenderChunk) rc).getRegionY();
@@ -110,7 +110,7 @@ public abstract class MixinRenderList extends ChunkRenderContainer {
                     value = "FIELD",
                     target = "Lnet/minecraft/client/renderer/chunk/RenderChunk;regionX:I",
                     ordinal = 1
-            ))
+            ), remap = false)
     private int updateRegionY(RenderChunk rc) {
         renderChunkLayer_regionY = ((IOptifineRenderChunk) rc).getRegionY();
         return ((IOptifineRenderChunk) rc).getRegionX();

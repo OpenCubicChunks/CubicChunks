@@ -37,7 +37,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(RenderChunkUtils.class)
 public class MixinRenderChunkUtils {
 
-    @Dynamic @Inject(method = "getCountBlocks", at = @At("HEAD"), cancellable = true)
+    @Dynamic @Inject(method = "getCountBlocks(Lnet/minecraft/client/renderer/chunk/RenderChunk;)I", at = @At("HEAD"),
+            cancellable = true, remap = false)
     private static void getCountBlocks(RenderChunk renderChunk, CallbackInfoReturnable<Integer> cbi) {
         if (((IOptifineRenderChunk) renderChunk).isCubic()) {
             ExtendedBlockStorage ebs = ((IOptifineRenderChunk) renderChunk).getCube().getStorage();

@@ -37,15 +37,7 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 import java.util.Random;
 
 @Mixin(ItemChorusFruit.class)
-public abstract class MixinItemChorusFruit extends ItemFood {
-
-    public MixinItemChorusFruit(int amount, float saturation, boolean isWolfFood) {
-        super(amount, saturation, isWolfFood);
-    }
-    
-    public MixinItemChorusFruit(int amount, boolean isWolfFood) {
-        super(amount, isWolfFood);
-    }
+public abstract class MixinItemChorusFruit {
 
     @ModifyConstant(method = "onItemUseFinish", constant = @Constant(doubleValue = 0.0))
     private double getMinHeight(double orig, ItemStack stack, World worldIn, EntityLivingBase entityLiving) {

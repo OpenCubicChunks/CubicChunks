@@ -68,6 +68,7 @@ public interface IHeightMap {
      *
      * @param localX local block x-coordinate (0..15)
      * @param localZ local block z-coordinate (0..15)
+     * @param blockY only positions below or at this Y coordinate will be retuirned
      *
      * @return Y position of the top non-transparent block below blockY, or very low (far below the min world height) if
      * one doesn't exist
@@ -77,6 +78,8 @@ public interface IHeightMap {
     /**
      * Out of the highest non-opaque blocks from all block columns in the column, returns the y-coordinate of the lowest
      * block.
+     *
+     * @return the minimum of all top block coordinates in this heightmap instance
      */
     int getLowestTopBlockY();
 

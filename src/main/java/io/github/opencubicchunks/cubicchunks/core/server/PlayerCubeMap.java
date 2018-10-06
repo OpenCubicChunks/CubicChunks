@@ -833,7 +833,7 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
      * Return iterator over 'CubeWatchers' of all cubes loaded
      * by players. Iterator first element defined by seed.
      * 
-     * @param seed
+     * @param seed seed for random iterator
      */
     public Iterator<CubeWatcher> getRandomWrappedCubeWatcherIterator(int seed) {
         return this.cubeWatchers.randomWrappedIterator(seed);

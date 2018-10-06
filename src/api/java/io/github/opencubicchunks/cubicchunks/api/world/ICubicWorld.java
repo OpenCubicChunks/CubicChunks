@@ -44,17 +44,26 @@ public interface ICubicWorld extends IMinMaxHeight {
     /**
      * Returns the {@link ICubeProvider} for this world, or throws {@link NotCubicChunksWorldException}
      * if this is not a CubicChunks world.
+     *
+     * @return the cube provider
      */
     ICubeProvider getCubeCache();
 
     /**
-     * Finds the top block for that population cube with give offset, or null if no suitable place found.
+     * Finds the top block for that population cube with given offset, or null if no suitable place found.
      * This method starts from the top of population area (or forcedAdditionalCubes*16 blocks above that)
      * and goes down scanning for solid block. The value is used only if it's within population area.
      *
      * Note: forcedAdditionalCubes should be zero unless absolutely necessary.
-     * TODO: make it go up instead of down so it doesn't load unnecessary chunks when forcedAdditionalCubes is nonzero
+     *
+     * @param pos cube position to find surface for
+     * @param xOffset x coordinate of population area offset relative to cube origin
+     * @param zOffset z coordinate of population area offset relative to cube origin
+     * @param forcedAdditionalCubes amount of additional cubes above to scan
+     * @param type surface type
+     * @return position of the top block matching criteria specified by surface type, or null if it doesn't exist
      */
+    // TODO: make it go up instead of down so it doesn't load unnecessary chunks when forcedAdditionalCubes is nonzero
     @Nullable
     public default BlockPos getSurfaceForCube(CubePos pos, int xOffset, int zOffset, int forcedAdditionalCubes, SurfaceType type) {
         int maxFreeY = pos.getMaxBlockY() + ICube.SIZE / 2;
@@ -112,6 +121,11 @@ public interface ICubicWorld extends IMinMaxHeight {
     /**
      * Returns true iff the given Predicate evaluates to true for all cubes for block positions within blockRadius from
      * centerPos. Only cubes that exist are tested. If some cubes within that range aren't loaded - returns false.
+     *
+     * @param centerPos position to start at
+     * @param blockRadius radius in block to test, starting from centerPos
+     * @param test the test to apply
+     * @return false if any invokation of the given predicate returns false, true otherwise
      */
     default boolean testForCubes(BlockPos centerPos, int blockRadius, Predicate<ICube> test) {
         return testForCubes(
@@ -125,6 +139,15 @@ public interface ICubicWorld extends IMinMaxHeight {
      * Returns true iff the given Predicate evaluates to true for all cubes for block positions between
      * BlockPos(minBlockX, minBlockY, minBlockZ) and BlockPos(maxBlockX, maxBlockY, maxBlockZ) (including the specified
      * positions). Only cubes that exist are tested. If some cubes within that range aren't loaded - returns false.
+     *
+     * @param minBlockX minimum block x coordinate
+     * @param minBlockY minimum block y coordinate
+     * @param minBlockZ minimum block z coordinate
+     * @param maxBlockX maximum block x coordinate
+     * @param maxBlockY maximum block y coordinate
+     * @param maxBlockZ maximum block z coordinate
+     * @param test the test to apply
+     * @return false if any invokation of the given predicate returns false, true otherwise
      */
     default boolean testForCubes(int minBlockX, int minBlockY, int minBlockZ, int maxBlockX, int maxBlockY, int maxBlockZ, Predicate<ICube> test) {
         return testForCubes(
@@ -137,6 +160,12 @@ public interface ICubicWorld extends IMinMaxHeight {
     /**
      * Returns true iff the given Predicate evaluates to true for given cube and neighbors.
      * Only cubes that exist are tested. If some cubes within that range aren't loaded - returns false.
+     *
+     * @param start start cube position
+     * @param end end cube position
+     * @param test the test to apply
+     * @return false if any invokation of the given predicate returns false, true otherwise
+
      */
     boolean testForCubes(CubePos start, CubePos end, Predicate<? super ICube> test);
 

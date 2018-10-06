@@ -59,22 +59,22 @@ public class MixinChunkVisibility {
     /**
      * Quadrant counter
      */
-    @Dynamic @Shadow private static int counter = 0;
+    @Dynamic @Shadow(remap = false) private static int counter = 0;
     /**
      * Current max Y for quadrants already scanned in this scan.
      */
-    @Dynamic @Shadow private static int iMaxStatic = -1;
+    @Dynamic @Shadow(remap = false) private static int iMaxStatic = -1;
     /**
      * Max Y after final test of all quadrants
      */
-    @Dynamic @Shadow private static int iMaxStaticFinal = Coords.blockToCube(Integer.MAX_VALUE) - 1;
+    @Dynamic @Shadow(remap = false) private static int iMaxStaticFinal = Coords.blockToCube(Integer.MAX_VALUE) - 1;
 
-    @Dynamic @Shadow private static World worldLast = null;
-    @Dynamic @Shadow private static int pcxLast = -2147483648;
+    @Dynamic @Shadow(remap = false) private static World worldLast = null;
+    @Dynamic @Shadow(remap = false) private static int pcxLast = -2147483648;
     private static int pcyLast = -2147483648;
-    @Dynamic @Shadow private static int pczLast = -2147483648;
+    @Dynamic @Shadow(remap = false) private static int pczLast = -2147483648;
 
-    @Dynamic @Inject(method = "getMaxChunkY", at = @At("HEAD"), cancellable = true)
+    @Dynamic @Inject(method = "getMaxChunkY", at = @At("HEAD"), cancellable = true, remap = false)
     private static void getMaxChunkYCC(World world, Entity viewEntity, int renderDistanceChunks, CallbackInfoReturnable<Integer> cbi) {
         if (!((ICubicWorld) world).isCubicWorld()) {
             return;

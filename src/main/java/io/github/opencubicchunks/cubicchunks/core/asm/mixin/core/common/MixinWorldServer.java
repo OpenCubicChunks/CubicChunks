@@ -200,8 +200,13 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
             }
         }
     }
-    
-    @Redirect(method = "updateBlocks", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/WorldProvider;canDoRainSnowIce(Lnet/minecraft/world/chunk/Chunk;)Z"))
+
+    @Redirect(method = "updateBlocks",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lnet/minecraft/world/WorldProvider;canDoRainSnowIce(Lnet/minecraft/world/chunk/Chunk;)Z",
+                    remap = false
+            ))
     public boolean redirectProviderCanDoRainSnowIce(WorldProvider provider, Chunk chunk) {
         boolean canDoRainSnowIce = provider.canDoRainSnowIce(chunk);
         if (!canDoRainSnowIce)
