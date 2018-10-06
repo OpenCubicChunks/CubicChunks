@@ -62,8 +62,11 @@ public abstract class MixinRenderChunk implements IOptifineRenderChunk {
     }
 
     @Dynamic @Inject(method = "setPosition",
-            at = @At(value = "FIELD", target = "Lnet/minecraft/client/renderer/chunk/RenderChunk;chunk:Lnet/minecraft/world/chunk/Chunk;"),
-            remap = false)
+            at = @At(
+                    value = "FIELD",
+                    target = "Lnet/minecraft/client/renderer/chunk/RenderChunk;chunk:Lnet/minecraft/world/chunk/Chunk;",
+                    remap = false),
+            remap = true)
     private void onSetChunk(int x, int y, int z, CallbackInfo cbi) {
         this.cube = null;
         this.isCubic = ((ICubicWorld) world).isCubicWorld();
