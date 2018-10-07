@@ -113,8 +113,8 @@ public interface ICube extends XYZAddressable {
      * @param pos target location
      * @param createType how fast the tile entity is needed
      *
-     * @return the tile entity at the specified location, or <code>null</code> if there is no entity and
-     * <code>createType</code> was not {@link Chunk.EnumCreateEntityType#IMMEDIATE}
+     * @return the tile entity at the specified location, or {@code null} if there is no entity and
+     * {@code createType} was not {@link Chunk.EnumCreateEntityType#IMMEDIATE}
      */
     @Nullable TileEntity getTileEntity(BlockPos pos, Chunk.EnumCreateEntityType createType);
 
@@ -128,7 +128,7 @@ public interface ICube extends XYZAddressable {
     /**
      * Check if there are any non-air blocks in this cube
      *
-     * @return <code>true</code> if this cube contains only air blocks, <code>false</code> otherwise
+     * @return {@code true} if this cube contains only air blocks, {@code false} otherwise
      */
     boolean isEmpty();
 
@@ -142,11 +142,13 @@ public interface ICube extends XYZAddressable {
     BlockPos localAddressToBlockPos(int localAddress);
 
     /**
+     * @param <T> dummy generic parameter to return a type that is both {@link World} and {@link ICubicWorld}
      * @return this cube's world
      */
     <T extends World & ICubicWorld> T getWorld();
 
     /**
+     * @param <T> dummy generic parameter to return a type that is both {@link Chunk} and {@link IColumn}
      * @return this cube's column
      */
     <T extends Chunk & IColumn> T getColumn();
@@ -182,7 +184,7 @@ public interface ICube extends XYZAddressable {
      *
      * @param blockPos the position of the block
      *
-     * @return <code>true</code> if the position is within this cube, <code>false</code> otherwise
+     * @return {@code true} if the position is within this cube, {@code false} otherwise
      */
     boolean containsBlockPos(BlockPos blockPos);
 
@@ -197,12 +199,11 @@ public interface ICube extends XYZAddressable {
 
     /**
      * Returns the internal entity container.
+     *
+     * @return the entity container
      */
     ClassInheritanceMultiMap<Entity> getEntitySet();
 
-    /**
-     *
-     */
     void addEntity(Entity entity);
 
     boolean removeEntity(Entity entity);
@@ -210,7 +211,7 @@ public interface ICube extends XYZAddressable {
     /**
      * Check if any modifications happened to this cube since it was loaded from disk
      *
-     * @return <code>true</code> if this cube should be written back to disk
+     * @return {@code true} if this cube should be written back to disk
      */
     boolean needsSaving();
 
@@ -228,19 +229,21 @@ public interface ICube extends XYZAddressable {
      * argument to {@link ICubeGenerator#populate(ICube)}. Check there for more
      * information regarding population
      *
-     * @return <code>true</code> if this cube has been populated, <code>false</code> otherwise
+     * @return {@code true} if this cube has been populated, {@code false} otherwise
      */
     boolean isFullyPopulated();
 
     /**
      * Gets internal isSurfaceTracked value. Intended to be used only for serialization.
+     *
+     * @return true if the contents of thic cube have already been supplied to surface tracker
      */
     boolean isSurfaceTracked();
 
     /**
      * Check whether this cube's initial diffuse skylight has been calculated
      *
-     * @return <code>true</code> if it has been calculated, <code>false</code> otherwise
+     * @return {@code true} if it has been calculated, {@code false} otherwise
      */
     boolean isInitialLightingDone();
 

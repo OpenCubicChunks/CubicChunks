@@ -196,7 +196,7 @@ public interface ICubeGenerator {
      * @param pos find the structure closest to this position
      * @param findUnexplored true if should also find not yet generated structures
      *
-     * @return the position of the structure, or <code>null</code> if none could be found
+     * @return the position of the structure, or {@code null} if none could be found
      */
     @Nullable BlockPos getClosestStructure(String name, BlockPos pos, boolean findUnexplored);
 }

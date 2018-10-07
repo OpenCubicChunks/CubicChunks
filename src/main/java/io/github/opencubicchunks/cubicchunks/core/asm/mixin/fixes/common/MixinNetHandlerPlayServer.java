@@ -33,6 +33,10 @@ import org.spongepowered.asm.mixin.Overwrite;
 @Mixin(NetHandlerPlayServer.class)
 public class MixinNetHandlerPlayServer {
 
+    /**
+     * @author Barteks2x
+     * @reason modify to check for infinite Y and not check for limited Y
+     */
     @Overwrite
     private static boolean isMovePlayerPacketInvalid(CPacketPlayer packetIn) {
         if (Doubles.isFinite(packetIn.getX(0.0D)) && Doubles.isFinite(packetIn.getY(0.0D)) && Doubles.isFinite(packetIn.getZ(0.0D)) && Floats

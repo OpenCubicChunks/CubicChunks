@@ -78,7 +78,7 @@ public abstract class MixinWorld implements ICubicWorldInternal {
 
     // these have to be here because of mixin limitation, they are used by MixinWorldServer
     @Shadow public abstract ISaveHandler getSaveHandler();
-    @Shadow protected abstract boolean isAreaLoaded(BlockPos blockpos1, BlockPos blockpos2);
+    @Shadow public abstract boolean isAreaLoaded(BlockPos blockpos1, BlockPos blockpos2);
 
     @Shadow protected IChunkProvider chunkProvider;
     @Shadow @Final @Mutable public WorldProvider provider;
@@ -97,7 +97,7 @@ public abstract class MixinWorld implements ICubicWorldInternal {
     protected int minHeight = 0, maxHeight = 256;
     private int minGenerationHeight = 0, maxGenerationHeight = 256;
 
-    @Shadow protected abstract boolean isValid(BlockPos pos);
+    @Shadow public abstract boolean isValid(BlockPos pos);
 
     protected void initCubicWorld(IntRange heightRange, IntRange generationRange) {
         ((ICubicWorldSettings) worldInfo).setCubic(true);

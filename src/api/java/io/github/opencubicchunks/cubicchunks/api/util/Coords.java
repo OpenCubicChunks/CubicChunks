@@ -99,6 +99,9 @@ public class Coords {
 
     /**
      * Returns the minimum coordinate inside the population area this coordinate is in
+     *
+     * @param coord the coordinate
+     * @return the minimum coordinate for population area
      */
     public static int getMinCubePopulationPos(int coord) {
         return localToBlock(blockToCube(coord), ICube.SIZE / 2);
@@ -106,6 +109,12 @@ public class Coords {
 
     /**
      * Return a seed for random number generation, based on initial seed and 3 coordinates.
+     *
+     * @param seed the world seed
+     * @param x the x coordinate
+     * @param y the y coordinate
+     * @param z the z coordinate
+     * @return A seed value based on world seed, x, y and z coordinates
      */
     public static long coordsSeedHash(long seed, int x, int y, int z) {
         long hash = 3;

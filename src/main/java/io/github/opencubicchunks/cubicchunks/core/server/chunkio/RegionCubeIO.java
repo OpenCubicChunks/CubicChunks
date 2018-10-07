@@ -27,6 +27,10 @@ import cubicchunks.regionlib.api.region.key.IKey;
 import cubicchunks.regionlib.impl.EntryLocation2D;
 import cubicchunks.regionlib.impl.EntryLocation3D;
 import cubicchunks.regionlib.impl.SaveCubeColumns;
+import cubicchunks.regionlib.impl.save.SaveSection2D;
+import cubicchunks.regionlib.impl.save.SaveSection3D;
+import cubicchunks.regionlib.lib.ExtRegion;
+import cubicchunks.regionlib.lib.provider.SimpleRegionProvider;
 import io.github.opencubicchunks.cubicchunks.api.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.core.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.core.world.cube.Cube;
@@ -45,8 +49,10 @@ import org.apache.logging.log4j.Logger;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
@@ -88,7 +94,35 @@ public class RegionCubeIO implements ICubeIO {
         } else {
             path = Paths.get(".").toAbsolutePath().resolve("clientCache").resolve("DIM" + world.provider.getDimension());
         }
-        this.save = SaveCubeColumns.create(path);
+
+        Files.createDirectories(path);
+
+        Path part2d = path.resolve("region2d");
+        Files.createDirectories(part2d);
+
+        Path part3d = path.resolve("region3d");
+        Files.createDirectories(part3d);
+
+        this.save = new SaveCubeColumns(
+                new SaveSection2D(
+                        new SharedCachedRegionProvider<>(
+                                SimpleRegionProvider.createDefault(new EntryLocation2D.Provider(), part2d, 512)
+                        ),
+                        new SharedCachedRegionProvider<>(
+                                new SimpleRegionProvider<>(new EntryLocation2D.Provider(), part2d,
+                                        (keyProvider, regionKey) -> new ExtRegion<>(part2d, Collections.emptyList(), keyProvider, regionKey)
+                                )
+                        )),
+                new SaveSection3D(
+                        new SharedCachedRegionProvider<>(
+                                SimpleRegionProvider.createDefault(new EntryLocation3D.Provider(), part3d, 512)
+                        ),
+                        new SharedCachedRegionProvider<>(
+                                new SimpleRegionProvider<>(new EntryLocation3D.Provider(), part3d,
+                                        (keyProvider, regionKey) -> new ExtRegion<>(part3d, Collections.emptyList(), keyProvider, regionKey)
+                                )
+                        ))
+        );
     }
 
     @Override public void flush() throws IOException {

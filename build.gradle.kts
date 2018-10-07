@@ -359,7 +359,6 @@ dependencies {
 
     embed("io.github.opencubicchunks:regionlib:0.51.0-SNAPSHOT")
 }
-
 jar.apply {
     from(sourceSets["main"].output)
     from(sourceSets["api"].output)

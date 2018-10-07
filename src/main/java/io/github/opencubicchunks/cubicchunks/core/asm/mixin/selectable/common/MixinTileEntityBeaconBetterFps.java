@@ -33,7 +33,7 @@ import net.minecraft.tileentity.TileEntityLockable;
 @Mixin(TileEntityBeacon.class)
 public abstract class MixinTileEntityBeaconBetterFps extends TileEntityLockable {
     
-    @ModifyConstant(method = "updateLevels", constant = @Constant(expandZeroConditions = Constant.Condition.LESS_THAN_ZERO))
+    @ModifyConstant(method = "updateLevels(III)V", constant = @Constant(expandZeroConditions = Constant.Condition.LESS_THAN_ZERO), remap = false)
     private int updateLevelsYValue(int orig) {
         return ((ICubicWorld) world).getMinHeight();
     }
