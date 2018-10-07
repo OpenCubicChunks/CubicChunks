@@ -23,7 +23,6 @@
  */
 package io.github.opencubicchunks.cubicchunks.core.util;
 
-import static io.github.opencubicchunks.cubicchunks.api.util.Coords.blockToCube;
 import static io.github.opencubicchunks.cubicchunks.api.util.Coords.blockToLocal;
 
 import io.github.opencubicchunks.cubicchunks.core.client.CubeProviderClient;
@@ -33,13 +32,7 @@ import io.github.opencubicchunks.cubicchunks.core.world.ICubeProviderInternal;
 import io.github.opencubicchunks.cubicchunks.core.world.cube.Cube;
 import io.github.opencubicchunks.cubicchunks.api.util.Coords;
 import io.github.opencubicchunks.cubicchunks.api.util.CubePos;
-import io.github.opencubicchunks.cubicchunks.core.client.CubeProviderClient;
-import io.github.opencubicchunks.cubicchunks.core.lighting.ILightBlockAccess;
-import io.github.opencubicchunks.cubicchunks.core.server.CubeProviderServer;
 import io.github.opencubicchunks.cubicchunks.api.world.ICubeProvider;
-import io.github.opencubicchunks.cubicchunks.api.world.ICubicWorld;
-import io.github.opencubicchunks.cubicchunks.core.world.ICubeProviderInternal;
-import io.github.opencubicchunks.cubicchunks.core.world.cube.Cube;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
@@ -71,14 +64,14 @@ public class FastCubeBlockAccess implements ILightBlockAccess {
     @Nonnull private final Chunk[][] columns;
     private final int originX, originY, originZ;
     private final int dx, dy, dz;
-    @Nonnull private final ICubicWorld world;
+    @Nonnull private final World world;
 
     public FastCubeBlockAccess(ICubeProviderInternal cache, Cube cube, int radius) {
         this(cube.getWorld(), cache,
                 cube.getCoords().sub(radius, radius, radius), cube.getCoords().add(radius, radius, radius));
     }
 
-    private FastCubeBlockAccess(ICubicWorld world, ICubeProviderInternal prov, CubePos start, CubePos end) {
+    private FastCubeBlockAccess(World world, ICubeProviderInternal prov, CubePos start, CubePos end) {
         this.dx = Math.abs(end.getX() - start.getX()) + 1;
         this.dy = Math.abs(end.getY() - start.getY()) + 1;
         this.dz = Math.abs(end.getZ() - start.getZ()) + 1;
