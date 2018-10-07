@@ -364,9 +364,14 @@ dependencies {
         isTransitive = false
     }
 
-    embed("io.github.opencubicchunks:regionlib:0.51.0-SNAPSHOT")
+    embed("io.github.opencubicchunks:regionlib:0.52.0-SNAPSHOT")
 }
 
+tasks {
+    "task"(Jar::class) {
+
+    }
+}
 jar.apply {
     from(sourceSets["main"].output)
     from(sourceSets["api"].output)
