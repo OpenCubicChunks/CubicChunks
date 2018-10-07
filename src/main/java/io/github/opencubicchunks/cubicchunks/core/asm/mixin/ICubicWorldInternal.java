@@ -85,8 +85,8 @@ public interface ICubicWorldInternal extends ICubicWorld {
         /**
          * Initializes the world to be a CubicChunks world. Must be done before any players are online and before any chunks
          * are loaded. Cannot be used more than once.
-         * @param heightRange
-         * @param generationRange
+         * @param heightRange world height range
+         * @param generationRange expected height range for world generation. Maximum Y should be above 0.
          */
         void initCubicWorldServer(IntRange heightRange, IntRange generationRange);
 
@@ -104,8 +104,8 @@ public interface ICubicWorldInternal extends ICubicWorld {
         /**
          * Initializes the world to be a CubicChunks world. Must be done before any players are online and before any chunks
          * are loaded. Cannot be used more than once.
-         * @param heightRange
-         * @param generationRange
+         * @param heightRange world height range
+         * @param generationRange expected height range for world generation. Maximum Y should be above 0.
          */
         void initCubicWorldClient(IntRange heightRange, IntRange generationRange);
 

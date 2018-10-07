@@ -456,7 +456,8 @@ public class XYZMap<T extends XYZAddressable> implements Iterable<T> {
      * Return iterator over elements started from random position defined by
      * seed
      * 
-     * @param seed - define start position.
+     * @param seed defines start position
+     * @return An iterator that starts at randomized position based on seed
      **/
     public Iterator<T> randomWrappedIterator(int seed) {
         return new Iterator<T>() {

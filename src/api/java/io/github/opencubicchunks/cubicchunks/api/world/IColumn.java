@@ -37,26 +37,42 @@ import javax.annotation.ParametersAreNonnullByDefault;
 public interface IColumn {
 
     /**
-     * Return Y position of the block directly above the top non-transparent block, or {@link Coords#NO_HEIGHT} + 1 if
-     * there are no non-transparent blocks
-     * <p>
-     * CHECKED: 1.11-13.19.0.2148
+     * Return Y position of the block directly above the top non-transparent block (opacity != 0),
+     * or a value below minimum world height of there is no top block.
+     *
+     * @param pos the position for which the height should be returned. Note that Y coordinate may not necessarily be ignored, which gives the
+     * possibility of multiple layers/stacked dimensions
+     * @return Y coordinate of the block directly above the top non-transparent block
      */
     int getHeight(BlockPos pos);
 
     /**
-     * Return Y position of the block directly above the top non-transparent block, or {@link Coords#NO_HEIGHT} + 1 if
-     * there are no non-transparent blocks
-     * <p>
-     * CHECKED: 1.11-13.19.0.2148
+     * Return Y position of the block directly above the top non-transparent block,
+     * or a value below minimum world height of there is no top block.
+     *
+     * @param localX x coordinate relative to this chunk. Only values in range [0, {@link ICube#SIZE}) are valid
+     * @param localZ z coordinate relative to this chunk. Only values in range [0, {@link ICube#SIZE}) are valid
+     * @return Height at specified X and Z coordinates
+     * @deprecated Use {@link #getHeightValue(int, int, int)} instead
      */
-    int getHeightValue(int localX, int localZ);
+    @Deprecated int getHeightValue(int localX, int localZ);
 
+    /**
+     * Return Y position of the block directly above the top non-transparent block,
+     * or a value below minimum world height of there is no top block.
+     *
+     * @param localX x coordinate relative to this chunk. Only values in range [0, {@link ICube#SIZE}) are valid
+     * @param blockY the Y for which the height should be returned. This is global world coordinate, not a local coordinate.
+     * Note that Y coordinate may not necessarily be ignored, which gives the possibility of multiple layers/stacked dimensions
+     * @param localZ z coordinate relative to this chunk. Only values in range [0, {@link ICube#SIZE}) are valid
+     * @return Height at specified X and Z coordinates
+     */
+    int getHeightValue(int localX, int blockY, int localZ);
 
     /**
      * Check if this column needs to be ticked
      *
-     * @return <code>true</code> if any cube in this column needs to be ticked, <code>false</code> otherwise
+     * @return {@code true} if any cube in this column needs to be ticked, {@code false} otherwise
      */
     boolean shouldTick();
 
@@ -88,7 +104,7 @@ public interface IColumn {
      *
      * @param cubeY cube y position
      *
-     * @return the cube at that position, or <code>null</code> if it is not loaded
+     * @return the cube at that position, or {@code null} if it is not loaded
      */
     @Nullable ICube getLoadedCube(int cubeY);
 
@@ -113,22 +129,24 @@ public interface IColumn {
      *
      * @param cubeY cube y position
      *
-     * @return the removed cube if it existed, otherwise <code>null</code>
+     * @return the removed cube if it existed, otherwise {@code null}
      */
     @Nullable ICube removeCube(int cubeY);
 
     /**
      * Check if there are any loaded cube in this column
      *
-     * @return <code>true</code> if there is at least on loaded cube in this column, <code>false</code> otherwise
+     * @return {@code true} if there is at least on loaded cube in this column, {@code false} otherwise
      */
     boolean hasLoadedCubes();
 
     /**
-     * Note: this method is intended for internal use only.
+     * Note: this method is intended for internal use only and will be removed.
      *
      * Make the chunk ready to use this cube for the next block operation.
      * This cube will be used only if the coordinates match.
+     *
+     * @param cube the cube to precache
      */
     void preCacheCube(ICube cube);
 

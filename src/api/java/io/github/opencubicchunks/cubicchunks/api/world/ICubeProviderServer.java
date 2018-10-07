@@ -34,19 +34,19 @@ import javax.annotation.ParametersAreNonnullByDefault;
 public interface ICubeProviderServer extends ICubeProvider {
 
     /**
-     * Retrieve a column. The work done to retrieve the column is specified by the {@link Requirement} <code>req</code>
+     * Retrieve a column. The work done to retrieve the column is specified by the {@link Requirement} {@code req}
      *
      * @param columnX Column x position
      * @param columnZ Column z position
      * @param req Work done to retrieve the column
      *
-     * @return the column, or <code>null</code> if no column could be created with the specified requirement level
+     * @return the column, or {@code null} if no column could be created with the specified requirement level
      */
     @Nullable
     Chunk getColumn(int columnX, int columnZ, Requirement req);
 
     /**
-     * Retrieve a cube. The work done to retrieve the cube is specified by {@link Requirement} <code>req</code>
+     * Retrieve a cube. The work done to retrieve the cube is specified by {@link Requirement} {@code req}
      *
      * @param cubeX the cube's x coordinate
      * @param cubeY the cube's y coordinate
@@ -60,7 +60,7 @@ public interface ICubeProviderServer extends ICubeProvider {
 
     /**
      * The effort made to retrieve a cube or column. Any further work should not be done, and returning
-     * <code>null</code> is acceptable in those cases
+     * {@code null} is acceptable in those cases
      */
     enum Requirement {
         // Warning, don't modify order of these constants - ordinals are used in comparisons

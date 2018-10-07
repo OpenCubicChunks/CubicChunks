@@ -50,8 +50,6 @@ defaultTasks = listOf("licenseFormat", "build")
 //it can't be named forgeVersion because ForgeExtension has property named forgeVersion
 val theForgeVersion: String by project
 val theMappingsVersion: String by project
-val malisisCoreVersion: String by project
-val malisisCoreMinVersion: String by project
 
 val licenseYear: String by project
 val projectName: String by project
@@ -359,13 +357,14 @@ dependencies {
         isTransitive = false
     }
 
-    embed("io.github.opencubicchunks:regionlib:0.51.0-SNAPSHOT")
-
-    deobfCompile("net.malisis:malisiscore:$malisisCoreVersion") {
-        isTransitive = false
-    }
+    embed("io.github.opencubicchunks:regionlib:0.52.0-SNAPSHOT")
 }
 
+tasks {
+    "task"(Jar::class) {
+
+    }
+}
 jar.apply {
     from(sourceSets["main"].output)
     from(sourceSets["api"].output)

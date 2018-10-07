@@ -72,8 +72,9 @@ public class MixinRenderGlobalOptifineSpecific {
     @SuppressWarnings("UnresolvedMixinReference")
     @Group(name = "renderEntitiesFix")
     @Inject(method = "renderEntities",
-            at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/chunk/RenderChunk;getChunk()Lnet/minecraft/world/chunk/Chunk;"),
-            locals = LocalCapture.CAPTURE_FAILHARD)
+            at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/chunk/RenderChunk;getChunk()Lnet/minecraft/world/chunk/Chunk;",
+                    remap = false),
+            locals = LocalCapture.CAPTURE_FAILHARD, remap = true)
     public void onGetPositionOptifine_New(Entity renderViewEntity, ICamera camera, float partialTicks,
             CallbackInfo ci, int pass, double d0, double d1, double d2,
             Entity entity, double d3, double d4, double d5,

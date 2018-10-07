@@ -68,7 +68,7 @@ public abstract class MixinWorld_HeightLimits implements ICubicWorld {
 
     @Shadow private int skylightSubtracted;
 
-    @Shadow public boolean isRemote;
+    @Shadow @Final public boolean isRemote;
 
     @Shadow @Final public WorldProvider provider;
 
