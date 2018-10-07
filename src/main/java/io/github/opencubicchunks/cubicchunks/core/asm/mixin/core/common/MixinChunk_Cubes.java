@@ -511,7 +511,7 @@ public abstract class MixinChunk_Cubes implements IColumn {
             ),
             require = 2)
     private int addEntity_getMaxHeight(ClassInheritanceMultiMap<?>[] entityLists) {
-        return isColumn ? entityLists.length : blockToCube(getWorld().getMaxHeight());
+        return isColumn ? blockToCube(getWorld().getMaxHeight()) : entityLists.length;
     }
 
     @Redirect(method = "addEntity",
