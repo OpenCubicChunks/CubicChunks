@@ -21,41 +21,16 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package io.github.opencubicchunks.cubicchunks.core.asm.mixin.selectable.client;
+package io.github.opencubicchunks.cubicchunks.core.world;
 
-import javax.annotation.ParametersAreNonnullByDefault;
+import javax.annotation.Nullable;
 
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-
-import io.github.opencubicchunks.cubicchunks.core.world.ICubicChunkCache;
 import io.github.opencubicchunks.cubicchunks.core.world.cube.Cube;
-import mcp.MethodsReturnNonnullByDefault;
-import net.minecraft.init.Biomes;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.ChunkCache;
-import net.minecraft.world.World;
-import net.minecraft.world.biome.Biome;
 
-@MethodsReturnNonnullByDefault
-@ParametersAreNonnullByDefault
-@Mixin(ChunkCache.class)
-public abstract class MixinChunkCache_Cubic implements ICubicChunkCache {
+public interface ICubicChunkCache {
 
-    @Shadow public World world;
+    @Nullable Cube getCube(BlockPos pos);
 
-    @Inject(method = "getBiome", at = @At("HEAD"), cancellable = true)
-    public void getBiome(BlockPos pos, CallbackInfoReturnable<Biome> cir) {
-        if (!this.isCubic())
-            return;
-        Cube cube = this.getCube(pos);
-        if (cube == null)
-            cir.setReturnValue(Biomes.PLAINS);
-        else
-            cir.setReturnValue(cube.getBiome(pos));
-        cir.cancel();
-    }
+    boolean isCubic();
 }

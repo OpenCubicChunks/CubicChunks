@@ -68,4 +68,8 @@ public class AddressTools {
     public static int getLocalAddress(BlockPos pos) {
         return getLocalAddress(pos.getX(), pos.getY(), pos.getZ());
     }
+
+    public static int getBiomeAddress(int biomeX, int biomeZ) {
+        return biomeX << 3 | biomeZ;
+    }
 }

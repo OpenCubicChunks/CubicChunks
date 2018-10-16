@@ -35,7 +35,6 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
-import net.minecraft.world.biome.BiomeProvider;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 
@@ -253,5 +252,5 @@ public interface ICube extends XYZAddressable {
 
     boolean hasLightUpdates();
 
-    Biome getBiome(BlockPos pos, BiomeProvider provider);
+    Biome getBiome(BlockPos pos);
 }

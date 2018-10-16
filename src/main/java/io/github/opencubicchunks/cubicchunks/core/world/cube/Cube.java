@@ -31,6 +31,7 @@ import io.github.opencubicchunks.cubicchunks.api.world.ICubicWorld;
 import io.github.opencubicchunks.cubicchunks.core.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.core.lighting.LightingManager;
 import io.github.opencubicchunks.cubicchunks.core.util.AddressTools;
+import io.github.opencubicchunks.cubicchunks.api.util.Coords;
 import io.github.opencubicchunks.cubicchunks.api.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.core.util.ticket.ITicket;
 import io.github.opencubicchunks.cubicchunks.core.util.ticket.TicketList;
@@ -53,7 +54,6 @@ import net.minecraft.world.NextTickListEntry;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.biome.Biome;
-import net.minecraft.world.biome.BiomeProvider;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 
@@ -394,12 +394,12 @@ public class Cube implements ICube {
      * cube generator
      */
     @Override
-    public Biome getBiome(BlockPos pos, BiomeProvider provider) {
+    public Biome getBiome(BlockPos pos) {
         if(this.blockBiomeArray == null)
-            return this.getColumn().getBiome(pos, provider);
-        int x = (pos.getX() & 14) >> 1;
-        int z = (pos.getZ() & 14) >> 1;
-        int biomeId = this.blockBiomeArray[x << 3 | z] & 255;
+            return this.getColumn().getBiome(pos, world.getBiomeProvider());
+        int biomeX = Coords.blockToBiome(pos.getX());
+        int biomeZ = Coords.blockToBiome(pos.getZ());
+        int biomeId = this.blockBiomeArray[AddressTools.getBiomeAddress(biomeX, biomeZ)] & 255;
         Biome biome = Biome.getBiome(biomeId);
         return biome;
     }

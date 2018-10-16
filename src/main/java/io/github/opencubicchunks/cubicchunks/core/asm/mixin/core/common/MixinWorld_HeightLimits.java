@@ -274,9 +274,15 @@ public abstract class MixinWorld_HeightLimits implements ICubicWorld {
         if (!this.isCubicWorld())
             return;
         ICube cube = this.getCubeCache().getLoadedCube(Coords.blockToCube(pos.getX()),Coords.blockToCube(pos.getY()),Coords.blockToCube(pos.getZ()));
+        /*
+         * Using return here function will keep callback not cancelled,
+         * therefore "vanilla" function, which will get biome from chunk, will
+         * be called. Since cube is null there is no way to retrieve chunk
+         * faster, than using vanilla way.
+         */
         if (cube == null)
             return;
-        Biome biome = cube.getBiome(pos, provider.getBiomeProvider());
+        Biome biome = cube.getBiome(pos);
         ci.setReturnValue(biome);
         ci.cancel();
     }

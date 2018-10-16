@@ -62,13 +62,13 @@ public abstract class MixinChunkCache_Vanilla {
         if(!cworld.isCubicWorld())
             return;
         cir.cancel();
-        int x = (pos.getX() >> 4) - this.chunkX;
-        int z = (pos.getZ() >> 4) - this.chunkZ;
-        if (!withinBounds(x, z)) {
+        int chunkX = Coords.blockToCube(pos.getX()) - this.chunkX;
+        int chunkZ = Coords.blockToCube(pos.getZ()) - this.chunkZ;
+        if (!withinBounds(chunkX, chunkZ)) {
             cir.setReturnValue(Biomes.PLAINS);
             return;
         }
-        ICube cube = ((IColumn)this.chunkArray[x][z]).getCube(Coords.blockToCube(pos.getY()));
-        cir.setReturnValue(cube.getBiome(pos, this.world.getBiomeProvider()));
+        ICube cube = ((IColumn)this.chunkArray[chunkX][chunkZ]).getCube(Coords.blockToCube(pos.getY()));
+        cir.setReturnValue(cube.getBiome(pos));
     }
 }

@@ -38,6 +38,12 @@ import javax.annotation.ParametersAreNonnullByDefault;
 public class Coords {
 
     public static final int NO_HEIGHT = Integer.MIN_VALUE + 32;
+    /**
+     * Each {@link io.github.opencubicchunks.cubicchunks.core.world.cube.Cube}
+     * optionally contain 8x1x8 map of biome IDs, or 2x16x2 block wide biome
+     * areas.
+     */
+    public static final int BIOMES_PER_CUBE = 8 * 1 * 8;
 
     public static BlockPos midPos(BlockPos p1, BlockPos p2) {
         //bitshift instead of / - round always down
@@ -54,6 +60,10 @@ public class Coords {
 
     public static int blockCeilToCube(int val) {
         return -((-val) >> 4);
+    }
+    
+    public static int blockToBiome(int val) {
+        return (val & 14) >> 1;
     }
 
     public static int localToBlock(int cubeVal, int localVal) {
