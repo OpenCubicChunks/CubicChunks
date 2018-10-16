@@ -49,11 +49,14 @@ class WorldEncoder {
 
         // 1. emptiness
         cubes.forEach(cube -> {
-            out.writeBoolean(cube.isEmpty());
-            out.writeBoolean(cube.getStorage() != null);
-            out.writeBoolean(cube.getBiomeArray() != null);
-            out.writeBoolean(false); // reserve
-            out.writeBoolean(false); // reserve
+            byte flags = 0;
+            if(cube.isEmpty())
+                flags |= 1;
+            if(cube.getStorage() != null)
+                flags |= 2;
+            if(cube.getBiomeArray() != null)
+                flags |= 4;
+            out.writeByte(flags);
         });
 
         // 2. block IDs and metadata
@@ -116,11 +119,10 @@ class WorldEncoder {
         boolean[] hasCustomBiomeMap = new boolean[cubes.size()];
 
         for (int i = 0; i < cubes.size(); i++) {
-            isEmpty[i] = in.readBoolean() || cubes.get(i) == null;
-            hasStorage[i] = in.readBoolean() && cubes.get(i) != null;
-            hasCustomBiomeMap[i] = in.readBoolean() && cubes.get(i) != null;
-            in.readBoolean(); // Reserved
-            in.readBoolean(); // Reserved
+            byte flags = in.readByte();
+            isEmpty[i] = (flags & 1) != 0 || cubes.get(i) == null;
+            hasStorage[i] = (flags & 2) != 0 && cubes.get(i) != null;
+            hasCustomBiomeMap[i] = (flags & 4) != 0 && cubes.get(i) != null;
         }
 
         for (int i = 0; i < cubes.size(); i++) {
@@ -190,8 +192,8 @@ class WorldEncoder {
     static int getEncodedSize(Collection<Cube> cubes) {
         int size = 0;
 
-        // 1. isEmpty, hasStorage, hasBiomeArray and two reserved flags
-        size += 5 * cubes.size();
+        // 1. isEmpty, hasStorage and hasBiomeArray flags packed in one byte
+        size += cubes.size();
 
         // 2. block IDs and metadata
         for (Cube cube : cubes) {
