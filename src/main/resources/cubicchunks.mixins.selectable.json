@@ -16,6 +16,8 @@
     ],
     "client": [
         "client.MixinRenderGlobalNoOptifine",
+        "client.MixinChunkCache_Cubic",
+        "client.MixinChunkCache_Vanilla",
         "client.optifine.MixinRenderGlobalOptifine_E",
         "client.optifine.MixinRenderChunk",
         "client.optifine.MixinRenderChunkUtils",

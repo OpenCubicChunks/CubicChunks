@@ -34,6 +34,7 @@ import net.minecraft.util.ClassInheritanceMultiMap;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.World;
+import net.minecraft.world.biome.Biome;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 
@@ -250,4 +251,6 @@ public interface ICube extends XYZAddressable {
     boolean isCubeLoaded();
 
     boolean hasLightUpdates();
+
+    Biome getBiome(BlockPos pos);
 }

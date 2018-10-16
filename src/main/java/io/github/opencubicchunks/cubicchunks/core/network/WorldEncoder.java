@@ -49,8 +49,14 @@ class WorldEncoder {
 
         // 1. emptiness
         cubes.forEach(cube -> {
-            out.writeBoolean(cube.isEmpty());
-            out.writeBoolean(cube.getStorage() != null);
+            byte flags = 0;
+            if(cube.isEmpty())
+                flags |= 1;
+            if(cube.getStorage() != null)
+                flags |= 2;
+            if(cube.getBiomeArray() != null)
+                flags |= 4;
+            out.writeByte(flags);
         });
 
         // 2. block IDs and metadata
@@ -86,6 +92,12 @@ class WorldEncoder {
                 out.writeBytes(heightmaps);
             }
         });
+        
+        // 6. biomes
+        cubes.forEach(cube -> {
+            if (cube.getBiomeArray() != null)
+                out.writeBytes(cube.getBiomeArray());
+        });
     }
 
     static void encodeColumn(PacketBuffer out, Chunk column) {
@@ -104,10 +116,13 @@ class WorldEncoder {
         // 1. emptiness
         boolean[] isEmpty = new boolean[cubes.size()];
         boolean[] hasStorage = new boolean[cubes.size()];
+        boolean[] hasCustomBiomeMap = new boolean[cubes.size()];
 
         for (int i = 0; i < cubes.size(); i++) {
-            isEmpty[i] = in.readBoolean() || cubes.get(i) == null;
-            hasStorage[i] = in.readBoolean() && cubes.get(i) != null;
+            byte flags = in.readByte();
+            isEmpty[i] = (flags & 1) != 0 || cubes.get(i) == null;
+            hasStorage[i] = (flags & 2) != 0 && cubes.get(i) != null;
+            hasCustomBiomeMap[i] = (flags & 4) != 0 && cubes.get(i) != null;
         }
 
         for (int i = 0; i < cubes.size(); i++) {
@@ -158,6 +173,16 @@ class WorldEncoder {
                 cube.getStorage().recalculateRefCounts();
             }
         }
+        
+        // 6. biomes
+        for (int i = 0; i < cubes.size(); i++) {
+            if (!hasCustomBiomeMap[i])
+                continue;
+            Cube cube = cubes.get(i);
+            byte[] blockBiomeArray = new byte[Coords.BIOMES_PER_CUBE];
+            in.readBytes(blockBiomeArray);
+            cube.setBiomeArray(blockBiomeArray);
+        }
     }
 
     static int getEncodedSize(Chunk column) {
@@ -167,7 +192,8 @@ class WorldEncoder {
     static int getEncodedSize(Collection<Cube> cubes) {
         int size = 0;
 
-        size += 2 * cubes.size(); // 1. isEmpty and hasStorage flags
+        // 1. isEmpty, hasStorage and hasBiomeArray flags packed in one byte
+        size += cubes.size();
 
         // 2. block IDs and metadata
         for (Cube cube : cubes) {
@@ -185,6 +211,13 @@ class WorldEncoder {
 
         // heightmaps
         size += 256 * Integer.BYTES * cubes.size();
+        // biomes
+        for (Cube cube : cubes) {
+            byte[] biomeArray = cube.getBiomeArray();
+            if (biomeArray == null)
+                continue;
+            size += biomeArray.length;
+        }
         return size;
     }
 

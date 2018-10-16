@@ -27,16 +27,12 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 
-import io.github.opencubicchunks.cubicchunks.core.CubicChunks;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.spongepowered.asm.lib.tree.ClassNode;
@@ -210,8 +206,9 @@ public class CubicChunksMixinConfig implements IMixinConfigPlugin {
                         + " chunk will not try to seek path to player outside of chunks if direct path is blocked."
                         + " You need to restart Minecraft to apply changes."),
         USE_CUBE_ARRAYS_INSIDE_CHUNK_CACHE(true, 
-                new String[] {},
-                new String[] {"io.github.opencubicchunks.cubicchunks.core.asm.mixin.selectable.common.MixinWorld_ChunkCache"},
+                new String[] {"io.github.opencubicchunks.cubicchunks.core.asm.mixin.selectable.client.MixinChunkCache_Vanilla"},
+                new String[] {"io.github.opencubicchunks.cubicchunks.core.asm.mixin.selectable.common.MixinChunkCache",
+                        "io.github.opencubicchunks.cubicchunks.core.asm.mixin.selectable.client.MixinChunkCache_Cubic"},
                 "Enabling this option will mix cube array into chunk cache"
                         + " for using in entity path navigator."
                         + " Potentially this will slightly reduce server tick time"

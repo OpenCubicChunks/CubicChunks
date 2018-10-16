@@ -135,7 +135,7 @@ public class IONbtReader {
         readTileEntities(level, world, cube);
         readScheduledBlockTicks(level, world);
         readLightingInfo(cube, level, world);
-
+        readBiomes(cube, level);
         cube.markSaved(); // its exactly the same as on disk so its not modified
     }
 
@@ -313,4 +313,8 @@ public class IONbtReader {
         }
     }
 
+    private static void readBiomes(Cube cube, NBTTagCompound nbt) {// biomes
+        if (nbt.hasKey("Biomes"))
+            cube.setBiomeArray(nbt.getByteArray("Biomes"));
+    }
 }

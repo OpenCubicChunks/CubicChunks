@@ -27,6 +27,7 @@ import static io.github.opencubicchunks.cubicchunks.api.util.Coords.blockToCube;
 import static io.github.opencubicchunks.cubicchunks.api.util.Coords.cubeToMinBlock;
 
 import io.github.opencubicchunks.cubicchunks.core.world.cube.BlankCube;
+import io.github.opencubicchunks.cubicchunks.api.util.Coords;
 import io.github.opencubicchunks.cubicchunks.api.world.ICube;
 import io.github.opencubicchunks.cubicchunks.api.world.ICubicWorld;
 import io.github.opencubicchunks.cubicchunks.core.world.cube.BlankCube;
@@ -37,6 +38,8 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldProvider;
+import net.minecraft.world.biome.Biome;
+import net.minecraft.world.biome.BiomeProvider;
 import net.minecraft.world.chunk.Chunk;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -264,5 +267,23 @@ public abstract class MixinWorld_HeightLimits implements ICubicWorld {
         } else {
             return this.isChunkLoaded(chunkX, chunkZ, allowEmpty);
         }
+    }
+    
+    @Inject(method = "getBiome", at = @At("HEAD"), cancellable = true)
+    public void getBiome(BlockPos pos, CallbackInfoReturnable<Biome> ci) {
+        if (!this.isCubicWorld())
+            return;
+        ICube cube = this.getCubeCache().getLoadedCube(Coords.blockToCube(pos.getX()),Coords.blockToCube(pos.getY()),Coords.blockToCube(pos.getZ()));
+        /*
+         * Using return here function will keep callback not cancelled,
+         * therefore "vanilla" function, which will get biome from chunk, will
+         * be called. Since cube is null there is no way to retrieve chunk
+         * faster, than using vanilla way.
+         */
+        if (cube == null)
+            return;
+        Biome biome = cube.getBiome(pos);
+        ci.setReturnValue(biome);
+        ci.cancel();
     }
 }
