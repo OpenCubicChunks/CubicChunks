@@ -23,10 +23,14 @@
  */
 package io.github.opencubicchunks.cubicchunks.api.world;
 
+import static io.github.opencubicchunks.cubicchunks.api.util.Coords.blockToCube;
+
+import io.github.opencubicchunks.cubicchunks.api.util.Coords;
 import io.github.opencubicchunks.cubicchunks.api.util.NotCubicChunksWorldException;
 import io.github.opencubicchunks.cubicchunks.api.util.CubePos;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.init.Blocks;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
@@ -61,7 +65,7 @@ public interface ICubicWorld extends IMinMaxHeight {
      * @param zOffset z coordinate of population area offset relative to cube origin
      * @param forcedAdditionalCubes amount of additional cubes above to scan
      * @param type surface type
-     * @return position of the top block matching criteria specified by surface type, or null if it doesn't exist
+     * @return position of the block above the top block matching criteria specified by surface type, or null if it doesn't exist
      */
     // TODO: make it go up instead of down so it doesn't load unnecessary chunks when forcedAdditionalCubes is nonzero
     @Nullable
@@ -79,18 +83,27 @@ public interface ICubicWorld extends IMinMaxHeight {
     }
 
     @Nullable
-    public default BlockPos findTopBlock(BlockPos start, int minTopY, int maxTopY, SurfaceType type) {
+    default BlockPos findTopBlock(BlockPos start, int minTopY, int maxTopY, SurfaceType type) {
         BlockPos pos = start;
         IBlockState startState = ((World) this).getBlockState(start);
-        if (canBeTopBlock(pos, startState, type)) {
-            // the top tested block is solid, don't use that one
+        if (startState != Blocks.AIR.getDefaultState()) {
+            // the top tested block is non-air, don't use that one because we don't know what is above
             return null;
         }
+        ICube cube = getCubeFromBlockCoords(pos.down());
         while (pos.getY() >= minTopY) {
             BlockPos next = pos.down();
-            IBlockState state = ((World) this).getBlockState(next);
-            if (canBeTopBlock(pos, state, type)) {
-                break;
+            if (blockToCube(next.getY()) != cube.getY()) {
+                cube = getCubeFromBlockCoords(next);
+            }
+            if (!cube.isEmpty()) {
+                IBlockState state = cube.getBlockState(next);
+                if (canBeTopBlock(next, state, type)) {
+                    break;
+                } else if (state != Blocks.AIR.getDefaultState()) {
+                    // don't generate anything below known solid parts of terrain
+                    return null;
+                }
             }
             pos = next;
         }
