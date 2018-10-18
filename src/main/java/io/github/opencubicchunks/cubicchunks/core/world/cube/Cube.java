@@ -337,6 +337,7 @@ public class Cube implements ICube {
 
         Iterator<NextTickListEntry> pti = pendingTickListEntriesTreeSet.iterator();
         while (pti.hasNext()) {
+            assert storage != null : "There are blocks to tick in cube but getStorage() is empty!";
             NextTickListEntry ntle = pti.next();
             if (ntle.scheduledTime > world.getTotalWorldTime())
                 return;
