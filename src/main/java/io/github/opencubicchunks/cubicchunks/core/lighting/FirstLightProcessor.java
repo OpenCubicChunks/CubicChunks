@@ -48,6 +48,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockPos.MutableBlockPos;
 import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.WorldServer;
+import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -133,6 +134,8 @@ public class FirstLightProcessor {
 
         BlockPos startPos = cube.getCoords().getMinBlockPos();
 
+        ExtendedBlockStorage ebs = cube.getStorage();
+
         for (int localX = 0; localX < Cube.SIZE; ++localX) {
             for (int localZ = 0; localZ < Cube.SIZE; ++localZ) {
                 for (int localY = Cube.SIZE - 1; localY >= 0; --localY) {
@@ -140,8 +143,11 @@ public class FirstLightProcessor {
                     if (opacityIndex.isOccluded(localX, cubeMinY + localY, localZ)) {
                         break;
                     }
-
-                    cube.setLightFor(EnumSkyBlock.SKY, startPos.add(localX, localY, localZ), 15);
+                    if (ebs == null) {
+                        ebs = cube.setStorage(new ExtendedBlockStorage(cube.getY(), cube.getWorld().provider.hasSkyLight()));
+                    }
+                    assert ebs != null;
+                    ebs.setSkyLight(localX, localY, localZ, 15);
                 }
             }
         }
