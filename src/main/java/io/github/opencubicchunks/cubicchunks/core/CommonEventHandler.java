@@ -109,7 +109,7 @@ public class CommonEventHandler {
 
         IntRange generationRange = new IntRange(0, ((ICubicWorldProvider) world.provider).getOriginalActualHeight());
         WorldType type = evt.getObject().getWorldType();
-        if (type instanceof ICubicWorldType) {
+        if (type instanceof ICubicWorldType && ((ICubicWorldType) type).hasCubicGeneratorForWorld(world)) {
             generationRange = ((ICubicWorldType) type).calculateGenerationHeightRange(world);
         }
 
