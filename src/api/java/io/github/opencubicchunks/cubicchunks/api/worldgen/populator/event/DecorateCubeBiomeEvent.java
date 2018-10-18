@@ -21,7 +21,7 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package io.github.opencubicchunks.cubicchunks.api.worldgen.populator;
+package io.github.opencubicchunks.cubicchunks.api.worldgen.populator.event;
 
 import io.github.opencubicchunks.cubicchunks.api.util.CubePos;
 import mcp.MethodsReturnNonnullByDefault;
@@ -37,13 +37,13 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class CubeDecorateEvent {
+public class DecorateCubeBiomeEvent extends Event {
 
     private final World world;
     private final Random rand;
     private final CubePos cubePos;
 
-    public CubeDecorateEvent(World world, Random rand, CubePos cubePos) {
+    public DecorateCubeBiomeEvent(World world, Random rand, CubePos cubePos) {
         this.world = world;
         this.rand = rand;
         this.cubePos = cubePos;
@@ -64,7 +64,7 @@ public class CubeDecorateEvent {
     /**
      * This event is fired before a cube is decorated with a biome feature.
      */
-    public static class Pre extends CubeDecorateEvent {
+    public static class Pre extends DecorateCubeBiomeEvent {
         public Pre(World world, Random rand, CubePos cubePos) {
             super(world, rand, cubePos);
         }
@@ -73,7 +73,7 @@ public class CubeDecorateEvent {
     /**
      * This event is fired after a cube is decorated with a biome feature.
      */
-    public static class Post extends CubeDecorateEvent {
+    public static class Post extends DecorateCubeBiomeEvent {
         public Post(World world, Random rand, CubePos cubePos) {
             super(world, rand, cubePos);
         }
@@ -85,7 +85,7 @@ public class CubeDecorateEvent {
      * You can set the result to DENY to prevent the default biome decoration.
      */
     @Event.HasResult
-    public static class Decorate extends CubeDecorateEvent {
+    public static class Decorate extends DecorateCubeBiomeEvent {
 
         private final DecorateBiomeEvent.Decorate.EventType type;
         @Nullable private final BlockPos placementPos;

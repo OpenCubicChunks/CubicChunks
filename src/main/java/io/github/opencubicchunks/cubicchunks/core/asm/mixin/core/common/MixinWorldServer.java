@@ -23,6 +23,7 @@
  */
 package io.github.opencubicchunks.cubicchunks.core.asm.mixin.core.common;
 
+import io.github.opencubicchunks.cubicchunks.api.worldgen.ICubeGenerator;
 import io.github.opencubicchunks.cubicchunks.core.CubicChunksConfig;
 import io.github.opencubicchunks.cubicchunks.core.world.ICubicSaveHandler;
 import io.github.opencubicchunks.cubicchunks.core.entity.CubicEntityTracker;
@@ -124,6 +125,10 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
             throw new NotCubicChunksWorldException();
         }
         return (CubeProviderServer) this.chunkProvider;
+    }
+
+    @Override public ICubeGenerator getCubeGenerator() {
+        return getCubeCache().getCubeGenerator();
     }
 
     @Override public FirstLightProcessor getFirstLightProcessor() {
