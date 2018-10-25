@@ -52,7 +52,7 @@ import net.minecraftforge.fml.common.registry.GameRegistry;
 
 public class CubeGeneratorsRegistry {
 
-    private static TreeSet<GeneratorWrapper> sortedGeneratorList;
+    private static TreeSet<GeneratorWrapper> sortedGeneratorList = new TreeSet<>();
 
     /**
      * Register a world generator - something that inserts new block types into the world on population stage
