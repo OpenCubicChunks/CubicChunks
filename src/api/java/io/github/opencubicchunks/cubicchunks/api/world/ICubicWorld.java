@@ -34,6 +34,7 @@ import net.minecraft.init.Blocks;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
+import java.util.function.BiPredicate;
 import java.util.function.Predicate;
 
 import javax.annotation.Nullable;
@@ -60,16 +61,19 @@ public interface ICubicWorld extends IMinMaxHeight {
      *
      * Note: forcedAdditionalCubes should be zero unless absolutely necessary.
      *
-     * @param pos cube position to find surface for
+     * @param cubePos cube position to find surface for
      * @param xOffset x coordinate of population area offset relative to cube origin
      * @param zOffset z coordinate of population area offset relative to cube origin
      * @param forcedAdditionalCubes amount of additional cubes above to scan
      * @param type surface type
      * @return position of the block above the top block matching criteria specified by surface type, or null if it doesn't exist
      */
-    // TODO: make it go up instead of down so it doesn't load unnecessary chunks when forcedAdditionalCubes is nonzero
+    public default BlockPos getSurfaceForCube(CubePos cubePos, int xOffset, int zOffset, int forcedAdditionalCubes, SurfaceType type) {
+        return getSurfaceForCube(cubePos, xOffset, zOffset, forcedAdditionalCubes, (pos, state) -> canBeTopBlock(pos, state, type));
+    }
+
     @Nullable
-    public default BlockPos getSurfaceForCube(CubePos pos, int xOffset, int zOffset, int forcedAdditionalCubes, SurfaceType type) {
+    public default BlockPos getSurfaceForCube(CubePos pos, int xOffset, int zOffset, int forcedAdditionalCubes, BiPredicate<BlockPos, IBlockState> canBeTopBlock) {
         int maxFreeY = pos.getMaxBlockY() + ICube.SIZE / 2;
         int minFreeY = pos.getMinBlockY() + ICube.SIZE / 2;
         int startY = pos.above().getMaxBlockY() + forcedAdditionalCubes * ICube.SIZE;
@@ -79,15 +83,33 @@ public interface ICubicWorld extends IMinMaxHeight {
                 startY,
                 pos.getMinBlockZ() + zOffset
         );
-        return findTopBlock(start, minFreeY, maxFreeY, type);
+        return findTopBlock(start, minFreeY, maxFreeY, canBeTopBlock);
     }
 
     @Nullable
     default BlockPos findTopBlock(BlockPos start, int minTopY, int maxTopY, SurfaceType type) {
+        return findTopBlock(start, minTopY, maxTopY, (pos, state) -> canBeTopBlock(pos, state, type));
+    }
+
+    /**
+     * Finds the top block between minTopY and maxTopY, startiung the search at start.
+     * If a potential top block is found above maxTopY, this method returns null.
+     *
+     * Note that canBeTopBlock should return true even if you don't intend to generate something when that block is encountered
+     * as long as it counts as "surface".
+     *
+     * @param start start position
+     * @param minTopY minimum Y coordinate to search
+     * @param maxTopY maximum Y coordinate to consider as a surface
+     * @param canBeTopBlock checks whether a block at given position should be considered "surface".
+     * @return the top found position
+     */
+    @Nullable
+    default BlockPos findTopBlock(BlockPos start, int minTopY, int maxTopY, BiPredicate<BlockPos, IBlockState> canBeTopBlock) {
         BlockPos pos = start;
         IBlockState startState = ((World) this).getBlockState(start);
-        if (startState != Blocks.AIR.getDefaultState()) {
-            // the top tested block is non-air, don't use that one because we don't know what is above
+        if (canBeTopBlock.test(start, startState)) {
+            // the top tested block is "top", don't use that one because we don't know what is above
             return null;
         }
         ICube cube = getCubeFromBlockCoords(pos.down());
@@ -98,11 +120,8 @@ public interface ICubicWorld extends IMinMaxHeight {
             }
             if (!cube.isEmpty()) {
                 IBlockState state = cube.getBlockState(next);
-                if (canBeTopBlock(next, state, type)) {
+                if (canBeTopBlock.test(next, state)) {
                     break;
-                } else if (state != Blocks.AIR.getDefaultState()) {
-                    // don't generate anything below known solid parts of terrain
-                    return null;
                 }
             }
             pos = next;
