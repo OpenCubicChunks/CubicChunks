@@ -109,7 +109,6 @@ public class CubicChunks {
         proxy.init();
 
         PacketDispatcher.registerPackets();
-        CubeGeneratorsRegistry.computeSortedGeneratorList();
     }
 
     @EventHandler
