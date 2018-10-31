@@ -167,7 +167,8 @@ public class CommonEventHandler {
             ReflectionUtil.getClassOrDefault("WorldServerOF", Object.class), // OptiFine's WorldServer, no package
             ReflectionUtil.getClassOrDefault("WorldServerMultiOF", Object.class), // OptiFine's WorldServerMulti, no package
             ReflectionUtil.getClassOrDefault("net.optifine.override.WorldServerOF", Object.class), // OptiFine's WorldServer
-            ReflectionUtil.getClassOrDefault("net.optifine.override.WorldServerMultiOF", Object.class) // OptiFine's WorldServerMulti
+            ReflectionUtil.getClassOrDefault("net.optifine.override.WorldServerMultiOF", Object.class), // OptiFine's WorldServerMulti
+            ReflectionUtil.getClassOrDefault("com.forgeessentials.multiworld.WorldServerMultiworld", Object.class) // ForgeEssentials world
     });
 
     @SuppressWarnings("unchecked")

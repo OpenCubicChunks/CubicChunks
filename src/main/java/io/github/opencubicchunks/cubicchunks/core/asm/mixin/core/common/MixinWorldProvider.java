@@ -96,7 +96,8 @@ public abstract class MixinWorldProvider implements ICubicWorldProvider {
         if (!((ICubicWorld) world).isCubicWorld()) {
             throw new NotCubicChunksWorldException();
         }
-        if (this.getDimensionType() == DimensionType.OVERWORLD && world.getWorldType() instanceof ICubicWorldType) {
+        if (world.getWorldType() instanceof ICubicWorldType
+                && ((ICubicWorldType) world.getWorldType()).hasCubicGeneratorForWorld(world)) {
             return ((ICubicWorldType) world.getWorldType()).createCubeGenerator(world);
         }
         return new VanillaCompatibilityGenerator(this.createChunkGenerator(), world);
