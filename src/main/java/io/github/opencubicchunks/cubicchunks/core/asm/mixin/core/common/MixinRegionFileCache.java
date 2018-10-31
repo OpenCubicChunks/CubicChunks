@@ -23,11 +23,9 @@
  */
 package io.github.opencubicchunks.cubicchunks.core.asm.mixin.core.common;
 
-import io.github.opencubicchunks.cubicchunks.core.world.ICubicSaveHandler;
-import io.github.opencubicchunks.cubicchunks.core.CubicChunks;
-import io.github.opencubicchunks.cubicchunks.core.server.chunkio.ICubeIO;
+import io.github.opencubicchunks.cubicchunks.core.server.chunkio.SharedCachedRegionProvider;
 import mcp.MethodsReturnNonnullByDefault;
-import net.minecraft.world.chunk.storage.AnvilSaveHandler;
+import net.minecraft.world.chunk.storage.RegionFileCache;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -41,24 +39,11 @@ import javax.annotation.ParametersAreNonnullByDefault;
 // many mods already assume AnvilSaveHandler is always used, so we assume the same and hope for the best
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-@Mixin(AnvilSaveHandler.class)
-public class MixinAnvilSaveHandler implements ICubicSaveHandler {
+@Mixin(RegionFileCache.class)
+public class MixinRegionFileCache {
 
-    private ICubeIO cubeIo;
-
-    @Inject(method = "flush", at = @At("RETURN"))
-    public void onClearRefs(CallbackInfo cbi) throws IOException {
-        if (cubeIo == null) {
-            CubicChunks.bigWarning("cubeIo not initializes in save handler! If this happens frequently it's likely a major issue!");
-            return;
-        }
-        cubeIo.flush();
-    }
-
-    @Override public void initCubic(ICubeIO cubeIo) {
-        if (this.cubeIo == null) {
-            CubicChunks.LOGGER.debug("Initializing cubeIo for cubic chunks save handler!");
-            this.cubeIo = cubeIo;
-        }
+    @Inject(method = "clearRegionFileReferences", at = @At("HEAD"))
+    private static void onClearRefs(CallbackInfo cbi) throws IOException {
+        SharedCachedRegionProvider.clearRegions();
     }
 }
