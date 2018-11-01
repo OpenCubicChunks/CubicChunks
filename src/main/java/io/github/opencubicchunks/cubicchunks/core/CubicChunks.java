@@ -75,8 +75,8 @@ public class CubicChunks {
         try {
             // Versions newer than current will be only checked on the other side
             // (I know this can be hard to actually fully understand)
-            SUPPORTED_SERVER_VERSIONS = VersionRange.createFromVersionSpec("[1.12.2-0.0.887.0,)");
-            SUPPORTED_CLIENT_VERSIONS = VersionRange.createFromVersionSpec("[1.12.2-0.0.887.0,)");
+            SUPPORTED_SERVER_VERSIONS = VersionRange.createFromVersionSpec("[1.11.2-0.0.915.0,)");
+            SUPPORTED_CLIENT_VERSIONS = VersionRange.createFromVersionSpec("[1.11.2-0.0.915.0,)");
         } catch (InvalidVersionSpecificationException e) {
             throw new Error(e);
         }
