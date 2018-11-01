@@ -85,12 +85,12 @@ public abstract class MixinPathNavigate {
     private void pathFollowInitWalkNodeProcessor(CallbackInfo ci) {
         Vec3d vec1 = this.getEntityPosition();
         Vec3d vec2 = this.currentPath.getVectorFromIndex(this.theEntity, this.currentPath.getCurrentPathLength() - 1);
-        int x1 = (int) vec1.xCoord;
-        int y1 = (int) vec1.yCoord;
-        int z1 = (int) vec1.zCoord;
-        int x2 = (int) vec2.xCoord;
-        int y2 = (int) vec2.yCoord;
-        int z2 = (int) vec2.zCoord;
+        int x1 = (int) vec1.x;
+        int y1 = (int) vec1.y;
+        int z1 = (int) vec1.z;
+        int x2 = (int) vec2.x;
+        int y2 = (int) vec2.y;
+        int z2 = (int) vec2.z;
         int maxChacheSize = 256;
         if (x2 - x1 > maxChacheSize) {
             CubicChunks.LOGGER.warn("ChunkCache X size requested by WalkNodeProcessor is too big! Capped to " + maxChacheSize);

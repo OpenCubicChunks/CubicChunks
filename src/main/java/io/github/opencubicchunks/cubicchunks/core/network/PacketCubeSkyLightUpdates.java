@@ -61,7 +61,7 @@ public class PacketCubeSkyLightUpdates implements IMessage {
             int localX = AddressTools.getLocalX(packed);
             int localY = AddressTools.getLocalY(packed);
             int localZ = AddressTools.getLocalZ(packed);
-            int value = cube.getStorage().getExtSkylightValue(localX, localY, localZ);
+            int value = cube.getStorage().getSkyLight(localX, localY, localZ);
             byte byte1 = (byte) (Bits.packUnsignedToInt(localX, 4, 0) | Bits.packUnsignedToInt(localY, 4, 4));
             byte byte2 = (byte) (Bits.packUnsignedToInt(localZ, 4, 0) | Bits.packUnsignedToInt(value, 4, 4));
             this.data[i * 2] = byte1;
@@ -77,7 +77,7 @@ public class PacketCubeSkyLightUpdates implements IMessage {
             return;
         }
         this.cube = cube.getCoords();
-        this.data = Arrays.copyOf(cube.getStorage().getSkylightArray().getData(), Cube.SIZE * Cube.SIZE * Cube.SIZE / 2);
+        this.data = Arrays.copyOf(cube.getStorage().getSkyLight().getData(), Cube.SIZE * Cube.SIZE * Cube.SIZE / 2);
     }
 
     @Override

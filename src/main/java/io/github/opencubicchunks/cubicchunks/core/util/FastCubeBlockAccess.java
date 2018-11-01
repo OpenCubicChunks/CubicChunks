@@ -163,9 +163,9 @@ public class FastCubeBlockAccess implements ILightBlockAccess {
             int localZ = blockToLocal(pos.getZ());
 
             if (lightType == EnumSkyBlock.SKY) {
-                return ebs.getExtSkylightValue(localX, localY, localZ);
+                return ebs.getSkyLight(localX, localY, localZ);
             } else {
-                return ebs.getExtBlocklightValue(localX, localY, localZ);
+                return ebs.getBlockLight(localX, localY, localZ);
             }
         }
         return lightType.defaultLightValue;
@@ -180,9 +180,9 @@ public class FastCubeBlockAccess implements ILightBlockAccess {
             int localZ = blockToLocal(pos.getZ());
 
             if (lightType == EnumSkyBlock.SKY) {
-                ebs.setExtSkylightValue(localX, localY, localZ, val);
+                ebs.setSkyLight(localX, localY, localZ, val);
             } else {
-                ebs.setExtBlocklightValue(localX, localY, localZ, val);
+                ebs.setBlockLight(localX, localY, localZ, val);
             }
             return true;
         }

@@ -80,7 +80,7 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
 
     @Shadow @Mutable @Final private PlayerChunkMap playerChunkMap;
     @Shadow @Mutable @Final private WorldEntitySpawner entitySpawner;
-    @Shadow @Mutable @Final private EntityTracker theEntityTracker;
+    @Shadow @Mutable @Final private EntityTracker entityTracker;
     @Shadow public boolean disableLevelSaving;
 
     @Nullable private ChunkGc chunkGc;
@@ -99,7 +99,7 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
         this.chunkGc = new ChunkGc(getCubeCache());
 
         this.firstLightProcessor = new FirstLightProcessor((WorldServer) (Object) this);
-        this.theEntityTracker = new CubicEntityTracker(this);
+        this.entityTracker = new CubicEntityTracker(this);
     }
 
     @Override public void tickCubicWorld() {
@@ -181,7 +181,7 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
             strikeTarget = column.getPrecipitationHeight(strikeTarget);
             ci.setReturnValue(strikeTarget);
             Cube cube = this.getCubeCache().getLoadedCube(CubePos.fromBlockCoords(strikeTarget));
-            AxisAlignedBB aabb = (new AxisAlignedBB(strikeTarget)).expandXyz(3.0D);
+            AxisAlignedBB aabb = (new AxisAlignedBB(strikeTarget)).grow(3.0D);
             if (cube == null) {
                 return;
             }
@@ -192,7 +192,7 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
                 BlockPos entityPos = entity.getPosition();
                 if (entityPos.getY() < column.getHeightValue(Coords.blockToLocal(entityPos.getX()), Coords.blockToLocal(entityPos.getZ())))
                     continue;
-                if (entity.getEntityBoundingBox().intersectsWith(aabb)) {
+                if (entity.getEntityBoundingBox().intersects(aabb)) {
                     // This entity is lucky!
                     ci.setReturnValue(entityPos);
                     return;

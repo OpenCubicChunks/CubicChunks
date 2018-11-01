@@ -105,8 +105,8 @@ public class ClientEventHandler {
                     GuiButton btn = gvs.buttonList.get(i);
                     int x = gvs.width / 2 - 155 + i % 2 * 160;
                     int y = gvs.height / 6 + 21 * (i / 2) - 12;
-                    btn.xPosition = x;
-                    btn.yPosition = y;
+                    btn.x = x;
+                    btn.y = y;
                 }
                 // now position the last 3 buttons excluding "done" to be 3-in-a-row
                 for (int i = gvs.buttonList.size() - 4; i < gvs.buttonList.size() - 1; i++) {
@@ -122,8 +122,8 @@ public class ClientEventHandler {
                     int x = minXCenter + (i % 3) * (maxXCenter - minXCenter) / 2 - newBtnWidth / 2;
                     int y = gvs.height / 6 + 21 * (gvs.buttonList.size() - 4) / 2 - 12;
 
-                    btn.xPosition = x;
-                    btn.yPosition = y;
+                    btn.x = x;
+                    btn.y = y;
                     btn.width = newBtnWidth;
                 }
             }
@@ -163,7 +163,7 @@ public class ClientEventHandler {
         protected void mouseDragged(Minecraft mc, int mouseX, int mouseY) {
             if (this.visible) {
                 if (this.dragging) {
-                    this.sliderValue = (float) (mouseX - (this.xPosition + 4)) / (float) (this.width - 8);
+                    this.sliderValue = (float) (mouseX - (this.x + 4)) / (float) (this.width - 8);
                     this.sliderValue = MathHelper.clamp(this.sliderValue, 0.0F, 1.0F);
                     CubicChunksConfig.setVerticalViewDistance(
                             Math.round(MathUtil.lerp(this.sliderValue, 2, 32)));
@@ -173,8 +173,8 @@ public class ClientEventHandler {
 
                 mc.getTextureManager().bindTexture(BUTTON_TEXTURES);
                 GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
-                this.drawTexturedModalRect(this.xPosition + (int) (this.sliderValue * (float) (this.width - 8)), this.yPosition, 0, 66, 4, 20);
-                this.drawTexturedModalRect(this.xPosition + (int) (this.sliderValue * (float) (this.width - 8)) + 4, this.yPosition, 196, 66, 4, 20);
+                this.drawTexturedModalRect(this.x + (int) (this.sliderValue * (float) (this.width - 8)), this.y, 0, 66, 4, 20);
+                this.drawTexturedModalRect(this.x + (int) (this.sliderValue * (float) (this.width - 8)) + 4, this.y, 196, 66, 4, 20);
             }
         }
 
@@ -184,7 +184,7 @@ public class ClientEventHandler {
          */
         public boolean mousePressed(Minecraft mc, int mouseX, int mouseY) {
             if (super.mousePressed(mc, mouseX, mouseY)) {
-                this.sliderValue = (float) (mouseX - (this.xPosition + 4)) / (float) (this.width - 8);
+                this.sliderValue = (float) (mouseX - (this.x + 4)) / (float) (this.width - 8);
                 this.sliderValue = MathHelper.clamp(this.sliderValue, 0.0F, 1.0F);
                 CubicChunksConfig.setVerticalViewDistance(
                         Math.round(MathUtil.lerp(this.sliderValue, 2, 32)));
@@ -238,10 +238,10 @@ public class ClientEventHandler {
             Optional<GuiButton> customizeButton = getButton(buttons, CUSTOMIZE_ID);
             Optional<GuiButton> allowCheats = getButton(buttons, ALLOW_CHEATS_ID);
             customizeButton.ifPresent(b -> allowCheats.ifPresent(c -> {
-                b.yPosition = c.yPosition - 21;
+                b.y = c.y - 21;
                 GuiButton mapTypeButton = getButton(buttons, MAP_TYPE_ID).get();
-                enableCC.xPosition = c.xPosition;
-                enableCC.yPosition = b.yPosition;
+                enableCC.x = c.x;
+                enableCC.y = b.y;
                 enableCC.width = c.width;
                 enableCC.height = c.height;
                 enableCC.visible = mapTypeButton.visible;

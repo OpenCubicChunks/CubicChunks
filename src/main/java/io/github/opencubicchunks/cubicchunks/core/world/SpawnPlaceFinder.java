@@ -60,7 +60,7 @@ public class SpawnPlaceFinder {
             spawnFuzz = border;
         }
 
-        if (!world.provider.hasNoSky() && !isAdventure && spawnFuzz != 0) {
+        if (!world.provider.isNether() && !isAdventure && spawnFuzz != 0) {
             if (spawnFuzz < 2) {
                 spawnFuzz = 2;
             }

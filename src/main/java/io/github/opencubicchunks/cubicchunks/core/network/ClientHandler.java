@@ -196,12 +196,12 @@ public class ClientHandler implements INetHandler {
         }
         assert storage != null;
         if (message.isFullRelight()) {
-            storage.setSkylightArray(new NibbleArray(message.getData()));
+            storage.setSkyLight(new NibbleArray(message.getData()));
         } else {
             for (int i = 0; i < message.updateCount(); i++) {
                 int packed1 = message.getData()[i * 2] & 0xFF;
                 int packed2 = message.getData()[i * 2 + 1] & 0xFF;
-                storage.setExtSkylightValue(Bits.unpackUnsigned(packed1, 4, 0), Bits.unpackUnsigned(packed1, 4, 4),
+                storage.setBlockLight(Bits.unpackUnsigned(packed1, 4, 0), Bits.unpackUnsigned(packed1, 4, 4),
                         Bits.unpackUnsigned(packed2, 4, 0), Bits.unpackUnsigned(packed2, 4, 4));
             }
         }

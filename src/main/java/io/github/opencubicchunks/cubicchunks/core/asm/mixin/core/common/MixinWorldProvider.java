@@ -56,7 +56,7 @@ public abstract class MixinWorldProvider implements ICubicWorldProvider {
 
     @Shadow protected World world;
 
-    @Shadow protected boolean hasNoSky;
+    @Shadow protected boolean nether;
 
     @Shadow public abstract DimensionType getDimensionType();
 

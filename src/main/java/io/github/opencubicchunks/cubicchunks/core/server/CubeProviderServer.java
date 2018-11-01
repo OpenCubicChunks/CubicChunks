@@ -230,7 +230,7 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
     }
 
     @Nullable @Override
-    public BlockPos getStrongholdGen(World worldIn, String name, BlockPos pos, boolean findUnexplored) {
+    public BlockPos getNearestStructurePos(World worldIn, String name, BlockPos pos, boolean findUnexplored) {
         return cubeGen.getClosestStructure(name, pos, findUnexplored);
     }
 
@@ -559,7 +559,7 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
         if (column != null) {
             id2ChunkMap.put(ChunkPos.asLong(columnX, columnZ), (Chunk) column);
             column.setLastSaveTime(this.worldServer.getTotalWorldTime()); // the column was just loaded
-            column.onChunkLoad();
+            column.onLoad();
             return column;
         } else if (req == Requirement.LOAD) {
             return null;
@@ -570,7 +570,7 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
 
         id2ChunkMap.put(ChunkPos.asLong(columnX, columnZ), (Chunk) column);
         column.setLastSaveTime(this.worldServer.getTotalWorldTime()); // the column was just generated
-        column.onChunkLoad();
+        column.onLoad();
         return column;
     }
 
@@ -649,7 +649,7 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
         column.unloadQueued = true;
 
         // unload the Column!
-        column.onChunkUnload();
+        column.onLoad();
 
         if (column.needsSaving(true)) { // save the Column, if it needs saving
             this.cubeIO.saveColumn(column);
