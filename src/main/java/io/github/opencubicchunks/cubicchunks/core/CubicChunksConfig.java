@@ -110,8 +110,11 @@ public class CubicChunksConfig {
     private static TreeRangeSet<Integer> excludedDimensionsRanges = null;
 
     public static void sync() {
-        excludedDimensionsRanges = null; // TODO: does it work? attempt to workaround no @Ignore
-        ConfigManager.load(CubicChunks.MODID, Config.Type.INSTANCE);
+        boolean first = excludedDimensionsRanges == null;
+        excludedDimensionsRanges = null; // workaround no @Ignore in 1.10.2
+        if (first) {
+            ConfigManager.load(CubicChunks.MODID, Config.Type.INSTANCE);
+        }
 
         initDimensionRanges();
     }
