@@ -185,7 +185,7 @@ public class SharedCachedRegionProvider<K extends IKey<K>> implements IRegionPro
         }
     }
 
-    private void clearRegions() throws IOException {
+    public static synchronized void clearRegions() throws IOException {
         Iterator<IRegion<?>> it = regionLocationToRegion.values().iterator();
         while (it.hasNext()) {
             it.next().close();

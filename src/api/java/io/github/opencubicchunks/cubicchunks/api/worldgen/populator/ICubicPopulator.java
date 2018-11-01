@@ -27,6 +27,7 @@ import java.util.Random;
 
 import io.github.opencubicchunks.cubicchunks.api.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.api.world.ICubicWorld;
+import io.github.opencubicchunks.cubicchunks.api.worldgen.CubeGeneratorsRegistry;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
@@ -36,11 +37,11 @@ import net.minecraftforge.fml.common.IWorldGenerator;
 
 /**
  * Implement this interface to your world generators and register them in
- * {@link net.minecraftforge.fml.common.registry.GameRegistry} to launch them
+ * {@link CubeGeneratorsRegistry} to launch them
  * single time for each generated cube right after terrain and biome specific
  * generators.
  */
-public interface ICubicPopulator extends IWorldGenerator {
+public interface ICubicPopulator {
 
     /**
      * Generate a specific populator feature for a given cube given a biome.
@@ -65,16 +66,4 @@ public interface ICubicPopulator extends IWorldGenerator {
      *
      */
     void generate(World world, Random random, CubePos pos, Biome biome);
-
-    /**
-     * Default implementation of vanilla generate method - calls cubic chunks version for all 16 sections.
-     * Override it with empty method if you don't want to generate anything in vanilla worlds.
-     */
-    @Override
-    default void generate(Random random, int chunkX, int chunkZ, World world, IChunkGenerator chunkGenerator, IChunkProvider chunkProvider) {
-        for (int y = 0; y <= 16; y++) {
-            CubePos pos = new CubePos(chunkX, y, chunkZ);
-            generate(world, random, pos, world.getBiome(pos.getCenterBlockPos()));
-        }
-    }
 }

@@ -21,17 +21,26 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package io.github.opencubicchunks.cubicchunks.api.world;
+package io.github.opencubicchunks.cubicchunks.api.worldgen.populator.event;
 
 import io.github.opencubicchunks.cubicchunks.api.worldgen.ICubeGenerator;
 import mcp.MethodsReturnNonnullByDefault;
+import net.minecraftforge.fml.common.eventhandler.Event;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public interface ICubicWorldServer extends ICubicWorld {
-    ICubeProviderServer getCubeCache();
+public class CubeGeneratorEvent extends Event {
 
-    ICubeGenerator getCubeGenerator();
+    private final ICubeGenerator gen;
+
+    public CubeGeneratorEvent(ICubeGenerator gen) {
+        this.gen = gen;
+    }
+
+    public ICubeGenerator getGenerator() {
+        return this.gen;
+    }
+
 }

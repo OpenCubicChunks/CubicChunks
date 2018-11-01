@@ -283,9 +283,7 @@ public class VanillaCompatibilityGenerator implements ICubeGenerator {
                     CubicChunks.LOGGER.error("Error while populating. Likely known mod issue, ignoring...", ex);
                 }
             }
-            if (CubicChunksConfig.useVanillaChunkWorldGenerators) {
-                GameRegistry.generateWorld(cube.getX(), cube.getZ(), (World) world, vanilla, ((World) world).getChunkProvider());
-            }
+            GameRegistry.generateWorld(cube.getX(), cube.getZ(), world, vanilla, world.getChunkProvider());
         }
     }
 
@@ -322,6 +320,6 @@ public class VanillaCompatibilityGenerator implements ICubeGenerator {
 
     @Override
     public BlockPos getClosestStructure(String name, BlockPos pos, boolean flag) {
-        return vanilla.getStrongholdGen((World) world, name, pos);
+        return vanilla.getStrongholdGen(world, name, pos);
     }
 }

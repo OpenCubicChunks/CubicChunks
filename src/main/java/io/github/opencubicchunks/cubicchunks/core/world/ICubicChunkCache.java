@@ -21,17 +21,16 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package io.github.opencubicchunks.cubicchunks.api.world;
+package io.github.opencubicchunks.cubicchunks.core.world;
 
-import io.github.opencubicchunks.cubicchunks.api.worldgen.ICubeGenerator;
-import mcp.MethodsReturnNonnullByDefault;
+import javax.annotation.Nullable;
 
-import javax.annotation.ParametersAreNonnullByDefault;
+import io.github.opencubicchunks.cubicchunks.core.world.cube.Cube;
+import net.minecraft.util.math.BlockPos;
 
-@ParametersAreNonnullByDefault
-@MethodsReturnNonnullByDefault
-public interface ICubicWorldServer extends ICubicWorld {
-    ICubeProviderServer getCubeCache();
+public interface ICubicChunkCache {
 
-    ICubeGenerator getCubeGenerator();
+    @Nullable Cube getCube(BlockPos pos);
+
+    boolean isCubic();
 }

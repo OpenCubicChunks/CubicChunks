@@ -94,6 +94,7 @@ class IONbtWriter {
         writeTileEntities(cube, level);
         writeScheduledTicks(cube, level);
         writeLightingInfo(cube, level);
+        writeBiomes(cube, level);
         return cubeNbt;
     }
 
@@ -220,6 +221,12 @@ class IONbtWriter {
                 edgeNeedSkyLightUpdate |= 1 << i;
         }
         lightingInfo.setByte("EdgeNeedSkyLightUpdate", edgeNeedSkyLightUpdate);
+    }
+
+    private static void writeBiomes(Cube cube, NBTTagCompound nbt) {// biomes
+        byte[] biomes = cube.getBiomeArray();
+        if (biomes != null)
+            nbt.setByteArray("Biomes", biomes);
     }
 
     private static List<NextTickListEntry> getScheduledTicks(Cube cube) {

@@ -24,6 +24,8 @@
 package io.github.opencubicchunks.cubicchunks.api.worldgen.populator;
 
 import io.github.opencubicchunks.cubicchunks.api.world.ICube;
+import io.github.opencubicchunks.cubicchunks.api.worldgen.populator.event.DecorateCubeBiomeEvent;
+import io.github.opencubicchunks.cubicchunks.api.worldgen.populator.event.PopulateCubeEvent;
 import net.minecraft.world.World;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.eventhandler.Cancelable;
@@ -35,8 +37,11 @@ import net.minecraftforge.fml.common.eventhandler.Event;
  * will remain untouched by populator. In that case only cube primer and
  * subscribed event handlers will affect cube population. This event is fired on
  * the {@link MinecraftForge#EVENT_BUS}.
+ *
+ * @deprecated Use {@link PopulateCubeEvent} or {@link DecorateCubeBiomeEvent}
  */
 @Cancelable
+@Deprecated
 public class CubePopulatorEvent extends Event {
 
     private final ICube cube;

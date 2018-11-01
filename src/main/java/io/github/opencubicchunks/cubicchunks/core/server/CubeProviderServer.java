@@ -23,6 +23,7 @@
  */
 package io.github.opencubicchunks.cubicchunks.core.server;
 
+import io.github.opencubicchunks.cubicchunks.core.CubicChunksConfig;
 import io.github.opencubicchunks.cubicchunks.core.lighting.LightingManager;
 import io.github.opencubicchunks.cubicchunks.core.server.chunkio.ICubeIO;
 import io.github.opencubicchunks.cubicchunks.core.server.chunkio.RegionCubeIO;
@@ -54,6 +55,7 @@ import net.minecraft.world.biome.Biome;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.gen.ChunkProviderServer;
 import net.minecraftforge.common.ForgeChunkManager;
+import net.minecraftforge.fml.common.registry.GameRegistry;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -91,13 +93,13 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
     private final boolean doRandomBlockTicksHere;
 
     public CubeProviderServer(WorldServer worldServer, ICubeGenerator cubeGen) {
-        super((WorldServer) worldServer,
+        super(worldServer,
                 worldServer.getSaveHandler().getChunkLoader(worldServer.provider), // forge uses this in
-                null); // safe to null out IChunkGenerator (Note: lets hope mods don't touch it, ik its public)
+                worldServer.provider.createChunkGenerator()); // let's create the chunk generator, for now the vanilla one may be enough
 
         this.cubeGen = cubeGen;
         this.worldServer = worldServer;
-        this.profiler = ((WorldServer) worldServer).theProfiler;
+        this.profiler = worldServer.theProfiler;
         try {
             this.cubeIO = new RegionCubeIO(worldServer);
         } catch (IOException e) {
@@ -424,11 +426,28 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
         int cubeY = cube.getY();
         int cubeZ = cube.getZ();
 
-        // for all cubes needed for full population - generate them their population requirements
-        cubeGen.getFullPopulationRequirements(cube).forEachPoint((x, y, z) -> {
+        // for all cubes needed for full population - generate their population requirements
+        Box fullPopulation = cubeGen.getFullPopulationRequirements(cube);
+        if (CubicChunksConfig.useVanillaChunkWorldGenerators) {
+            if (cube.getY() >= 0 && cube.getY() < 16) {
+                fullPopulation = new Box(
+                        0, -cube.getY(), 0,
+                        0, 16 - cube.getY() - 1, 0
+                ).add(fullPopulation);
+            }
+        }
+        fullPopulation.forEachPoint((x, y, z) -> {
             // this also generates the cube
             Cube fullPopulationCube = getCube(x + cubeX, y + cubeY, z + cubeZ);
             Box newBox = cubeGen.getPopulationPregenerationRequirements(fullPopulationCube);
+            if (CubicChunksConfig.useVanillaChunkWorldGenerators) {
+                if (cube.getY() >= 0 && cube.getY() < 16) {
+                    newBox = new Box(
+                            0, -cube.getY(), 0,
+                            0, 16 - cube.getY() - 1, 0
+                    ).add(newBox);
+                }
+            }
             newBox.forEachPoint((nx, ny, nz) -> {
                 int genX = cubeX + x + nx;
                 int genY = cubeY + y + ny;
@@ -441,7 +460,14 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
                 fullPopulationCube.setPopulated(true);
             }
         });
-        
+        if (CubicChunksConfig.useVanillaChunkWorldGenerators) {
+            Box.Mutable box = fullPopulation.asMutable();
+            box.setY1(0);
+            box.setY2(0);
+            box.forEachPoint((x, y, z) -> {
+                GameRegistry.generateWorld(cube.getX() + x, cube.getZ() + z, world, chunkGenerator, world.getChunkProvider());
+            });
+        }
         cube.setFullyPopulated(true);
     }
 

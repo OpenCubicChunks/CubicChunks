@@ -21,44 +21,41 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package io.github.opencubicchunks.cubicchunks.core.asm.mixin.core.common;
-
-import io.github.opencubicchunks.cubicchunks.core.world.ICubicSaveHandler;
-import io.github.opencubicchunks.cubicchunks.core.CubicChunks;
-import io.github.opencubicchunks.cubicchunks.core.server.chunkio.ICubeIO;
-import mcp.MethodsReturnNonnullByDefault;
-import net.minecraft.world.chunk.storage.AnvilSaveHandler;
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-
-import java.io.IOException;
+package io.github.opencubicchunks.cubicchunks.core.asm.mixin.selectable.client;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
-// a hook for flush()
-// many mods already assume AnvilSaveHandler is always used, so we assume the same and hope for the best
-@ParametersAreNonnullByDefault
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+
+import io.github.opencubicchunks.cubicchunks.core.world.ICubicChunkCache;
+import io.github.opencubicchunks.cubicchunks.core.world.cube.Cube;
+import mcp.MethodsReturnNonnullByDefault;
+import net.minecraft.init.Biomes;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.ChunkCache;
+import net.minecraft.world.World;
+import net.minecraft.world.biome.Biome;
+
 @MethodsReturnNonnullByDefault
-@Mixin(AnvilSaveHandler.class)
-public class MixinAnvilSaveHandler implements ICubicSaveHandler {
+@ParametersAreNonnullByDefault
+@Mixin(ChunkCache.class)
+public abstract class MixinChunkCache_Cubic implements ICubicChunkCache {
 
-    private ICubeIO cubeIo;
+    @Shadow public World world;
 
-    @Inject(method = "flush", at = @At("RETURN"))
-    public void onClearRefs(CallbackInfo cbi) throws IOException {
-        if (cubeIo == null) {
-            CubicChunks.bigWarning("cubeIo not initializes in save handler! If this happens frequently it's likely a major issue!");
+    @Inject(method = "getBiome", at = @At("HEAD"), cancellable = true)
+    public void getBiome(BlockPos pos, CallbackInfoReturnable<Biome> cir) {
+        if (!this.isCubic())
             return;
-        }
-        cubeIo.flush();
-    }
-
-    @Override public void initCubic(ICubeIO cubeIo) {
-        if (this.cubeIo == null) {
-            CubicChunks.LOGGER.debug("Initializing cubeIo for cubic chunks save handler!");
-            this.cubeIo = cubeIo;
-        }
+        Cube cube = this.getCube(pos);
+        if (cube == null)
+            cir.setReturnValue(Biomes.PLAINS);
+        else
+            cir.setReturnValue(cube.getBiome(pos));
+        cir.cancel();
     }
 }
