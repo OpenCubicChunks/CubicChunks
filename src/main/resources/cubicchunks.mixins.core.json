@@ -20,7 +20,7 @@
         "common.MixinWorldInfo",
         "common.MixinWorldSettings",
         "common.MixinDerivedWorldInfo",
-        "common.MixinAnvilSaveHandler"
+        "common.MixinRegionFileCache"
     ],
     "client": [
         "client.MixinWorld_HeightLimits",

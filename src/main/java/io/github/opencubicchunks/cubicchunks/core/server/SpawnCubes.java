@@ -42,8 +42,8 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @MethodsReturnNonnullByDefault
 public class SpawnCubes {
 
-    private static final int DEFAULT_SPAWN_RADIUS = 12 - 1; // highest render distance is 32
-    private static final int DEFAULT_VERTICAL_SPAWN_RADIUS = 8 - 1;
+    private static final int DEFAULT_SPAWN_RADIUS = 12;//12 - 1 + 12; // highest render distance is 32
+    private static final int DEFAULT_VERTICAL_SPAWN_RADIUS = 8;
 
     public static void update(World world) {
         if (world.provider.canRespawnHere()) {
@@ -56,7 +56,8 @@ public class SpawnCubes {
         private static final String STORAGE = CubicChunks.MODID + "_spawncubes";
 
         @Nullable private BlockPos spawnPoint = null;
-        private int radius = DEFAULT_SPAWN_RADIUS;
+        private int radiusXZ = DEFAULT_SPAWN_RADIUS;
+        private int radiusY = DEFAULT_VERTICAL_SPAWN_RADIUS;
 
         public SpawnArea() {
             this(STORAGE);
@@ -67,32 +68,33 @@ public class SpawnCubes {
         }
 
         public void update(World world) {
-            update(world, radius); // radius did not change
+            update(world, radiusXZ, radiusY); // radius did not change
         }
 
-        public void update(World world, int newRadius) {
-            if (!world.getSpawnPoint().equals(spawnPoint) || radius != newRadius) { // check if something changed
+        public void update(World world, int newRadiusXZ, int newRadiusY) {
+            if (!world.getSpawnPoint().equals(spawnPoint) || radiusXZ != newRadiusXZ || radiusY != newRadiusY) { // check if something changed
                 removeTickets(world);
-                radius = newRadius;
+                radiusXZ = newRadiusXZ;
+                radiusY = newRadiusY;
                 addTickets(world); // addTickets will update the spawn location if need be
                 markDirty();
             }
         }
 
         private void removeTickets(World world) {
-            if (radius < 0 || spawnPoint == null) {
+            if (radiusXZ < 0 || radiusY < 0 || spawnPoint == null) {
                 return; // no spawn chunks OR nothing to remove
             }
 
             ICubeProviderInternal serverCubeCache = (ICubeProviderInternal) world.getChunkProvider();
 
             int spawnCubeX = Coords.blockToCube(spawnPoint.getX());
-            int spawnCubeY = 128;//Coords.blockToCube(spawnPoint.getY()); // TODO: auto-find better value. This matches height range in vanilla
+            int spawnCubeY = 8;//Coords.blockToCube(spawnPoint.getY()); // TODO: auto-find better value. This matches height range in vanilla
             int spawnCubeZ = Coords.blockToCube(spawnPoint.getZ());
 
-            for (int cubeX = spawnCubeX - radius; cubeX <= spawnCubeX + radius; cubeX++) {
-                for (int cubeZ = spawnCubeZ - radius; cubeZ <= spawnCubeZ + radius; cubeZ++) {
-                    for (int cubeY = spawnCubeY + radius; cubeY >= spawnCubeY - radius; cubeY--) {
+            for (int cubeX = spawnCubeX - radiusXZ; cubeX <= spawnCubeX + radiusXZ; cubeX++) {
+                for (int cubeZ = spawnCubeZ - radiusXZ; cubeZ <= spawnCubeZ + radiusXZ; cubeZ++) {
+                    for (int cubeY = spawnCubeY + radiusY; cubeY >= spawnCubeY - radiusY; cubeY--) {
                         serverCubeCache.getCube(cubeX, cubeY, cubeZ).getTickets().remove(this);
                     }
                 }
@@ -100,7 +102,7 @@ public class SpawnCubes {
         }
 
         private void addTickets(World world) {
-            if (radius < 0) {
+            if (radiusXZ < 0 || radiusY < 0) {
                 return; // no spawn cubes
             }
 
@@ -110,18 +112,28 @@ public class SpawnCubes {
             CubicChunks.LOGGER.info("Loading cubes for spawn...");
             spawnPoint = world.getSpawnPoint();
             int spawnCubeX = Coords.blockToCube(spawnPoint.getX());
-            int spawnCubeY = Coords.blockToCube(spawnPoint.getY());
+            int spawnCubeY = 8;//Coords.blockToCube(spawnPoint.getY());
             int spawnCubeZ = Coords.blockToCube(spawnPoint.getZ());
 
             long lastTime = System.currentTimeMillis();
             final int progressReportInterval = 1000;//ms
-            int totalToGenerate = (radius * 2 + 1) * (radius * 2 + 1) * (radius * 2 + 1);
+            int totalToGenerate = (radiusXZ * 2 + 1) * (radiusXZ * 2 + 1) * (radiusY * 2 + 1);
             int generated = 0;
 
-            for (int cubeX = spawnCubeX - radius; cubeX <= spawnCubeX + radius; cubeX++) {
-                for (int cubeZ = spawnCubeZ - radius; cubeZ <= spawnCubeZ + radius; cubeZ++) {
-                    for (int cubeY = spawnCubeY + radius; cubeY >= spawnCubeY - radius; cubeY--) {
-                        serverCubeCache.getCube(cubeX, cubeY, cubeZ, ICubeProviderServer.Requirement.LIGHT).getTickets().add(this);
+            for (int cubeX = spawnCubeX - radiusXZ; cubeX <= spawnCubeX + radiusXZ; cubeX++) {
+                for (int cubeZ = spawnCubeZ - radiusXZ; cubeZ <= spawnCubeZ + radiusXZ; cubeZ++) {
+                    for (int cubeY = spawnCubeY + radiusY; cubeY >= spawnCubeY - radiusY; cubeY--) {
+                        ICubeProviderServer.Requirement req;
+                        // is edge?
+                        if (cubeX == spawnCubeX - radiusXZ || cubeX == spawnCubeX + radiusXZ ||
+                                cubeZ == spawnCubeZ - radiusXZ || cubeZ == spawnCubeZ + radiusXZ ||
+                                cubeY == spawnCubeY - radiusY || cubeY == spawnCubeY + radiusY) {
+                            req = ICubeProviderServer.Requirement.GENERATE;
+                        } else {
+                            req = ICubeProviderServer.Requirement.LIGHT;
+                        }
+
+                        serverCubeCache.getCube(cubeX, cubeY, cubeZ, req).getTickets().add(this);
                         generated++;
                         if (System.currentTimeMillis() >= lastTime + progressReportInterval) {
                             lastTime = System.currentTimeMillis();
@@ -138,12 +150,15 @@ public class SpawnCubes {
 
         @Override
         public void readFromNBT(NBTTagCompound nbt) {
-            this.radius = nbt.getInteger("spawnRadius");
+            this.radiusXZ = nbt.getInteger("spawnRadius");
+            this.radiusY = nbt.hasKey("spawnRadiusY") ?
+                    nbt.getInteger("spawnRadiusY") : DEFAULT_VERTICAL_SPAWN_RADIUS;
         }
 
         @Override
         public NBTTagCompound writeToNBT(NBTTagCompound nbt) {
-            nbt.setInteger("spawnRadius", this.radius);
+            nbt.setInteger("spawnRadius", this.radiusXZ);
+            nbt.setInteger("spawnRadiusY", this.radiusY);
             return nbt;
         }
 

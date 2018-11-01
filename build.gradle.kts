@@ -94,6 +94,7 @@ minecraft {
     isUseDepAts = true
 
     replace("@@VERSION@@", project.version)
+    replace("public static final boolean IS_DEV = true;", "public static final boolean IS_DEV = false;")
     replaceIn("io/github/opencubicchunks/cubicchunks/core/CubicChunks.java")
 
     val args = listOf(

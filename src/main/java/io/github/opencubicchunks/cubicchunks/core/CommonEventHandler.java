@@ -109,7 +109,7 @@ public class CommonEventHandler {
 
         IntRange generationRange = new IntRange(0, ((ICubicWorldProvider) world.provider).getOriginalActualHeight());
         WorldType type = evt.getObject().getWorldType();
-        if (type instanceof ICubicWorldType) {
+        if (type instanceof ICubicWorldType && ((ICubicWorldType) type).hasCubicGeneratorForWorld(world)) {
             generationRange = ((ICubicWorldType) type).calculateGenerationHeightRange(world);
         }
 
@@ -167,7 +167,8 @@ public class CommonEventHandler {
             ReflectionUtil.getClassOrDefault("WorldServerOF", Object.class), // OptiFine's WorldServer, no package
             ReflectionUtil.getClassOrDefault("WorldServerMultiOF", Object.class), // OptiFine's WorldServerMulti, no package
             ReflectionUtil.getClassOrDefault("net.optifine.override.WorldServerOF", Object.class), // OptiFine's WorldServer
-            ReflectionUtil.getClassOrDefault("net.optifine.override.WorldServerMultiOF", Object.class) // OptiFine's WorldServerMulti
+            ReflectionUtil.getClassOrDefault("net.optifine.override.WorldServerMultiOF", Object.class), // OptiFine's WorldServerMulti
+            ReflectionUtil.getClassOrDefault("com.forgeessentials.multiworld.WorldServerMultiworld", Object.class) // ForgeEssentials world
     });
 
     @SuppressWarnings("unchecked")

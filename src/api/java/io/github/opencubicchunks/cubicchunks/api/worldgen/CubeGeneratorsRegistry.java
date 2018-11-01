@@ -31,11 +31,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
+import java.util.TreeMap;
+import java.util.TreeSet;
 
+import com.google.common.base.Preconditions;
 import io.github.opencubicchunks.cubicchunks.api.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.api.world.ICubicWorld;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
+import net.minecraftforge.fml.common.FMLCommonHandler;
+import net.minecraftforge.fml.common.Loader;
 import org.apache.commons.lang3.reflect.FieldUtils;
 
 import com.google.common.collect.ImmutableList;
@@ -45,10 +50,21 @@ import io.github.opencubicchunks.cubicchunks.api.worldgen.populator.ICubicPopula
 import net.minecraftforge.fml.common.IWorldGenerator;
 import net.minecraftforge.fml.common.registry.GameRegistry;
 
-// Based on net.minecraftforge.fml.common.registry.GameRegistry.
 public class CubeGeneratorsRegistry {
 
-    private static List<ICubicPopulator> sortedGeneratorList;
+    private static TreeSet<GeneratorWrapper> sortedGeneratorList = new TreeSet<>();
+
+    /**
+     * Register a world generator - something that inserts new block types into the world on population stage
+     *
+     * @param populator the generator
+     * @param weight a weight to assign to this generator. Heavy weights tend to sink to the bottom of
+     * list of world generators (i.e. they run later)
+     */
+    public static void register(ICubicPopulator populator, int weight) {
+        Preconditions.checkNotNull(populator);
+        sortedGeneratorList.add(new GeneratorWrapper(populator, weight));
+    }
 
     /**
      * Callback hook for cube gen - if your mod wishes to add extra mod related
@@ -60,22 +76,49 @@ public class CubeGeneratorsRegistry {
      * @param biome The biome we are generating in
      */
     public static void generateWorld(World world, Random random, CubePos pos, Biome biome) {
-        for (ICubicPopulator generator : sortedGeneratorList) {
-            generator.generate(world, random, pos, biome);
+        for (GeneratorWrapper wrapper : sortedGeneratorList) {
+            wrapper.populator.generate(world, random, pos, biome);
         }
     }
 
-    @SuppressWarnings("unchecked")
-    public static void computeSortedGeneratorList() throws IllegalArgumentException, IllegalAccessException, NoSuchFieldException, SecurityException {
-        Set<IWorldGenerator> forgeWorldGenerators = (HashSet<IWorldGenerator>) FieldUtils.readDeclaredStaticField(GameRegistry.class, "worldGenerators", true);
-        Map<IWorldGenerator, Integer> forgeWorldGeneratorIndex = (HashMap<IWorldGenerator, Integer>) FieldUtils.readDeclaredStaticField(GameRegistry.class, "worldGeneratorIndex", true);
-        List<ICubicPopulator> list = new ArrayList<ICubicPopulator>();
-        for (IWorldGenerator worldGenerator : forgeWorldGenerators) {
-            if (worldGenerator instanceof ICubicPopulator) {
-                list.add((ICubicPopulator) worldGenerator);
-            }
+    private static class GeneratorWrapper implements Comparable<GeneratorWrapper> {
+
+        private final ICubicPopulator populator;
+        private final int weight;
+
+        public GeneratorWrapper(ICubicPopulator populator, int weight) {
+            this.populator = populator;
+            this.weight = weight;
         }
-        Collections.sort(list, (o1, o2) -> Ints.compare(forgeWorldGeneratorIndex.get(o1), forgeWorldGeneratorIndex.get(o2)));
-        sortedGeneratorList = ImmutableList.copyOf(list);
+
+        @Override public boolean equals(Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (!(o instanceof GeneratorWrapper)) {
+                return false;
+            }
+
+            GeneratorWrapper that = (GeneratorWrapper) o;
+
+            if (weight != that.weight) {
+                return false;
+            }
+            if (!populator.equals(that.populator)) {
+                return false;
+            }
+
+            return true;
+        }
+
+        @Override public int hashCode() {
+            int result = populator.hashCode();
+            result = 31 * result + weight;
+            return result;
+        }
+
+        @Override public int compareTo(GeneratorWrapper o) {
+            return Integer.compare(weight, o.weight);
+        }
     }
 }

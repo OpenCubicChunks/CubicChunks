@@ -23,8 +23,8 @@
  */
 package io.github.opencubicchunks.cubicchunks.core.asm.mixin.core.common;
 
+import io.github.opencubicchunks.cubicchunks.api.worldgen.ICubeGenerator;
 import io.github.opencubicchunks.cubicchunks.core.CubicChunksConfig;
-import io.github.opencubicchunks.cubicchunks.core.world.ICubicSaveHandler;
 import io.github.opencubicchunks.cubicchunks.core.entity.CubicEntityTracker;
 import io.github.opencubicchunks.cubicchunks.core.lighting.FirstLightProcessor;
 import io.github.opencubicchunks.cubicchunks.core.server.ChunkGc;
@@ -113,10 +113,6 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
             this.entitySpawner = CubicChunksConfig.useFastEntitySpawner ?
                     new FastCubeWorldEntitySpawner() : new CubeWorldEntitySpawner();
         }
-        // do it every tick so it also works when something replaces the save handler
-        // TODO: go with the vanilla way and have one global region cache.
-        // region cache per world is likely to run out of file handles with many dimensions
-        ((ICubicSaveHandler) saveHandler).initCubic(getCubeCache().getCubeIO());
     }
 
     @Override public CubeProviderServer getCubeCache() {
@@ -124,6 +120,10 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
             throw new NotCubicChunksWorldException();
         }
         return (CubeProviderServer) this.chunkProvider;
+    }
+
+    @Override public ICubeGenerator getCubeGenerator() {
+        return getCubeCache().getCubeGenerator();
     }
 
     @Override public FirstLightProcessor getFirstLightProcessor() {

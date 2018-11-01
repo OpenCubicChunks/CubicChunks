@@ -21,11 +21,29 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package io.github.opencubicchunks.cubicchunks.core.world;
+package io.github.opencubicchunks.cubicchunks.core.asm.mixin.core.common;
 
+import io.github.opencubicchunks.cubicchunks.core.server.chunkio.SharedCachedRegionProvider;
+import mcp.MethodsReturnNonnullByDefault;
+import net.minecraft.world.chunk.storage.RegionFileCache;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import io.github.opencubicchunks.cubicchunks.core.server.chunkio.ICubeIO;
+import java.io.IOException;
 
-public interface ICubicSaveHandler {
-    public void initCubic(ICubeIO cubeIo);
+import javax.annotation.ParametersAreNonnullByDefault;
+
+// a hook for flush()
+// many mods already assume AnvilSaveHandler is always used, so we assume the same and hope for the best
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
+@Mixin(RegionFileCache.class)
+public class MixinRegionFileCache {
+
+    @Inject(method = "clearRegionFileReferences", at = @At("HEAD"))
+    private static void onClearRefs(CallbackInfo cbi) throws IOException {
+        SharedCachedRegionProvider.clearRegions();
+    }
 }
