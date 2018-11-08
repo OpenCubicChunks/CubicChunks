@@ -136,11 +136,13 @@ public class CubeProviderClient extends ChunkProviderClient implements ICubeProv
      * It is used when the server tells the client to unload a Cube.
      */
     public void unloadCube(CubePos pos) {
-        cubeMap.remove(pos.getX(), pos.getY(), pos.getZ());
-        Chunk column = getLoadedColumn(pos.getX(), pos.getZ());
-        if (column != null) {
-            ((IColumn) column).removeCube(pos.getY());
+        Cube cube = getLoadedCube(pos);
+        if (cube == null) {
+            return;
         }
+        cube.onUnload();
+        cubeMap.remove(pos.getX(), pos.getY(), pos.getZ());
+        cube.getColumn().removeCube(pos.getY());
     }
 
     @Override
