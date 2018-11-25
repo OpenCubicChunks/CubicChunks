@@ -27,16 +27,25 @@ import io.github.opencubicchunks.cubicchunks.api.world.ICubicWorld;
 import io.github.opencubicchunks.cubicchunks.api.world.IMinMaxHeight;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.entity.EntityLiving;
 import net.minecraft.init.Blocks;
 import net.minecraft.pathfinding.NodeProcessor;
+import net.minecraft.pathfinding.PathNodeType;
+import net.minecraft.pathfinding.PathPoint;
 import net.minecraft.pathfinding.WalkNodeProcessor;
+import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockAccess;
+
+import org.spongepowered.asm.lib.Opcodes;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Constant;
+import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyConstant;
 import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -44,6 +53,9 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @MethodsReturnNonnullByDefault
 @Mixin(WalkNodeProcessor.class)
 public abstract class MixinWalkNodeProcessor_HeightLimit extends NodeProcessor {
+
+    @Shadow
+    abstract PathNodeType getPathNodeType(EntityLiving entitylivingIn, int x, int y, int z);
 
     @ModifyConstant(method = "getStart", constant = @Constant(intValue = 0, expandZeroConditions = Constant.Condition.GREATER_THAN_ZERO))
     private int getMinHeight_GetStart(int originalY) {
@@ -61,14 +73,35 @@ public abstract class MixinWalkNodeProcessor_HeightLimit extends NodeProcessor {
     }
 
 
-    @ModifyConstant(
+    @Inject(
             method = "getSafePoint",
-            constant = @Constant(
-                    expandZeroConditions = Constant.Condition.GREATER_THAN_ZERO,
-                    ordinal = 1
-            ))
-    private int getMinHeight_GetSafePoint(int originalY) {
-        return ((ICubicWorld) this.entity.world).getMinHeight() + originalY;
+            at = @At(value = "JUMP", opcode = Opcodes.IF_ACMPNE, ordinal = 4), cancellable = true)
+    private void getMinHeight_GetSafePoint(int x, int y, int z, int range, double distance, EnumFacing facing,
+            CallbackInfoReturnable<PathPoint> cir) {
+        if (y > 0)
+            return;
+        PathNodeType pathnodetype = PathNodeType.OPEN;
+        PathPoint pathpoint = this.openPoint(x, y, z);
+        int maxFallHeight = this.entity.getMaxFallHeight();
+        while (pathnodetype == PathNodeType.OPEN) {
+            if (maxFallHeight-- <= 0)
+                return;
+            --y;
+            pathnodetype = this.getPathNodeType(this.entity, x, y, z);
+            float f = this.entity.getPathPriority(pathnodetype);
+
+            if (pathnodetype != PathNodeType.OPEN && f >= 0.0F) {
+                pathpoint = this.openPoint(x, y, z);
+                pathpoint.nodeType = pathnodetype;
+                pathpoint.costMalus = Math.max(pathpoint.costMalus, f);
+                cir.setReturnValue(pathpoint);
+                cir.cancel();
+                return;
+            }
+            if (f < 0.0F) {
+                return;
+            }
+        }
     }
 
     @ModifyConstant(
