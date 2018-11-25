@@ -64,6 +64,7 @@ public abstract class MixinWalkNodeProcessor_HeightLimit extends NodeProcessor {
     @ModifyConstant(
             method = "getSafePoint",
             constant = @Constant(
+                    intValue = 0, 
                     expandZeroConditions = Constant.Condition.GREATER_THAN_ZERO,
                     ordinal = 1
             ))
