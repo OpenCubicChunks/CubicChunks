@@ -20,7 +20,9 @@
         "common.MixinWorldInfo",
         "common.MixinWorldSettings",
         "common.MixinDerivedWorldInfo",
-        "common.MixinRegionFileCache"
+        "common.MixinRegionFileCache",
+        "common.forge.MixinForgeChunkManager",
+        "common.forge.MixinTicket"
     ],
     "client": [
         "client.MixinWorld_HeightLimits",

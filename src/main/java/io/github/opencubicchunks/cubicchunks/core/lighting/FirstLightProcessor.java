@@ -144,7 +144,7 @@ public class FirstLightProcessor {
                         break;
                     }
                     if (ebs == null) {
-                        ebs = cube.setStorage(new ExtendedBlockStorage(cube.getY(), cube.getWorld().provider.hasSkyLight()));
+                        ebs = cube.setStorage(new ExtendedBlockStorage(cubeToMinBlock(cube.getY()), cube.getWorld().provider.hasSkyLight()));
                     }
                     assert ebs != null;
                     ebs.setSkyLight(localX, localY, localZ, 15);

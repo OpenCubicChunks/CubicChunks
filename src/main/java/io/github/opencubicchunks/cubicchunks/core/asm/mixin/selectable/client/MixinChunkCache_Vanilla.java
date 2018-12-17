@@ -53,7 +53,7 @@ public abstract class MixinChunkCache_Vanilla {
     @Shadow protected int chunkZ;
     @Shadow protected Chunk[][] chunkArray;
 
-    @Shadow
+    @Shadow(remap = false)
     abstract boolean withinBounds(int x, int z);
 
     @Inject(method = "getBiome", at = @At("HEAD"), cancellable = true)

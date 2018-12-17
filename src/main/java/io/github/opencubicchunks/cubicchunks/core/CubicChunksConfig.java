@@ -23,15 +23,19 @@
  */
 package io.github.opencubicchunks.cubicchunks.core;
 
+import com.google.common.collect.Maps;
 import com.google.common.collect.Range;
 import com.google.common.collect.TreeRangeSet;
 import mcp.MethodsReturnNonnullByDefault;
+import net.minecraftforge.common.ForgeChunkManager;
 import net.minecraftforge.common.config.Config;
 import net.minecraftforge.common.config.ConfigManager;
 import net.minecraftforge.fml.client.event.ConfigChangedEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
@@ -105,6 +109,13 @@ public class CubicChunksConfig {
     @Config.Comment("By default cubic chunks will attempt to go over all the blocks over time to fix lighting only on server. Enable this to also "
             + "fix lighting on the clientside.")
     public static boolean doClientLightFixes = false;
+
+    public static int defaultMaxCubesPerChunkloadingTicket = 25 * 16;
+    public static Map<String, Integer> modMaxCubesPerChunkloadingTicket = new HashMap<>();
+
+    static {
+        modMaxCubesPerChunkloadingTicket.put("cubicchunks", defaultMaxCubesPerChunkloadingTicket);
+    }
 
     @Config.Ignore
     private static TreeRangeSet<Integer> excludedDimensionsRanges = null;

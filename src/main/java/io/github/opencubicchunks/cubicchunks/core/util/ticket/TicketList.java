@@ -24,19 +24,29 @@
 package io.github.opencubicchunks.cubicchunks.core.util.ticket;
 
 import com.google.common.collect.Lists;
+import io.github.opencubicchunks.cubicchunks.api.world.ICube;
+import io.github.opencubicchunks.cubicchunks.core.asm.mixin.ICubicWorldInternal;
+import io.github.opencubicchunks.cubicchunks.core.world.cube.Cube;
 import mcp.MethodsReturnNonnullByDefault;
 
 import java.util.List;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class TicketList {
 
+    private final Cube cube;
     private int tickRefs = 0;
     @Nonnull private List<ITicket> tickets = Lists.newArrayListWithCapacity(1);
+
+    // null cube means it's "BlankCube"
+    public TicketList(@Nullable Cube cube) {
+        this.cube = cube;
+    }
 
     /**
      * Removes a ticket form this ticket list if present
@@ -44,8 +54,15 @@ public class TicketList {
      * @param ticket the ticket to remove
      */
     public void remove(ITicket ticket) {
+        if (cube == null) {
+            return;
+        }
         if (tickets.remove(ticket) && ticket.shouldTick()) {
             tickRefs--;
+            assert tickRefs >= 0;
+            if (tickRefs == 0) {
+                ((ICubicWorldInternal.Server) cube.getWorld()).removeForcedCube(cube);
+            }
         }
     }
 
@@ -55,11 +72,21 @@ public class TicketList {
      * @param ticket the ticket to add
      */
     public void add(ITicket ticket) {
+        if (cube == null) {
+            return;
+        }
         if (tickets.contains(ticket)) {
             return; // we already have that ticket
         }
         tickets.add(ticket);
         tickRefs += ticket.shouldTick() ? 1 : 0; // keep track of the number of tickets that want to tick
+        if (ticket.shouldTick()) {
+            assert tickRefs > 0;
+            if (tickRefs == 1) { // if it just got increased from zero
+                ((ICubicWorldInternal.Server) cube.getWorld()).addForcedCube(cube);
+            }
+        }
+
     }
 
     /**

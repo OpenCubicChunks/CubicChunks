@@ -26,6 +26,7 @@ package io.github.opencubicchunks.cubicchunks.api.util;
 import mcp.MethodsReturnNonnullByDefault;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
@@ -166,6 +167,16 @@ public class XYZMap<T extends XYZAddressable> implements Iterable<T> {
      */
     private int getNextPointerIndex(int pointerIndex) {
         return ++pointerIndex & this.mask;
+    }
+
+    /**
+     * Removes all elements from the map.
+     */
+    public void clear() {
+        Arrays.fill(this.bucketsByHash, null);
+        Arrays.fill(this.bucketsByPointer, null);
+        Arrays.fill(this.pointers, 0);
+        this.size = 0;
     }
 
     /**

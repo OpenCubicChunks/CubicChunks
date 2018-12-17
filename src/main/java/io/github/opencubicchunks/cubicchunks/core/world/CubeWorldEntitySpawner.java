@@ -94,7 +94,8 @@ public class CubeWorldEntitySpawner extends WorldEntitySpawner {
 
     private int addEligibleChunks(WorldServer world, Set<CubePos> possibleChunks) {
         int chunkCount = 0;
-
+        Random r = world.rand;
+        Set<CubePos> allCubes = new HashSet<>();
         for (EntityPlayer player : world.playerEntities) {
             if (player.isSpectator()) {
                 continue;
@@ -104,15 +105,17 @@ public class CubeWorldEntitySpawner extends WorldEntitySpawner {
             for (int cubeXRel = -SPAWN_RADIUS; cubeXRel <= SPAWN_RADIUS; ++cubeXRel) {
                 for (int cubeYRel = -SPAWN_RADIUS; cubeYRel <= SPAWN_RADIUS; ++cubeYRel) {
                     for (int cubeZRel = -SPAWN_RADIUS; cubeZRel <= SPAWN_RADIUS; ++cubeZRel) {
+                        CubePos chunkPos = center.add(cubeXRel, cubeYRel, cubeZRel);
+
+                        if (allCubes.contains(chunkPos)) {
+                            continue;
+                        }
+                        assert !possibleChunks.contains(chunkPos);
+                        ++chunkCount;
+
                         boolean isEdge = cubeXRel == -SPAWN_RADIUS || cubeXRel == SPAWN_RADIUS ||
                                 cubeYRel == -SPAWN_RADIUS || cubeYRel == SPAWN_RADIUS ||
                                 cubeZRel == -SPAWN_RADIUS || cubeZRel == SPAWN_RADIUS;
-                        CubePos chunkPos = center.add(cubeXRel, cubeYRel, cubeZRel);
-
-                        if (possibleChunks.contains(chunkPos)) {
-                            continue;
-                        }
-                        ++chunkCount;
 
                         if (isEdge || !world.getWorldBorder().contains(chunkPos.chunkPos())) {
                             continue;
@@ -120,7 +123,10 @@ public class CubeWorldEntitySpawner extends WorldEntitySpawner {
                         CubeWatcher chunkInfo = ((PlayerCubeMap) world.getPlayerChunkMap()).getCubeWatcher(chunkPos);
 
                         if (chunkInfo != null && chunkInfo.isSentToPlayers()) {
-                            possibleChunks.add(chunkPos);
+                            allCubes.add(chunkPos);
+                            if (r.nextInt(SPAWN_RADIUS * 2 + 1) == 0) {
+                                possibleChunks.add(chunkPos);
+                            }
                         }
                     }
                 }

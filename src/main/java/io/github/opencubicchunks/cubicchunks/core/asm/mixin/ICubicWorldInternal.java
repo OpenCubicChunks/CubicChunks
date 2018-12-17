@@ -23,6 +23,10 @@
  */
 package io.github.opencubicchunks.cubicchunks.core.asm.mixin;
 
+import io.github.opencubicchunks.cubicchunks.api.util.XYZMap;
+import io.github.opencubicchunks.cubicchunks.api.util.XZMap;
+import io.github.opencubicchunks.cubicchunks.api.world.IColumn;
+import io.github.opencubicchunks.cubicchunks.api.world.ICube;
 import io.github.opencubicchunks.cubicchunks.core.client.CubeProviderClient;
 import io.github.opencubicchunks.cubicchunks.core.lighting.FirstLightProcessor;
 import io.github.opencubicchunks.cubicchunks.core.lighting.ILightingManager;
@@ -46,6 +50,11 @@ import io.github.opencubicchunks.cubicchunks.core.world.ICubeProviderInternal;
 import io.github.opencubicchunks.cubicchunks.core.world.cube.Cube;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.ChunkPos;
+import net.minecraft.world.chunk.Chunk;
+
+import java.util.Map;
+import java.util.Set;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -97,6 +106,13 @@ public interface ICubicWorldInternal extends ICubicWorld {
 
         ChunkGc getChunkGarbageCollector();
 
+        void removeForcedCube(ICube cube);
+
+        void addForcedCube(ICube cube);
+
+        XYZMap<ICube> getForcedCubes();
+
+        XZMap<IColumn> getForcedColumns();
     }
 
     public interface Client extends ICubicWorldInternal {

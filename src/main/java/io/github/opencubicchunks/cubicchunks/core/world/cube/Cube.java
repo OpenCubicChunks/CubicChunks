@@ -163,6 +163,18 @@ public class Cube implements ICube {
      * True only if all the blocks have been added to server height map. Always true clientside.
      */
     private boolean isSurfaceTracked = true;
+    private boolean ticked = false;
+
+    /**
+     * This is used as an optimization to avoid putting all the cubes to tick in a set (which turns out to be very slow because of huge amount of
+     * cubes), or iterating over all loaded cubes, which can also be very expensive in case of very big render distance, where not many cubes are
+     * actually ticked, but hundreds of thousands of them can be loaded.
+     *
+     * Instead, cubes for players are added into a simple arraylist, and forced cubes are iterated separately, and double-ticking is avoided by
+     * checking this lastTicked field instead of deduplication by putting them all into a Set.
+     */
+    private long lastTicked = Long.MIN_VALUE;
+
 
     /**
      * Create a new cube in the specified column at the specified location. The newly created cube will only contain air
@@ -176,7 +188,7 @@ public class Cube implements ICube {
         this.column = column;
         this.coords = new CubePos(column.x, cubeY, column.z);
 
-        this.tickets = new TicketList();
+        this.tickets = new TicketList(this);
 
         this.entities = new EntityContainer();
         this.tileEntityMap = new HashMap<>();
@@ -304,6 +316,7 @@ public class Cube implements ICube {
      * @param tryToTickFaster Whether costly calculations should be skipped in order to catch up with ticks
      */
     public void tickCubeCommon(BooleanSupplier tryToTickFaster) {
+        this.ticked = true;
         while (!this.tileEntityPosQueue.isEmpty()) {
             BlockPos blockpos = this.tileEntityPosQueue.poll();
 
@@ -354,25 +367,6 @@ public class Cube implements ICube {
             NextTickListEntry ntle = pti.next();
             pendingTickListEntriesTreeSet.add(ntle);
             pti.remove();
-        }
-    }
-
-    /**
-     * Launch random ticks of a blocks of a cube. Plant growing and other events goes here.
-     * @param worldServer - world where random tick is launched
-     * @param rand - World specific Random
-     */
-    public void randomTick(WorldServer worldServer, Random rand) {
-        this.updateLCG = this.updateLCG * 3 + 1013904223;
-        int j1 = updateLCG >> 2;
-        int localX = AddressTools.getLocalX(j1);
-        int localY = AddressTools.getLocalY(j1);
-        int localZ = AddressTools.getLocalZ(j1);
-        IBlockState iblockstate = this.storage.get(localX, localY, localZ);
-        Block block = iblockstate.getBlock();
-        if (block.getTickRandomly()) {
-            BlockPos pos = new BlockPos(this.coords.getMinBlockX() + localX, this.coords.getMinBlockY() + localY, this.coords.getMinBlockZ() + localZ);
-            block.randomTick(worldServer, pos, iblockstate, rand);
         }
     }
 
@@ -499,6 +493,15 @@ public class Cube implements ICube {
     }
 
     /**
+     * Returns true if the cube still needs to be ticked this tick.
+     */
+    public boolean checkAndUpdateTick(long totalTime) {
+        boolean ret = totalTime != this.lastTicked;
+        this.lastTicked = totalTime;
+        return ret;
+    }
+
+    /**
      * Finish the cube loading process
      */
     public void onLoad() {
@@ -612,6 +615,7 @@ public class Cube implements ICube {
         this.isFullyPopulated = true;
         this.isInitialLightingDone = true;
         this.isSurfaceTracked = true;
+        this.ticked = true;
     }
 
     @Override public boolean isPopulated() {
@@ -684,5 +688,9 @@ public class Cube implements ICube {
 
     public void markEdgeNeedSkyLightUpdate(EnumFacing side) {
         this.edgeNeedSkyLightUpdate[side.ordinal()] = true;
+    }
+
+    public boolean hasBeenTicked() {
+        return ticked;
     }
 }

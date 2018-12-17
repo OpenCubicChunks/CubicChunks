@@ -81,7 +81,7 @@ public abstract class MixinRenderList extends ChunkRenderContainer {
     }
 
 
-    @Group(name = "preRenderRegion", min = 1, max = 1)
+    @Group(name = "preRenderRegion", min = 1, max = 2)
     @Dynamic @ModifyArg(method = "preRenderRegion",
             at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/GlStateManager;translate(FFF)V"),
             index = 1,
@@ -92,7 +92,7 @@ public abstract class MixinRenderList extends ChunkRenderContainer {
         return (float) (renderChunkLayer_regionY - this.viewEntityY);
     }
 
-    @Group(name = "preRenderRegion", min = 1, max = 1)
+    @Group(name = "preRenderRegion", min = 1, max = 2)
     @Dynamic @ModifyArg(method = "preRenderRegion",
             at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/GlStateManager;func_179109_b(FFF)V"),
             index = 1,
