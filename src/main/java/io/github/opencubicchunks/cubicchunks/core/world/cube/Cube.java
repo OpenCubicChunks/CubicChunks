@@ -353,7 +353,7 @@ public class Cube implements ICube {
             assert storage != null : "There are blocks to tick in cube but getStorage() is empty!";
             NextTickListEntry ntle = pti.next();
             if (ntle.scheduledTime > world.getTotalWorldTime())
-                return;
+                break;
             BlockPos pos = ntle.position;
             IBlockState iblockstate = this.storage.get(blockToLocal(pos.getX()), blockToLocal(pos.getY()), blockToLocal(pos.getZ()));
             if (iblockstate.getMaterial() != Material.AIR && iblockstate.getBlock() == ntle.getBlock()) {
