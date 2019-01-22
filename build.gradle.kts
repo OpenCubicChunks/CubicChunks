@@ -19,6 +19,31 @@ import org.spongepowered.asm.gradle.plugins.MixinExtension
 import org.spongepowered.asm.gradle.plugins.MixinGradlePlugin
 import kotlin.apply
 
+// Gradle repositories and dependencies
+buildscript {
+    repositories {
+        mavenCentral()
+        jcenter()
+        maven {
+            setUrl("http://files.minecraftforge.net/maven")
+        }
+        maven {
+            setUrl("http://repo.spongepowered.org/maven")
+        }
+        maven {
+            setUrl("https://plugins.gradle.org/m2/")
+        }
+    }
+    dependencies {
+        classpath("org.ajoberstar.grgit:grgit-gradle:3.0.0-beta.1")
+        classpath("org.spongepowered:mixingradle:0.5-SNAPSHOT")
+        classpath("com.github.jengelman.gradle.plugins:shadow:2.0.4")
+        classpath("gradle.plugin.nl.javadude.gradle.plugins:license-gradle-plugin:0.14.0")
+        classpath("me.champeau.gradle:jmh-gradle-plugin:0.4.6")
+        classpath("net.minecraftforge.gradle:ForgeGradle:2.3-SNAPSHOT")
+    }
+}
+
 plugins {
     base
     java
@@ -27,12 +52,14 @@ plugins {
     `maven-publish`
     maven
     signing
-    id("net.minecraftforge.gradle.forge").version("2.3-SNAPSHOT")
-    id("org.spongepowered.mixin").version("0.5-SNAPSHOT")
-    id("com.github.johnrengelman.shadow").version("2.0.4")
-    id("com.github.hierynomus.license").version("0.14.0")
-    id("org.ajoberstar.grgit").version("3.0.0-beta.1")
-    id("me.champeau.gradle.jmh").version("0.4.6")
+}
+
+apply {
+    plugin<ForgePlugin>()
+    plugin<ShadowPlugin>()
+    plugin<MixinGradlePlugin>()
+    plugin<LicensePlugin>()
+    plugin<JMHPlugin>()
 }
 
 // tasks
@@ -299,8 +326,10 @@ publishing {
         }
     }
 }
-tasks["publishApiPublicationToMavenRepository"].dependsOn("reobfApiJar")
-tasks["publishModPublicationToMavenRepository"].dependsOn("reobfShadowJar")
+afterEvaluate {
+    tasks["publishApiPublicationToMavenRepository"].dependsOn("reobfApiJar")
+    tasks["publishModPublicationToMavenRepository"].dependsOn("reobfShadowJar")
+}
 // tasks must be before artifacts, don't change the order
 artifacts {
     withGroovyBuilder {
