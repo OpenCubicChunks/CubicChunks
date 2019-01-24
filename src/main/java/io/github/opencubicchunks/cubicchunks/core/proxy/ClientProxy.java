@@ -34,6 +34,7 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.WorldSettings;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.fml.client.FMLClientHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -63,5 +64,10 @@ public class ClientProxy extends CommonProxy {
         if (((ICubicWorldSettings) (Object) settings).isCubic()) {
             server.setBuildLimit(CubicChunks.MAX_BLOCK_Y);
         }
+    }
+
+    @Override
+    public boolean hasOptifine() {
+        return FMLClientHandler.instance().hasOptifine();
     }
 }

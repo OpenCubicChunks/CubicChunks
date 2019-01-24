@@ -46,4 +46,8 @@ public abstract class CommonProxy {
     }
 
     public abstract void setBuildLimit(MinecraftServer server);
+
+    public boolean hasOptifine() {
+        return false;
+    }
 }

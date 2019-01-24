@@ -63,6 +63,8 @@ import net.minecraft.world.WorldServer;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraftforge.common.ForgeChunkManager;
 import net.minecraftforge.common.ForgeChunkManager.Ticket;
+import net.minecraftforge.fml.client.FMLClientHandler;
+import net.minecraftforge.fml.common.FMLCommonHandler;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -699,8 +701,9 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
         if (this.players == null) {
             return;
         }
-        newHorizontalViewDistance = clamp(newHorizontalViewDistance, 3, 32);
-        newVerticalViewDistance = clamp(newVerticalViewDistance, 3, 32);
+
+        newHorizontalViewDistance = clamp(newHorizontalViewDistance, 3, CubicChunks.hasOptifine() ? 64 : 32);
+        newVerticalViewDistance = clamp(newVerticalViewDistance, 3, CubicChunks.hasOptifine() ? 64 : 32);
 
         if (newHorizontalViewDistance == this.horizontalViewDistance && newVerticalViewDistance == this.verticalViewDistance) {
             return;
