@@ -33,6 +33,7 @@ import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
+import io.github.opencubicchunks.cubicchunks.api.world.ICube;
 import io.github.opencubicchunks.cubicchunks.core.CubicChunksConfig;
 import io.github.opencubicchunks.cubicchunks.core.lighting.LightingManager;
 import io.github.opencubicchunks.cubicchunks.core.network.PacketCubes;
@@ -42,19 +43,15 @@ import io.github.opencubicchunks.cubicchunks.core.visibility.CubeSelector;
 import io.github.opencubicchunks.cubicchunks.core.visibility.CuboidalCubeSelector;
 import io.github.opencubicchunks.cubicchunks.core.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.core.entity.CubicEntityTracker;
-import io.github.opencubicchunks.cubicchunks.core.lighting.LightingManager;
-import io.github.opencubicchunks.cubicchunks.core.network.PacketCubes;
-import io.github.opencubicchunks.cubicchunks.core.network.PacketDispatcher;
 import io.github.opencubicchunks.cubicchunks.api.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.api.util.XYZMap;
 import io.github.opencubicchunks.cubicchunks.api.util.XZMap;
-import io.github.opencubicchunks.cubicchunks.core.visibility.CubeSelector;
-import io.github.opencubicchunks.cubicchunks.core.visibility.CuboidalCubeSelector;
 import io.github.opencubicchunks.cubicchunks.api.world.IColumn;
 import io.github.opencubicchunks.cubicchunks.core.asm.mixin.ICubicWorldInternal;
 import io.github.opencubicchunks.cubicchunks.core.world.cube.Cube;
 import gnu.trove.map.TIntObjectMap;
 import gnu.trove.map.hash.TIntObjectHashMap;
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.server.management.PlayerChunkMap;
@@ -66,14 +63,17 @@ import net.minecraft.world.WorldServer;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraftforge.common.ForgeChunkManager;
 import net.minecraftforge.common.ForgeChunkManager.Ticket;
+import net.minecraftforge.fml.client.FMLClientHandler;
+import net.minecraftforge.fml.common.FMLCommonHandler;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
@@ -203,6 +203,8 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
     // (player respawn packet?)
     private Set<EntityPlayerMP> pendingPlayerAdd = new HashSet<>();
 
+    private final TickableChunkContainer tickableChunksCubesToReturn = new TickableChunkContainer();
+
     public PlayerCubeMap(WorldServer worldServer) {
         super((WorldServer) worldServer);
         this.cubeCache = ((ICubicWorldInternal.Server) worldServer).getCubeCache();
@@ -214,11 +216,12 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
     /**
      * This method exists only because vanilla needs it. It shouldn't be used anywhere else.
      */
-    // CHECKED: 1.10.2-12.18.1.2092
     @Override
     @Deprecated // Warning: Hacks! For vanilla use only! (WorldServer.updateBlocks())
     public Iterator<Chunk> getChunkIterator() {
-        // GIVE TICKET SYSTEM FULL CONTROL
+        // CubicChunks.bigWarning("Usage of PlayerCubeMap#getChunkIterator detected in a cubic chunks world! "
+        //        + "This is likely to work incorrectly. This is not supported.");
+        // TODO: throw UnsupportedOperationException?
         Iterator<Chunk> chunkIt = this.cubeCache.getLoadedChunks().iterator();
         return new AbstractIterator<Chunk>() {
             @Override protected Chunk computeNext() {
@@ -231,6 +234,46 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
                 return this.endOfData();
             }
         };
+    }
+
+    public TickableChunkContainer getTickableChunks() {
+        TickableChunkContainer tickableChunksCubes = this.tickableChunksCubesToReturn;
+        tickableChunksCubes.clear();
+        addTickableColumns(tickableChunksCubes);
+        addTickableCubes(tickableChunksCubes);
+        addForcedColumns(tickableChunksCubes);
+        addForcedCubes(tickableChunksCubes);
+        return tickableChunksCubes;
+    }
+
+    private void addForcedColumns(TickableChunkContainer tickableChunksCubes) {
+        for(IColumn columns : ((ICubicWorldInternal.Server) getWorldServer()).getForcedColumns()) {
+            tickableChunksCubes.addColumn((Chunk) columns);
+        }
+    }
+
+    private void addForcedCubes(TickableChunkContainer tickableChunksCubes) {
+        tickableChunksCubes.forcedCubes = ((ICubicWorldInternal.Server) getWorldServer()).getForcedCubes();
+    }
+
+    private void addTickableCubes(TickableChunkContainer tickableChunksCubes) {
+        for (CubeWatcher watcher : cubeWatchers) {
+            ICube cube = watcher.getCube();
+            if (cube == null || !watcher.hasPlayerMatchingInRange(NOT_SPECTATOR, 128)) {
+                continue;
+            }
+            tickableChunksCubes.addCube(cube);
+        }
+    }
+
+    private void addTickableColumns(TickableChunkContainer tickableChunksCubes) {
+        for (ColumnWatcher watcher : columnWatchers) {
+            Chunk chunk = watcher.getChunk();
+            if (chunk == null || !watcher.hasPlayerMatchingInRange(128.0D, NOT_SPECTATOR)) {
+                continue;
+            }
+            tickableChunksCubes.addColumn(chunk);
+        }
     }
 
     /**
@@ -658,8 +701,9 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
         if (this.players == null) {
             return;
         }
-        newHorizontalViewDistance = clamp(newHorizontalViewDistance, 3, 32);
-        newVerticalViewDistance = clamp(newVerticalViewDistance, 3, 32);
+
+        newHorizontalViewDistance = clamp(newHorizontalViewDistance, 3, CubicChunks.hasOptifine() ? 64 : 32);
+        newVerticalViewDistance = clamp(newVerticalViewDistance, 3, CubicChunks.hasOptifine() ? 64 : 32);
 
         if (newHorizontalViewDistance == this.horizontalViewDistance && newVerticalViewDistance == this.verticalViewDistance) {
             return;
@@ -884,5 +928,37 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
                 return this.endOfData();
             }
         };
+    }
+
+    public class TickableChunkContainer {
+
+        private final ObjectArrayList<ICube> cubes = ObjectArrayList.wrap(new ICube[64*1024]);
+        private XYZMap<ICube> forcedCubes;
+        private final Set<Chunk> columns = Collections.newSetFromMap(new IdentityHashMap<>());
+
+        private void clear() {
+            this.cubes.clear();
+            this.columns.clear();
+        }
+
+        private void addCube(ICube cube) {
+            cubes.add(cube);
+        }
+
+        public void addColumn(Chunk column) {
+            columns.add(column);
+        }
+
+        public Iterable<ICube> forcedCubes() {
+            return forcedCubes;
+        }
+
+        public ICube[] playerTickableCubes() {
+            return cubes.elements();
+        }
+
+        public Iterable<Chunk> columns() {
+            return columns;
+        }
     }
 }

@@ -33,10 +33,6 @@ import io.github.opencubicchunks.cubicchunks.api.world.ICube;
 import io.github.opencubicchunks.cubicchunks.api.worldgen.ICubeGenerator;
 import io.github.opencubicchunks.cubicchunks.api.world.ICubeProviderServer;
 import io.github.opencubicchunks.cubicchunks.core.asm.CubicChunksMixinConfig;
-import io.github.opencubicchunks.cubicchunks.core.lighting.LightingManager;
-import io.github.opencubicchunks.cubicchunks.core.server.chunkio.ICubeIO;
-import io.github.opencubicchunks.cubicchunks.core.server.chunkio.RegionCubeIO;
-import io.github.opencubicchunks.cubicchunks.core.server.chunkio.async.forge.AsyncWorldIOExecutor;
 import io.github.opencubicchunks.cubicchunks.api.util.Box;
 import io.github.opencubicchunks.cubicchunks.api.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.api.util.XYZMap;
@@ -62,6 +58,7 @@ import java.io.UncheckedIOException;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
+import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 
 import javax.annotation.Detainted;
@@ -90,7 +87,6 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
 
     @Nonnull private ICubeGenerator cubeGen;
     @Nonnull private Profiler profiler;
-    private final boolean doRandomBlockTicksHere;
 
     public CubeProviderServer(WorldServer worldServer, ICubeGenerator cubeGen) {
         super(worldServer,
@@ -105,8 +101,6 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
-
-        doRandomBlockTicksHere = CubicChunksMixinConfig.BoolOptions.RANDOM_TICK_IN_CUBE.getValue();
     }
 
     @Override
@@ -201,18 +195,12 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
         // NOTE: the return value is completely ignored
         profiler.startSection("providerTick");
         long i = System.currentTimeMillis();
-        int randomTickSpeed = this.world.getGameRules().getInt("randomTickSpeed");
         Random rand = this.world.rand;
         PlayerCubeMap playerCubeMap = ((PlayerCubeMap) this.world.getPlayerChunkMap());
         Iterator<Cube> watchersIterator = playerCubeMap.getCubeIterator();
+        BooleanSupplier tickFaster = () -> System.currentTimeMillis() - i > 40;
         while (watchersIterator.hasNext()) {
-            Cube cube = watchersIterator.next();
-            cube.tickCubeServer(() -> System.currentTimeMillis() - i > 40, rand);
-            if (!doRandomBlockTicksHere)
-                continue;
-            int randomTickCounter = randomTickSpeed;
-            while (randomTickCounter-- > 0)
-                cube.randomTick(this.world, rand);
+            watchersIterator.next().tickCubeServer(tickFaster, rand);
         }
         profiler.endSection();
         return false;

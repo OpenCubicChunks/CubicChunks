@@ -194,12 +194,6 @@ public class CubicChunksMixinConfig implements IMixinConfigPlugin {
                 new String[] {"io.github.opencubicchunks.cubicchunks.core.asm.mixin.selectable.common.MixinWorld_CollisionCheck"},
                 "Enabling this option allow using fast collision check."
                         + " Fast collision check can reduce server lag."
-                        + " You need to restart Minecraft to apply changes."),
-        RANDOM_TICK_IN_CUBE(true, 
-                new String[] {},
-                new String[] {"io.github.opencubicchunks.cubicchunks.core.asm.mixin.selectable.common.MixinWorldServer_UpdateBlocks"},
-                "If set to true, random tick wil be launched from cube instance instead of chunk."
-                        + " Cube based random tick may slightly reduce server lag."
                         + " You need to restart Minecraft to apply changes.");
 
         private final boolean defaultValue;

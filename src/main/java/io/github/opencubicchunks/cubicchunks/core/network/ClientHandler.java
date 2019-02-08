@@ -23,6 +23,9 @@
  */
 package io.github.opencubicchunks.cubicchunks.core.network;
 
+import static io.github.opencubicchunks.cubicchunks.api.util.Coords.cubeToMinBlock;
+
+import io.github.opencubicchunks.cubicchunks.api.util.Coords;
 import io.github.opencubicchunks.cubicchunks.core.lighting.LightingManager;
 import io.github.opencubicchunks.cubicchunks.api.world.ICubicWorld;
 import io.github.opencubicchunks.cubicchunks.core.CubicChunks;
@@ -192,7 +195,7 @@ public class ClientHandler implements INetHandler {
         }
         ExtendedBlockStorage storage = cube.getStorage();
         if (cube.getStorage() == null) {
-            cube.setStorage(storage = new ExtendedBlockStorage(cube.getY(), worldClient.provider.hasSkyLight()));
+            cube.setStorage(storage = new ExtendedBlockStorage(cubeToMinBlock(cube.getY()), worldClient.provider.hasSkyLight()));
         }
         assert storage != null;
         if (message.isFullRelight()) {

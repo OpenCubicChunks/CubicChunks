@@ -286,4 +286,16 @@ public abstract class MixinWorld_HeightLimits implements ICubicWorld {
         ci.setReturnValue(biome);
         ci.cancel();
     }
+
+    @ModifyConstant(method = "canSnowAtBody", constant = @Constant(intValue = 256), remap = false)
+    private int canSnowAt_getMaxHeight(int _256) {
+        return getMaxHeight();
+    }
+
+    @ModifyConstant(method = "canSnowAtBody",
+            constant = @Constant(expandZeroConditions = Constant.Condition.GREATER_THAN_OR_EQUAL_TO_ZERO),
+            remap = false)
+    private int canSnowAt_getMinHeight(int zero) {
+        return getMinHeight();
+    }
 }

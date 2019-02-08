@@ -23,15 +23,19 @@
  */
 package io.github.opencubicchunks.cubicchunks.core;
 
+import com.google.common.collect.Maps;
 import com.google.common.collect.Range;
 import com.google.common.collect.TreeRangeSet;
 import mcp.MethodsReturnNonnullByDefault;
+import net.minecraftforge.common.ForgeChunkManager;
 import net.minecraftforge.common.config.Config;
 import net.minecraftforge.common.config.ConfigManager;
 import net.minecraftforge.fml.client.event.ConfigChangedEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
@@ -94,7 +98,7 @@ public class CubicChunksConfig {
     @Config.Comment("If this is set to true, cubic chunks will respect excluded dimensions even for already existing worlds. If this results in a "
             + "existing dimension switching between cubic chunks and vanilla, the contents of that dimension won't be converted.")
     public static boolean forceDimensionExcludes = false;
-    
+
     @Config.LangKey("cubicchunks.config.relight_checks_per_tick_per_column")
     @Config.Comment("In an attempt to fix lighting glicthes over time, cubic chunks will keep updating light in specified amount of blocks per "
             + "column (chunk) per tick. Default value of 1 doesn't cause noticeable performance drop, but still fixes most major issues relatively "
@@ -105,6 +109,13 @@ public class CubicChunksConfig {
     @Config.Comment("By default cubic chunks will attempt to go over all the blocks over time to fix lighting only on server. Enable this to also "
             + "fix lighting on the clientside.")
     public static boolean doClientLightFixes = false;
+
+    public static int defaultMaxCubesPerChunkloadingTicket = 25 * 16;
+    public static Map<String, Integer> modMaxCubesPerChunkloadingTicket = new HashMap<>();
+
+    static {
+        modMaxCubesPerChunkloadingTicket.put("cubicchunks", defaultMaxCubesPerChunkloadingTicket);
+    }
 
     //@Config.Ignore
     private static TreeRangeSet<Integer> excludedDimensionsRanges = null;
