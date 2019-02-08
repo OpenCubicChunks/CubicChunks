@@ -23,7 +23,14 @@
  */
 package io.github.opencubicchunks.cubicchunks.core.asm.mixin.core.common;
 
+import static io.github.opencubicchunks.cubicchunks.api.util.Coords.cubeToMinBlock;
+
+import io.github.opencubicchunks.cubicchunks.api.util.XYZMap;
+import io.github.opencubicchunks.cubicchunks.api.util.XZMap;
+import io.github.opencubicchunks.cubicchunks.api.world.IColumn;
+import io.github.opencubicchunks.cubicchunks.api.world.ICube;
 import io.github.opencubicchunks.cubicchunks.api.worldgen.ICubeGenerator;
+import io.github.opencubicchunks.cubicchunks.core.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.core.CubicChunksConfig;
 import io.github.opencubicchunks.cubicchunks.core.entity.CubicEntityTracker;
 import io.github.opencubicchunks.cubicchunks.core.lighting.FirstLightProcessor;
@@ -35,7 +42,6 @@ import io.github.opencubicchunks.cubicchunks.core.world.FastCubeWorldEntitySpawn
 import io.github.opencubicchunks.cubicchunks.core.world.cube.Cube;
 import io.github.opencubicchunks.cubicchunks.core.world.provider.ICubicWorldProvider;
 import io.github.opencubicchunks.cubicchunks.api.world.ICubeProviderServer;
-import io.github.opencubicchunks.cubicchunks.api.util.Bits;
 import io.github.opencubicchunks.cubicchunks.api.util.Coords;
 import io.github.opencubicchunks.cubicchunks.api.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.api.util.IntRange;
@@ -44,16 +50,21 @@ import io.github.opencubicchunks.cubicchunks.core.asm.mixin.ICubicWorldInternal;
 import io.github.opencubicchunks.cubicchunks.api.util.NotCubicChunksWorldException;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.Block;
+import net.minecraft.block.state.IBlockState;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.EntityTracker;
+import net.minecraft.entity.effect.EntityLightningBolt;
+import net.minecraft.init.Blocks;
 import net.minecraft.server.management.PlayerChunkMap;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.World;
 import net.minecraft.world.WorldEntitySpawner;
-import net.minecraft.world.WorldProvider;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.chunk.Chunk;
 
+import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Implements;
 import org.spongepowered.asm.mixin.Interface;
@@ -62,9 +73,12 @@ import org.spongepowered.asm.mixin.Mutable;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -82,6 +96,15 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
     @Shadow @Mutable @Final private WorldEntitySpawner entitySpawner;
     @Shadow @Mutable @Final private EntityTracker theEntityTracker;
     @Shadow public boolean disableLevelSaving;
+    private Map<Chunk, Set<ICube>> forcedChunksCubes;
+    private XYZMap<ICube> forcedCubes;
+    private XZMap<IColumn> forcedColumns;
+
+    @Shadow protected abstract void playerCheckLight();
+
+    @Shadow public abstract boolean spawnEntity(Entity entityIn);
+
+    @Shadow public abstract boolean addWeatherEffect(Entity entityIn);
 
     @Nullable private ChunkGc chunkGc;
     @Nullable private FirstLightProcessor firstLightProcessor;
@@ -100,6 +123,10 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
 
         this.firstLightProcessor = new FirstLightProcessor((WorldServer) (Object) this);
         this.theEntityTracker = new CubicEntityTracker(this);
+
+        this.forcedChunksCubes = new HashMap<>();
+        this.forcedCubes = new XYZMap<>(0.75f, 64*1024);
+        this.forcedColumns = new XZMap<>(0.75f, 2048);
     }
 
     @Override public void tickCubicWorld() {
@@ -139,6 +166,33 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
         return this.chunkGc;
     }
 
+    @Override public void removeForcedCube(ICube cube) {
+        if (!forcedChunksCubes.get(cube.getColumn()).remove(cube)) {
+            CubicChunks.LOGGER.error("Trying to remove forced cube " + cube.getCoords() + ", but it's not forced!");
+        }
+        forcedCubes.remove(cube);
+        if (forcedChunksCubes.get(cube.getColumn()).isEmpty()) {
+            forcedChunksCubes.remove(cube.getColumn());
+            forcedColumns.remove(cube.getColumn());
+        }
+    }
+
+    @Override public void addForcedCube(ICube cube) {
+        if (!forcedChunksCubes.computeIfAbsent(cube.getColumn(), chunk -> new HashSet<>()).add(cube)) {
+            CubicChunks.LOGGER.error("Trying to add forced cube " + cube.getCoords() + ", but it's already forced!");
+        }
+        forcedCubes.put(cube);
+        forcedColumns.put(cube.getColumn());
+    }
+
+    @Override public XYZMap<ICube> getForcedCubes() {
+        return forcedCubes;
+    }
+
+    @Override public XZMap<IColumn> getForcedColumns() {
+        return forcedColumns;
+    }
+
     @Inject(method = "scheduleUpdate", at = @At("HEAD"), cancellable = true, require = 1)
     public void scheduleUpdateInject(BlockPos pos, Block blockIn, int delay, CallbackInfo ci) {
         if (this.isCubicWorld()) {
@@ -149,7 +203,8 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
             ci.cancel();
         }
     }
-    
+
+    // TODO: verify that these work correctly
     @Inject(method = "scheduleBlockUpdate", at = @At("HEAD"), cancellable = true, require = 1)
     public void scheduleBlockUpdateInject(BlockPos pos, Block blockIn, int delay, int priority, CallbackInfo ci) {
         if (this.isCubicWorld()) {
@@ -172,54 +227,153 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
         }
     }
 
-    @Inject(method = "adjustPosToNearbyEntity", at = @At("HEAD"), cancellable = true)
-    public void adjustPosToNearbyEntityCubicChunks(BlockPos strikeTarget, CallbackInfoReturnable<BlockPos> ci) {
-        if (this.isCubicWorld()) {
-            ci.cancel();
-            Chunk column = this.getCubeCache().getColumn(Coords.blockToCube(strikeTarget.getX()), Coords.blockToCube(strikeTarget.getZ()),
-                    ICubeProviderServer.Requirement.GET_CACHED);
-            strikeTarget = column.getPrecipitationHeight(strikeTarget);
-            ci.setReturnValue(strikeTarget);
-            Cube cube = this.getCubeCache().getLoadedCube(CubePos.fromBlockCoords(strikeTarget));
-            AxisAlignedBB aabb = (new AxisAlignedBB(strikeTarget)).expandXyz(3.0D);
-            if (cube == null) {
-                return;
+    /**
+     * @author Barteks2x
+     */
+
+    @Inject(method = "updateBlocks", at = @At("HEAD"), cancellable = true)
+    protected void updateBlocksCubicChunks(CallbackInfo cbi) {
+        if (!isCubicWorld()) {
+            return;
+        }
+        cbi.cancel();
+        this.playerCheckLight();
+
+        int tickSpeed = this.getGameRules().getInt("randomTickSpeed");
+        boolean raining = this.isRaining();
+        boolean thundering = this.isThundering();
+        this.theProfiler.startSection("pollingChunks");
+
+        // CubicChunks - iterate over PlayerCubeMap.TickableChunkContainer instead of Chunks, getTickableChunks already includes forced chunks
+        PlayerCubeMap.TickableChunkContainer chunks = ((PlayerCubeMap) this.playerChunkMap).getTickableChunks();
+        for (Chunk chunk : chunks.columns()) {
+            tickColumn(raining, thundering, chunk);
+        }
+        this.theProfiler.endStartSection("pollingCubes");
+
+        if (tickSpeed > 0) {
+            long worldTime = worldInfo.getWorldTotalTime();
+            // CubicChunks - iterate over cubes instead of storage array from Chunk
+            for (ICube cube : chunks.forcedCubes()) {
+                tickCube(tickSpeed, cube, worldTime);
             }
-            Iterable<EntityLivingBase> setOfLiving = cube.getEntityContainer().getEntitySet().getByClass(EntityLivingBase.class);
-            for (EntityLivingBase entity : setOfLiving) {
-                if (!entity.isEntityAlive())
-                    continue;
-                BlockPos entityPos = entity.getPosition();
-                if (entityPos.getY() < column.getHeightValue(Coords.blockToLocal(entityPos.getX()), Coords.blockToLocal(entityPos.getZ())))
-                    continue;
-                if (entity.getEntityBoundingBox().intersectsWith(aabb)) {
-                    // This entity is lucky!
-                    ci.setReturnValue(entityPos);
-                    return;
+            for (ICube cube : chunks.playerTickableCubes()) {
+                if (cube == null) { // this is the internal array from the arraylist, anything beyond the size is null
+                    break;
                 }
+                tickCube(tickSpeed, cube, worldTime);
             }
         }
+
+        this.theProfiler.endSection();
     }
 
-    @Redirect(method = "updateBlocks",
-            at = @At(
-                    value = "INVOKE",
-                    target = "Lnet/minecraft/world/WorldProvider;canDoRainSnowIce(Lnet/minecraft/world/chunk/Chunk;)Z",
-                    remap = false
-            ))
-    public boolean redirectProviderCanDoRainSnowIce(WorldProvider provider, Chunk chunk) {
-        boolean canDoRainSnowIce = provider.canDoRainSnowIce(chunk);
-        if (!canDoRainSnowIce)
-            return canDoRainSnowIce;
-        // We will mock WorldServer actions here without actually changing value, so we can take a peek what would happened here.
-        int updateLCG1 = this.updateLCG * 3 + 1013904223;
-        int localXZAddress = updateLCG1 >> 2;
-        int blockX = Coords.localToBlock(chunk.xPosition, Bits.unpackUnsigned(localXZAddress, 4, 0));
-        int blockZ = Coords.localToBlock(chunk.zPosition, Bits.unpackUnsigned(localXZAddress, 4, 8));
-        BlockPos blockpos1 = chunk.getPrecipitationHeight(new BlockPos(blockX, 0, blockZ));
-        BlockPos blockpos2 = blockpos1.down();
-        if (!this.isAreaLoaded(blockpos1, blockpos2))
-            return false;
-        return canDoRainSnowIce;
+    private void tickCube(int tickSpeed, ICube cube, long worldTime) {
+        if (!((Cube) cube).checkAndUpdateTick(worldTime)) {
+            return;
+        }
+        int chunkBlockX = cubeToMinBlock(cube.getX());
+        int chunkBlockZ = cubeToMinBlock(cube.getZ());
+
+        this.theProfiler.startSection("tickBlocks");
+        ExtendedBlockStorage ebs = cube.getStorage();
+        if (ebs != Chunk.NULL_BLOCK_STORAGE && ebs.getNeedsRandomTick()) {
+            for (int i = 0; i < tickSpeed; ++i) {
+                tickNextBlock(chunkBlockX, chunkBlockZ, ebs);
+            }
+        }
+        this.theProfiler.endSection();
+    }
+
+    private void tickNextBlock(int chunkBlockX, int chunkBlockZ, ExtendedBlockStorage ebs) {
+        this.updateLCG = this.updateLCG * 3 + 1013904223;
+        int rand = this.updateLCG >> 2;
+        int localX = rand & 15;
+        int localZ = rand >> 8 & 15;
+        int localY = rand >> 16 & 15;
+        IBlockState state = ebs.get(localX, localY, localZ);
+        Block block = state.getBlock();
+        this.theProfiler.startSection("randomTick");
+
+        if (block.getTickRandomly()) {
+            block.randomTick((World) (Object) this,
+                    new BlockPos(localX + chunkBlockX, localY + ebs.getYLocation(), localZ + chunkBlockZ), state, this.rand);
+        }
+
+        this.theProfiler.endSection();
+    }
+
+    private void tickColumn(boolean raining, boolean thundering, Chunk chunk) {
+        int chunkBlockX = chunk.xPosition * 16;
+        int chunkBlockZ = chunk.zPosition * 16;
+        this.theProfiler.startSection("checkNextLight");
+        chunk.enqueueRelightChecks();
+        this.theProfiler.endStartSection("tickChunk");
+        chunk.onTick(false);
+        this.theProfiler.endStartSection("thunder");
+
+        if (this.provider.canDoLightning(chunk) && raining && thundering && this.rand.nextInt(100000) == 0) {
+            this.updateLCG = this.updateLCG * 3 + 1013904223;
+            int rand = this.updateLCG >> 2;
+            BlockPos strikePos =
+                    this.adjustPosToNearbyEntityCubicChunks(new BlockPos(chunkBlockX + (rand & 15), 0, chunkBlockZ + (rand >> 8 & 15)));
+
+            if (strikePos != null && this.isRainingAt(strikePos)) {
+                this.addWeatherEffect(new EntityLightningBolt((World) (Object) this,
+                            (double) strikePos.getX(), (double) strikePos.getY(), (double) strikePos.getZ(), false));
+            }
+        }
+
+        this.theProfiler.endStartSection("iceandsnow");
+
+        if (this.provider.canDoRainSnowIce(chunk) && this.rand.nextInt(16) == 0) {
+            this.updateLCG = this.updateLCG * 3 + 1013904223;
+            int j2 = this.updateLCG >> 2;
+            BlockPos block = this.getPrecipitationHeight(new BlockPos(chunkBlockX + (j2 & 15), 0, chunkBlockZ + (j2 >> 8 & 15)));
+            BlockPos blockBelow = block.down();
+
+            if (this.isAreaLoaded(blockBelow, 1)) { // Forge: check area to avoid loading neighbors in unloaded chunks
+                if (this.canBlockFreezeNoWater(blockBelow)) {
+                    this.setBlockState(blockBelow, Blocks.ICE.getDefaultState());
+                }
+            }
+
+            // CubicChunks - isBlockLoaded check
+            if (raining && isBlockLoaded(block) && this.canSnowAt(block, true)) {
+                this.setBlockState(block, Blocks.SNOW_LAYER.getDefaultState());
+            }
+
+            // CubicChunks - isBlockLoaded check
+            if (raining && isBlockLoaded(blockBelow) && this.getBiome(blockBelow).canRain()) {
+                this.getBlockState(blockBelow).getBlock().fillWithRain((World) (Object) this, blockBelow);
+            }
+        }
+        this.theProfiler.endSection();
+    }
+
+    private BlockPos adjustPosToNearbyEntityCubicChunks(BlockPos strikeTarget) {
+        Chunk column = this.getCubeCache().getColumn(Coords.blockToCube(strikeTarget.getX()), Coords.blockToCube(strikeTarget.getZ()),
+                ICubeProviderServer.Requirement.GET_CACHED);
+        strikeTarget = column.getPrecipitationHeight(strikeTarget);
+        Cube cube = this.getCubeCache().getLoadedCube(CubePos.fromBlockCoords(strikeTarget));
+        if (cube == null) {
+            return null;
+        }
+        AxisAlignedBB aabb = (new AxisAlignedBB(strikeTarget)).expandXyz(3.0D);
+
+        Iterable<EntityLivingBase> setOfLiving = cube.getEntityContainer().getEntitySet().getByClass(EntityLivingBase.class);
+        for (EntityLivingBase entity : setOfLiving) {
+            if (!entity.isEntityAlive()) {
+                continue;
+            }
+            BlockPos entityPos = entity.getPosition();
+            if (entityPos.getY() < column.getHeightValue(Coords.blockToLocal(entityPos.getX()), Coords.blockToLocal(entityPos.getZ()))) {
+                continue;
+            }
+            if (entity.getEntityBoundingBox().intersectsWith(aabb)) {
+                return entityPos;
+            }
+        }
+        return strikeTarget;
     }
 }

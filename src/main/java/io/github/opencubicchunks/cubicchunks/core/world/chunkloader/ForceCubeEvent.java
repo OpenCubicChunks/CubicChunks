@@ -21,33 +21,19 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package io.github.opencubicchunks.cubicchunks.core.proxy;
+package io.github.opencubicchunks.cubicchunks.core.world.chunkloader;
 
-import io.github.opencubicchunks.cubicchunks.core.CommonEventHandler;
+import io.github.opencubicchunks.cubicchunks.api.util.CubePos;
 import mcp.MethodsReturnNonnullByDefault;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.server.MinecraftServer;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
+import net.minecraftforge.common.ForgeChunkManager;
+import net.minecraftforge.fml.common.eventhandler.Event;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
-@MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
-public abstract class CommonProxy {
+@MethodsReturnNonnullByDefault
+public class ForceCubeEvent extends Event {
 
-    /**
-     * Returns a side-appropriate EntityPlayer for use during message handling
-     */
-    public abstract EntityPlayer getPlayerEntity(MessageContext ctx);
-
-    public void init() {
-        MinecraftForge.EVENT_BUS.register(new CommonEventHandler());
-    }
-
-    public abstract void setBuildLimit(MinecraftServer server);
-
-    public boolean hasOptifine() {
-        return false;
+    public ForceCubeEvent(ForgeChunkManager.Ticket ticket, CubePos pos) {
     }
 }

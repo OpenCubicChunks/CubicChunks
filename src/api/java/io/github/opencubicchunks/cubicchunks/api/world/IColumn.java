@@ -24,6 +24,7 @@
 package io.github.opencubicchunks.cubicchunks.api.world;
 
 import io.github.opencubicchunks.cubicchunks.api.util.Coords;
+import io.github.opencubicchunks.cubicchunks.api.util.XZAddressable;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.util.math.BlockPos;
 
@@ -34,7 +35,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public interface IColumn {
+public interface IColumn extends XZAddressable {
 
     /**
      * Return Y position of the block directly above the top non-transparent block (opacity != 0),
@@ -149,5 +150,4 @@ public interface IColumn {
      * @param cube the cube to precache
      */
     void preCacheCube(ICube cube);
-
 }

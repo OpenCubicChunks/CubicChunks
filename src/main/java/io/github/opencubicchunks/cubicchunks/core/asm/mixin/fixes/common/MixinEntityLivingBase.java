@@ -26,12 +26,10 @@ package io.github.opencubicchunks.cubicchunks.core.asm.mixin.fixes.common;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.ModifyArg;
-import org.spongepowered.asm.mixin.injection.Constant;
-import org.spongepowered.asm.mixin.injection.ModifyConstant;
+import org.spongepowered.asm.mixin.injection.*;
 import io.github.opencubicchunks.cubicchunks.api.world.ICubicWorld;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -60,5 +58,13 @@ public abstract class MixinEntityLivingBase extends Entity {
     @ModifyConstant(method = "attemptTeleport", constant = @Constant(expandZeroConditions = Constant.Condition.GREATER_THAN_ZERO))
     private int getMinHeight(int orig) {
         return ((ICubicWorld) world).getMinHeight();
+    }
+
+    @Redirect(method = "attemptTeleport", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/math/BlockPos;getY()I"))
+    private int isBlockLoadedTeleportCheck(BlockPos blockPos) {
+        // in this check:
+        // while (!flag1 && blockpos.getY() > 0)
+        // return very high Y if the block isn't loaded to avoid potentially infinite loop
+        return world.isBlockLoaded(blockPos.down()) ? blockPos.getY() : (Integer.MIN_VALUE + 1);
     }
 }

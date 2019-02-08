@@ -57,4 +57,12 @@ public class MixinChunkCache_HeightLimits {
     private int getBlockState_getMaxHeight(int orig) {
         return ((ICubicWorld) world).getMaxHeight();
     }
+    
+    public int getMinHeight() {
+        return ((ICubicWorld) world).getMinHeight();
+    }
+
+    public int getMaxHeight() {
+        return ((ICubicWorld) world).getMaxHeight();
+    }
 }

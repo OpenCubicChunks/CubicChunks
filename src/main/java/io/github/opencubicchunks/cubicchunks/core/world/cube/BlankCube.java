@@ -51,7 +51,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 public class BlankCube extends Cube {
 
     public BlankCube(Chunk column) {
-        super(new TicketList(), column.getWorld(), column, new CubePos(0, 0, 0),
+        super(new TicketList(null), column.getWorld(), column, new CubePos(0, 0, 0),
                 Cube.NULL_STORAGE, new BlankEntityContainer(), new HashMap<>(), new ConcurrentLinkedQueue<>(),
                 new LightingManager.CubeLightUpdateInfo(null) {
                     @Override

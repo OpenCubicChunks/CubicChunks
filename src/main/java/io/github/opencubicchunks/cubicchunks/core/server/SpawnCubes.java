@@ -145,7 +145,7 @@ public class SpawnCubes {
         }
 
         public boolean shouldTick() {
-            return true;
+            return false;
         }
 
         @Override

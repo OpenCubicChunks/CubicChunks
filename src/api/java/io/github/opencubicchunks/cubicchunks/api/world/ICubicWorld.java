@@ -211,6 +211,11 @@ public interface ICubicWorld extends IMinMaxHeight {
 
     ICube getCubeFromCubeCoords(int cubeX, int cubeY, int cubeZ);
 
+    default ICube getCubeFromCubeCoords(CubePos pos) {
+        return getCubeFromCubeCoords(pos.getX(), pos.getY(), pos.getZ());
+    }
+
+
     ICube getCubeFromBlockCoords(BlockPos pos);
 
     int getEffectiveHeight(int blockX, int blockZ);

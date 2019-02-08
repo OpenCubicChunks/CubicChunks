@@ -138,13 +138,13 @@ public class ClientEventHandler {
 
     private class VertViewDistanceSlider extends GuiButton {
 
+        private final int MAX_VIEW_DIST = CubicChunks.hasOptifine() ?  64 : 32;
         private float sliderValue;
         public boolean dragging;
 
         public VertViewDistanceSlider(int buttonId, int x, int y) {
             super(buttonId, x, y, 150, 20, "");
-            this.sliderValue = 1.0F;
-            this.sliderValue = CubicChunksConfig.verticalCubeLoadDistance;
+            this.sliderValue = MathUtil.unlerp(CubicChunksConfig.verticalCubeLoadDistance, 2, MAX_VIEW_DIST);
             this.displayString = this.createDisplayString();
         }
 
@@ -152,6 +152,7 @@ public class ClientEventHandler {
          * Returns 0 if the button is disabled, 1 if the mouse is NOT hovering
          * over this button and 2 if it IS hovering over this button.
          */
+        @Override
         protected int getHoverState(boolean mouseOver) {
             return 0;
         }
@@ -160,14 +161,15 @@ public class ClientEventHandler {
          * Fired when the mouse button is dragged. Equivalent of
          * MouseListener.mouseDragged(MouseEvent e).
          */
+        @Override
         protected void mouseDragged(Minecraft mc, int mouseX, int mouseY) {
             if (this.visible) {
                 if (this.dragging) {
                     this.sliderValue = (float) (mouseX - (this.xPosition + 4)) / (float) (this.width - 8);
                     this.sliderValue = MathHelper.clamp(this.sliderValue, 0.0F, 1.0F);
                     CubicChunksConfig.setVerticalViewDistance(
-                            Math.round(MathUtil.lerp(this.sliderValue, 2, 32)));
-                    this.sliderValue = MathUtil.unlerp(CubicChunksConfig.verticalCubeLoadDistance, 2, 32);
+                            Math.round(MathUtil.lerp(this.sliderValue, 2, MAX_VIEW_DIST)));
+                    this.sliderValue = MathUtil.unlerp(CubicChunksConfig.verticalCubeLoadDistance, 2, MAX_VIEW_DIST);
                     this.displayString = this.createDisplayString();
                 }
 
@@ -182,13 +184,14 @@ public class ClientEventHandler {
          * Returns true if the mouse has been pressed on this control.
          * Equivalent of MouseListener.mousePressed(MouseEvent e).
          */
+        @Override
         public boolean mousePressed(Minecraft mc, int mouseX, int mouseY) {
             if (super.mousePressed(mc, mouseX, mouseY)) {
                 this.sliderValue = (float) (mouseX - (this.xPosition + 4)) / (float) (this.width - 8);
                 this.sliderValue = MathHelper.clamp(this.sliderValue, 0.0F, 1.0F);
                 CubicChunksConfig.setVerticalViewDistance(
-                        Math.round(MathUtil.lerp(this.sliderValue, 2, 32)));
-                this.sliderValue = MathUtil.unlerp(CubicChunksConfig.verticalCubeLoadDistance, 2, 32);
+                        Math.round(MathUtil.lerp(this.sliderValue, 2, MAX_VIEW_DIST)));
+                this.sliderValue = MathUtil.unlerp(CubicChunksConfig.verticalCubeLoadDistance, 2, MAX_VIEW_DIST);
                 this.displayString = this.createDisplayString();
                 this.dragging = true;
                 return true;
@@ -205,6 +208,7 @@ public class ClientEventHandler {
          * Fired when the mouse button is released. Equivalent of
          * MouseListener.mouseReleased(MouseEvent e).
          */
+        @Override
         public void mouseReleased(int mouseX, int mouseY) {
             this.dragging = false;
         }

@@ -25,6 +25,7 @@ package io.github.opencubicchunks.cubicchunks.api.util;
 
 import mcp.MethodsReturnNonnullByDefault;
 
+import java.util.Arrays;
 import java.util.Iterator;
 
 import javax.annotation.Nullable;
@@ -148,6 +149,13 @@ public class XZMap<T extends XZAddressable> implements Iterable<T> {
         return (index + 1) & this.mask;
     }
 
+    /**
+     * Removes all elements from the map.
+     */
+    public void clear() {
+        Arrays.fill(this.buckets, null);
+        this.size = 0;
+    }
 
     /**
      * Associates the given value with its xz-coordinates. If the map previously contained a mapping for these
@@ -431,5 +439,4 @@ public class XZMap<T extends XZAddressable> implements Iterable<T> {
             }
         };
     }
-
 }

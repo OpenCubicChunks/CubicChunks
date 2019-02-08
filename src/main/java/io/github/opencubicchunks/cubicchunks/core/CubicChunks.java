@@ -66,8 +66,6 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @Mod.EventBusSubscriber
 public class CubicChunks {
 
-    public static final int FIXER_VERSION = 0;
-
     public static final VersionRange SUPPORTED_SERVER_VERSIONS;
     public static final VersionRange SUPPORTED_CLIENT_VERSIONS;
 
@@ -168,10 +166,6 @@ public class CubicChunks {
         return true;
     }
 
-    public static ResourceLocation location(String location) {
-        return new ResourceLocation(MODID, location);
-    }
-
     // essentially a copy of FMLLog.bigWarning, with more lines of stacktrace
     public static void bigWarning(String format, Object... data)
     {
@@ -183,5 +177,9 @@ public class CubicChunks {
             LOGGER.log(Level.WARN, "*  at {}{}", trace[i].toString(), i == 9 ? "..." : "");
         }
         LOGGER.log(Level.WARN, "****************************************");
+    }
+
+    public static boolean hasOptifine() {
+        return proxy.hasOptifine();
     }
 }

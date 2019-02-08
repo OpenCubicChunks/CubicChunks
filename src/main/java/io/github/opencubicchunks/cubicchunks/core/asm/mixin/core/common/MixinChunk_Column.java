@@ -137,4 +137,12 @@ public abstract class MixinChunk_Column implements IColumn {
     @Override public void preCacheCube(ICube cube) {
         this.cachedCube = (Cube) cube;
     }
+
+    @Override public int getX() {
+        return xPosition;
+    }
+
+    @Override public int getZ() {
+        return zPosition;
+    }
 }
