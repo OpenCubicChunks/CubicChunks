@@ -92,6 +92,10 @@ version = getModVersion()
 group = "io.github.opencubicchunks"
 (mainSourceSet as ExtensionAware).extra["refMap"] = "cubicchunks.mixins.refmap.json"
 
+sourceSets {
+    create("optifine_dummy")
+}
+
 idea {
     module.apply {
         inheritOutputDirs = true
@@ -377,6 +381,9 @@ dependencies {
     embed("com.flowpowered:flow-noise:1.0.1-SNAPSHOT")
     // https://mvnrepository.com/artifact/com.typesafe/config
     embed("com.typesafe:config:1.2.0")
+
+    provided(sourceSets["optifine_dummy"].output)
+
     testCompile("junit:junit:4.11")
     testCompile("org.hamcrest:hamcrest-junit:2.0.0.0")
     testCompile("it.ozimov:java7-hamcrest-matchers:0.7.0")
