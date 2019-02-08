@@ -68,7 +68,11 @@ public class CubicChunksMixinConfig implements IMixinConfigPlugin {
             optifineVersion = optifineVersion.replace("_pre", "");
             optifineVersion = optifineVersion.substring(optifineVersion.length() - 2);
             CubicChunks.LOGGER.info("Detected Optifine version: " + optifineVersion);
-            optifineState = OptifineState.LOADED;
+            if (optifineVersion.compareTo("E1") < 0) {
+                optifineState = OptifineState.LOADED;
+            } else {
+                optifineState = OptifineState.LOADED_E1_PRE;
+            }
         } catch (ClassNotFoundException e) {
             CubicChunks.LOGGER.info("No Optifine detected");
         } catch (Exception e) {
@@ -81,8 +85,27 @@ public class CubicChunksMixinConfig implements IMixinConfigPlugin {
                 "io.github.opencubicchunks.cubicchunks.core.asm.mixin.selectable.client.MixinRenderGlobalNoOptifine",
                 optifineState == OptifineState.NOT_LOADED);
         modDependencyConditions.put(
-                "io.github.opencubicchunks.cubicchunks.core.asm.mixin.selectable.client.MixinRenderGlobalOptifineSpecific",
-                optifineState != OptifineState.NOT_LOADED);
+                "io.github.opencubicchunks.cubicchunks.core.asm.mixin.selectable.client.optifine.MixinRenderGlobalOptifine",
+                optifineState == OptifineState.LOADED);
+        modDependencyConditions.put(
+                "io.github.opencubicchunks.cubicchunks.core.asm.mixin.selectable.client.optifine.MixinRenderGlobalOptifine_E",
+                optifineState == OptifineState.LOADED_E1_PRE);
+
+        modDependencyConditions.put(
+                "io.github.opencubicchunks.cubicchunks.core.asm.mixin.selectable.client.optifine.MixinRenderChunk",
+                optifineState == OptifineState.LOADED_E1_PRE);
+        modDependencyConditions.put(
+                "io.github.opencubicchunks.cubicchunks.core.asm.mixin.selectable.client.optifine.MixinRenderChunkUtils",
+                optifineState == OptifineState.LOADED_E1_PRE);
+        modDependencyConditions.put(
+                "io.github.opencubicchunks.cubicchunks.core.asm.mixin.selectable.client.optifine.MixinExtendedBlockStorage",
+                optifineState == OptifineState.LOADED_E1_PRE);
+        modDependencyConditions.put(
+                "io.github.opencubicchunks.cubicchunks.core.asm.mixin.selectable.client.optifine.MixinRenderList",
+                optifineState == OptifineState.LOADED_E1_PRE);
+        modDependencyConditions.put(
+                "io.github.opencubicchunks.cubicchunks.core.asm.mixin.selectable.client.optifine.MixinViewFrustum",
+                optifineState == OptifineState.LOADED_E1_PRE);
 
 
         //BetterFps FastBeacon Handling
@@ -275,6 +298,7 @@ public class CubicChunksMixinConfig implements IMixinConfigPlugin {
 
     private enum OptifineState {
         NOT_LOADED,
-        LOADED
+        LOADED,
+        LOADED_E1_PRE
     }
 }
