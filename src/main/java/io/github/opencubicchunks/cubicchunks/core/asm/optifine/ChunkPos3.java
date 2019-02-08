@@ -48,10 +48,10 @@ public class ChunkPos3 extends ChunkPos {
 
         ChunkPos3 chunkPos3 = (ChunkPos3) o;
 
-        if (x != chunkPos3.x) {
+        if (chunkXPos != chunkPos3.chunkXPos) {
             return false;
         }
-        if (z != chunkPos3.z) {
+        if (chunkZPos != chunkPos3.chunkZPos) {
             return false;
         }
         if (y != chunkPos3.y) {
@@ -63,8 +63,8 @@ public class ChunkPos3 extends ChunkPos {
 
     @Override public int hashCode() {
         int result = super.hashCode();
-        result = 31 * result + x;
-        result = 31 * result + z;
+        result = 31 * result + chunkXPos;
+        result = 31 * result + chunkZPos;
         result = 31 * result + y;
         return result;
     }
