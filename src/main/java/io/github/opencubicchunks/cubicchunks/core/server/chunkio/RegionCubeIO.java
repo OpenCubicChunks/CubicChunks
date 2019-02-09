@@ -225,12 +225,7 @@ public class RegionCubeIO implements ICubeIO {
             final int CubesBatchSize = 250;
 
             int numColumnsSaved = 0;
-            int numColumnsRemaining;
-            int numColumnBytesSaved = 0;
             int numCubesSaved = 0;
-            int numCubesRemaining;
-            int numCubeBytesSaved = 0;
-            long start = System.currentTimeMillis();
 
             // save a batch of columns
             Iterator<SaveEntry<EntryLocation2D>> colIt = columnsToSave.values().iterator();
@@ -243,7 +238,6 @@ public class RegionCubeIO implements ICubeIO {
                     //column can be removed from toSave queue only after writing to disk
                     //to avoid race conditions
                     colIt.remove();
-                    numColumnBytesSaved += data.length;
                 } catch (Throwable t) {
                     LOGGER.error(String.format("Unable to write column (%d, %d)", entry.pos.getEntryX(), entry.pos.getEntryZ()), t);
                 }
@@ -266,24 +260,12 @@ public class RegionCubeIO implements ICubeIO {
                         //to avoid race conditions
                         cubeIt.remove();
                     }
-
-                    numCubeBytesSaved += data.length;
                 } catch (Throwable t) {
                     LOGGER.error(
                             String.format("Unable to write cube %d, %d, %d", entry.pos.getEntryX(), entry.pos.getEntryY(), entry.pos.getEntryZ()), t);
                 }
             }
             boolean hasMoreCubes = cubeIt.hasNext();
-
-            numColumnsRemaining = this.columnsToSave.size();
-            numCubesRemaining = this.cubesToSave.size();
-
-            long diff = System.currentTimeMillis() - start;
-            LOGGER.debug("Wrote {} columns ({} remaining) ({}k) and {} cubes ({} remaining) ({}k) in {} ms",
-                    numColumnsSaved, numColumnsRemaining, numColumnBytesSaved / 1024,
-                    numCubesSaved, numCubesRemaining, numCubeBytesSaved / 1024, diff
-            );
-
             return hasMoreColumns || hasMoreCubes;
         } catch (Throwable t) {
             LOGGER.error("Exception occurred when saving cubes", t);
