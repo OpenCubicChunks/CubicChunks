@@ -94,7 +94,7 @@ public class CubicChunksMixinConfig implements IMixinConfigPlugin {
                 optifineState == OptifineState.NOT_LOADED);
         modDependencyConditions.put(
                 "io.github.opencubicchunks.cubicchunks.core.asm.mixin.selectable.client.vertviewdist.MixinRenderGlobalNoOptifine",
-                optifineState == OptifineState.NOT_LOADED);
+                optifineState == OptifineState.NOT_LOADED && BoolOptions.VERT_RENDER_DISTANCE.getValue());
 
         modDependencyConditions.put(
                 "io.github.opencubicchunks.cubicchunks.core.asm.mixin.selectable.client.optifine.MixinRenderGlobalOptifine_E",
