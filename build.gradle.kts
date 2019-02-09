@@ -382,7 +382,7 @@ dependencies {
     // https://mvnrepository.com/artifact/com.typesafe/config
     embed("com.typesafe:config:1.2.0")
 
-    provided(sourceSets["optifine_dummy"].output)
+    compileOnly(sourceSets["optifine_dummy"].output)
 
     testCompile("junit:junit:4.11")
     testCompile("org.hamcrest:hamcrest-junit:2.0.0.0")
