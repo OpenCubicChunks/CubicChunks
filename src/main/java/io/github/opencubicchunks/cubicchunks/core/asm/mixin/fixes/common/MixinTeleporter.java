@@ -74,7 +74,9 @@ public class MixinTeleporter {
                       to = @At(value = "INVOKE", target = "Lnet/minecraft/util/math/BlockPos;down()Lnet/minecraft/util/math/BlockPos;")
               ))
     private BlockPos makeTopStartPos(BlockPos orig, int dx, int dy, int dz, Entity entity, float rotationYaw) {
-        return orig.add(dx, 128, dz);
+        if (((ICubicWorld) world).isCubicWorld())
+            return orig.add(dx, 128, dz);
+        return orig.add(dx, dy, dz);
     }
 
     @ModifyConstant(method = "placeInExistingPortal",
@@ -83,7 +85,9 @@ public class MixinTeleporter {
                             expandZeroConditions = Constant.Condition.GREATER_THAN_OR_EQUAL_TO_ZERO,
                             ordinal = 1))
     private int getScanBottomY(int zero, Entity entity, float rotationYaw) {
-        return MathHelper.floor(entity.posY - 128);
+        if (((ICubicWorld) world).isCubicWorld())
+            return MathHelper.floor(entity.posY - 128);
+        return zero;
     }
     
     /**
@@ -99,6 +103,12 @@ public class MixinTeleporter {
         int x1 = x;
         int y1 = y;
         int z1 = z;
+        int searchFromY = 70;
+        int searchToY = world.getActualHeight() - 1;
+        if (((ICubicWorld) world).isCubicWorld()) {
+            searchFromY = y1 - 128;
+            searchToY = y1 + 128;
+        }
         int verticalPlane = 0;
         int random = this.random.nextInt(4);
         BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
@@ -108,7 +118,7 @@ public class MixinTeleporter {
             for (int iz = z - 16; iz <= z + 16; ++iz) {
                 double dZ = (double) iz + 0.5D - entityIn.posZ;
                 for (int minDepth = 3; minDepth >= 1; minDepth -= 2) {
-                    nextY: for (int iy = y + 128; iy >= y - 128; --iy) {
+                    nextY: for (int iy = searchToY; iy >= searchFromY; --iy) {
                         if (this.world.isAirBlock(pos.setPos(ix, iy, iz))) {
                             while (this.world.isAirBlock(pos)) {
                                 pos.setPos(ix, --iy - 1, iz);
