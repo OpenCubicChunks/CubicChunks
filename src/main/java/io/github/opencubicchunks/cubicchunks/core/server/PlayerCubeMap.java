@@ -66,16 +66,7 @@ import net.minecraftforge.common.ForgeChunkManager.Ticket;
 import net.minecraftforge.fml.client.FMLClientHandler;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.IdentityHashMap;
-import java.util.Iterator;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -579,6 +570,8 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
         // so we need to use managerPosition there
         CubePos playerCubePos = CubePos.fromEntityCoords(player.managedPosX, playerWrapper.managedPosY, player.managedPosZ);
 
+        // send unload columns later so that they get unloaded after their corresponding cubes
+        Set<ColumnWatcher> toSendUnload = new HashSet<>((horizontalViewDistance*2+1) * (horizontalViewDistance*2+1) * 6);
         this.cubeSelector.forAllVisibleFrom(playerCubePos, horizontalViewDistance, verticalViewDistance, (cubePos) -> {
 
             // get the watcher
@@ -594,10 +587,11 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
                 return;
             }
 
-            if (columnWatcher.containsPlayer(player)) {
-                columnWatcher.removePlayer(player);
-            }
+            toSendUnload.add(columnWatcher);
         });
+        toSendUnload.stream()
+                .filter(watcher->watcher.containsPlayer(player))
+                .forEach(watcher->watcher.removePlayer(player));
         this.players.remove(player.getEntityId());
         this.setNeedSort();
     }

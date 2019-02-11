@@ -34,6 +34,7 @@ import io.github.opencubicchunks.cubicchunks.api.world.ICubicWorldType;
 import io.github.opencubicchunks.cubicchunks.api.worldgen.ICubeGenerator;
 import io.github.opencubicchunks.cubicchunks.core.worldgen.generator.vanilla.VanillaCompatibilityGenerator;
 import mcp.MethodsReturnNonnullByDefault;
+import net.minecraft.init.Blocks;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.DimensionType;
 import net.minecraft.world.World;
@@ -76,14 +77,15 @@ public abstract class MixinWorldProvider implements ICubicWorldProvider {
     }
 
     @Inject(method = "getActualHeight", at = @At("HEAD"), cancellable = true, remap = false)
-    public void getActualHeight(CallbackInfoReturnable<Integer> cir) {
+    private void getActualHeight(CallbackInfoReturnable<Integer> cir) {
         if (world == null || !((ICubicWorld) world).isCubicWorld() || !(world.getWorldType() instanceof ICubicWorldType)) {
             return;
         }
-        cir.setReturnValue(((ICubicWorld)world).getMaxGenerationHeight());
+        cir.setReturnValue(((ICubicWorld) world).getMaxGenerationHeight());
     }
 
-    @Override public int getOriginalActualHeight() {
+    @Override
+    public int getOriginalActualHeight() {
         try {
             getActualHeightForceOriginalFlag = true;
             return getActualHeight();
@@ -92,7 +94,9 @@ public abstract class MixinWorldProvider implements ICubicWorldProvider {
         }
     }
 
-    @Nullable @Override public ICubeGenerator createCubeGenerator() {
+    @Nullable
+    @Override
+    public ICubeGenerator createCubeGenerator() {
         if (!((ICubicWorld) world).isCubicWorld()) {
             throw new NotCubicChunksWorldException();
         }
@@ -106,8 +110,28 @@ public abstract class MixinWorldProvider implements ICubicWorldProvider {
     @Inject(method = "getRandomizedSpawnPoint", at = @At(value = "HEAD"), cancellable = true, remap = false)
     private void findRandomizedSpawnPoint(CallbackInfoReturnable<BlockPos> cir) {
         if (((ICubicWorld) world).isCubicWorld()) {
-            cir.setReturnValue(new SpawnPlaceFinder().getRandomizedSpawnPoint(world));
+            cir.setReturnValue(SpawnPlaceFinder.getRandomizedSpawnPoint(world));
             cir.cancel();
+        }
+    }
+
+    @Inject(method = "canCoordinateBeSpawn", at = @At("HEAD"), cancellable = true)
+    private void canCoordinateBeSpawnCC(int x, int z, CallbackInfoReturnable<Boolean> cir) {
+        if (!((ICubicWorld) world).isCubicWorld()) {
+            return;
+        }
+        cir.cancel();
+        BlockPos blockpos = new BlockPos(x, 64, z);
+
+        if (this.world.getBiome(blockpos).ignorePlayerSpawnSuitability()) {
+            cir.setReturnValue(true);
+        } else {
+            BlockPos top = SpawnPlaceFinder.getTopBlockBisect(world, blockpos);
+            if (top == null) {
+                cir.setReturnValue(false);
+            } else {
+                cir.setReturnValue(this.world.getBlockState(top).getBlock() == Blocks.GRASS);
+            }
         }
     }
 }

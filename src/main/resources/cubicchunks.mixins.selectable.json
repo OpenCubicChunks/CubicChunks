@@ -24,7 +24,10 @@
         "client.optifine.MixinExtendedBlockStorage",
         "client.optifine.MixinChunkVisibility",
         "client.optifine.MixinRenderList",
-        "client.optifine.MixinViewFrustum"
+        "client.optifine.MixinViewFrustum",
+        "client.vertviewdist.MixinEntityRenderer",
+        "client.vertviewdist.MixinRenderGlobal",
+        "client.vertviewdist.MixinRenderGlobalNoOptifine"
     ],
     "server": [
     ],
