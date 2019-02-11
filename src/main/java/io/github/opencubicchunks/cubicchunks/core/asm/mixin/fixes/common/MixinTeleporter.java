@@ -1,7 +1,8 @@
 /*
  *  This file is part of Cubic Chunks Mod, licensed under the MIT License (MIT).
  *
- *  Copyright (c) 2015 contributors
+ *  Copyright (c) 2015-2019 OpenCubicChunks
+ *  Copyright (c) 2015-2019 contributors
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a copy
  *  of this software and associated documentation files (the "Software"), to deal
@@ -59,7 +60,7 @@ public class MixinTeleporter {
     
     @Shadow
     @Final
-    protected WorldServer world;
+    protected WorldServer worldServerInstance;
     @Shadow
     @Final
     protected Random random;
@@ -74,7 +75,7 @@ public class MixinTeleporter {
                       to = @At(value = "INVOKE", target = "Lnet/minecraft/util/math/BlockPos;down()Lnet/minecraft/util/math/BlockPos;")
               ))
     private BlockPos makeTopStartPos(BlockPos orig, int dx, int dy, int dz, Entity entity, float rotationYaw) {
-        if (((ICubicWorld) world).isCubicWorld())
+        if (((ICubicWorld) worldServerInstance).isCubicWorld())
             return orig.add(dx, 128, dz);
         return orig.add(dx, dy, dz);
     }
@@ -85,7 +86,7 @@ public class MixinTeleporter {
                             expandZeroConditions = Constant.Condition.GREATER_THAN_OR_EQUAL_TO_ZERO,
                             ordinal = 1))
     private int getScanBottomY(int zero, Entity entity, float rotationYaw) {
-        if (((ICubicWorld) world).isCubicWorld())
+        if (((ICubicWorld) worldServerInstance).isCubicWorld())
             return MathHelper.floor(entity.posY - 128);
         return zero;
     }
@@ -104,8 +105,8 @@ public class MixinTeleporter {
         int y1 = y;
         int z1 = z;
         int searchFromY = 70;
-        int searchToY = world.getActualHeight() - 1;
-        if (((ICubicWorld) world).isCubicWorld()) {
+        int searchToY = worldServerInstance.getActualHeight() - 1;
+        if (((ICubicWorld) worldServerInstance).isCubicWorld()) {
             searchFromY = y1 - 128;
             searchToY = y1 + 128;
         }
@@ -119,10 +120,10 @@ public class MixinTeleporter {
                 double dZ = (double) iz + 0.5D - entityIn.posZ;
                 for (int minDepth = 3; minDepth >= 1; minDepth -= 2) {
                     nextY: for (int iy = searchToY; iy >= searchFromY; --iy) {
-                        if (this.world.isAirBlock(pos.setPos(ix, iy, iz))) {
-                            while (this.world.isAirBlock(pos)) {
+                        if (this.worldServerInstance.isAirBlock(pos.setPos(ix, iy, iz))) {
+                            while (this.worldServerInstance.isAirBlock(pos)) {
                                 pos.setPos(ix, --iy - 1, iz);
-                                if (world.isOutsideBuildHeight(pos))
+                                if (worldServerInstance.isOutsideBuildHeight(pos))
                                     break;
                             }
 
@@ -143,8 +144,8 @@ public class MixinTeleporter {
                                             int iz1 = iz + (width - 1) * zPlane - depth * xPlane;
                                             pos.setPos(ix1, iy1, iz1);
 
-                                            if (height < 0 && !this.world.getBlockState(pos).getMaterial().isSolid()
-                                                    || height >= 0 && !this.world.isAirBlock(pos)) {
+                                            if (height < 0 && !this.worldServerInstance.getBlockState(pos).getMaterial().isSolid()
+                                                    || height >= 0 && !this.worldServerInstance.isAirBlock(pos)) {
                                                 continue nextY;
                                             }
                                         }
@@ -185,7 +186,7 @@ public class MixinTeleporter {
                         int iy = y1 + height;
                         int iz = z1 + (width - 1) * zPlane - depth * xPlane;
                         boolean isBase = height < 0;
-                        this.world.setBlockState(new BlockPos(ix, iy, iz), isBase ? Blocks.OBSIDIAN.getDefaultState() : Blocks.AIR.getDefaultState());
+                        this.worldServerInstance.setBlockState(new BlockPos(ix, iy, iz), isBase ? Blocks.OBSIDIAN.getDefaultState() : Blocks.AIR.getDefaultState());
                     }
                 }
             }
@@ -199,7 +200,7 @@ public class MixinTeleporter {
                 int iy = y1 + height;
                 int iz = z1 + (width - 1) * zPlane;
                 boolean isFrame = width == 0 || width == 3 || height == -1 || height == 3;
-                this.world.setBlockState(new BlockPos(ix, iy, iz), isFrame ? Blocks.OBSIDIAN.getDefaultState() : portal, 2);
+                this.worldServerInstance.setBlockState(new BlockPos(ix, iy, iz), isFrame ? Blocks.OBSIDIAN.getDefaultState() : portal, 2);
             }
         }
 
@@ -209,7 +210,7 @@ public class MixinTeleporter {
                 int iy = y1 + height;
                 int iz = z1 + (width - 1) * zPlane;
                 BlockPos blockpos = new BlockPos(ix, iy, iz);
-                this.world.notifyNeighborsOfStateChange(blockpos, this.world.getBlockState(blockpos).getBlock(), false);
+                this.worldServerInstance.notifyNeighborsOfStateChange(blockpos, this.worldServerInstance.getBlockState(blockpos).getBlock());
             }
         }
         return true;
