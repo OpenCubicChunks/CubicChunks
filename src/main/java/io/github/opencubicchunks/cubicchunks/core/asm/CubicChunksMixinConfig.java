@@ -85,6 +85,10 @@ public class CubicChunksMixinConfig implements IMixinConfigPlugin {
                 "io.github.opencubicchunks.cubicchunks.core.asm.mixin.selectable.client.MixinRenderGlobalNoOptifine",
                 optifineState == OptifineState.NOT_LOADED);
         modDependencyConditions.put(
+                "io.github.opencubicchunks.cubicchunks.core.asm.mixin.selectable.client.vertviewdist.MixinRenderGlobalNoOptifine",
+                optifineState == OptifineState.NOT_LOADED && BoolOptions.VERT_RENDER_DISTANCE.getValue());
+
+        modDependencyConditions.put(
                 "io.github.opencubicchunks.cubicchunks.core.asm.mixin.selectable.client.optifine.MixinRenderGlobalOptifine",
                 optifineState == OptifineState.LOADED);
         modDependencyConditions.put(
@@ -106,7 +110,9 @@ public class CubicChunksMixinConfig implements IMixinConfigPlugin {
         modDependencyConditions.put(
                 "io.github.opencubicchunks.cubicchunks.core.asm.mixin.selectable.client.optifine.MixinViewFrustum",
                 optifineState == OptifineState.LOADED_E1_PRE);
-
+        modDependencyConditions.put(
+                "io.github.opencubicchunks.cubicchunks.core.asm.mixin.selectable.client.optifine.MixinChunkVisibility",
+                optifineState == OptifineState.LOADED_E1_PRE);
 
         //BetterFps FastBeacon Handling
         boolean enableBetterFpsBeaconFix = false;
@@ -193,7 +199,7 @@ public class CubicChunksMixinConfig implements IMixinConfigPlugin {
     public void postApply(String targetClassName, ClassNode targetClass, String mixinClassName, IMixinInfo mixinInfo) {
     }
 
-    public static enum BoolOptions {
+    public enum BoolOptions {
         OPTIMIZE_PATH_NAVIGATOR(false, 
                 new String[] {},
                 new String[] {"io.github.opencubicchunks.cubicchunks.core.asm.mixin.selectable.common.MixinPathNavigate",
@@ -217,7 +223,13 @@ public class CubicChunksMixinConfig implements IMixinConfigPlugin {
                 new String[] {"io.github.opencubicchunks.cubicchunks.core.asm.mixin.selectable.common.MixinWorld_CollisionCheck"},
                 "Enabling this option allow using fast collision check."
                         + " Fast collision check can reduce server lag."
-                        + " You need to restart Minecraft to apply changes.");
+                        + " You need to restart Minecraft to apply changes."),
+        VERT_RENDER_DISTANCE(true,
+                new String[] {},
+                new String[] {"io.github.opencubicchunks.cubicchunks.core.asm.mixin.selectable.client.MixinEntityRenderer",
+                        "io.github.opencubicchunks.cubicchunks.core.asm.mixin.selectable.client.MixinRenderGlobal"},
+                "Enabling this option will make the vertical view distance slider affect clientside vertical render distance." +
+                        "When disabled, only serverside load distance is affected.");
 
         private final boolean defaultValue;
         // Load this Mixin class only if option is false.

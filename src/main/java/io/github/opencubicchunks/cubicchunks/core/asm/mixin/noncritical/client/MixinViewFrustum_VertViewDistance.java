@@ -24,7 +24,10 @@
 package io.github.opencubicchunks.cubicchunks.core.asm.mixin.noncritical.client;
 
 import io.github.opencubicchunks.cubicchunks.api.world.ICubicWorld;
+import io.github.opencubicchunks.cubicchunks.core.CubicChunksConfig;
+import io.github.opencubicchunks.cubicchunks.core.asm.CubicChunksMixinConfig;
 import mcp.MethodsReturnNonnullByDefault;
+import net.minecraft.client.renderer.RenderGlobal;
 import net.minecraft.client.renderer.ViewFrustum;
 import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Final;
@@ -47,13 +50,15 @@ import javax.annotation.ParametersAreNonnullByDefault;
 public class MixinViewFrustum_VertViewDistance {
 
     @Shadow @Final protected World world;
+    @Shadow @Final protected RenderGlobal renderGlobal;
     private int renderDistance = 16;
 
     //this one can fail, there is safe default
     @Inject(method = "setCountChunksXYZ", at = @At(value = "HEAD"))
     private void onSetCountChunks(int renderDistance, CallbackInfo cbi) {
         if (((ICubicWorld) world).isCubicWorld()) {
-            this.renderDistance = renderDistance * 2 + 1;
+            this.renderDistance = (CubicChunksMixinConfig.BoolOptions.VERT_RENDER_DISTANCE.getValue() ?
+                    CubicChunksConfig.verticalCubeLoadDistance : renderDistance) * 2 + 1;
         } else {
             this.renderDistance = 16;
         }

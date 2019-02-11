@@ -76,7 +76,7 @@ public class CubicChunksConfig {
     public static boolean useVanillaChunkWorldGenerators = false;
 
     @Config.LangKey("cubicchunks.config.vert_view_distance")
-    @Config.Comment("Similar to Minecraft's view distance, only for vertical chunks. Automatically adjusted by vertical view distance sloder on the"
+    @Config.Comment("Similar to Minecraft's view distance, only for vertical chunks. Automatically adjusted by vertical view distance slider on the"
             + " client. Does not affect rendering, only what chunks are sent to client.")
     public static int verticalCubeLoadDistance = 8;
 
@@ -92,7 +92,7 @@ public class CubicChunksConfig {
             + "        -5\n"
             + "     >\n"
             + "The ranges specified can overlap, and the bounds can be specified in reversed order.")
-    public static String[] excludedDimensions = new String[0];
+    public static String[] excludedDimensions = {"1"};
 
     @Config.LangKey("cubicchunks.config.force_dimension_blacklist")
     @Config.Comment("If this is set to true, cubic chunks will respect excluded dimensions even for already existing worlds. If this results in a "
@@ -100,7 +100,7 @@ public class CubicChunksConfig {
     public static boolean forceDimensionExcludes = false;
 
     @Config.LangKey("cubicchunks.config.relight_checks_per_tick_per_column")
-    @Config.Comment("In an attempt to fix lighting glicthes over time, cubic chunks will keep updating light in specified amount of blocks per "
+    @Config.Comment("In an attempt to fix lighting glitches over time, cubic chunks will keep updating light in specified amount of blocks per "
             + "column (chunk) per tick. Default value of 1 doesn't cause noticeable performance drop, but still fixes most major issues relatively "
             + "quickly.")
     public static int relightChecksPerTickPerColumn = 1;
