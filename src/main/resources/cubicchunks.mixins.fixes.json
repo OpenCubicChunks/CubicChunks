@@ -27,7 +27,6 @@
         "common.MixinBlockGrass",
         "common.MixinBlockMushroom",
         "common.MixinBlockStaticLiquid",
-        "common.MixinEntity_PrepareSpawn",
         "common.isblockloaded.MixinEntity",
         "common.worldgen.tree.MixinWorldGenCanopyTree",
         "common.worldgen.tree.MixinWorldGenHugeTrees",
@@ -55,7 +54,8 @@
     ],
     "client": [
         "client.MixinEntityPlayerSP",
-        "client.isblockloaded.MixinEntity"
+        "client.isblockloaded.MixinEntity",
+        "common.MixinEntity_PrepareSpawn"
     ],
     "server": [
     ],
