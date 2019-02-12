@@ -55,7 +55,7 @@
     "client": [
         "client.MixinEntityPlayerSP",
         "client.isblockloaded.MixinEntity",
-        "common.MixinEntity_PrepareSpawn"
+        "client.MixinEntity_PrepareSpawn"
     ],
     "server": [
     ],
