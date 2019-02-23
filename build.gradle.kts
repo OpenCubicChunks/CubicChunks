@@ -394,7 +394,7 @@ dependencies {
         isTransitive = false
     }
 
-    embed("io.github.opencubicchunks:regionlib:0.52.0-SNAPSHOT")
+    embed("io.github.opencubicchunks:regionlib:0.55.0-SNAPSHOT")
 }
 
 tasks {
