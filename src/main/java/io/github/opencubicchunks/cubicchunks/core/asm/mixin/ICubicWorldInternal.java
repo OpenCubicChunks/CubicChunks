@@ -105,8 +105,6 @@ public interface ICubicWorldInternal extends ICubicWorld {
 
         FirstLightProcessor getFirstLightProcessor();
 
-        ChunkGc getChunkGarbageCollector();
-
         void removeForcedCube(ICube cube);
 
         void addForcedCube(ICube cube);

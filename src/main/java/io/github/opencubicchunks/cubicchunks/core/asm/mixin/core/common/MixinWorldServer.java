@@ -109,7 +109,6 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
 
     @Shadow public abstract boolean addWeatherEffect(Entity entityIn);
 
-    @Nullable private ChunkGc chunkGc;
     @Nullable private FirstLightProcessor firstLightProcessor;
 
     @Override public void initCubicWorldServer(IntRange heightRange, IntRange generationRange) {
@@ -122,7 +121,6 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
                 ((ICubicWorldProvider) this.provider).createCubeGenerator());
 
         this.playerChunkMap = new PlayerCubeMap((WorldServer) (Object) this);
-        this.chunkGc = new ChunkGc(getCubeCache());
 
         this.firstLightProcessor = new FirstLightProcessor((WorldServer) (Object) this);
         this.entityTracker = new CubicEntityTracker(this);
@@ -136,8 +134,6 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
         if (!this.isCubicWorld()) {
             throw new NotCubicChunksWorldException();
         }
-        assert chunkGc != null;
-        this.chunkGc.tick();
         // update world entity spawner
         if (CubicChunksConfig.useFastEntitySpawner != (entitySpawner.getClass() == FastCubeWorldEntitySpawner.class)) {
             this.entitySpawner = CubicChunksConfig.useFastEntitySpawner ?
@@ -164,11 +160,6 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
         return this.firstLightProcessor;
     }
     
-    @Override
-    public ChunkGc getChunkGarbageCollector() {
-        return this.chunkGc;
-    }
-
     @Override public void removeForcedCube(ICube cube) {
         if (!forcedChunksCubes.get(cube.getColumn()).remove(cube)) {
             CubicChunks.LOGGER.error("Trying to remove forced cube " + cube.getCoords() + ", but it's not forced!");
