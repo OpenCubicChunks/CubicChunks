@@ -53,6 +53,7 @@ public class ChunkGc {
     }
 
     public void tick() {
+        cubeCache.world.profiler.startSection("chunkGc");
         tick++;
         if (tick > CubicChunksConfig.chunkGCInterval) {
             tick = 0;
@@ -61,6 +62,7 @@ public class ChunkGc {
         if (CubicChunks.DEBUG_ENABLED) {
             verifyColumnConsistency();
         }
+        cubeCache.world.profiler.endSection();
     }
 
     private void verifyColumnConsistency() {

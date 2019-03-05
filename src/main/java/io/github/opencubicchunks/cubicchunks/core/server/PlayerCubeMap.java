@@ -201,12 +201,16 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
 
     private final TickableChunkContainer tickableChunksCubesToReturn = new TickableChunkContainer();
 
+    // see comment in updateMovingPlayer() for explnation why it's in this class
+    private final ChunkGc chunkGc;
+
     public PlayerCubeMap(WorldServer worldServer) {
-        super((WorldServer) worldServer);
+        super(worldServer);
         this.cubeCache = ((ICubicWorldInternal.Server) worldServer).getCubeCache();
         this.setPlayerViewDistance(worldServer.getMinecraftServer().getPlayerList().getViewDistance(),
                 ((ICubicPlayerList) worldServer.getMinecraftServer().getPlayerList()).getVerticalViewDistance());
         ((ICubicWorldInternal) worldServer).getLightingManager().registerHeightChangeListener(this);
+        this.chunkGc = new ChunkGc(((ICubicWorldInternal.Server) worldServer).getCubeCache());
     }
 
     /**
@@ -614,6 +618,21 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
         this.updatePlayer(playerWrapper, playerWrapper.getManagedCubePos(), CubePos.fromEntity(player));
         playerWrapper.updateManagedPos();
         this.setNeedSort();
+
+        // With ChunkGc being separate from PlayerCubeMap, there are 2 issues:
+        // Problem 0: Sometimes, a chunk can be generated after CubeWatcher's chunk load callback returns with a null
+        // but before ChunkGC call. This means that the cube will get unloaded, even when ChunkWatcher is waiting for it.
+        // Problem 1: When chunkGc call is not in this method, sometimes, when a player teleports far away and is
+        // unlucky, and ChunkGc runs in the same tick the teleport appears to happen after PlayerCubeMap call, but
+        // before ChunkGc call. This means that PlayerCubeMap won't yet have a CubeWatcher for the player cubes at all,
+        // so even directly checking for CubeWatchers before unload attempt won't work.
+        //
+        // While normally not an issue as it will be reloaded soon anyway, it breaks a lot of things if that cube
+        // contains the player. Which is not unlikely if the player is what caused generating this cube in the first place
+        // for problem #0.
+        // So we put ChunkGc here so that we can be sure it has consistent data about player location, and that no chunks are
+        // loaded while we aren't looking.
+        this.chunkGc.tick();
     }
 
     private void updatePlayer(PlayerWrapper entry, CubePos oldPos, CubePos newPos) {
@@ -788,7 +807,8 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
     void removeEntry(CubeWatcher cubeWatcher) {
         CubePos cubePos = cubeWatcher.getCubePos();
         cubeWatcher.updateInhabitedTime();
-        this.cubeWatchers.remove(cubePos.getX(), cubePos.getY(), cubePos.getZ());
+        CubeWatcher removed = this.cubeWatchers.remove(cubePos.getX(), cubePos.getY(), cubePos.getZ());
+        assert removed == cubeWatcher : "Removed unexpected cube watcher";
         this.cubeWatchersToUpdate.remove(cubeWatcher);
         this.cubesToGenerate.remove(cubeWatcher);
         this.cubesToSendToClients.remove(cubeWatcher);
