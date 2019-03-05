@@ -24,27 +24,19 @@
  */
 package io.github.opencubicchunks.cubicchunks.core;
 
-import io.github.opencubicchunks.cubicchunks.core.asm.mixin.ICubicWorldInternal;
-import io.github.opencubicchunks.cubicchunks.core.asm.mixin.ICubicWorldSettings;
-import io.github.opencubicchunks.cubicchunks.core.event.CreateNewWorldEvent;
-import io.github.opencubicchunks.cubicchunks.core.network.PacketCubicWorldData;
-import io.github.opencubicchunks.cubicchunks.core.network.PacketDispatcher;
-import io.github.opencubicchunks.cubicchunks.core.server.SpawnCubes;
-import io.github.opencubicchunks.cubicchunks.core.util.ReflectionUtil;
-import io.github.opencubicchunks.cubicchunks.core.world.WorldSavedCubicChunksData;
-import io.github.opencubicchunks.cubicchunks.core.world.provider.ICubicWorldProvider;
-import io.github.opencubicchunks.cubicchunks.core.network.PacketDispatcher;
-import io.github.opencubicchunks.cubicchunks.core.event.CreateNewWorldEvent;
-import io.github.opencubicchunks.cubicchunks.core.network.PacketCubicWorldData;
-import io.github.opencubicchunks.cubicchunks.core.server.SpawnCubes;
+import com.google.common.collect.ImmutableList;
 import io.github.opencubicchunks.cubicchunks.api.util.IntRange;
-import io.github.opencubicchunks.cubicchunks.core.util.ReflectionUtil;
 import io.github.opencubicchunks.cubicchunks.api.world.ICubicWorld;
+import io.github.opencubicchunks.cubicchunks.api.world.ICubicWorldType;
 import io.github.opencubicchunks.cubicchunks.core.asm.mixin.ICubicWorldInternal;
 import io.github.opencubicchunks.cubicchunks.core.asm.mixin.ICubicWorldSettings;
+import io.github.opencubicchunks.cubicchunks.core.event.CreateNewWorldEvent;
+import io.github.opencubicchunks.cubicchunks.core.network.PacketCubicWorldData;
+import io.github.opencubicchunks.cubicchunks.core.network.PacketDispatcher;
+import io.github.opencubicchunks.cubicchunks.core.server.SpawnCubes;
+import io.github.opencubicchunks.cubicchunks.core.util.ReflectionUtil;
 import io.github.opencubicchunks.cubicchunks.core.world.WorldSavedCubicChunksData;
 import io.github.opencubicchunks.cubicchunks.core.world.provider.ICubicWorldProvider;
-import io.github.opencubicchunks.cubicchunks.api.world.ICubicWorldType;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.world.World;
@@ -63,8 +55,6 @@ import net.minecraftforge.fml.relauncher.Side;
 import java.util.List;
 
 import javax.annotation.ParametersAreNonnullByDefault;
-
-import com.google.common.collect.ImmutableList;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
@@ -150,8 +140,6 @@ public class CommonEventHandler {
     public void onPlayerJoinWorld(EntityJoinWorldEvent evt) {
         if (evt.getEntity() instanceof EntityPlayerMP && ((ICubicWorld) evt.getWorld()).isCubicWorld()) {
             PacketDispatcher.sendTo(new PacketCubicWorldData((WorldServer) evt.getWorld()), (EntityPlayerMP) evt.getEntity());
-            // Workaround for issue when entities became invisible in cubes where player dies and which are not yet unloaded by garbage collector.
-            ((ICubicWorldInternal.Server) evt.getWorld()).getChunkGarbageCollector().chunkGc();
         }
     }
     
