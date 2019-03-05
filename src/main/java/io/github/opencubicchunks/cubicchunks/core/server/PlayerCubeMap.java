@@ -332,7 +332,6 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
             while (iter.hasNext()) {
                 ColumnWatcher entry = iter.next();
 
-                getWorldServer().profiler.startSection("column[" + entry.getPos().x + "," + entry.getPos().z + "]");
                 boolean success = entry.getChunk() != null;
                 if (!success) {
                     boolean canGenerate = entry.hasPlayerMatching(CAN_GENERATE_CHUNKS);
@@ -348,8 +347,6 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
                         this.columnsToSendToClients.remove(entry);
                     }
                 }
-
-                getWorldServer().profiler.endSection(); // column[x,z]
             }
 
             getWorldServer().profiler.endSection(); // columns
@@ -363,10 +360,6 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
 
             while (iterator.hasNext() && chunksToGenerate >= 0 && System.nanoTime() < stopTime) {
                 CubeWatcher watcher = iterator.next();
-                CubePos pos = watcher.getCubePos();
-
-                getWorldServer().profiler.startSection("chunk=" + pos);
-
                 boolean success = watcher.getCube() != null && watcher.getCube().isFullyPopulated() && watcher.getCube().isInitialLightingDone() &&
                         !watcher.getCube().hasLightUpdates();
                 if (!success) {
@@ -386,8 +379,6 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
 
                     --chunksToGenerate;
                 }
-
-                getWorldServer().profiler.endSection();//chunk[x, y, z]
             }
 
             getWorldServer().profiler.endSection(); // chunks
