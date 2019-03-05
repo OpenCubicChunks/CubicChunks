@@ -72,13 +72,8 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @MethodsReturnNonnullByDefault
 public class CubeWatcher implements ITicket, ICubeWatcher {
 
-    private final Consumer<Cube> consumer = (c) -> {
-        this.cube = c;
-        this.loading = false;
-        if (this.cube != null) {
-            this.cube.getTickets().add(this);
-        }
-    };
+    private final Consumer<Cube> consumer;
+
     private final CubeProviderServer cubeCache;
     private PlayerCubeMap playerCubeMap;
     @Nullable private Cube cube;
@@ -88,16 +83,27 @@ public class CubeWatcher implements ITicket, ICubeWatcher {
     private long previousWorldTime = 0;
     private boolean sentToPlayers = false;
     private boolean loading = true;
+    private boolean invalid = false;
 
     // CHECKED: 1.10.2-12.18.1.2092
     CubeWatcher(PlayerCubeMap playerCubeMap, CubePos cubePos) {
+        this.cubePos = cubePos;
         this.playerCubeMap = playerCubeMap;
         this.cubeCache = ((ICubicWorldInternal.Server) playerCubeMap.getWorldServer()).getCubeCache();
+        this.consumer = (c) -> {
+            if (this.invalid) {
+                return;
+            }
+            this.cube = c;
+            this.loading = false;
+            if (this.cube != null) {
+                this.cube.getTickets().add(this);
+            }
+        };
         this.cubeCache.asyncGetCube(
                 cubePos.getX(), cubePos.getY(), cubePos.getZ(),
                 ICubeProviderServer.Requirement.LOAD,
                 consumer);
-        this.cubePos = cubePos;
     }
 
     // CHECKED: 1.10.2-12.18.1.2092
@@ -133,6 +139,7 @@ public class CubeWatcher implements ITicket, ICubeWatcher {
                             cubePos.getX(), cubePos.getY(), cubePos.getZ(),
                             c -> this.cube = c);
                 }
+                invalid = true;
                 playerCubeMap.removeEntry(this);
             }
             return;
@@ -146,6 +153,7 @@ public class CubeWatcher implements ITicket, ICubeWatcher {
         MinecraftForge.EVENT_BUS.post(new CubeUnWatchEvent(cube, cubePos, this, player));
 
         if (this.players.isEmpty()) {
+            invalid = true;
             playerCubeMap.removeEntry(this);
         }
     }
