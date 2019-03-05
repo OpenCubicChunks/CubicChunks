@@ -98,34 +98,7 @@ public class RegionCubeIO implements ICubeIO {
             path = Paths.get(".").toAbsolutePath().resolve("clientCache").resolve("DIM" + world.provider.getDimension());
         }
 
-        Files.createDirectories(path);
-
-        Path part2d = path.resolve("region2d");
-        Files.createDirectories(part2d);
-
-        Path part3d = path.resolve("region3d");
-        Files.createDirectories(part3d);
-
-        this.save = new SaveCubeColumns(
-                new SaveSection2D(
-                        new SharedCachedRegionProvider<>(
-                                SimpleRegionProvider.createDefault(new EntryLocation2D.Provider(), part2d, 512)
-                        ),
-                        new SharedCachedRegionProvider<>(
-                                new SimpleRegionProvider<>(new EntryLocation2D.Provider(), part2d,
-                                        (keyProvider, regionKey) -> new ExtRegion<>(part2d, Collections.emptyList(), keyProvider, regionKey)
-                                )
-                        )),
-                new SaveSection3D(
-                        new SharedCachedRegionProvider<>(
-                                SimpleRegionProvider.createDefault(new EntryLocation3D.Provider(), part3d, 512)
-                        ),
-                        new SharedCachedRegionProvider<>(
-                                new SimpleRegionProvider<>(new EntryLocation3D.Provider(), part3d,
-                                        (keyProvider, regionKey) -> new ExtRegion<>(part3d, Collections.emptyList(), keyProvider, regionKey)
-                                )
-                        ))
-        );
+        this.save = SaveCubeColumns.create(path);
     }
 
     @Override public void flush() throws IOException {

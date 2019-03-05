@@ -24,7 +24,7 @@
  */
 package io.github.opencubicchunks.cubicchunks.core.asm.mixin.core.common;
 
-import io.github.opencubicchunks.cubicchunks.core.server.chunkio.SharedCachedRegionProvider;
+import cubicchunks.regionlib.lib.provider.SharedCachedRegionProvider;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.world.chunk.storage.RegionFileCache;
 import org.spongepowered.asm.mixin.Mixin;
