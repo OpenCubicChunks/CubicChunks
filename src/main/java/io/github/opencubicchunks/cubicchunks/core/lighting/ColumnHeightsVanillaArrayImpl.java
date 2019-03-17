@@ -24,41 +24,35 @@
  */
 package io.github.opencubicchunks.cubicchunks.core.lighting;
 
-import io.github.opencubicchunks.cubicchunks.api.world.ICube;
-import io.github.opencubicchunks.cubicchunks.core.world.cube.Cube;
-import mcp.MethodsReturnNonnullByDefault;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.chunk.Chunk;
+import io.github.opencubicchunks.relight.heightmap.HeightMap;
 
-import javax.annotation.ParametersAreNonnullByDefault;
+// This class exists only because I don't want to introduce many off-by-one errors when modifying height tracking code to store
+// height-above-the-top-block instead of height-of-the-top-block (which is done so that the heightmap array can be shared with vanilla)
+public final class ColumnHeightsVanillaArrayImpl implements HeightMap {
 
-@ParametersAreNonnullByDefault
-@MethodsReturnNonnullByDefault
-public interface ILightingManager {
-    void scheduleFirstLight(ICube cube);
+    private int[] data;
 
-    void update();
-
-    ICubeLightUpdateInfo createCubeLightUpdateInfo(Cube cube);
-
-    void registerHeightChangeListener(IHeightChangeListener playerCubeMap);
-
-    void onLoadCubeFromNBT(Cube cube, NBTTagCompound lightingInfo);
-
-    void onSetBlockState(Chunk chunk, int localX, int oldHeightValue, int y, int localZ);
-
-    void onHeightMapUpdate(BlockPos pos);
-
-    interface ICubeLightUpdateInfo {
-        void update();
-
-        boolean needsUpdate();
-
-        void clear();
+    public ColumnHeightsVanillaArrayImpl(int[] heightmap) {
+        this.data = heightmap;
     }
 
-    interface IHeightChangeListener {
-        void heightUpdated(int blockX, int blockZ);
+    public int get(int index) {
+        return data[index] - 1;
+    }
+
+    public void set(int index, int value) {
+        data[index] = value + 1;
+    }
+
+    public void increment(int index) {
+        data[index]++;
+    }
+
+    public void decrement(int index) {
+        data[index]--;
+    }
+
+    @Override public int getTopY(int localX, int localZ) {
+        return data[(localZ << 4) | localX];
     }
 }

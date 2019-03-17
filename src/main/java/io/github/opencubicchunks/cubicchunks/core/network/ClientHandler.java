@@ -26,15 +26,14 @@ package io.github.opencubicchunks.cubicchunks.core.network;
 
 import static io.github.opencubicchunks.cubicchunks.api.util.Coords.cubeToMinBlock;
 
-import io.github.opencubicchunks.cubicchunks.api.util.Coords;
+import io.github.opencubicchunks.cubicchunks.core.lighting.ClientSurfaceTracker;
+import io.github.opencubicchunks.cubicchunks.core.lighting.ILightingManager;
 import io.github.opencubicchunks.cubicchunks.core.lighting.LightingManager;
 import io.github.opencubicchunks.cubicchunks.api.world.ICubicWorld;
 import io.github.opencubicchunks.cubicchunks.core.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.core.client.CubeProviderClient;
-import io.github.opencubicchunks.cubicchunks.core.lighting.LightingManager;
 import io.github.opencubicchunks.cubicchunks.core.util.AddressTools;
 import io.github.opencubicchunks.cubicchunks.api.util.Bits;
-import io.github.opencubicchunks.cubicchunks.core.world.ClientHeightMap;
 import io.github.opencubicchunks.cubicchunks.api.world.IColumn;
 import io.github.opencubicchunks.cubicchunks.core.asm.mixin.ICubicWorldInternal;
 import io.github.opencubicchunks.cubicchunks.core.world.cube.BlankCube;
@@ -124,7 +123,7 @@ public class ClientHandler implements INetHandler {
             return;
         }
 
-        ClientHeightMap index = (ClientHeightMap) cube.getColumn().getOpacityIndex();
+        ClientSurfaceTracker index = (ClientSurfaceTracker) cube.getColumn().getOpacityIndex();
         for (int hmapUpdate : packet.heightValues) {
             int x = hmapUpdate & 0xF;
             int z = (hmapUpdate >> 4) & 0xF;
@@ -159,7 +158,7 @@ public class ClientHandler implements INetHandler {
             return;
         }
 
-        ClientHeightMap index = (ClientHeightMap) ((IColumn) column).getOpacityIndex();
+        ClientSurfaceTracker index = (ClientSurfaceTracker) ((IColumn) column).getOpacityIndex();
         LightingManager lm = worldClient.getLightingManager();
 
         int size = message.getUpdates().size();
@@ -170,7 +169,7 @@ public class ClientHandler implements INetHandler {
             int z = AddressTools.getLocalZ(packed);
             int height = message.getHeights().get(i);
 
-            int oldHeight = index.getTopBlockY(x, z);
+            int oldHeight = index.getTopY(x, z);
             index.setHeight(x, z, height);
             // Disable due to huge client side performance loss on accepting freshly generated cubes light updates.
             // More info at  https://github.com/OpenCubicChunks/CubicChunks/pull/328
@@ -209,7 +208,7 @@ public class ClientHandler implements INetHandler {
                         Bits.unpackUnsigned(packed2, 4, 0), Bits.unpackUnsigned(packed2, 4, 4));
             }
         }
-        LightingManager.CubeLightUpdateInfo info = cube.getCubeLightUpdateInfo();
+        ILightingManager.ICubeLightUpdateInfo info = cube.getCubeLightUpdateInfo();
         if (info != null) {
             info.clear();
         }

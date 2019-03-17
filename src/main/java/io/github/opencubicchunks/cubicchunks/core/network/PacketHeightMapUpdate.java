@@ -26,12 +26,13 @@ package io.github.opencubicchunks.cubicchunks.core.network;
 
 import com.google.common.base.Preconditions;
 import io.github.opencubicchunks.cubicchunks.core.util.AddressTools;
-import io.github.opencubicchunks.cubicchunks.api.world.IHeightMap;
+import io.github.opencubicchunks.cubicchunks.api.world.ISurfaceTracker;
 import gnu.trove.list.TByteList;
 import gnu.trove.list.TIntList;
 import gnu.trove.list.array.TByteArrayList;
 import gnu.trove.list.array.TIntArrayList;
 import io.netty.buffer.ByteBuf;
+import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraftforge.fml.common.network.ByteBufUtils;
@@ -39,7 +40,10 @@ import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 
 import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
 
+@MethodsReturnNonnullByDefault
+@ParametersAreNonnullByDefault
 public class PacketHeightMapUpdate implements IMessage {
 
     private ChunkPos chunk;
@@ -49,7 +53,7 @@ public class PacketHeightMapUpdate implements IMessage {
     public PacketHeightMapUpdate() {
     }
 
-    public PacketHeightMapUpdate(ChunkPos chunk, TByteList updates, IHeightMap heightMap) {
+    public PacketHeightMapUpdate(ChunkPos chunk, TByteList updates, ISurfaceTracker heightMap) {
         this.chunk = chunk;
         this.updates = new TByteArrayList();
         this.heights = new TIntArrayList();
@@ -59,7 +63,7 @@ public class PacketHeightMapUpdate implements IMessage {
                 continue;
             }
             this.updates.add(pos);
-            this.heights.add(heightMap.getTopBlockY(AddressTools.getLocalX(pos), AddressTools.getLocalZ(pos)));
+            this.heights.add(heightMap.getTopY(AddressTools.getLocalX(pos), AddressTools.getLocalZ(pos)));
         }
     }
 

@@ -27,11 +27,11 @@ package io.github.opencubicchunks.cubicchunks.core.server.chunkio;
 import static io.github.opencubicchunks.cubicchunks.core.util.WorldServerAccess.getPendingTickListEntriesHashSet;
 import static io.github.opencubicchunks.cubicchunks.core.util.WorldServerAccess.getPendingTickListEntriesThisTick;
 
-import io.github.opencubicchunks.cubicchunks.api.world.IHeightMap;
+import io.github.opencubicchunks.cubicchunks.api.world.ISurfaceTracker;
 import io.github.opencubicchunks.cubicchunks.core.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.api.util.Coords;
-import io.github.opencubicchunks.cubicchunks.core.world.ClientHeightMap;
-import io.github.opencubicchunks.cubicchunks.core.world.ServerHeightMap;
+import io.github.opencubicchunks.cubicchunks.core.lighting.ClientSurfaceTracker;
+import io.github.opencubicchunks.cubicchunks.core.lighting.ServerSurfaceTracker;
 import io.github.opencubicchunks.cubicchunks.api.world.IColumn;
 import io.github.opencubicchunks.cubicchunks.core.world.cube.Cube;
 import mcp.MethodsReturnNonnullByDefault;
@@ -78,7 +78,7 @@ class IONbtWriter {
         writeBaseColumn(column, level);
         writeBiomes(column, level);
         writeOpacityIndex(column, level);
-        MinecraftForge.EVENT_BUS.post(new ChunkDataEvent.Save((Chunk) column, columnNbt));
+        MinecraftForge.EVENT_BUS.post(new ChunkDataEvent.Save(column, columnNbt));
         return columnNbt;
     }
 
@@ -107,9 +107,9 @@ class IONbtWriter {
         nbt.setByte("v", (byte) 1);
         nbt.setLong("InhabitedTime", column.getInhabitedTime());
 
-        if (((Chunk) column).getCapabilities() != null) {
+        if (column.getCapabilities() != null) {
             try {
-                nbt.setTag("ForgeCaps", ((Chunk) column).getCapabilities().serializeNBT());
+                nbt.setTag("ForgeCaps", column.getCapabilities().serializeNBT());
             } catch (Exception exception) {
                 CubicChunks.LOGGER.error("A capability provider has thrown an exception trying to write state. It will not persist. "
                                 + "Report this to the mod author", exception);
@@ -122,11 +122,11 @@ class IONbtWriter {
     }
 
     private static void writeOpacityIndex(Chunk column, NBTTagCompound nbt) {// light index
-        IHeightMap hmap = ((IColumn) column).getOpacityIndex();
-        if (hmap instanceof ServerHeightMap) {
-            nbt.setByteArray("OpacityIndex", ((ServerHeightMap) hmap).getData());
+        ISurfaceTracker hmap = ((IColumn) column).getOpacityIndex();
+        if (hmap instanceof ServerSurfaceTracker) {
+            nbt.setByteArray("OpacityIndex", ((ServerSurfaceTracker) hmap).getData());
         } else {
-            nbt.setByteArray("OpacityIndexClient", ((ClientHeightMap) hmap).getData());
+            nbt.setByteArray("OpacityIndexClient", ((ClientSurfaceTracker) hmap).getData());
         }
     }
 
@@ -246,7 +246,7 @@ class IONbtWriter {
         if (!(cube.getWorld() instanceof WorldServer)) {
             return out;
         }
-        WorldServer worldServer = (WorldServer) cube.getWorld();
+        WorldServer worldServer = cube.getWorld();
 
         // copy the ticks for this cube
         copyScheduledTicks(out, getPendingTickListEntriesHashSet(worldServer), cube);

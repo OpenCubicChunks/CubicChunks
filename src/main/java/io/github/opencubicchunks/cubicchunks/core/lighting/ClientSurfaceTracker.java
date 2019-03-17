@@ -22,16 +22,12 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package io.github.opencubicchunks.cubicchunks.core.world;
-
-import static io.github.opencubicchunks.cubicchunks.core.lighting.LightingManager.MAX_CLIENT_LIGHT_SCAN_DEPTH;
+package io.github.opencubicchunks.cubicchunks.core.lighting;
 
 import com.google.common.base.Throwables;
-import io.github.opencubicchunks.cubicchunks.core.lighting.LightingManager;
 import io.github.opencubicchunks.cubicchunks.core.world.cube.Cube;
-import io.github.opencubicchunks.cubicchunks.api.world.IHeightMap;
+import io.github.opencubicchunks.cubicchunks.api.world.ISurfaceTracker;
 import io.github.opencubicchunks.cubicchunks.api.util.Coords;
-import io.github.opencubicchunks.cubicchunks.core.world.cube.Cube;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.chunk.Chunk;
@@ -47,26 +43,20 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class ClientHeightMap implements IHeightMap {
+public class ClientSurfaceTracker implements ISurfaceTracker {
 
     private final Chunk column;
-    private final HeightMap hmap;
+    private final ColumnHeightsVanillaArrayImpl hmap;
     private int heightMapLowest = Coords.NO_HEIGHT;
 
-    public ClientHeightMap(Chunk column, int[] heightmap) {
+    public ClientSurfaceTracker(Chunk column, int[] heightmap) {
         this.column = column;
-        this.hmap = new HeightMap(heightmap);
-    }
-
-    @Override
-    public boolean isOccluded(int localX, int blockY, int localZ) {
-        int topY = this.getTopBlockY(localX, localZ);
-        return blockY <= topY;
+        this.hmap = new ColumnHeightsVanillaArrayImpl(heightmap);
     }
 
     @Override
     public void onOpacityChange(int localX, int blockY, int localZ, int opacity) {
-        writeNewTopBlockY(localX, blockY, localZ, opacity, getTopBlockY(localX, localZ));
+        writeNewTopBlockY(localX, blockY, localZ, opacity, getTopY(localX, localZ));
     }
 
     private void writeNewTopBlockY(int localX, int changeY, int localZ, int newOpacity, int oldTopY) {
@@ -102,26 +92,8 @@ public class ClientHeightMap implements IHeightMap {
     }
 
     @Override
-    public int getTopBlockY(int localX, int localZ) {
+    public int getTopY(int localX, int localZ) {
         return hmap.get(getIndex(localX, localZ));
-    }
-
-    @Override
-    public int getLowestTopBlockY() {
-        if (heightMapLowest == Coords.NO_HEIGHT) {
-            heightMapLowest = Integer.MAX_VALUE;
-            for (int i = 0; i < Cube.SIZE * Cube.SIZE; i++) {
-                if (hmap.get(i) < heightMapLowest) {
-                    heightMapLowest = hmap.get(i);
-                }
-            }
-        }
-        return heightMapLowest;
-    }
-
-    @Override
-    public int getTopBlockYBelow(int localX, int localZ, int blockY) {
-        throw new UnsupportedOperationException("Not implemented");
     }
 
     public void setHeight(int localX, int localZ, int height) {

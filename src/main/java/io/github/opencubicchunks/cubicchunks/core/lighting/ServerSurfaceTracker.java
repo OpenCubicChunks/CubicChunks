@@ -22,13 +22,12 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package io.github.opencubicchunks.cubicchunks.core.world;
+package io.github.opencubicchunks.cubicchunks.core.lighting;
 
+import io.github.opencubicchunks.cubicchunks.api.world.ISurfaceTracker;
 import io.github.opencubicchunks.cubicchunks.core.world.cube.Cube;
-import io.github.opencubicchunks.cubicchunks.api.world.IHeightMap;
 import io.github.opencubicchunks.cubicchunks.core.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.api.util.Coords;
-import io.github.opencubicchunks.cubicchunks.core.world.cube.Cube;
 import mcp.MethodsReturnNonnullByDefault;
 
 import java.io.ByteArrayInputStream;
@@ -42,7 +41,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class ServerHeightMap implements IHeightMap {
+public class ServerSurfaceTracker implements ISurfaceTracker {
 
     /**
      * Special value to indicate the absence of a segment in the segments arrays.
@@ -61,7 +60,7 @@ public class ServerHeightMap implements IHeightMap {
      * Array containing the y-coordinate of the highest segment in each block column. The value {@link Coords#NO_HEIGHT}
      * is used if a given block column does not contain any segments.
      */
-    @Nonnull private final HeightMap ymax;
+    @Nonnull private final ColumnHeightsVanillaArrayImpl ymax;
 
     /**
      * Array containing an array of segments for each x/z position in a column.
@@ -74,13 +73,13 @@ public class ServerHeightMap implements IHeightMap {
 
     private boolean needsHash;
 
-    public ServerHeightMap() {
+    public ServerSurfaceTracker() {
         this(new int[Cube.SIZE * Cube.SIZE]);
     }
 
-    public ServerHeightMap(int[] heightmap) {
+    public ServerSurfaceTracker(int[] heightmap) {
         this.ymin = new int[Cube.SIZE * Cube.SIZE];
-        this.ymax = new HeightMap(heightmap);
+        this.ymax = new ColumnHeightsVanillaArrayImpl(heightmap);
 
         this.segments = new int[Cube.SIZE * Cube.SIZE][];
 
@@ -120,7 +119,7 @@ public class ServerHeightMap implements IHeightMap {
         return getLastSegmentIndex(segments[xzIndex]) % 2 == 0;
     }
 
-    // Interface: IHeightMap ----------------------------------------------------------------------------------------
+    // Interface: ISurfaceTracker ----------------------------------------------------------------------------------------
 
     @Override
     public void onOpacityChange(int localX, int blockY, int localZ, int opacity) {
@@ -142,106 +141,9 @@ public class ServerHeightMap implements IHeightMap {
     }
 
     @Override
-    public boolean isOccluded(int localX, int blockY, int localZ) {
-        return blockY <= this.getTopBlockY(localX, localZ);
-    }
-
-    @Override
-    public int getTopBlockY(int localX, int localZ) {
+    public int getTopY(int localX, int localZ) {
         return this.ymax.get(getIndex(localX, localZ));
     }
-
-    @Override
-    public int getTopBlockYBelow(int localX, int localZ, int blockY) {
-
-        // within the highest segment or there exists no segment for this block column
-        int i = getIndex(localX, localZ);
-        if (blockY > this.ymax.get(i)) {
-            return this.getTopBlockY(localX, localZ);
-        }
-
-        // below or at the minimum height, thus there are no blocks below
-        if (blockY <= this.ymin[i]) {
-            return Coords.NO_HEIGHT;
-        }
-
-        // There are no opacity changes, everything is opaque from ymin to ymax. blockY is between ymin and ymax, thus
-        // the next opaque block below blockY is blockY - 1.
-        int[] segments = this.segments[i];
-        if (segments == null) {
-            return blockY - 1;
-        }
-
-        // binary search for the segment containing blockY
-        int mini = 0;
-        int maxi = getLastSegmentIndex(segments);
-        while (mini <= maxi) {
-            int midi = (mini + maxi) >>> 1;
-            int midPos = segments[midi];
-
-            if (midPos < blockY) {
-                mini = midi + 1;
-            } else if (midPos > blockY) {
-                maxi = midi - 1;
-            } else {
-                // hit a segment start exactly
-                mini = midi + 1;
-                break;
-            }
-        }
-
-        assert (mini > 0) : String.format("can't find %d in %s", blockY, dump(localX, localZ));
-
-        // The binary search ends on answer + 1, so subtract 1. The result is the index of the segment containing
-        // blockY.
-        int segmentIndex = mini - 1;
-        if (segmentIndex < 0) {
-            return Coords.NO_HEIGHT;
-        }
-        int blockYSegment = segments[segmentIndex];
-        int blockYSegmentOpacity = getOpacity(segmentIndex);
-
-        // The lowest segment is always opaque. Thus, if blockY is in the lowest segment, the next opaque block is
-        // at blockY - 1.
-        if (segmentIndex == 0) {
-            assert blockYSegmentOpacity != 0 : "The bottom opacity segment is transparent!";
-            return blockY - 1;
-        }
-
-        // Otherwise, there exists a segment underneath the segment of blockY.
-
-        // If the segment of blockY is transparent, the next opaque block is at the top of the segment underneath.
-        if (blockYSegmentOpacity == 0) {
-            return blockYSegment - 1;
-        }
-
-        // The segment of blockY is opaque, thus, if blockY is not at the bottom of its segment, the next opaque block
-        // is at blockY - 1.
-        if (blockY != blockYSegment) {
-            return blockY - 1;
-        }
-
-        // If blockY is the lowest block in its segment, the next opaque block is the highest block in the next opaque
-        // segment.
-        int belowYSegment = segments[segmentIndex - 1];
-        return belowYSegment - 1;
-    }
-    @Override
-    public int getLowestTopBlockY() {
-        if (this.heightMapLowest == Coords.NO_HEIGHT) {
-            this.heightMapLowest = Integer.MAX_VALUE;
-            for (int i = 0; i < Cube.SIZE * Cube.SIZE; i++) {
-                if (this.ymax.get(i) < this.heightMapLowest) {
-                    this.heightMapLowest = this.ymax.get(i);
-                }
-            }
-            if (this.heightMapLowest == Coords.NO_HEIGHT) {
-                this.heightMapLowest--; // don't recalculate this on every call
-            }
-        }
-        return this.heightMapLowest;
-    }
-
 
     // Helper ----------------------------------------------------------------------------------------------------------
 

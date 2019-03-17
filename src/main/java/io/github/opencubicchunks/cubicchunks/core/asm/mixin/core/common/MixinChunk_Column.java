@@ -24,14 +24,12 @@
  */
 package io.github.opencubicchunks.cubicchunks.core.asm.mixin.core.common;
 
+import io.github.opencubicchunks.cubicchunks.api.world.ISurfaceTracker;
 import io.github.opencubicchunks.cubicchunks.core.world.column.CubeMap;
 import io.github.opencubicchunks.cubicchunks.core.world.cube.Cube;
 import io.github.opencubicchunks.cubicchunks.api.world.ICube;
-import io.github.opencubicchunks.cubicchunks.api.world.IHeightMap;
 import io.github.opencubicchunks.cubicchunks.core.asm.mixin.ICubicWorldInternal;
-import io.github.opencubicchunks.cubicchunks.core.world.column.CubeMap;
 import io.github.opencubicchunks.cubicchunks.api.world.IColumn;
-import io.github.opencubicchunks.cubicchunks.core.world.cube.Cube;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
@@ -60,7 +58,7 @@ public abstract class MixinChunk_Column implements IColumn {
      * "cubicchunks.asm.mixin.core.client.MixinChunk_Cubes".
      */
     private CubeMap cubeMap;
-    private IHeightMap opacityIndex;
+    private ISurfaceTracker opacityIndex;
     private Cube cachedCube;
 
     @Shadow @Final public int z;
@@ -122,17 +120,17 @@ public abstract class MixinChunk_Column implements IColumn {
     }
 
 
-    @Override public IHeightMap getOpacityIndex() {
+    @Override public ISurfaceTracker getOpacityIndex() {
         return this.opacityIndex;
     }
 
 
-    @Override public Collection getLoadedCubes() {
+    @Override public Collection<? extends ICube> getLoadedCubes() {
         return this.cubeMap.all();
     }
 
 
-    @Override public Iterable getLoadedCubes(int startY, int endY) {
+    @Override public Iterable<? extends ICube> getLoadedCubes(int startY, int endY) {
         return this.cubeMap.cubes(startY, endY);
     }
 

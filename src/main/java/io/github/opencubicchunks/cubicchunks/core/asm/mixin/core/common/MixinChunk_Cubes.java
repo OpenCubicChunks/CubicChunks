@@ -28,46 +28,32 @@ import static io.github.opencubicchunks.cubicchunks.api.util.Coords.blockToCube;
 import static io.github.opencubicchunks.cubicchunks.api.util.Coords.blockToLocal;
 
 import com.google.common.base.Predicate;
+import io.github.opencubicchunks.cubicchunks.api.world.ISurfaceTracker;
 import io.github.opencubicchunks.cubicchunks.core.CubicChunksConfig;
-import io.github.opencubicchunks.cubicchunks.core.world.ClientHeightMap;
-import io.github.opencubicchunks.cubicchunks.core.world.EntityContainer;
-import io.github.opencubicchunks.cubicchunks.core.world.ServerHeightMap;
+import io.github.opencubicchunks.cubicchunks.core.lighting.ClientSurfaceTracker;
+import io.github.opencubicchunks.cubicchunks.core.lighting.ServerSurfaceTracker;
 import io.github.opencubicchunks.cubicchunks.core.world.column.ColumnTileEntityMap;
 import io.github.opencubicchunks.cubicchunks.core.world.column.CubeMap;
 import io.github.opencubicchunks.cubicchunks.core.world.cube.BlankCube;
 import io.github.opencubicchunks.cubicchunks.core.world.cube.Cube;
 import io.github.opencubicchunks.cubicchunks.api.world.ICube;
-import io.github.opencubicchunks.cubicchunks.core.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.api.util.Coords;
-import io.github.opencubicchunks.cubicchunks.core.world.ClientHeightMap;
 import io.github.opencubicchunks.cubicchunks.api.world.ICubicWorld;
-import io.github.opencubicchunks.cubicchunks.api.world.IHeightMap;
 import io.github.opencubicchunks.cubicchunks.core.asm.mixin.ICubicWorldInternal;
-import io.github.opencubicchunks.cubicchunks.core.world.ServerHeightMap;
-import io.github.opencubicchunks.cubicchunks.core.world.column.ColumnTileEntityMap;
-import io.github.opencubicchunks.cubicchunks.core.world.column.CubeMap;
 import io.github.opencubicchunks.cubicchunks.api.world.IColumn;
-import io.github.opencubicchunks.cubicchunks.core.world.cube.BlankCube;
-import io.github.opencubicchunks.cubicchunks.core.world.cube.Cube;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
-import net.minecraft.crash.CrashReport;
-import net.minecraft.crash.CrashReportCategory;
 import net.minecraft.entity.Entity;
-import net.minecraft.init.Blocks;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ClassInheritanceMultiMap;
-import net.minecraft.util.ReportedException;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.World;
-import net.minecraft.world.WorldType;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
-import net.minecraft.world.gen.ChunkGeneratorDebug;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.world.ChunkEvent.Load;
 import org.spongepowered.asm.mixin.Final;
@@ -123,7 +109,7 @@ public abstract class MixinChunk_Cubes implements IColumn {
      * "cubicchunks.asm.mixin.core.common.MixinChunk_Columns".
      */
     private CubeMap cubeMap;
-    private IHeightMap opacityIndex;
+    private ISurfaceTracker opacityIndex;
     private Cube cachedCube; // todo: make it always nonnull using BlankCube
 
     private boolean isColumn = false;
@@ -211,9 +197,9 @@ public abstract class MixinChunk_Cubes implements IColumn {
         this.cubeMap = new CubeMap();
         //clientside we don't really need that much data. we actually only need top and bottom block Y positions
         if (world.isRemote) {
-            this.opacityIndex = new ClientHeightMap((Chunk) (Object) this, heightMap);
+            this.opacityIndex = new ClientSurfaceTracker((Chunk) (Object) this, heightMap);
         } else {
-            this.opacityIndex = new ServerHeightMap(heightMap);
+            this.opacityIndex = new ServerSurfaceTracker(heightMap);
         }
 
         // instead of redirecting access to this map, just make the map do the work
@@ -237,7 +223,7 @@ public abstract class MixinChunk_Cubes implements IColumn {
         int blockY = Coords.NO_HEIGHT;
         for (int localX = 0; localX < Cube.SIZE; localX++) {
             for (int localZ = 0; localZ < Cube.SIZE; localZ++) {
-                int y = this.opacityIndex.getTopBlockY(localX, localZ);
+                int y = this.opacityIndex.getTopY(localX, localZ);
                 if (y > blockY) {
                     blockY = y;
                 }
@@ -330,7 +316,7 @@ public abstract class MixinChunk_Cubes implements IColumn {
             int oldOpacity, ExtendedBlockStorage ebs, boolean createdNewEbsAboveTop, int newOpacity) {
 
         if (isColumn) {
-            getWorld().getLightingManager().doOnBlockSetLightUpdates((Chunk) (Object) this, localX, oldHeightValue, y, localZ);
+            getWorld().getLightingManager().onSetBlockState((Chunk) (Object) this, localX, oldHeightValue, y, localZ);
         }
     }
     
@@ -397,7 +383,7 @@ public abstract class MixinChunk_Cubes implements IColumn {
             return;
         }
         opacityIndex.onOpacityChange(blockToLocal(pos.getX()), pos.getY(), blockToLocal(pos.getZ()), state.getLightOpacity(world, pos));
-        getWorld().getLightingManager().sendHeightMapUpdate(pos);
+        getWorld().getLightingManager().onHeightMapUpdate(pos);
     }
 
     @Redirect(method = "setBlockState", at = @At(

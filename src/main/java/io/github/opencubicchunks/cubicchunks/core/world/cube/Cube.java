@@ -24,22 +24,23 @@
  */
 package io.github.opencubicchunks.cubicchunks.core.world.cube;
 
-import io.github.opencubicchunks.cubicchunks.core.lighting.LightingManager;
+import io.github.opencubicchunks.cubicchunks.core.lighting.ILightingManager;
 import io.github.opencubicchunks.cubicchunks.api.worldgen.CubePrimer;
 import io.github.opencubicchunks.cubicchunks.api.world.ICube;
 import io.github.opencubicchunks.cubicchunks.api.worldgen.ICubeGenerator;
 import io.github.opencubicchunks.cubicchunks.api.world.ICubicWorld;
 import io.github.opencubicchunks.cubicchunks.core.CubicChunks;
-import io.github.opencubicchunks.cubicchunks.core.lighting.LightingManager;
 import io.github.opencubicchunks.cubicchunks.core.util.AddressTools;
 import io.github.opencubicchunks.cubicchunks.api.util.Coords;
 import io.github.opencubicchunks.cubicchunks.api.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.core.util.ticket.ITicket;
 import io.github.opencubicchunks.cubicchunks.core.util.ticket.TicketList;
 import io.github.opencubicchunks.cubicchunks.core.world.EntityContainer;
-import io.github.opencubicchunks.cubicchunks.api.world.IHeightMap;
+import io.github.opencubicchunks.cubicchunks.api.world.ISurfaceTracker;
 import io.github.opencubicchunks.cubicchunks.api.world.IColumn;
 import io.github.opencubicchunks.cubicchunks.core.asm.mixin.ICubicWorldInternal;
+import io.github.opencubicchunks.relight.util.LightType;
+import io.github.opencubicchunks.relight.world.LightChunk;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
@@ -82,12 +83,12 @@ import static io.github.opencubicchunks.cubicchunks.api.util.Coords.*;
  */
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class Cube implements ICube {
+public class Cube implements ICube, LightChunk {
 
     @Nullable protected static final ExtendedBlockStorage NULL_STORAGE = null;
 
-    private final Set<NextTickListEntry> pendingTickListEntriesHashSet = new HashSet<NextTickListEntry>();
-    private final TreeSet<NextTickListEntry> pendingTickListEntriesTreeSet = new TreeSet<NextTickListEntry>();
+    private final Set<NextTickListEntry> pendingTickListEntriesHashSet = new HashSet<>();
+    private final TreeSet<NextTickListEntry> pendingTickListEntriesTreeSet = new TreeSet<>();
     
     @Nullable private byte[] blockBiomeArray = null;
 
@@ -146,7 +147,7 @@ public class Cube implements ICube {
      */
     @Nonnull private final ConcurrentLinkedQueue<BlockPos> tileEntityPosQueue;
 
-    private final LightingManager.CubeLightUpdateInfo cubeLightUpdateInfo;
+    private final ILightingManager.ICubeLightUpdateInfo cubeLightUpdateInfo;
 
     /**
      * Is this cube loaded and not queued for unload
@@ -213,7 +214,7 @@ public class Cube implements ICube {
         this(column, cubeY);
 
         int miny = cubeToMinBlock(cubeY);
-        IHeightMap opindex = ((IColumn) column).getOpacityIndex();
+        ISurfaceTracker opindex = ((IColumn) column).getOpacityIndex();
 
         for (int x = 0; x < Cube.SIZE; x++) {
             for (int z = 0; z < Cube.SIZE; z++) {
@@ -228,7 +229,7 @@ public class Cube implements ICube {
                         storage.set(x, y, z, newstate);
 
                         if (newstate.getLightOpacity() != 0) {
-                            column.setModified(true); //TODO: this is a bit of am abstraction leak... maybe ServerHeightMap needs its own isModified
+                            column.setModified(true); //TODO: this is a bit of am abstraction leak... maybe ServerSurfaceTracker needs its own isModified
                             opindex.onOpacityChange(x, miny + y, z, newstate.getLightOpacity());
                         }
                     }
@@ -243,9 +244,9 @@ public class Cube implements ICube {
     /**
      * Constructor to be used from subclasses to provide all field values
      */
-    protected Cube(TicketList tickers, World world, Chunk column, CubePos coords, ExtendedBlockStorage storage,
+    protected Cube(TicketList tickers, World world, Chunk column, CubePos coords, @Nullable ExtendedBlockStorage storage,
             EntityContainer entities, Map<BlockPos, TileEntity> tileEntityMap,
-            ConcurrentLinkedQueue<BlockPos> tileEntityPosQueue, LightingManager.CubeLightUpdateInfo lightInfo) {
+            ConcurrentLinkedQueue<BlockPos> tileEntityPosQueue, ILightingManager.ICubeLightUpdateInfo lightInfo) {
         this.tickets = tickers;
         this.world = world;
         this.column = column;
@@ -298,7 +299,7 @@ public class Cube implements ICube {
         Block block = blockState.getBlock();
 
         if (block.hasTileEntity(blockState)) {
-            return block.createTileEntity((World) this.world, blockState);
+            return block.createTileEntity(this.world, blockState);
         }
         return null;
     }
@@ -332,8 +333,8 @@ public class Cube implements ICube {
             }
         }
 
-        if (this.cubeLightUpdateInfo != null && this.cubeLightUpdateInfo.hasUpdates() && !tryToTickFaster.getAsBoolean()) {
-            this.cubeLightUpdateInfo.tick();
+        if (this.cubeLightUpdateInfo != null && this.cubeLightUpdateInfo.needsUpdate() && !tryToTickFaster.getAsBoolean()) {
+            this.cubeLightUpdateInfo.update();
         }
     }
 
@@ -358,7 +359,7 @@ public class Cube implements ICube {
             BlockPos pos = ntle.position;
             IBlockState iblockstate = this.storage.get(blockToLocal(pos.getX()), blockToLocal(pos.getY()), blockToLocal(pos.getZ()));
             if (iblockstate.getMaterial() != Material.AIR && iblockstate.getBlock() == ntle.getBlock()) {
-                iblockstate.getBlock().updateTick((WorldServer) world, ntle.position, iblockstate, rand);
+                iblockstate.getBlock().updateTick(world, ntle.position, iblockstate, rand);
             }
             pti.remove();
         }
@@ -372,10 +373,9 @@ public class Cube implements ICube {
     }
 
     public void scheduleUpdate(BlockPos pos, Block blockIn, int delay, int priority) {
-        if (pos instanceof BlockPos.MutableBlockPos || pos instanceof BlockPos.PooledMutableBlockPos) {
+        if (pos instanceof BlockPos.MutableBlockPos) {
             pos = new BlockPos(pos);
-            LogManager.getLogger().warn((String) "Tried to assign a mutable BlockPos to tick data...",
-                    (Throwable) (new Error(pos.getClass().toString())));
+            LogManager.getLogger().warn("Tried to assign a mutable BlockPos to tick data...", new Error(pos.getClass().toString()));
         }
         if (((ICubicWorld) world).getCubeCache().getLoadedCube(CubePos.fromBlockCoords(pos)) != null) {
             NextTickListEntry nextticklistentry = new NextTickListEntry(pos, blockIn);
@@ -396,8 +396,7 @@ public class Cube implements ICube {
         int biomeX = Coords.blockToBiome(pos.getX());
         int biomeZ = Coords.blockToBiome(pos.getZ());
         int biomeId = this.blockBiomeArray[AddressTools.getBiomeAddress(biomeX, biomeZ)] & 255;
-        Biome biome = Biome.getBiome(biomeId);
-        return biome;
+        return Biome.getBiome(biomeId);
     }
 
     @Nullable
@@ -409,8 +408,7 @@ public class Cube implements ICube {
         if(this.blockBiomeArray == null)
             this.blockBiomeArray = biomeArray;
         if (this.blockBiomeArray.length != biomeArray.length) {
-            CubicChunks.LOGGER.warn("Could not set level cube biomes, array length is {} instead of {}", Integer.valueOf(biomeArray.length),
-                    Integer.valueOf(this.blockBiomeArray.length));
+            CubicChunks.LOGGER.warn("Could not set level cube biomes, array length is {} instead of {}", biomeArray.length, this.blockBiomeArray.length);
         } else {
             System.arraycopy(biomeArray, 0, this.blockBiomeArray, 0, this.blockBiomeArray.length);
         }
@@ -437,6 +435,37 @@ public class Cube implements ICube {
     @Override public <T extends Chunk & IColumn> T getColumn() {
         return (T) this.column;
     }
+
+    // LightChunk start
+    @Override public int getLight(int blockX, int blockY, int blockZ, LightType type) {
+        if (storage == null) {
+            return 0;
+        }
+        if (type == LightType.SKY) {
+            return storage.getSkyLight(blockToLocal(blockX) ,blockToLocal(blockY), blockToLocal(blockZ));
+        } else {
+            return storage.getBlockLight(blockToLocal(blockX) ,blockToLocal(blockY), blockToLocal(blockZ));
+        }
+    }
+
+    @Override public int getLightSource(int blockX, int blockY, int blockZ, LightType type) {
+        if (type == LightType.BLOCK) {
+            if (storage == null) {
+                return 0;
+            }
+            return storage.get(blockToLocal(blockX) ,blockToLocal(blockY), blockToLocal(blockZ)).getLightValue(world, new BlockPos(blockX, blockY, blockZ));
+        } else {
+            return column.getHeightValue(blockX, blockZ) >= blockY ? 15 : 0;
+        }
+    }
+
+    @Override public int getOpacity(int blockX, int blockY, int blockZ) {
+        if (storage == null) {
+            return 0;
+        }
+        return storage.get(blockToLocal(blockX) ,blockToLocal(blockY), blockToLocal(blockZ)).getLightOpacity(world, new BlockPos(blockX, blockY, blockZ));
+    }
+    // LightChunk end
 
     @Override public int getX() {
         return this.coords.getX();
@@ -521,7 +550,7 @@ public class Cube implements ICube {
 
     @SuppressWarnings("deprecation")
     private void trackSurface() {
-        IHeightMap opindex = ((IColumn) column).getOpacityIndex();
+        ISurfaceTracker opindex = ((IColumn) column).getOpacityIndex();
         int miny = getCoords().getMinBlockY();
 
         for (int x = 0; x < Cube.SIZE; x++) {
@@ -530,7 +559,7 @@ public class Cube implements ICube {
                 for (int y = Cube.SIZE - 1; y >= 0; y--) {
                     IBlockState newstate = this.getBlockState(x, y, z);
 
-                    column.setModified(true); //TODO: maybe ServerHeightMap needs its own isModified?
+                    column.setModified(true); //TODO: maybe ServerSurfaceTracker needs its own isModified?
                     opindex.onOpacityChange(x, miny + y, z, newstate.getLightOpacity());
                 }
             }
@@ -603,7 +632,7 @@ public class Cube implements ICube {
     }
 
     @Nullable
-    public LightingManager.CubeLightUpdateInfo getCubeLightUpdateInfo() {
+    public ILightingManager.ICubeLightUpdateInfo getCubeLightUpdateInfo() {
         return this.cubeLightUpdateInfo;
     }
 
@@ -683,8 +712,8 @@ public class Cube implements ICube {
     }
 
     @Override public boolean hasLightUpdates() {
-        LightingManager.CubeLightUpdateInfo info = this.getCubeLightUpdateInfo();
-        return info != null && info.hasUpdates();
+        ILightingManager.ICubeLightUpdateInfo info = this.getCubeLightUpdateInfo();
+        return info != null && info.needsUpdate();
     }
 
     public void markEdgeNeedSkyLightUpdate(EnumFacing side) {

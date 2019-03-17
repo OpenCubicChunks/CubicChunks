@@ -29,33 +29,18 @@ import io.github.opencubicchunks.cubicchunks.api.util.XZMap;
 import io.github.opencubicchunks.cubicchunks.api.world.IColumn;
 import io.github.opencubicchunks.cubicchunks.api.world.ICube;
 import io.github.opencubicchunks.cubicchunks.core.client.CubeProviderClient;
-import io.github.opencubicchunks.cubicchunks.core.lighting.FirstLightProcessor;
 import io.github.opencubicchunks.cubicchunks.core.lighting.ILightingManager;
 import io.github.opencubicchunks.cubicchunks.core.lighting.LightingManager;
-import io.github.opencubicchunks.cubicchunks.core.server.ChunkGc;
 import io.github.opencubicchunks.cubicchunks.core.server.CubeProviderServer;
 import io.github.opencubicchunks.cubicchunks.core.world.ICubeProviderInternal;
 import io.github.opencubicchunks.cubicchunks.core.world.cube.Cube;
 import io.github.opencubicchunks.cubicchunks.api.world.ICubeProvider;
 import io.github.opencubicchunks.cubicchunks.api.world.ICubicWorld;
 import io.github.opencubicchunks.cubicchunks.api.world.ICubicWorldServer;
-import io.github.opencubicchunks.cubicchunks.core.lighting.ILightingManager;
 import io.github.opencubicchunks.cubicchunks.api.util.NotCubicChunksWorldException;
-import io.github.opencubicchunks.cubicchunks.core.client.CubeProviderClient;
-import io.github.opencubicchunks.cubicchunks.core.lighting.FirstLightProcessor;
-import io.github.opencubicchunks.cubicchunks.core.lighting.LightingManager;
-import io.github.opencubicchunks.cubicchunks.core.server.ChunkGc;
-import io.github.opencubicchunks.cubicchunks.core.server.CubeProviderServer;
 import io.github.opencubicchunks.cubicchunks.api.util.IntRange;
-import io.github.opencubicchunks.cubicchunks.core.world.ICubeProviderInternal;
-import io.github.opencubicchunks.cubicchunks.core.world.cube.Cube;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.ChunkPos;
-import net.minecraft.world.chunk.Chunk;
-
-import java.util.Map;
-import java.util.Set;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -90,7 +75,7 @@ public interface ICubicWorldInternal extends ICubicWorld {
     @Override
     Cube getCubeFromBlockCoords(BlockPos pos);
 
-    public interface Server extends ICubicWorldInternal, ICubicWorldServer {
+    interface Server extends ICubicWorldInternal, ICubicWorldServer {
 
         /**
          * Initializes the world to be a CubicChunks world. Must be done before any players are online and before any chunks
@@ -103,8 +88,6 @@ public interface ICubicWorldInternal extends ICubicWorld {
         @Override
         CubeProviderServer getCubeCache();
 
-        FirstLightProcessor getFirstLightProcessor();
-
         void removeForcedCube(ICube cube);
 
         void addForcedCube(ICube cube);
@@ -114,7 +97,7 @@ public interface ICubicWorldInternal extends ICubicWorld {
         XZMap<IColumn> getForcedColumns();
     }
 
-    public interface Client extends ICubicWorldInternal {
+    interface Client extends ICubicWorldInternal {
 
         /**
          * Initializes the world to be a CubicChunks world. Must be done before any players are online and before any chunks

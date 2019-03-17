@@ -24,22 +24,19 @@
  */
 package io.github.opencubicchunks.cubicchunks.core.server;
 
-import io.github.opencubicchunks.cubicchunks.core.CubicChunksConfig;
-import io.github.opencubicchunks.cubicchunks.core.lighting.LightingManager;
-import io.github.opencubicchunks.cubicchunks.core.server.chunkio.ICubeIO;
-import io.github.opencubicchunks.cubicchunks.core.server.chunkio.RegionCubeIO;
-import io.github.opencubicchunks.cubicchunks.core.server.chunkio.async.forge.AsyncWorldIOExecutor;
-import io.github.opencubicchunks.cubicchunks.api.worldgen.CubePrimer;
-import io.github.opencubicchunks.cubicchunks.api.world.ICube;
-import io.github.opencubicchunks.cubicchunks.api.worldgen.ICubeGenerator;
-import io.github.opencubicchunks.cubicchunks.api.world.ICubeProviderServer;
-import io.github.opencubicchunks.cubicchunks.core.asm.CubicChunksMixinConfig;
 import io.github.opencubicchunks.cubicchunks.api.util.Box;
 import io.github.opencubicchunks.cubicchunks.api.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.api.util.XYZMap;
-import io.github.opencubicchunks.cubicchunks.core.world.ICubeProviderInternal;
-import io.github.opencubicchunks.cubicchunks.core.asm.mixin.ICubicWorldInternal;
 import io.github.opencubicchunks.cubicchunks.api.world.IColumn;
+import io.github.opencubicchunks.cubicchunks.api.world.ICubeProviderServer;
+import io.github.opencubicchunks.cubicchunks.api.worldgen.CubePrimer;
+import io.github.opencubicchunks.cubicchunks.api.worldgen.ICubeGenerator;
+import io.github.opencubicchunks.cubicchunks.core.CubicChunksConfig;
+import io.github.opencubicchunks.cubicchunks.core.asm.mixin.ICubicWorldInternal;
+import io.github.opencubicchunks.cubicchunks.core.server.chunkio.ICubeIO;
+import io.github.opencubicchunks.cubicchunks.core.server.chunkio.RegionCubeIO;
+import io.github.opencubicchunks.cubicchunks.core.server.chunkio.async.forge.AsyncWorldIOExecutor;
+import io.github.opencubicchunks.cubicchunks.core.world.ICubeProviderInternal;
 import io.github.opencubicchunks.cubicchunks.core.world.cube.Cube;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.entity.EnumCreatureType;
@@ -128,7 +125,7 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
     @Override
     @Deprecated
     public Chunk getLoadedChunk(int columnX, int columnZ) {
-        return (Chunk) getLoadedColumn(columnX, columnZ);
+        return getLoadedColumn(columnX, columnZ);
     }
 
     /**
@@ -378,12 +375,9 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
             }
         }
 
-        //TODO: Direct skylight might have changed and even Cubes that have there
-        //      initial light done, there might be work to do for a cube that just loaded
         if (!cube.isInitialLightingDone()) {
-            calculateDiffuseSkylight(cube);
+            ((ICubicWorldInternal) world).getLightingManager().scheduleFirstLight(cube);
         }
-
         return cube;
     }
 
@@ -403,9 +397,6 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
         Cube cube = new Cube(column, cubeY, primer);
 
         onCubeLoaded(cube, column);
-
-        ((ICubicWorldInternal.Server) this.worldServer).getFirstLightProcessor()
-                .initializeSkylight(cube); // init sky light, (does not require any other cubes, just ServerHeightMap)
 
         return cube;
     }
@@ -464,34 +455,6 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
         }
         cube.setFullyPopulated(true);
     }
-
-    /**
-     * Initialize skylight for the cube at the specified position, generating surrounding cubes as needed.
-     *
-     * @param cube The cube to light up
-     */
-    private void calculateDiffuseSkylight(Cube cube) {
-        if (LightingManager.NO_SUNLIGHT_PROPAGATION) {
-            cube.setInitialLightingDone(true);
-            return;
-        }
-        int cubeX = cube.getX();
-        int cubeY = cube.getY();
-        int cubeZ = cube.getZ();
-
-        // TODO: remove this loop; Does it break anything?
-        for (int x = -2; x <= 2; x++) {
-            for (int z = -2; z <= 2; z++) {
-                for (int y = 2; y >= -2; y--) {
-                    if (x != 0 || y != 0 || z != 0) {
-                        getCube(x + cubeX, y + cubeY, z + cubeZ);
-                    }
-                }
-            }
-        }
-        ((ICubicWorldInternal.Server) this.worldServer).getFirstLightProcessor().diffuseSkylight(cube);
-    }
-
 
     /**
      * Retrieve a column, asynchronously. The work done to retrieve the column is specified by the
@@ -566,31 +529,6 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
         column.setLastSaveTime(this.worldServer.getTotalWorldTime()); // the column was just generated
         column.onLoad();
         return column;
-    }
-
-    public String dumpLoadedCubes() {
-        StringBuilder sb = new StringBuilder(10000).append("\n");
-        for (Chunk chunk : this.id2ChunkMap.values()) {
-            if (chunk == null) {
-                sb.append("column = null\n");
-                continue;
-            }
-            sb.append("Column[").append(chunk.x).append(", ").append(chunk.z).append("] {");
-            boolean isFirst = true;
-            for (ICube cube : ((IColumn) chunk).getLoadedCubes()) {
-                if (!isFirst) {
-                    sb.append(", ");
-                }
-                isFirst = false;
-                if (cube == null) {
-                    sb.append("cube = null");
-                    continue;
-                }
-                sb.append("Cube[").append(cube.getY()).append("]");
-            }
-            sb.append("\n");
-        }
-        return sb.toString();
     }
 
     @Nonnull public ICubeIO getCubeIO() {

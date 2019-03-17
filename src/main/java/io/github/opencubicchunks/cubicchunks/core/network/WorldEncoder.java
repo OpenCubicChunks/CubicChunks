@@ -25,8 +25,8 @@
 package io.github.opencubicchunks.cubicchunks.core.network;
 
 import io.github.opencubicchunks.cubicchunks.api.util.Coords;
-import io.github.opencubicchunks.cubicchunks.core.world.ClientHeightMap;
-import io.github.opencubicchunks.cubicchunks.core.world.ServerHeightMap;
+import io.github.opencubicchunks.cubicchunks.core.lighting.ClientSurfaceTracker;
+import io.github.opencubicchunks.cubicchunks.core.lighting.ServerSurfaceTracker;
 import io.github.opencubicchunks.cubicchunks.core.world.cube.Cube;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
@@ -88,7 +88,7 @@ class WorldEncoder {
         // it wil all cubes
         cubes.forEach(cube -> {
             if (!cube.isEmpty()) {
-                byte[] heightmaps = ((ServerHeightMap) cube.getColumn().getOpacityIndex()).getDataForClient();
+                byte[] heightmaps = ((ServerSurfaceTracker) cube.getColumn().getOpacityIndex()).getDataForClient();
                 assert heightmaps.length == Cube.SIZE * Cube.SIZE * Integer.BYTES;
                 out.writeBytes(heightmaps);
             }
@@ -167,7 +167,7 @@ class WorldEncoder {
                 Cube cube = cubes.get(i);
                 byte[] heightmaps = new byte[Cube.SIZE * Cube.SIZE * Integer.BYTES];
                 in.readBytes(heightmaps);
-                ClientHeightMap coi = ((ClientHeightMap) cube.getColumn().getOpacityIndex());
+                ClientSurfaceTracker coi = ((ClientSurfaceTracker) cube.getColumn().getOpacityIndex());
                 coi.setData(heightmaps);
 
                 //noinspection ConstantConditions

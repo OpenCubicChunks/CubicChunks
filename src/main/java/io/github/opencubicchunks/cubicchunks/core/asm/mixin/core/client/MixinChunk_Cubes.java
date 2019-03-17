@@ -27,6 +27,7 @@ package io.github.opencubicchunks.cubicchunks.core.asm.mixin.core.client;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
+import io.github.opencubicchunks.cubicchunks.api.world.ISurfaceTracker;
 import io.github.opencubicchunks.cubicchunks.core.world.column.CubeMap;
 import io.github.opencubicchunks.cubicchunks.core.world.cube.Cube;
 import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
@@ -37,10 +38,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import io.github.opencubicchunks.cubicchunks.api.world.IHeightMap;
-import io.github.opencubicchunks.cubicchunks.core.world.column.CubeMap;
 import io.github.opencubicchunks.cubicchunks.api.world.IColumn;
-import io.github.opencubicchunks.cubicchunks.core.world.cube.Cube;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.world.chunk.Chunk;
@@ -62,7 +60,7 @@ public abstract class MixinChunk_Cubes implements IColumn {
      * "cubicchunks.asm.mixin.core.common.MixinChunk_Columns".
      */
     private CubeMap cubeMap;
-    private IHeightMap opacityIndex;
+    private ISurfaceTracker opacityIndex;
     private Cube cachedCube; // todo: make it always nonnull using BlankCube
 
     private boolean isColumn = false;
@@ -75,17 +73,6 @@ public abstract class MixinChunk_Cubes implements IColumn {
     protected void generateHeightMap_CubicChunks_Cancel(CallbackInfo cbi) {
         if (isColumn) {
             cbi.cancel();
-        }
-    }
-    
-    // ==============================================
-    //                  fillChunk
-    // ==============================================
-
-    @Inject(method = "read", at = @At(value = "HEAD"))
-    private void fillChunk_CubicChunks_NotSupported(PacketBuffer buf, int i, boolean flag, CallbackInfo cbi) {
-        if(false)if (isColumn) {
-            throw new UnsupportedOperationException("setting storage arrays it not supported with cubic chunks");
         }
     }
 }

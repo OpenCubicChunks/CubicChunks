@@ -24,7 +24,6 @@
  */
 package io.github.opencubicchunks.cubicchunks.api.world;
 
-import io.github.opencubicchunks.cubicchunks.api.util.Coords;
 import io.github.opencubicchunks.cubicchunks.api.util.XZAddressable;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.util.math.BlockPos;
@@ -81,7 +80,7 @@ public interface IColumn extends XZAddressable {
     /**
      * @return the height map of this column
      */
-    IHeightMap getOpacityIndex();
+    ISurfaceTracker getOpacityIndex();
 
     /**
      * Retrieve all cubes in this column that are currently loaded

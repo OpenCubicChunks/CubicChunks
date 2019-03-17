@@ -25,7 +25,7 @@
 package io.github.opencubicchunks.cubicchunks.core.server;
 
 import com.google.common.base.Predicate;
-import io.github.opencubicchunks.cubicchunks.core.lighting.LightingManager;
+import io.github.opencubicchunks.cubicchunks.core.lighting.ILightingManager;
 import io.github.opencubicchunks.cubicchunks.core.network.PacketCubeBlockChange;
 import io.github.opencubicchunks.cubicchunks.core.network.PacketDispatcher;
 import io.github.opencubicchunks.cubicchunks.core.network.PacketUnloadCube;
@@ -36,11 +36,6 @@ import io.github.opencubicchunks.cubicchunks.core.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.api.world.CubeUnWatchEvent;
 import io.github.opencubicchunks.cubicchunks.api.world.CubeWatchEvent;
 import io.github.opencubicchunks.cubicchunks.core.entity.CubicEntityTracker;
-import io.github.opencubicchunks.cubicchunks.core.lighting.LightingManager;
-import io.github.opencubicchunks.cubicchunks.core.network.PacketCubeBlockChange;
-import io.github.opencubicchunks.cubicchunks.core.network.PacketDispatcher;
-import io.github.opencubicchunks.cubicchunks.core.network.PacketUnloadCube;
-import io.github.opencubicchunks.cubicchunks.core.server.chunkio.async.forge.AsyncWorldIOExecutor;
 import io.github.opencubicchunks.cubicchunks.core.util.AddressTools;
 import io.github.opencubicchunks.cubicchunks.api.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.core.util.ticket.ITicket;
@@ -48,8 +43,6 @@ import io.github.opencubicchunks.cubicchunks.core.asm.mixin.ICubicWorldInternal;
 import io.github.opencubicchunks.cubicchunks.core.world.cube.Cube;
 import gnu.trove.list.TShortList;
 import gnu.trove.list.array.TShortArrayList;
-import gnu.trove.map.TIntObjectMap;
-import gnu.trove.map.hash.TIntObjectHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.state.IBlockState;
@@ -181,9 +174,9 @@ public class CubeWatcher implements ITicket, ICubeWatcher {
         }
         playerCubeMap.getWorldServer().profiler.endStartSection("light");
         if (this.cube != null) {
-            LightingManager.CubeLightUpdateInfo info = this.cube.getCubeLightUpdateInfo();
+            ILightingManager.ICubeLightUpdateInfo info = this.cube.getCubeLightUpdateInfo();
             if (info != null) {
-                info.tick();
+                info.update();
             }
             assert !this.cube.hasLightUpdates();
         }

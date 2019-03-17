@@ -34,8 +34,6 @@ import io.github.opencubicchunks.cubicchunks.api.worldgen.ICubeGenerator;
 import io.github.opencubicchunks.cubicchunks.core.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.core.CubicChunksConfig;
 import io.github.opencubicchunks.cubicchunks.core.entity.CubicEntityTracker;
-import io.github.opencubicchunks.cubicchunks.core.lighting.FirstLightProcessor;
-import io.github.opencubicchunks.cubicchunks.core.server.ChunkGc;
 import io.github.opencubicchunks.cubicchunks.core.server.CubeProviderServer;
 import io.github.opencubicchunks.cubicchunks.core.server.PlayerCubeMap;
 import io.github.opencubicchunks.cubicchunks.core.world.CubeWorldEntitySpawner;
@@ -109,8 +107,6 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
 
     @Shadow public abstract boolean addWeatherEffect(Entity entityIn);
 
-    @Nullable private FirstLightProcessor firstLightProcessor;
-
     @Override public void initCubicWorldServer(IntRange heightRange, IntRange generationRange) {
         super.initCubicWorld(heightRange, generationRange);
         this.isCubicWorld = true;
@@ -122,7 +118,6 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
 
         this.playerChunkMap = new PlayerCubeMap((WorldServer) (Object) this);
 
-        this.firstLightProcessor = new FirstLightProcessor((WorldServer) (Object) this);
         this.entityTracker = new CubicEntityTracker(this);
 
         this.forcedChunksCubes = new HashMap<>();
@@ -150,14 +145,6 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
 
     @Override public ICubeGenerator getCubeGenerator() {
         return getCubeCache().getCubeGenerator();
-    }
-
-    @Override public FirstLightProcessor getFirstLightProcessor() {
-        if (!this.isCubicWorld()) {
-            throw new NotCubicChunksWorldException();
-        }
-        assert this.firstLightProcessor != null;
-        return this.firstLightProcessor;
     }
     
     @Override public void removeForcedCube(ICube cube) {
