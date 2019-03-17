@@ -395,6 +395,8 @@ dependencies {
     }
 
     embed("io.github.opencubicchunks:regionlib:0.55.0-SNAPSHOT")
+
+    embed(project(":relight"))
 }
 
 tasks {
