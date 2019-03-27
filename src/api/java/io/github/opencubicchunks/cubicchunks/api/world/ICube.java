@@ -254,4 +254,9 @@ public interface ICube extends XYZAddressable {
     boolean hasLightUpdates();
 
     Biome getBiome(BlockPos pos);
+
+    /**
+     * Set biome at a cube-local 2x2 block column.
+     */
+    void setBiome(int localBiomeX, int localBiomeZ, Biome biome);
 }

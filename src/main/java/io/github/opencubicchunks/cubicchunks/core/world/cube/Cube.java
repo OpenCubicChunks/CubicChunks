@@ -400,6 +400,14 @@ public class Cube implements ICube {
         return biome;
     }
 
+    @Override
+    public void setBiome(int localBiomeX, int localBiomeZ, Biome biome) {
+        if(this.blockBiomeArray == null)
+            this.blockBiomeArray = new byte[8*8];
+
+        this.blockBiomeArray[AddressTools.getBiomeAddress(localBiomeX, localBiomeZ)] = (byte) Biome.REGISTRY.getIDForObject(biome);
+    }
+
     @Nullable
     public byte[] getBiomeArray() {
         return this.blockBiomeArray;
