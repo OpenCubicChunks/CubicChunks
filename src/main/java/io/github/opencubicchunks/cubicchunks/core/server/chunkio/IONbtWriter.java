@@ -24,15 +24,13 @@
  */
 package io.github.opencubicchunks.cubicchunks.core.server.chunkio;
 
-import static io.github.opencubicchunks.cubicchunks.core.util.WorldServerAccess.getPendingTickListEntriesHashSet;
-import static io.github.opencubicchunks.cubicchunks.core.util.WorldServerAccess.getPendingTickListEntriesThisTick;
-
+import io.github.opencubicchunks.cubicchunks.api.util.Coords;
+import io.github.opencubicchunks.cubicchunks.api.world.IColumn;
 import io.github.opencubicchunks.cubicchunks.api.world.IHeightMap;
 import io.github.opencubicchunks.cubicchunks.core.CubicChunks;
-import io.github.opencubicchunks.cubicchunks.api.util.Coords;
+import io.github.opencubicchunks.cubicchunks.core.asm.mixin.ICubicWorldInternal;
 import io.github.opencubicchunks.cubicchunks.core.world.ClientHeightMap;
 import io.github.opencubicchunks.cubicchunks.core.world.ServerHeightMap;
-import io.github.opencubicchunks.cubicchunks.api.world.IColumn;
 import io.github.opencubicchunks.cubicchunks.core.world.cube.Cube;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.Block;
@@ -53,9 +51,7 @@ import net.minecraftforge.fml.common.FMLCommonHandler;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -246,16 +242,11 @@ class IONbtWriter {
         if (!(cube.getWorld() instanceof WorldServer)) {
             return out;
         }
-        WorldServer worldServer = (WorldServer) cube.getWorld();
+        WorldServer worldServer = cube.getWorld();
 
-        // copy the ticks for this cube
-        copyScheduledTicks(out, getPendingTickListEntriesHashSet(worldServer), cube);
-        copyScheduledTicks(out, getPendingTickListEntriesThisTick(worldServer), cube);
+        out.addAll(((ICubicWorldInternal.Server) worldServer).getScheduledTicks().getForCube(cube.getCoords()));
+        out.addAll(((ICubicWorldInternal.Server) worldServer).getThisTickScheduledTicks().getForCube(cube.getCoords()));
 
         return out;
-    }
-
-    private static void copyScheduledTicks(ArrayList<NextTickListEntry> out, Collection<NextTickListEntry> scheduledTicks, Cube cube) {
-        out.addAll(scheduledTicks.stream().filter(scheduledTick -> cube.containsBlockPos(scheduledTick.position)).collect(Collectors.toList()));
     }
 }

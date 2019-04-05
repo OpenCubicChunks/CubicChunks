@@ -141,8 +141,7 @@ public class IONbtReader {
     }
 
     @Nullable
-    private static Cube readBaseCube(Chunk column, int cubeX, int cubeY, int cubeZ, NBTTagCompound nbt,
-            World world) {// check the version number
+    private static Cube readBaseCube(Chunk column, int cubeX, int cubeY, int cubeZ, NBTTagCompound nbt, World world) {// check the version number
         byte version = nbt.getByte("v");
         if (version != 1) {
             throw new IllegalArgumentException("Cube has wrong version! " + version);
