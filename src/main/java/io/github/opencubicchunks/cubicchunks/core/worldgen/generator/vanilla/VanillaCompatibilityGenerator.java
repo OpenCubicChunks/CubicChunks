@@ -34,6 +34,7 @@ import io.github.opencubicchunks.cubicchunks.core.asm.mixin.ICubicWorldInternal;
 import io.github.opencubicchunks.cubicchunks.core.world.cube.Cube;
 import io.github.opencubicchunks.cubicchunks.api.worldgen.CubePrimer;
 import io.github.opencubicchunks.cubicchunks.api.worldgen.ICubeGenerator;
+import io.github.opencubicchunks.cubicchunks.api.worldgen.populator.ICubicPopulator;
 import io.github.opencubicchunks.cubicchunks.core.worldgen.generator.WorldGenUtils;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.state.IBlockState;
@@ -51,6 +52,7 @@ import net.minecraft.world.gen.IChunkGenerator;
 import net.minecraftforge.fml.common.registry.ForgeRegistries;
 import net.minecraftforge.fml.common.registry.GameRegistry;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -90,6 +92,8 @@ public class VanillaCompatibilityGenerator implements ICubeGenerator {
      * Detected block for filling cubes above the world
      */
     @Nonnull private IBlockState extensionBlockTop = Blocks.AIR.getDefaultState();
+    /** List of populators added by other mods */
+    private static final List<ICubicPopulator> customPopulators = new ArrayList<ICubicPopulator>();
 
     /**
      * Create a new VanillaCompatibilityGenerator
@@ -183,6 +187,13 @@ public class VanillaCompatibilityGenerator implements ICubeGenerator {
     public void recreateStructures(Chunk column) {
         vanilla.recreateStructures(column, column.x, column.z);
     }
+    
+    private Random getChunkSpecificRandom(int cubeX, int cubeZ) {
+        Random rand = new Random(world.getSeed());
+        rand.setSeed(rand.nextInt() ^ cubeX);
+        rand.setSeed(rand.nextInt() ^ cubeZ);
+        return rand;
+    }
 
     @Override
     public CubePrimer generateCube(int cubeX, int cubeY, int cubeZ) {
@@ -190,9 +201,7 @@ public class VanillaCompatibilityGenerator implements ICubeGenerator {
         CubePrimer primer = new CubePrimer();
 
         if (cubeY < 0) {
-            Random rand = new Random(world.getSeed());
-            rand.setSeed(rand.nextInt() ^ cubeX);
-            rand.setSeed(rand.nextInt() ^ cubeZ);
+            Random rand = getChunkSpecificRandom(cubeX, cubeZ);
             // Fill with bottom block
             for (int x = 0; x < Cube.SIZE; x++) {
                 for (int y = 0; y < Cube.SIZE; y++) {
@@ -261,6 +270,10 @@ public class VanillaCompatibilityGenerator implements ICubeGenerator {
     @Override
     public void populate(ICube cube) {
         tryInit(vanilla, world);
+        Random rand = getChunkSpecificRandom(cube.getX(), cube.getZ());
+        for (ICubicPopulator populator : customPopulators) {
+            populator.generate(world, rand, cube.getCoords(), cube.getBiome(cube.getCoords().getCenterBlockPos()));
+        }
         if (cube.getY() < 0 || cube.getY() >= worldHeightCubes) {
             return;
         }
@@ -322,5 +335,14 @@ public class VanillaCompatibilityGenerator implements ICubeGenerator {
     @Override
     public BlockPos getClosestStructure(String name, BlockPos pos, boolean findUnexplored) {
         return vanilla.getNearestStructurePos((World) world, name, pos, findUnexplored);
+    }
+
+    /**
+     * Populators added here will be launched prior to any other. It is
+     * recommended to use this function in init or pre init event of a mod.
+     */
+    public static void registerForCompatibilityGenerator(ICubicPopulator populator) {
+        if (!customPopulators.contains(populator))
+            customPopulators.add(populator);
     }
 }
