@@ -201,7 +201,9 @@ public class VanillaCompatibilityGenerator implements ICubeGenerator {
         CubePrimer primer = new CubePrimer();
 
         if (cubeY < 0) {
-            Random rand = getCubeSpecificRandom(cubeX, cubeY, cubeZ);
+            Random rand = new Random(world.getSeed());
+            rand.setSeed(rand.nextInt() ^ cubeX);
+            rand.setSeed(rand.nextInt() ^ cubeZ);
             // Fill with bottom block
             for (int x = 0; x < Cube.SIZE; x++) {
                 for (int y = 0; y < Cube.SIZE; y++) {
