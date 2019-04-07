@@ -270,9 +270,7 @@ public class VanillaCompatibilityGenerator implements ICubeGenerator {
     public void populate(ICube cube) {
         tryInit(vanilla, world);
         Random rand = getChunkSpecificRandom(cube.getX(), cube.getZ());
-        for (ICubicPopulator populator : CubeGeneratorsRegistry.customPopulatorsForFlatCubicGenerator) {
-            populator.generate(world, rand, cube.getCoords(), cube.getBiome(cube.getCoords().getCenterBlockPos()));
-        }
+        CubeGeneratorsRegistry.populateVanillaCubic(world, rand, cube);
         if (cube.getY() < 0 || cube.getY() >= worldHeightCubes) {
             return;
         }
