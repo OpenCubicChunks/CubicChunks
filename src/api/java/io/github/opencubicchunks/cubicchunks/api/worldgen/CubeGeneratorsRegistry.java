@@ -53,6 +53,9 @@ import net.minecraftforge.fml.common.registry.GameRegistry;
 
 public class CubeGeneratorsRegistry {
 
+    /** List of populators added by other mods to FlatCubic generator type */
+    public static final List<ICubicPopulator> customPopulatorsForFlatCubicGenerator = new ArrayList<ICubicPopulator>();
+
     private static TreeSet<GeneratorWrapper> sortedGeneratorList = new TreeSet<>();
 
     /**
@@ -121,5 +124,14 @@ public class CubeGeneratorsRegistry {
         @Override public int compareTo(GeneratorWrapper o) {
             return Integer.compare(weight, o.weight);
         }
+    }
+    
+    /**
+     * Populators added here will be launched prior to any other. It is
+     * recommended to use this function in init or pre init event of a mod.
+     */
+    public static void registerForCompatibilityGenerator(ICubicPopulator populator) {
+        if (!customPopulatorsForFlatCubicGenerator.contains(populator))
+            customPopulatorsForFlatCubicGenerator.add(populator);
     }
 }

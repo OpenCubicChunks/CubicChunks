@@ -32,6 +32,7 @@ import io.github.opencubicchunks.cubicchunks.api.world.ICubicWorld;
 import io.github.opencubicchunks.cubicchunks.core.CubicChunksConfig;
 import io.github.opencubicchunks.cubicchunks.core.asm.mixin.ICubicWorldInternal;
 import io.github.opencubicchunks.cubicchunks.core.world.cube.Cube;
+import io.github.opencubicchunks.cubicchunks.api.worldgen.CubeGeneratorsRegistry;
 import io.github.opencubicchunks.cubicchunks.api.worldgen.CubePrimer;
 import io.github.opencubicchunks.cubicchunks.api.worldgen.ICubeGenerator;
 import io.github.opencubicchunks.cubicchunks.api.worldgen.populator.ICubicPopulator;
@@ -92,8 +93,6 @@ public class VanillaCompatibilityGenerator implements ICubeGenerator {
      * Detected block for filling cubes above the world
      */
     @Nonnull private IBlockState extensionBlockTop = Blocks.AIR.getDefaultState();
-    /** List of populators added by other mods */
-    private static final List<ICubicPopulator> customPopulators = new ArrayList<ICubicPopulator>();
 
     /**
      * Create a new VanillaCompatibilityGenerator
@@ -271,7 +270,7 @@ public class VanillaCompatibilityGenerator implements ICubeGenerator {
     public void populate(ICube cube) {
         tryInit(vanilla, world);
         Random rand = getChunkSpecificRandom(cube.getX(), cube.getZ());
-        for (ICubicPopulator populator : customPopulators) {
+        for (ICubicPopulator populator : CubeGeneratorsRegistry.customPopulatorsForFlatCubicGenerator) {
             populator.generate(world, rand, cube.getCoords(), cube.getBiome(cube.getCoords().getCenterBlockPos()));
         }
         if (cube.getY() < 0 || cube.getY() >= worldHeightCubes) {
@@ -335,14 +334,5 @@ public class VanillaCompatibilityGenerator implements ICubeGenerator {
     @Override
     public BlockPos getClosestStructure(String name, BlockPos pos, boolean findUnexplored) {
         return vanilla.getNearestStructurePos((World) world, name, pos, findUnexplored);
-    }
-
-    /**
-     * Populators added here will be launched prior to any other. It is
-     * recommended to use this function in init or pre init event of a mod.
-     */
-    public static void registerForCompatibilityGenerator(ICubicPopulator populator) {
-        if (!customPopulators.contains(populator))
-            customPopulators.add(populator);
     }
 }
