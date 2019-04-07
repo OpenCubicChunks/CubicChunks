@@ -187,10 +187,11 @@ public class VanillaCompatibilityGenerator implements ICubeGenerator {
         vanilla.recreateStructures(column, column.x, column.z);
     }
     
-    private Random getChunkSpecificRandom(int cubeX, int cubeZ) {
+    private Random getCubeSpecificRandom(int cubeX, int cubeY, int cubeZ) {
         Random rand = new Random(world.getSeed());
         rand.setSeed(rand.nextInt() ^ cubeX);
         rand.setSeed(rand.nextInt() ^ cubeZ);
+        rand.setSeed(rand.nextInt() ^ cubeY);
         return rand;
     }
 
@@ -200,7 +201,7 @@ public class VanillaCompatibilityGenerator implements ICubeGenerator {
         CubePrimer primer = new CubePrimer();
 
         if (cubeY < 0) {
-            Random rand = getChunkSpecificRandom(cubeX, cubeZ);
+            Random rand = getCubeSpecificRandom(cubeX, cubeY, cubeZ);
             // Fill with bottom block
             for (int x = 0; x < Cube.SIZE; x++) {
                 for (int y = 0; y < Cube.SIZE; y++) {
@@ -269,7 +270,7 @@ public class VanillaCompatibilityGenerator implements ICubeGenerator {
     @Override
     public void populate(ICube cube) {
         tryInit(vanilla, world);
-        Random rand = getChunkSpecificRandom(cube.getX(), cube.getZ());
+        Random rand = getCubeSpecificRandom(cube.getX(), cube.getY(), cube.getZ());
         CubeGeneratorsRegistry.populateVanillaCubic(world, rand, cube);
         if (cube.getY() < 0 || cube.getY() >= worldHeightCubes) {
             return;
