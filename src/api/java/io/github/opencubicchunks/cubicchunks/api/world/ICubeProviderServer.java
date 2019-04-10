@@ -60,6 +60,12 @@ public interface ICubeProviderServer extends ICubeProvider {
     ICube getCube(int cubeX, int cubeY, int cubeZ, Requirement req);
 
     /**
+     * Returns true if the specified cube has been already generated (either loaded or saved
+     * on disk).
+     */
+    boolean isCubeGenerated(int cubeX, int cubeY, int cubeZ);
+
+    /**
      * The effort made to retrieve a cube or column. Any further work should not be done, and returning
      * {@code null} is acceptable in those cases
      */

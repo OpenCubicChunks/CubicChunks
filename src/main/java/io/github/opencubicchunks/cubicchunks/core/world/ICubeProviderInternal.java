@@ -24,9 +24,9 @@
  */
 package io.github.opencubicchunks.cubicchunks.core.world;
 
-import io.github.opencubicchunks.cubicchunks.core.world.cube.Cube;
-import io.github.opencubicchunks.cubicchunks.api.world.ICubeProvider;
 import io.github.opencubicchunks.cubicchunks.api.util.CubePos;
+import io.github.opencubicchunks.cubicchunks.api.world.ICubeProvider;
+import io.github.opencubicchunks.cubicchunks.core.server.chunkio.ICubeIO;
 import io.github.opencubicchunks.cubicchunks.core.world.cube.Cube;
 import mcp.MethodsReturnNonnullByDefault;
 
@@ -34,7 +34,7 @@ import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 
 /**
- * Version of ICubeProvider used internally, that returns the implementations of classes.
+ * Version of ICubeProvider used internally
  */
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
@@ -53,4 +53,8 @@ public interface ICubeProviderInternal extends ICubeProvider {
 
     @Override
     Cube getCube(CubePos coords);
+
+    interface Server extends ICubeProviderInternal {
+        ICubeIO getCubeIO();
+    }
 }

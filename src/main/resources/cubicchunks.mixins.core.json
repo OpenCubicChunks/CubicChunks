@@ -21,6 +21,7 @@
         "common.MixinWorldSettings",
         "common.MixinDerivedWorldInfo",
         "common.MixinRegionFileCache",
+        "common.MixinAnvilSaveHandler",
         "common.forge.MixinForgeChunkManager",
         "common.forge.MixinTicket"
     ],

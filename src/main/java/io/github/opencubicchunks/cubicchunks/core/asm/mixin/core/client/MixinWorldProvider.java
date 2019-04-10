@@ -61,7 +61,11 @@ public abstract class MixinWorldProvider implements ICubicWorldProvider {
             cir.cancel();
         }
     }
-    
+
+    @Override public World getWorld() {
+        return this.world;
+    }
+
     private ICubicWorld cubicWorld() {
         return (ICubicWorld) world;
     }

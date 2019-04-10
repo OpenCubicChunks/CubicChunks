@@ -78,7 +78,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
  */
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
-public class CubeProviderServer extends ChunkProviderServer implements ICubeProviderServer, ICubeProviderInternal {
+public class CubeProviderServer extends ChunkProviderServer implements ICubeProviderServer, ICubeProviderInternal.Server {
 
     @Nonnull private WorldServer worldServer;
     @Nonnull private ICubeIO cubeIO;
@@ -313,6 +313,10 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
         }
 
         return postCubeLoadAttempt(cubeX, cubeY, cubeZ, cube, column, req);
+    }
+
+    @Override public boolean isCubeGenerated(int cubeX, int cubeY, int cubeZ) {
+        return getLoadedCube(cubeX, cubeY, cubeZ) != null || cubeIO.cubeExists(cubeX, cubeY, cubeZ);
     }
 
     /**
@@ -593,7 +597,7 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
         return sb.toString();
     }
 
-    @Nonnull public ICubeIO getCubeIO() {
+    @Override @Nonnull public ICubeIO getCubeIO() {
         return cubeIO;
     }
 
