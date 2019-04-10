@@ -69,7 +69,7 @@ public class CubicAnvilChunkLoader extends AnvilChunkLoader {
     }
 
     @Override @Nullable public Object[] loadChunk__Async(World worldIn, int x, int z) throws IOException {
-        throw new UnsupportedEncodingException();
+        throw new UnsupportedOperationException();
     }
 
     @Override public boolean isChunkGeneratedAt(int x, int z) {
