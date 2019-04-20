@@ -70,10 +70,11 @@ public class CommonEventHandler {
                 (WorldSavedCubicChunksData) evt.getObject().getPerWorldStorage().getOrLoadData(WorldSavedCubicChunksData.class, "cubicChunksData");
         boolean ccWorldType = evt.getObject().getWorldType() instanceof ICubicWorldType;
         boolean ccGenerator = ccWorldType && ((ICubicWorldType) evt.getObject().getWorldType()).hasCubicGeneratorForWorld(evt.getObject());
-        boolean savedCC = savedData != null;
-        boolean ccNewWorld = ((ICubicWorldSettings) world.getWorldInfo()).isCubic();
+        boolean savedCC = savedData != null && savedData.isCubicChunks;
+        boolean ccWorldInfo = ((ICubicWorldSettings) world.getWorldInfo()).isCubic() && (savedData == null || savedData.isCubicChunks);
         boolean excludeCC = CubicChunksConfig.isDimensionExcluded(evt.getObject().provider.getDimension());
         boolean forceExclusions = CubicChunksConfig.forceDimensionExcludes;
+        // TODO: simplify this mess of booleans and document where each of them comes from
         // these espressions are generated using Quine McCluskey algorithm
         // using the JQM v1.2.0 (Java QuineMcCluskey) program:
         // IS_CC := CC_GEN OR CC_TYPE AND NOT(EXCLUDED) OR SAVED_CC AND NOT(EXCLUDED) OR SAVED_CC AND NOT(F_EX) OR CC_NEW AND NOT(EXCLUDED);
@@ -86,11 +87,19 @@ public class CommonEventHandler {
                         || (ccWorldType && !excludeCC)
                         || (savedCC && !excludeCC)
                         || (savedCC && !forceExclusions)
-                        || (ccNewWorld && !excludeCC);
+                        || (ccWorldInfo && !excludeCC);
         if ((CubicChunksConfig.forceLoadCubicChunks == CubicChunksConfig.ForceCCMode.LOAD_NOT_EXCLUDED && !excludeCC)
             || CubicChunksConfig.forceLoadCubicChunks == CubicChunksConfig.ForceCCMode.ALWAYS) {
             isCC = true;
         }
+
+        if (savedData == null) {
+            savedData = new WorldSavedCubicChunksData("cubicChunksData", isCC);
+        }
+        savedData.markDirty();
+        evt.getObject().getPerWorldStorage().setData("cubicChunksData", savedData);
+        evt.getObject().getPerWorldStorage().saveAllData();
+
         if (!isCC) {
             return;
         }
@@ -108,15 +117,9 @@ public class CommonEventHandler {
             generationRange = ((ICubicWorldType) type).calculateGenerationHeightRange(world);
         }
 
-        if (savedData == null) {
-            savedData = new WorldSavedCubicChunksData("cubicChunksData");
-        }
         int minHeight = savedData.minHeight;
         int maxHeight = savedData.maxHeight;
         ((ICubicWorldInternal.Server) world).initCubicWorldServer(new IntRange(minHeight, maxHeight), generationRange);
-        savedData.markDirty();
-        evt.getObject().getPerWorldStorage().setData("cubicChunksData", savedData);
-        evt.getObject().getPerWorldStorage().saveAllData();
     }
 
     @SubscribeEvent
