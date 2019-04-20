@@ -24,11 +24,9 @@
  */
 package io.github.opencubicchunks.cubicchunks.core;
 
-import com.google.common.collect.Maps;
 import com.google.common.collect.Range;
 import com.google.common.collect.TreeRangeSet;
 import mcp.MethodsReturnNonnullByDefault;
-import net.minecraftforge.common.ForgeChunkManager;
 import net.minecraftforge.common.config.Config;
 import net.minecraftforge.common.config.ConfigManager;
 import net.minecraftforge.fml.client.event.ConfigChangedEvent;
@@ -54,10 +52,12 @@ public class CubicChunksConfig {
 
 
     @Config.LangKey("cubicchunks.config.force_cc")
-    @Config.Comment("Enabling this will force creating a cubic chunks world, even if it's not cubic chunks world type. This option is automatically "
-            + "set in world creation GUI when creating cubic chunks world with non-cubicchunks world type. This doesn't affect already created "
-            + "worlds.")
-    public static boolean forceCubicChunks = false;
+    @Config.Comment("Determines when a cubic chunks world should be created for non-cubic-chunks world types.\n"
+        + "NONE - only when cubic chunks world type\n"
+        + "NEW_WORLD - only for newly created worlds\n"
+        + "LOAD_NOT_EXCLUDED - load all worlds as cubic chunks, except excluded dimensions\n"
+        + "ALWAYS - load everything as cubic chunks. Overrides forceDimensionExcludes")
+    public static ForceCCMode forceLoadCubicChunks = ForceCCMode.NONE;
 
     @Config.LangKey("cubicchunks.config.cubegen_per_tick")
     @Config.Comment("The maximum number of cubic chunks to generate per tick.")
@@ -163,7 +163,14 @@ public class CubicChunksConfig {
     }
 
     public static void flipForceCubicChunks() {
-        forceCubicChunks = !forceCubicChunks;
+        switch (forceLoadCubicChunks) {
+            case NONE:
+                forceLoadCubicChunks = ForceCCMode.NEW_WORLD;
+                break;
+            case NEW_WORLD:
+                forceLoadCubicChunks = ForceCCMode.NONE;
+                break;
+        }
         sync();
     }
 
@@ -172,5 +179,12 @@ public class CubicChunksConfig {
             initDimensionRanges();
         }
         return excludedDimensionsRanges.contains(dimension);
+    }
+
+    public enum ForceCCMode {
+        NONE,
+        NEW_WORLD,
+        LOAD_NOT_EXCLUDED,
+        ALWAYS
     }
 }

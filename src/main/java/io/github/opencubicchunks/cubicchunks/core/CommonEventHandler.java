@@ -87,11 +87,15 @@ public class CommonEventHandler {
                         || (savedCC && !excludeCC)
                         || (savedCC && !forceExclusions)
                         || (ccNewWorld && !excludeCC);
+        if ((CubicChunksConfig.forceLoadCubicChunks == CubicChunksConfig.ForceCCMode.LOAD_NOT_EXCLUDED && !excludeCC)
+            || CubicChunksConfig.forceLoadCubicChunks == CubicChunksConfig.ForceCCMode.ALWAYS) {
+            isCC = true;
+        }
         if (!isCC) {
             return;
         }
 
-        if (shouldSkipWorld((World) world)) {
+        if (shouldSkipWorld(world)) {
             CubicChunks.LOGGER.info("Skipping world " + evt.getObject() + " with type " + evt.getObject().getWorldType() + " due to potential "
                     + "compatibility issues");
             return;
@@ -145,7 +149,7 @@ public class CommonEventHandler {
     
     @SubscribeEvent
     public void onCreateWorldSettings(CreateNewWorldEvent event) {
-        ((ICubicWorldSettings) (Object) event.settings).setCubic(CubicChunksConfig.forceCubicChunks);
+        ((ICubicWorldSettings) (Object) event.settings).setCubic(CubicChunksConfig.forceLoadCubicChunks == CubicChunksConfig.ForceCCMode.NEW_WORLD);
     }
 
     @SuppressWarnings("unchecked")
