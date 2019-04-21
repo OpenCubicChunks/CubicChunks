@@ -403,6 +403,10 @@ jar.apply {
     from(sourceSets["api"].output)
     exclude("LICENSE.txt", "log4j2.xml")
 
+    configureManifest(manifest)
+}
+
+fun configureManifest(manifest: Manifest) {
     manifest.attributes["FMLAT"] = "cubicchunks_at.cfg"
     manifest.attributes["FMLCorePlugin"] = "io.github.opencubicchunks.cubicchunks.core.asm.coremod.CubicChunksCoreMod"
     manifest.attributes["TweakClass"] = "org.spongepowered.asm.launch.MixinTweaker"
@@ -413,6 +417,7 @@ jar.apply {
 
 fun configureShadowJar(task: ShadowJar, classifier: String) {
     task.configurations = listOf(coreShadow)
+    task.exclude("META-INF/")
     task.from(sourceSets["main"].output)
     task.from(sourceSets["api"].output)
     task.exclude("log4j2.xml")
@@ -421,6 +426,8 @@ fun configureShadowJar(task: ShadowJar, classifier: String) {
     }
 
     task.classifier = classifier
+
+    configureManifest(task.manifest)
 }
 
 shadowJar.apply { configureShadowJar(this, "all") }
