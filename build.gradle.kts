@@ -417,7 +417,7 @@ fun configureManifest(manifest: Manifest) {
 
 fun configureShadowJar(task: ShadowJar, classifier: String) {
     task.configurations = listOf(coreShadow)
-    task.exclude("META-INF/")
+    task.exclude("META-INF/MUMFREY*")
     task.from(sourceSets["main"].output)
     task.from(sourceSets["api"].output)
     task.exclude("log4j2.xml")
