@@ -34,8 +34,12 @@ public class WorldSavedCubicChunksData extends WorldSavedData {
     public boolean isCubicChunks = false;
     public int minHeight = 0, maxHeight = 256;
 
-    public WorldSavedCubicChunksData(String name, boolean isCC) {
+    public WorldSavedCubicChunksData(String name) {
         super(name);
+    }
+    
+    public WorldSavedCubicChunksData(String name, boolean isCC) {
+        this(name);
         if (isCC) {
             minHeight = CubicChunks.MIN_BLOCK_Y;
             maxHeight = CubicChunks.MAX_BLOCK_Y;
