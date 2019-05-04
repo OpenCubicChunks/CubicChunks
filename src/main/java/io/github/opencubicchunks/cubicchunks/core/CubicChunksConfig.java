@@ -111,6 +111,18 @@ public class CubicChunksConfig {
             + "fix lighting on the clientside.")
     public static boolean doClientLightFixes = false;
 
+    @Config.LangKey("cubicchunks.config.biome_temperature_center_y")
+    @Config.Comment("Heights below this value will have normal, unmodified biome temperature")
+    public static int biomeTemperatureCenterY = 64;
+
+    @Config.LangKey("cubicchunks.config.biome_temperature_y_factor")
+    @Config.Comment("How much should biome temperature increase with height (negative values decrease temperature)")
+    public static float biomeTemperatureHeightFactor = -0.05F / 30.0F;
+
+    @Config.LangKey("cubicchunks.config.biome_temperature_scale_max_y")
+    @Config.Comment("Above this height, biome temperature will no longer change")
+    public static int biomeTemperatureScaleMaxY = 256;
+
     public static int defaultMaxCubesPerChunkloadingTicket = 25 * 16;
     public static Map<String, Integer> modMaxCubesPerChunkloadingTicket = new HashMap<>();
 
