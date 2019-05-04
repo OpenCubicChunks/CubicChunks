@@ -48,8 +48,8 @@ public abstract class MixinBiomeTemperatureConfig {
         if (pos.getY() > CubicChunksConfig.biomeTemperatureCenterY) {
             float noise = (float) (TEMPERATURE_NOISE.getValue((double) ((float) pos.getX() / 8.0F), (double) ((float) pos.getZ() / 8.0F)) * 4.0D);
             int y = Math.min(pos.getY(), CubicChunksConfig.biomeTemperatureScaleMaxY);
-            return this.getTemperature() -
-                (noise + y + CubicChunksConfig.biomeTemperatureCenterY) * CubicChunksConfig.biomeTemperatureHeightFactor;
+            return this.getTemperature() +
+                (noise + y - CubicChunksConfig.biomeTemperatureCenterY) * CubicChunksConfig.biomeTemperatureHeightFactor;
         } else {
             return this.getTemperature();
         }
