@@ -400,7 +400,7 @@ public abstract class MixinChunk_Cubes implements IColumn {
         args = "array=set"
     ), cancellable = true)
     private void setBlockState_CubicChunks_EBSSetInject(BlockPos pos, IBlockState state, CallbackInfoReturnable<IBlockState> cir) {
-        if (getWorld().getCubeCache().getLoadedCube(CubePos.fromBlockCoords(pos)) == null) {
+        if (isColumn && getWorld().getCubeCache().getLoadedCube(CubePos.fromBlockCoords(pos)) == null) {
             cir.setReturnValue(null);
             cir.cancel();
         }
