@@ -86,7 +86,8 @@ public class CubicChunksMixinConfig implements IMixinConfigPlugin {
         } else if (optifineVersion.compareTo("E1") >= 0) {
             optifineState = OptifineState.LOADED_E1;
         } else {
-            throw new RuntimeException("Unsupported optifine version " + optifineVersion);
+            new RuntimeException("Unsupported optifine version " + optifineVersion + ", trying E1-specific mixins").printStackTrace();
+            optifineState = OptifineState.LOADED_E1;
         }
 
         modDependencyConditions.defaultReturnValue(true);
