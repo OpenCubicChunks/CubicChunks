@@ -48,5 +48,5 @@ public interface ICubicWorldServer extends ICubicWorld {
      * that cause a chunk that contains a player to be unloaded when the player is moving
      * at very high speed. This issue is not fixable. Automatic chunk unloading is not affected.
      */
-    void unloadStaleCubes();
+    void unloadOldCubes();
 }

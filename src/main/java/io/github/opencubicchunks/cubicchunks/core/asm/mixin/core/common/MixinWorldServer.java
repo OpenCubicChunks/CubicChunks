@@ -209,7 +209,7 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
         return forcedColumns;
     }
 
-    @Override public void unloadStaleCubes() {
+    @Override public void unloadOldCubes() {
         worldChunkGc.chunkGc();
     }
 
