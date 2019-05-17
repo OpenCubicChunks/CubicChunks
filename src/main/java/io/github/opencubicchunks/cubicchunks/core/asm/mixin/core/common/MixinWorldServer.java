@@ -42,6 +42,7 @@ import io.github.opencubicchunks.cubicchunks.core.CubicChunksConfig;
 import io.github.opencubicchunks.cubicchunks.core.asm.mixin.ICubicWorldInternal;
 import io.github.opencubicchunks.cubicchunks.core.entity.CubicEntityTracker;
 import io.github.opencubicchunks.cubicchunks.core.lighting.FirstLightProcessor;
+import io.github.opencubicchunks.cubicchunks.core.server.ChunkGc;
 import io.github.opencubicchunks.cubicchunks.core.server.CubeProviderServer;
 import io.github.opencubicchunks.cubicchunks.core.server.PlayerCubeMap;
 import io.github.opencubicchunks.cubicchunks.core.util.world.CubeSplitTickList;
@@ -105,6 +106,8 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
     private XYZMap<ICube> forcedCubes;
     private XZMap<IColumn> forcedColumns;
 
+    private ChunkGc worldChunkGc;
+
     @Shadow protected abstract void playerCheckLight();
 
     @Shadow public abstract boolean spawnEntity(Entity entityIn);
@@ -113,6 +116,8 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
 
     @Shadow @Mutable @Final private Set<NextTickListEntry> pendingTickListEntriesHashSet;
     @Shadow @Mutable @Final private List<NextTickListEntry> pendingTickListEntriesThisTick;
+
+    @Shadow public abstract PlayerChunkMap getPlayerChunkMap();
 
     @Nullable private FirstLightProcessor firstLightProcessor;
 
@@ -136,6 +141,7 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
 
         this.pendingTickListEntriesHashSet = new CubeSplitTickSet();
         this.pendingTickListEntriesThisTick = new CubeSplitTickList();
+        this.worldChunkGc = new ChunkGc(getCubeCache());
     }
 
     @Override public CubeSplitTickSet getScheduledTicks() {
@@ -201,6 +207,10 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
 
     @Override public XZMap<IColumn> getForcedColumns() {
         return forcedColumns;
+    }
+
+    @Override public void unloadStaleCubes() {
+        worldChunkGc.chunkGc();
     }
 
     /**
