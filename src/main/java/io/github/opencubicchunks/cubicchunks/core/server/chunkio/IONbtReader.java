@@ -229,6 +229,10 @@ public class IONbtReader {
             //TileEntity.create
             TileEntity blockEntity = TileEntity.create(world, nbtTileEntity);
             if (blockEntity != null) {
+                if (!cube.getCoords().containsBlock(blockEntity.getPos())) {
+                    CubicChunks.LOGGER.warn("TileEntity " + blockEntity + " is not in cube at " + cube.getCoords() + ", tile entity will be skipped");
+                    continue;
+                }
                 cube.addTileEntity(blockEntity);
             }
         }
