@@ -153,13 +153,44 @@ class IONbtWriter {
         cubeNbt.setTag("Sections", sectionList);
         byte[] abyte = new byte[Cube.SIZE * Cube.SIZE * Cube.SIZE];
         NibbleArray data = new NibbleArray();
-        NibbleArray add = ebs.getData().getDataForNBT(abyte, data);
+        NibbleArray add = null;
+        NibbleArray add2neid = null;
+
+        for (int i = 0; i < 4096; ++i) {
+            int x = i & 15;
+            int y = i >> 8 & 15;
+            int z = i >> 4 & 15;
+
+            int id = Block.BLOCK_STATE_IDS.get(ebs.getData().get(x, y, z));
+
+            int in1 = (id >> 12) & 0xF;
+            int in2 = (id >> 16) & 0xF;
+
+            if (in1 != 0) {
+                if (add == null) {
+                    add = new NibbleArray();
+                }
+                add.setIndex(i, in1);
+            }
+            if (in2 != 0) {
+                if (add2neid == null) {
+                    add2neid = new NibbleArray();
+                }
+                add2neid.setIndex(i, in2);
+            }
+
+            abyte[i] = (byte) (id >> 4 & 255);
+            data.setIndex(i, id & 15);
+        }
 
         section.setByteArray("Blocks", abyte);
         section.setByteArray("Data", data.getData());
 
         if (add != null) {
             section.setByteArray("Add", add.getData());
+        }
+        if (add2neid != null) {
+            section.setByteArray("Add2", add2neid.getData());
         }
 
         section.setByteArray("BlockLight", ebs.getBlockLight().getData());
