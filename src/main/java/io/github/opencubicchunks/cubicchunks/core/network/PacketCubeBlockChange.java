@@ -28,8 +28,12 @@ import static io.github.opencubicchunks.cubicchunks.api.util.Coords.blockToCube;
 import static io.github.opencubicchunks.cubicchunks.api.util.Coords.blockToLocal;
 import static net.minecraftforge.fml.common.network.ByteBufUtils.readVarInt;
 
+import io.github.opencubicchunks.cubicchunks.core.CubicChunks;
+import io.github.opencubicchunks.cubicchunks.core.client.CubeProviderClient;
 import io.github.opencubicchunks.cubicchunks.core.util.AddressTools;
 import io.github.opencubicchunks.cubicchunks.api.util.CubePos;
+import io.github.opencubicchunks.cubicchunks.core.world.ClientHeightMap;
+import io.github.opencubicchunks.cubicchunks.core.world.cube.BlankCube;
 import io.github.opencubicchunks.cubicchunks.core.world.cube.Cube;
 import gnu.trove.TShortCollection;
 import gnu.trove.iterator.TIntIterator;
@@ -39,7 +43,11 @@ import io.netty.buffer.ByteBuf;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.fml.common.network.ByteBufUtils;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
@@ -124,9 +132,32 @@ public class PacketCubeBlockChange implements IMessage {
     public static class Handler extends AbstractClientMessageHandler<PacketCubeBlockChange> {
 
         @Nullable @Override
-        public IMessage handleClientMessage(EntityPlayer player, PacketCubeBlockChange message, MessageContext ctx) {
-            ClientHandler.getInstance().handle(message);
-            return null;
+        public void handleClientMessage(EntityPlayer player, PacketCubeBlockChange packet, MessageContext ctx) {
+            WorldClient worldClient = Minecraft.getMinecraft().world;
+            CubeProviderClient cubeCache = (CubeProviderClient) worldClient.getChunkProvider();
+
+            // get the cube
+            Cube cube = cubeCache.getCube(packet.cubePos);
+            if (cube instanceof BlankCube) {
+                CubicChunks.LOGGER.error("Ignored block update to blank cube {}", packet.cubePos);
+                return;
+            }
+
+            ClientHeightMap index = (ClientHeightMap) cube.getColumn().getOpacityIndex();
+            for (int hmapUpdate : packet.heightValues) {
+                int x = hmapUpdate & 0xF;
+                int z = (hmapUpdate >> 4) & 0xF;
+                //height is signed, so don't use unsigned shift
+                int height = hmapUpdate >> 8;
+                index.setHeight(x, z, height);
+            }
+            // apply the update
+            for (int i = 0; i < packet.localAddresses.length; i++) {
+                BlockPos pos = cube.localAddressToBlockPos(packet.localAddresses[i]);
+                worldClient.invalidateBlockReceiveRegion(pos.getX(), pos.getY(), pos.getZ(), pos.getX(), pos.getY(), pos.getZ());
+                worldClient.setBlockState(pos, packet.blockStates[i], 3);
+            }
+            cube.getTileEntityMap().values().forEach(TileEntity::updateContainingBlockInfo);
         }
     }
 }
