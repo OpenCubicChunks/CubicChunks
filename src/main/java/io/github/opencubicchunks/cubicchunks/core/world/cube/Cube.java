@@ -299,8 +299,30 @@ public class Cube implements ICube {
         return column.getTileEntity(pos, createType);
     }
 
-    @Override public void addTileEntity(TileEntity tileEntity) {
-        column.addTileEntity(tileEntity);
+    // have a copy of addTileEntity in Cube because sometimes some mods will access blocks from outside of
+    // the cube being loaded while loading it's tile entity, causing a StackOverflowError when the cube set at
+    // the start of loading TEs in column gets changed.
+    @Override public void addTileEntity(TileEntity tileEntityIn) {
+        this.addTileEntity(tileEntityIn.getPos(), tileEntityIn);
+        if (this.isCubeLoaded) {
+            this.world.addTileEntity(tileEntityIn);
+        }
+    }
+
+    private void addTileEntity(BlockPos pos, TileEntity tileEntityIn) {
+        if (tileEntityIn.getWorld() != this.world) { //Forge don't call unless it's changed, could screw up bad mods.
+            tileEntityIn.setWorld(this.world);
+        }
+        tileEntityIn.setPos(pos);
+
+        if (this.getBlockState(pos).getBlock().hasTileEntity(this.getBlockState(pos))) {
+            if (this.tileEntityMap.containsKey(pos)) {
+                this.tileEntityMap.get(pos).invalidate();
+            }
+
+            tileEntityIn.validate();
+            this.tileEntityMap.put(pos, tileEntityIn);
+        }
     }
 
     /**
