@@ -22,7 +22,7 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package io.github.opencubicchunks.cubicchunks.asm.mixin;
+package io.github.opencubicchunks.cubicchunks.core.asm.mixin.core.common;
 
 import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;

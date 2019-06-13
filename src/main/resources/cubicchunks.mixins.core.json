@@ -1,0 +1,21 @@
+{
+    "required": true,
+    "package": "io.github.opencubicchunks.cubicchunks.core.asm.mixin.core",
+    "refmap": "cubicgen.refmap.json",
+    "compatibilityLevel": "JAVA_8",
+    "minVersion": "0.6.15-SNAPSHOT",
+    "mixins": [
+        "common.MixinWorld",
+        "common.MixinChunk"
+    ],
+    "client": [
+    ],
+    "server": [
+    ],
+    "injectors": {
+        "defaultRequire": 1
+    },
+    "overwrites": {
+        "conformVisibility": true
+    }
+}

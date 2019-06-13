@@ -22,7 +22,7 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package io.github.opencubicchunks.cubicchunks;
+package io.github.opencubicchunks.cubicchunks.core;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;

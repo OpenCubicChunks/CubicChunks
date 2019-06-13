@@ -110,9 +110,9 @@ dependencies {
 
     val mixinFile = project.file("../../../Mixin/build/libs/mixin-0.7.11-SNAPSHOT.jar")
     if (mixinFile.exists()) {
-        compileOnly(files(mixinFile))
+        implementation(files(mixinFile))
     } else {
-        compileOnly("org.spongepowered:mixin:0.7.11-SNAPSHOT") {
+        implementation("org.spongepowered:mixin:0.7.11-SNAPSHOT") {
             isTransitive = false
         }
     }

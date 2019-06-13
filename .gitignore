@@ -109,3 +109,5 @@ run
 
 .nb-gradle-properties
 VERSION
+
+!.idea
