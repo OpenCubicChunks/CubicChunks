@@ -110,4 +110,6 @@ run
 .nb-gradle-properties
 VERSION
 
-!.idea
+!.idea/
+.idea/*
+!.idea/runConfigurations
