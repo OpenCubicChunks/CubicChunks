@@ -1,0 +1,34 @@
+modLoader="javafml"
+loaderVersion="[26,)"
+issueTrackerURL="https://github.com/OpenCubicChunks/CubicChunks/issues"
+
+[[mods]] #mandatory
+modId="cubicchunks"
+version="${file.jarVersion}"
+displayName="Cubic Chunks"
+displayURL="https://minecraft.curseforge.com/projects/opencubicchunks"
+logoFile="logo.png"
+credits='''
+Initially based on Cuchaz's TallWorldsMod, original idea and first implementation by Robinton.
+Notable contributors: Foghrye4, Cyclonit, xcube16, Boreeas.
+Special thanks to:
+MineCrak - for help with 1.5.* and 1.6.* CubicChunks.
+Calacbolg - the CubicChunks suggestion thread on MinecraftForum inspired me to start working on CubicChunks mod, and made the idea more well known
+'''
+authors="Barteks2x"
+description='''
+Extends Minecraft height by changing chunk size to 16x16x16 blocks.
+'''
+
+[[dependencies.cubicchunks]] #optional
+    modId="forge"
+    mandatory=true
+    versionRange="[26,)"
+    ordering="NONE"
+    side="BOTH"
+[[dependencies.examplemod]]
+    modId="minecraft"
+    mandatory=true
+    versionRange="[1.14.2,1.15)"
+    ordering="NONE"
+    side="BOTH"

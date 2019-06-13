@@ -1,0 +1,169 @@
+{
+    ":": {
+        "conventions": [
+            {
+                "type": "org.gradle.api.plugins.BasePluginConvention",
+                "target": "org.gradle.api.Project",
+                "name": "base"
+            },
+            {
+                "type": "org.gradle.api.plugins.JavaPluginConvention",
+                "target": "org.gradle.api.Project",
+                "name": "java"
+            }
+        ],
+        "configurations": [
+            "annotationProcessor",
+            "apiElements",
+            "archives",
+            "compile",
+            "compileClasspath",
+            "compileOnly",
+            "default",
+            "deobf",
+            "implementation",
+            "minecraft",
+            "runtime",
+            "runtimeClasspath",
+            "runtimeElements",
+            "runtimeOnly",
+            "shadow",
+            "signatures",
+            "testAnnotationProcessor",
+            "testCompile",
+            "testCompileClasspath",
+            "testCompileOnly",
+            "testImplementation",
+            "testRuntime",
+            "testRuntimeClasspath",
+            "testRuntimeOnly"
+        ],
+        "extensions": [
+            {
+                "type": "org.gradle.api.plugins.ExtraPropertiesExtension",
+                "target": "org.gradle.api.Project",
+                "name": "ext"
+            },
+            {
+                "type": "com.github.jengelman.gradle.plugins.shadow.ShadowExtension",
+                "target": "org.gradle.api.Project",
+                "name": "shadow"
+            },
+            {
+                "type": "org.gradle.api.plugins.ExtraPropertiesExtension",
+                "target": "com.github.jengelman.gradle.plugins.shadow.ShadowExtension",
+                "name": "ext"
+            },
+            {
+                "type": "nl.javadude.gradle.plugins.license.LicenseExtension",
+                "target": "org.gradle.api.Project",
+                "name": "license"
+            },
+            {
+                "type": "org.gradle.api.plugins.ExtraPropertiesExtension",
+                "target": "nl.javadude.gradle.plugins.license.LicenseExtension",
+                "name": "ext"
+            },
+            {
+                "type": "org.gradle.api.reporting.ReportingExtension",
+                "target": "org.gradle.api.Project",
+                "name": "reporting"
+            },
+            {
+                "type": "org.gradle.api.plugins.ExtraPropertiesExtension",
+                "target": "org.gradle.api.reporting.ReportingExtension",
+                "name": "ext"
+            },
+            {
+                "type": "nl.javadude.gradle.plugins.license.DownloadLicensesExtension",
+                "target": "org.gradle.api.Project",
+                "name": "downloadLicenses"
+            },
+            {
+                "type": "org.gradle.api.plugins.ExtraPropertiesExtension",
+                "target": "nl.javadude.gradle.plugins.license.DownloadLicensesExtension",
+                "name": "ext"
+            },
+            {
+                "type": "org.gradle.plugins.ide.idea.model.IdeaModel",
+                "target": "org.gradle.api.Project",
+                "name": "idea"
+            },
+            {
+                "type": "org.gradle.api.plugins.ExtraPropertiesExtension",
+                "target": "org.gradle.plugins.ide.idea.model.IdeaModel",
+                "name": "ext"
+            },
+            {
+                "type": "org.gradle.plugins.ide.eclipse.model.EclipseModel",
+                "target": "org.gradle.api.Project",
+                "name": "eclipse"
+            },
+            {
+                "type": "org.gradle.api.plugins.ExtraPropertiesExtension",
+                "target": "org.gradle.plugins.ide.eclipse.model.EclipseModel",
+                "name": "ext"
+            },
+            {
+                "type": "org.gradle.api.publish.PublishingExtension",
+                "target": "org.gradle.api.Project",
+                "name": "publishing"
+            },
+            {
+                "type": "org.gradle.api.internal.plugins.DefaultArtifactPublicationSet",
+                "target": "org.gradle.api.Project",
+                "name": "defaultArtifacts"
+            },
+            {
+                "type": "org.gradle.api.plugins.ExtraPropertiesExtension",
+                "target": "org.gradle.api.internal.plugins.DefaultArtifactPublicationSet",
+                "name": "ext"
+            },
+            {
+                "type": "org.gradle.plugins.signing.SigningExtension",
+                "target": "org.gradle.api.Project",
+                "name": "signing"
+            },
+            {
+                "type": "org.gradle.api.plugins.ExtraPropertiesExtension",
+                "target": "org.gradle.plugins.signing.SigningExtension",
+                "name": "ext"
+            },
+            {
+                "type": "net.minecraftforge.gradle.userdev.UserDevExtension",
+                "target": "org.gradle.api.Project",
+                "name": "minecraft"
+            },
+            {
+                "type": "org.gradle.api.plugins.ExtraPropertiesExtension",
+                "target": "net.minecraftforge.gradle.userdev.UserDevExtension",
+                "name": "ext"
+            },
+            {
+                "type": "org.gradle.api.NamedDomainObjectContainer<net.minecraftforge.gradle.userdev.tasks.RenameJarInPlace>",
+                "target": "org.gradle.api.Project",
+                "name": "reobf"
+            },
+            {
+                "type": "org.gradle.api.plugins.ExtraPropertiesExtension",
+                "target": "org.gradle.api.NamedDomainObjectContainer<net.minecraftforge.gradle.userdev.tasks.RenameJarInPlace>",
+                "name": "ext"
+            },
+            {
+                "type": "net.minecraftforge.gradle.userdev.DependencyManagementExtension",
+                "target": "org.gradle.api.Project",
+                "name": "fg"
+            },
+            {
+                "type": "org.gradle.api.plugins.ExtraPropertiesExtension",
+                "target": "net.minecraftforge.gradle.userdev.DependencyManagementExtension",
+                "name": "ext"
+            },
+            {
+                "type": "org.gradle.api.plugins.ExtraPropertiesExtension",
+                "target": "org.gradle.api.tasks.SourceSet",
+                "name": "ext"
+            }
+        ]
+    }
+}
