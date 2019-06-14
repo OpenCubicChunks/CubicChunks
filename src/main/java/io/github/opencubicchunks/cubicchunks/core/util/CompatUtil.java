@@ -22,37 +22,10 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package io.github.opencubicchunks.cubicchunks.core;
+package io.github.opencubicchunks.cubicchunks.core.util;
 
-import io.github.opencubicchunks.cubicchunks.core.client.GuiHandler;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.common.ForgeConfigSpec;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.fml.DistExecutor;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
-import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
-import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
-@Mod("cubicchunks")
-public class CubicChunks {
-
-    private static final Logger LOGGER = LogManager.getLogger();
-
-    public CubicChunks() {
-        FMLJavaModLoadingContext.get().getModEventBus().addListener(this::setup);
-        FMLJavaModLoadingContext.get().getModEventBus().addListener(this::doClientStuff);
-
-        CubicChunksConfig.register();
-
-        DistExecutor.runWhenOn(Dist.CLIENT, () -> () -> MinecraftForge.EVENT_BUS.addListener(GuiHandler::handleGui));
-    }
-
-    private void setup(final FMLCommonSetupEvent event) {
-    }
-
-    private void doClientStuff(final FMLClientSetupEvent event) {
+public class CompatUtil {
+    public static boolean hasOptifine() {
+        return false; // OptiFine for forge doesn't exist at the moment of writing this
     }
 }

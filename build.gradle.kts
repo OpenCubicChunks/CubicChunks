@@ -61,6 +61,8 @@ idea {
 minecraft {
     mappings("snapshot", mappingsVersion)
 
+    accessTransformer(file("$rootDir/src/main/resources/META-INF/accesstransformer.cfg"))
+
     fun setupConfig(conf: RunConfig) {
         conf.apply {
             property("forge.logging.markers", "SCAN,REGISTRIES,REGISTRYDUMP")

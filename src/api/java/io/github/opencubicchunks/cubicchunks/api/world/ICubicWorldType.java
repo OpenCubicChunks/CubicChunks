@@ -22,37 +22,21 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package io.github.opencubicchunks.cubicchunks.core;
+package io.github.opencubicchunks.cubicchunks.api.world;
 
-import io.github.opencubicchunks.cubicchunks.core.client.GuiHandler;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.common.ForgeConfigSpec;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.fml.DistExecutor;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
-import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
-import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import mcp.MethodsReturnNonnullByDefault;
+import net.minecraft.world.World;
 
-@Mod("cubicchunks")
-public class CubicChunks {
+import javax.annotation.ParametersAreNonnullByDefault;
 
-    private static final Logger LOGGER = LogManager.getLogger();
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
+public interface ICubicWorldType {
 
-    public CubicChunks() {
-        FMLJavaModLoadingContext.get().getModEventBus().addListener(this::setup);
-        FMLJavaModLoadingContext.get().getModEventBus().addListener(this::doClientStuff);
+    // TODO: Make it Nonnull. VanillaCubic uses null
+    //@Nullable ICubeGenerator createCubeGenerator(World world);
 
-        CubicChunksConfig.register();
+    //IntRange calculateGenerationHeightRange(ServerWorld world);
 
-        DistExecutor.runWhenOn(Dist.CLIENT, () -> () -> MinecraftForge.EVENT_BUS.addListener(GuiHandler::handleGui));
-    }
-
-    private void setup(final FMLCommonSetupEvent event) {
-    }
-
-    private void doClientStuff(final FMLClientSetupEvent event) {
-    }
+    boolean hasCubicGeneratorForWorld(World object);
 }
