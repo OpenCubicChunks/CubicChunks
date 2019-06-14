@@ -22,20 +22,20 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package io.github.opencubicchunks.cubicchunks.core.asm.mixin.core.common;
+package io.github.opencubicchunks.cubicchunks.api.util;
 
-import net.minecraft.world.World;
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
+/**
+ * Classes implementing this interface represent objects in a 3-dimensional cartesian coordinate system.
+ *
+ * @see XYZMap
+ */
 
-@Mixin(World.class)
-public class MixinWorld {
-    /**
-     * @author Barteks2x
-     * @reason Overwrite isYOutOfBounds to always return false. All height checks will be done immediately when needed, with World context
-     */
-    @Overwrite
-    public static boolean isYOutOfBounds(int y) {
-        return y < 0;
-    }
+public interface XYZAddressable extends XZAddressable {
+
+    int getX();
+
+    int getY();
+
+    int getZ();
+
 }

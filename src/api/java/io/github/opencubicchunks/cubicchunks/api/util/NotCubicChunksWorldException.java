@@ -22,20 +22,35 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package io.github.opencubicchunks.cubicchunks.core.asm.mixin.core.common;
+package io.github.opencubicchunks.cubicchunks.api.util;
 
-import net.minecraft.world.World;
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
+import mcp.MethodsReturnNonnullByDefault;
 
-@Mixin(World.class)
-public class MixinWorld {
-    /**
-     * @author Barteks2x
-     * @reason Overwrite isYOutOfBounds to always return false. All height checks will be done immediately when needed, with World context
-     */
-    @Overwrite
-    public static boolean isYOutOfBounds(int y) {
-        return y < 0;
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
+@MethodsReturnNonnullByDefault
+public class NotCubicChunksWorldException extends RuntimeException {
+
+    public NotCubicChunksWorldException() {
+        super();
+    }
+
+    public NotCubicChunksWorldException(String message) {
+        super(message);
+    }
+
+    public NotCubicChunksWorldException(String message, Throwable cause) {
+        super(message, cause);
+    }
+
+    public NotCubicChunksWorldException(Throwable cause) {
+        super(cause);
+    }
+
+    protected NotCubicChunksWorldException(String message, Throwable cause,
+            boolean enableSuppression,
+            boolean writableStackTrace) {
+        super(message, cause, enableSuppression, writableStackTrace);
     }
 }

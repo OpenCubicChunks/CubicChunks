@@ -22,20 +22,10 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package io.github.opencubicchunks.cubicchunks.core.asm.mixin.core.common;
+package io.github.opencubicchunks.cubicchunks.api.world;
 
-import net.minecraft.world.World;
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
+import io.github.opencubicchunks.cubicchunks.api.util.XYZAddressable;
 
-@Mixin(World.class)
-public class MixinWorld {
-    /**
-     * @author Barteks2x
-     * @reason Overwrite isYOutOfBounds to always return false. All height checks will be done immediately when needed, with World context
-     */
-    @Overwrite
-    public static boolean isYOutOfBounds(int y) {
-        return y < 0;
-    }
+public interface ICube extends XYZAddressable {
+    int SIZE = 16;
 }

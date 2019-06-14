@@ -44,6 +44,10 @@ base {
 java {
     sourceCompatibility = JavaVersion.VERSION_1_8
     targetCompatibility = JavaVersion.VERSION_1_8
+
+    sourceSets.create("api") {
+        compileClasspath += configurations["minecraft"]
+    }
 }
 
 idea {
@@ -91,7 +95,7 @@ minecraft {
 license {
     val ext = (this as HasConvention).convention.extraProperties
     ext["project"] = "CubicChunks"
-    ext["year"] = "2019"
+    ext["year"] = "2015-2019"
     exclude("**/*.info")
     exclude("**/package-info.java")
     exclude("**/*.json")
@@ -118,6 +122,8 @@ dependencies {
     }
 
     implementation("io.github.opencubicchunks:regionlib:0.55.0-SNAPSHOT")
+
+    implementation(java.sourceSets["api"].output)
 }
 
 repositories {
