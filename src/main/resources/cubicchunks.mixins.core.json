@@ -6,9 +6,11 @@
     "minVersion": "0.6.15-SNAPSHOT",
     "mixins": [
         "common.MixinWorld",
-        "common.MixinChunk"
+        "common.MixinChunk",
+        "common.MixinChunkPrimer"
     ],
     "client": [
+        "client.MixinIntegratedServer"
     ],
     "server": [
     ],

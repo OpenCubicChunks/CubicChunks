@@ -14,7 +14,7 @@
     </envs>
     <option name="MAIN_CLASS_NAME" value="net.minecraftforge.userdev.LaunchTesting" />
     <module name="1.14.main" />
-    <option name="VM_PARAMETERS" value="-Dforge.logging.console.level=debug -Dmixin.checks.interfaces=true -Dmixin.temphack.configs=cubicchunks.mixins.core.json -Dforge.logging.markers=REGISTRIES,REGISTRYDUMP -Dmixin.debug.verbose=true -Dmixin.debug.export=true -Dcubicchunks.debug=true -XX:-OmitStackTraceInFastThrow -ea -da:io.netty..." />
+    <option name="VM_PARAMETERS" value="-Dforge.logging.console.level=debug -Dmixin.checks.interfaces=true -Dmixin.temphack.configs=cubicchunks.mixins.core.json -Dforge.logging.markers= -Dmixin.debug.verbose=true -Dmixin.debug.export=true -Dcubicchunks.debug=true -XX:-OmitStackTraceInFastThrow -ea -da:io.netty..." />
     <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/run" />
     <method v="2">
       <option name="Make" enabled="true" />

@@ -29,17 +29,24 @@ public class MixinChunk {
     @Shadow @Final public static ChunkSection EMPTY_SECTION;
     @Shadow @Final private ChunkPos pos;
     @Shadow @Final private ChunkSection[] sections;
-    private Int2ObjectMap<Cube> cubeMap = new Int2ObjectOpenHashMap<>();
+    private Int2ObjectMap<Cube> cubeMap;
 
     @Inject(method = "<init>(Lnet/minecraft/world/World;Lnet/minecraft/util/math/ChunkPos;[Lnet/minecraft/world/biome/Biome;"
         + "Lnet/minecraft/world/chunk/UpgradeData;Lnet/minecraft/world/ITickList;Lnet/minecraft/world/ITickList;"
         + "J[Lnet/minecraft/world/chunk/ChunkSection;Ljava/util/function/Consumer;)V", at = @At("RETURN"))
     private void afterConstruct(World world, ChunkPos pos, Biome[] biomes, UpgradeData upgradeData, ITickList<Block> toTick,
         ITickList<Fluid> toTickFluids, long p_i49946_7_, ChunkSection[] sections, Consumer<Chunk> p_i49946_10_, CallbackInfo ci) {
-        if (sections != null) {
-            for (int i = 0; i < sections.length; i++) {
-                this.setChunkSection(this.sections, i, sections[i]);
+        cubeMap = new Int2ObjectOpenHashMap<>();
+
+        try {
+            if (sections != null) {
+                for (int i = 0; i < sections.length; i++) {
+                    this.setChunkSection(this.sections, i, sections[i]);
+                }
             }
+        } catch (Throwable t) {
+            t.printStackTrace();
+            throw t;
         }
     }
 
@@ -54,8 +61,13 @@ public class MixinChunk {
         args = "array=get"
     ))
     private ChunkSection getChunkSection(ChunkSection[] sections, int index) {
-        Cube cube = cubeMap.get(index);
-        return cube == null ? EMPTY_SECTION : cube.getSection();
+        try {
+            Cube cube = cubeMap.get(index);
+            return cube == null ? EMPTY_SECTION : cube.getSection();
+        } catch (Throwable t) {
+            t.printStackTrace();
+            throw t;
+        }
     }
 
     @Redirect(method = {"setBlockState", "func_217326_a"}, at = @At(
@@ -64,11 +76,16 @@ public class MixinChunk {
         args = "array=set"
     ))
     private void setChunkSection(ChunkSection[] sections, int index, ChunkSection newValue) {
-        if (index >= 0 && index < sections.length) {
-            sections[index] = newValue;
+        try {
+            if (index >= 0 && index < sections.length) {
+                sections[index] = newValue;
+            }
+            //System.out.println("setChunkSection!");
+            cubeMap.computeIfAbsent(index, idx -> new Cube(this.pos.x, idx, this.pos.z)).setSection(newValue);
+        } catch (Throwable t) {
+            t.printStackTrace();
+            throw t;
         }
-        //System.out.println("setChunkSection!");
-        cubeMap.computeIfAbsent(index, idx -> new Cube(this.pos.x, idx, this.pos.z)).setSection(newValue);
     }
 
     @Redirect(method = {"getFluidState(III)Lnet/minecraft/fluid/IFluidState;", "getBlockState"}, at = @At(

@@ -26,8 +26,16 @@ package io.github.opencubicchunks.cubicchunks.core.asm.mixin.core.common;
 
 import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Overwrite;
 
 @Mixin(World.class)
 public class MixinWorld {
-
+    /**
+     * @author Barteks2x
+     * @reason Overwrite isYOutOfBounds to always return false. All height checks will be done immediately when needed, with World context
+     */
+    @Overwrite
+    public static boolean isYOutOfBounds(int y) {
+        return y < 0;
+    }
 }
