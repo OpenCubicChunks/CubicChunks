@@ -30,7 +30,6 @@ import io.github.opencubicchunks.cubicchunks.api.world.ICubicWorld;
 import io.github.opencubicchunks.cubicchunks.api.world.ICubicWorldType;
 import io.github.opencubicchunks.cubicchunks.core.asm.mixin.ICubicWorldInternal;
 import io.github.opencubicchunks.cubicchunks.core.asm.mixin.ICubicWorldSettings;
-import io.github.opencubicchunks.cubicchunks.core.event.CreateNewWorldEvent;
 import io.github.opencubicchunks.cubicchunks.core.network.PacketCubicWorldData;
 import io.github.opencubicchunks.cubicchunks.core.network.PacketDispatcher;
 import io.github.opencubicchunks.cubicchunks.core.server.SpawnCubes;
@@ -148,11 +147,6 @@ public class CommonEventHandler {
         if (evt.getEntity() instanceof EntityPlayerMP && ((ICubicWorld) evt.getWorld()).isCubicWorld()) {
             PacketDispatcher.sendTo(new PacketCubicWorldData((WorldServer) evt.getWorld()), (EntityPlayerMP) evt.getEntity());
         }
-    }
-    
-    @SubscribeEvent
-    public void onCreateWorldSettings(CreateNewWorldEvent event) {
-        ((ICubicWorldSettings) (Object) event.settings).setCubic(CubicChunksConfig.forceLoadCubicChunks == CubicChunksConfig.ForceCCMode.NEW_WORLD);
     }
 
     @SuppressWarnings("unchecked")

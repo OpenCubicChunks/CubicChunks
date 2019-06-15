@@ -88,6 +88,7 @@ group = "io.github.opencubicchunks"
 
 sourceSets {
     create("optifine_dummy")
+    println(sourceSets["api"].compileClasspath)
 }
 
 // configurations, needed for extendsFrom

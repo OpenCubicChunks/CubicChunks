@@ -8,7 +8,6 @@
         "common.MixinChunk_Column",
         "common.MixinChunk_Cubes",
         "common.MixinIBlockAccess_MinMaxHeight",
-        "common.MixinMinecraftServer",
         "common.MixinWorld_Tick",
         "common.MixinWorld",
         "common.MixinWorldServer",
@@ -33,7 +32,6 @@
         "client.MixinChunk_Cubes",
         "client.MixinViewFrustum_RenderHeightFix",
         "client.MixinWorldProvider",
-        "client.MixinGuiCreateWorld",
         "client.MixinDebugRenderChunkBorder"
     ],
     "server": [
