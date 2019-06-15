@@ -28,6 +28,7 @@ The mod uses information from git repository to generate version number. Make su
 Note: on windows you need to run these commands without `./`
 
 ![IntelliJ IDEA](intellij-logo.png)
+
 Run:
 ```
 ./gradlew setupDecompWorkspace
@@ -40,7 +41,7 @@ Then run:
 To be able to run the mod from within IDE. Then edit the generated run configurations and set `use classpath of module` to `CubicChunkc_main`
 Then refresh gradle project in IDEA.
 
-For development in Intellij IDEA the [MinecraftDev plugin](https://plugins.jetbrains.com/idea/plugin/8327-minecraft-development) is recommended.
+For development in IntelliJ IDEA the [MinecraftDev plugin](https://plugins.jetbrains.com/idea/plugin/8327-minecraft-development) is recommended.
 
 
 #### Other IDEs:
