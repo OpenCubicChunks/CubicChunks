@@ -1,22 +1,17 @@
 # Cubic Chunks Minecraft Mod
 
-[![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/CubicChunks-dev/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+[![Build Status](https://travis-ci.org/OpenCubicChunks/CubicChunks.svg?branch=MC_1.12)](https://travis-ci.org/OpenCubicChunks/CubicChunks)
 
 [Discord server](https://discord.gg/kMfWg9m)
 
-
-[![Build Status](https://travis-ci.org/OpenCubicChunks/CubicChunks.svg?branch=master)](https://travis-ci.org/OpenCubicChunks/CubicChunks)
+[![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/CubicChunks-dev/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 This MinecraftForge mod extends Minecraft height and depth. The only limitation is size of 32-bit integer.
 
 ### Cloning the repository
 Note: you need git installed to do that
 ```
-git clone --recursive https://github.com/Barteks2x/CubicChunks.git
-```
-If you already cloned it without `--recursive` option before reading this, run:
-```
-git submodule update --init --recursive
+git clone
 ```
 
 ### Compiling the mod
@@ -26,14 +21,13 @@ This command:
 ```
 ./gradlew build
 ```
-~~should be enough to compile the mod.~~ Because of [a bug in ForgeGradle](https://github.com/MinecraftForge/ForgeGradle/issues/410) running one of: `./gradlew setupCiWorkspace`, `./gradlew setupDevWorkspace`, `./gradlew setupDecompWorkspace` is required before running `./gradlew build` for the first time, and after some dependency updates. (`setupCiWorkspace` does the minimum required to compile the mod)
-
-The mod uses information from git repository to generate version number, it won't compile without full git repository. It also won't compile if regionlib submodule doesn't exist.
+Should be enough to build the mod, but if there are any issues, run `./gradlew setupDecompWorkspace` before `./gradlew build`.
+The mod uses information from git repository to generate version number. Make sure you have the git repository before compiling.
 
 ### Setting up development environment
 Note: on windows you need to run these commands without `./`
 
-#### intellij IDEA
+![IntelliJ IDEA](intellij-logo.png)
 Run:
 ```
 ./gradlew setupDecompWorkspace
@@ -51,14 +45,15 @@ For development in Intellij IDEA the [MinecraftDev plugin](https://plugins.jetbr
 
 #### Other IDEs:
 
-I don't use any other IDE so I don't know how to do that, but you should be able to find instructions for importing forge mod into your IDE.
-
-To run this mod from your IDE you need to add at least the following JVM options:
+Importing cubic chunks should be the same as any other Forge mod. If the IDE has gradle integration, import the mod as gradle project after setting
+ up development environment.
+ 
+To run this mod from your IDE you need to add at least the following JVM option:
 ```
--Dfml.coreMods.load=cubicchunks.asm.CubicChunksCoreMod -Dmixin.env.compatLevel=JAVA_8
+-Dfml.coreMods.load=cubicchunks.asm.CubicChunksCoreMod
 ```
 
-If you know how to setup development environment in other IDEs - submit pull request adding that information to this file.
+If you use a different IDE and know how to setup development environment in that IDEs - submit pull request adding that information to this file.
 
 Some other useful options:
 
