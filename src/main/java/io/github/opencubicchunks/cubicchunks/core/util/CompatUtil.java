@@ -24,8 +24,49 @@
  */
 package io.github.opencubicchunks.cubicchunks.core.util;
 
+import com.google.common.collect.ImmutableList;
+import net.minecraft.world.ServerMultiWorld;
+import net.minecraft.world.ServerWorld;
+import net.minecraft.world.World;
+import net.minecraft.world.chunk.AbstractChunkProvider;
+import net.minecraft.world.chunk.ServerChunkProvider;
+
+import java.util.List;
+import java.util.Optional;
+
 public class CompatUtil {
     public static boolean hasOptifine() {
         return false; // OptiFine for forge doesn't exist at the moment of writing this
+    }
+
+
+    @SuppressWarnings("unchecked")
+    private static final List<Class<?>> allowedServerWorldClasses = ImmutableList.copyOf(new Class[]{
+        ServerWorld.class,
+        ServerMultiWorld.class,
+        // non-existing classes will be Objects
+        getClass("WorldServerOF"), // OptiFine's WorldServer, no package
+        getClass("WorldServerMultiOF"), // OptiFine's WorldServerMulti, no package
+        getClass("net.optifine.override.WorldServerOF"), // OptiFine's WorldServer
+        getClass("net.optifine.override.WorldServerMultiOF"), // OptiFine's WorldServerMulti
+        getClass("com.forgeessentials.multiworld.WorldServerMultiworld") // ForgeEssentials world
+    });
+
+    @SuppressWarnings("unchecked")
+    private static final List<Class<?>> allowedServerChunkProviderClasses = ImmutableList.copyOf(new Class[]{
+        ServerChunkProvider.class
+    });
+
+    private static Class<?> getClass(String name) {
+        try {
+            return Class.forName(name);
+        } catch (ClassNotFoundException e) {
+            return Object.class;
+        }
+    }
+
+    public static boolean shouldSkipWorld(World world) {
+        return !allowedServerWorldClasses.contains(world.getClass())
+            || !allowedServerChunkProviderClasses.contains(world.getChunkProvider().getClass());
     }
 }

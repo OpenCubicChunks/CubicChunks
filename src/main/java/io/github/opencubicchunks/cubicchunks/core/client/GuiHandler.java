@@ -24,17 +24,21 @@
  */
 package io.github.opencubicchunks.cubicchunks.core.client;
 
+import static java.lang.Math.floorMod;
+
 import io.github.opencubicchunks.cubicchunks.api.world.ICubicWorldType;
 import io.github.opencubicchunks.cubicchunks.core.CubicChunksConfig;
+import io.github.opencubicchunks.cubicchunks.core.CubicChunksConfig.ForceCCMode;
 import io.github.opencubicchunks.cubicchunks.core.util.CompatUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screen.CreateWorldScreen;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.VideoSettingsScreen;
-import net.minecraft.client.gui.widget.button.Button;
+import net.minecraft.client.gui.widget.Widget;
 import net.minecraft.client.gui.widget.list.OptionsRowList;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.client.settings.AbstractOption;
+import net.minecraft.client.settings.IteratableOption;
 import net.minecraft.client.settings.SliderPercentageOption;
 import net.minecraft.world.WorldType;
 import net.minecraftforge.client.event.GuiScreenEvent;
@@ -61,6 +65,15 @@ public class GuiHandler {
             return option.func_216617_a() + I18n.format("options.chunks", (int) distance);
         });
 
+    private static final IteratableOption FORCE_CUBIC_WORLD_OPTION = new IteratableOption(
+        "cubicchunks.options.forceCCWorld",
+        (gameSettings, delta) -> {
+            int newId = floorMod(CubicChunksConfig.SERVER.forceCCMode.get().ordinal() + delta, ForceCCMode.values().length);
+            CubicChunksConfig.SERVER.forceCCMode.set(ForceCCMode.values()[newId]);
+        },
+        (gameSettings, option) -> option.func_216617_a() + I18n.format(CubicChunksConfig.SERVER.forceCCMode.get().translationKey())
+    );
+
     public static void handleGui(GuiScreenEvent.InitGuiEvent.Post event) {
         Screen currentScreen = event.getGui();
         if (currentScreen instanceof VideoSettingsScreen) {
@@ -77,55 +90,21 @@ public class GuiHandler {
             videoSettings.optionsRowList.children().add(1, row);
         } else {
             LOGGER.error("Found OptiFine, OptiFine video settings GUI support not implemented.");
-            /*
-            int idx = 3;
-            int btnSpacing = 20;
-            videoSettings.buttonList.add(idx,
-                new VertViewDistanceSlider(100, videoSettings.width / 2 - 155 + 160, videoSettings.height / 6 + btnSpacing * (idx / 2) - 12));
-            // reposition all buttons except the last 4 (last 3 and done)
-            for (int i = 0; i < videoSettings.buttonList.size() - 4; i++) {
-                GuiButton btn = videoSettings.buttonList.get(i);
-                int x = videoSettings.width / 2 - 155 + i % 2 * 160;
-                int y = videoSettings.height / 6 + 21 * (i / 2) - 12;
-                btn.x = x;
-                btn.y = y;
-            }
-            // now position the last 3 buttons excluding "done" to be 3-in-a-row
-            for (int i = videoSettings.buttonList.size() - 4; i < videoSettings.buttonList.size() - 1; i++) {
-                GuiButton btn = videoSettings.buttonList.get(i);
-
-                int newBtnWidth = 150 * 2 / 3;
-                int minX = videoSettings.width / 2 - 155;
-                int maxX = videoSettings.width / 2 - 155 + 160 + btn.width;
-
-                int minXCenter = minX + newBtnWidth / 2;
-                int maxXCenter = maxX - newBtnWidth / 2;
-
-                int x = minXCenter + (i % 3) * (maxXCenter - minXCenter) / 2 - newBtnWidth / 2;
-                int y = videoSettings.height / 6 + 21 * (videoSettings.buttonList.size() - 4) / 2 - 12;
-
-                btn.x = x;
-                btn.y = y;
-                btn.width = newBtnWidth;
-            }
-             */
         }
     }
 
     private static void handleCreateWorld(CreateWorldScreen createWorld) {
         // move customize button Y to the same Y as the CC enable button will be for alignment
         createWorld.btnCustomizeType.y = createWorld.btnAllowCommands.y - 21;
-        Button enableCC = new Button(
-            createWorld.btnAllowCommands.x, // above btnAllowCommands
-            createWorld.btnCustomizeType.y, // next to customize
-            150, 20, // size, same as other buttons
-            I18n.format(CubicChunksConfig.SERVER.forceCCMode.get().translationKey()),
-            btn -> CubicChunksConfig.SERVER.forceCCMode.set(CubicChunksConfig.SERVER.forceCCMode.get().flip())) {
+        Widget enableCC = FORCE_CUBIC_WORLD_OPTION.createWidget(Minecraft.getInstance().gameSettings,
+            createWorld.btnAllowCommands.x, createWorld.btnCustomizeType.y, 150);
+        Widget fakeWidget = new Widget(0, 0, createWorld.width, createWorld.height, "") {
             @Override public void render(int arg1, int arg2, float arg3) {
-                this.visible = createWorld.btnMapType.visible && !(WorldType.WORLD_TYPES[createWorld.selectedIndex] instanceof ICubicWorldType);
-                super.render(arg1, arg2, arg3);
+                enableCC.visible = createWorld.btnMapType.visible && !(WorldType.WORLD_TYPES[createWorld.selectedIndex] instanceof ICubicWorldType);
             }
         };
+        fakeWidget.active = false;
+        createWorld.addButton(fakeWidget);
         createWorld.addButton(enableCC);
     }
 }

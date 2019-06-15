@@ -24,21 +24,13 @@
  */
 package io.github.opencubicchunks.cubicchunks.api.world;
 
-import io.github.opencubicchunks.cubicchunks.api.util.IntRange;
 import mcp.MethodsReturnNonnullByDefault;
-import net.minecraft.world.ServerWorld;
-import net.minecraft.world.World;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
-@ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public interface ICubicWorldType {
+@ParametersAreNonnullByDefault
+public interface ICubicWorld extends IMinMaxHeight {
 
-    // TODO: Make it Nonnull. VanillaCubic uses null
-    //@Nullable ICubeGenerator createCubeGenerator(World world);
-
-    IntRange calculateGenerationHeightRange(ServerWorld world);
-
-    boolean hasCubicGeneratorForWorld(World object);
+    boolean isCubicWorld();
 }

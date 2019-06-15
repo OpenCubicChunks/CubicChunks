@@ -38,13 +38,21 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @MethodsReturnNonnullByDefault
 public class Coords {
 
-    public static final int NO_HEIGHT = Integer.MIN_VALUE + 32;
+    public static final int NO_HEIGHT = dontInline(Integer.MIN_VALUE + 32);
+
     /**
      * Each {@link io.github.opencubicchunks.cubicchunks.api.world.ICube}
      * optionally contain 8x1x8 map of biome IDs, or 2x16x2 block wide biome
      * areas.
      */
     public static final int BIOMES_PER_CUBE = 8 * 1 * 8;
+
+    public static final int MIN_BLOCK_Y = dontInline(Integer.MIN_VALUE / 2);
+    public static final int MAX_BLOCK_Y = dontInline(-MIN_BLOCK_Y);
+
+    private static <T> T dontInline(T v) {
+        return v;
+    }
 
     public static BlockPos midPos(BlockPos p1, BlockPos p2) {
         //bitshift instead of / - round always down

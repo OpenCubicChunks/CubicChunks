@@ -5,11 +5,15 @@
     "compatibilityLevel": "JAVA_8",
     "minVersion": "0.6.15-SNAPSHOT",
     "mixins": [
-        "common.MixinWorld",
         "common.MixinChunk",
-        "common.MixinChunkPrimer"
+        "common.MixinChunkPrimer",
+        "common.MixinServerWorld",
+        "common.MixinWorld",
+        "common.MixinWorldInfo",
+        "common.MixinWorldSettings"
     ],
     "client": [
+        "client.MixinClientWorld",
         "client.MixinIntegratedServer"
     ],
     "server": [

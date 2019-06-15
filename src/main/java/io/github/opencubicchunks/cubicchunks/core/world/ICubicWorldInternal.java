@@ -22,23 +22,36 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package io.github.opencubicchunks.cubicchunks.api.world;
+package io.github.opencubicchunks.cubicchunks.core.world;
 
 import io.github.opencubicchunks.cubicchunks.api.util.IntRange;
-import mcp.MethodsReturnNonnullByDefault;
-import net.minecraft.world.ServerWorld;
-import net.minecraft.world.World;
+import io.github.opencubicchunks.cubicchunks.api.world.ICubicWorld;
+import io.github.opencubicchunks.cubicchunks.api.world.ICubicWorldServer;
 
-import javax.annotation.ParametersAreNonnullByDefault;
+public interface ICubicWorldInternal extends ICubicWorld {
 
-@ParametersAreNonnullByDefault
-@MethodsReturnNonnullByDefault
-public interface ICubicWorldType {
+    void initCubicWorld(IntRange heightRange, IntRange generationRange);
 
-    // TODO: Make it Nonnull. VanillaCubic uses null
-    //@Nullable ICubeGenerator createCubeGenerator(World world);
+    void initCubicWorldCommon();
 
-    IntRange calculateGenerationHeightRange(ServerWorld world);
+    interface Client extends ICubicWorldInternal {
 
-    boolean hasCubicGeneratorForWorld(World object);
+        @Override default void initCubicWorld(IntRange heightRange, IntRange generationRange) {
+            initCubicWorldCommon();
+            initCubicClientWorld();
+        }
+
+        void initCubicClientWorld();
+    }
+
+    interface Server extends ICubicWorldInternal, ICubicWorldServer {
+
+        @Override default void initCubicWorld(IntRange heightRange,
+            IntRange generationRange) {
+            initCubicWorldCommon();
+            initCubicServerWorld();
+        }
+
+        void initCubicServerWorld();
+    }
 }

@@ -24,53 +24,42 @@
  */
 package io.github.opencubicchunks.cubicchunks.core.asm.mixin.core.common;
 
-import io.github.opencubicchunks.cubicchunks.core.world.ICubicWorldInternal;
-import net.minecraft.world.World;
+import io.github.opencubicchunks.cubicchunks.core.CubicChunksConfig;
+import io.github.opencubicchunks.cubicchunks.core.world.ICubicWorldSettings;
+import mcp.MethodsReturnNonnullByDefault;
+import net.minecraft.world.GameType;
+import net.minecraft.world.WorldSettings;
 import net.minecraft.world.WorldType;
 import net.minecraft.world.storage.WorldInfo;
-import org.apache.logging.log4j.Logger;
-import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
-import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(World.class)
-public abstract class MixinWorld implements ICubicWorldInternal {
+import javax.annotation.ParametersAreNonnullByDefault;
 
-    @Shadow @Final protected static Logger LOGGER;
+@MethodsReturnNonnullByDefault
+@ParametersAreNonnullByDefault
+@Mixin(WorldSettings.class)
+public class MixinWorldSettings implements ICubicWorldSettings {
 
-    @Shadow public abstract WorldInfo getWorldInfo();
+    private boolean isCubic;
 
-    @Shadow public abstract WorldType getWorldType();
-
-    @Shadow public abstract int getActualHeight();
-
-    private boolean isCubicWorld;
-    private int minY = 0, maxY = 256;
-
-    /**
-     * @author Barteks2x
-     * @reason Overwrite isYOutOfBounds to always return false. All height checks will be done immediately when needed, with World context
-     */
-    @Overwrite
-    public static boolean isYOutOfBounds(int y) {
-        return false;
+    @Inject(method = "<init>(Lnet/minecraft/world/storage/WorldInfo;)V", at = @At("RETURN"))
+    private void onConstruct(WorldInfo info, CallbackInfo cbi) {
+        this.isCubic = ((ICubicWorldSettings) info).isCubic();
     }
 
-    @Override public void initCubicWorldCommon() {
-        LOGGER.info("Initializing cubic world {} ({})", this.getWorldInfo().getWorldName(), this);
-        this.isCubicWorld = true;
+    @Inject(method = "<init>(JLnet/minecraft/world/GameType;ZZLnet/minecraft/world/WorldType;)V", at = @At("RETURN"))
+    private void onConstruct(long seedIn, GameType gameType, boolean features, boolean hardcore, WorldType worldType, CallbackInfo ci) {
+        this.isCubic = CubicChunksConfig.SERVER.forceCCMode.get() != CubicChunksConfig.ForceCCMode.NONE;
     }
 
-    @Override public boolean isCubicWorld() {
-        return isCubicWorld;
+    @Override public boolean isCubic() {
+        return isCubic;
     }
 
-    @Override public int getMinHeight() {
-        return minY;
-    }
-
-    @Override public int getMaxHeight() {
-        return maxY;
+    @Override public void setCubic(boolean cubic) {
+        this.isCubic = cubic;
     }
 }
