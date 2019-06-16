@@ -22,43 +22,29 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package io.github.opencubicchunks.cubicchunks.core.world;
+package io.github.opencubicchunks.cubicchunks.core.network;
 
-import io.github.opencubicchunks.cubicchunks.api.util.Coords;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.world.storage.WorldSavedData;
+import io.github.opencubicchunks.cubicchunks.core.CubicChunks;
+import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.fml.network.NetworkRegistry;
+import net.minecraftforge.fml.network.PacketDistributor;
+import net.minecraftforge.fml.network.simple.SimpleChannel;
 
-public class WorldSavedCubicChunksData extends WorldSavedData {
+public class PacketDispatcher {
 
-    public boolean isCubicChunks = false;
-    public int minHeight = 0, maxHeight = 256;
+    private static final SimpleChannel CHANNEL = NetworkRegistry.ChannelBuilder.named(new ResourceLocation(CubicChunks.MODID, "net"))
+        .clientAcceptedVersions(CubicChunks.PROTOCOL_VERSION::equals)
+        .serverAcceptedVersions(CubicChunks.PROTOCOL_VERSION::equals)
+        .networkProtocolVersion(() -> CubicChunks.PROTOCOL_VERSION)
+        .simpleChannel();
 
-    public WorldSavedCubicChunksData() {
-        super("cubicChunksData");
+    public static void register() {
+        CHANNEL.registerMessage(5, PacketCubicWorldInit.class,
+            PacketCubicWorldInit::encode, PacketCubicWorldInit::new, PacketCubicWorldInit::handle);
     }
 
-    public WorldSavedCubicChunksData(boolean isCC) {
-        this();
-        if (isCC) {
-            minHeight = Coords.MIN_BLOCK_Y;
-            maxHeight = Coords.MAX_BLOCK_Y;
-            isCubicChunks = true;
-        }
+    public static <MSG> void sendTo(MSG packet, ServerPlayerEntity player) {
+        CHANNEL.send(PacketDistributor.PLAYER.with(() -> player), packet);
     }
-
-    @Override
-    public void read(CompoundNBT nbt) {
-        minHeight = nbt.getInt("minHeight");
-        maxHeight = nbt.getInt("maxHeight");
-        isCubicChunks = !nbt.contains("isCubicChunks") || nbt.getBoolean("isCubicChunks");
-    }
-
-    @Override
-    public CompoundNBT write(CompoundNBT compound) {
-        compound.putInt("minHeight", minHeight);
-        compound.putInt("maxHeight", maxHeight);
-        compound.putBoolean("isCubicChunks", isCubicChunks);
-        return compound;
-    }
-
 }
