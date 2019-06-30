@@ -34,13 +34,16 @@ import java.util.Random;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
+import java.util.function.BiFunction;
 
 import com.google.common.base.Preconditions;
 import io.github.opencubicchunks.cubicchunks.api.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.api.world.ICube;
 import io.github.opencubicchunks.cubicchunks.api.world.ICubicWorld;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
+import net.minecraft.world.gen.IChunkGenerator;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.Loader;
 import org.apache.commons.lang3.reflect.FieldUtils;
@@ -54,10 +57,27 @@ import net.minecraftforge.fml.common.registry.GameRegistry;
 
 public class CubeGeneratorsRegistry {
 
+    /** Provide mapping for possible vanilla compatibility generators options */
+    private static final Map<ResourceLocation,BiFunction<IChunkGenerator, World, ICubeGenerator>> vanillaCompatibilityGenerators = new HashMap<ResourceLocation,BiFunction<IChunkGenerator, World, ICubeGenerator>>();
+    
     /** List of populators added by other mods to vanilla compatibility generator type */
     private static final List<ICubicPopulator> customPopulatorsForFlatCubicGenerator = new ArrayList<ICubicPopulator>();
 
     private static TreeSet<GeneratorWrapper> sortedGeneratorList = new TreeSet<>();
+    public static final ResourceLocation defaultCompatibilityGenerator = new ResourceLocation("cubicchunks","default");
+
+    /**
+     * Register a compatibility generator - something that will convert vanilla
+     * generators into cubic form
+     *
+     * @param name of a generator
+     * @param generatorProvider BiFunction which will consume vanilla chunk
+     *        generator and world instances and return cubic generator
+     */
+    public static void register(ResourceLocation name, BiFunction<IChunkGenerator, World, ICubeGenerator> generatorProvider) {
+        Preconditions.checkNotNull(generatorProvider);
+        vanillaCompatibilityGenerators.put(name, generatorProvider);
+    }
 
     /**
      * Register a world generator - something that inserts new block types into the world on population stage
@@ -140,5 +160,11 @@ public class CubeGeneratorsRegistry {
         for (ICubicPopulator populator : customPopulatorsForFlatCubicGenerator) {
             populator.generate(world, rand, cube.getCoords(), cube.getBiome(cube.getCoords().getCenterBlockPos()));
         }
+    }
+    
+    public static ICubeGenerator getGeneratorFor(IChunkGenerator vanillaGenerator, World world, ResourceLocation resourceLocation) {
+        if(vanillaCompatibilityGenerators.containsKey(resourceLocation))
+            return vanillaCompatibilityGenerators.get(resourceLocation).apply(vanillaGenerator, world);
+        return vanillaCompatibilityGenerators.get(defaultCompatibilityGenerator).apply(vanillaGenerator, world);
     }
 }

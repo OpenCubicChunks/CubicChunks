@@ -27,6 +27,7 @@ package io.github.opencubicchunks.cubicchunks.core.asm.mixin.core.common;
 import io.github.opencubicchunks.cubicchunks.core.CubicChunksConfig;
 import io.github.opencubicchunks.cubicchunks.core.asm.mixin.ICubicWorldSettings;
 import mcp.MethodsReturnNonnullByDefault;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.GameType;
 import net.minecraft.world.WorldSettings;
 import net.minecraft.world.WorldType;
@@ -44,10 +45,12 @@ import javax.annotation.ParametersAreNonnullByDefault;
 public class MixinWorldSettings implements ICubicWorldSettings {
 
     private boolean isCubic;
+    private ResourceLocation compatibilityGeneratorType;
 
     @Inject(method = "<init>(Lnet/minecraft/world/storage/WorldInfo;)V", at = @At("RETURN"))
     private void onConstruct(WorldInfo info, CallbackInfo cbi) {
         this.isCubic = ((ICubicWorldSettings) info).isCubic();
+        this.compatibilityGeneratorType = ((ICubicWorldSettings) info).getCompatibilityGeneratorType();
     }
 
     @Inject(method = "<init>(JLnet/minecraft/world/GameType;ZZLnet/minecraft/world/WorldType;)V", at = @At("RETURN"))
@@ -61,5 +64,15 @@ public class MixinWorldSettings implements ICubicWorldSettings {
 
     @Override public void setCubic(boolean cubic) {
         this.isCubic = cubic;
+    }
+
+    @Override
+    public ResourceLocation getCompatibilityGeneratorType() {
+        return compatibilityGeneratorType;
+    }
+
+    @Override
+    public void setCompatibilityGeneratorType(ResourceLocation compatibilityGeneratorTypeIn) {
+        this.compatibilityGeneratorType = compatibilityGeneratorTypeIn;
     }
 }

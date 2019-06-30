@@ -24,6 +24,7 @@
  */
 package io.github.opencubicchunks.cubicchunks.core.asm.mixin.core.common;
 
+import io.github.opencubicchunks.cubicchunks.core.asm.mixin.ICubicWorldSettings;
 import io.github.opencubicchunks.cubicchunks.core.world.SpawnPlaceFinder;
 import io.github.opencubicchunks.cubicchunks.core.world.provider.ICubicWorldProvider;
 import io.github.opencubicchunks.cubicchunks.core.worldgen.generator.vanilla.VanillaCompatibilityGenerator;
@@ -32,10 +33,12 @@ import io.github.opencubicchunks.cubicchunks.api.util.NotCubicChunksWorldExcepti
 import io.github.opencubicchunks.cubicchunks.core.world.SpawnPlaceFinder;
 import io.github.opencubicchunks.cubicchunks.core.world.provider.ICubicWorldProvider;
 import io.github.opencubicchunks.cubicchunks.api.world.ICubicWorldType;
+import io.github.opencubicchunks.cubicchunks.api.worldgen.CubeGeneratorsRegistry;
 import io.github.opencubicchunks.cubicchunks.api.worldgen.ICubeGenerator;
 import io.github.opencubicchunks.cubicchunks.core.worldgen.generator.vanilla.VanillaCompatibilityGenerator;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.init.Blocks;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.DimensionType;
 import net.minecraft.world.World;
@@ -105,7 +108,8 @@ public abstract class MixinWorldProvider implements ICubicWorldProvider {
                 && ((ICubicWorldType) world.getWorldType()).hasCubicGeneratorForWorld(world)) {
             return ((ICubicWorldType) world.getWorldType()).createCubeGenerator(world);
         }
-        return new VanillaCompatibilityGenerator(this.createChunkGenerator(), world);
+        ResourceLocation cgt = ((ICubicWorldSettings)world.getWorldInfo()).getCompatibilityGeneratorType();
+        return CubeGeneratorsRegistry.getGeneratorFor(this.createChunkGenerator(), world, cgt);
     }
 
     @Inject(method = "getRandomizedSpawnPoint", at = @At(value = "HEAD"), cancellable = true, remap = false)

@@ -27,6 +27,7 @@ package io.github.opencubicchunks.cubicchunks.core;
 import io.github.opencubicchunks.cubicchunks.core.network.PacketDispatcher;
 import io.github.opencubicchunks.cubicchunks.core.proxy.CommonProxy;
 import io.github.opencubicchunks.cubicchunks.core.world.type.VanillaCubicWorldType;
+import io.github.opencubicchunks.cubicchunks.core.worldgen.generator.vanilla.VanillaCompatibilityGenerator;
 import io.github.opencubicchunks.cubicchunks.api.worldgen.CubeGeneratorsRegistry;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.launchwrapper.Launch;
@@ -101,6 +102,9 @@ public class CubicChunks {
 
         VanillaCubicWorldType.create();
         LOGGER.debug("Registered world types");
+        CubeGeneratorsRegistry.register(CubeGeneratorsRegistry.defaultCompatibilityGenerator, (cg, w) -> {
+            return new VanillaCompatibilityGenerator(cg, w);
+        });
     }
 
     @EventHandler
