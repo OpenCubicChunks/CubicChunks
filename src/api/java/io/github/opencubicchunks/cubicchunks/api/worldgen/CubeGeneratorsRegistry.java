@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -59,6 +60,8 @@ public class CubeGeneratorsRegistry {
 
     /** Provide mapping for possible vanilla compatibility generators options */
     private static final Map<ResourceLocation,BiFunction<IChunkGenerator, World, ICubeGenerator>> vanillaCompatibilityGenerators = new HashMap<ResourceLocation,BiFunction<IChunkGenerator, World, ICubeGenerator>>();
+    /** Provide mapping for vanilla compatibility generators names */
+    private static final Map<ResourceLocation,String> vanillaCompatibilityGeneratorsUnlocalisedNames = new HashMap<ResourceLocation,String>();
     
     /** List of populators added by other mods to vanilla compatibility generator type */
     private static final List<ICubicPopulator> customPopulatorsForFlatCubicGenerator = new ArrayList<ICubicPopulator>();
@@ -70,12 +73,14 @@ public class CubeGeneratorsRegistry {
      * Register a compatibility generator - something that will convert vanilla
      * generators into cubic form
      *
+     * @param unLocalisedName - GUI name
      * @param name of a generator
-     * @param generatorProvider BiFunction which will consume vanilla chunk
+     * @param generatorProvider - BiFunction which will consume vanilla chunk
      *        generator and world instances and return cubic generator
      */
-    public static void register(ResourceLocation name, BiFunction<IChunkGenerator, World, ICubeGenerator> generatorProvider) {
+    public static void register(String unLocalisedName, ResourceLocation name, BiFunction<IChunkGenerator, World, ICubeGenerator> generatorProvider) {
         Preconditions.checkNotNull(generatorProvider);
+        vanillaCompatibilityGeneratorsUnlocalisedNames.put(name, unLocalisedName);
         vanillaCompatibilityGenerators.put(name, generatorProvider);
     }
 
@@ -166,5 +171,24 @@ public class CubeGeneratorsRegistry {
         if(vanillaCompatibilityGenerators.containsKey(resourceLocation))
             return vanillaCompatibilityGenerators.get(resourceLocation).apply(vanillaGenerator, world);
         return vanillaCompatibilityGenerators.get(defaultCompatibilityGenerator).apply(vanillaGenerator, world);
+    }
+
+    public static ResourceLocation getNextGeneratorType(ResourceLocation resourceLocation) {
+        Iterator<ResourceLocation> typesIterator = vanillaCompatibilityGenerators.keySet().iterator();
+        while (typesIterator.hasNext()) {
+            if (resourceLocation.equals(typesIterator.next()) && typesIterator.hasNext()) {
+                return typesIterator.next();
+            }
+        }
+        return null;
+    }
+
+    public static ResourceLocation getFirstGeneratorType() {
+        Iterator<ResourceLocation> typesIterator = vanillaCompatibilityGenerators.keySet().iterator();
+        return typesIterator.next();
+    }
+    
+    public static String getNameOf(ResourceLocation generator) {
+        return vanillaCompatibilityGeneratorsUnlocalisedNames.get(generator);
     }
 }

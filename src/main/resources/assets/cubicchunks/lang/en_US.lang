@@ -5,6 +5,7 @@
 cubicchunks.gui.worldmenu.cc_enable=CubicChunks: Yes
 cubicchunks.gui.worldmenu.cc_disable=CubicChunks: No
 cubicchunks.gui.worldmenu.cc_forced=CubicChunks: Forced
+cubicchunks.gui.worldmenu.cc_default=CubicChunks: Default
 
 #################################
 ###          options          ###

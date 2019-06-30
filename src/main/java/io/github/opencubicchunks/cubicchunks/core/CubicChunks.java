@@ -102,7 +102,7 @@ public class CubicChunks {
 
         VanillaCubicWorldType.create();
         LOGGER.debug("Registered world types");
-        CubeGeneratorsRegistry.register(CubeGeneratorsRegistry.defaultCompatibilityGenerator, (cg, w) -> {
+        CubeGeneratorsRegistry.register("cubicchunks.gui.worldmenu.cc_default",CubeGeneratorsRegistry.defaultCompatibilityGenerator, (cg, w) -> {
             return new VanillaCompatibilityGenerator(cg, w);
         });
     }

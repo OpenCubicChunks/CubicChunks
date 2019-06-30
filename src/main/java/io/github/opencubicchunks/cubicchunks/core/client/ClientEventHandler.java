@@ -30,6 +30,7 @@ import io.github.opencubicchunks.cubicchunks.core.server.ICubicPlayerList;
 import io.github.opencubicchunks.cubicchunks.core.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.core.asm.mixin.ICubicWorldInternal;
 import io.github.opencubicchunks.cubicchunks.api.world.ICubicWorldType;
+import io.github.opencubicchunks.cubicchunks.api.worldgen.CubeGeneratorsRegistry;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
@@ -39,6 +40,7 @@ import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.GuiVideoSettings;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.resources.I18n;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.WorldType;
 import net.minecraftforge.client.event.GuiScreenEvent;
@@ -256,13 +258,11 @@ public class ClientEventHandler {
         private static void refreshText(GuiCreateWorld gui, GuiButton enableBtn) {
             String txt;
             if (CubicChunksConfig.forceLoadCubicChunks == CubicChunksConfig.ForceCCMode.NONE) {
-                txt = "cc_disable";
-            } else if (CubicChunksConfig.forceLoadCubicChunks == CubicChunksConfig.ForceCCMode.NEW_WORLD) {
-                txt = "cc_enable";
+                txt = "cubicchunks.gui.worldmenu.cc_disable";
             } else {
-                txt = "cc_forced";
+                txt = CubeGeneratorsRegistry.getNameOf(new ResourceLocation(CubicChunksConfig.compatibilityGeneratorType));
             }
-            enableBtn.displayString = I18n.format("cubicchunks.gui.worldmenu." + txt);
+            enableBtn.displayString = I18n.format(txt);
         }
 
         @SubscribeEvent
