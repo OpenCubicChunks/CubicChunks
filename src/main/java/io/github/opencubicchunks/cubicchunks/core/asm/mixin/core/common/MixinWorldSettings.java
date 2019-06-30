@@ -56,6 +56,7 @@ public class MixinWorldSettings implements ICubicWorldSettings {
     @Inject(method = "<init>(JLnet/minecraft/world/GameType;ZZLnet/minecraft/world/WorldType;)V", at = @At("RETURN"))
     private void onConstruct(long seedIn, GameType gameType, boolean enableMapFeatures, boolean hardcoreMode, WorldType worldTypeIn, CallbackInfo ci) {
         this.isCubic = CubicChunksConfig.forceLoadCubicChunks != CubicChunksConfig.ForceCCMode.NONE;
+        this.compatibilityGeneratorType = new ResourceLocation(CubicChunksConfig.compatibilityGeneratorType);
     }
 
     @Override public boolean isCubic() {
