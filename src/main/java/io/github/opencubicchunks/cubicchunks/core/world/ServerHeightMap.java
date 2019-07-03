@@ -24,10 +24,9 @@
  */
 package io.github.opencubicchunks.cubicchunks.core.world;
 
-import io.github.opencubicchunks.cubicchunks.core.world.cube.Cube;
+import io.github.opencubicchunks.cubicchunks.api.util.Coords;
 import io.github.opencubicchunks.cubicchunks.api.world.IHeightMap;
 import io.github.opencubicchunks.cubicchunks.core.CubicChunks;
-import io.github.opencubicchunks.cubicchunks.api.util.Coords;
 import io.github.opencubicchunks.cubicchunks.core.world.cube.Cube;
 import mcp.MethodsReturnNonnullByDefault;
 
@@ -70,14 +69,6 @@ public class ServerHeightMap implements IHeightMap {
 
     private int heightMapLowest;
 
-    private int hash;
-
-    private boolean needsHash;
-
-    public ServerHeightMap() {
-        this(new int[Cube.SIZE * Cube.SIZE]);
-    }
-
     public ServerHeightMap(int[] heightmap) {
         this.ymin = new int[Cube.SIZE * Cube.SIZE];
         this.ymax = new HeightMap(heightmap);
@@ -91,8 +82,6 @@ public class ServerHeightMap implements IHeightMap {
         }
 
         this.heightMapLowest = Coords.NO_HEIGHT;
-        this.hash = 0;
-        this.needsHash = true;
     }
 
 
@@ -138,7 +127,6 @@ public class ServerHeightMap implements IHeightMap {
         }
 
         this.heightMapLowest = Coords.NO_HEIGHT;
-        this.needsHash = true;
     }
 
     @Override
@@ -737,35 +725,6 @@ public class ServerHeightMap implements IHeightMap {
 
     private static int getIndex(int localX, int localZ) {
         return (localZ << 4) | localX;
-    }
-
-    @Override
-    public int hashCode() {
-        if (this.needsHash) {
-            this.hash = computeHash();
-            this.needsHash = false;
-        }
-        return hash;
-    }
-
-    private int computeHash() {
-        final int MyFavoritePrime = 37;
-        int hash = 1;
-        for (int i = 0; i < this.segments.length; i++) {
-            hash *= MyFavoritePrime;
-            hash += this.ymin[i];
-            hash *= MyFavoritePrime;
-            hash += this.ymax.get(i);
-            if (this.segments[i] == null) {
-                hash *= MyFavoritePrime;
-            } else {
-                for (int n : this.segments[i]) {
-                    hash *= MyFavoritePrime;
-                    hash += n;
-                }
-            }
-        }
-        return hash;
     }
 
     // Serialization / NBT ---------------------------------------------------------------------------------------------
