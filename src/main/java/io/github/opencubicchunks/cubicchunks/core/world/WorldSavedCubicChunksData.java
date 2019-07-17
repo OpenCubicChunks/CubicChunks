@@ -31,24 +31,34 @@ import net.minecraft.world.WorldSavedData;
 
 public class WorldSavedCubicChunksData extends WorldSavedData {
 
+    public boolean isCubicChunks = false;
     public int minHeight = 0, maxHeight = 256;
 
     public WorldSavedCubicChunksData(String name) {
         super(name);
-        minHeight = CubicChunks.MIN_BLOCK_Y;
-        maxHeight = CubicChunks.MAX_BLOCK_Y;
+    }
+    
+    public WorldSavedCubicChunksData(String name, boolean isCC) {
+        this(name);
+        if (isCC) {
+            minHeight = CubicChunks.MIN_BLOCK_Y;
+            maxHeight = CubicChunks.MAX_BLOCK_Y;
+            isCubicChunks = true;
+        }
     }
 
     @Override
     public void readFromNBT(NBTTagCompound nbt) {
         minHeight = nbt.getInteger("minHeight");
         maxHeight = nbt.getInteger("maxHeight");
+        isCubicChunks = !nbt.hasKey("isCubicChunks") || nbt.getBoolean("isCubicChunks");
     }
 
     @Override
     public NBTTagCompound writeToNBT(NBTTagCompound compound) {
         compound.setInteger("minHeight", minHeight);
         compound.setInteger("maxHeight", maxHeight);
+        compound.setBoolean("isCubicChunks", isCubicChunks);
         return compound;
     }
 

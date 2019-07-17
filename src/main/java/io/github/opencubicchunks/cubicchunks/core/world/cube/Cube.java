@@ -24,22 +24,27 @@
  */
 package io.github.opencubicchunks.cubicchunks.core.world.cube;
 
-import io.github.opencubicchunks.cubicchunks.core.lighting.LightingManager;
-import io.github.opencubicchunks.cubicchunks.api.worldgen.CubePrimer;
-import io.github.opencubicchunks.cubicchunks.api.world.ICube;
-import io.github.opencubicchunks.cubicchunks.api.worldgen.ICubeGenerator;
-import io.github.opencubicchunks.cubicchunks.api.world.ICubicWorld;
-import io.github.opencubicchunks.cubicchunks.core.CubicChunks;
-import io.github.opencubicchunks.cubicchunks.core.lighting.LightingManager;
-import io.github.opencubicchunks.cubicchunks.core.util.AddressTools;
+import static io.github.opencubicchunks.cubicchunks.api.util.Coords.blockToCube;
+import static io.github.opencubicchunks.cubicchunks.api.util.Coords.blockToLocal;
+import static io.github.opencubicchunks.cubicchunks.api.util.Coords.cubeToMaxBlock;
+import static io.github.opencubicchunks.cubicchunks.api.util.Coords.cubeToMinBlock;
+import static io.github.opencubicchunks.cubicchunks.api.util.Coords.localToBlock;
+
 import io.github.opencubicchunks.cubicchunks.api.util.Coords;
 import io.github.opencubicchunks.cubicchunks.api.util.CubePos;
+import io.github.opencubicchunks.cubicchunks.api.world.IColumn;
+import io.github.opencubicchunks.cubicchunks.api.world.ICube;
+import io.github.opencubicchunks.cubicchunks.api.world.ICubicWorld;
+import io.github.opencubicchunks.cubicchunks.api.world.IHeightMap;
+import io.github.opencubicchunks.cubicchunks.api.worldgen.CubePrimer;
+import io.github.opencubicchunks.cubicchunks.api.worldgen.ICubeGenerator;
+import io.github.opencubicchunks.cubicchunks.core.CubicChunks;
+import io.github.opencubicchunks.cubicchunks.core.asm.mixin.ICubicWorldInternal;
+import io.github.opencubicchunks.cubicchunks.core.lighting.LightingManager;
+import io.github.opencubicchunks.cubicchunks.core.util.AddressTools;
 import io.github.opencubicchunks.cubicchunks.core.util.ticket.ITicket;
 import io.github.opencubicchunks.cubicchunks.core.util.ticket.TicketList;
 import io.github.opencubicchunks.cubicchunks.core.world.EntityContainer;
-import io.github.opencubicchunks.cubicchunks.api.world.IHeightMap;
-import io.github.opencubicchunks.cubicchunks.api.world.IColumn;
-import io.github.opencubicchunks.cubicchunks.core.asm.mixin.ICubicWorldInternal;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
@@ -51,30 +56,20 @@ import net.minecraft.util.ClassInheritanceMultiMap;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.EnumSkyBlock;
-import net.minecraft.world.NextTickListEntry;
 import net.minecraft.world.World;
-import net.minecraft.world.WorldServer;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Random;
-import java.util.Set;
-import java.util.TreeSet;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.function.BooleanSupplier;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
-
-import org.apache.logging.log4j.LogManager;
-
-import static io.github.opencubicchunks.cubicchunks.api.util.Coords.*;
 
 /**
  * A cube is our extension of minecraft's chunk system to three dimensions. Each cube encloses a cubic area in the world
@@ -86,9 +81,6 @@ public class Cube implements ICube {
 
     @Nullable protected static final ExtendedBlockStorage NULL_STORAGE = null;
 
-    private final Set<NextTickListEntry> pendingTickListEntriesHashSet = new HashSet<NextTickListEntry>();
-    private final TreeSet<NextTickListEntry> pendingTickListEntriesTreeSet = new TreeSet<NextTickListEntry>();
-    
     @Nullable private byte[] blockBiomeArray = null;
 
     /**
@@ -307,8 +299,30 @@ public class Cube implements ICube {
         return column.getTileEntity(pos, createType);
     }
 
-    @Override public void addTileEntity(TileEntity tileEntity) {
-        column.addTileEntity(tileEntity);
+    // have a copy of addTileEntity in Cube because sometimes some mods will access blocks from outside of
+    // the cube being loaded while loading it's tile entity, causing a StackOverflowError when the cube set at
+    // the start of loading TEs in column gets changed.
+    @Override public void addTileEntity(TileEntity tileEntityIn) {
+        this.addTileEntity(tileEntityIn.getPos(), tileEntityIn);
+        if (this.isCubeLoaded) {
+            this.world.addTileEntity(tileEntityIn);
+        }
+    }
+
+    private void addTileEntity(BlockPos pos, TileEntity tileEntityIn) {
+        if (tileEntityIn.getWorld() != this.world) { //Forge don't call unless it's changed, could screw up bad mods.
+            tileEntityIn.setWorld(this.world);
+        }
+        tileEntityIn.setPos(pos);
+
+        if (this.getBlockState(pos).getBlock().hasTileEntity(this.getBlockState(pos))) {
+            if (this.tileEntityMap.containsKey(pos)) {
+                this.tileEntityMap.get(pos).invalidate();
+            }
+
+            tileEntityIn.validate();
+            this.tileEntityMap.put(pos, tileEntityIn);
+        }
     }
 
     /**
@@ -348,43 +362,8 @@ public class Cube implements ICube {
         }
 
         tickCubeCommon(tryToTickFaster);
-
-        Iterator<NextTickListEntry> pti = pendingTickListEntriesTreeSet.iterator();
-        while (pti.hasNext()) {
-            assert storage != null : "There are blocks to tick in cube but getStorage() is empty!";
-            NextTickListEntry ntle = pti.next();
-            if (ntle.scheduledTime > world.getTotalWorldTime())
-                break;
-            BlockPos pos = ntle.position;
-            IBlockState iblockstate = this.storage.get(blockToLocal(pos.getX()), blockToLocal(pos.getY()), blockToLocal(pos.getZ()));
-            if (iblockstate.getMaterial() != Material.AIR && iblockstate.getBlock() == ntle.getBlock()) {
-                iblockstate.getBlock().updateTick((WorldServer) world, ntle.position, iblockstate, rand);
-            }
-            pti.remove();
-        }
-        int tickLimit = 256; // 16x16 per cube per tick will be enough
-        pti = pendingTickListEntriesHashSet.iterator();
-        while (pti.hasNext() && --tickLimit != 0) {
-            NextTickListEntry ntle = pti.next();
-            pendingTickListEntriesTreeSet.add(ntle);
-            pti.remove();
-        }
     }
 
-    public void scheduleUpdate(BlockPos pos, Block blockIn, int delay, int priority) {
-        if (pos instanceof BlockPos.MutableBlockPos || pos instanceof BlockPos.PooledMutableBlockPos) {
-            pos = new BlockPos(pos);
-            LogManager.getLogger().warn((String) "Tried to assign a mutable BlockPos to tick data...",
-                    (Throwable) (new Error(pos.getClass().toString())));
-        }
-        if (((ICubicWorld) world).getCubeCache().getLoadedCube(CubePos.fromBlockCoords(pos)) != null) {
-            NextTickListEntry nextticklistentry = new NextTickListEntry(pos, blockIn);
-            nextticklistentry.setScheduledTime((long) delay + world.getTotalWorldTime());
-            nextticklistentry.setPriority(priority);
-            this.pendingTickListEntriesHashSet.add(nextticklistentry);
-        }
-    }
-    
     /**
      * @return biome or null if {@link #blockBiomeArray} is not generated by
      * cube generator
@@ -398,6 +377,14 @@ public class Cube implements ICube {
         int biomeId = this.blockBiomeArray[AddressTools.getBiomeAddress(biomeX, biomeZ)] & 255;
         Biome biome = Biome.getBiome(biomeId);
         return biome;
+    }
+
+    @Override
+    public void setBiome(int localBiomeX, int localBiomeZ, Biome biome) {
+        if(this.blockBiomeArray == null)
+            this.blockBiomeArray = new byte[8*8];
+
+        this.blockBiomeArray[AddressTools.getBiomeAddress(localBiomeX, localBiomeZ)] = (byte) Biome.REGISTRY.getIDForObject(biome);
     }
 
     @Nullable

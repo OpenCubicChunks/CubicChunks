@@ -22,29 +22,36 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package io.github.opencubicchunks.cubicchunks.core.asm.mixin.core.common;
+package io.github.opencubicchunks.cubicchunks.core.asm.mixin.fixes.common;
 
-import cubicchunks.regionlib.lib.provider.SharedCachedRegionProvider;
-import mcp.MethodsReturnNonnullByDefault;
-import net.minecraft.world.chunk.storage.RegionFileCache;
+import io.github.opencubicchunks.cubicchunks.core.CubicChunksConfig;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.biome.Biome;
+import net.minecraft.world.gen.NoiseGeneratorPerlin;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.Overwrite;
+import org.spongepowered.asm.mixin.Shadow;
 
-import java.io.IOException;
+@Mixin(Biome.class)
+public abstract class MixinBiomeTemperatureConfig {
 
-import javax.annotation.ParametersAreNonnullByDefault;
+    @Shadow @Final protected static NoiseGeneratorPerlin TEMPERATURE_NOISE;
 
-// a hook for flush()
-// many mods already assume AnvilSaveHandler is always used, so we assume the same and hope for the best
-@ParametersAreNonnullByDefault
-@MethodsReturnNonnullByDefault
-@Mixin(RegionFileCache.class)
-public class MixinRegionFileCache {
+    @Shadow public abstract float getTemperature();
 
-    @Inject(method = "clearRegionFileReferences", at = @At("HEAD"))
-    private static void onClearRefs(CallbackInfo cbi) throws IOException {
-        SharedCachedRegionProvider.clearRegions();
+    /**
+     * @author Barteks2x
+     */
+    @Overwrite
+    public final float getFloatTemperature(BlockPos pos) {
+        if (pos.getY() > CubicChunksConfig.biomeTemperatureCenterY) {
+            float noise = (float) (TEMPERATURE_NOISE.getValue((double) ((float) pos.getX() / 8.0F), (double) ((float) pos.getZ() / 8.0F)) * 4.0D);
+            int y = Math.min(pos.getY(), CubicChunksConfig.biomeTemperatureScaleMaxY);
+            return this.getTemperature() +
+                (noise + y - CubicChunksConfig.biomeTemperatureCenterY) * CubicChunksConfig.biomeTemperatureHeightFactor;
+        } else {
+            return this.getTemperature();
+        }
     }
 }

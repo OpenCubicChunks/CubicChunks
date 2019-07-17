@@ -26,29 +26,31 @@ package io.github.opencubicchunks.cubicchunks.core.asm.mixin.core.common;
 
 import static io.github.opencubicchunks.cubicchunks.api.util.Coords.cubeToMinBlock;
 
+import io.github.opencubicchunks.cubicchunks.api.util.Coords;
+import io.github.opencubicchunks.cubicchunks.api.util.CubePos;
+import io.github.opencubicchunks.cubicchunks.api.util.IntRange;
+import io.github.opencubicchunks.cubicchunks.api.util.NotCubicChunksWorldException;
 import io.github.opencubicchunks.cubicchunks.api.util.XYZMap;
 import io.github.opencubicchunks.cubicchunks.api.util.XZMap;
 import io.github.opencubicchunks.cubicchunks.api.world.IColumn;
 import io.github.opencubicchunks.cubicchunks.api.world.ICube;
+import io.github.opencubicchunks.cubicchunks.api.world.ICubeProviderServer;
+import io.github.opencubicchunks.cubicchunks.api.world.ICubicWorldServer;
 import io.github.opencubicchunks.cubicchunks.api.worldgen.ICubeGenerator;
 import io.github.opencubicchunks.cubicchunks.core.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.core.CubicChunksConfig;
+import io.github.opencubicchunks.cubicchunks.core.asm.mixin.ICubicWorldInternal;
 import io.github.opencubicchunks.cubicchunks.core.entity.CubicEntityTracker;
 import io.github.opencubicchunks.cubicchunks.core.lighting.FirstLightProcessor;
 import io.github.opencubicchunks.cubicchunks.core.server.ChunkGc;
 import io.github.opencubicchunks.cubicchunks.core.server.CubeProviderServer;
 import io.github.opencubicchunks.cubicchunks.core.server.PlayerCubeMap;
+import io.github.opencubicchunks.cubicchunks.core.util.world.CubeSplitTickList;
+import io.github.opencubicchunks.cubicchunks.core.util.world.CubeSplitTickSet;
 import io.github.opencubicchunks.cubicchunks.core.world.CubeWorldEntitySpawner;
 import io.github.opencubicchunks.cubicchunks.core.world.FastCubeWorldEntitySpawner;
 import io.github.opencubicchunks.cubicchunks.core.world.cube.Cube;
 import io.github.opencubicchunks.cubicchunks.core.world.provider.ICubicWorldProvider;
-import io.github.opencubicchunks.cubicchunks.api.world.ICubeProviderServer;
-import io.github.opencubicchunks.cubicchunks.api.util.Coords;
-import io.github.opencubicchunks.cubicchunks.api.util.CubePos;
-import io.github.opencubicchunks.cubicchunks.api.util.IntRange;
-import io.github.opencubicchunks.cubicchunks.api.world.ICubicWorldServer;
-import io.github.opencubicchunks.cubicchunks.core.asm.mixin.ICubicWorldInternal;
-import io.github.opencubicchunks.cubicchunks.api.util.NotCubicChunksWorldException;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
@@ -62,11 +64,11 @@ import net.minecraft.server.management.PlayerChunkMap;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.DifficultyInstance;
+import net.minecraft.world.NextTickListEntry;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldEntitySpawner;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.chunk.Chunk;
-
 import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Implements;
@@ -80,6 +82,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -103,13 +106,19 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
     private XYZMap<ICube> forcedCubes;
     private XZMap<IColumn> forcedColumns;
 
+    private ChunkGc worldChunkGc;
+
     @Shadow protected abstract void playerCheckLight();
 
     @Shadow public abstract boolean spawnEntity(Entity entityIn);
 
     @Shadow public abstract boolean addWeatherEffect(Entity entityIn);
 
-    @Nullable private ChunkGc chunkGc;
+    @Shadow @Mutable @Final private Set<NextTickListEntry> pendingTickListEntriesHashSet;
+    @Shadow @Mutable @Final private List<NextTickListEntry> pendingTickListEntriesThisTick;
+
+    @Shadow public abstract PlayerChunkMap getPlayerChunkMap();
+
     @Nullable private FirstLightProcessor firstLightProcessor;
 
     @Override public void initCubicWorldServer(IntRange heightRange, IntRange generationRange) {
@@ -122,7 +131,6 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
                 ((ICubicWorldProvider) this.provider).createCubeGenerator());
 
         this.playerChunkMap = new PlayerCubeMap((WorldServer) (Object) this);
-        this.chunkGc = new ChunkGc(getCubeCache());
 
         this.firstLightProcessor = new FirstLightProcessor((WorldServer) (Object) this);
         this.entityTracker = new CubicEntityTracker(this);
@@ -130,14 +138,24 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
         this.forcedChunksCubes = new HashMap<>();
         this.forcedCubes = new XYZMap<>(0.75f, 64*1024);
         this.forcedColumns = new XZMap<>(0.75f, 2048);
+
+        this.pendingTickListEntriesHashSet = new CubeSplitTickSet();
+        this.pendingTickListEntriesThisTick = new CubeSplitTickList();
+        this.worldChunkGc = new ChunkGc(getCubeCache());
+    }
+
+    @Override public CubeSplitTickSet getScheduledTicks() {
+        return (CubeSplitTickSet) pendingTickListEntriesHashSet;
+    }
+
+    @Override public CubeSplitTickList getThisTickScheduledTicks() {
+        return (CubeSplitTickList) pendingTickListEntriesThisTick;
     }
 
     @Override public void tickCubicWorld() {
         if (!this.isCubicWorld()) {
             throw new NotCubicChunksWorldException();
         }
-        assert chunkGc != null;
-        this.chunkGc.tick();
         // update world entity spawner
         if (CubicChunksConfig.useFastEntitySpawner != (entitySpawner.getClass() == FastCubeWorldEntitySpawner.class)) {
             this.entitySpawner = CubicChunksConfig.useFastEntitySpawner ?
@@ -164,11 +182,6 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
         return this.firstLightProcessor;
     }
     
-    @Override
-    public ChunkGc getChunkGarbageCollector() {
-        return this.chunkGc;
-    }
-
     @Override public void removeForcedCube(ICube cube) {
         if (!forcedChunksCubes.get(cube.getColumn()).remove(cube)) {
             CubicChunks.LOGGER.error("Trying to remove forced cube " + cube.getCoords() + ", but it's not forced!");
@@ -196,38 +209,8 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
         return forcedColumns;
     }
 
-    @Inject(method = "scheduleUpdate", at = @At("HEAD"), cancellable = true, require = 1)
-    public void scheduleUpdateInject(BlockPos pos, Block blockIn, int delay, CallbackInfo ci) {
-        if (this.isCubicWorld()) {
-            Cube cube = this.getCubeCache().getLoadedCube(CubePos.fromBlockCoords(pos));
-            if (cube != null) {
-                cube.scheduleUpdate(pos, blockIn, delay, 0);
-            }
-            ci.cancel();
-        }
-    }
-
-    // TODO: verify that these work correctly
-    @Inject(method = "scheduleBlockUpdate", at = @At("HEAD"), cancellable = true, require = 1)
-    public void scheduleBlockUpdateInject(BlockPos pos, Block blockIn, int delay, int priority, CallbackInfo ci) {
-        if (this.isCubicWorld()) {
-            Cube cube = this.getCubeCache().getLoadedCube(CubePos.fromBlockCoords(pos));
-            if (cube != null) {
-                cube.scheduleUpdate(pos, blockIn, delay, priority);
-            }
-            ci.cancel();
-        }
-    }
-
-    @Inject(method = "updateBlockTick", at = @At("HEAD"), cancellable = true, require = 1)
-    public void updateBlockTickInject(BlockPos pos, Block blockIn, int delay, int priority, CallbackInfo ci) {
-        if (this.isCubicWorld()) {
-            Cube cube = this.getCubeCache().getLoadedCube(CubePos.fromBlockCoords(pos));
-            if (cube != null) {
-                cube.scheduleUpdate(pos, blockIn, delay, priority);
-            }
-            ci.cancel();
-        }
+    @Override public void unloadOldCubes() {
+        worldChunkGc.chunkGc();
     }
 
     /**

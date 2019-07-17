@@ -8,7 +8,6 @@
         "common.MixinChunk_Column",
         "common.MixinChunk_Cubes",
         "common.MixinIBlockAccess_MinMaxHeight",
-        "common.MixinMinecraftServer",
         "common.MixinWorld_Tick",
         "common.MixinWorld",
         "common.MixinWorldServer",
@@ -21,6 +20,7 @@
         "common.MixinWorldSettings",
         "common.MixinDerivedWorldInfo",
         "common.MixinRegionFileCache",
+        "common.MixinAnvilSaveHandler",
         "common.forge.MixinForgeChunkManager",
         "common.forge.MixinTicket"
     ],
@@ -32,7 +32,6 @@
         "client.MixinChunk_Cubes",
         "client.MixinViewFrustum_RenderHeightFix",
         "client.MixinWorldProvider",
-        "client.MixinGuiCreateWorld",
         "client.MixinDebugRenderChunkBorder"
     ],
     "server": [

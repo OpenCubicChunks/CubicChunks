@@ -25,16 +25,14 @@
 package io.github.opencubicchunks.cubicchunks.core.server;
 
 import com.google.common.base.Predicate;
-import io.github.opencubicchunks.cubicchunks.core.lighting.LightingManager;
-import io.github.opencubicchunks.cubicchunks.core.network.PacketCubeBlockChange;
-import io.github.opencubicchunks.cubicchunks.core.network.PacketDispatcher;
-import io.github.opencubicchunks.cubicchunks.core.network.PacketUnloadCube;
-import io.github.opencubicchunks.cubicchunks.core.server.chunkio.async.forge.AsyncWorldIOExecutor;
+import gnu.trove.list.TShortList;
+import gnu.trove.list.array.TShortArrayList;
+import io.github.opencubicchunks.cubicchunks.api.util.CubePos;
+import io.github.opencubicchunks.cubicchunks.api.world.CubeUnWatchEvent;
 import io.github.opencubicchunks.cubicchunks.api.world.ICubeProviderServer;
 import io.github.opencubicchunks.cubicchunks.api.world.ICubeWatcher;
 import io.github.opencubicchunks.cubicchunks.core.CubicChunks;
-import io.github.opencubicchunks.cubicchunks.api.world.CubeUnWatchEvent;
-import io.github.opencubicchunks.cubicchunks.api.world.CubeWatchEvent;
+import io.github.opencubicchunks.cubicchunks.core.asm.mixin.ICubicWorldInternal;
 import io.github.opencubicchunks.cubicchunks.core.entity.CubicEntityTracker;
 import io.github.opencubicchunks.cubicchunks.core.lighting.LightingManager;
 import io.github.opencubicchunks.cubicchunks.core.network.PacketCubeBlockChange;
@@ -42,14 +40,8 @@ import io.github.opencubicchunks.cubicchunks.core.network.PacketDispatcher;
 import io.github.opencubicchunks.cubicchunks.core.network.PacketUnloadCube;
 import io.github.opencubicchunks.cubicchunks.core.server.chunkio.async.forge.AsyncWorldIOExecutor;
 import io.github.opencubicchunks.cubicchunks.core.util.AddressTools;
-import io.github.opencubicchunks.cubicchunks.api.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.core.util.ticket.ITicket;
-import io.github.opencubicchunks.cubicchunks.core.asm.mixin.ICubicWorldInternal;
 import io.github.opencubicchunks.cubicchunks.core.world.cube.Cube;
-import gnu.trove.list.TShortList;
-import gnu.trove.list.array.TShortArrayList;
-import gnu.trove.map.TIntObjectMap;
-import gnu.trove.map.hash.TIntObjectHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.state.IBlockState;
@@ -72,13 +64,8 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @MethodsReturnNonnullByDefault
 public class CubeWatcher implements ITicket, ICubeWatcher {
 
-    private final Consumer<Cube> consumer = (c) -> {
-        this.cube = c;
-        this.loading = false;
-        if (this.cube != null) {
-            this.cube.getTickets().add(this);
-        }
-    };
+    private final Consumer<Cube> consumer;
+
     private final CubeProviderServer cubeCache;
     private PlayerCubeMap playerCubeMap;
     @Nullable private Cube cube;
@@ -88,16 +75,27 @@ public class CubeWatcher implements ITicket, ICubeWatcher {
     private long previousWorldTime = 0;
     private boolean sentToPlayers = false;
     private boolean loading = true;
+    private boolean invalid = false;
 
     // CHECKED: 1.10.2-12.18.1.2092
     CubeWatcher(PlayerCubeMap playerCubeMap, CubePos cubePos) {
+        this.cubePos = cubePos;
         this.playerCubeMap = playerCubeMap;
         this.cubeCache = ((ICubicWorldInternal.Server) playerCubeMap.getWorldServer()).getCubeCache();
+        this.consumer = (c) -> {
+            if (this.invalid) {
+                return;
+            }
+            this.cube = c;
+            this.loading = false;
+            if (this.cube != null) {
+                this.cube.getTickets().add(this);
+            }
+        };
         this.cubeCache.asyncGetCube(
                 cubePos.getX(), cubePos.getY(), cubePos.getZ(),
                 ICubeProviderServer.Requirement.LOAD,
                 consumer);
-        this.cubePos = cubePos;
     }
 
     // CHECKED: 1.10.2-12.18.1.2092
@@ -133,6 +131,7 @@ public class CubeWatcher implements ITicket, ICubeWatcher {
                             cubePos.getX(), cubePos.getY(), cubePos.getZ(),
                             c -> this.cube = c);
                 }
+                invalid = true;
                 playerCubeMap.removeEntry(this);
             }
             return;
@@ -146,6 +145,7 @@ public class CubeWatcher implements ITicket, ICubeWatcher {
         MinecraftForge.EVENT_BUS.post(new CubeUnWatchEvent(cube, cubePos, this, player));
 
         if (this.players.isEmpty()) {
+            invalid = true;
             playerCubeMap.removeEntry(this);
         }
     }
@@ -209,7 +209,6 @@ public class CubeWatcher implements ITicket, ICubeWatcher {
         this.sentToPlayers = true;
 
         for (EntityPlayerMP playerEntry : this.players) {
-            MinecraftForge.EVENT_BUS.post(new CubeWatchEvent(cube, cubePos, this, playerEntry));
             sendToPlayer(playerEntry);
         }
 

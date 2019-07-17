@@ -1,21 +1,15 @@
 import com.github.jengelman.gradle.plugins.shadow.ShadowPlugin
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import me.champeau.gradle.JMHPlugin
-import me.champeau.gradle.JMHPluginExtension
 import net.minecraftforge.gradle.tasks.DeobfuscateJar
 import net.minecraftforge.gradle.user.ReobfMappingType
-import net.minecraftforge.gradle.user.ReobfTaskFactory
-import net.minecraftforge.gradle.user.patcherUser.forge.ForgeExtension
 import net.minecraftforge.gradle.user.patcherUser.forge.ForgePlugin
-import nl.javadude.gradle.plugins.license.LicenseExtension
 import nl.javadude.gradle.plugins.license.LicensePlugin
 import org.ajoberstar.grgit.Grgit
 import org.ajoberstar.grgit.operation.DescribeOp
 import org.gradle.api.internal.HasConvention
 import org.gradle.kotlin.dsl.creating
 import org.gradle.kotlin.dsl.extra
-import org.gradle.plugins.ide.idea.model.IdeaModel
-import org.spongepowered.asm.gradle.plugins.MixinExtension
 import org.spongepowered.asm.gradle.plugins.MixinGradlePlugin
 import kotlin.apply
 
@@ -94,6 +88,50 @@ group = "io.github.opencubicchunks"
 
 sourceSets {
     create("optifine_dummy")
+    println(sourceSets["api"].compileClasspath)
+}
+
+// configurations, needed for extendsFrom
+val jmh by configurations
+val forgeGradleMc by configurations
+val forgeGradleMcDeps by configurations
+val forgeGradleGradleStart by configurations
+val compile by configurations
+val testCompile by configurations
+
+val embed by configurations.creating
+val coreShadow by configurations.creating
+
+jmh.extendsFrom(compile)
+jmh.extendsFrom(forgeGradleMc)
+jmh.extendsFrom(forgeGradleMcDeps)
+testCompile.extendsFrom(forgeGradleGradleStart)
+testCompile.extendsFrom(forgeGradleMcDeps)
+compile.extendsFrom(embed)
+compile.extendsFrom(coreShadow)
+
+// NOTE for backporting: DON'T do this before 1.12
+// this is needed because it.ozimov:java7-hamcrest-matchers:0.7.0 depends on guava 19, while MC needs guava 21
+//configurations.all { resolutionStrategy { force("com.google.guava:guava:21.0") } }
+
+dependencies {
+    embed("com.flowpowered:flow-noise:1.0.1-SNAPSHOT")
+    // https://mvnrepository.com/artifact/com.typesafe/config
+    embed("com.typesafe:config:1.2.0")
+
+    compileOnly(sourceSets["optifine_dummy"].output)
+
+    testCompile("junit:junit:4.11")
+    testCompile("org.hamcrest:hamcrest-junit:2.0.0.0")
+    testCompile("it.ozimov:java7-hamcrest-matchers:0.7.0")
+    testCompile("org.mockito:mockito-core:2.1.0-RC.2")
+    testCompile("org.spongepowered:launchwrappertestsuite:1.0-SNAPSHOT")
+
+    coreShadow("org.spongepowered:mixin:0.7.10-SNAPSHOT") {
+        isTransitive = false
+    }
+
+    embed("io.github.opencubicchunks:regionlib:0.55.0-SNAPSHOT")
 }
 
 idea {
@@ -198,6 +236,9 @@ val sourcesJar by tasks.creating(Jar::class) {
     classifier = "sources"
     from(sourceSets["main"].java.srcDirs)
 }
+val devShadowJar by tasks.creating(ShadowJar::class) {
+    configureShadowJar(this, "dev")
+}
 reobf {
     create("shadowJar").apply {
         mappingType = ReobfMappingType.SEARGE
@@ -206,7 +247,7 @@ reobf {
         mappingType = ReobfMappingType.SEARGE
     }
 }
-build.dependsOn("reobfShadowJar", "reobfApiJar")
+build.dependsOn("reobfShadowJar", "reobfApiJar", devShadowJar)
 
 publishing {
     repositories {
@@ -290,6 +331,9 @@ publishing {
             artifact(shadowJar) {
                 classifier = ""
             }
+            artifact(devShadowJar) {
+                classifier = "dev"
+            }
             pom {
                 name.set(projectName)
                 description.set("Unlimited world height mod for Minecraft")
@@ -328,11 +372,12 @@ publishing {
 afterEvaluate {
     tasks["publishApiPublicationToMavenRepository"].dependsOn("reobfApiJar")
     tasks["publishModPublicationToMavenRepository"].dependsOn("reobfShadowJar")
+    tasks["publishModPublicationToMavenRepository"].dependsOn(devShadowJar)
 }
 // tasks must be before artifacts, don't change the order
 artifacts {
     withGroovyBuilder {
-        "archives"(apiJar, apiSourcesJar, apiJavadocJar, shadowJar, sourcesJar)
+        "archives"(apiJar, apiSourcesJar, apiJavadocJar, shadowJar, sourcesJar, devShadowJar)
     }
 }
 
@@ -354,59 +399,15 @@ repositories {
     }
 }
 
-// configurations, needed for extendsFrom
-val jmh by configurations
-val forgeGradleMc by configurations
-val forgeGradleMcDeps by configurations
-val forgeGradleGradleStart by configurations
-val compile by configurations
-val testCompile by configurations
-
-val embed by configurations.creating
-val coreShadow by configurations.creating
-
-jmh.extendsFrom(compile)
-jmh.extendsFrom(forgeGradleMc)
-jmh.extendsFrom(forgeGradleMcDeps)
-testCompile.extendsFrom(forgeGradleGradleStart)
-testCompile.extendsFrom(forgeGradleMcDeps)
-compile.extendsFrom(embed)
-compile.extendsFrom(coreShadow)
-
-// NOTE for backporting: DON'T do this before 1.12
-// this is needed because it.ozimov:java7-hamcrest-matchers:0.7.0 depends on guava 19, while MC needs guava 21
-//configurations.all { resolutionStrategy { force("com.google.guava:guava:21.0") } }
-
-dependencies {
-    embed("com.flowpowered:flow-noise:1.0.1-SNAPSHOT")
-    // https://mvnrepository.com/artifact/com.typesafe/config
-    embed("com.typesafe:config:1.2.0")
-
-    compileOnly(sourceSets["optifine_dummy"].output)
-
-    testCompile("junit:junit:4.11")
-    testCompile("org.hamcrest:hamcrest-junit:2.0.0.0")
-    testCompile("it.ozimov:java7-hamcrest-matchers:0.7.0")
-    testCompile("org.mockito:mockito-core:2.1.0-RC.2")
-    testCompile("org.spongepowered:launchwrappertestsuite:1.0-SNAPSHOT")
-
-    coreShadow("org.spongepowered:mixin:0.7.10-SNAPSHOT") {
-        isTransitive = false
-    }
-
-    embed("io.github.opencubicchunks:regionlib:0.52.0-SNAPSHOT")
-}
-
-tasks {
-    "task"(Jar::class) {
-
-    }
-}
 jar.apply {
     from(sourceSets["main"].output)
     from(sourceSets["api"].output)
     exclude("LICENSE.txt", "log4j2.xml")
 
+    configureManifest(manifest)
+}
+
+fun configureManifest(manifest: Manifest) {
     manifest.attributes["FMLAT"] = "cubicchunks_at.cfg"
     manifest.attributes["FMLCorePlugin"] = "io.github.opencubicchunks.cubicchunks.core.asm.coremod.CubicChunksCoreMod"
     manifest.attributes["TweakClass"] = "org.spongepowered.asm.launch.MixinTweaker"
@@ -415,17 +416,22 @@ jar.apply {
     manifest.attributes["FMLCorePluginContainsFMLMod"] = "true" // workaround for mixin double-loading the mod on new forge versions
 }
 
-shadowJar.apply {
-    configurations = listOf(coreShadow)
-    from(sourceSets["main"].output)
-    from(sourceSets["api"].output)
-    exclude("log4j2.xml")
-    into("/") {
+fun configureShadowJar(task: ShadowJar, classifier: String) {
+    task.configurations = listOf(coreShadow)
+    task.exclude("META-INF/MUMFREY*")
+    task.from(sourceSets["main"].output)
+    task.from(sourceSets["api"].output)
+    task.exclude("log4j2.xml")
+    task.into("/") {
         from(embed)
     }
 
-    classifier = "all"
+    task.classifier = classifier
+
+    configureManifest(task.manifest)
 }
+
+shadowJar.apply { configureShadowJar(this, "all") }
 
 test.apply {
     systemProperty("lwts.tweaker", "cubicchunks.tweaker.MixinTweakerServer")

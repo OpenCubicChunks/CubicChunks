@@ -98,34 +98,7 @@ public class RegionCubeIO implements ICubeIO {
             path = Paths.get(".").toAbsolutePath().resolve("clientCache").resolve("DIM" + world.provider.getDimension());
         }
 
-        Files.createDirectories(path);
-
-        Path part2d = path.resolve("region2d");
-        Files.createDirectories(part2d);
-
-        Path part3d = path.resolve("region3d");
-        Files.createDirectories(part3d);
-
-        this.save = new SaveCubeColumns(
-                new SaveSection2D(
-                        new SharedCachedRegionProvider<>(
-                                SimpleRegionProvider.createDefault(new EntryLocation2D.Provider(), part2d, 512)
-                        ),
-                        new SharedCachedRegionProvider<>(
-                                new SimpleRegionProvider<>(new EntryLocation2D.Provider(), part2d,
-                                        (keyProvider, regionKey) -> new ExtRegion<>(part2d, Collections.emptyList(), keyProvider, regionKey)
-                                )
-                        )),
-                new SaveSection3D(
-                        new SharedCachedRegionProvider<>(
-                                SimpleRegionProvider.createDefault(new EntryLocation3D.Provider(), part3d, 512)
-                        ),
-                        new SharedCachedRegionProvider<>(
-                                new SimpleRegionProvider<>(new EntryLocation3D.Provider(), part3d,
-                                        (keyProvider, regionKey) -> new ExtRegion<>(part3d, Collections.emptyList(), keyProvider, regionKey)
-                                )
-                        ))
-        );
+        this.save = SaveCubeColumns.create(path);
     }
 
     @Override public void flush() throws IOException {
@@ -215,6 +188,32 @@ public class RegionCubeIO implements ICubeIO {
 
         // signal the IO thread to process the save queue
         ThreadedFileIOBase.getThreadedIOInstance().queueIO(this);
+    }
+
+    @Override public boolean cubeExists(int cubeX, int cubeY, int cubeZ) {
+        try {
+            return this.save.getSaveSection3D().hasEntry(new EntryLocation3D(cubeX,  cubeY, cubeZ));
+        } catch (IOException e) {
+            CubicChunks.LOGGER.catching(e);
+            return false;
+        }
+    }
+
+    @Override public boolean columnExists(int columnX, int columnZ) {
+        try {
+            return this.save.getSaveSection2D().hasEntry(new EntryLocation2D(columnX, columnZ));
+        } catch (IOException e) {
+            CubicChunks.LOGGER.catching(e);
+            return false;
+        }
+    }
+
+    @Override public int getPendingColumnCount() {
+        return columnsToSave.size();
+    }
+
+    @Override public int getPendingCubeCount() {
+        return cubesToSave.size();
     }
 
     @Override

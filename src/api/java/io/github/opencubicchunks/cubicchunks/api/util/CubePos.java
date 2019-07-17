@@ -279,4 +279,8 @@ public class CubePos {
     public static CubePos fromBlockCoords(BlockPos pos) {
         return CubePos.fromBlockCoords(pos.getX(), pos.getY(), pos.getZ());
     }
+
+    public boolean containsBlock(BlockPos pos) {
+        return this.cubeX == blockToCube(pos.getX()) && this.cubeY == blockToCube(pos.getY()) && this.cubeZ == blockToCube(pos.getZ());
+    }
 }

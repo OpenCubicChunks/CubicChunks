@@ -26,6 +26,7 @@ package io.github.opencubicchunks.cubicchunks.core.world.provider;
 
 import io.github.opencubicchunks.cubicchunks.api.worldgen.ICubeGenerator;
 import mcp.MethodsReturnNonnullByDefault;
+import net.minecraft.world.World;
 
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -42,4 +43,6 @@ public interface ICubicWorldProvider {
     @Nullable ICubeGenerator createCubeGenerator();
 
     int getOriginalActualHeight();
+
+    World getWorld();
 }

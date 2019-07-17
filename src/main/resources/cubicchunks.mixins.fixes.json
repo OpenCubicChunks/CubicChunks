@@ -27,6 +27,7 @@
         "common.MixinBlockGrass",
         "common.MixinBlockMushroom",
         "common.MixinBlockStaticLiquid",
+        "common.MixinBiomeTemperatureConfig",
         "common.isblockloaded.MixinEntity",
         "common.worldgen.tree.MixinWorldGenCanopyTree",
         "common.worldgen.tree.MixinWorldGenHugeTrees",
