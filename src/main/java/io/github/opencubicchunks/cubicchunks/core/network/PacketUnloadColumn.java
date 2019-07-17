@@ -71,21 +71,18 @@ public class PacketUnloadColumn implements IMessage {
     public static class Handler extends AbstractClientMessageHandler<PacketUnloadColumn> {
 
         @Nullable @Override
-        public IMessage handleClientMessage(EntityPlayer player, PacketUnloadColumn message, MessageContext ctx) {
-            PacketUtils.ensureMainThread(this, player, message, ctx);
-
+        public void handleClientMessage(EntityPlayer player, PacketUnloadColumn message, MessageContext ctx) {
             ICubicWorld worldClient = (ICubicWorld) Minecraft.getMinecraft().world;
             if (!worldClient.isCubicWorld()) {
                 // Workaround for vanilla: when going between dimensions, chunk unload packets are received for the old dimension
                 // are received when client already has the new dimension. In vanilla it just happens to cause no issues but it breaks cubic chunks
                 // if we don't check for it
-                return null;
+                return;
             }
             CubeProviderClient cubeCache = (CubeProviderClient) worldClient.getCubeCache();
 
             ChunkPos chunkPos = message.getColumnPos();
             cubeCache.unloadChunk(chunkPos.chunkXPos, chunkPos.chunkZPos);
-            return null;
         }
     }
 }

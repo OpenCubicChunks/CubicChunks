@@ -385,6 +385,7 @@ public class XYZMap<T extends XYZAddressable> implements Iterable<T> {
         this.pointers[oldLastPointerIndex] = holeIndex;
         this.pointers[holePointerIndex] = 0;
         this.bucketsByPointer[holeIndex] = this.bucketsByPointer[lastElement];
+        this.bucketsByPointer[lastElement] = null;
         this.bucketsByHash[holePointerIndex] = null;
         this.size--;
 

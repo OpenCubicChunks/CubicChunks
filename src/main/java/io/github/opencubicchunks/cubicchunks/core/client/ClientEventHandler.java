@@ -28,7 +28,6 @@ import io.github.opencubicchunks.cubicchunks.api.util.MathUtil;
 import io.github.opencubicchunks.cubicchunks.core.CubicChunksConfig;
 import io.github.opencubicchunks.cubicchunks.core.server.ICubicPlayerList;
 import io.github.opencubicchunks.cubicchunks.core.CubicChunks;
-import io.github.opencubicchunks.cubicchunks.core.server.ICubicPlayerList;
 import io.github.opencubicchunks.cubicchunks.core.asm.mixin.ICubicWorldInternal;
 import io.github.opencubicchunks.cubicchunks.api.world.ICubicWorldType;
 import mcp.MethodsReturnNonnullByDefault;
@@ -255,8 +254,15 @@ public class ClientEventHandler {
             }));
         }
         private static void refreshText(GuiCreateWorld gui, GuiButton enableBtn) {
-            enableBtn.displayString = I18n.format("cubicchunks.gui.worldmenu." +
-                    (CubicChunksConfig.forceCubicChunks ? "cc_enable" : "cc_disable"));
+            String txt;
+            if (CubicChunksConfig.forceLoadCubicChunks == CubicChunksConfig.ForceCCMode.NONE) {
+                txt = "cc_disable";
+            } else if (CubicChunksConfig.forceLoadCubicChunks == CubicChunksConfig.ForceCCMode.NEW_WORLD) {
+                txt = "cc_enable";
+            } else {
+                txt = "cc_forced";
+            }
+            enableBtn.displayString = I18n.format("cubicchunks.gui.worldmenu." + txt);
         }
 
         @SubscribeEvent

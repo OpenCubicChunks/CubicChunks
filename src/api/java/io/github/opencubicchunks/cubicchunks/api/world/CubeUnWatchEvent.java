@@ -37,6 +37,13 @@ import net.minecraftforge.fml.common.eventhandler.Event;
  * This event can be fired several times for a same cube during game session
  * for a same and for a different players.
  *
+ * This event may be fired even if there was no corresponding {@link CubeWatchEvent}.
+ * This matches Forge behavior with {@link net.minecraftforge.event.world.ChunkWatchEvent.UnWatch} because
+ * UnWatch event is fired even if chunk has never been sent to players, but Watch event is fired only
+ * after the chunk packet has been sent.
+ * This event is fired after the corresponding unload packet has been sent to the player.
+ *
+ *
  * This is not an {@link #isCancelable()} event.
  * This event is fired on the {@link MinecraftForge#EVENT_BUS}.
  */

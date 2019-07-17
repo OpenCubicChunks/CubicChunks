@@ -103,13 +103,4 @@ public class PacketUtils {
     private static void writeVarIntByte(ByteBuf buf, int i, boolean hasMore) {
         buf.writeByte(i | (hasMore ? 0x80 : 0));
     }
-
-    public static <T extends IMessage> void ensureMainThread(AbstractClientMessageHandler<T> handler,
-            EntityPlayer player, T message, MessageContext ctx) {
-        IThreadListener taskQueue = Minecraft.getMinecraft();
-        if (!taskQueue.isCallingFromMinecraftThread()) {
-            taskQueue.addScheduledTask(() -> handler.handleClientMessage(player, message, ctx));
-            throw ThreadQuickExitException.INSTANCE;
-        }
-    }
 }

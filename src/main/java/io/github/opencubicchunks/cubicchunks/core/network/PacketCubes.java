@@ -31,6 +31,7 @@ import io.github.opencubicchunks.cubicchunks.core.util.PacketUtils;
 import io.github.opencubicchunks.cubicchunks.core.world.cube.Cube;
 import io.netty.buffer.ByteBuf;
 import mcp.MethodsReturnNonnullByDefault;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
@@ -130,9 +131,7 @@ public class PacketCubes implements IMessage {
     public static class Handler extends AbstractClientMessageHandler<PacketCubes> {
 
         @Nullable @Override
-        public IMessage handleClientMessage(EntityPlayer player, PacketCubes message, MessageContext ctx) {
-            PacketUtils.ensureMainThread(this, player, message, ctx);
-
+        public void handleClientMessage(EntityPlayer player, PacketCubes message, MessageContext ctx) {
             WorldClient worldClient = (WorldClient) player.getEntityWorld();
             CubeProviderClient cubeCache = (CubeProviderClient) worldClient.getChunkProvider();
 
@@ -165,11 +164,6 @@ public class PacketCubes implements IMessage {
                     tileEntity.handleUpdateTag(tag);
                 }
             }));
-            return null;
         }
-    }
-
-    private static int index(int x, int z) {
-        return x << 4 | z;
     }
 }

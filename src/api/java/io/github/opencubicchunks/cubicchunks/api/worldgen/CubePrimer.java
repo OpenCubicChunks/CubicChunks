@@ -38,6 +38,7 @@ public class CubePrimer {
     public static final IBlockState DEFAULT_STATE = Blocks.AIR.getDefaultState();
 
     private final char[] data = new char[4096];
+    private byte[] extData = null; // NEID-compat
 
     /**
      * Get the block state at the given location
@@ -49,8 +50,13 @@ public class CubePrimer {
      * @return the block state
      */
     public IBlockState getBlockState(int x, int y, int z) {
+        int idx = getBlockIndex(x, y, z);
+        int block = this.data[idx];
+        if (extData != null) {
+            block |= extData[idx] << 16;
+        }
         @SuppressWarnings("deprecation")
-        IBlockState iblockstate = Block.BLOCK_STATE_IDS.getByValue(this.data[getBlockIndex(x, y, z)]);
+        IBlockState iblockstate = Block.BLOCK_STATE_IDS.getByValue(block);
         return iblockstate == null ? DEFAULT_STATE : iblockstate;
     }
 
@@ -64,8 +70,16 @@ public class CubePrimer {
      */
     public void setBlockState(int x, int y, int z, @Nonnull IBlockState state) {
         @SuppressWarnings("deprecation")
-        char value = (char) Block.BLOCK_STATE_IDS.get(state);
-        this.data[getBlockIndex(x, y, z)] = value;
+        int value = Block.BLOCK_STATE_IDS.get(state);
+        char lsb = (char) value;
+        int idx = getBlockIndex(x, y, z);
+        this.data[idx] = lsb;
+        if (value > 0xFFFF) {
+            if (extData == null) {
+                extData = new byte[4096];
+            }
+            extData[idx] = (byte) (value >>> 16);
+        }
     }
 
     /**

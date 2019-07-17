@@ -26,8 +26,10 @@ package io.github.opencubicchunks.cubicchunks.core.network;
 
 import io.github.opencubicchunks.cubicchunks.core.CubicChunks;
 import mcp.MethodsReturnNonnullByDefault;
+import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.network.ThreadQuickExitException;
+import net.minecraft.util.IThreadListener;
 import net.minecraftforge.fml.client.FMLClientHandler;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
@@ -54,7 +56,7 @@ public abstract class AbstractMessageHandler<T extends IMessage> implements IMes
      * @return a message to send back to the Server, or null if no reply is necessary
      */
     @Nullable @SideOnly(Side.CLIENT)
-    public abstract IMessage handleClientMessage(EntityPlayer player, T message, MessageContext ctx);
+    public abstract void handleClientMessage(EntityPlayer player, T message, MessageContext ctx);
 
     /**
      * Handle a message received on the server side
@@ -62,7 +64,7 @@ public abstract class AbstractMessageHandler<T extends IMessage> implements IMes
      * @return a message to send back to the Client, or null if no reply is necessary
      */
     @Nullable
-    public abstract IMessage handleServerMessage(EntityPlayer player, T message, MessageContext ctx);
+    public abstract void handleServerMessage(EntityPlayer player, T message, MessageContext ctx);
 
     /*
     * Here is where I parse the side and get the player to pass on to the abstract methods.
@@ -73,23 +75,27 @@ public abstract class AbstractMessageHandler<T extends IMessage> implements IMes
     @Nullable @Override
     public IMessage onMessage(T message, MessageContext ctx) {
         try {
+            IThreadListener taskQueue = Minecraft.getMinecraft();
+            if (!taskQueue.isCallingFromMinecraftThread()) {
+                taskQueue.addScheduledTask(() -> onMessage(message, ctx));
+                return null;
+            }
             // due to compile-time issues, FML will crash if you try to use Minecraft.getMinecraft() here,
             // even when you restrict this code to the client side and before the code is ever accessed;
             // a solution is to use proxy classes to get the player.
             if (ctx.side.isClient()) {
                 // the only reason to check side here is to use our more aptly named handling methods
                 // client side proxy will return the client side EntityPlayer
-                return handleClientMessage(CubicChunks.proxy.getPlayerEntity(ctx), message, ctx);
+                handleClientMessage(CubicChunks.proxy.getPlayerEntity(ctx), message, ctx);
+                return null;
             }
             // server side proxy will return the server side EntityPlayer
-            return handleServerMessage(CubicChunks.proxy.getPlayerEntity(ctx), message, ctx);
-        } catch (ThreadQuickExitException ex) {
-            // ignore
+            handleServerMessage(CubicChunks.proxy.getPlayerEntity(ctx), message, ctx);
             return null;
         } catch (Throwable t) {
             // catch *EVERYTHING* because Minecraft is dumb and will only print the stacktrace and continue
             // catch all and ask forge to shut down
-            t.printStackTrace();
+            CubicChunks.LOGGER.catching(t);
             FMLCommonHandler.instance().exitJava(-1, false);
             throw t;
         }

@@ -34,13 +34,14 @@ import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
-import io.github.opencubicchunks.cubicchunks.api.world.ICube;
 import gnu.trove.map.TIntObjectMap;
 import gnu.trove.map.hash.TIntObjectHashMap;
 import io.github.opencubicchunks.cubicchunks.api.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.api.util.XYZMap;
 import io.github.opencubicchunks.cubicchunks.api.util.XZMap;
+import io.github.opencubicchunks.cubicchunks.api.world.CubeWatchEvent;
 import io.github.opencubicchunks.cubicchunks.api.world.IColumn;
+import io.github.opencubicchunks.cubicchunks.api.world.ICube;
 import io.github.opencubicchunks.cubicchunks.core.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.core.CubicChunksConfig;
 import io.github.opencubicchunks.cubicchunks.core.asm.mixin.ICubicWorldInternal;
@@ -51,16 +52,7 @@ import io.github.opencubicchunks.cubicchunks.core.network.PacketDispatcher;
 import io.github.opencubicchunks.cubicchunks.core.util.WatchersSortingList;
 import io.github.opencubicchunks.cubicchunks.core.visibility.CubeSelector;
 import io.github.opencubicchunks.cubicchunks.core.visibility.CuboidalCubeSelector;
-import io.github.opencubicchunks.cubicchunks.core.CubicChunks;
-import io.github.opencubicchunks.cubicchunks.core.entity.CubicEntityTracker;
-import io.github.opencubicchunks.cubicchunks.api.util.CubePos;
-import io.github.opencubicchunks.cubicchunks.api.util.XYZMap;
-import io.github.opencubicchunks.cubicchunks.api.util.XZMap;
-import io.github.opencubicchunks.cubicchunks.api.world.IColumn;
-import io.github.opencubicchunks.cubicchunks.core.asm.mixin.ICubicWorldInternal;
 import io.github.opencubicchunks.cubicchunks.core.world.cube.Cube;
-import gnu.trove.map.TIntObjectMap;
-import gnu.trove.map.hash.TIntObjectHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -73,10 +65,19 @@ import net.minecraft.world.WorldServer;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraftforge.common.ForgeChunkManager;
 import net.minecraftforge.common.ForgeChunkManager.Ticket;
-import net.minecraftforge.fml.client.FMLClientHandler;
-import net.minecraftforge.fml.common.FMLCommonHandler;
+import net.minecraftforge.common.MinecraftForge;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.IdentityHashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -206,12 +207,16 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
 
     private final TickableChunkContainer tickableChunksCubesToReturn = new TickableChunkContainer();
 
+    // see comment in updateMovingPlayer() for explnation why it's in this class
+    private final ChunkGc chunkGc;
+
     public PlayerCubeMap(WorldServer worldServer) {
-        super((WorldServer) worldServer);
+        super(worldServer);
         this.cubeCache = ((ICubicWorldInternal.Server) worldServer).getCubeCache();
         this.setPlayerViewDistance(worldServer.getMinecraftServer().getPlayerList().getViewDistance(),
                 ((ICubicPlayerList) worldServer.getMinecraftServer().getPlayerList()).getVerticalViewDistance());
         ((ICubicWorldInternal) worldServer).getLightingManager().registerHeightChangeListener(this);
+        this.chunkGc = new ChunkGc(((ICubicWorldInternal.Server) worldServer).getCubeCache());
     }
 
     /**
@@ -445,8 +450,10 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
             }
             //Sending entities per cube.
             for (Cube cube : cubes) {
-                ((CubicEntityTracker) getWorldServer().getEntityTracker())
-                        .sendLeashedEntitiesInCube(player, cube);
+                ((CubicEntityTracker) getWorldServer().getEntityTracker()).sendLeashedEntitiesInCube(player, cube);
+                CubeWatcher watcher = getCubeWatcher(cube.getCoords());
+                assert watcher != null;
+                MinecraftForge.EVENT_BUS.post(new CubeWatchEvent(cube, cube.getCoords(), watcher, player));
             }
 
         }
@@ -633,6 +640,21 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
         this.updatePlayer(playerWrapper, playerWrapper.getManagedCubePos(), CubePos.fromEntity(player));
         playerWrapper.updateManagedPos();
         this.setNeedSort();
+
+        // With ChunkGc being separate from PlayerCubeMap, there are 2 issues:
+        // Problem 0: Sometimes, a chunk can be generated after CubeWatcher's chunk load callback returns with a null
+        // but before ChunkGC call. This means that the cube will get unloaded, even when ChunkWatcher is waiting for it.
+        // Problem 1: When chunkGc call is not in this method, sometimes, when a player teleports far away and is
+        // unlucky, and ChunkGc runs in the same tick the teleport appears to happen after PlayerCubeMap call, but
+        // before ChunkGc call. This means that PlayerCubeMap won't yet have a CubeWatcher for the player cubes at all,
+        // so even directly checking for CubeWatchers before unload attempt won't work.
+        //
+        // While normally not an issue as it will be reloaded soon anyway, it breaks a lot of things if that cube
+        // contains the player. Which is not unlikely if the player is what caused generating this cube in the first place
+        // for problem #0.
+        // So we put ChunkGc here so that we can be sure it has consistent data about player location, and that no chunks are
+        // loaded while we aren't looking.
+        this.chunkGc.tick();
     }
 
     private void updatePlayer(PlayerWrapper entry, CubePos oldPos, CubePos newPos) {
@@ -807,7 +829,8 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
     void removeEntry(CubeWatcher cubeWatcher) {
         CubePos cubePos = cubeWatcher.getCubePos();
         cubeWatcher.updateInhabitedTime();
-        this.cubeWatchers.remove(cubePos.getX(), cubePos.getY(), cubePos.getZ());
+        CubeWatcher removed = this.cubeWatchers.remove(cubePos.getX(), cubePos.getY(), cubePos.getZ());
+        assert removed == cubeWatcher : "Removed unexpected cube watcher";
         this.cubeWatchersToUpdate.remove(cubeWatcher);
         this.cubesToGenerate.remove(cubeWatcher);
         this.cubesToSendToClients.remove(cubeWatcher);

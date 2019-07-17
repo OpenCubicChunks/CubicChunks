@@ -32,8 +32,10 @@ import io.github.opencubicchunks.cubicchunks.api.world.ICubicWorld;
 import io.github.opencubicchunks.cubicchunks.core.CubicChunksConfig;
 import io.github.opencubicchunks.cubicchunks.core.asm.mixin.ICubicWorldInternal;
 import io.github.opencubicchunks.cubicchunks.core.world.cube.Cube;
+import io.github.opencubicchunks.cubicchunks.api.worldgen.CubeGeneratorsRegistry;
 import io.github.opencubicchunks.cubicchunks.api.worldgen.CubePrimer;
 import io.github.opencubicchunks.cubicchunks.api.worldgen.ICubeGenerator;
+import io.github.opencubicchunks.cubicchunks.api.worldgen.populator.ICubicPopulator;
 import io.github.opencubicchunks.cubicchunks.core.worldgen.generator.WorldGenUtils;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.state.IBlockState;
@@ -51,6 +53,7 @@ import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 import net.minecraftforge.fml.common.registry.ForgeRegistries;
 import net.minecraftforge.fml.common.registry.GameRegistry;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -183,6 +186,14 @@ public class VanillaCompatibilityGenerator implements ICubeGenerator {
     public void recreateStructures(Chunk column) {
         vanilla.recreateStructures(column, column.xPosition, column.zPosition);
     }
+    
+    private Random getCubeSpecificRandom(int cubeX, int cubeY, int cubeZ) {
+        Random rand = new Random(world.getSeed());
+        rand.setSeed(rand.nextInt() ^ cubeX);
+        rand.setSeed(rand.nextInt() ^ cubeZ);
+        rand.setSeed(rand.nextInt() ^ cubeY);
+        return rand;
+    }
 
     @Override
     public CubePrimer generateCube(int cubeX, int cubeY, int cubeZ) {
@@ -261,6 +272,8 @@ public class VanillaCompatibilityGenerator implements ICubeGenerator {
     @Override
     public void populate(ICube cube) {
         tryInit(vanilla, world);
+        Random rand = getCubeSpecificRandom(cube.getX(), cube.getY(), cube.getZ());
+        CubeGeneratorsRegistry.populateVanillaCubic(world, rand, cube);
         if (cube.getY() < 0 || cube.getY() >= worldHeightCubes) {
             return;
         }

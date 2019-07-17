@@ -47,7 +47,15 @@ public interface ICubeIO extends IThreadedFileIO {
 
 	void saveCube(Cube cube);
 
-	/**
+    boolean cubeExists(int cubeX, int cubeY, int cubeZ);
+
+    boolean columnExists(int columnX, int columnZ);
+
+    int getPendingColumnCount();
+
+    int getPendingCubeCount();
+
+    /**
 	 * Stores partially read cube, before sync read but after async read
 	 */
 	class PartialCubeData {

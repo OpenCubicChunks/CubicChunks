@@ -38,13 +38,18 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.PlayerEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 import javax.annotation.Nonnull;
@@ -63,7 +68,7 @@ public class AsyncWorldIOExecutor {
     private static final int BASE_THREADS = 1;
     private static final int PLAYERS_PER_THREAD = 50;
 
-    private static final Map<QueuedCube, AsyncCubeIOProvider> cubeTasks = Maps.newConcurrentMap();
+    private static final Map<QueuedCube, AsyncCubeIOProvider> cubeTasks = new ConcurrentHashMap<>(20000, 0.8f, 1);
     private static final Map<QueuedColumn, AsyncColumnIOProvider> columnTasks = Maps.newConcurrentMap();
 
     private static final AtomicInteger threadCounter = new AtomicInteger();
@@ -364,6 +369,8 @@ public class AsyncWorldIOExecutor {
     // Sync completion of loading
     @SubscribeEvent
     public static void onWorldTick(TickEvent.WorldTickEvent evt) {
-        tick();
+        if (evt.phase == TickEvent.Phase.END) {
+            tick();
+        }
     }
 }

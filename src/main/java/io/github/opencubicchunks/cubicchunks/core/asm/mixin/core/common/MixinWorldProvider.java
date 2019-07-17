@@ -135,4 +135,8 @@ public abstract class MixinWorldProvider implements ICubicWorldProvider {
             }
         }
     }
+
+    @Override public World getWorld() {
+        return world;
+    }
 }

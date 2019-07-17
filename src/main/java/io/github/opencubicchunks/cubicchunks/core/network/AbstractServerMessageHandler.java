@@ -38,8 +38,7 @@ public abstract class AbstractServerMessageHandler<T extends IMessage> extends A
 
     // implementing a final version of the client message handler both prevents it from
     // appearing automatically and prevents us from ever accidentally overriding it
-    @Nullable public final IMessage handleClientMessage(EntityPlayer player, T message, MessageContext ctx) {
-        return null;
+    @Nullable public final void handleClientMessage(EntityPlayer player, T message, MessageContext ctx) {
     }
 }
 

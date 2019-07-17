@@ -28,19 +28,20 @@ import static io.github.opencubicchunks.cubicchunks.api.util.Coords.blockToCube;
 import static io.github.opencubicchunks.cubicchunks.api.util.Coords.blockToLocal;
 
 import com.google.common.base.Predicate;
+import io.github.opencubicchunks.cubicchunks.api.util.Coords;
+import io.github.opencubicchunks.cubicchunks.api.util.CubePos;
+import io.github.opencubicchunks.cubicchunks.api.world.IColumn;
+import io.github.opencubicchunks.cubicchunks.api.world.ICube;
+import io.github.opencubicchunks.cubicchunks.api.world.ICubicWorld;
+import io.github.opencubicchunks.cubicchunks.api.world.IHeightMap;
 import io.github.opencubicchunks.cubicchunks.core.CubicChunksConfig;
+import io.github.opencubicchunks.cubicchunks.core.asm.mixin.ICubicWorldInternal;
 import io.github.opencubicchunks.cubicchunks.core.world.ClientHeightMap;
 import io.github.opencubicchunks.cubicchunks.core.world.ServerHeightMap;
 import io.github.opencubicchunks.cubicchunks.core.world.column.ColumnTileEntityMap;
 import io.github.opencubicchunks.cubicchunks.core.world.column.CubeMap;
 import io.github.opencubicchunks.cubicchunks.core.world.cube.BlankCube;
 import io.github.opencubicchunks.cubicchunks.core.world.cube.Cube;
-import io.github.opencubicchunks.cubicchunks.api.world.ICube;
-import io.github.opencubicchunks.cubicchunks.api.util.Coords;
-import io.github.opencubicchunks.cubicchunks.api.world.ICubicWorld;
-import io.github.opencubicchunks.cubicchunks.api.world.IHeightMap;
-import io.github.opencubicchunks.cubicchunks.core.asm.mixin.ICubicWorldInternal;
-import io.github.opencubicchunks.cubicchunks.api.world.IColumn;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
@@ -168,6 +169,10 @@ public abstract class MixinChunk_Cubes implements IColumn {
             return;
         }
         Cube loaded = getWorld().getCubeCache().getLoadedCube(this.xPosition, index, this.zPosition);
+        if (loaded == null) {
+            // BlankCube clientside. This is the only case where getEBS doesn't create cube
+            return;
+        }
         if (loaded.getStorage() == null) {
             loaded.setStorage(ebs);
         } else {
@@ -176,7 +181,7 @@ public abstract class MixinChunk_Cubes implements IColumn {
                             + "This is not supported. "
                             + "CubePos(%d, %d, %d), loadedCube(%s), loadedCubeStorage(%s)",
                     this.xPosition, index, this.zPosition,
-                    loaded, loaded == null ? null : loaded.getStorage()));
+                    loaded, loaded.getStorage()));
         }
     }
 
@@ -392,7 +397,19 @@ public abstract class MixinChunk_Cubes implements IColumn {
     private void setBlockState_CubicChunks_EBSSetRedirect(ExtendedBlockStorage[] array, int index, ExtendedBlockStorage val) {
         setEBS_CubicChunks(index, val);
     }
-    
+
+    @Inject(method = "setBlockState", at = @At(
+        value = "FIELD",
+        target = "Lnet/minecraft/world/chunk/Chunk;storageArrays:[Lnet/minecraft/world/chunk/storage/ExtendedBlockStorage;",
+        args = "array=set"
+    ), cancellable = true)
+    private void setBlockState_CubicChunks_EBSSetInject(BlockPos pos, IBlockState state, CallbackInfoReturnable<IBlockState> cir) {
+        if (isColumn && getWorld().getCubeCache().getLoadedCube(CubePos.fromBlockCoords(pos)) == null) {
+            cir.setReturnValue(null);
+            cir.cancel();
+        }
+    }
+
     @Redirect(method = "setBlockState", at = @At(value = "FIELD", target = "Lnet/minecraft/world/chunk/Chunk;isModified:Z"))
     private void setIsModifiedFromSetBlockState_Field(Chunk chunk, boolean isModifiedIn, BlockPos pos, IBlockState state) {
         if (isColumn) {

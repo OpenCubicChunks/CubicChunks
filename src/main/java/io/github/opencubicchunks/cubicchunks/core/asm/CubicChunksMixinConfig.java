@@ -230,7 +230,7 @@ public class CubicChunksMixinConfig implements IMixinConfigPlugin {
                 new String[] {"io.github.opencubicchunks.cubicchunks.core.asm.mixin.selectable.client.MixinEntityRenderer",
                         "io.github.opencubicchunks.cubicchunks.core.asm.mixin.selectable.client.MixinRenderGlobal"},
                 "Enabling this option will make the vertical view distance slider affect clientside vertical render distance." +
-                        "When disabled, only serverside load distance is affected.");
+                        " When disabled, only serverside load distance is affected.");
 
         private final boolean defaultValue;
         // Load this Mixin class only if option is false.
