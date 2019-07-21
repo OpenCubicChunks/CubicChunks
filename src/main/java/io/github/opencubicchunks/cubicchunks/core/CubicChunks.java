@@ -27,18 +27,13 @@ package io.github.opencubicchunks.cubicchunks.core;
 import io.github.opencubicchunks.cubicchunks.core.network.PacketDispatcher;
 import io.github.opencubicchunks.cubicchunks.core.proxy.CommonProxy;
 import io.github.opencubicchunks.cubicchunks.core.world.type.VanillaCubicWorldType;
-import io.github.opencubicchunks.cubicchunks.api.worldgen.CubeGeneratorsRegistry;
+import io.github.opencubicchunks.cubicchunks.core.worldgen.WorldgenHangWatchdog;
 import mcp.MethodsReturnNonnullByDefault;
-import net.minecraft.launchwrapper.Launch;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.datafix.DataFixer;
-import net.minecraft.util.datafix.FixTypes;
-import net.minecraft.world.WorldType;
 import net.minecraftforge.fml.common.FMLCommonHandler;
+import net.minecraftforge.fml.common.ICrashCallable;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
 import net.minecraftforge.fml.common.SidedProxy;
-import net.minecraftforge.fml.common.asm.transformers.deobf.FMLDeobfuscatingRemapper;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLServerAboutToStartEvent;
@@ -99,6 +94,19 @@ public class CubicChunks {
     public void preInit(FMLPreInitializationEvent e) {
         LOGGER = e.getModLog();
 
+        FMLCommonHandler.instance().registerCrashCallable(new ICrashCallable() {
+            @Override public String getLabel() {
+                return "CubicChunks WorldGen Hang Watchdog samples";
+            }
+
+            @Override public String call() throws Exception {
+                String message = WorldgenHangWatchdog.getCrashInfo();
+                if (message == null) {
+                    return "(no data)";
+                }
+                return message;
+            }
+        });
         VanillaCubicWorldType.create();
         LOGGER.debug("Registered world types");
     }
