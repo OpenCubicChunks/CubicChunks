@@ -110,11 +110,11 @@ public class MathUtil {
     public static float maxIgnoreNan(float... a) {
         float max = a[0];
         for (int i = 1; i < a.length; i++) {
-            if (max != max || a[i] > max) {
+            if (a[i] > max || Float.isNaN(max)) {
                 max = a[i];
             }
         }
-        if (max != max) {
+        if (Float.isNaN(max)) {
             throw new IllegalArgumentException("All values are NaN");
         }
         return max;
