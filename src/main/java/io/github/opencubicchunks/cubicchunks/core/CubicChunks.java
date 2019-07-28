@@ -148,7 +148,7 @@ public class CubicChunks {
             public VanillaCompatibilityGenerator provideGenerator(IChunkGenerator vanillaChunkGenerator, World world) {
                 return new VanillaCompatibilityGenerator(vanillaChunkGenerator, world);
             }
-        }.setRegistryName(VanillaCompatibilityGeneratorProviderBase.defaultCompatibilityGenerator)
+        }.setRegistryName(VanillaCompatibilityGeneratorProviderBase.DEFAULT)
                 .setUnlocalizedName("cubicchunks.gui.worldmenu.cc_default"));
     }
     

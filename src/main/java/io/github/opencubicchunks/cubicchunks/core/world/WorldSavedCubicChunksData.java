@@ -60,7 +60,7 @@ public class WorldSavedCubicChunksData extends WorldSavedData {
         if(nbt.hasKey("compatibilityGeneratorType"))
             compatibilityGeneratorType = new ResourceLocation(nbt.getString("compatibilityGeneratorType"));
         else
-            compatibilityGeneratorType = VanillaCompatibilityGeneratorProviderBase.defaultCompatibilityGenerator;
+            compatibilityGeneratorType = VanillaCompatibilityGeneratorProviderBase.DEFAULT;
     }
 
     @Override

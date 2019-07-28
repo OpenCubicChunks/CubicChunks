@@ -33,7 +33,7 @@ import net.minecraftforge.registries.RegistryBuilder;
 
 public abstract class VanillaCompatibilityGeneratorProviderBase implements IForgeRegistryEntry<VanillaCompatibilityGeneratorProviderBase> {
     
-    public static final ResourceLocation defaultCompatibilityGenerator = new ResourceLocation("cubicchunks","default");
+    public static final ResourceLocation DEFAULT = new ResourceLocation("cubicchunks","default");
     
     public static IForgeRegistry<VanillaCompatibilityGeneratorProviderBase> REGISTRY;
     
@@ -42,7 +42,7 @@ public abstract class VanillaCompatibilityGeneratorProviderBase implements IForg
             .setType(VanillaCompatibilityGeneratorProviderBase.class)
             .setIDRange(0, 256)
             .setName(new ResourceLocation("cubicchunks", "vanilla_compatibility_generators_registry"))
-            .setDefaultKey(defaultCompatibilityGenerator)
+            .setDefaultKey(DEFAULT)
             .create();
     }
     
