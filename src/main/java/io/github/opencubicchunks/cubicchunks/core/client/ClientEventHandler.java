@@ -258,6 +258,7 @@ public class ClientEventHandler {
                 refreshText(gui, enableCC);
             }));
             LIST_OF_GEN_OPTIONS.addAll(VanillaCompatibilityGeneratorProviderBase.REGISTRY.getKeys());
+            CURRENT_GEN_OPTION = LIST_OF_GEN_OPTIONS.indexOf(new ResourceLocation(CubicChunksConfig.compatibilityGeneratorType));
         }
         
         private static void refreshText(GuiCreateWorld gui, GuiButton enableBtn) {

@@ -32,23 +32,22 @@ import net.minecraftforge.registries.IForgeRegistryEntry;
 import net.minecraftforge.registries.RegistryBuilder;
 
 public abstract class VanillaCompatibilityGeneratorProviderBase implements IForgeRegistryEntry<VanillaCompatibilityGeneratorProviderBase> {
-    
-    public static final ResourceLocation DEFAULT = new ResourceLocation("cubicchunks","default");
-    
+
+    public static final ResourceLocation DEFAULT = new ResourceLocation("cubicchunks", "default");
     public static IForgeRegistry<VanillaCompatibilityGeneratorProviderBase> REGISTRY;
-    
+
     public static void init() {
         REGISTRY = new RegistryBuilder<VanillaCompatibilityGeneratorProviderBase>()
-            .setType(VanillaCompatibilityGeneratorProviderBase.class)
-            .setIDRange(0, 256)
-            .setName(new ResourceLocation("cubicchunks", "vanilla_compatibility_generators_registry"))
-            .setDefaultKey(DEFAULT)
-            .create();
+                .setType(VanillaCompatibilityGeneratorProviderBase.class)
+                .setIDRange(0, 256)
+                .setName(new ResourceLocation("cubicchunks", "vanilla_compatibility_generators_registry"))
+                .setDefaultKey(DEFAULT)
+                .create();
     }
-    
+
     public ResourceLocation registryName;
     public String unlocalizedName;
-    
+
     @Override
     public VanillaCompatibilityGeneratorProviderBase setRegistryName(ResourceLocation registryNameIn) {
         registryName = registryNameIn;
@@ -63,16 +62,16 @@ public abstract class VanillaCompatibilityGeneratorProviderBase implements IForg
     @Override
     public Class<VanillaCompatibilityGeneratorProviderBase> getRegistryType() {
         return VanillaCompatibilityGeneratorProviderBase.class;
-    };
-    
+    }
+
     public VanillaCompatibilityGeneratorProviderBase setUnlocalizedName(String nameIn) {
         unlocalizedName = nameIn;
         return this;
     }
-    
+
     public String getUnlocalizedName() {
         return unlocalizedName;
     }
-    
+
     public abstract ICubeGenerator provideGenerator(IChunkGenerator vanillaChunkGenerator, World world);
 }
