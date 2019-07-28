@@ -27,8 +27,6 @@ package io.github.opencubicchunks.cubicchunks.core;
 import com.google.common.collect.Range;
 import com.google.common.collect.TreeRangeSet;
 
-import io.github.opencubicchunks.cubicchunks.api.worldgen.CubeGeneratorsRegistry;
-import io.github.opencubicchunks.cubicchunks.api.worldgen.VanillaCompatibilityGeneratorProviderBase;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.config.Config;

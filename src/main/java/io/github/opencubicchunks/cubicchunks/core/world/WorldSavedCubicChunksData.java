@@ -24,7 +24,9 @@
  */
 package io.github.opencubicchunks.cubicchunks.core.world;
 
+import io.github.opencubicchunks.cubicchunks.api.worldgen.VanillaCompatibilityGeneratorProviderBase;
 import io.github.opencubicchunks.cubicchunks.core.CubicChunks;
+import io.github.opencubicchunks.cubicchunks.core.CubicChunksConfig;
 import io.github.opencubicchunks.cubicchunks.core.util.AddressTools;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ResourceLocation;
@@ -46,6 +48,7 @@ public class WorldSavedCubicChunksData extends WorldSavedData {
             minHeight = CubicChunks.MIN_BLOCK_Y;
             maxHeight = CubicChunks.MAX_BLOCK_Y;
             isCubicChunks = true;
+            compatibilityGeneratorType = new ResourceLocation(CubicChunksConfig.compatibilityGeneratorType);
         }
     }
 
@@ -57,7 +60,7 @@ public class WorldSavedCubicChunksData extends WorldSavedData {
         if(nbt.hasKey("compatibilityGeneratorType"))
             compatibilityGeneratorType = new ResourceLocation(nbt.getString("compatibilityGeneratorType"));
         else
-            compatibilityGeneratorType = new ResourceLocation(CubicChunks.MODID,"default");
+            compatibilityGeneratorType = VanillaCompatibilityGeneratorProviderBase.defaultCompatibilityGenerator;
     }
 
     @Override

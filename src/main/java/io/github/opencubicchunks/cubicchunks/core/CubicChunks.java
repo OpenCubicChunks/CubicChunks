@@ -40,7 +40,6 @@ import net.minecraft.world.WorldType;
 import net.minecraft.world.gen.IChunkGenerator;
 import net.minecraftforge.event.RegistryEvent;
 import io.github.opencubicchunks.cubicchunks.core.worldgen.WorldgenHangWatchdog;
-import mcp.MethodsReturnNonnullByDefault;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.ICrashCallable;
 import net.minecraftforge.fml.common.Mod;

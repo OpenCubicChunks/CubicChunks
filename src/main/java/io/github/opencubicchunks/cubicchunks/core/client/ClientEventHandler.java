@@ -30,7 +30,6 @@ import io.github.opencubicchunks.cubicchunks.core.server.ICubicPlayerList;
 import io.github.opencubicchunks.cubicchunks.core.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.core.asm.mixin.ICubicWorldInternal;
 import io.github.opencubicchunks.cubicchunks.api.world.ICubicWorldType;
-import io.github.opencubicchunks.cubicchunks.api.worldgen.CubeGeneratorsRegistry;
 import io.github.opencubicchunks.cubicchunks.api.worldgen.VanillaCompatibilityGeneratorProviderBase;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.client.Minecraft;
@@ -266,7 +265,9 @@ public class ClientEventHandler {
             if (CubicChunksConfig.forceLoadCubicChunks == CubicChunksConfig.ForceCCMode.NONE) {
                 txt = "cubicchunks.gui.worldmenu.cc_disable";
             } else {
-                txt = VanillaCompatibilityGeneratorProviderBase.REGISTRY.getValue(new ResourceLocation(CubicChunksConfig.compatibilityGeneratorType)).getUnlocalizedName();
+                VanillaCompatibilityGeneratorProviderBase provider = VanillaCompatibilityGeneratorProviderBase.REGISTRY
+                        .getValue(new ResourceLocation(CubicChunksConfig.compatibilityGeneratorType));
+                txt = provider.getUnlocalizedName();
             }
             enableBtn.displayString = I18n.format(txt);
         }
