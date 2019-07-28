@@ -24,15 +24,19 @@
  */
 package io.github.opencubicchunks.cubicchunks.core.world;
 
+import io.github.opencubicchunks.cubicchunks.api.worldgen.VanillaCompatibilityGeneratorProviderBase;
 import io.github.opencubicchunks.cubicchunks.core.CubicChunks;
+import io.github.opencubicchunks.cubicchunks.core.CubicChunksConfig;
 import io.github.opencubicchunks.cubicchunks.core.util.AddressTools;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.storage.WorldSavedData;
 
 public class WorldSavedCubicChunksData extends WorldSavedData {
 
     public boolean isCubicChunks = false;
     public int minHeight = 0, maxHeight = 256;
+    public ResourceLocation compatibilityGeneratorType;
 
     public WorldSavedCubicChunksData(String name) {
         super(name);
@@ -44,6 +48,7 @@ public class WorldSavedCubicChunksData extends WorldSavedData {
             minHeight = CubicChunks.MIN_BLOCK_Y;
             maxHeight = CubicChunks.MAX_BLOCK_Y;
             isCubicChunks = true;
+            compatibilityGeneratorType = new ResourceLocation(CubicChunksConfig.compatibilityGeneratorType);
         }
     }
 
@@ -52,6 +57,10 @@ public class WorldSavedCubicChunksData extends WorldSavedData {
         minHeight = nbt.getInteger("minHeight");
         maxHeight = nbt.getInteger("maxHeight");
         isCubicChunks = !nbt.hasKey("isCubicChunks") || nbt.getBoolean("isCubicChunks");
+        if(nbt.hasKey("compatibilityGeneratorType"))
+            compatibilityGeneratorType = new ResourceLocation(nbt.getString("compatibilityGeneratorType"));
+        else
+            compatibilityGeneratorType = VanillaCompatibilityGeneratorProviderBase.DEFAULT;
     }
 
     @Override
@@ -59,6 +68,7 @@ public class WorldSavedCubicChunksData extends WorldSavedData {
         compound.setInteger("minHeight", minHeight);
         compound.setInteger("maxHeight", maxHeight);
         compound.setBoolean("isCubicChunks", isCubicChunks);
+        compound.setString("compatibilityGeneratorType", compatibilityGeneratorType.toString());
         return compound;
     }
 

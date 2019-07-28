@@ -26,7 +26,9 @@ package io.github.opencubicchunks.cubicchunks.core;
 
 import com.google.common.collect.Range;
 import com.google.common.collect.TreeRangeSet;
+
 import mcp.MethodsReturnNonnullByDefault;
+import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.config.Config;
 import net.minecraftforge.common.config.ConfigManager;
 import net.minecraftforge.fml.client.event.ConfigChangedEvent;
@@ -122,6 +124,10 @@ public class CubicChunksConfig {
     @Config.LangKey("cubicchunks.config.biome_temperature_scale_max_y")
     @Config.Comment("Above this height, biome temperature will no longer change")
     public static int biomeTemperatureScaleMaxY = 256;
+    
+    @Config.LangKey("cubicchunks.config.compatibility_generator_type")
+    @Config.Comment("Vanilla compatibility generator type, which will convert vanilla world type generators output in cubic")
+    public static String compatibilityGeneratorType = "cubicchunks:default";
 
     public static int defaultMaxCubesPerChunkloadingTicket = 25 * 16;
     public static Map<String, Integer> modMaxCubesPerChunkloadingTicket = new HashMap<>();
@@ -174,15 +180,15 @@ public class CubicChunksConfig {
         sync();
     }
 
-    public static void flipForceCubicChunks() {
-        switch (forceLoadCubicChunks) {
-            case NONE:
-                forceLoadCubicChunks = ForceCCMode.NEW_WORLD;
-                break;
-            case NEW_WORLD:
-                forceLoadCubicChunks = ForceCCMode.NONE;
-                break;
-        }
+    public static void disableCubicChunks() {
+        forceLoadCubicChunks = ForceCCMode.NONE;
+        sync();
+    }
+    
+    public static void setGenerator(ResourceLocation generatorTypeIn) {
+        if(forceLoadCubicChunks == ForceCCMode.NONE)
+            forceLoadCubicChunks = ForceCCMode.NEW_WORLD;
+        compatibilityGeneratorType = generatorTypeIn.toString();
         sync();
     }
 
