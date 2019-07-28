@@ -28,6 +28,7 @@ import com.google.common.collect.Range;
 import com.google.common.collect.TreeRangeSet;
 
 import io.github.opencubicchunks.cubicchunks.api.worldgen.CubeGeneratorsRegistry;
+import io.github.opencubicchunks.cubicchunks.api.worldgen.VanillaCompatibilityGeneratorProviderBase;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.config.Config;
@@ -181,22 +182,15 @@ public class CubicChunksConfig {
         sync();
     }
 
-    public static void flipForceCubicChunks() {
-        switch (forceLoadCubicChunks) {
-            case NONE:
-                forceLoadCubicChunks = ForceCCMode.NEW_WORLD;
-                break;
-            case NEW_WORLD:
-                ResourceLocation nextType = CubeGeneratorsRegistry.getNextGeneratorType(new ResourceLocation(compatibilityGeneratorType));
-                if (nextType == null) {
-                    forceLoadCubicChunks = ForceCCMode.NONE;
-                    compatibilityGeneratorType = CubeGeneratorsRegistry.getFirstGeneratorType().toString();
-                }
-                else {
-                    compatibilityGeneratorType = nextType.toString();
-                }
-                break;
-        }
+    public static void disableCubicChunks() {
+        forceLoadCubicChunks = ForceCCMode.NONE;
+        sync();
+    }
+    
+    public static void setGenerator(ResourceLocation generatorTypeIn) {
+        if(forceLoadCubicChunks == ForceCCMode.NONE)
+            forceLoadCubicChunks = ForceCCMode.NEW_WORLD;
+        compatibilityGeneratorType = generatorTypeIn.toString();
         sync();
     }
 

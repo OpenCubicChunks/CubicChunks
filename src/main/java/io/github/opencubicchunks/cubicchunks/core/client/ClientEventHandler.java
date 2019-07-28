@@ -31,6 +31,7 @@ import io.github.opencubicchunks.cubicchunks.core.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.core.asm.mixin.ICubicWorldInternal;
 import io.github.opencubicchunks.cubicchunks.api.world.ICubicWorldType;
 import io.github.opencubicchunks.cubicchunks.api.worldgen.CubeGeneratorsRegistry;
+import io.github.opencubicchunks.cubicchunks.api.worldgen.VanillaCompatibilityGeneratorProviderBase;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
@@ -53,6 +54,7 @@ import net.minecraftforge.fml.common.gameevent.TickEvent;
 
 import net.minecraftforge.fml.relauncher.Side;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -225,6 +227,8 @@ public class ClientEventHandler {
         private static final int MORE_WORLD_OPTIONS = 3;
 
         private static final int CC_ENABLE_BUTTON_ID = 11;
+        private static final List<ResourceLocation> LIST_OF_GEN_OPTIONS = new ArrayList<ResourceLocation>();
+        private static int CURRENT_GEN_OPTION = 0;
 
         @SubscribeEvent
         public static void guiInit(InitGuiEvent.Post event) {
@@ -254,13 +258,15 @@ public class ClientEventHandler {
 
                 refreshText(gui, enableCC);
             }));
+            LIST_OF_GEN_OPTIONS.addAll(VanillaCompatibilityGeneratorProviderBase.REGISTRY.getKeys());
         }
+        
         private static void refreshText(GuiCreateWorld gui, GuiButton enableBtn) {
             String txt;
             if (CubicChunksConfig.forceLoadCubicChunks == CubicChunksConfig.ForceCCMode.NONE) {
                 txt = "cubicchunks.gui.worldmenu.cc_disable";
             } else {
-                txt = CubeGeneratorsRegistry.getNameOf(new ResourceLocation(CubicChunksConfig.compatibilityGeneratorType));
+                txt = VanillaCompatibilityGeneratorProviderBase.REGISTRY.getValue(new ResourceLocation(CubicChunksConfig.compatibilityGeneratorType)).getUnlocalizedName();
             }
             enableBtn.displayString = I18n.format(txt);
         }
@@ -290,7 +296,13 @@ public class ClientEventHandler {
                         break;
                     }
                     case CC_ENABLE_BUTTON_ID: {
-                        CubicChunksConfig.flipForceCubicChunks();
+                        CURRENT_GEN_OPTION++;
+                        if (CURRENT_GEN_OPTION >= LIST_OF_GEN_OPTIONS.size()) {
+                            CubicChunksConfig.disableCubicChunks();
+                            CURRENT_GEN_OPTION = -1;
+                        } else {
+                            CubicChunksConfig.setGenerator(LIST_OF_GEN_OPTIONS.get(CURRENT_GEN_OPTION));
+                        }
                         refreshText((GuiCreateWorld) gui, button);
                         break;
                     }

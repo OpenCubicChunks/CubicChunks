@@ -24,11 +24,9 @@
  */
 package io.github.opencubicchunks.cubicchunks.core.asm.mixin.core.common;
 
-import io.github.opencubicchunks.cubicchunks.core.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.core.asm.mixin.ICubicWorldSettings;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.WorldSettings;
 import net.minecraft.world.storage.WorldInfo;
 import org.spongepowered.asm.mixin.Mixin;
@@ -44,33 +42,25 @@ import javax.annotation.ParametersAreNonnullByDefault;
 public class MixinWorldInfo implements ICubicWorldSettings {
 
     private boolean isCubic;
-    private ResourceLocation compatibilityGeneratorType;
 
     @Inject(method = "populateFromWorldSettings", at = @At("RETURN"))
     private void onConstructWithSettings(WorldSettings settings, CallbackInfo cbi) {
         this.isCubic = ((ICubicWorldSettings) (Object) settings).isCubic();
-        this.compatibilityGeneratorType = ((ICubicWorldSettings) (Object) settings).getCompatibilityGeneratorType();
     }
 
     @Inject(method = "<init>(Lnet/minecraft/world/storage/WorldInfo;)V", at = @At("RETURN"))
     private void onConstructWithSettings(WorldInfo other, CallbackInfo cbi) {
         this.isCubic = ((ICubicWorldSettings) other).isCubic();
-        this.compatibilityGeneratorType = ((ICubicWorldSettings) other).getCompatibilityGeneratorType();
     }
 
     @Inject(method = "<init>(Lnet/minecraft/nbt/NBTTagCompound;)V", at = @At("RETURN"))
     private void onConstructWithSettings(NBTTagCompound tag, CallbackInfo cbi) {
         this.isCubic = tag.getBoolean("isCubicWorld");
-        if(tag.hasKey("compatibilityGeneratorType"))
-            this.compatibilityGeneratorType = new ResourceLocation(tag.getString("compatibilityGeneratorType"));
-        else
-            this.compatibilityGeneratorType = new ResourceLocation(CubicChunks.MODID,"default");
     }
 
     @Inject(method = "updateTagCompound", at = @At("RETURN"))
     private void onConstructWithSettings(NBTTagCompound nbt, NBTTagCompound playerNbt, CallbackInfo cbi) {
         nbt.setBoolean("isCubicWorld", isCubic);
-        nbt.setString("compatibilityGeneratorType", compatibilityGeneratorType.toString());
     }
 
     @Override public boolean isCubic() {
@@ -79,15 +69,5 @@ public class MixinWorldInfo implements ICubicWorldSettings {
 
     @Override public void setCubic(boolean cubic) {
         this.isCubic = cubic;
-    }
-
-    @Override
-    public ResourceLocation getCompatibilityGeneratorType() {
-        return compatibilityGeneratorType;
-    }
-
-    @Override
-    public void setCompatibilityGeneratorType(ResourceLocation compatibilityGeneratorTypeIn) {
-        this.compatibilityGeneratorType = compatibilityGeneratorTypeIn;
     }
 }

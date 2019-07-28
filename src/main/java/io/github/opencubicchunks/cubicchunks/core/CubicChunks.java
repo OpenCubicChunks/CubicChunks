@@ -29,12 +29,16 @@ import io.github.opencubicchunks.cubicchunks.core.proxy.CommonProxy;
 import io.github.opencubicchunks.cubicchunks.core.world.type.VanillaCubicWorldType;
 import io.github.opencubicchunks.cubicchunks.core.worldgen.generator.vanilla.VanillaCompatibilityGenerator;
 import io.github.opencubicchunks.cubicchunks.api.worldgen.CubeGeneratorsRegistry;
+import io.github.opencubicchunks.cubicchunks.api.worldgen.VanillaCompatibilityGeneratorProviderBase;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.launchwrapper.Launch;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.datafix.DataFixer;
 import net.minecraft.util.datafix.FixTypes;
+import net.minecraft.world.World;
 import net.minecraft.world.WorldType;
+import net.minecraft.world.gen.IChunkGenerator;
+import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
@@ -43,6 +47,7 @@ import net.minecraftforge.fml.common.asm.transformers.deobf.FMLDeobfuscatingRema
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLServerAboutToStartEvent;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.network.NetworkCheckHandler;
 import net.minecraftforge.fml.common.versioning.ArtifactVersion;
 import net.minecraftforge.fml.common.versioning.DefaultArtifactVersion;
@@ -102,9 +107,6 @@ public class CubicChunks {
 
         VanillaCubicWorldType.create();
         LOGGER.debug("Registered world types");
-        CubeGeneratorsRegistry.register("cubicchunks.gui.worldmenu.cc_default",CubeGeneratorsRegistry.defaultCompatibilityGenerator, (cg, w) -> {
-            return new VanillaCompatibilityGenerator(cg, w);
-        });
     }
 
     @EventHandler
@@ -118,7 +120,24 @@ public class CubicChunks {
     public void onServerAboutToStart(FMLServerAboutToStartEvent event) {
         proxy.setBuildLimit(event.getServer());
     }
+    
+    @SubscribeEvent
+    public static void registerRegistries(RegistryEvent.NewRegistry evt) {
+        VanillaCompatibilityGeneratorProviderBase.init();
+    }
+    
+    @SubscribeEvent
+    public static void registerVanillaCompatibilityGeneratorProvider(RegistryEvent.Register<VanillaCompatibilityGeneratorProviderBase> event) {
+        event.getRegistry().register(new VanillaCompatibilityGeneratorProviderBase() {
 
+            @Override
+            public VanillaCompatibilityGenerator provideGenerator(IChunkGenerator vanillaChunkGenerator, World world) {
+                return new VanillaCompatibilityGenerator(vanillaChunkGenerator, world);
+            }
+        }.setRegistryName(VanillaCompatibilityGeneratorProviderBase.defaultCompatibilityGenerator)
+                .setUnlocalizedName("cubicchunks.gui.worldmenu.cc_default"));
+    }
+    
     @NetworkCheckHandler
     public static boolean checkCanConnectWithMods(Map<String, String> modVersions, Side remoteSide) {
         String remoteFullVersion = modVersions.get(MODID);

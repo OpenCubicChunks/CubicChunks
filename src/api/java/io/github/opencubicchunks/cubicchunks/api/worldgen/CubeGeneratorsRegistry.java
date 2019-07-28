@@ -58,31 +58,10 @@ import net.minecraftforge.fml.common.registry.GameRegistry;
 
 public class CubeGeneratorsRegistry {
 
-    /** Provide mapping for possible vanilla compatibility generators options */
-    private static final Map<ResourceLocation,BiFunction<IChunkGenerator, World, ICubeGenerator>> vanillaCompatibilityGenerators = new HashMap<ResourceLocation,BiFunction<IChunkGenerator, World, ICubeGenerator>>();
-    /** Provide mapping for vanilla compatibility generators names */
-    private static final Map<ResourceLocation,String> vanillaCompatibilityGeneratorsUnlocalisedNames = new HashMap<ResourceLocation,String>();
-    
     /** List of populators added by other mods to vanilla compatibility generator type */
     private static final List<ICubicPopulator> customPopulatorsForFlatCubicGenerator = new ArrayList<ICubicPopulator>();
 
     private static TreeSet<GeneratorWrapper> sortedGeneratorList = new TreeSet<>();
-    public static final ResourceLocation defaultCompatibilityGenerator = new ResourceLocation("cubicchunks","default");
-
-    /**
-     * Register a compatibility generator - something that will convert vanilla
-     * generators into cubic form
-     *
-     * @param unLocalisedName - GUI name
-     * @param name of a generator
-     * @param generatorProvider - BiFunction which will consume vanilla chunk
-     *        generator and world instances and return cubic generator
-     */
-    public static void register(String unLocalisedName, ResourceLocation name, BiFunction<IChunkGenerator, World, ICubeGenerator> generatorProvider) {
-        Preconditions.checkNotNull(generatorProvider);
-        vanillaCompatibilityGeneratorsUnlocalisedNames.put(name, unLocalisedName);
-        vanillaCompatibilityGenerators.put(name, generatorProvider);
-    }
 
     /**
      * Register a world generator - something that inserts new block types into the world on population stage
@@ -165,30 +144,5 @@ public class CubeGeneratorsRegistry {
         for (ICubicPopulator populator : customPopulatorsForFlatCubicGenerator) {
             populator.generate(world, rand, cube.getCoords(), cube.getBiome(cube.getCoords().getCenterBlockPos()));
         }
-    }
-    
-    public static ICubeGenerator getGeneratorFor(IChunkGenerator vanillaGenerator, World world, ResourceLocation resourceLocation) {
-        if(vanillaCompatibilityGenerators.containsKey(resourceLocation))
-            return vanillaCompatibilityGenerators.get(resourceLocation).apply(vanillaGenerator, world);
-        return vanillaCompatibilityGenerators.get(defaultCompatibilityGenerator).apply(vanillaGenerator, world);
-    }
-
-    public static ResourceLocation getNextGeneratorType(ResourceLocation resourceLocation) {
-        Iterator<ResourceLocation> typesIterator = vanillaCompatibilityGenerators.keySet().iterator();
-        while (typesIterator.hasNext()) {
-            if (resourceLocation.equals(typesIterator.next()) && typesIterator.hasNext()) {
-                return typesIterator.next();
-            }
-        }
-        return null;
-    }
-
-    public static ResourceLocation getFirstGeneratorType() {
-        Iterator<ResourceLocation> typesIterator = vanillaCompatibilityGenerators.keySet().iterator();
-        return typesIterator.next();
-    }
-    
-    public static String getNameOf(ResourceLocation generator) {
-        return vanillaCompatibilityGeneratorsUnlocalisedNames.get(generator);
     }
 }

@@ -26,6 +26,7 @@ package io.github.opencubicchunks.cubicchunks.core.asm.mixin.core.common;
 
 import io.github.opencubicchunks.cubicchunks.core.asm.mixin.ICubicWorldSettings;
 import io.github.opencubicchunks.cubicchunks.core.world.SpawnPlaceFinder;
+import io.github.opencubicchunks.cubicchunks.core.world.WorldSavedCubicChunksData;
 import io.github.opencubicchunks.cubicchunks.core.world.provider.ICubicWorldProvider;
 import io.github.opencubicchunks.cubicchunks.core.worldgen.generator.vanilla.VanillaCompatibilityGenerator;
 import io.github.opencubicchunks.cubicchunks.api.world.ICubicWorld;
@@ -35,6 +36,7 @@ import io.github.opencubicchunks.cubicchunks.core.world.provider.ICubicWorldProv
 import io.github.opencubicchunks.cubicchunks.api.world.ICubicWorldType;
 import io.github.opencubicchunks.cubicchunks.api.worldgen.CubeGeneratorsRegistry;
 import io.github.opencubicchunks.cubicchunks.api.worldgen.ICubeGenerator;
+import io.github.opencubicchunks.cubicchunks.api.worldgen.VanillaCompatibilityGeneratorProviderBase;
 import io.github.opencubicchunks.cubicchunks.core.worldgen.generator.vanilla.VanillaCompatibilityGenerator;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.init.Blocks;
@@ -108,8 +110,10 @@ public abstract class MixinWorldProvider implements ICubicWorldProvider {
                 && ((ICubicWorldType) world.getWorldType()).hasCubicGeneratorForWorld(world)) {
             return ((ICubicWorldType) world.getWorldType()).createCubeGenerator(world);
         }
-        ResourceLocation cgt = ((ICubicWorldSettings)world.getWorldInfo()).getCompatibilityGeneratorType();
-        return CubeGeneratorsRegistry.getGeneratorFor(this.createChunkGenerator(), world, cgt);
+        WorldSavedCubicChunksData savedData =
+                (WorldSavedCubicChunksData) world.getPerWorldStorage().getOrLoadData(WorldSavedCubicChunksData.class, "cubicChunksData");
+        return VanillaCompatibilityGeneratorProviderBase.REGISTRY.getValue(savedData.compatibilityGeneratorType)
+                .provideGenerator(this.createChunkGenerator(), world);
     }
 
     @Inject(method = "getRandomizedSpawnPoint", at = @At(value = "HEAD"), cancellable = true, remap = false)

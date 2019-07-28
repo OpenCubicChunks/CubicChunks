@@ -44,8 +44,4 @@ public interface ICubicWorldSettings {
     boolean isCubic();
 
     void setCubic(boolean cubic);
-    
-    ResourceLocation getCompatibilityGeneratorType();
-    
-    void setCompatibilityGeneratorType(ResourceLocation compatibilityGeneratorType);
 }
