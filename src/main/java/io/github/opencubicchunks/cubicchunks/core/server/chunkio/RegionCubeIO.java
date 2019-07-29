@@ -190,6 +190,32 @@ public class RegionCubeIO implements ICubeIO {
         ThreadedFileIOBase.getThreadedIOInstance().queueIO(this);
     }
 
+    @Override public boolean cubeExists(int cubeX, int cubeY, int cubeZ) {
+        try {
+            return this.save.getSaveSection3D().hasEntry(new EntryLocation3D(cubeX,  cubeY, cubeZ));
+        } catch (IOException e) {
+            CubicChunks.LOGGER.catching(e);
+            return false;
+        }
+    }
+
+    @Override public boolean columnExists(int columnX, int columnZ) {
+        try {
+            return this.save.getSaveSection2D().hasEntry(new EntryLocation2D(columnX, columnZ));
+        } catch (IOException e) {
+            CubicChunks.LOGGER.catching(e);
+            return false;
+        }
+    }
+
+    @Override public int getPendingColumnCount() {
+        return columnsToSave.size();
+    }
+
+    @Override public int getPendingCubeCount() {
+        return cubesToSave.size();
+    }
+
     @Override
     public boolean writeNextIO() {
         try {

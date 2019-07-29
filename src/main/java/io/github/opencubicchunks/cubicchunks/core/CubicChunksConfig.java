@@ -24,11 +24,11 @@
  */
 package io.github.opencubicchunks.cubicchunks.core;
 
-import com.google.common.collect.Maps;
 import com.google.common.collect.Range;
 import com.google.common.collect.TreeRangeSet;
+
 import mcp.MethodsReturnNonnullByDefault;
-import net.minecraftforge.common.ForgeChunkManager;
+import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.config.Config;
 import net.minecraftforge.common.config.ConfigManager;
 import net.minecraftforge.fml.client.event.ConfigChangedEvent;
@@ -54,10 +54,12 @@ public class CubicChunksConfig {
 
 
     @Config.LangKey("cubicchunks.config.force_cc")
-    @Config.Comment("Enabling this will force creating a cubic chunks world, even if it's not cubic chunks world type. This option is automatically "
-            + "set in world creation GUI when creating cubic chunks world with non-cubicchunks world type. This doesn't affect already created "
-            + "worlds.")
-    public static boolean forceCubicChunks = false;
+    @Config.Comment("Determines when a cubic chunks world should be created for non-cubic-chunks world types.\n"
+        + "NONE - only when cubic chunks world type\n"
+        + "NEW_WORLD - only for newly created worlds\n"
+        + "LOAD_NOT_EXCLUDED - load all worlds as cubic chunks, except excluded dimensions\n"
+        + "ALWAYS - load everything as cubic chunks. Overrides forceDimensionExcludes")
+    public static ForceCCMode forceLoadCubicChunks = ForceCCMode.NONE;
 
     @Config.LangKey("cubicchunks.config.cubegen_per_tick")
     @Config.Comment("The maximum number of cubic chunks to generate per tick.")
@@ -111,6 +113,22 @@ public class CubicChunksConfig {
             + "fix lighting on the clientside.")
     public static boolean doClientLightFixes = false;
 
+    @Config.LangKey("cubicchunks.config.biome_temperature_center_y")
+    @Config.Comment("Heights below this value will have normal, unmodified biome temperature")
+    public static int biomeTemperatureCenterY = 64;
+
+    @Config.LangKey("cubicchunks.config.biome_temperature_y_factor")
+    @Config.Comment("How much should biome temperature increase with height (negative values decrease temperature)")
+    public static float biomeTemperatureHeightFactor = -0.05F / 30.0F;
+
+    @Config.LangKey("cubicchunks.config.biome_temperature_scale_max_y")
+    @Config.Comment("Above this height, biome temperature will no longer change")
+    public static int biomeTemperatureScaleMaxY = 256;
+    
+    @Config.LangKey("cubicchunks.config.compatibility_generator_type")
+    @Config.Comment("Vanilla compatibility generator type, which will convert vanilla world type generators output in cubic")
+    public static String compatibilityGeneratorType = "cubicchunks:default";
+
     public static int defaultMaxCubesPerChunkloadingTicket = 25 * 16;
     public static Map<String, Integer> modMaxCubesPerChunkloadingTicket = new HashMap<>();
 
@@ -162,8 +180,15 @@ public class CubicChunksConfig {
         sync();
     }
 
-    public static void flipForceCubicChunks() {
-        forceCubicChunks = !forceCubicChunks;
+    public static void disableCubicChunks() {
+        forceLoadCubicChunks = ForceCCMode.NONE;
+        sync();
+    }
+    
+    public static void setGenerator(ResourceLocation generatorTypeIn) {
+        if(forceLoadCubicChunks == ForceCCMode.NONE)
+            forceLoadCubicChunks = ForceCCMode.NEW_WORLD;
+        compatibilityGeneratorType = generatorTypeIn.toString();
         sync();
     }
 
@@ -172,5 +197,12 @@ public class CubicChunksConfig {
             initDimensionRanges();
         }
         return excludedDimensionsRanges.contains(dimension);
+    }
+
+    public enum ForceCCMode {
+        NONE,
+        NEW_WORLD,
+        LOAD_NOT_EXCLUDED,
+        ALWAYS
     }
 }

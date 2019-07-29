@@ -25,15 +25,13 @@
 package io.github.opencubicchunks.cubicchunks.core.asm.mixin.core.common;
 
 import io.github.opencubicchunks.cubicchunks.core.world.SpawnPlaceFinder;
+import io.github.opencubicchunks.cubicchunks.core.world.WorldSavedCubicChunksData;
 import io.github.opencubicchunks.cubicchunks.core.world.provider.ICubicWorldProvider;
-import io.github.opencubicchunks.cubicchunks.core.worldgen.generator.vanilla.VanillaCompatibilityGenerator;
 import io.github.opencubicchunks.cubicchunks.api.world.ICubicWorld;
 import io.github.opencubicchunks.cubicchunks.api.util.NotCubicChunksWorldException;
-import io.github.opencubicchunks.cubicchunks.core.world.SpawnPlaceFinder;
-import io.github.opencubicchunks.cubicchunks.core.world.provider.ICubicWorldProvider;
 import io.github.opencubicchunks.cubicchunks.api.world.ICubicWorldType;
 import io.github.opencubicchunks.cubicchunks.api.worldgen.ICubeGenerator;
-import io.github.opencubicchunks.cubicchunks.core.worldgen.generator.vanilla.VanillaCompatibilityGenerator;
+import io.github.opencubicchunks.cubicchunks.api.worldgen.VanillaCompatibilityGeneratorProviderBase;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.math.BlockPos;
@@ -105,7 +103,10 @@ public abstract class MixinWorldProvider implements ICubicWorldProvider {
                 && ((ICubicWorldType) world.getWorldType()).hasCubicGeneratorForWorld(world)) {
             return ((ICubicWorldType) world.getWorldType()).createCubeGenerator(world);
         }
-        return new VanillaCompatibilityGenerator(this.createChunkGenerator(), world);
+        WorldSavedCubicChunksData savedData =
+                (WorldSavedCubicChunksData) world.getPerWorldStorage().getOrLoadData(WorldSavedCubicChunksData.class, "cubicChunksData");
+        return VanillaCompatibilityGeneratorProviderBase.REGISTRY.getValue(savedData.compatibilityGeneratorType)
+                .provideGenerator(this.createChunkGenerator(), world);
     }
 
     @Inject(method = "getRandomizedSpawnPoint", at = @At(value = "HEAD"), cancellable = true, remap = false)
@@ -134,5 +135,9 @@ public abstract class MixinWorldProvider implements ICubicWorldProvider {
                 cir.setReturnValue(this.world.getBlockState(top).getBlock() == Blocks.GRASS);
             }
         }
+    }
+
+    @Override public World getWorld() {
+        return world;
     }
 }

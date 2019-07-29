@@ -35,4 +35,18 @@ public interface ICubicWorldServer extends ICubicWorld {
     ICubeProviderServer getCubeCache();
 
     ICubeGenerator getCubeGenerator();
+
+    /**
+     * Unloads or schedules unloading of no longer needed chunks from the world.
+     * Use of this should generally be avoided, as this is done automatically.
+     *
+     * There are generally only a few valid uses of this method:
+     *  * Generating a lot of new chunks (for example pregenerating terrain)
+     *  * On user command
+     *
+     * Note: there are known bugs caused by this method in some situations,
+     * that cause a chunk that contains a player to be unloaded when the player is moving
+     * at very high speed. This issue is not fixable. Automatic chunk unloading is not affected.
+     */
+    void unloadOldCubes();
 }

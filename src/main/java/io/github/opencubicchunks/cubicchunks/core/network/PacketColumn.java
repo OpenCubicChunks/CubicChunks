@@ -24,8 +24,11 @@
  */
 package io.github.opencubicchunks.cubicchunks.core.network;
 
+import io.github.opencubicchunks.cubicchunks.api.world.ICubicWorld;
+import io.github.opencubicchunks.cubicchunks.core.client.CubeProviderClient;
 import io.netty.buffer.ByteBuf;
 import mcp.MethodsReturnNonnullByDefault;
+import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.math.ChunkPos;
@@ -80,9 +83,18 @@ public class PacketColumn implements IMessage {
     public static class Handler extends AbstractClientMessageHandler<PacketColumn> {
 
         @Nullable @Override
-        public IMessage handleClientMessage(EntityPlayer player, PacketColumn message, MessageContext ctx) {
-            ClientHandler.getInstance().handle(message);
-            return null;
+        public void handleClientMessage(EntityPlayer player, PacketColumn packet, MessageContext ctx) {
+            ICubicWorld worldClient = (ICubicWorld) Minecraft.getMinecraft().world;
+            CubeProviderClient cubeCache = (CubeProviderClient) worldClient.getCubeCache();
+
+            ChunkPos chunkPos = packet.getChunkPos();
+
+            Chunk column = cubeCache.loadChunk(chunkPos.x, chunkPos.z);
+
+            byte[] data = packet.getData();
+            ByteBuf buf = WorldEncoder.createByteBufForRead(data);
+
+            WorldEncoder.decodeColumn(new PacketBuffer(buf), column);
         }
     }
 }

@@ -37,6 +37,7 @@ import java.util.TreeSet;
 
 import com.google.common.base.Preconditions;
 import io.github.opencubicchunks.cubicchunks.api.util.CubePos;
+import io.github.opencubicchunks.cubicchunks.api.world.ICube;
 import io.github.opencubicchunks.cubicchunks.api.world.ICubicWorld;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
@@ -52,6 +53,9 @@ import net.minecraftforge.fml.common.IWorldGenerator;
 import net.minecraftforge.fml.common.registry.GameRegistry;
 
 public class CubeGeneratorsRegistry {
+
+    /** List of populators added by other mods to vanilla compatibility generator type */
+    private static final List<ICubicPopulator> customPopulatorsForFlatCubicGenerator = new ArrayList<ICubicPopulator>();
 
     private static TreeSet<GeneratorWrapper> sortedGeneratorList = new TreeSet<>();
 
@@ -120,6 +124,21 @@ public class CubeGeneratorsRegistry {
 
         @Override public int compareTo(GeneratorWrapper o) {
             return Integer.compare(weight, o.weight);
+        }
+    }
+    
+    /**
+     * Populators added here will be launched prior to any other. It is
+     * recommended to use this function in init or pre init event of a mod.
+     */
+    public static void registerForCompatibilityGenerator(ICubicPopulator populator) {
+        if (!customPopulatorsForFlatCubicGenerator.contains(populator))
+            customPopulatorsForFlatCubicGenerator.add(populator);
+    }
+    
+    public static void populateVanillaCubic(World world, Random rand, ICube cube) {
+        for (ICubicPopulator populator : customPopulatorsForFlatCubicGenerator) {
+            populator.generate(world, rand, cube.getCoords(), cube.getBiome(cube.getCoords().getCenterBlockPos()));
         }
     }
 }

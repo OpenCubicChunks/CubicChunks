@@ -24,9 +24,12 @@
  */
 package io.github.opencubicchunks.cubicchunks.core.asm.mixin.core.common;
 
+import io.github.opencubicchunks.cubicchunks.core.CubicChunksConfig;
 import io.github.opencubicchunks.cubicchunks.core.asm.mixin.ICubicWorldSettings;
 import mcp.MethodsReturnNonnullByDefault;
+import net.minecraft.world.GameType;
 import net.minecraft.world.WorldSettings;
+import net.minecraft.world.WorldType;
 import net.minecraft.world.storage.WorldInfo;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -46,7 +49,12 @@ public class MixinWorldSettings implements ICubicWorldSettings {
     private void onConstruct(WorldInfo info, CallbackInfo cbi) {
         this.isCubic = ((ICubicWorldSettings) info).isCubic();
     }
-    
+
+    @Inject(method = "<init>(JLnet/minecraft/world/GameType;ZZLnet/minecraft/world/WorldType;)V", at = @At("RETURN"))
+    private void onConstruct(long seedIn, GameType gameType, boolean enableMapFeatures, boolean hardcoreMode, WorldType worldTypeIn, CallbackInfo ci) {
+        this.isCubic = CubicChunksConfig.forceLoadCubicChunks != CubicChunksConfig.ForceCCMode.NONE;
+    }
+
     @Override public boolean isCubic() {
         return isCubic;
     }

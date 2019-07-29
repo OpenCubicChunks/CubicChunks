@@ -26,15 +26,14 @@ package io.github.opencubicchunks.cubicchunks.core.server.chunkio;
 
 import static io.github.opencubicchunks.cubicchunks.api.util.Coords.localToBlock;
 
-import io.github.opencubicchunks.cubicchunks.api.world.IHeightMap;
-import io.github.opencubicchunks.cubicchunks.core.lighting.LightingManager;
-import io.github.opencubicchunks.cubicchunks.core.CubicChunks;
-import io.github.opencubicchunks.cubicchunks.core.lighting.LightingManager;
 import io.github.opencubicchunks.cubicchunks.api.util.Coords;
+import io.github.opencubicchunks.cubicchunks.api.world.IColumn;
+import io.github.opencubicchunks.cubicchunks.api.world.IHeightMap;
+import io.github.opencubicchunks.cubicchunks.core.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.core.asm.mixin.ICubicWorldInternal;
+import io.github.opencubicchunks.cubicchunks.core.lighting.LightingManager;
 import io.github.opencubicchunks.cubicchunks.core.world.ClientHeightMap;
 import io.github.opencubicchunks.cubicchunks.core.world.ServerHeightMap;
-import io.github.opencubicchunks.cubicchunks.api.world.IColumn;
 import io.github.opencubicchunks.cubicchunks.core.world.cube.Cube;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.Block;
@@ -141,8 +140,7 @@ public class IONbtReader {
     }
 
     @Nullable
-    private static Cube readBaseCube(Chunk column, int cubeX, int cubeY, int cubeZ, NBTTagCompound nbt,
-            World world) {// check the version number
+    private static Cube readBaseCube(Chunk column, int cubeX, int cubeY, int cubeZ, NBTTagCompound nbt, World world) {// check the version number
         byte version = nbt.getByte("v");
         if (version != 1) {
             throw new IllegalArgumentException("Cube has wrong version! " + version);
@@ -177,7 +175,7 @@ public class IONbtReader {
         return cube;
     }
 
-    private static void readBlocks(NBTTagCompound nbt, World world, Cube cube) {
+    @SuppressWarnings("deprecation") private static void readBlocks(NBTTagCompound nbt, World world, Cube cube) {
         boolean isEmpty = !nbt.hasKey("Sections");// is this an empty cube?
         if (!isEmpty) {
             NBTTagList sectionList = nbt.getTagList("Sections", 10);
@@ -187,9 +185,19 @@ public class IONbtReader {
 
             byte[] abyte = nbt.getByteArray("Blocks");
             NibbleArray data = new NibbleArray(nbt.getByteArray("Data"));
-            NibbleArray add = nbt.hasKey("Add", 7) ? new NibbleArray(nbt.getByteArray("Add")) : null;
+            NibbleArray add = nbt.hasKey("Add", Constants.NBT.TAG_BYTE_ARRAY) ? new NibbleArray(nbt.getByteArray("Add")) : null;
+            NibbleArray add2neid = nbt.hasKey("Add2", Constants.NBT.TAG_BYTE_ARRAY) ? new NibbleArray(nbt.getByteArray("Add2")) : null;
 
-            ebs.getData().setDataFromNBT(abyte, data, add);
+            for (int i = 0; i < 4096; i++) {
+                int x = i & 15;
+                int y = i >> 8 & 15;
+                int z = i >> 4 & 15;
+
+                int toAdd = add == null ? 0 : add.getFromIndex(i);
+                toAdd = (toAdd & 0xF) | (add2neid == null ? 0 : add2neid.getFromIndex(i) << 4);
+                int id = (toAdd << 12) | ((abyte[i] & 0xFF) << 4) | data.getFromIndex(i);
+                ebs.getData().set(x, y, z, Block.BLOCK_STATE_IDS.getByValue(id));
+            }
 
             ebs.setBlockLight(new NibbleArray(nbt.getByteArray("BlockLight")));
 
@@ -230,6 +238,10 @@ public class IONbtReader {
             //TileEntity.create
             TileEntity blockEntity = TileEntity.create(world, nbtTileEntity);
             if (blockEntity != null) {
+                if (!cube.getCoords().containsBlock(blockEntity.getPos())) {
+                    CubicChunks.LOGGER.warn("TileEntity " + blockEntity + " is not in cube at " + cube.getCoords() + ", tile entity will be skipped");
+                    continue;
+                }
                 cube.addTileEntity(blockEntity);
             }
         }

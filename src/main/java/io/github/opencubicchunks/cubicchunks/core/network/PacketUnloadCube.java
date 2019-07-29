@@ -71,23 +71,19 @@ public class PacketUnloadCube implements IMessage {
     public static class Handler extends AbstractClientMessageHandler<PacketUnloadCube> {
 
         @Nullable @Override
-        public IMessage handleClientMessage(EntityPlayer player, PacketUnloadCube message, MessageContext ctx) {
-            PacketUtils.ensureMainThread(this, player, message, ctx);
-
+        public void handleClientMessage(EntityPlayer player, PacketUnloadCube message, MessageContext ctx) {
             ICubicWorld worldClient = (ICubicWorld) Minecraft.getMinecraft().world;
             if (!worldClient.isCubicWorld()) {
                 // Workaround for vanilla: when going between dimensions, chunk unload packets are received for the old dimension
                 // are received when client already has the new dimension. In vanilla it just happens to cause no issues but it breaks cubic chunks
                 // if we don't check for it
-                return null;
+                return;
             }
             CubeProviderClient cubeCache = (CubeProviderClient) worldClient.getCubeCache();
 
             // This apparently makes visual chunk holes much more rare/nonexistent
             cubeCache.getCube(message.getCubePos()).markForRenderUpdate();
             cubeCache.unloadCube(message.getCubePos());
-
-            return null;
         }
     }
 }

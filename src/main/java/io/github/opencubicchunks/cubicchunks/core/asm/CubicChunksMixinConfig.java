@@ -86,7 +86,8 @@ public class CubicChunksMixinConfig implements IMixinConfigPlugin {
         } else if (optifineVersion.compareTo("E1") >= 0) {
             optifineState = OptifineState.LOADED_E1;
         } else {
-            throw new RuntimeException("Unsupported optifine version " + optifineVersion);
+            new RuntimeException("Unsupported optifine version " + optifineVersion + ", trying E1-specific mixins").printStackTrace();
+            optifineState = OptifineState.LOADED_E1;
         }
 
         modDependencyConditions.defaultReturnValue(true);
@@ -233,7 +234,7 @@ public class CubicChunksMixinConfig implements IMixinConfigPlugin {
                 new String[] {"io.github.opencubicchunks.cubicchunks.core.asm.mixin.selectable.client.MixinEntityRenderer",
                         "io.github.opencubicchunks.cubicchunks.core.asm.mixin.selectable.client.MixinRenderGlobal"},
                 "Enabling this option will make the vertical view distance slider affect clientside vertical render distance." +
-                        "When disabled, only serverside load distance is affected.");
+                        " When disabled, only serverside load distance is affected.");
 
         private final boolean defaultValue;
         // Load this Mixin class only if option is false.

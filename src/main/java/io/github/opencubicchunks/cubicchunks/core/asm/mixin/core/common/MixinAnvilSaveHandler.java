@@ -22,31 +22,32 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package io.github.opencubicchunks.cubicchunks.core.asm.mixin.core.client;
+package io.github.opencubicchunks.cubicchunks.core.asm.mixin.core.common;
 
-import io.github.opencubicchunks.cubicchunks.core.event.CCEventFactory;
-import io.github.opencubicchunks.cubicchunks.core.event.CCEventFactory;
-import net.minecraft.client.gui.GuiButton;
-import net.minecraft.client.gui.GuiCreateWorld;
-import net.minecraft.world.WorldSettings;
+import io.github.opencubicchunks.cubicchunks.api.world.ICubicWorld;
+import io.github.opencubicchunks.cubicchunks.core.server.CubicAnvilChunkLoader;
+import io.github.opencubicchunks.cubicchunks.core.world.ICubeProviderInternal;
+import io.github.opencubicchunks.cubicchunks.core.world.provider.ICubicWorldProvider;
+import net.minecraft.util.datafix.DataFixer;
+import net.minecraft.world.WorldProvider;
+import net.minecraft.world.chunk.storage.AnvilChunkLoader;
+import net.minecraft.world.chunk.storage.AnvilSaveHandler;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
+import org.spongepowered.asm.mixin.injection.Redirect;
 
-@Mixin(GuiCreateWorld.class)
-public class MixinGuiCreateWorld {
+import java.io.File;
 
-    @Inject(method = "actionPerformed",
-            at = @At(
-                    value = "INVOKE",
-                    target = "Lnet/minecraft/world/WorldSettings;setGeneratorOptions(Ljava/lang/String;)Lnet/minecraft/world/WorldSettings;",
-                    shift = At.Shift.AFTER
-            ),
-            locals = LocalCapture.CAPTURE_FAILHARD)
-    private void onWorldSettingsCreate(GuiButton button, CallbackInfo cbi, long seed, String generatorSettings, WorldSettings worldSettings) {
-        CCEventFactory.onWorldSettingsCreate(worldSettings);
+@Mixin(AnvilSaveHandler.class)
+public class MixinAnvilSaveHandler {
+
+    @Redirect(method = "getChunkLoader", at = @At(value = "NEW", target = "net/minecraft/world/chunk/storage/AnvilChunkLoader"))
+    public AnvilChunkLoader getChunkLoader(File file, DataFixer dataFixer, WorldProvider provider) {
+        ICubicWorld world = ((ICubicWorld) ((ICubicWorldProvider) provider).getWorld());
+        if (world.isCubicWorld()) {
+            return new CubicAnvilChunkLoader(file, dataFixer, () -> ((ICubeProviderInternal.Server) world.getCubeCache()).getCubeIO());
+        } else {
+            return new AnvilChunkLoader(file, dataFixer);
+        }
     }
-
 }

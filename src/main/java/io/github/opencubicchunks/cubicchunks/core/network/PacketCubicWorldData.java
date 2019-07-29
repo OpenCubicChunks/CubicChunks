@@ -36,7 +36,6 @@ import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.world.WorldServer;
 import net.minecraftforge.fml.client.FMLClientHandler;
-import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 
@@ -116,9 +115,7 @@ public class PacketCubicWorldData implements IMessage {
     public static class Handler extends AbstractClientMessageHandler<PacketCubicWorldData> {
 
         @Nullable @Override
-        public IMessage handleClientMessage(EntityPlayer player, PacketCubicWorldData message, MessageContext ctx) {
-            PacketUtils.ensureMainThread(this, player, message, ctx);
-
+        public void handleClientMessage(EntityPlayer player, PacketCubicWorldData message, MessageContext ctx) {
             if (Minecraft.getMinecraft().getConnection() != null) {
                 WorldClient world = Minecraft.getMinecraft().getConnection().clientWorldController;
                 // initialize only if sending packet about cubic world, but not when already initialized
@@ -137,7 +134,6 @@ public class PacketCubicWorldData implements IMessage {
                     }
                 }
             }
-            return null;
         }
     }
 }

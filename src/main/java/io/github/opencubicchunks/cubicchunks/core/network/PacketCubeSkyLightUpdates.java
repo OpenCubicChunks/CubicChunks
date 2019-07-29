@@ -24,13 +24,22 @@
  */
 package io.github.opencubicchunks.cubicchunks.core.network;
 
+import static io.github.opencubicchunks.cubicchunks.api.util.Coords.cubeToMinBlock;
+
+import io.github.opencubicchunks.cubicchunks.core.client.CubeProviderClient;
+import io.github.opencubicchunks.cubicchunks.core.lighting.LightingManager;
 import io.github.opencubicchunks.cubicchunks.core.util.AddressTools;
 import io.github.opencubicchunks.cubicchunks.api.util.Bits;
 import io.github.opencubicchunks.cubicchunks.api.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.core.world.cube.Cube;
 import gnu.trove.list.TShortList;
 import io.netty.buffer.ByteBuf;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.world.chunk.Chunk;
+import net.minecraft.world.chunk.NibbleArray;
+import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 import net.minecraftforge.fml.common.network.ByteBufUtils;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
@@ -127,9 +136,37 @@ public class PacketCubeSkyLightUpdates implements IMessage {
     public static class Handler extends AbstractClientMessageHandler<PacketCubeSkyLightUpdates> {
 
         @Nullable @Override
-        public IMessage handleClientMessage(EntityPlayer player, PacketCubeSkyLightUpdates message, MessageContext ctx) {
-            ClientHandler.getInstance().handle(message);
-            return null;
+        public void handleClientMessage(EntityPlayer player, PacketCubeSkyLightUpdates message, MessageContext ctx) {
+            WorldClient worldClient = Minecraft.getMinecraft().world;
+            CubeProviderClient cubeCache = (CubeProviderClient) worldClient.getChunkProvider();
+
+            // get the cube
+            Cube cube = cubeCache.getCube(message.getCubePos());
+            if (message.getData() == null) {
+                // this means the EBS was null serverside. So it needs to be null clientside
+                cube.setStorage(Chunk.NULL_BLOCK_STORAGE);
+                return;
+            }
+            ExtendedBlockStorage storage = cube.getStorage();
+            if (cube.getStorage() == null) {
+                cube.setStorage(storage = new ExtendedBlockStorage(cubeToMinBlock(cube.getY()), worldClient.provider.hasSkyLight()));
+            }
+            assert storage != null;
+            if (message.isFullRelight()) {
+                storage.setSkyLight(new NibbleArray(message.getData()));
+            } else {
+                for (int i = 0; i < message.updateCount(); i++) {
+                    int packed1 = message.getData()[i * 2] & 0xFF;
+                    int packed2 = message.getData()[i * 2 + 1] & 0xFF;
+                    storage.setSkyLight(Bits.unpackUnsigned(packed1, 4, 0), Bits.unpackUnsigned(packed1, 4, 4),
+                        Bits.unpackUnsigned(packed2, 4, 0), Bits.unpackUnsigned(packed2, 4, 4));
+                }
+            }
+            LightingManager.CubeLightUpdateInfo info = cube.getCubeLightUpdateInfo();
+            if (info != null) {
+                info.clear();
+            }
+            cube.markForRenderUpdate();
         }
     }
 }

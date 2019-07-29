@@ -37,6 +37,9 @@ import net.minecraftforge.fml.common.eventhandler.Event;
  * This event can be fired several times for a same cube during game session
  * for a same and for a different players.
  *
+ * This event is fired only after the corresponding cube packet has been sent
+ * to the player, the same as {@link net.minecraftforge.event.world.ChunkWatchEvent.Watch}
+ *
  * This is not an {@link #isCancelable()} event.
  * This event is fired on the {@link MinecraftForge#EVENT_BUS}.
  */

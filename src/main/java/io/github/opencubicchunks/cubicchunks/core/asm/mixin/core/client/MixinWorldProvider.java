@@ -41,7 +41,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 @Mixin(WorldProvider.class)
-public abstract class MixinWorldProvider implements ICubicWorldProvider {
+public abstract class MixinWorldProvider {
 
     @Shadow protected World world;
 
@@ -61,8 +61,8 @@ public abstract class MixinWorldProvider implements ICubicWorldProvider {
             cir.cancel();
         }
     }
-    
+
     private ICubicWorld cubicWorld() {
-        return (ICubicWorld) world;
+        return (ICubicWorld) this.world;
     }
 }

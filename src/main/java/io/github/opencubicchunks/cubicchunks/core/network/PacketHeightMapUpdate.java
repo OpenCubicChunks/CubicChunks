@@ -25,15 +25,24 @@
 package io.github.opencubicchunks.cubicchunks.core.network;
 
 import com.google.common.base.Preconditions;
+import io.github.opencubicchunks.cubicchunks.api.world.IColumn;
+import io.github.opencubicchunks.cubicchunks.core.CubicChunks;
+import io.github.opencubicchunks.cubicchunks.core.asm.mixin.ICubicWorldInternal;
+import io.github.opencubicchunks.cubicchunks.core.client.CubeProviderClient;
+import io.github.opencubicchunks.cubicchunks.core.lighting.LightingManager;
 import io.github.opencubicchunks.cubicchunks.core.util.AddressTools;
 import io.github.opencubicchunks.cubicchunks.api.world.IHeightMap;
 import gnu.trove.list.TByteList;
 import gnu.trove.list.TIntList;
 import gnu.trove.list.array.TByteArrayList;
 import gnu.trove.list.array.TIntArrayList;
+import io.github.opencubicchunks.cubicchunks.core.world.ClientHeightMap;
 import io.netty.buffer.ByteBuf;
+import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.math.ChunkPos;
+import net.minecraft.world.chunk.Chunk;
+import net.minecraft.world.chunk.EmptyChunk;
 import net.minecraftforge.fml.common.network.ByteBufUtils;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
@@ -105,9 +114,36 @@ public class PacketHeightMapUpdate implements IMessage {
     public static class Handler extends AbstractClientMessageHandler<PacketHeightMapUpdate> {
 
         @Nullable @Override
-        public IMessage handleClientMessage(EntityPlayer player, PacketHeightMapUpdate message, MessageContext ctx) {
-            ClientHandler.getInstance().handle(message);
-            return null;
+        public void handleClientMessage(EntityPlayer player, PacketHeightMapUpdate message, MessageContext ctx) {
+            ICubicWorldInternal.Client worldClient = (ICubicWorldInternal.Client) Minecraft.getMinecraft().world;
+            CubeProviderClient cubeCache = worldClient.getCubeCache();
+
+            int columnX = message.getColumnPos().x;
+            int columnZ = message.getColumnPos().z;
+
+            Chunk column = cubeCache.provideColumn(columnX, columnZ);
+            if (column instanceof EmptyChunk) {
+                CubicChunks.LOGGER.error("Ignored block update to blank column {}", message.getColumnPos());
+                return;
+            }
+
+            ClientHeightMap index = (ClientHeightMap) ((IColumn) column).getOpacityIndex();
+            LightingManager lm = worldClient.getLightingManager();
+
+            int size = message.getUpdates().size();
+
+            for (int i = 0; i < size; i++) {
+                int packed = message.getUpdates().get(i) & 0xFF;
+                int x = AddressTools.getLocalX(packed);
+                int z = AddressTools.getLocalZ(packed);
+                int height = message.getHeights().get(i);
+
+                int oldHeight = index.getTopBlockY(x, z);
+                index.setHeight(x, z, height);
+                // Disable due to huge client side performance loss on accepting freshly generated cubes light updates.
+                // More info at  https://github.com/OpenCubicChunks/CubicChunks/pull/328
+                //lm.onHeightMapUpdate(column, x, z, oldHeight, height);
+            }
         }
     }
 }
