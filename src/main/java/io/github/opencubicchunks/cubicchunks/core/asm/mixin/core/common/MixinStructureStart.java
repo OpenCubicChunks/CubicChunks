@@ -1,5 +1,3 @@
-package io.github.opencubicchunks.cubicchunks.core.asm.mixin.core.common;
-
 /*
  *  This file is part of Cubic Chunks Mod, licensed under the MIT License (MIT).
  *
@@ -24,6 +22,7 @@ package io.github.opencubicchunks.cubicchunks.core.asm.mixin.core.common;
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
+package io.github.opencubicchunks.cubicchunks.core.asm.mixin.core.common;
 
 import static io.github.opencubicchunks.cubicchunks.api.util.Coords.localToBlock;
 
@@ -153,5 +152,9 @@ public abstract class MixinStructureStart implements ICubicStructureStart {
 
     @Override public int getZ() {
         return getChunkPosZ();
+    }
+    
+    @Override public boolean isCubic() {
+        return this.isCubic;
     }
 }

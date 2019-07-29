@@ -28,11 +28,27 @@ import io.github.opencubicchunks.cubicchunks.api.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.api.util.XYZAddressable;
 import net.minecraft.world.World;
 
+/**
+ * Helper interface used in mixin for
+ * {@link net.minecraft.world.gen.structure.StructureStart} class. It is save to
+ * cast StructureStart instances to this interface when CubicChunks mod is
+ * present.
+ */
 public interface ICubicStructureStart extends XYZAddressable {
     int getChunkPosY();
 
-    // internal use instead of constructor argument
+    /**
+     * Called upon generating of structure start to fill a fields necessary for
+     * 3d dimensional structure position and change result of a function call
+     * {@code isCubic()} to {@code true}.
+     */
     void initCubic(World world, int expectedBaseHeight, int cubeY);
 
     CubePos getCubePos();
+    
+    /**
+     * @return {@code true} when instance is initialized by initCubic(..) method called
+     *         by one of CubicType structure generators.
+     */
+    boolean isCubic();
 }
