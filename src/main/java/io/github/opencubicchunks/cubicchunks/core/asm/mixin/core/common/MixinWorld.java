@@ -61,6 +61,7 @@ import org.spongepowered.asm.mixin.Implements;
 import org.spongepowered.asm.mixin.Interface;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Mutable;
+import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -101,7 +102,7 @@ public abstract class MixinWorld implements ICubicWorldInternal {
 
     @Nullable private LightingManager lightingManager;
     protected boolean isCubicWorld;
-    protected int minHeight = 0, maxHeight = 256;
+    protected int minHeight = 0, maxHeight = 256, fakedMaxHeight = 0;
     private int minGenerationHeight = 0, maxGenerationHeight = 256;
 
     @Shadow public abstract boolean isValid(BlockPos pos);
@@ -139,6 +140,7 @@ public abstract class MixinWorld implements ICubicWorldInternal {
         // Set the world height boundaries to their highest and lowest values respectively
         this.minHeight = heightRange.getMin();
         this.maxHeight = heightRange.getMax();
+        this.fakedMaxHeight = this.maxHeight;
 
         this.minGenerationHeight = generationRange.getMin();
         this.maxGenerationHeight = generationRange.getMax();
@@ -224,7 +226,23 @@ public abstract class MixinWorld implements ICubicWorldInternal {
         throw new NoSuchMethodError("World.tickCubicWorld: Classes extending World need to implement tickCubicWorld in CubicChunks");
     }
 
-    //vanilla field accessors
+    @Override public void fakeWorldHeight(int height) {
+        this.fakedMaxHeight = height;
+    }
+
+    /**
+     * Some mod's world generation will try to do their work over the whole world height.
+     * This allows to fake the world height for them.
+     * @author Barteks2x
+     */
+    @Overwrite
+    public int getHeight() {
+        if (fakedMaxHeight != 0) {
+            return fakedMaxHeight;
+        }
+        return this.provider.getHeight();
+    }
+
 
     /**
      * @author Foghrye4

@@ -78,7 +78,9 @@ public interface ICubicWorldInternal extends ICubicWorld {
     @Override
     Cube getCubeFromBlockCoords(BlockPos pos);
 
-    public interface Server extends ICubicWorldInternal, ICubicWorldServer {
+    void fakeWorldHeight(int height);
+
+    interface Server extends ICubicWorldInternal, ICubicWorldServer {
 
         /**
          * Initializes the world to be a CubicChunks world. Must be done before any players are online and before any chunks

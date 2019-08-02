@@ -30,7 +30,6 @@ import mcp.MethodsReturnNonnullByDefault;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
-import java.util.Date;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -51,7 +50,7 @@ public class Dbg {
         } else {
             PrintWriter p;
             try {
-                p = new PrintWriter(new File("DEBUG_" + new Date()));
+                p = new PrintWriter(new File("DEBUG_" + System.currentTimeMillis()));
             } catch (FileNotFoundException e) {
                 throw new RuntimeException(e);
             }
