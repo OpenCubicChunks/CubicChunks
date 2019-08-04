@@ -35,13 +35,12 @@ import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.World;
 import net.minecraftforge.common.ForgeChunkManager;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.gen.Accessor;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
@@ -51,16 +50,26 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 @Mixin(ForgeChunkManager.Ticket.class)
-public class MixinTicket implements ICubicTicket {
+public abstract class MixinTicket implements ICubicTicket {
 
-    @Shadow(remap = false) private NBTTagCompound modData;
-    @Shadow(remap = false) private String player;
-    @Shadow(remap = false) private int entityChunkX;
-    @Shadow(remap = false) private int entityChunkZ;
     private LinkedHashSet<CubePos> forcedCubes = new LinkedHashSet<>();
     private Map<ChunkPos, IntSet> cubePosMap = new HashMap<>();
     private int entityChunkY;
     private int cubeDepth;
+
+    @Override @Accessor public abstract void setModData(NBTTagCompound modData);
+    @Override @Accessor public abstract void setPlayer(String player);
+    @Override @Accessor public abstract void setEntityChunkX(int chunkX);
+    @Override @Accessor public abstract void setEntityChunkZ(int chunkZ);
+    @Override @Accessor public abstract int getEntityChunkX();
+    @Override @Accessor public abstract int getEntityChunkZ();
+
+    @Override public int getEntityChunkY() {
+        return entityChunkY;
+    }
+    @Override public void setEntityChunkY(int cubeY) {
+        this.entityChunkY = cubeY;
+    }
 
     @Inject(
             method = "<init>(Ljava/lang/String;Lnet/minecraftforge/common/ForgeChunkManager$Type;Lnet/minecraft/world/World;)V", at = @At("RETURN"),
@@ -98,38 +107,6 @@ public class MixinTicket implements ICubicTicket {
 
     @Override public void setAllForcedChunkCubes(Map<ChunkPos, IntSet> cubePosMap) {
         this.cubePosMap = cubePosMap;
-    }
-
-    @Override public void setModData(NBTTagCompound modData) {
-        this.modData = modData;
-    }
-
-    @Override public void setPlayer(String player) {
-        this.player = player;
-    }
-
-    @Override public void setEntityChunkX(int chunkX) {
-        this.entityChunkX = chunkX;
-    }
-
-    @Override public void setEntityChunkY(int cubeY) {
-        this.entityChunkY = cubeY;
-    }
-
-    @Override public void setEntityChunkZ(int chunkZ) {
-        this.entityChunkZ = chunkZ;
-    }
-
-    @Override public int getEntityChunkX() {
-        return entityChunkX;
-    }
-
-    @Override public int getEntityChunkY() {
-        return entityChunkY;
-    }
-
-    @Override public int getEntityChunkZ() {
-        return entityChunkZ;
     }
 
     @Override public int getMaxCubeDepth() {

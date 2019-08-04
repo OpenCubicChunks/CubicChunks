@@ -22,23 +22,20 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package io.github.opencubicchunks.cubicchunks.core.asm.mixin.selectable.client.optifine;
+package io.github.opencubicchunks.cubicchunks.core.asm.mixin.core.common;
 
-import io.github.opencubicchunks.cubicchunks.core.asm.optifine.ChunkPos3;
-import net.minecraft.client.renderer.ViewFrustum;
-import net.minecraft.client.renderer.chunk.RenderChunk;
-import net.minecraft.util.math.ChunkPos;
-import org.spongepowered.asm.mixin.Dynamic;
+import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.server.management.PlayerChunkMapEntry;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.gen.Accessor;
 
-@Mixin(ViewFrustum.class)
-public class MixinViewFrustum {
+import java.util.List;
 
-    @Dynamic @Redirect(method = "updateVboRegion(Lnet/minecraft/client/renderer/chunk/RenderChunk;)V",
-            at = @At(value = "NEW", target = "net/minecraft/util/math/ChunkPos"))
-    private ChunkPos getChunkPos(int x, int z, RenderChunk renderChunk) {
-        return new ChunkPos3(x, renderChunk.getPosition().getY() & ~255, z);
-    }
+@Mixin(PlayerChunkMapEntry.class)
+public interface IPlayerChunkMapEntry {
+    @Accessor List<EntityPlayerMP> getPlayers();
+    @Accessor void setLastUpdateInhabitedTime(long time);
+    @Accessor void setSentToPlayers(boolean value);
+    @Accessor(remap = false) boolean isLoading();
+    @Accessor(remap = false) Runnable getLoadedRunnable();
 }

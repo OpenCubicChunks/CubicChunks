@@ -25,6 +25,7 @@
 package io.github.opencubicchunks.cubicchunks.core.asm.mixin.core.common;
 
 import static io.github.opencubicchunks.cubicchunks.api.util.Coords.cubeToMinBlock;
+import static io.github.opencubicchunks.cubicchunks.core.util.ReflectionUtil.cast;
 
 import io.github.opencubicchunks.cubicchunks.api.util.Coords;
 import io.github.opencubicchunks.cubicchunks.api.util.CubePos;
@@ -40,7 +41,6 @@ import io.github.opencubicchunks.cubicchunks.api.worldgen.ICubeGenerator;
 import io.github.opencubicchunks.cubicchunks.core.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.core.CubicChunksConfig;
 import io.github.opencubicchunks.cubicchunks.core.asm.mixin.ICubicWorldInternal;
-import io.github.opencubicchunks.cubicchunks.core.entity.CubicEntityTracker;
 import io.github.opencubicchunks.cubicchunks.core.lighting.FirstLightProcessor;
 import io.github.opencubicchunks.cubicchunks.core.server.ChunkGc;
 import io.github.opencubicchunks.cubicchunks.core.server.CubeProviderServer;
@@ -49,6 +49,7 @@ import io.github.opencubicchunks.cubicchunks.core.util.world.CubeSplitTickList;
 import io.github.opencubicchunks.cubicchunks.core.util.world.CubeSplitTickSet;
 import io.github.opencubicchunks.cubicchunks.core.world.CubeWorldEntitySpawner;
 import io.github.opencubicchunks.cubicchunks.core.world.FastCubeWorldEntitySpawner;
+import io.github.opencubicchunks.cubicchunks.core.world.IWorldEntitySpawner;
 import io.github.opencubicchunks.cubicchunks.core.world.cube.Cube;
 import io.github.opencubicchunks.cubicchunks.core.world.provider.ICubicWorldProvider;
 import mcp.MethodsReturnNonnullByDefault;
@@ -124,8 +125,10 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
     @Override public void initCubicWorldServer(IntRange heightRange, IntRange generationRange) {
         super.initCubicWorld(heightRange, generationRange);
         this.isCubicWorld = true;
-        this.entitySpawner = CubicChunksConfig.useFastEntitySpawner ?
+        IWorldEntitySpawner spawner = CubicChunksConfig.useFastEntitySpawner ?
                 new FastCubeWorldEntitySpawner() : new CubeWorldEntitySpawner();
+        IWorldEntitySpawner.Handler spawnHandler = cast(entitySpawner);
+        spawnHandler.setEntitySpawner(spawner);
 
         this.chunkProvider = new CubeProviderServer((WorldServer) (Object) this,
                 ((ICubicWorldProvider) this.provider).createCubeGenerator());
@@ -133,7 +136,6 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
         this.playerChunkMap = new PlayerCubeMap((WorldServer) (Object) this);
 
         this.firstLightProcessor = new FirstLightProcessor((WorldServer) (Object) this);
-        this.entityTracker = new CubicEntityTracker(this);
 
         this.forcedChunksCubes = new HashMap<>();
         this.forcedCubes = new XYZMap<>(0.75f, 64*1024);
@@ -156,10 +158,11 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
         if (!this.isCubicWorld()) {
             throw new NotCubicChunksWorldException();
         }
+        IWorldEntitySpawner.Handler spawnHandler = cast(entitySpawner);
         // update world entity spawner
-        if (CubicChunksConfig.useFastEntitySpawner != (entitySpawner.getClass() == FastCubeWorldEntitySpawner.class)) {
-            this.entitySpawner = CubicChunksConfig.useFastEntitySpawner ?
-                    new FastCubeWorldEntitySpawner() : new CubeWorldEntitySpawner();
+        if (CubicChunksConfig.useFastEntitySpawner != (spawnHandler.getEntitySpawner().getClass() == FastCubeWorldEntitySpawner.class)) {
+            spawnHandler.setEntitySpawner(CubicChunksConfig.useFastEntitySpawner ?
+                    new FastCubeWorldEntitySpawner() : new CubeWorldEntitySpawner());
         }
     }
 

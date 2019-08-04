@@ -3,7 +3,6 @@ import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import me.champeau.gradle.JMHPlugin
 import net.minecraftforge.gradle.tasks.DeobfuscateJar
 import net.minecraftforge.gradle.user.ReobfMappingType
-import net.minecraftforge.gradle.user.patcherUser.forge.ForgePlugin
 import nl.javadude.gradle.plugins.license.LicensePlugin
 import org.ajoberstar.grgit.Grgit
 import org.ajoberstar.grgit.operation.DescribeOp
@@ -12,6 +11,10 @@ import org.gradle.kotlin.dsl.creating
 import org.gradle.kotlin.dsl.extra
 import org.spongepowered.asm.gradle.plugins.MixinGradlePlugin
 import kotlin.apply
+import io.github.opencubicchunks.gradle.fgfix.ForgePluginFixed
+import io.github.opencubicchunks.gradle.MixinAutoGen
+import java.nio.file.Path as NioPath
+import java.nio.file.Paths as NioPaths
 
 // Gradle repositories and dependencies
 buildscript {
@@ -49,7 +52,8 @@ plugins {
 }
 
 apply {
-    plugin<ForgePlugin>()
+    plugin<MixinAutoGen>()
+    plugin<ForgePluginFixed>()
     plugin<ShadowPlugin>()
     plugin<MixinGradlePlugin>()
     plugin<LicensePlugin>()
@@ -88,7 +92,6 @@ group = "io.github.opencubicchunks"
 
 sourceSets {
     create("optifine_dummy")
-    println(sourceSets["api"].compileClasspath)
 }
 
 // configurations, needed for extendsFrom
@@ -154,12 +157,39 @@ mixin {
     token("MC_FORGE", extractForgeMinorVersion())
 }
 
+mixinGen {
+    filePattern = "cubicchunks.mixins.%s.json"
+    defaultRefmap = "cubicchunks.mixins.refmap.json"
+    defaultPackagePrefix = "io.github.opencubicchunks.cubicchunks.core.asm.mixin"
+    defaultCompatibilityLevel = "JAVA_8"
+    defaultMinVersion = "0.7.10"
+
+    config("core") {
+        required = true
+        conformVisibility = true
+        injectorsDefaultRequire = 1
+    }
+    config("fixes") {
+        required = true
+        conformVisibility = true
+        injectorsDefaultRequire = 1
+    }
+    config("noncritical") {
+        required = false
+        conformVisibility = true
+    }
+    config("selectable") {
+        required = true
+        conformVisibility = true
+        injectorsDefaultRequire = 1
+        configurationPlugin = "io.github.opencubicchunks.cubicchunks.core.asm.CubicChunksMixinConfig"
+    }
+}
+
 minecraft {
     version = theForgeVersion
     runDir = "run"
     mappings = theMappingsVersion
-
-    isUseDepAts = true
 
     replace("@@VERSION@@", project.version)
     replace("public static final boolean IS_DEV = true;", "public static final boolean IS_DEV = false;")
@@ -408,7 +438,6 @@ jar.apply {
 }
 
 fun configureManifest(manifest: Manifest) {
-    manifest.attributes["FMLAT"] = "cubicchunks_at.cfg"
     manifest.attributes["FMLCorePlugin"] = "io.github.opencubicchunks.cubicchunks.core.asm.coremod.CubicChunksCoreMod"
     manifest.attributes["TweakClass"] = "org.spongepowered.asm.launch.MixinTweaker"
     manifest.attributes["TweakOrder"] = "0"
@@ -460,11 +489,6 @@ processResources.apply {
     from(mainSourceSet.resources.srcDirs) {
         exclude("mcmod.info")
     }
-}
-
-val writeModVersion by tasks.creating {
-    dependsOn("build")
-    file("VERSION").writeText("VERSION=" + version)
 }
 
 fun getMcVersion(): String {

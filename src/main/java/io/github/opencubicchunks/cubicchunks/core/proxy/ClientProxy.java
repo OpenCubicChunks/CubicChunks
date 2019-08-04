@@ -24,16 +24,16 @@
  */
 package io.github.opencubicchunks.cubicchunks.core.proxy;
 
-import io.github.opencubicchunks.cubicchunks.core.client.ClientEventHandler;
+import static io.github.opencubicchunks.cubicchunks.core.util.ReflectionUtil.cast;
+
 import io.github.opencubicchunks.cubicchunks.core.CubicChunks;
-import io.github.opencubicchunks.cubicchunks.core.client.ClientEventHandler;
-import io.github.opencubicchunks.cubicchunks.core.util.ReflectionUtil;
 import io.github.opencubicchunks.cubicchunks.core.asm.mixin.ICubicWorldSettings;
+import io.github.opencubicchunks.cubicchunks.core.asm.mixin.core.common.IIntegratedServer;
+import io.github.opencubicchunks.cubicchunks.core.client.ClientEventHandler;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.world.WorldSettings;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.client.FMLClientHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
@@ -61,8 +61,9 @@ public class ClientProxy extends CommonProxy {
     }
 
     @Override public void setBuildLimit(MinecraftServer server) {
-        WorldSettings settings = ReflectionUtil.getFieldValueSrg(server, "field_71350_m");//theWorldSettings
-        if (((ICubicWorldSettings) (Object) settings).isCubic()) {
+        IIntegratedServer integratedServer = cast(server);
+        ICubicWorldSettings settings = cast(integratedServer.getWorldSettings());
+        if (settings.isCubic()) {
             server.setBuildLimit(CubicChunks.MAX_BLOCK_Y);
         }
     }

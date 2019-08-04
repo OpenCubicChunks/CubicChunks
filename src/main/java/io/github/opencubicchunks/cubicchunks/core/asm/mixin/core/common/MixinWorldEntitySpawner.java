@@ -22,23 +22,38 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package io.github.opencubicchunks.cubicchunks.core.asm.mixin.selectable.client.optifine;
+package io.github.opencubicchunks.cubicchunks.core.asm.mixin.core.common;
 
-import io.github.opencubicchunks.cubicchunks.core.asm.optifine.ChunkPos3;
-import net.minecraft.client.renderer.ViewFrustum;
-import net.minecraft.client.renderer.chunk.RenderChunk;
-import net.minecraft.util.math.ChunkPos;
-import org.spongepowered.asm.mixin.Dynamic;
+import io.github.opencubicchunks.cubicchunks.core.world.IWorldEntitySpawner;
+import net.minecraft.world.WorldEntitySpawner;
+import net.minecraft.world.WorldServer;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-@Mixin(ViewFrustum.class)
-public class MixinViewFrustum {
+import javax.annotation.Nullable;
 
-    @Dynamic @Redirect(method = "updateVboRegion(Lnet/minecraft/client/renderer/chunk/RenderChunk;)V",
-            at = @At(value = "NEW", target = "net/minecraft/util/math/ChunkPos"))
-    private ChunkPos getChunkPos(int x, int z, RenderChunk renderChunk) {
-        return new ChunkPos3(x, renderChunk.getPosition().getY() & ~255, z);
+@Mixin(WorldEntitySpawner.class)
+public class MixinWorldEntitySpawner implements IWorldEntitySpawner.Handler {
+
+    @Nullable private IWorldEntitySpawner customSpawner;
+
+    @Override public void setEntitySpawner(@Nullable IWorldEntitySpawner spawner) {
+        this.customSpawner = spawner;
+    }
+
+    @Override @Nullable public IWorldEntitySpawner getEntitySpawner() {
+        return this.customSpawner;
+    }
+
+    @Inject(method = "findChunksForSpawning", cancellable = true, at = @At("HEAD"))
+    private void onSpawnMobs(WorldServer world, boolean hostileEnable,
+            boolean peacefulEnable, boolean spawnOnSetTickRate, CallbackInfoReturnable<Integer> cir) {
+        if (this.customSpawner != null) {
+            int ret = this.customSpawner.findChunksForSpawning(world, hostileEnable, peacefulEnable, spawnOnSetTickRate);
+            cir.setReturnValue(ret);
+            cir.cancel();
+        }
     }
 }

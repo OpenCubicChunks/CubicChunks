@@ -144,6 +144,11 @@
                 "name": "ext"
             },
             {
+                "type": "io.github.opencubicchunks.gradle.MixinGenExtension",
+                "target": "org.gradle.api.Project",
+                "name": "mixinGen"
+            },
+            {
                 "type": "net.minecraftforge.gradle.user.patcherUser.forge.ForgeExtension",
                 "target": "org.gradle.api.Project",
                 "name": "minecraft"

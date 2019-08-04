@@ -24,9 +24,6 @@
  */
 package io.github.opencubicchunks.cubicchunks.core.worldgen.generator.vanilla;
 
-import static io.github.opencubicchunks.cubicchunks.core.util.ReflectionUtil.getFieldGetterHandle;
-import static io.github.opencubicchunks.cubicchunks.core.util.ReflectionUtil.getMethodHandle;
-
 import io.github.opencubicchunks.cubicchunks.api.util.Box;
 import io.github.opencubicchunks.cubicchunks.api.util.Coords;
 import io.github.opencubicchunks.cubicchunks.api.world.ICube;
@@ -36,8 +33,8 @@ import io.github.opencubicchunks.cubicchunks.api.worldgen.CubePrimer;
 import io.github.opencubicchunks.cubicchunks.api.worldgen.ICubeGenerator;
 import io.github.opencubicchunks.cubicchunks.core.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.core.asm.mixin.ICubicWorldInternal;
+import io.github.opencubicchunks.cubicchunks.core.asm.mixin.core.common.IGameRegistry;
 import io.github.opencubicchunks.cubicchunks.core.util.CompatHandler;
-import io.github.opencubicchunks.cubicchunks.core.util.ReflectionUtil;
 import io.github.opencubicchunks.cubicchunks.core.world.cube.Cube;
 import io.github.opencubicchunks.cubicchunks.core.worldgen.WorldgenHangWatchdog;
 import io.github.opencubicchunks.cubicchunks.core.worldgen.generator.WorldGenUtils;
@@ -54,9 +51,7 @@ import net.minecraft.world.chunk.IChunkProvider;
 import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 import net.minecraft.world.gen.IChunkGenerator;
 import net.minecraftforge.fml.common.IWorldGenerator;
-import net.minecraftforge.fml.common.registry.GameRegistry;
 
-import java.lang.invoke.MethodHandle;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -74,18 +69,14 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @MethodsReturnNonnullByDefault
 public class VanillaCompatibilityGenerator implements ICubeGenerator {
 
-    private static final MethodHandle getSortedGeneratorListHandle = getFieldGetterHandle(GameRegistry.class, "sortedGeneratorList");
-    private static final MethodHandle computeSortedGeneratorListHandle = getMethodHandle(GameRegistry.class, "computeSortedGeneratorList");
-
     private boolean isInit = false;
-    private int worldHeightBlocks;
     private int worldHeightCubes;
     @Nonnull private IChunkGenerator vanilla;
     @Nonnull private World world;
     /**
      * Last chunk that was generated from the vanilla world gen
      */
-    @Nonnull private Chunk lastChunk;
+    private Chunk lastChunk;
     /**
      * We generate all the chunks in the vanilla range at once. This variable prevents infinite recursion
      */
@@ -120,7 +111,7 @@ public class VanillaCompatibilityGenerator implements ICubeGenerator {
         // heuristics TODO: add a config that overrides this
         lastChunk = vanilla.generateChunk(0, 0); // lets scan the chunk at 0, 0
 
-        worldHeightBlocks = ((ICubicWorld) world).getMaxGenerationHeight();
+        int worldHeightBlocks = ((ICubicWorld) world).getMaxGenerationHeight();
         worldHeightCubes = worldHeightBlocks / Cube.SIZE;
         Map<IBlockState, Integer> blockHistogramBottom = new HashMap<>();
         Map<IBlockState, Integer> blockHistogramTop = new HashMap<>();
@@ -317,23 +308,12 @@ public class VanillaCompatibilityGenerator implements ICubeGenerator {
         }
     }
 
-    @SuppressWarnings("unchecked")
     private void applyModGenerators(int x, int z, World world, IChunkGenerator vanillaGen, IChunkProvider provider) {
-        List<IWorldGenerator> generators;
-        try {
-            generators = (List<IWorldGenerator>) getSortedGeneratorListHandle.invoke();
-            if (generators == null) {
-                computeSortedGeneratorListHandle.invoke();
-                generators = (List<IWorldGenerator>) getSortedGeneratorListHandle.invoke();
-            }
-        } catch (Throwable e) {
-            if (e instanceof Error) {
-                throw (Error) e;
-            }
-            if (e instanceof RuntimeException) {
-                throw (RuntimeException) e;
-            }
-            throw new RuntimeException(e);
+        List<IWorldGenerator> generators = IGameRegistry.getSortedGeneratorList();
+        if (generators == null) {
+            IGameRegistry.computeGenerators();
+            generators = IGameRegistry.getSortedGeneratorList();
+            assert generators != null;
         }
         long worldSeed = world.getSeed();
         Random fmlRandom = new Random(worldSeed);
@@ -350,7 +330,6 @@ public class VanillaCompatibilityGenerator implements ICubeGenerator {
                 CompatHandler.afterGenerate(world);
             }
         }
-
     }
 
     @Override
@@ -386,6 +365,6 @@ public class VanillaCompatibilityGenerator implements ICubeGenerator {
 
     @Override
     public BlockPos getClosestStructure(String name, BlockPos pos, boolean findUnexplored) {
-        return vanilla.getNearestStructurePos((World) world, name, pos, findUnexplored);
+        return vanilla.getNearestStructurePos(world, name, pos, findUnexplored);
     }
 }

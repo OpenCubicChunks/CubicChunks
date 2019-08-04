@@ -26,6 +26,10 @@ package io.github.opencubicchunks.cubicchunks.core.client;
 
 import io.github.opencubicchunks.cubicchunks.api.util.MathUtil;
 import io.github.opencubicchunks.cubicchunks.core.CubicChunksConfig;
+import io.github.opencubicchunks.cubicchunks.core.asm.mixin.core.client.IGuiCreateWorld;
+import io.github.opencubicchunks.cubicchunks.core.asm.mixin.core.client.IGuiOptionsRowList;
+import io.github.opencubicchunks.cubicchunks.core.asm.mixin.core.client.IGuiScreen;
+import io.github.opencubicchunks.cubicchunks.core.asm.mixin.core.client.IGuiVideoSettings;
 import io.github.opencubicchunks.cubicchunks.core.server.ICubicPlayerList;
 import io.github.opencubicchunks.cubicchunks.core.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.core.asm.mixin.ICubicWorldInternal;
@@ -94,26 +98,29 @@ public class ClientEventHandler {
         if (currentGui instanceof GuiVideoSettings) {
             GuiVideoSettings gvs = (GuiVideoSettings) currentGui;
             try {
-                GuiOptionsRowList gowl = (GuiOptionsRowList) gvs.optionsRowList;
+                IGuiOptionsRowList gowl = (IGuiOptionsRowList) ((IGuiVideoSettings) gvs).getOptionsRowList();
                 GuiOptionsRowList.Row row = this.createRow(100, gvs.width);
-                gowl.options.add(1, row);
+                gowl.getOptions().add(1, row);
             } catch (NoSuchFieldError err) {
                 int idx = 3;
                 int btnSpacing = 20;
-                CubicChunks.LOGGER.error("Couldn't add vertical view distance options, maybe optifine is installed? Attempting optifine-specific "
-                        + "option add", err.toString());
-                gvs.buttonList.add(idx, new VertViewDistanceSlider(100, gvs.width / 2 - 155 + 160, gvs.height / 6 + btnSpacing * (idx / 2) - 12));
+                CubicChunks.LOGGER.error(
+                        "Couldn't add vertical view distance options, maybe optifine is installed? Attempting optifine-specific option add ({})",
+                        err.toString());
+                ((IGuiScreen) gvs).getButtonList()
+                        .add(idx, new VertViewDistanceSlider(100, gvs.width / 2 - 155 + 160, gvs.height / 6 + btnSpacing * (idx / 2) - 12));
+                List<GuiButton> buttons = ((IGuiScreen) gvs).getButtonList();
                 // reposition all buttons except the last 4 (last 3 and done)
-                for (int i = 0; i < gvs.buttonList.size() - 4; i++) {
-                    GuiButton btn = gvs.buttonList.get(i);
+                for (int i = 0; i < buttons.size() - 4; i++) {
+                    GuiButton btn = buttons.get(i);
                     int x = gvs.width / 2 - 155 + i % 2 * 160;
                     int y = gvs.height / 6 + 21 * (i / 2) - 12;
                     btn.x = x;
                     btn.y = y;
                 }
                 // now position the last 3 buttons excluding "done" to be 3-in-a-row
-                for (int i = gvs.buttonList.size() - 4; i < gvs.buttonList.size() - 1; i++) {
-                    GuiButton btn = gvs.buttonList.get(i);
+                for (int i = buttons.size() - 4; i < buttons.size() - 1; i++) {
+                    GuiButton btn = buttons.get(i);
 
                     int newBtnWidth = 150 * 2 / 3;
                     int minX = gvs.width / 2 - 155;
@@ -123,7 +130,7 @@ public class ClientEventHandler {
                     int maxXCenter = maxX - newBtnWidth / 2;
 
                     int x = minXCenter + (i % 3) * (maxXCenter - minXCenter) / 2 - newBtnWidth / 2;
-                    int y = gvs.height / 6 + 21 * (gvs.buttonList.size() - 4) / 2 - 12;
+                    int y = gvs.height / 6 + 21 * (buttons.size() - 4) / 2 - 12;
 
                     btn.x = x;
                     btn.y = y;
@@ -293,7 +300,7 @@ public class ClientEventHandler {
                             }
                         }
                         assert enableCC != null;
-                        boolean isCubicChunksType = WorldType.WORLD_TYPES[((GuiCreateWorld) gui).selectedIndex] instanceof ICubicWorldType;
+                        boolean isCubicChunksType = WorldType.WORLD_TYPES[((IGuiCreateWorld) gui).getSelectedIndex()] instanceof ICubicWorldType;
                         enableCC.visible = mapType != null && !isCubicChunksType && mapType.visible;
                         break;
                     }

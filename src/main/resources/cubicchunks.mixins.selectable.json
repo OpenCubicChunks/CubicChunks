@@ -2,38 +2,38 @@
     "required": true,
     "package": "io.github.opencubicchunks.cubicchunks.core.asm.mixin.selectable",
     "refmap": "cubicchunks.mixins.refmap.json",
-    "compatibilityLevel": "JAVA_8",
-    "minVersion": "0.6.15-SNAPSHOT",
     "plugin": "io.github.opencubicchunks.cubicchunks.core.asm.CubicChunksMixinConfig",
+    "compatibilityLevel": "JAVA_8",
+    "minVersion": "0.7.10",
+    "injectors": {
+        "defaultRequire": 1
+    },
+    "overwrites": {
+        "conformVisibility": true
+    },
     "mixins": [
-        "common.MixinPathNavigate",
-        "common.MixinWalkNodeProcessor",
         "common.MixinChunkCache",
-        "common.MixinWorld_SlowCollisionCheck",
+        "common.MixinPathNavigate",
+        "common.MixinTileEntityBeaconBetterFps",
+        "common.MixinWalkNodeProcessor",
         "common.MixinWorld_CollisionCheck",
-        "common.MixinTileEntityBeaconBetterFps"
+        "common.MixinWorld_SlowCollisionCheck",
+        "common.MixinWorldServer_UpdateBlocks"
     ],
     "client": [
-        "client.MixinRenderGlobalNoOptifine",
         "client.MixinChunkCache_Cubic",
         "client.MixinChunkCache_Vanilla",
-        "client.optifine.MixinRenderGlobalOptifine_E",
+        "client.MixinRenderGlobalNoOptifine",
+        "client.optifine.MixinChunkVisibility",
+        "client.optifine.MixinExtendedBlockStorage",
         "client.optifine.MixinRenderChunk",
         "client.optifine.MixinRenderChunkUtils",
-        "client.optifine.MixinExtendedBlockStorage",
-        "client.optifine.MixinChunkVisibility",
+        "client.optifine.MixinRenderGlobalOptifine_E",
         "client.optifine.MixinRenderList",
         "client.optifine.MixinViewFrustum",
         "client.vertviewdist.MixinEntityRenderer",
         "client.vertviewdist.MixinRenderGlobal",
         "client.vertviewdist.MixinRenderGlobalNoOptifine"
     ],
-    "server": [
-    ],
-    "injectors": {
-        "defaultRequire": 1
-    },
-    "overwrites": {
-        "conformVisibility": true
-    }
+    "server": []
 }

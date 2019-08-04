@@ -22,43 +22,15 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package io.github.opencubicchunks.cubicchunks.core.asm.mixin.selectable.client.vertviewdist;
+package io.github.opencubicchunks.cubicchunks.core.asm.mixin.core.client;
 
-import io.github.opencubicchunks.cubicchunks.core.asm.mixin.core.client.IViewFrustum;
-import net.minecraft.client.renderer.RenderGlobal;
 import net.minecraft.client.renderer.ViewFrustum;
 import net.minecraft.client.renderer.chunk.RenderChunk;
-import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.MathHelper;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
-import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.gen.Invoker;
 
-import javax.annotation.Nullable;
-
-@Mixin(value = RenderGlobal.class, priority = 2000)
-public class MixinRenderGlobalNoOptifine {
-
-    @Shadow private ViewFrustum viewFrustum;
-
-    @Shadow private int renderDistanceChunks;
-
-    // NOTE: the field name here and in MixinRendeerGlobal have to match
-    private int verticalRenderDistanceCubes;
-    /**
-     * @author Barteks2x
-     */
-    @Overwrite
-    @Nullable
-    private RenderChunk getRenderChunkOffset(BlockPos playerPos, RenderChunk renderChunkBase, EnumFacing facing) {
-        BlockPos blockpos = renderChunkBase.getBlockPosOffset16(facing);
-
-        if (MathHelper.abs(playerPos.getX() - blockpos.getX()) <= this.renderDistanceChunks * 16
-                && MathHelper.abs(playerPos.getY() - blockpos.getY()) <= this.verticalRenderDistanceCubes * 16
-                && MathHelper.abs(playerPos.getZ() - blockpos.getZ()) <= this.renderDistanceChunks * 16) {
-            return ((IViewFrustum) this.viewFrustum).getRenderChunkAt(blockpos);
-        }
-        return null;
-    }
+@Mixin(ViewFrustum.class)
+public interface IViewFrustum {
+    @Invoker("getRenderChunk") RenderChunk getRenderChunkAt(BlockPos pos);
 }

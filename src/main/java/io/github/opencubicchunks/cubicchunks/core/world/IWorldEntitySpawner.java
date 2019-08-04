@@ -22,43 +22,24 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package io.github.opencubicchunks.cubicchunks.core.util;
+package io.github.opencubicchunks.cubicchunks.core.world;
 
-import mcp.MethodsReturnNonnullByDefault;
+import net.minecraft.world.WorldServer;
 
-import java.lang.invoke.MethodHandle;
-import java.lang.invoke.MethodHandles;
-import java.lang.reflect.Constructor;
+import javax.annotation.Nullable;
 
-import javax.annotation.ParametersAreNonnullByDefault;
-
-@ParametersAreNonnullByDefault
-@MethodsReturnNonnullByDefault
-public class ReflectionUtil {
+/**
+ * An interface for custom entity spawner. Because vanilla entity spawner is final, an instance of class implementing this interface is added as a
+ * field to WorldEntitySpawner, and can optionally replace the whole vanilla behavior.
+ */
+public interface IWorldEntitySpawner {
+    int findChunksForSpawning(WorldServer world, boolean hostileEnable, boolean peacefulEnable, boolean spawnOnSetTickRate);
 
     /**
-     * Casts any object to inferred type. Useful for reflection.
+     * This interface will be injected using Mixin on top of vanilla WorldEntitySpawner
      */
-    @SuppressWarnings("unchecked") public static <T> T cast(Object in) {
-        return (T) in;
-    }
-
-    public static <T> Class<? extends T> getClassOrDefault(String name, Class<? extends T> cl) {
-        try {
-            return cast(Class.forName(name));
-        } catch (ClassNotFoundException ex) {
-            return cl;
-        }
-    }
-
-    public static MethodHandle constructHandle(Class<?> owner, Class<?>... args) {
-        try {
-            Constructor<?> constr = owner.getDeclaredConstructor(args);
-            constr.setAccessible(true);
-            return MethodHandles.lookup().unreflectConstructor(constr);
-        } catch (IllegalAccessException | NoSuchMethodException e) {
-            //if it happens - either something has gone horribly wrong or the JVM is blocking access
-            throw new Error(e);
-        }
+    interface Handler {
+        void setEntitySpawner(@Nullable IWorldEntitySpawner spawner);
+        @Nullable IWorldEntitySpawner getEntitySpawner();
     }
 }

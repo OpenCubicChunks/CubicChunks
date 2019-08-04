@@ -22,43 +22,24 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package io.github.opencubicchunks.cubicchunks.core.util;
+package io.github.opencubicchunks.cubicchunks.core.asm.mixin.core.common;
 
-import mcp.MethodsReturnNonnullByDefault;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.SetMultimap;
+import net.minecraft.world.World;
+import net.minecraftforge.common.ForgeChunkManager;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.gen.Accessor;
 
-import java.lang.invoke.MethodHandle;
-import java.lang.invoke.MethodHandles;
-import java.lang.reflect.Constructor;
+import java.util.Map;
 
-import javax.annotation.ParametersAreNonnullByDefault;
-
-@ParametersAreNonnullByDefault
-@MethodsReturnNonnullByDefault
-public class ReflectionUtil {
-
-    /**
-     * Casts any object to inferred type. Useful for reflection.
-     */
-    @SuppressWarnings("unchecked") public static <T> T cast(Object in) {
-        return (T) in;
+@Mixin(ForgeChunkManager.class)
+public interface IForgeChunkManager {
+    @Accessor static Map<World, Multimap<String, ForgeChunkManager.Ticket>> getTickets() {
+        throw new Error("IForgeChunkManager failed to apply");
     }
 
-    public static <T> Class<? extends T> getClassOrDefault(String name, Class<? extends T> cl) {
-        try {
-            return cast(Class.forName(name));
-        } catch (ClassNotFoundException ex) {
-            return cl;
-        }
-    }
-
-    public static MethodHandle constructHandle(Class<?> owner, Class<?>... args) {
-        try {
-            Constructor<?> constr = owner.getDeclaredConstructor(args);
-            constr.setAccessible(true);
-            return MethodHandles.lookup().unreflectConstructor(constr);
-        } catch (IllegalAccessException | NoSuchMethodException e) {
-            //if it happens - either something has gone horribly wrong or the JVM is blocking access
-            throw new Error(e);
-        }
+    @Accessor static SetMultimap<String, ForgeChunkManager.Ticket> getPlayerTickets() {
+        throw new Error("IForgeChunkManager failed to apply");
     }
 }

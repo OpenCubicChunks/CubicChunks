@@ -24,6 +24,8 @@
  */
 package io.github.opencubicchunks.cubicchunks.core.world.chunkloader;
 
+import static io.github.opencubicchunks.cubicchunks.core.util.ReflectionUtil.cast;
+
 import com.google.common.collect.Multimap;
 import com.google.common.collect.SetMultimap;
 import io.github.opencubicchunks.cubicchunks.api.util.Coords;
@@ -32,6 +34,7 @@ import io.github.opencubicchunks.cubicchunks.api.world.ICubicWorld;
 import io.github.opencubicchunks.cubicchunks.core.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.core.CubicChunksConfig;
 import io.github.opencubicchunks.cubicchunks.core.asm.mixin.ICubicWorldInternal;
+import io.github.opencubicchunks.cubicchunks.core.asm.mixin.core.common.IForgeChunkManager;
 import io.github.opencubicchunks.cubicchunks.core.server.PlayerCubeMap;
 import io.github.opencubicchunks.cubicchunks.core.util.ReflectionUtil;
 import io.github.opencubicchunks.cubicchunks.core.util.ticket.ITicket;
@@ -83,14 +86,9 @@ public class CubicChunkManager {
      * When serializing forced chunks, we also store this map in a file, and load it when a world is loaded.
      */
 
-    private static final MethodHandle ticketConstructor = ReflectionUtil.getConstructorHandle(
+    private static final MethodHandle ticketConstructor = ReflectionUtil.constructHandle(
             ForgeChunkManager.Ticket.class, String.class,
             ForgeChunkManager.Type.class, World.class);
-
-    private static final MethodHandle getPlayerTickets =
-            ReflectionUtil.getFieldGetterHandle(ForgeChunkManager.class, "playerTickets");
-    private static final MethodHandle getTickets =
-            ReflectionUtil.getFieldGetterHandle(ForgeChunkManager.class, "tickets");
 
     /**
      * Force the supplied chunk coordinate to be loaded by the supplied ticket. If the ticket's {@link ForgeChunkManager.Ticket#maxDepth} is
@@ -108,8 +106,8 @@ public class CubicChunkManager {
         if (ticket.getType() == ForgeChunkManager.Type.ENTITY && ticket.getEntity() == null) {
             throw new RuntimeException("Attempted to use an entity ticket to force a chunk, without an entity");
         }
-        if (ticket.isPlayerTicket() ? !getPlayerTickets().containsValue(ticket) :
-                !getTickets().get(ticket.world).containsEntry(ticket.getModId(), ticket)) {
+        if (ticket.isPlayerTicket() ? !IForgeChunkManager.getPlayerTickets().containsValue(ticket) :
+                !IForgeChunkManager.getTickets().get(ticket.world).containsEntry(ticket.getModId(), ticket)) {
             FMLLog.log.fatal("The mod {} attempted to force load a chunk with an invalid ticket. This is not permitted.", ticket.getModId());
             return;
         }
@@ -166,23 +164,7 @@ public class CubicChunkManager {
 
     public static ForgeChunkManager.Ticket makeTicket(String str, ForgeChunkManager.Type type, World world) {
         try {
-            return (ForgeChunkManager.Ticket) ticketConstructor.invoke(str, type, world);
-        } catch (Throwable throwable) {
-            throw new RuntimeException(throwable);
-        }
-    }
-
-    public static SetMultimap<String, ForgeChunkManager.Ticket> getPlayerTickets() {
-        try {
-            return (SetMultimap<String, ForgeChunkManager.Ticket>) getPlayerTickets.invoke();
-        } catch (Throwable throwable) {
-            throw new RuntimeException(throwable);
-        }
-    }
-
-    public static Map<World, Multimap<String, ForgeChunkManager.Ticket>> getTickets() {
-        try {
-            return (Map<World, Multimap<String, ForgeChunkManager.Ticket>>) getTickets.invoke();
+            return cast(ticketConstructor.invoke(str, type, world));
         } catch (Throwable throwable) {
             throw new RuntimeException(throwable);
         }

@@ -24,35 +24,25 @@
  */
 package io.github.opencubicchunks.cubicchunks.core.server;
 
-import static io.github.opencubicchunks.cubicchunks.core.util.ReflectionUtil.getFieldGetterHandle;
-import static io.github.opencubicchunks.cubicchunks.core.util.ReflectionUtil.getFieldSetterHandle;
-
-import io.github.opencubicchunks.cubicchunks.core.network.PacketColumn;
-import io.github.opencubicchunks.cubicchunks.core.network.PacketDispatcher;
-import io.github.opencubicchunks.cubicchunks.core.network.PacketHeightMapUpdate;
-import io.github.opencubicchunks.cubicchunks.core.network.PacketUnloadColumn;
-import io.github.opencubicchunks.cubicchunks.core.server.chunkio.async.forge.AsyncWorldIOExecutor;
+import gnu.trove.list.TByteList;
+import gnu.trove.list.array.TByteArrayList;
+import io.github.opencubicchunks.cubicchunks.api.util.CubePos;
+import io.github.opencubicchunks.cubicchunks.api.util.XZAddressable;
+import io.github.opencubicchunks.cubicchunks.api.world.IColumn;
 import io.github.opencubicchunks.cubicchunks.core.CubicChunks;
+import io.github.opencubicchunks.cubicchunks.core.asm.mixin.core.common.IPlayerChunkMapEntry;
 import io.github.opencubicchunks.cubicchunks.core.network.PacketColumn;
 import io.github.opencubicchunks.cubicchunks.core.network.PacketDispatcher;
 import io.github.opencubicchunks.cubicchunks.core.network.PacketHeightMapUpdate;
 import io.github.opencubicchunks.cubicchunks.core.network.PacketUnloadColumn;
 import io.github.opencubicchunks.cubicchunks.core.server.chunkio.async.forge.AsyncWorldIOExecutor;
 import io.github.opencubicchunks.cubicchunks.core.util.AddressTools;
-import io.github.opencubicchunks.cubicchunks.api.util.CubePos;
-import io.github.opencubicchunks.cubicchunks.api.util.XZAddressable;
-import io.github.opencubicchunks.cubicchunks.api.world.IColumn;
-import gnu.trove.list.TByteList;
-import gnu.trove.list.array.TByteArrayList;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.server.management.PlayerChunkMapEntry;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.world.ChunkWatchEvent;
-
-import java.lang.invoke.MethodHandle;
-import java.util.List;
 
 import javax.annotation.Nonnull;
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -62,38 +52,30 @@ import javax.annotation.ParametersAreNonnullByDefault;
 class ColumnWatcher extends PlayerChunkMapEntry implements XZAddressable {
 
     @Nonnull private PlayerCubeMap playerCubeMap;
-    private static MethodHandle getPlayers = getFieldGetterHandle(PlayerChunkMapEntry.class, "field_187283_c");
-    private static MethodHandle setLastUpdateInhabitedTime = getFieldSetterHandle(PlayerChunkMapEntry.class, "field_187289_i");
-    private static MethodHandle setSentToPlayers = getFieldSetterHandle(PlayerChunkMapEntry.class, "field_187290_j");
-    private static MethodHandle isLoading = getFieldGetterHandle(PlayerChunkMapEntry.class, "loading");//forge field, no srg name
-    private static MethodHandle getLoadedRunnable = getFieldGetterHandle(PlayerChunkMapEntry.class, "loadedRunnable");//forge field, no srg name
-    @Nonnull private final Runnable loadedRunnable;
-
     @Nonnull private final TByteList dirtyColumns = new TByteArrayList(64);
 
     ColumnWatcher(PlayerCubeMap playerCubeMap, ChunkPos pos) {
         super(playerCubeMap, pos.x, pos.z);
         this.playerCubeMap = playerCubeMap;
-        try {
-            this.loadedRunnable = (Runnable) getLoadedRunnable.invoke(this);
-        } catch (Throwable throwable) {
-            throw new RuntimeException(throwable);
-        }
+    }
+
+    private IPlayerChunkMapEntry self() {
+        return (IPlayerChunkMapEntry) this;
     }
 
     // CHECKED: 1.10.2-12.18.1.2092
     public void addPlayer(EntityPlayerMP player) {
-        if (this.getPlayers().contains(player)) {
+        if (self().getPlayers().contains(player)) {
             CubicChunks.LOGGER.debug("Failed to expand player. {} already is in chunk {}, {}", player,
                     this.getPos().x,
                     this.getPos().z);
             return;
         }
-        if (this.getPlayers().isEmpty()) {
-            this.setLastUpdateInhabitedTime(playerCubeMap.getWorldServer().getTotalWorldTime());
+        if (self().getPlayers().isEmpty()) {
+            self().setLastUpdateInhabitedTime(playerCubeMap.getWorldServer().getTotalWorldTime());
         }
 
-        this.getPlayers().add(player);
+        self().getPlayers().add(player);
 
         //always sent to players, no need to check it
 
@@ -107,15 +89,15 @@ class ColumnWatcher extends PlayerChunkMapEntry implements XZAddressable {
 
     // CHECKED: 1.10.2-12.18.1.2092//TODO: remove it, the only different line is sending packet
     public void removePlayer(EntityPlayerMP player) {
-        if (!this.getPlayers().contains(player)) {
+        if (!self().getPlayers().contains(player)) {
             return;
         }
         if (this.getChunk() == null) {
-            this.getPlayers().remove(player);
-            if (this.getPlayers().isEmpty()) {
-                if (isLoading()) {
+            self().getPlayers().remove(player);
+            if (self().getPlayers().isEmpty()) {
+                if (self().isLoading()) {
                     AsyncWorldIOExecutor.dropQueuedColumnLoad(
-                            playerCubeMap.getWorldServer(), getPos().x, getPos().z, (c) -> loadedRunnable.run());
+                            playerCubeMap.getWorldServer(), getPos().x, getPos().z, (c) -> self().getLoadedRunnable().run());
                 }
                 this.playerCubeMap.removeEntry(this);
             }
@@ -126,28 +108,12 @@ class ColumnWatcher extends PlayerChunkMapEntry implements XZAddressable {
             PacketDispatcher.sendTo(new PacketUnloadColumn(getPos()), player);
         }
 
-        this.getPlayers().remove(player);
+        self().getPlayers().remove(player);
 
         MinecraftForge.EVENT_BUS.post(new ChunkWatchEvent.UnWatch(this.getChunk(), player));
 
-        if (this.getPlayers().isEmpty()) {
+        if (self().getPlayers().isEmpty()) {
             playerCubeMap.removeEntry(this);
-        }
-    }
-
-    private List<EntityPlayerMP> getPlayers() {
-        try {
-            return (List<EntityPlayerMP>) getPlayers.invoke(this);
-        } catch (Throwable throwable) {
-            throw new RuntimeException(throwable);
-        }
-    }
-
-    private void setLastUpdateInhabitedTime(long time) {
-        try {
-            setLastUpdateInhabitedTime.invoke(this, time);
-        } catch (Throwable throwable) {
-            throw new RuntimeException(throwable);
         }
     }
 
@@ -165,10 +131,10 @@ class ColumnWatcher extends PlayerChunkMapEntry implements XZAddressable {
 
         try {
             PacketColumn message = new PacketColumn(this.getChunk());
-            for (EntityPlayerMP player : this.getPlayers()) {
+            for (EntityPlayerMP player : self().getPlayers()) {
                 PacketDispatcher.sendTo(message, player);
             }
-            setSentToPlayers.invoke(this, true);
+            self().setSentToPlayers(true);
         } catch (Throwable throwable) {
             throw new RuntimeException(throwable);
         }
@@ -198,21 +164,13 @@ class ColumnWatcher extends PlayerChunkMapEntry implements XZAddressable {
             return;
         }
         assert getChunk() != null;
-        for (EntityPlayerMP player : this.getPlayers()) {
+        for (EntityPlayerMP player : self().getPlayers()) {
             PacketDispatcher.sendTo(new PacketHeightMapUpdate(getPos(), dirtyColumns, ((IColumn) getChunk()).getOpacityIndex()), player);
         }
         this.dirtyColumns.clear();
     }
 
     //containsPlayer, hasPlayerMatching, hasPlayerMatchingInRange, isAddedToChunkUpdateQueue, getChunk, getClosestPlayerDistance - ok
-
-    private boolean isLoading() {
-        try {
-            return (boolean) isLoading.invoke(this);
-        } catch (Throwable throwable) {
-            throw new RuntimeException(throwable);
-        }
-    }
 
     @Override public int getX() {
         return this.getPos().x;

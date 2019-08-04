@@ -24,19 +24,13 @@
  */
 package io.github.opencubicchunks.cubicchunks.core.server.chunkio;
 
-import cubicchunks.regionlib.impl.save.SaveSection2D;
-import cubicchunks.regionlib.impl.save.SaveSection3D;
-import cubicchunks.regionlib.lib.ExtRegion;
-import cubicchunks.regionlib.lib.provider.CachedRegionProvider;
-import cubicchunks.regionlib.lib.provider.SimpleRegionProvider;
-import io.github.opencubicchunks.cubicchunks.core.CubicChunks;
 import cubicchunks.regionlib.api.region.key.IKey;
 import cubicchunks.regionlib.impl.EntryLocation2D;
 import cubicchunks.regionlib.impl.EntryLocation3D;
 import cubicchunks.regionlib.impl.SaveCubeColumns;
 import io.github.opencubicchunks.cubicchunks.api.util.CubePos;
+import io.github.opencubicchunks.cubicchunks.core.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.core.world.cube.Cube;
-import net.minecraft.client.Minecraft;
 import net.minecraft.nbt.CompressedStreamTools;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.datafix.FixTypes;
@@ -52,10 +46,8 @@ import org.apache.logging.log4j.Logger;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
