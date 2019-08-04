@@ -127,11 +127,13 @@ public abstract class MixinWorld implements ICubicWorldInternal {
 
     @Shadow public abstract boolean isBlockLoaded(BlockPos pos);
 
-    @Shadow public abstract IBlockState getBlockState(BlockPos pos);
-
     @Shadow public abstract Biome getBiome(BlockPos pos);
 
     @Shadow public abstract boolean isBlockLoaded(BlockPos pos, boolean allowEmpty);
+
+    @Shadow public abstract boolean isOutsideBuildHeight(BlockPos pos);
+
+    @Shadow public abstract Chunk getChunk(BlockPos pos);
 
     protected void initCubicWorld(IntRange heightRange, IntRange generationRange) {
         ((ICubicWorldSettings) worldInfo).setCubic(true);
@@ -261,7 +263,7 @@ public abstract class MixinWorld implements ICubicWorldInternal {
             ci.cancel();
         }
     }
-    
+/*
     @Inject(method = "getBlockState", at = @At("HEAD"), cancellable = true)
     public void onGetBlockState(BlockPos pos, CallbackInfoReturnable<IBlockState> ci) {
         if (this.isCubicWorld()) {
@@ -272,6 +274,26 @@ public abstract class MixinWorld implements ICubicWorldInternal {
             else
                 ci.setReturnValue(Blocks.AIR.getDefaultState());
             ci.cancel();
+        }
+    }
+*/
+    /**
+     * @author Barteks2x
+     * @reason Injection causes performance issues, overwrite for cubic chunks version
+     */
+
+    @Overwrite
+    public IBlockState getBlockState(BlockPos pos) {
+        if (this.isOutsideBuildHeight(pos)) { // TODO: maybe avoid height check for cubic chunks world?
+            return Blocks.AIR.getDefaultState();
+        }
+        if (this.isCubicWorld) {
+            ICube cube = ((ICubeProviderInternal) this.chunkProvider)
+                    .getCube(Coords.blockToCube(pos.getX()), Coords.blockToCube(pos.getY()), Coords.blockToCube(pos.getZ()));
+            return cube.getBlockState(pos);
+        } else {
+            Chunk chunk = this.getChunk(pos);
+            return chunk.getBlockState(pos);
         }
     }
 
