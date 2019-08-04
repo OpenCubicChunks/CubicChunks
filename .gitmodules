@@ -1,3 +1,6 @@
 [submodule "RegionLib"]
 	path = RegionLib
 	url = https://github.com/Barteks2x/RegionLib
+[submodule "buildSrc"]
+	path = buildSrc
+	url = https://github.com/OpenCubicChunks/CubicGradle
