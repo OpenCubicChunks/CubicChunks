@@ -49,7 +49,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-@Mixin(ForgeChunkManager.Ticket.class)
+@Mixin(value = ForgeChunkManager.Ticket.class, remap = false)
 public abstract class MixinTicket implements ICubicTicket {
 
     private LinkedHashSet<CubePos> forcedCubes = new LinkedHashSet<>();

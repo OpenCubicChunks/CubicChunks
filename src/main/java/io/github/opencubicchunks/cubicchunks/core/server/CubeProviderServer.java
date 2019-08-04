@@ -121,7 +121,7 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
      */
     @Nullable @Override
     public Chunk getLoadedColumn(int columnX, int columnZ) {
-        return this.id2ChunkMap.get(ChunkPos.asLong(columnX, columnZ));
+        return this.loadedChunks.get(ChunkPos.asLong(columnX, columnZ));
     }
 
     @Nullable
@@ -181,7 +181,7 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
                 this.cubeIO.saveCube(cube);
             }
         }
-        for (Chunk chunk : id2ChunkMap.values()) { // save columns
+        for (Chunk chunk : loadedChunks.values()) { // save columns
             // save the column
             if (chunk.needsSaving(alwaysTrue)) {
                 this.cubeIO.saveColumn(chunk);
@@ -209,7 +209,7 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
 
     @Override
     public String makeString() {
-        return "CubeProviderServer: " + this.id2ChunkMap.size() + " columns, "
+        return "CubeProviderServer: " + this.loadedChunks.size() + " columns, "
                 + this.cubeMap.getSize() + " cubes";
     }
 
@@ -227,7 +227,7 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
 
     @Override
     public boolean chunkExists(int cubeX, int cubeZ) {
-        return this.id2ChunkMap.get(ChunkPos.asLong(cubeX, cubeZ)) != null;
+        return this.loadedChunks.get(ChunkPos.asLong(cubeX, cubeZ)) != null;
     }
 
     @Override // TODO: What it does? implement it
@@ -555,7 +555,7 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
             return loaded;
         }
         if (column != null) {
-            id2ChunkMap.put(ChunkPos.asLong(columnX, columnZ), (Chunk) column);
+            loadedChunks.put(ChunkPos.asLong(columnX, columnZ), (Chunk) column);
             column.setLastSaveTime(this.worldServer.getTotalWorldTime()); // the column was just loaded
             column.onLoad();
             return column;
@@ -566,7 +566,7 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
         column = (Chunk) new Chunk((World) worldServer, columnX, columnZ);
         cubeGen.generateColumn(column);
 
-        id2ChunkMap.put(ChunkPos.asLong(columnX, columnZ), (Chunk) column);
+        loadedChunks.put(ChunkPos.asLong(columnX, columnZ), (Chunk) column);
         column.setLastSaveTime(this.worldServer.getTotalWorldTime()); // the column was just generated
         column.onLoad();
         return column;
@@ -574,7 +574,7 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
 
     public String dumpLoadedCubes() {
         StringBuilder sb = new StringBuilder(10000).append("\n");
-        for (Chunk chunk : this.id2ChunkMap.values()) {
+        for (Chunk chunk : this.loadedChunks.values()) {
             if (chunk == null) {
                 sb.append("column = null\n");
                 continue;
@@ -607,7 +607,7 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
 
     @SuppressWarnings("unchecked")
     Iterator<Chunk> columnsIterator() {
-        return id2ChunkMap.values().iterator();
+        return loadedChunks.values().iterator();
     }
 
     boolean tryUnloadCube(Cube cube) {

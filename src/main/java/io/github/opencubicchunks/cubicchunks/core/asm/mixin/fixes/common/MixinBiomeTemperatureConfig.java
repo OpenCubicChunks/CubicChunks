@@ -38,20 +38,21 @@ public abstract class MixinBiomeTemperatureConfig {
 
     @Shadow @Final protected static NoiseGeneratorPerlin TEMPERATURE_NOISE;
 
-    @Shadow public abstract float getTemperature();
+    @Shadow public abstract float getDefaultTemperature();
 
     /**
      * @author Barteks2x
+     * @reason Configure how it changes with height
      */
     @Overwrite
-    public final float getFloatTemperature(BlockPos pos) {
+    public final float getTemperature(BlockPos pos) {
         if (pos.getY() > CubicChunksConfig.biomeTemperatureCenterY) {
             float noise = (float) (TEMPERATURE_NOISE.getValue((double) ((float) pos.getX() / 8.0F), (double) ((float) pos.getZ() / 8.0F)) * 4.0D);
             int y = Math.min(pos.getY(), CubicChunksConfig.biomeTemperatureScaleMaxY);
-            return this.getTemperature() +
+            return this.getDefaultTemperature() +
                 (noise + y - CubicChunksConfig.biomeTemperatureCenterY) * CubicChunksConfig.biomeTemperatureHeightFactor;
         } else {
-            return this.getTemperature();
+            return this.getDefaultTemperature();
         }
     }
 }

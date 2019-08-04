@@ -243,9 +243,9 @@ public class LightingManager implements ILightingManager {
                 if (cube.edgeNeedSkyLightUpdate[dir.ordinal()]) {
                     CubePos cpos = cube.getCoords();
                     Cube loadedCube = cache.getLoadedCube(
-                            cpos.getX() + dir.getFrontOffsetX(),
-                            cpos.getY() + dir.getFrontOffsetY(),
-                            cpos.getZ() + dir.getFrontOffsetZ());
+                            cpos.getX() + dir.getXOffset(),
+                            cpos.getY() + dir.getYOffset(),
+                            cpos.getZ() + dir.getZOffset());
                     if (loadedCube == null)
                         continue;
 

@@ -13,8 +13,7 @@ import org.spongepowered.asm.gradle.plugins.MixinGradlePlugin
 import kotlin.apply
 import io.github.opencubicchunks.gradle.fgfix.ForgePluginFixed
 import io.github.opencubicchunks.gradle.MixinAutoGen
-import java.nio.file.Path as NioPath
-import java.nio.file.Paths as NioPaths
+import io.github.opencubicchunks.gradle.Remapper
 
 // Gradle repositories and dependencies
 buildscript {
@@ -54,6 +53,7 @@ plugins {
 apply {
     plugin<MixinAutoGen>()
     plugin<ForgePluginFixed>()
+    plugin<Remapper>()
     plugin<ShadowPlugin>()
     plugin<MixinGradlePlugin>()
     plugin<LicensePlugin>()

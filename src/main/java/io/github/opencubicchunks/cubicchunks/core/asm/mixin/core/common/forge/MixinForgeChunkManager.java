@@ -172,7 +172,7 @@ public abstract class MixinForgeChunkManager {
                     // force the world to load the entity's chunk
                     // the load will come back through the loadEntity method and attach the entity
                     // to the ticket
-                    world.getChunkFromChunkCoords(((ICubicTicket) tick).getEntityChunkX(), ((ICubicTicket) tick).getEntityChunkZ());
+                    world.getChunk(((ICubicTicket) tick).getEntityChunkX(), ((ICubicTicket) tick).getEntityChunkZ());
                     CubicChunkManager.onLoadEntityTicketChunk(world, tick); // CubicChunks - load entity cube
                 }
             }

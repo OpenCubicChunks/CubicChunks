@@ -33,6 +33,8 @@ import net.minecraft.block.properties.IProperty;
 import net.minecraft.block.state.BlockStateContainer;
 import net.minecraft.block.state.IBlockState;
 
+import net.minecraft.block.state.BlockStateContainer.StateImplementation;
+
 public class FullBlockBlockStateContainer extends BlockStateContainer {
 
     public FullBlockBlockStateContainer(Block blockIn, IProperty<?>[] properties) {

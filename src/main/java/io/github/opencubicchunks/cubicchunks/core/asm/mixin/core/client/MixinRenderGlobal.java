@@ -84,8 +84,7 @@ public class MixinRenderGlobal {
     @Group(name = "renderEntitiesFix")//, min = 3, max = 3)
     @Inject(method = "renderEntities",
             at = @At(value = "INVOKE",
-                    target = "Lnet/minecraft/client/multiplayer/WorldClient;getChunkFromBlockCoords(Lnet/minecraft/util/math/BlockPos;)"
-                            + "Lnet/minecraft/world/chunk/Chunk;"),
+                    target = "Lnet/minecraft/client/multiplayer/WorldClient;getChunk(Lnet/minecraft/util/math/BlockPos;)Lnet/minecraft/world/chunk/Chunk;"),
             locals = LocalCapture.CAPTURE_FAILHARD)
     public void onGetPosition(Entity renderViewEntity, ICamera camera, float partialTicks,
             CallbackInfo ci, int pass, double d0, double d1, double d2,

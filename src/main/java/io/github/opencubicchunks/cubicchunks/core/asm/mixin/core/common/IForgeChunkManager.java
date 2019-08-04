@@ -33,7 +33,7 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 
 import java.util.Map;
 
-@Mixin(ForgeChunkManager.class)
+@Mixin(value = ForgeChunkManager.class, remap = false)
 public interface IForgeChunkManager {
     @Accessor static Map<World, Multimap<String, ForgeChunkManager.Ticket>> getTickets() {
         throw new Error("IForgeChunkManager failed to apply");

@@ -116,7 +116,7 @@ public abstract class MixinPathNavigate {
         }
         ChunkCache chunkCache = new ChunkCache(world, new BlockPos(Math.min(x1, x2), Math.min(y1, y2), Math.min(z1, z2)),
                 new BlockPos(Math.max(x1, x2), Math.max(y1, y2), Math.max(z1, z2)), 4);
-        this.nodeProcessor.initProcessor(chunkCache, entity);
+        this.nodeProcessor.init(chunkCache, entity);
     }
 
     @Inject(method = "pathFollow", at = @At("RETURN"))

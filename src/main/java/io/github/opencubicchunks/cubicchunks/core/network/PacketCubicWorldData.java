@@ -26,7 +26,6 @@ package io.github.opencubicchunks.cubicchunks.core.network;
 
 import io.github.opencubicchunks.cubicchunks.api.util.IntRange;
 import io.github.opencubicchunks.cubicchunks.core.asm.mixin.core.client.INetHandlerPlayClient;
-import io.github.opencubicchunks.cubicchunks.core.util.PacketUtils;
 import io.github.opencubicchunks.cubicchunks.api.world.ICubicWorld;
 import io.github.opencubicchunks.cubicchunks.core.asm.mixin.ICubicWorldInternal;
 import io.github.opencubicchunks.cubicchunks.api.world.ICubicWorldType;
@@ -118,7 +117,7 @@ public class PacketCubicWorldData implements IMessage {
         @Nullable @Override
         public void handleClientMessage(EntityPlayer player, PacketCubicWorldData message, MessageContext ctx) {
             if (Minecraft.getMinecraft().getConnection() != null) {
-                WorldClient world = ((INetHandlerPlayClient) Minecraft.getMinecraft().getConnection()).getClientWorldController();
+                WorldClient world = ((INetHandlerPlayClient) Minecraft.getMinecraft().getConnection()).getWorld();
                 // initialize only if sending packet about cubic world, but not when already initialized
                 if (message.isCubicWorld() && !((ICubicWorld) world).isCubicWorld()) {
                     ((ICubicWorldInternal.Client) world).initCubicWorldClient(

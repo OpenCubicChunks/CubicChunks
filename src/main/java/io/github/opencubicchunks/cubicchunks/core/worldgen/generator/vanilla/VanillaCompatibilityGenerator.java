@@ -150,7 +150,7 @@ public class VanillaCompatibilityGenerator implements ICubeGenerator {
                 topcount = entry.getValue();
             }
         }
-        CubicChunks.LOGGER.info("Detected filler block " + extensionBlockBottom.getBlock().getUnlocalizedName() + " " +
+        CubicChunks.LOGGER.info("Detected filler block " + extensionBlockBottom.getBlock().getTranslationKey() + " " +
                 "from layers [0, 2]");
 
         topcount = 0;
@@ -160,7 +160,7 @@ public class VanillaCompatibilityGenerator implements ICubeGenerator {
                 topcount = entry.getValue();
             }
         }
-        CubicChunks.LOGGER.info("Detected filler block " + extensionBlockTop.getBlock().getUnlocalizedName() + " from" +
+        CubicChunks.LOGGER.info("Detected filler block " + extensionBlockTop.getBlock().getTranslationKey() + " from" +
                 " layers [" + (worldHeightBlocks - 3) + ", " + (worldHeightBlocks - 1) + "]");
     }
 

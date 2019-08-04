@@ -66,7 +66,7 @@ public abstract class MixinWalkNodeProcessor extends NodeProcessor {
             int x2 = MathHelper.ceil(maxX) + 1;
             int y2 = MathHelper.ceil(maxY) + 1;
             int z2 = MathHelper.ceil(maxZ) + 1;
-            for (MutableBlockPos pos : MutableBlockPos.mutablesBetween(x1, y1, z1, x2, y2, z2)) {
+            for (MutableBlockPos pos : MutableBlockPos.getAllInBoxMutable(x1, y1, z1, x2, y2, z2)) {
                 IBlockState bstate = blockaccess.getBlockState(pos);
                 bstate.addCollisionBoxToList(worldIn, pos, aabb, aabbList,
                         entity, false);

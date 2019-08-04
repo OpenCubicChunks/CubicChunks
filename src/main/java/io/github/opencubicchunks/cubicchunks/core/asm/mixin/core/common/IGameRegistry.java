@@ -34,7 +34,7 @@ import java.util.List;
 
 import javax.annotation.Nullable;
 
-@Mixin(GameRegistry.class)
+@Mixin(value = GameRegistry.class, remap = false)
 public interface IGameRegistry {
     @Nullable @Accessor static List<IWorldGenerator> getSortedGeneratorList() {
         throw new Error("IGameRegistry failed to apply");

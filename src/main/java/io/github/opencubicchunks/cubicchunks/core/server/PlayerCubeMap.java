@@ -909,7 +909,7 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
         world.profiler.startSection("forcedChunkLoading");
         final Iterator<Cube> persistentCubesIterator = persistentChunksFor.keys().stream()
                 .filter(Objects::nonNull)
-                .map(input -> (Collection<Cube>) ((IColumn) world.getChunkFromChunkCoords(input.x, input.z)).getLoadedCubes())
+                .map(input -> (Collection<Cube>) ((IColumn) world.getChunk(input.x, input.z)).getLoadedCubes())
                 .collect(ArrayList<Cube>::new, (list, cubeCollection) -> ((ArrayList<Cube>) list).addAll(cubeCollection),
                         (list, cubeList) -> ((ArrayList<Cube>) list).addAll(cubeList))
                 .iterator();

@@ -89,7 +89,7 @@ public class MixinChunkVisibility {
         int pcy = MathHelper.floor(viewEntity.posY) >> 4;
         int pcz = MathHelper.floor(viewEntity.posZ) >> 4;
 
-        Chunk playerChunk = world.getChunkFromChunkCoords(pcx, pcz);
+        Chunk playerChunk = world.getChunk(pcx, pcz);
         int cxStart = pcx - renderDistanceChunks;
         int cxEnd = pcx + renderDistanceChunks;
 
@@ -130,7 +130,7 @@ public class MixinChunkVisibility {
 
         for (int cx = cxStart; cx < cxEnd; ++cx) {
             for (int cz = czStart; cz < czEnd; ++cz) {
-                Chunk chunk = world.getChunkFromChunkCoords(cx, cz);
+                Chunk chunk = world.getChunk(cx, cz);
                 if (chunk.isEmpty()) {
                     continue;
                 }

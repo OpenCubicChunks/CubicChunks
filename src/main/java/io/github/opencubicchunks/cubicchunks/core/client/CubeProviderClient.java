@@ -82,7 +82,7 @@ public class CubeProviderClient extends ChunkProviderClient implements ICubeProv
     @Override
     public Chunk loadChunk(int cubeX, int cubeZ) {
         Chunk column = new Chunk((World) this.world, cubeX, cubeZ);   // make a new one
-        ((IChunkProviderClient) this).getChunkMapping().put(ChunkPos.asLong(cubeX, cubeZ), column); // add it to the cache
+        ((IChunkProviderClient) this).getLoadedChunks().put(ChunkPos.asLong(cubeX, cubeZ), column); // add it to the cache
 
         // fire a forge event... make mods happy :)
         net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.event.world.ChunkEvent.Load(column));
@@ -173,15 +173,15 @@ public class CubeProviderClient extends ChunkProviderClient implements ICubeProv
     }
 
     public Iterable<Chunk> getLoadedChunks() {
-        return ((IChunkProviderClient) this).getChunkMapping().values();
+        return ((IChunkProviderClient) this).getLoadedChunks().values();
     }
 
     @Override
     public String makeString() {
-        return "MultiplayerChunkCache: " + ((IChunkProviderClient) this).getChunkMapping().values()
+        return "MultiplayerChunkCache: " + ((IChunkProviderClient) this).getLoadedChunks().values()
                 .stream()
                 .map(c -> ((IColumn) c).getLoadedCubes().size())
                 .reduce(Integer::sum)
-                .orElse(-1) + "/" + ((IChunkProviderClient) this).getChunkMapping().size();
+                .orElse(-1) + "/" + ((IChunkProviderClient) this).getLoadedChunks().size();
     }
 }

@@ -36,5 +36,5 @@ public interface IChunkProviderClient {
    //     throw new Error("IChunkProviderClient failed to apply");
    // }
 
-    @Accessor Long2ObjectMap<Chunk> getChunkMapping();
+    @Accessor Long2ObjectMap<Chunk> getLoadedChunks();
 }

@@ -56,8 +56,8 @@ public class MixinEntityTracker implements ICubicEntityTracker {
 
                 entitytrackerentry.updatePlayerEntity(player);
                 //noinspection ConstantConditions
-                if (entity instanceof EntityLiving && ((EntityLiving) entity).getLeashedToEntity() != null) {
-                    player.connection.sendPacket(new SPacketEntityAttach(entity, ((EntityLiving) entity).getLeashedToEntity()));
+                if (entity instanceof EntityLiving && ((EntityLiving) entity).getLeashHolder() != null) {
+                    player.connection.sendPacket(new SPacketEntityAttach(entity, ((EntityLiving) entity).getLeashHolder()));
                 }
 
                 if (!entity.getPassengers().isEmpty()) {

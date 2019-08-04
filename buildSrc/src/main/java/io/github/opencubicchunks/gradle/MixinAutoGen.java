@@ -15,13 +15,7 @@ public class MixinAutoGen implements Plugin<Project> {
         MixinGenExtension extension = new MixinGenExtension();
         target.getExtensions().add("mixinGen", extension);
         target.getTasks().create("generateMixinConfigs").doLast(task -> {
-            JavaPluginConvention convention = target.getConvention().findByType(JavaPluginConvention.class);
-            if (convention == null) {
-                convention = target.getConvention().findPlugin(JavaPluginConvention.class);
-                if (convention == null) {
-                    convention = target.getConvention().getByType(JavaPluginConvention.class);
-                }
-            }
+            JavaPluginConvention convention = Utils.getJavaPluginConvention(target);
             try {
                 extension.generateFiles(convention);
             } catch (IOException e) {

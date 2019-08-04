@@ -31,5 +31,5 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 
 @Mixin(NetHandlerPlayClient.class)
 public interface INetHandlerPlayClient {
-    @Accessor WorldClient getClientWorldController();
+    @Accessor WorldClient getWorld();
 }
