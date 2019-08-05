@@ -29,7 +29,7 @@ import io.github.opencubicchunks.cubicchunks.core.CubicChunksConfig;
 import io.github.opencubicchunks.cubicchunks.core.asm.mixin.core.client.IGuiCreateWorld;
 import io.github.opencubicchunks.cubicchunks.core.asm.mixin.core.client.IGuiOptionsRowList;
 import io.github.opencubicchunks.cubicchunks.core.asm.mixin.core.client.IGuiScreen;
-import io.github.opencubicchunks.cubicchunks.core.asm.mixin.core.client.IGuiVideoSettings;
+import io.github.opencubicchunks.cubicchunks.core.asm.mixin.selectable.client.IGuiVideoSettings;
 import io.github.opencubicchunks.cubicchunks.core.server.ICubicPlayerList;
 import io.github.opencubicchunks.cubicchunks.core.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.core.asm.mixin.ICubicWorldInternal;
@@ -97,16 +97,13 @@ public class ClientEventHandler {
         GuiScreen currentGui = event.getGui();
         if (currentGui instanceof GuiVideoSettings) {
             GuiVideoSettings gvs = (GuiVideoSettings) currentGui;
-            try {
+            if (!FMLClientHandler.instance().hasOptifine()) {
                 IGuiOptionsRowList gowl = (IGuiOptionsRowList) ((IGuiVideoSettings) gvs).getOptionsRowList();
                 GuiOptionsRowList.Row row = this.createRow(100, gvs.width);
                 gowl.getOptions().add(1, row);
-            } catch (NoSuchFieldError err) {
+            } else {
                 int idx = 3;
                 int btnSpacing = 20;
-                CubicChunks.LOGGER.error(
-                        "Couldn't add vertical view distance options, maybe optifine is installed? Attempting optifine-specific option add ({})",
-                        err.toString());
                 ((IGuiScreen) gvs).getButtonList()
                         .add(idx, new VertViewDistanceSlider(100, gvs.width / 2 - 155 + 160, gvs.height / 6 + btnSpacing * (idx / 2) - 12));
                 List<GuiButton> buttons = ((IGuiScreen) gvs).getButtonList();

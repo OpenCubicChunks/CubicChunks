@@ -119,6 +119,9 @@ public class CubicChunksMixinConfig implements IMixinConfigPlugin {
         modDependencyConditions.put(
                 "io.github.opencubicchunks.cubicchunks.core.asm.mixin.selectable.client.optifine.MixinChunkVisibility",
                 optifineState != OptifineState.NOT_LOADED);
+        modDependencyConditions.put(
+                "io.github.opencubicchunks.cubicchunks.core.asm.mixin.selectable.client.IGuiVideoSettings",
+                optifineState == OptifineState.NOT_LOADED);
 
         //BetterFps FastBeacon Handling
         boolean enableBetterFpsBeaconFix = false;

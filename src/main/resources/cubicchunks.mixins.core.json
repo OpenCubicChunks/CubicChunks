@@ -45,7 +45,6 @@
         "client.IGuiCreateWorld",
         "client.IGuiOptionsRowList",
         "client.IGuiScreen",
-        "client.IGuiVideoSettings",
         "client.INetHandlerPlayClient",
         "client.IViewFrustum",
         "client.MixinChunk_Cubes",

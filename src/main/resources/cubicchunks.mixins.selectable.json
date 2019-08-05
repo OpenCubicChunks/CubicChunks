@@ -21,6 +21,7 @@
         "common.MixinWorldServer_UpdateBlocks"
     ],
     "client": [
+        "client.IGuiVideoSettings",
         "client.MixinChunkCache_Cubic",
         "client.MixinChunkCache_Vanilla",
         "client.MixinRenderGlobalNoOptifine",

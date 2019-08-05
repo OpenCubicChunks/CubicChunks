@@ -22,8 +22,9 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package io.github.opencubicchunks.cubicchunks.core.asm.mixin.core.client;
+package io.github.opencubicchunks.cubicchunks.core.asm.mixin.selectable.client;
 
+import io.github.opencubicchunks.cubicchunks.core.asm.mixin.core.client.IGuiScreen;
 import net.minecraft.client.gui.GuiListExtended;
 import net.minecraft.client.gui.GuiVideoSettings;
 import org.spongepowered.asm.mixin.Mixin;
