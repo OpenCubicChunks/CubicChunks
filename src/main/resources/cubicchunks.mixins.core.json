@@ -29,6 +29,7 @@
         "common.MixinIBlockAccess_MinMaxHeight",
         "common.MixinPlayerList",
         "common.MixinRegionFileCache",
+        "common.MixinStructureStart",
         "common.MixinWorld",
         "common.MixinWorld_HeightLimits",
         "common.MixinWorld_Tick",
