@@ -4,16 +4,11 @@ import me.champeau.gradle.JMHPlugin
 import net.minecraftforge.gradle.tasks.DeobfuscateJar
 import net.minecraftforge.gradle.user.ReobfMappingType
 import nl.javadude.gradle.plugins.license.LicensePlugin
-import org.ajoberstar.grgit.Grgit
-import org.ajoberstar.grgit.operation.DescribeOp
 import org.gradle.api.internal.HasConvention
 import org.gradle.kotlin.dsl.creating
 import org.gradle.kotlin.dsl.extra
 import org.spongepowered.asm.gradle.plugins.MixinGradlePlugin
 import kotlin.apply
-import io.github.opencubicchunks.gradle.fgfix.ForgePluginFixed
-import io.github.opencubicchunks.gradle.MixinAutoGen
-import io.github.opencubicchunks.gradle.Remapper
 
 // Gradle repositories and dependencies
 buildscript {
@@ -31,7 +26,6 @@ buildscript {
         }
     }
     dependencies {
-        classpath("org.ajoberstar.grgit:grgit-gradle:3.0.0-beta.1")
         classpath("org.spongepowered:mixingradle:0.5-SNAPSHOT")
         classpath("com.github.jengelman.gradle.plugins:shadow:2.0.4")
         classpath("gradle.plugin.nl.javadude.gradle.plugins:license-gradle-plugin:0.14.0")
@@ -48,16 +42,21 @@ plugins {
     `maven-publish`
     maven
     signing
+    id("io.github.opencubicchunks.gradle.fg2fixed")
+    id("io.github.opencubicchunks.gradle.mixingen")
+    id("io.github.opencubicchunks.gradle.remapper")
+    id("io.github.opencubicchunks.gradle.mcGitVersion")
 }
 
 apply {
-    plugin<MixinAutoGen>()
-    plugin<ForgePluginFixed>()
-    plugin<Remapper>()
     plugin<ShadowPlugin>()
     plugin<MixinGradlePlugin>()
     plugin<LicensePlugin>()
     plugin<JMHPlugin>()
+}
+
+mcGitVersion {
+    isSnapshot = true
 }
 
 // tasks
@@ -86,7 +85,6 @@ val release: String by project
 val sourceSets = the<JavaPluginConvention>().sourceSets
 val mainSourceSet = sourceSets["main"]!!
 
-version = getModVersion()
 group = "io.github.opencubicchunks"
 (mainSourceSet as ExtensionAware).extra["refMap"] = "cubicchunks.mixins.refmap.json"
 
@@ -191,7 +189,7 @@ minecraft {
     runDir = "run"
     mappings = theMappingsVersion
 
-    replace("@@VERSION@@", project.version)
+    replace("@@VERSION@@", project.version.toString())
     replace("public static final boolean IS_DEV = true;", "public static final boolean IS_DEV = false;")
     replaceIn("io/github/opencubicchunks/cubicchunks/core/CubicChunks.java")
 
@@ -303,7 +301,7 @@ publishing {
     }
     (publications) {
         "api"(MavenPublication::class) {
-            version = getModVersionMaven()
+            version = ext["mavenProjectVersion"]!!.toString()
             artifactId = "cubicchunks-api"
             from(components["java"])
             artifacts.clear()
@@ -351,7 +349,7 @@ publishing {
             }
         }
         "mod"(MavenPublication::class) {
-            version = getModVersionMaven()
+            version = ext["mavenProjectVersion"]!!.toString()
             artifactId = "cubicchunks"
             from(components["java"])
             artifacts.clear()
@@ -474,7 +472,7 @@ test.apply {
 
 processResources.apply {
     // this will ensure that this task is redone when the versions change.
-    inputs.property("version", project.version)
+    inputs.property("version", project.version.toString())
     inputs.property("mcversion", minecraft.version)
 
     // replace stuff in mcmod.info, nothing else
@@ -482,7 +480,7 @@ processResources.apply {
         include("mcmod.info")
 
         // replace version and mcversion
-        expand(mapOf("version" to project.version, "mcversion" to minecraft.version))
+        expand(mapOf("version" to project.version.toString(), "mcversion" to minecraft.version))
     }
 
     // copy everything else, thats not the mcmod.info
@@ -491,110 +489,8 @@ processResources.apply {
     }
 }
 
-fun getMcVersion(): String {
-    if (minecraft.version == null) {
-        return theForgeVersion.split("-")[0]
-    }
-    return minecraft.version
-}
-
-//returns version string according to this: http://mcforge.readthedocs.org/en/latest/conventions/versioning/
-//format: MCVERSION-MAJORMOD.MAJORAPI.MINOR.PATCH(-final/rcX/betaX)
-//rcX and betaX are not implemented yet
-fun getModVersion(): String {
-    return getModVersion(false)
-}
-//returns version string similar to that here: http://mcforge.readthedocs.org/en/latest/conventions/versioning/
-//but without minor and patch versions, and with -SNAPSHOT if not doing maven release
-//format: MCVERSION-MAJORMOD.MAJORAPI(-final/rcX/betaX)(-SNAPSHOT)
-//rcX and betaX are not implemented yet
-fun getModVersionMaven(): String {
-    return getModVersion(true)
-}
-
-fun getModVersion(maven: Boolean): String {
-    return try {
-        val git = Grgit.open()
-        val describe = DescribeOp(git.repository).call()
-        val branch = getGitBranch(git)
-        val snapshotSuffix = if (release.toBoolean()) "" else "-SNAPSHOT"
-        getModVersion(describe, branch, maven) + snapshotSuffix;
-    } catch(ex: RuntimeException) {
-        logger.error("Unknown error when accessing git repository! Are you sure the git repository exists?", ex)
-        String.format("%s-%s.%s.%s%s%s", getMcVersion(), "9999", "9999", "9999", "", "NOVERSION")
-    }
-}
-fun getGitBranch(git: Grgit): String {
-    var branch: String = git.branch.current().name
-    if (branch == "HEAD") {
-        branch = when {
-            System.getenv("TRAVIS_BRANCH")?.isEmpty() == false -> // travis
-                System.getenv("TRAVIS_BRANCH")
-            System.getenv("GIT_BRANCH")?.isEmpty() == false -> // jenkins
-                System.getenv("GIT_BRANCH")
-            System.getenv("BRANCH_NAME")?.isEmpty() == false -> // ??? another jenkins alternative?
-                System.getenv("BRANCH_NAME")
-            else -> throw RuntimeException("Found HEAD branch! This is most likely caused by detached head state! Will assume unknown version!")
-        }
-    }
-
-    if (branch.startsWith("origin/")) {
-        branch = branch.substring("origin/".length)
-    }
-    return branch
-}
-
-fun getModVersion(describe: String, branch: String, mvn: Boolean): String {
-    if (branch.startsWith("MC_")) {
-        val branchMcVersion = branch.substring("MC_".length)
-        if (branchMcVersion != getMcVersion()) {
-            logger.warn("Branch version different than project MC version! MC version: " +
-                    getMcVersion() + ", branch: " + branch + ", branch version: " + branchMcVersion)
-        }
-    }
-
-    //branches "master" and "MC_something" are not appended to version sreing, everything else is
-    //only builds from "master" and "MC_version" branches will actually use the correct versioning
-    //but it allows to distinguish between builds from different branches even if version number is the same
-    val branchSuffix = if (branch == "master" || branch.startsWith("MC_")) "" else ("-" + branch.replace("[^a-zA-Z0-9.-]", "_"))
-
-    val baseVersionRegex = "v[0-9]+\\.[0-9]+"
-    val unknownVersion = String.format("%s-UNKNOWN_VERSION%s%s", getMcVersion(), versionSuffix, branchSuffix)
-    if (!describe.contains('-')) {
-        //is it the "vX.Y" format?
-        if (describe.matches(Regex(baseVersionRegex))) {
-            return if (mvn) String.format("%s-%s", getMcVersion(), describe)
-            else String.format("%s-%s.0.0%s%s", getMcVersion(), describe, versionSuffix, branchSuffix)
-        }
-        logger.error("Git describe information: \"$describe\" in unknown/incorrect format")
-        return unknownVersion
-    }
-    //Describe format: vX.Y-build-hash
-    val parts = describe.split("-")
-    if (!parts[0].matches(Regex(baseVersionRegex))) {
-        logger.error("Git describe information: \"$describe\" in unknown/incorrect format")
-        return unknownVersion
-    }
-    if (!parts[1].matches(Regex("[0-9]+"))) {
-        logger.error("Git describe information: \"$describe\" in unknown/incorrect format")
-        return unknownVersion
-    }
-    val mcVersion = getMcVersion()
-    val modAndApiVersion = parts[0].substring(1)
-    //next we have commit-since-tag
-    val commitSinceTag = Integer.parseInt(parts[1])
-
-    val minorFreeze = if (versionMinorFreeze.isEmpty()) -1 else Integer.parseInt(versionMinorFreeze)
-
-    val minor = if (minorFreeze < 0) commitSinceTag else minorFreeze
-    val patch = if (minorFreeze < 0) 0 else (commitSinceTag - minorFreeze)
-
-    return if (mvn) String.format("%s-%s%s", mcVersion, modAndApiVersion, versionSuffix)
-    else String.format("%s-%s.%d.%d%s%s", mcVersion, modAndApiVersion, minor, patch, versionSuffix, branchSuffix)
-}
-
 fun extractForgeMinorVersion(): String {
     // version format: MC_VERSION-MAJOR.MINOR.?.BUILD
     return theForgeVersion.split(Regex("-")).getOrNull(1)?.split(Regex("\\."))?.getOrNull(1) ?:
-    throw RuntimeException("Invalid forge version format: " + theForgeVersion)
+    throw RuntimeException("Invalid forge version format: $theForgeVersion")
 }

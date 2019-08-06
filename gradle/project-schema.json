@@ -144,11 +144,6 @@
                 "name": "ext"
             },
             {
-                "type": "io.github.opencubicchunks.gradle.MixinGenExtension",
-                "target": "org.gradle.api.Project",
-                "name": "mixinGen"
-            },
-            {
                 "type": "net.minecraftforge.gradle.user.patcherUser.forge.ForgeExtension",
                 "target": "org.gradle.api.Project",
                 "name": "minecraft"
@@ -167,6 +162,16 @@
                 "type": "org.gradle.api.plugins.ExtraPropertiesExtension",
                 "target": "org.gradle.api.NamedDomainObjectContainer<net.minecraftforge.gradle.user.IReobfuscator>",
                 "name": "ext"
+            },
+            {
+                "type": "io.github.opencubicchunks.gradle.MixinGenExtension",
+                "target": "org.gradle.api.Project",
+                "name": "mixinGen"
+            },
+            {
+                "type": "io.github.opencubicchunks.gradle.McGitVersionExtension",
+                "target": "org.gradle.api.Project",
+                "name": "mcGitVersion"
             },
             {
                 "type": "com.github.jengelman.gradle.plugins.shadow.ShadowExtension",
