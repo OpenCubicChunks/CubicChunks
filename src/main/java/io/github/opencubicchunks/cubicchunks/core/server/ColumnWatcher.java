@@ -44,6 +44,8 @@ import net.minecraft.util.math.ChunkPos;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.world.ChunkWatchEvent;
 
+import java.util.List;
+
 import javax.annotation.Nonnull;
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -65,17 +67,17 @@ class ColumnWatcher extends PlayerChunkMapEntry implements XZAddressable {
 
     // CHECKED: 1.10.2-12.18.1.2092
     public void addPlayer(EntityPlayerMP player) {
-        if (self().getPlayers().contains(player)) {
+        if (self().getPlayerList().contains(player)) {
             CubicChunks.LOGGER.debug("Failed to expand player. {} already is in chunk {}, {}", player,
                     this.getPos().x,
                     this.getPos().z);
             return;
         }
-        if (self().getPlayers().isEmpty()) {
+        if (self().getPlayerList().isEmpty()) {
             self().setLastUpdateInhabitedTime(playerCubeMap.getWorldServer().getTotalWorldTime());
         }
 
-        self().getPlayers().add(player);
+        self().getPlayerList().add(player);
 
         //always sent to players, no need to check it
 
@@ -89,12 +91,12 @@ class ColumnWatcher extends PlayerChunkMapEntry implements XZAddressable {
 
     // CHECKED: 1.10.2-12.18.1.2092//TODO: remove it, the only different line is sending packet
     public void removePlayer(EntityPlayerMP player) {
-        if (!self().getPlayers().contains(player)) {
+        if (!self().getPlayerList().contains(player)) {
             return;
         }
         if (this.getChunk() == null) {
-            self().getPlayers().remove(player);
-            if (self().getPlayers().isEmpty()) {
+            self().getPlayerList().remove(player);
+            if (self().getPlayerList().isEmpty()) {
                 if (self().isLoading()) {
                     AsyncWorldIOExecutor.dropQueuedColumnLoad(
                             playerCubeMap.getWorldServer(), getPos().x, getPos().z, (c) -> self().getLoadedRunnable().run());
@@ -108,11 +110,11 @@ class ColumnWatcher extends PlayerChunkMapEntry implements XZAddressable {
             PacketDispatcher.sendTo(new PacketUnloadColumn(getPos()), player);
         }
 
-        self().getPlayers().remove(player);
+        self().getPlayerList().remove(player);
 
         MinecraftForge.EVENT_BUS.post(new ChunkWatchEvent.UnWatch(this.getChunk(), player));
 
-        if (self().getPlayers().isEmpty()) {
+        if (self().getPlayerList().isEmpty()) {
             playerCubeMap.removeEntry(this);
         }
     }
@@ -131,7 +133,7 @@ class ColumnWatcher extends PlayerChunkMapEntry implements XZAddressable {
 
         try {
             PacketColumn message = new PacketColumn(this.getChunk());
-            for (EntityPlayerMP player : self().getPlayers()) {
+            for (EntityPlayerMP player : self().getPlayerList()) {
                 PacketDispatcher.sendTo(message, player);
             }
             self().setSentToPlayers(true);
@@ -164,7 +166,7 @@ class ColumnWatcher extends PlayerChunkMapEntry implements XZAddressable {
             return;
         }
         assert getChunk() != null;
-        for (EntityPlayerMP player : self().getPlayers()) {
+        for (EntityPlayerMP player : self().getPlayerList()) {
             PacketDispatcher.sendTo(new PacketHeightMapUpdate(getPos(), dirtyColumns, ((IColumn) getChunk()).getOpacityIndex()), player);
         }
         this.dirtyColumns.clear();
@@ -188,5 +190,10 @@ class ColumnWatcher extends PlayerChunkMapEntry implements XZAddressable {
             playerCubeMap.addToUpdateEntry(this);
         }
         this.dirtyColumns.add((byte) AddressTools.getLocalAddress(localX, localZ));
+    }
+
+    // BetterPortals: keep compatibility
+    @Deprecated private List<EntityPlayerMP> getPlayers() {
+        return self().getPlayerList();
     }
 }
