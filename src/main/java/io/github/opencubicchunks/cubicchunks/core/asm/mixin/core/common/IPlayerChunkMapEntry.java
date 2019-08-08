@@ -33,7 +33,7 @@ import java.util.List;
 
 @Mixin(PlayerChunkMapEntry.class)
 public interface IPlayerChunkMapEntry {
-    @Accessor List<EntityPlayerMP> getPlayerList();
+    @Accessor("players") List<EntityPlayerMP> getPlayerList();
     @Accessor void setLastUpdateInhabitedTime(long time);
     @Accessor void setSentToPlayers(boolean value);
     @Accessor(remap = false) boolean isLoading();
