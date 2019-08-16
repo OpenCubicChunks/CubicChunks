@@ -73,7 +73,7 @@ public class CompatHandler {
             return;
         }
         String modid = packageToModId.get(genClass.getPackage().getName());
-        if (modid.equals("ic2") || modid.equals("thaumcraft")) {
+        if (modid.equals("ic2") || modid.equals("thaumcraft") || modid.equals("fossil")) {
             ((ICubicWorldInternal.Server) world).fakeWorldHeight(256);
         }
     }
