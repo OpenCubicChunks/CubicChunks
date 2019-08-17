@@ -42,21 +42,28 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @MethodsReturnNonnullByDefault
 public class Dbg {
 
-    private static final PrintWriter pw;
+    private static PrintWriter pw;
 
     static {
         if (!CubicChunks.DEBUG_ENABLED) {
             pw = null;
         } else {
-            PrintWriter p;
-            try {
-                p = new PrintWriter(new File("DEBUG_" + System.currentTimeMillis()));
-            } catch (FileNotFoundException e) {
-                throw new RuntimeException(e);
-            }
-            pw = p;
-            Runtime.getRuntime().addShutdownHook(new Thread(pw::close));
+            restart();
         }
+    }
+
+    public static void restart() {
+        PrintWriter p;
+        if (pw != null) {
+            pw.close();
+        }
+        try {
+            p = new PrintWriter(new File("DEBUG_" + System.currentTimeMillis()));
+        } catch (FileNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+        pw = p;
+        Runtime.getRuntime().addShutdownHook(new Thread(pw::close));
     }
 
     public static void p(String format, Object... objs) {
