@@ -24,27 +24,27 @@
  */
 package io.github.opencubicchunks.cubicchunks.core;
 
-import io.github.opencubicchunks.cubicchunks.core.network.PacketDispatcher;
-import io.github.opencubicchunks.cubicchunks.core.proxy.CommonProxy;
-import io.github.opencubicchunks.cubicchunks.core.world.type.VanillaCubicWorldType;
-import io.github.opencubicchunks.cubicchunks.core.worldgen.generator.vanilla.VanillaCompatibilityGenerator;
-import io.github.opencubicchunks.cubicchunks.api.worldgen.CubeGeneratorsRegistry;
+import static io.github.opencubicchunks.cubicchunks.core.util.ReflectionUtil.cast;
+
 import io.github.opencubicchunks.cubicchunks.api.worldgen.VanillaCompatibilityGeneratorProviderBase;
-import mcp.MethodsReturnNonnullByDefault;
-import net.minecraft.launchwrapper.Launch;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.datafix.DataFixer;
-import net.minecraft.util.datafix.FixTypes;
-import net.minecraft.world.World;
-import net.minecraft.world.WorldType;
-import net.minecraft.world.gen.IChunkGenerator;
-import net.minecraftforge.event.RegistryEvent;
+import io.github.opencubicchunks.cubicchunks.core.asm.mixin.ICubicWorldSettings;
+import io.github.opencubicchunks.cubicchunks.core.asm.mixin.core.common.IIntegratedServer;
+import io.github.opencubicchunks.cubicchunks.core.client.ClientEventHandler;
+import io.github.opencubicchunks.cubicchunks.core.network.PacketDispatcher;
+import io.github.opencubicchunks.cubicchunks.core.util.SideUtils;
+import io.github.opencubicchunks.cubicchunks.core.world.type.VanillaCubicWorldType;
 import io.github.opencubicchunks.cubicchunks.core.worldgen.WorldgenHangWatchdog;
+import io.github.opencubicchunks.cubicchunks.core.worldgen.generator.vanilla.VanillaCompatibilityGenerator;
+import mcp.MethodsReturnNonnullByDefault;
+import net.minecraft.world.World;
+import net.minecraft.world.gen.IChunkGenerator;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.RegistryEvent;
+import net.minecraftforge.fml.client.FMLClientHandler;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.ICrashCallable;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
-import net.minecraftforge.fml.common.SidedProxy;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLServerAboutToStartEvent;
@@ -99,9 +99,6 @@ public class CubicChunks {
     @Nonnull
     public static Logger LOGGER = LogManager.getLogger("EarlyCubicChunks");//use some logger even before it's set. useful for unit tests
 
-    @SidedProxy(clientSide = "io.github.opencubicchunks.cubicchunks.core.proxy.ClientProxy", serverSide = "io.github.opencubicchunks.cubicchunks.core.proxy.ServerProxy")
-    public static CommonProxy proxy;
-
     @EventHandler
     public void preInit(FMLPreInitializationEvent e) {
         LOGGER = e.getModLog();
@@ -125,14 +122,25 @@ public class CubicChunks {
 
     @EventHandler
     public void init(FMLInitializationEvent event) throws IllegalArgumentException, IllegalAccessException, NoSuchFieldException, SecurityException {
-        proxy.init();
-
+        MinecraftForge.EVENT_BUS.register(new CommonEventHandler());
+        SideUtils.runForClient(() -> () -> MinecraftForge.EVENT_BUS.register(new ClientEventHandler()));
         PacketDispatcher.registerPackets();
     }
 
     @EventHandler
     public void onServerAboutToStart(FMLServerAboutToStartEvent event) {
-        proxy.setBuildLimit(event.getServer());
+        SideUtils.runForSide(
+                () -> () -> {
+                    IIntegratedServer integratedServer = cast(event.getServer());
+                    ICubicWorldSettings settings = cast(integratedServer.getWorldSettings());
+                    if (settings.isCubic()) {
+                        event.getServer().setBuildLimit(CubicChunks.MAX_BLOCK_Y);
+                    }
+                },
+                () -> () -> {
+                    // no-op, done by mixin
+                }
+        );
     }
     
     @SubscribeEvent
@@ -218,6 +226,9 @@ public class CubicChunks {
     }
 
     public static boolean hasOptifine() {
-        return proxy.hasOptifine();
+        return SideUtils.getForSide(
+                () -> () -> FMLClientHandler.instance().hasOptifine(),
+                () -> () -> false
+        );
     }
 }

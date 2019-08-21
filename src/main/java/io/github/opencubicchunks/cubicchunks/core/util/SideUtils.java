@@ -22,33 +22,37 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package io.github.opencubicchunks.cubicchunks.core.proxy;
+package io.github.opencubicchunks.cubicchunks.core.util;
 
-import io.github.opencubicchunks.cubicchunks.core.CommonEventHandler;
-import mcp.MethodsReturnNonnullByDefault;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.server.MinecraftServer;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
+import net.minecraftforge.fml.common.FMLCommonHandler;
 
-import javax.annotation.ParametersAreNonnullByDefault;
+import java.util.function.Supplier;
 
-@MethodsReturnNonnullByDefault
-@ParametersAreNonnullByDefault
-public abstract class CommonProxy {
-
-    /**
-     * Returns a side-appropriate EntityPlayer for use during message handling
-     */
-    public abstract EntityPlayer getPlayerEntity(MessageContext ctx);
-
-    public void init() {
-        MinecraftForge.EVENT_BUS.register(new CommonEventHandler());
+/**
+ * Methods for running code on client/server side.
+ *
+ * Based on ideas from Forge 1.14.x DistExecutor.
+ */
+public class SideUtils {
+    public static <T> T getForSide(Supplier<Supplier<T>> client, Supplier<Supplier<T>> server) {
+        if (FMLCommonHandler.instance().getSide().isClient()) {
+            return client.get().get();
+        } else {
+            return server.get().get();
+        }
     }
 
-    public abstract void setBuildLimit(MinecraftServer server);
+    public static void runForSide(Supplier<Runnable> client, Supplier<Runnable> server) {
+        if (FMLCommonHandler.instance().getSide().isClient()) {
+            client.get().run();
+        } else {
+            server.get().run();
+        }
+    }
 
-    public boolean hasOptifine() {
-        return false;
+    public static void runForClient(Supplier<Runnable> toRun) {
+        if (FMLCommonHandler.instance().getSide().isClient()) {
+            toRun.get().run();
+        }
     }
 }
