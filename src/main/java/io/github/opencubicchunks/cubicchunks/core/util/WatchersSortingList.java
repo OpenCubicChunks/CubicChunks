@@ -225,6 +225,11 @@ public class WatchersSortingList<T> implements Iterable<T> {
         System.arraycopy(data, start, newData, newStart, size);
         data = newData;
         start = newStart;
+        for (int i = start; i < start + size; i++) {
+            if (data[i] != null) {
+                indexMap.put((T) data[i], i);
+            }
+        }
     }
     
     @Override
