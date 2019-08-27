@@ -26,6 +26,7 @@ package io.github.opencubicchunks.cubicchunks.core.util;
 
 import net.minecraftforge.fml.common.FMLCommonHandler;
 
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 /**
@@ -39,6 +40,14 @@ public class SideUtils {
             return client.get().get();
         } else {
             return server.get().get();
+        }
+    }
+
+    public static <T, R> R getForSide(T param, Supplier<Function<T, R>> client, Supplier<Function<T, R>> server) {
+        if (FMLCommonHandler.instance().getSide().isClient()) {
+            return client.get().apply(param);
+        } else {
+            return server.get().apply(param);
         }
     }
 

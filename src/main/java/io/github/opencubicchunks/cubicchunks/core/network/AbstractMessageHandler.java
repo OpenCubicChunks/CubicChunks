@@ -62,17 +62,16 @@ public abstract class AbstractMessageHandler<T extends IMessage> implements IMes
                 return null;
             }
             World mainWorld = SideUtils.getForSide(
-                    () -> () -> Minecraft.getMinecraft().getConnection() == null ? null :
-                            ((INetHandlerPlayClient) Minecraft.getMinecraft().getConnection()).getWorld(),
+                    () -> ClientAccessProxy::getWorld,
                     () -> () -> FMLCommonHandler.instance().getMinecraftServerInstance().getWorld(0)
             );
             if (mainWorld == null) {
                 CubicChunks.LOGGER.warn("Received packet when world doesn't exist!");
                 return null; // there is no world, so we received packet after quitting world. Ignore it.
             }
-            EntityPlayer player = SideUtils.getForSide(
-                    () -> () -> ctx.side.isClient() ? Minecraft.getMinecraft().player : ctx.getServerHandler().player,
-                    () -> () -> ctx.getServerHandler().player
+            EntityPlayer player = SideUtils.getForSide(ctx,
+                    () -> ClientAccessProxy::getPlayer,
+                    () -> c -> c.getServerHandler().player
             );
             if (ctx.side.isClient()) {
                 handleClientMessage(mainWorld, player, message, ctx);
@@ -86,6 +85,17 @@ public abstract class AbstractMessageHandler<T extends IMessage> implements IMes
             CubicChunks.LOGGER.catching(t);
             FMLCommonHandler.instance().exitJava(-1, false);
             throw t;
+        }
+    }
+
+    private static class ClientAccessProxy {
+        static EntityPlayer getPlayer(MessageContext c) {
+            return c.side.isClient() ? Minecraft.getMinecraft().player : c.getServerHandler().player;
+        }
+
+        @Nullable static World getWorld() {
+            return Minecraft.getMinecraft().getConnection() == null ? null :
+                    ((INetHandlerPlayClient) Minecraft.getMinecraft().getConnection()).getWorld();
         }
     }
 }
