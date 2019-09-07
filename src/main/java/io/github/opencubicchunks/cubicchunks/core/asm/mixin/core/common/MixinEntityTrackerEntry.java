@@ -25,6 +25,7 @@
 package io.github.opencubicchunks.cubicchunks.core.asm.mixin.core.common;
 
 import io.github.opencubicchunks.cubicchunks.api.world.ICubicWorld;
+import io.github.opencubicchunks.cubicchunks.core.entity.ICubicEntityTracker;
 import io.github.opencubicchunks.cubicchunks.core.server.PlayerCubeMap;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityTrackerEntry;
@@ -37,25 +38,26 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(EntityTrackerEntry.class)
-public class MixinEntityTrackerEntry {
+public class MixinEntityTrackerEntry implements ICubicEntityTracker.Entry {
 
     @Shadow @Final private int range;
-    @Shadow private int maxRange;
     @Shadow private long encodedPosY;
 
     @Shadow @Final private Entity trackedEntity;
+    private int maxVertRange;
 
     @Inject(method = "isVisibleTo", cancellable = true, at = @At("RETURN"))
     private void isVisibleToCubic(EntityPlayerMP player, CallbackInfoReturnable<Boolean> cir) {
         boolean ret = cir.getReturnValue();
         // if the result would be "visible" and it's CC world - add CC-specific checks
         if (ret && ((ICubicWorld) player.world).isCubicWorld()) {
-            int range = Math.min(this.range, this.maxRange);
+            int rangeY = Math.min(this.range, this.maxVertRange);
             double dy = player.posY - this.encodedPosY / 4096.0D;
-            cir.setReturnValue(dy >= -range && dy <= range);
+            cir.setReturnValue(dy >= -rangeY && dy <= rangeY);
             cir.cancel();
         }
     }
+
     @Inject(method = "isPlayerWatchingThisChunk", cancellable = true, at = @At("HEAD"))
     private void isPlayerWatchingThisChunkCubic(EntityPlayerMP player, CallbackInfoReturnable<Boolean> cir) {
         // workaround for transfer between cubicchunks and non-cubic-chunks dimension
@@ -67,4 +69,7 @@ public class MixinEntityTrackerEntry {
         }
     }
 
+    @Override public void setMaxVertRange(int maxVertTrackingDistanceThreshold) {
+        this.maxVertRange = maxVertTrackingDistanceThreshold;
+    }
 }

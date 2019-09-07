@@ -25,6 +25,7 @@
 package io.github.opencubicchunks.cubicchunks.core.asm.mixin.core.common;
 
 import io.github.opencubicchunks.cubicchunks.api.util.Coords;
+import io.github.opencubicchunks.cubicchunks.core.entity.ICubicEntityTracker;
 import io.github.opencubicchunks.cubicchunks.core.server.ICubicPlayerList;
 import io.github.opencubicchunks.cubicchunks.core.server.PlayerCubeMap;
 import io.github.opencubicchunks.cubicchunks.api.world.ICubicWorld;
@@ -82,8 +83,7 @@ public abstract class MixinPlayerList implements ICubicPlayerList {
             for (WorldServer worldserver : this.server.worlds) {
                 if (worldserver != null && ((ICubicWorld) worldserver).isCubicWorld()) {
                     ((PlayerCubeMap) worldserver.getPlayerChunkMap()).setPlayerViewDistance(viewDistance, dist);
-                    // TODO: entity tracker vertical view distance
-                    // worldserver.getEntityTracker().setViewDistance(dist);
+                    ((ICubicEntityTracker) worldserver.getEntityTracker()).setVertViewDistance(dist);
                 }
             }
         }

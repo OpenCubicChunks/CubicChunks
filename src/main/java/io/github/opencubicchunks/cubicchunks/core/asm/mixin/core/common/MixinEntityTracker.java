@@ -26,6 +26,7 @@ package io.github.opencubicchunks.cubicchunks.core.asm.mixin.core.common;
 
 import io.github.opencubicchunks.cubicchunks.api.world.ICube;
 import io.github.opencubicchunks.cubicchunks.core.entity.ICubicEntityTracker;
+import io.github.opencubicchunks.cubicchunks.core.server.ICubicPlayerList;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.EntityTracker;
@@ -33,17 +34,36 @@ import net.minecraft.entity.EntityTrackerEntry;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.network.play.server.SPacketEntityAttach;
 import net.minecraft.network.play.server.SPacketSetPassengers;
+import net.minecraft.world.WorldServer;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import java.io.InputStream;
 import java.util.Set;
 
 @Mixin(EntityTracker.class)
 public class MixinEntityTracker implements ICubicEntityTracker {
 
     @Shadow @Final private Set<EntityTrackerEntry> entries;
+    private int maxVertTrackingDistanceThreshold;
+
+    @Inject(method = "<init>", at = @At("RETURN"))
+    private void onConstruct(WorldServer world, CallbackInfo ci) {
+        setVertViewDistance(((ICubicPlayerList) world.getMinecraftServer().getPlayerList()).getVerticalViewDistance());
+    }
+
+    @Redirect(method = "track(Lnet/minecraft/entity/Entity;IIZ)V", at = @At(value = "NEW",
+            target = "net/minecraft/entity/EntityTrackerEntry"))
+    private EntityTrackerEntry onCreateEntry(Entity entityIn, int rangeIn, int maxRangeIn, int updateFrequencyIn, boolean sendVelocityUpdatesIn) {
+        EntityTrackerEntry e = new EntityTrackerEntry(entityIn, rangeIn, maxRangeIn, updateFrequencyIn, sendVelocityUpdatesIn);
+        //noinspection ConstantConditions
+        ((ICubicEntityTracker.Entry) e).setMaxVertRange(maxVertTrackingDistanceThreshold);
+        return e;
+    }
 
     // Previous version of this function contain code which force Minecraft to send all SPacketEntityAttach before any SPacketSetPassengers
     @Override public void sendLeashedEntitiesInCube(EntityPlayerMP player, ICube cubeIn) {
@@ -64,6 +84,13 @@ public class MixinEntityTracker implements ICubicEntityTracker {
                     player.connection.sendPacket(new SPacketSetPassengers(entity));
                 }
             }
+        }
+    }
+
+    @Override public void setVertViewDistance(int viewDistance) {
+        this.maxVertTrackingDistanceThreshold = (viewDistance - 1) * 16;
+        for (EntityTrackerEntry e : this.entries) {
+            ((ICubicEntityTracker.Entry) e).setMaxVertRange(this.maxVertTrackingDistanceThreshold);
         }
     }
 }

@@ -29,4 +29,11 @@ import net.minecraft.entity.player.EntityPlayerMP;
 
 public interface ICubicEntityTracker {
     void sendLeashedEntitiesInCube(EntityPlayerMP player, ICube cube);
+
+    void setVertViewDistance(int viewDistance);
+
+    interface Entry {
+
+        void setMaxVertRange(int maxVertTrackingDistanceThreshold);
+    }
 }
