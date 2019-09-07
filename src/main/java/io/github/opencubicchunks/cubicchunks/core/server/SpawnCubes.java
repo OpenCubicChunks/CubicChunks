@@ -26,6 +26,7 @@ package io.github.opencubicchunks.cubicchunks.core.server;
 
 import io.github.opencubicchunks.cubicchunks.core.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.api.util.Coords;
+import io.github.opencubicchunks.cubicchunks.core.CubicChunksConfig;
 import io.github.opencubicchunks.cubicchunks.core.util.ticket.ITicket;
 import io.github.opencubicchunks.cubicchunks.api.world.ICubeProviderServer;
 import io.github.opencubicchunks.cubicchunks.core.world.ICubeProviderInternal;
@@ -42,153 +43,111 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class SpawnCubes {
+public class SpawnCubes implements ITicket {
 
-    private static final int DEFAULT_SPAWN_RADIUS_GENERATE = 12;
-    private static final int DEFAULT_SPAWN_RADIUS_FORCE = 8;
-    private static final int DEFAULT_VERTICAL_SPAWN_RADIUS = 8;
+    @Nullable private BlockPos spawnPoint = null;
+    private int radiusXZGenerate = CubicChunksConfig.spawnGenerateDistanceXZ;
+    private int radiusYGenerate = CubicChunksConfig.spawnGenerateDistanceY;
+    private int radiusXZForce = CubicChunksConfig.spawnLoadDistanceXZ;
+    private int radiusYForce = CubicChunksConfig.spawnLoadDistanceY;
 
-    public static void update(World world) {
-        if (world.provider.canRespawnHere()) {
-            SpawnArea.get(world).update(world);
+    public void update(World world) {
+        update(world, CubicChunksConfig.spawnGenerateDistanceXZ, CubicChunksConfig.spawnGenerateDistanceY,
+                CubicChunksConfig.spawnLoadDistanceXZ, CubicChunksConfig.spawnLoadDistanceY); // radius did not change
+    }
+
+    public void update(World world, int newRadiusXZGenerate, int newRadiusYGenerate, int newRadiusXZForce, int newRadiusYForce) {
+        if (!world.getSpawnPoint().equals(spawnPoint) ||
+                radiusXZGenerate != newRadiusXZGenerate ||
+                radiusYGenerate != newRadiusYGenerate ||
+                radiusXZForce != newRadiusXZForce ||
+                radiusYForce != newRadiusYForce) {
+            removeTickets(world);
+            spawnPoint = world.getSpawnPoint();
+            radiusXZGenerate = newRadiusXZGenerate;
+            radiusYGenerate = newRadiusYGenerate;
+            radiusXZForce = newRadiusXZForce;
+            radiusYForce = newRadiusYForce;
+            addTickets(world); // addTickets will update the spawn location if need be
         }
     }
 
-    public static class SpawnArea extends WorldSavedData implements ITicket {
-
-        private static final String STORAGE = CubicChunks.MODID + "_spawncubes";
-
-        @Nullable private BlockPos spawnPoint = null;
-        private int radiusXZGenerate = DEFAULT_SPAWN_RADIUS_GENERATE;
-        private int radiusXZForce = DEFAULT_SPAWN_RADIUS_FORCE;
-        private int radiusY = DEFAULT_VERTICAL_SPAWN_RADIUS;
-
-        public SpawnArea() {
-            this(STORAGE);
+    private void removeTickets(World world) {
+        if (radiusYForce < 0 || radiusXZForce < 0 || spawnPoint == null) {
+            return; // no spawn chunks OR nothing to remove
         }
 
-        public SpawnArea(String storage) {
-            super(storage);
-        }
+        ICubeProviderInternal serverCubeCache = (ICubeProviderInternal) world.getChunkProvider();
 
-        public void update(World world) {
-            update(world, radiusXZGenerate, radiusXZForce, radiusY); // radius did not change
-        }
+        int spawnCubeX = Coords.blockToCube(spawnPoint.getX());
+        int spawnCubeY = Coords.blockToCube(spawnPoint.getY());
+        int spawnCubeZ = Coords.blockToCube(spawnPoint.getZ());
 
-        public void update(World world, int newRadiusXZGenerate, int newRadiusXZForce, int newRadiusY) {
-            if (!world.getSpawnPoint().equals(spawnPoint) || radiusXZGenerate != newRadiusXZGenerate || radiusY != newRadiusY || newRadiusXZForce != radiusXZForce) { // check if
-                // something changed
-                removeTickets(world);
-                radiusXZGenerate = newRadiusXZGenerate;
-                radiusXZForce = newRadiusXZForce;
-                radiusY = newRadiusY;
-                addTickets(world); // addTickets will update the spawn location if need be
-                markDirty();
+        for (int cubeX = spawnCubeX - radiusXZForce; cubeX <= spawnCubeX + radiusXZForce; cubeX++) {
+            for (int cubeZ = spawnCubeZ - radiusXZForce; cubeZ <= spawnCubeZ + radiusXZForce; cubeZ++) {
+                for (int cubeY = spawnCubeY + radiusYForce; cubeY >= spawnCubeY - radiusYForce; cubeY--) {
+                    serverCubeCache.getCube(cubeX, cubeY, cubeZ).getTickets().remove(this);
+                }
             }
         }
+    }
 
-        private void removeTickets(World world) {
-            if (radiusY < 0 || radiusXZForce < 0 || spawnPoint == null) {
-                return; // no spawn chunks OR nothing to remove
-            }
+    private void addTickets(World world) {
+        if (radiusXZGenerate < 0 || radiusYGenerate < 0) {
+            return; // no spawn cubes
+        }
 
-            ICubeProviderInternal serverCubeCache = (ICubeProviderInternal) world.getChunkProvider();
+        CubeProviderServer serverCubeCache = (CubeProviderServer) world.getChunkProvider();
 
-            int spawnCubeX = Coords.blockToCube(spawnPoint.getX());
-            int spawnCubeY = 8;//Coords.blockToCube(spawnPoint.getY()); // TODO: auto-find better value. This matches height range in vanilla
-            int spawnCubeZ = Coords.blockToCube(spawnPoint.getZ());
+        // load the cubes around the spawn point
+        CubicChunks.LOGGER.info("Loading cubes for spawn...");
+        int spawnCubeX = Coords.blockToCube(spawnPoint.getX());
+        int spawnCubeY = Coords.blockToCube(spawnPoint.getY());
+        int spawnCubeZ = Coords.blockToCube(spawnPoint.getZ());
 
-            for (int cubeX = spawnCubeX - radiusXZForce; cubeX <= spawnCubeX + radiusXZForce; cubeX++) {
-                for (int cubeZ = spawnCubeZ - radiusXZForce; cubeZ <= spawnCubeZ + radiusXZForce; cubeZ++) {
-                    for (int cubeY = spawnCubeY + radiusY; cubeY >= spawnCubeY - radiusY; cubeY--) {
-                        serverCubeCache.getCube(cubeX, cubeY, cubeZ).getTickets().remove(this);
+        long lastTime = System.currentTimeMillis();
+        final int progressReportInterval = 1000;//ms
+        int totalToGenerate = (radiusXZGenerate * 2 + 1) * (radiusXZGenerate * 2 + 1) * (radiusYGenerate * 2 + 1);
+        int generated = 0;
+
+        int r = Math.max(radiusXZGenerate, radiusXZForce);
+        int ry = Math.max(radiusYGenerate, radiusYForce);
+
+        for (int cubeX = spawnCubeX - r; cubeX <= spawnCubeX + r; cubeX++) {
+            for (int cubeZ = spawnCubeZ - r; cubeZ <= spawnCubeZ + r; cubeZ++) {
+                for (int cubeY = spawnCubeY + ry; cubeY >= spawnCubeY - ry; cubeY--) {
+                    ICubeProviderServer.Requirement req;
+
+                    int dx = Math.abs(cubeX - spawnCubeX);
+                    int dy = Math.abs(cubeY - spawnCubeY);
+                    int dz = Math.abs(cubeZ - spawnCubeZ);
+
+                    // is edge?
+                    if (dx >= radiusXZGenerate || dz >= radiusXZGenerate || dy >= radiusYGenerate) {
+                        req = ICubeProviderServer.Requirement.GENERATE;
+                    } else {
+                        req = ICubeProviderServer.Requirement.LIGHT;
+                    }
+
+                    Cube cube = serverCubeCache.getCube(cubeX, cubeY, cubeZ, req);
+                    assert cube != null;
+
+                    if (dx <= radiusXZForce && dz <= radiusXZForce) {
+                        cube.getTickets().add(this);
+                    }
+                    generated++;
+                    if (System.currentTimeMillis() >= lastTime + progressReportInterval) {
+                        lastTime = System.currentTimeMillis();
+                        CubicChunks.LOGGER.info("Preparing spawn area: {}%", generated * 100 / totalToGenerate);
                     }
                 }
             }
         }
+        CubicChunks.LOGGER.info("Preparing spawn area: 100%");
 
-        private void addTickets(World world) {
-            if (radiusXZGenerate < 0 || radiusY < 0) {
-                return; // no spawn cubes
-            }
+    }
 
-            CubeProviderServer serverCubeCache = (CubeProviderServer) world.getChunkProvider();
-
-            // load the cubes around the spawn point
-            CubicChunks.LOGGER.info("Loading cubes for spawn...");
-            spawnPoint = world.getSpawnPoint();
-            int spawnCubeX = Coords.blockToCube(spawnPoint.getX());
-            int spawnCubeY = 8;//Coords.blockToCube(spawnPoint.getY());
-            int spawnCubeZ = Coords.blockToCube(spawnPoint.getZ());
-
-            long lastTime = System.currentTimeMillis();
-            final int progressReportInterval = 1000;//ms
-            int totalToGenerate = (radiusXZGenerate * 2 + 1) * (radiusXZGenerate * 2 + 1) * (radiusY * 2 + 1);
-            int generated = 0;
-
-            int r = Math.max(radiusXZGenerate, radiusXZForce);
-
-            for (int cubeX = spawnCubeX - r; cubeX <= spawnCubeX + r; cubeX++) {
-                for (int cubeZ = spawnCubeZ - r; cubeZ <= spawnCubeZ + r; cubeZ++) {
-                    for (int cubeY = spawnCubeY + radiusY; cubeY >= spawnCubeY - radiusY; cubeY--) {
-                        ICubeProviderServer.Requirement req;
-
-                        int dx = Math.abs(cubeX - spawnCubeX);
-                        int dy = Math.abs(cubeY - spawnCubeY);
-                        int dz = Math.abs(cubeZ - spawnCubeZ);
-
-                        // is edge?
-                        if (dx >= radiusXZGenerate || dz >= radiusXZGenerate || dy >= radiusY) {
-                            req = ICubeProviderServer.Requirement.GENERATE;
-                        } else {
-                            req = ICubeProviderServer.Requirement.LIGHT;
-                        }
-
-                        Cube cube = serverCubeCache.getCube(cubeX, cubeY, cubeZ, req);
-                        assert cube != null;
-
-                        if (dx <= radiusXZForce && dz <= radiusXZForce) {
-                            cube.getTickets().add(this);
-                        }
-                        generated++;
-                        if (System.currentTimeMillis() >= lastTime + progressReportInterval) {
-                            lastTime = System.currentTimeMillis();
-                            CubicChunks.LOGGER.info("Preparing spawn area: {}%", generated * 100 / totalToGenerate);
-                        }
-                    }
-                }
-            }
-        }
-
-        public boolean shouldTick() {
-            return false;
-        }
-
-        @Override
-        public void readFromNBT(NBTTagCompound nbt) {
-            this.radiusXZGenerate = nbt.getInteger("spawnRadius");
-            this.radiusXZForce = nbt.hasKey("spawnRadiusForce") ? nbt.getInteger("spawnRadiusForce") : DEFAULT_SPAWN_RADIUS_FORCE;
-            this.radiusY = nbt.hasKey("spawnRadiusY") ?
-                    nbt.getInteger("spawnRadiusY") : DEFAULT_VERTICAL_SPAWN_RADIUS;
-        }
-
-        @Override
-        public NBTTagCompound writeToNBT(NBTTagCompound nbt) {
-            nbt.setInteger("spawnRadius", this.radiusXZGenerate);
-            nbt.setInteger("spawnRadiusForce", this.radiusXZForce);
-            nbt.setInteger("spawnRadiusY", this.radiusY);
-            return nbt;
-        }
-
-        public static SpawnArea get(World world) {
-            MapStorage storage = world.getPerWorldStorage();
-            SpawnArea area = (SpawnArea) storage.getOrLoadData(SpawnArea.class, STORAGE);
-
-            if (area == null) {
-                area = new SpawnArea();
-                storage.setData(STORAGE, area);
-            }
-            return area;
-        }
+    @Override public boolean shouldTick() {
+        return false;
     }
 }

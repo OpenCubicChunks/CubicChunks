@@ -45,6 +45,7 @@ import io.github.opencubicchunks.cubicchunks.core.lighting.FirstLightProcessor;
 import io.github.opencubicchunks.cubicchunks.core.server.ChunkGc;
 import io.github.opencubicchunks.cubicchunks.core.server.CubeProviderServer;
 import io.github.opencubicchunks.cubicchunks.core.server.PlayerCubeMap;
+import io.github.opencubicchunks.cubicchunks.core.server.SpawnCubes;
 import io.github.opencubicchunks.cubicchunks.core.util.world.CubeSplitTickList;
 import io.github.opencubicchunks.cubicchunks.core.util.world.CubeSplitTickSet;
 import io.github.opencubicchunks.cubicchunks.core.world.CubeWorldEntitySpawner;
@@ -108,6 +109,7 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
     private XZMap<IColumn> forcedColumns;
 
     private ChunkGc worldChunkGc;
+    private SpawnCubes spawnArea;
 
     @Shadow protected abstract void playerCheckLight();
 
@@ -146,6 +148,14 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
         this.worldChunkGc = new ChunkGc(getCubeCache());
     }
 
+    @Override public void setSpawnArea(SpawnCubes spawn) {
+        this.spawnArea = spawn;
+    }
+
+    @Override public SpawnCubes getSpawnArea() {
+        return spawnArea;
+    }
+
     @Override public CubeSplitTickSet getScheduledTicks() {
         return (CubeSplitTickSet) pendingTickListEntriesHashSet;
     }
@@ -163,6 +173,9 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
         if (CubicChunksConfig.useFastEntitySpawner != (spawnHandler.getEntitySpawner().getClass() == FastCubeWorldEntitySpawner.class)) {
             spawnHandler.setEntitySpawner(CubicChunksConfig.useFastEntitySpawner ?
                     new FastCubeWorldEntitySpawner() : new CubeWorldEntitySpawner());
+        }
+        if (this.spawnArea != null) {
+            this.spawnArea.update((World) (Object) this);
         }
     }
 

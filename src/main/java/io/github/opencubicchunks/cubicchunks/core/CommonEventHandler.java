@@ -122,23 +122,11 @@ public class CommonEventHandler {
     }
 
     @SubscribeEvent
-    public void onWorldLoad(WorldEvent.Load evt) {
-        if (!((ICubicWorld) evt.getWorld()).isCubicWorld()) {
-            return;
-        }
-        if (!evt.getWorld().isRemote) {
-            SpawnCubes.update(evt.getWorld());
-        }
-    }
-
-    @SubscribeEvent
     public void onWorldServerTick(TickEvent.WorldTickEvent evt) {
         WorldServer world = (WorldServer) evt.world;
         //Forge (at least version 11.14.3.1521) doesn't call this event for client world.
         if (evt.phase == TickEvent.Phase.END && ((ICubicWorld) world).isCubicWorld() && evt.side == Side.SERVER) {
             ((ICubicWorldInternal) world).tickCubicWorld();
-            // There is no event for when the spawn location changes, so check every tick for now
-            SpawnCubes.update(world);
         }
     }
 

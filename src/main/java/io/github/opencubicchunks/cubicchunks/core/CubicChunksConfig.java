@@ -124,10 +124,30 @@ public class CubicChunksConfig {
     @Config.LangKey("cubicchunks.config.biome_temperature_scale_max_y")
     @Config.Comment("Above this height, biome temperature will no longer change")
     public static int biomeTemperatureScaleMaxY = 256;
-    
+
     @Config.LangKey("cubicchunks.config.compatibility_generator_type")
     @Config.Comment("Vanilla compatibility generator type, which will convert vanilla world type generators output in cubic")
     public static String compatibilityGeneratorType = "cubicchunks:default";
+
+    @Config.LangKey("cubicchunks.config.spawn_generate_distance_horizontal")
+    @Config.Comment("Horizontal distance for initially generated spawn area")
+    @Config.RequiresWorldRestart
+    public static int spawnGenerateDistanceXZ = 12;
+
+    @Config.LangKey("cubicchunks.config.spawn_generate_distance_vertical")
+    @Config.Comment("Vertical distance for initially generated spawn area")
+    @Config.RequiresWorldRestart
+    public static int spawnGenerateDistanceY = 8;
+
+    @Config.LangKey("cubicchunks.config.spawn_forceload_distance_horizontal")
+    @Config.Comment("Horizontal distance for spawn chunks kept loaded in memory")
+    @Config.RequiresWorldRestart
+    public static int spawnLoadDistanceXZ = 8;
+
+    @Config.LangKey("cubicchunks.config.spawn_forceload_distance_vertical")
+    @Config.Comment("Vertical distance for spawn chunks kept loaded in memory")
+    @Config.RequiresWorldRestart
+    public static int spawnLoadDistanceY = 8;
 
     public static int defaultMaxCubesPerChunkloadingTicket = 25 * 16;
     public static Map<String, Integer> modMaxCubesPerChunkloadingTicket = new HashMap<>();
