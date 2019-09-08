@@ -121,7 +121,7 @@ public class RegionCubeIO implements ICubeIO {
             nbt = saveEntry.nbt;
         } else {
             // IOException makes using Optional impossible :(
-            Optional<ByteBuffer> buf = this.save.load(new EntryLocation2D(chunkX, chunkZ));
+            Optional<ByteBuffer> buf = this.save.load(new EntryLocation2D(chunkX, chunkZ), true);
             if (!buf.isPresent()) {
                 return null;
             }
@@ -138,7 +138,7 @@ public class RegionCubeIO implements ICubeIO {
             nbt = saveEntry.nbt;
         } else {
             // does the database have the cube?
-            Optional<ByteBuffer> buf = this.save.load(new EntryLocation3D(column.x, cubeY, column.z));
+            Optional<ByteBuffer> buf = this.save.load(new EntryLocation3D(column.x, cubeY, column.z), true);
             if (!buf.isPresent()) {
                 return null;
             }

@@ -131,7 +131,7 @@ dependencies {
         isTransitive = false
     }
 
-    embed("io.github.opencubicchunks:regionlib:0.55.0-SNAPSHOT")
+    embed("io.github.opencubicchunks:regionlib:0.61.0-SNAPSHOT")
 }
 
 idea {
@@ -323,7 +323,7 @@ publishing {
                 scm {
                     connection.set("scm:git:git://github.com/OpenCubicChunks/CubicChunks.git")
                     developerConnection.set("scm:git:ssh://git@github.com:OpenCubicChunks/CubicChunks.git")
-                    url.set("https://github.com/OpenCubicChunks/RegionLib")
+                    url.set("https://github.com/OpenCubicChunks/CubicChunks")
                 }
 
                 licenses {
