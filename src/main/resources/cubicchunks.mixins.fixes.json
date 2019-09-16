@@ -12,6 +12,10 @@
     },
     "mixins": [
         "common.EntityBat_AiHeightLimit",
+        "common.fakeheight.IASMEventHandler",
+        "common.fakeheight.IEventBus",
+        "common.fakeheight.MixinForgeEventFactory",
+        "common.fakeheight.MixinTerrainGen",
         "common.isblockloaded.MixinEntity",
         "common.MixinBiomeTemperatureConfig",
         "common.MixinBlockChorusFlower",

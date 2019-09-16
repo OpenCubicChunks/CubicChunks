@@ -24,11 +24,22 @@
  */
 package io.github.opencubicchunks.cubicchunks.core.util;
 
+import com.google.common.base.Throwables;
+import com.google.common.collect.ImmutableSet;
+import io.github.opencubicchunks.cubicchunks.api.world.ICubicWorld;
 import io.github.opencubicchunks.cubicchunks.core.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.core.asm.mixin.ICubicWorldInternal;
+import io.github.opencubicchunks.cubicchunks.core.asm.mixin.fixes.common.fakeheight.IASMEventHandler;
+import io.github.opencubicchunks.cubicchunks.core.asm.mixin.fixes.common.fakeheight.IEventBus;
 import net.minecraft.world.World;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.terraingen.DecorateBiomeEvent;
+import net.minecraftforge.event.terraingen.PopulateChunkEvent;
 import net.minecraftforge.fml.common.IWorldGenerator;
 import net.minecraftforge.fml.common.Loader;
+import net.minecraftforge.fml.common.eventhandler.Event;
+import net.minecraftforge.fml.common.eventhandler.EventBus;
+import net.minecraftforge.fml.common.eventhandler.IEventListener;
 
 import java.util.AbstractMap;
 import java.util.Collections;
@@ -39,6 +50,19 @@ import java.util.stream.Collectors;
 
 public class CompatHandler {
 
+    private static final Set<String> IWORLDGENERATOR_FAKE_HEIGHT = ImmutableSet.of(
+            "ic2",
+            "thaumcraft",
+            "fossil"
+    );
+
+    private static final Set<String> POPULATE_EVENT_PRE_FAKE_HEIGHT = ImmutableSet.of(
+            "reccomplex"
+    );
+
+    private static final Set<String> DECORATE_EVENT_FAKE_HEIGHT = ImmutableSet.of(
+            "reccomplex"
+    );
 
     private static final Map<String, String> packageToModId = getPackageToModId();
 
@@ -73,12 +97,59 @@ public class CompatHandler {
             return;
         }
         String modid = packageToModId.get(genClass.getPackage().getName());
-        if (modid.equals("ic2") || modid.equals("thaumcraft") || modid.equals("fossil")) {
+        if (IWORLDGENERATOR_FAKE_HEIGHT.contains(modid)) {
             ((ICubicWorldInternal.Server) world).fakeWorldHeight(256);
         }
     }
 
     public static void afterGenerate(World world) {
         ((ICubicWorldInternal.Server) world).fakeWorldHeight(0);
+    }
+
+    // this is called from a mixin into ForgeEventFactory
+    // it's needed for mods that use events instead of IWorldGenerator
+    // performance is not a big issue there, as foring most of those events
+    // is a relatively small part of the whole worldgen
+
+    public static boolean postChunkPopulatePreWithFakeWorldHeight(PopulateChunkEvent.Pre event) {
+        return postEventPerModFakeHeight(event.getWorld(), event, MinecraftForge.EVENT_BUS, POPULATE_EVENT_PRE_FAKE_HEIGHT);
+    }
+
+    public static boolean postBiomeDecorateWithFakeWorldHeight(DecorateBiomeEvent.Decorate event) {
+        return postEventPerModFakeHeight(event.getWorld(), event, MinecraftForge.EVENT_BUS, POPULATE_EVENT_PRE_FAKE_HEIGHT);
+    }
+
+    private static boolean postEventPerModFakeHeight(World world, Event event, EventBus eventBus, Set<String> modIds) {
+        if (!((ICubicWorld) world).isCubicWorld()) {
+            return eventBus.post(event);
+        }
+        IEventBus forgeEventBus = (IEventBus) eventBus;
+        if (forgeEventBus.isShutdown()) {
+            return false;
+        }
+        IEventListener[] listeners = event.getListenerList().getListeners(forgeEventBus.getBusID());
+        int index = 0;
+        try {
+            for (; index < listeners.length; index++) {
+                try {
+                    IEventListener listener = listeners[index];
+                    if (listener instanceof IASMEventHandler) {
+                        IASMEventHandler handler = (IASMEventHandler) listener;
+                        String modid = handler.getOwner().getModId();
+                        if (modIds.contains(modid)) {
+                            ((ICubicWorldInternal.Server) world).fakeWorldHeight(256);
+                        }
+                    }
+                    listener.invoke(event);
+                } finally {
+                    ((ICubicWorldInternal.Server) world).fakeWorldHeight(0);
+                }
+            }
+        } catch (Throwable throwable) {
+            forgeEventBus.getExceptionHandler().handleException(eventBus, event, listeners, index, throwable);
+            Throwables.throwIfUnchecked(throwable);
+            throw new RuntimeException(throwable);
+        }
+        return event.isCancelable() && event.isCanceled();
     }
 }
