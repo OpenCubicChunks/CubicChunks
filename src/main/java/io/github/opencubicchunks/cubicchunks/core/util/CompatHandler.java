@@ -129,23 +129,14 @@ public class CompatHandler {
         if (!((ICubicWorld) world).isCubicWorld()) {
             return eventBus.post(event);
         }
-        return postFakeEvent((ICubicWorldInternal.Server) world, event, eventBus, modIds, w -> w.fakeWorldHeight(256), w -> w.fakeWorldHeight(0));
+        return postEvent((ICubicWorldInternal.Server) world, event, eventBus, modIds, w -> w.fakeWorldHeight(256), w -> w.fakeWorldHeight(0));
     }
 
     public static void onCubeLoad(ChunkEvent.Load load) {
         postFakeEvent(load, MinecraftForge.EVENT_BUS, FAKE_CHUNK_LOAD);
     }
 
-    private static <T> boolean postFakeEvent(Event event, EventBus eventBus, Set<String> modIds) {
-        return postFakeEvent(null, event, eventBus, modIds,
-                x -> {
-                },
-                x -> {
-                }
-        );
-    }
-
-    private static <T> boolean postFakeEvent(T ctx, Event event, EventBus eventBus, Set<String> modIds, Consumer<T> preEvt, Consumer<T> postEvt) {
+    private static <T> boolean postEvent(T ctx, Event event, EventBus eventBus, Set<String> modIds, Consumer<T> preEvt, Consumer<T> postEvt) {
         IEventBus forgeEventBus = (IEventBus) eventBus;
         if (forgeEventBus.isShutdown()) {
             return false;
@@ -166,6 +157,33 @@ public class CompatHandler {
                     listener.invoke(event);
                 } finally {
                     postEvt.accept(ctx);
+                }
+            }
+        } catch (Throwable throwable) {
+            forgeEventBus.getExceptionHandler().handleException(eventBus, event, listeners, index, throwable);
+            Throwables.throwIfUnchecked(throwable);
+            throw new RuntimeException(throwable);
+        }
+        return event.isCancelable() && event.isCanceled();
+    }
+
+
+    private static <T> boolean postFakeEvent(Event event, EventBus eventBus, Set<String> modIds) {
+        IEventBus forgeEventBus = (IEventBus) eventBus;
+        if (forgeEventBus.isShutdown()) {
+            return false;
+        }
+        IEventListener[] listeners = event.getListenerList().getListeners(forgeEventBus.getBusID());
+        int index = 0;
+        try {
+            for (; index < listeners.length; index++) {
+                IEventListener listener = listeners[index];
+                if (listener instanceof IASMEventHandler) {
+                    IASMEventHandler handler = (IASMEventHandler) listener;
+                    String modid = handler.getOwner().getModId();
+                    if (modIds.contains(modid)) {
+                        listener.invoke(event);
+                    }
                 }
             }
         } catch (Throwable throwable) {
