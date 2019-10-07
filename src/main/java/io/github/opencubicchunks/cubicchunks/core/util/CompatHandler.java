@@ -181,6 +181,21 @@ public class CompatHandler {
                 if (listener instanceof IASMEventHandler) {
                     IASMEventHandler handler = (IASMEventHandler) listener;
                     String modid = handler.getOwner().getModId();
+                    if (modid.equals("forge")) {
+                        // workaround for https://github.com/ZeroNoRyouki/ZeroCore/issues/28
+                        String desc = handler.toString();
+                        if (desc.startsWith("ASM: ") && desc.contains("@")) {
+                            String modClass = desc.split("@")[0].substring("ASM: ".length());
+                            try {
+                                Class<?> cl = Class.forName(modClass);
+                                String newModid = cl.getPackage() == null ? null : getPackageToModId().get(cl.getPackage().getName());
+                                if (newModid != null) {
+                                    modid = newModid;
+                                }
+                            } catch (ClassNotFoundException t) {
+                            }
+                        }
+                    }
                     if (modIds.contains(modid)) {
                         listener.invoke(event);
                     }
