@@ -35,6 +35,7 @@ import net.minecraft.world.World;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.terraingen.DecorateBiomeEvent;
 import net.minecraftforge.event.terraingen.PopulateChunkEvent;
+import net.minecraftforge.event.world.ChunkEvent;
 import net.minecraftforge.fml.common.IWorldGenerator;
 import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.common.eventhandler.Event;
@@ -46,6 +47,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 public class CompatHandler {
@@ -62,6 +64,10 @@ public class CompatHandler {
 
     private static final Set<String> DECORATE_EVENT_FAKE_HEIGHT = ImmutableSet.of(
             "reccomplex"
+    );
+
+    private static final Set<String> FAKE_CHUNK_LOAD = ImmutableSet.of(
+            "zerocore"
     );
 
     private static final Map<String, String> packageToModId = getPackageToModId();
@@ -116,13 +122,30 @@ public class CompatHandler {
     }
 
     public static boolean postBiomeDecorateWithFakeWorldHeight(DecorateBiomeEvent.Decorate event) {
-        return postEventPerModFakeHeight(event.getWorld(), event, MinecraftForge.EVENT_BUS, POPULATE_EVENT_PRE_FAKE_HEIGHT);
+        return postEventPerModFakeHeight(event.getWorld(), event, MinecraftForge.EVENT_BUS, DECORATE_EVENT_FAKE_HEIGHT);
     }
 
     private static boolean postEventPerModFakeHeight(World world, Event event, EventBus eventBus, Set<String> modIds) {
         if (!((ICubicWorld) world).isCubicWorld()) {
             return eventBus.post(event);
         }
+        return postFakeEvent((ICubicWorldInternal.Server) world, event, eventBus, modIds, w -> w.fakeWorldHeight(256), w -> w.fakeWorldHeight(0));
+    }
+
+    public static void onCubeLoad(ChunkEvent.Load load) {
+        postFakeEvent(load, MinecraftForge.EVENT_BUS, FAKE_CHUNK_LOAD);
+    }
+
+    private static <T> boolean postFakeEvent(Event event, EventBus eventBus, Set<String> modIds) {
+        return postFakeEvent(null, event, eventBus, modIds,
+                x -> {
+                },
+                x -> {
+                }
+        );
+    }
+
+    private static <T> boolean postFakeEvent(T ctx, Event event, EventBus eventBus, Set<String> modIds, Consumer<T> preEvt, Consumer<T> postEvt) {
         IEventBus forgeEventBus = (IEventBus) eventBus;
         if (forgeEventBus.isShutdown()) {
             return false;
@@ -137,12 +160,12 @@ public class CompatHandler {
                         IASMEventHandler handler = (IASMEventHandler) listener;
                         String modid = handler.getOwner().getModId();
                         if (modIds.contains(modid)) {
-                            ((ICubicWorldInternal.Server) world).fakeWorldHeight(256);
+                            preEvt.accept(ctx);
                         }
                     }
                     listener.invoke(event);
                 } finally {
-                    ((ICubicWorldInternal.Server) world).fakeWorldHeight(0);
+                    postEvt.accept(ctx);
                 }
             }
         } catch (Throwable throwable) {

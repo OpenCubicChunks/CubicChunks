@@ -42,6 +42,7 @@ import io.github.opencubicchunks.cubicchunks.core.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.core.asm.mixin.ICubicWorldInternal;
 import io.github.opencubicchunks.cubicchunks.core.lighting.LightingManager;
 import io.github.opencubicchunks.cubicchunks.core.util.AddressTools;
+import io.github.opencubicchunks.cubicchunks.core.util.CompatHandler;
 import io.github.opencubicchunks.cubicchunks.core.util.ticket.ITicket;
 import io.github.opencubicchunks.cubicchunks.core.util.ticket.TicketList;
 import io.github.opencubicchunks.cubicchunks.core.world.EntityContainer;
@@ -60,6 +61,7 @@ import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
+import net.minecraftforge.event.world.ChunkEvent;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -504,6 +506,7 @@ public class Cube implements ICube {
         if (!isSurfaceTracked) {
             trackSurface();
         }
+        CompatHandler.onCubeLoad(new ChunkEvent.Load(getColumn()));
     }
 
     @SuppressWarnings("deprecation")
