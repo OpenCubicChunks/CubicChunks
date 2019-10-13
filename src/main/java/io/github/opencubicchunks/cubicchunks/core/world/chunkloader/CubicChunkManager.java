@@ -26,8 +26,6 @@ package io.github.opencubicchunks.cubicchunks.core.world.chunkloader;
 
 import static io.github.opencubicchunks.cubicchunks.core.util.ReflectionUtil.cast;
 
-import com.google.common.collect.Multimap;
-import com.google.common.collect.SetMultimap;
 import io.github.opencubicchunks.cubicchunks.api.util.Coords;
 import io.github.opencubicchunks.cubicchunks.api.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.api.world.ICubicWorld;
@@ -111,14 +109,14 @@ public class CubicChunkManager {
             FMLLog.log.fatal("The mod {} attempted to force load a chunk with an invalid ticket. This is not permitted.", ticket.getModId());
             return;
         }
-        ((ICubicTicket) ticket).addRequestedCube(chunk);
+        ((ICubicTicketInternal) ticket).addRequestedCube(chunk);
         Cube cube = (Cube) ((ICubicWorld) ticket.world).getCubeFromCubeCoords(chunk);
-        cube.getTickets().add((ICubicTicket) ticket);
+        cube.getTickets().add((ICubicTicketInternal) ticket);
         MinecraftForge.EVENT_BUS.post(new ForceCubeEvent(ticket, chunk));
 
-        if (((ICubicTicket) ticket).getMaxCubeDepth() > 0
-                && ((ICubicTicket) ticket).requestedCubes().size() > ((ICubicTicket) ticket).getMaxCubeDepth()) {
-            CubePos removed = ((ICubicTicket) ticket).requestedCubes().iterator().next();
+        if (((ICubicTicketInternal) ticket).getMaxCubeDepth() > 0
+                && ((ICubicTicketInternal) ticket).requestedCubes().size() > ((ICubicTicketInternal) ticket).getMaxCubeDepth()) {
+            CubePos removed = ((ICubicTicketInternal) ticket).requestedCubes().iterator().next();
             unforceChunk(ticket, removed);
         }
     }
@@ -132,11 +130,11 @@ public class CubicChunkManager {
      * @param chunk The chunk you wish to push to the end (so that it would be unloaded last)
      */
     public static void reorderChunk(ForgeChunkManager.Ticket ticket, CubePos chunk) {
-        if (ticket == null || chunk == null || !((ICubicTicket) ticket).requestedCubes().contains(chunk)) {
+        if (ticket == null || chunk == null || !((ICubicTicketInternal) ticket).requestedCubes().contains(chunk)) {
             return;
         }
-        ((ICubicTicket) ticket).removeRequestedCube(chunk);
-        ((ICubicTicket) ticket).addRequestedCube(chunk);
+        ((ICubicTicketInternal) ticket).removeRequestedCube(chunk);
+        ((ICubicTicketInternal) ticket).addRequestedCube(chunk);
     }
 
     /**
@@ -149,10 +147,10 @@ public class CubicChunkManager {
         if (ticket == null || chunk == null) {
             return;
         }
-        ((ICubicTicket) ticket).removeRequestedCube(chunk);
+        ((ICubicTicketInternal) ticket).removeRequestedCube(chunk);
         MinecraftForge.EVENT_BUS.post(new UnforceCubeEvent(ticket, chunk));
         Cube cube = (Cube) ((ICubicWorld) ticket.world).getCubeFromCubeCoords(chunk);
-        cube.getTickets().remove((ICubicTicket) ticket);
+        cube.getTickets().remove((ICubicTicketInternal) ticket);
     }
 
     // internals
@@ -188,18 +186,18 @@ public class CubicChunkManager {
         }
         // only store the cube Y coords, don't load
         // mods will request a column to be loaded on loading callback and then we will force the cubes
-        ((ICubicTicket) ticket).setAllForcedChunkCubes(coordsMap);
+        ((ICubicTicketInternal) ticket).setAllForcedChunkCubes(coordsMap);
     }
 
     public static void onSerializeTicket(NBTTagCompound ticket, ForgeChunkManager.Ticket tick) {
-        if (((ICubicTicket) tick).getAllForcedChunkCubes().isEmpty()) {
+        if (((ICubicTicketInternal) tick).getAllForcedChunkCubes().isEmpty()) {
             return;
         }
         NBTTagCompound cubicNBT = new NBTTagCompound();
-        cubicNBT.setInteger("entityCubeY", ((ICubicTicket) tick).getEntityChunkY());
+        cubicNBT.setInteger("entityCubeY", ((ICubicTicketInternal) tick).getEntityChunkY());
 
         NBTTagList chunkMap = new NBTTagList();
-        ((ICubicTicket) tick).getAllForcedChunkCubes().forEach((pos, cubes) -> {
+        ((ICubicTicketInternal) tick).getAllForcedChunkCubes().forEach((pos, cubes) -> {
             NBTTagCompound entry = new NBTTagCompound();
             entry.setInteger("x", pos.x);
             entry.setInteger("z", pos.z);
@@ -213,7 +211,7 @@ public class CubicChunkManager {
 
     public static void onLoadEntityTicketChunk(World world, ForgeChunkManager.Ticket tick) {
         if (((ICubicWorld) world).isCubicWorld()) {
-            ICubicTicket ticket = (ICubicTicket) tick;
+            ICubicTicketInternal ticket = (ICubicTicketInternal) tick;
             ((ICubicWorld) world).getCubeFromCubeCoords(ticket.getEntityChunkX(), ticket.getEntityChunkY(), ticket.getEntityChunkZ());
         }
     }
@@ -228,7 +226,7 @@ public class CubicChunkManager {
     }
 
     private static void addForcedCubesHeuristic(ForgeChunkManager.ForceChunkEvent event, ForgeChunkManager.Ticket ticket, WorldServer worldInstance) {
-        IntSet yCoords = ((ICubicTicket) ticket).getAllForcedChunkCubes().get(event.getLocation());
+        IntSet yCoords = ((ICubicTicketInternal) ticket).getAllForcedChunkCubes().get(event.getLocation());
         if (yCoords != null && !yCoords.isEmpty()) {
             yCoords.forEach(cubeY ->
                     ((ICubicWorldInternal) ticket.world)
@@ -242,7 +240,7 @@ public class CubicChunkManager {
         PlayerChunkMapEntry columnWatcher = cubeMap.getEntry(event.getLocation().x, event.getLocation().z);
 
         if (columnWatcher == null) {
-            ((ICubicTicket) ticket).setForcedChunkCubes(event.getLocation(), new IntArraySet());
+            ((ICubicTicketInternal) ticket).setForcedChunkCubes(event.getLocation(), new IntArraySet());
             return; // TODO: some different heuristic?
         }
         List<EntityPlayerMP> players = columnWatcher.getWatchingPlayers();
@@ -258,7 +256,7 @@ public class CubicChunkManager {
                 yCoords.add(cubeY);
             }
         }
-        ((ICubicTicket) ticket).setForcedChunkCubes(event.getLocation(), yCoords);
+        ((ICubicTicketInternal) ticket).setForcedChunkCubes(event.getLocation(), yCoords);
     }
 
     @SubscribeEvent public static void onForgeChunkManagerUnforceChunk(ForgeChunkManager.UnforceChunkEvent event) {
@@ -267,11 +265,11 @@ public class CubicChunkManager {
         if (!((ICubicWorld) world).isCubicWorld()) {
             return;
         }
-        for (int cubeY : ((ICubicTicket) ticket).getAllForcedChunkCubes().get(event.getLocation())) {
+        for (int cubeY : ((ICubicTicketInternal) ticket).getAllForcedChunkCubes().get(event.getLocation())) {
             Cube cube = (Cube) ((ICubicWorld) world).getCubeFromCubeCoords(event.getLocation().x, cubeY, event.getLocation().z);
             cube.getTickets().remove((ITicket) ticket);
         }
-        ((ICubicTicket) ticket).clearForcedChunkCubes(event.getLocation());
+        ((ICubicTicketInternal) ticket).clearForcedChunkCubes(event.getLocation());
     }
 
     public static int getCubeDepthFor(String modId) {

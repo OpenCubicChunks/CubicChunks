@@ -24,8 +24,11 @@
  */
 package io.github.opencubicchunks.cubicchunks.api.world;
 
+import io.github.opencubicchunks.cubicchunks.api.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.api.worldgen.ICubeGenerator;
 import mcp.MethodsReturnNonnullByDefault;
+import net.minecraft.util.math.ChunkPos;
+import net.minecraftforge.common.ForgeChunkManager;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -46,7 +49,31 @@ public interface ICubicWorldServer extends ICubicWorld {
      *
      * Note: there are known bugs caused by this method in some situations,
      * that cause a chunk that contains a player to be unloaded when the player is moving
-     * at very high speed. This issue is not fixable. Automatic chunk unloading is not affected.
+     * at very high speed. This is very unlikely to happen and has never been reported
+     * outside of artificially created test setup with special player movement code.
+     * This issue is probably not fixable. Automatic chunk unloading is not affected.
      */
     void unloadOldCubes();
+
+    /**
+     * CubicChunks equivalent of {@link ForgeChunkManager#forceChunk(ForgeChunkManager.Ticket, ChunkPos)}.
+     *
+     * Can accept tickets from different worlds.
+     */
+    void forceChunk(ForgeChunkManager.Ticket ticket, CubePos chunk);
+
+    /**
+     * CubicChunks equivalent of {@link ForgeChunkManager#reorderChunk(ForgeChunkManager.Ticket, ChunkPos)}
+     *
+     * Can accept tickets from different worlds.
+     */
+    void reorderChunk(ForgeChunkManager.Ticket ticket, CubePos chunk);
+
+    /**
+     * CubicChunks equivalent of {@link ForgeChunkManager#unforceChunk(ForgeChunkManager.Ticket, ChunkPos)}
+     *
+     * Can accept tickets from different worlds.
+     */
+    void unforceChunk(ForgeChunkManager.Ticket ticket, CubePos chunk);
+
 }

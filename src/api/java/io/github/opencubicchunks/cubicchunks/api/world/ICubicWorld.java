@@ -26,12 +26,10 @@ package io.github.opencubicchunks.cubicchunks.api.world;
 
 import static io.github.opencubicchunks.cubicchunks.api.util.Coords.blockToCube;
 
-import io.github.opencubicchunks.cubicchunks.api.util.Coords;
-import io.github.opencubicchunks.cubicchunks.api.util.NotCubicChunksWorldException;
 import io.github.opencubicchunks.cubicchunks.api.util.CubePos;
+import io.github.opencubicchunks.cubicchunks.api.util.NotCubicChunksWorldException;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.state.IBlockState;
-import net.minecraft.init.Blocks;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
@@ -229,7 +227,7 @@ public interface ICubicWorld extends IMinMaxHeight {
 
     int getMaxGenerationHeight();
 
-    public enum SurfaceType {
+    enum SurfaceType {
         SOLID, BLOCKING_MOVEMENT, OPAQUE
     }
 }

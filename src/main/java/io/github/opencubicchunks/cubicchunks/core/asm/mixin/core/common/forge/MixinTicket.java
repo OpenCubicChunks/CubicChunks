@@ -26,7 +26,7 @@ package io.github.opencubicchunks.cubicchunks.core.asm.mixin.core.common.forge;
 
 import io.github.opencubicchunks.cubicchunks.api.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.core.world.chunkloader.CubicChunkManager;
-import io.github.opencubicchunks.cubicchunks.core.world.chunkloader.ICubicTicket;
+import io.github.opencubicchunks.cubicchunks.core.world.chunkloader.ICubicTicketInternal;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import mcp.MethodsReturnNonnullByDefault;
@@ -50,7 +50,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 @Mixin(value = ForgeChunkManager.Ticket.class, remap = false)
-public abstract class MixinTicket implements ICubicTicket {
+public abstract class MixinTicket implements ICubicTicketInternal {
 
     private LinkedHashSet<CubePos> forcedCubes = new LinkedHashSet<>();
     private Map<ChunkPos, IntSet> cubePosMap = new HashMap<>();

@@ -31,6 +31,7 @@ import io.github.opencubicchunks.cubicchunks.core.asm.mixin.ICubicWorldSettings;
 import io.github.opencubicchunks.cubicchunks.core.asm.mixin.core.common.IIntegratedServer;
 import io.github.opencubicchunks.cubicchunks.core.client.ClientEventHandler;
 import io.github.opencubicchunks.cubicchunks.core.network.PacketDispatcher;
+import io.github.opencubicchunks.cubicchunks.core.util.CompatHandler;
 import io.github.opencubicchunks.cubicchunks.core.util.SideUtils;
 import io.github.opencubicchunks.cubicchunks.core.world.type.VanillaCubicWorldType;
 import io.github.opencubicchunks.cubicchunks.core.worldgen.WorldgenHangWatchdog;
@@ -46,6 +47,7 @@ import net.minecraftforge.fml.common.ICrashCallable;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
+import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLServerAboutToStartEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -121,10 +123,15 @@ public class CubicChunks {
     }
 
     @EventHandler
-    public void init(FMLInitializationEvent event) throws IllegalArgumentException, IllegalAccessException, NoSuchFieldException, SecurityException {
+    public void init(FMLInitializationEvent event) {
         MinecraftForge.EVENT_BUS.register(new CommonEventHandler());
         SideUtils.runForClient(() -> () -> MinecraftForge.EVENT_BUS.register(new ClientEventHandler()));
         PacketDispatcher.registerPackets();
+    }
+
+    @EventHandler
+    public void postInit(FMLPostInitializationEvent event) {
+        CompatHandler.init();
     }
 
     @EventHandler

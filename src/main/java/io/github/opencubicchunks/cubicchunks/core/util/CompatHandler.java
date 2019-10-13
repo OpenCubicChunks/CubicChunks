@@ -32,6 +32,7 @@ import io.github.opencubicchunks.cubicchunks.core.asm.mixin.ICubicWorldInternal;
 import io.github.opencubicchunks.cubicchunks.core.asm.mixin.fixes.common.fakeheight.IASMEventHandler;
 import io.github.opencubicchunks.cubicchunks.core.asm.mixin.fixes.common.fakeheight.IEventBus;
 import net.minecraft.world.World;
+import net.minecraft.world.chunk.Chunk;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.terraingen.DecorateBiomeEvent;
 import net.minecraftforge.event.terraingen.PopulateChunkEvent;
@@ -41,10 +42,13 @@ import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.common.eventhandler.Event;
 import net.minecraftforge.fml.common.eventhandler.EventBus;
 import net.minecraftforge.fml.common.eventhandler.IEventListener;
+import net.minecraftforge.fml.common.eventhandler.ListenerList;
 
 import java.util.AbstractMap;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -72,6 +76,14 @@ public class CompatHandler {
 
     private static final Map<String, String> packageToModId = getPackageToModId();
 
+    private static IEventListener[] fakeChunkLoadListeners;
+
+    public static void init() {
+        fakeChunkLoadListeners = getFakeEventListeners(
+                new ChunkEvent.Load(new Chunk(null, 0, 0)).getListenerList(),
+                MinecraftForge.EVENT_BUS, FAKE_CHUNK_LOAD
+        );
+    }
     private static Map<String, String> getPackageToModId() {
         return Collections.unmodifiableMap(Loader.instance().getActiveModList().stream()
                 .flatMap(mod -> mod.getOwnedPackages().stream().map(pkg -> new AbstractMap.SimpleEntry<>(pkg, mod.getModId())))
@@ -133,7 +145,28 @@ public class CompatHandler {
     }
 
     public static void onCubeLoad(ChunkEvent.Load load) {
-        postFakeEvent(load, MinecraftForge.EVENT_BUS, FAKE_CHUNK_LOAD);
+        if (fakeChunkLoadListeners.length == 0) {
+            return;
+        }
+        onChunkLoadImpl(load);
+    }
+
+    private static void onChunkLoadImpl(ChunkEvent.Load load) {
+        IEventBus bus = (IEventBus) MinecraftForge.EVENT_BUS;
+        if (bus.isShutdown()) {
+            return;
+        }
+        int i = -1;
+        try {
+            for (i = 0; i < fakeChunkLoadListeners.length; i++) {
+                IEventListener fakeChunkLoadListener = fakeChunkLoadListeners[i];
+                fakeChunkLoadListener.invoke(load);
+            }
+        } catch (Throwable throwable) {
+            bus.getExceptionHandler().handleException(MinecraftForge.EVENT_BUS, load, fakeChunkLoadListeners, i, throwable);
+            Throwables.throwIfUnchecked(throwable);
+            throw new RuntimeException(throwable);
+        }
     }
 
     private static <T> boolean postEvent(T ctx, Event event, EventBus eventBus, Set<String> modIds, Consumer<T> preEvt, Consumer<T> postEvt) {
@@ -167,45 +200,37 @@ public class CompatHandler {
         return event.isCancelable() && event.isCanceled();
     }
 
-
-    private static <T> boolean postFakeEvent(Event event, EventBus eventBus, Set<String> modIds) {
+    private static <T> IEventListener[] getFakeEventListeners(ListenerList listenerList, EventBus eventBus, Set<String> modIds) {
         IEventBus forgeEventBus = (IEventBus) eventBus;
-        if (forgeEventBus.isShutdown()) {
-            return false;
-        }
-        IEventListener[] listeners = event.getListenerList().getListeners(forgeEventBus.getBusID());
+        IEventListener[] listeners = listenerList.getListeners(forgeEventBus.getBusID());
+        List<IEventListener> newList = new ArrayList<>();
         int index = 0;
-        try {
-            for (; index < listeners.length; index++) {
-                IEventListener listener = listeners[index];
-                if (listener instanceof IASMEventHandler) {
-                    IASMEventHandler handler = (IASMEventHandler) listener;
-                    String modid = handler.getOwner().getModId();
-                    if (modid.equals("forge")) {
-                        // workaround for https://github.com/ZeroNoRyouki/ZeroCore/issues/28
-                        String desc = handler.toString();
-                        if (desc.startsWith("ASM: ") && desc.contains("@")) {
-                            String modClass = desc.split("@")[0].substring("ASM: ".length());
-                            try {
-                                Class<?> cl = Class.forName(modClass);
-                                String newModid = cl.getPackage() == null ? null : getPackageToModId().get(cl.getPackage().getName());
-                                if (newModid != null) {
-                                    modid = newModid;
-                                }
-                            } catch (ClassNotFoundException t) {
+        for (; index < listeners.length; index++) {
+            IEventListener listener = listeners[index];
+            if (listener instanceof IASMEventHandler) {
+                IASMEventHandler handler = (IASMEventHandler) listener;
+                String modid = handler.getOwner().getModId();
+                if (modid.equals("forge")) {
+                    // workaround for https://github.com/ZeroNoRyouki/ZeroCore/issues/28
+                    String desc = handler.toString();
+                    if (desc.startsWith("ASM: ") && desc.contains("@")) {
+                        String modClass = desc.split("@")[0].substring("ASM: ".length());
+                        try {
+                            Class<?> cl = Class.forName(modClass);
+                            String newModid = cl.getPackage() == null ? null : getPackageToModId().get(cl.getPackage().getName());
+                            if (newModid != null) {
+                                modid = newModid;
                             }
+                        } catch (ClassNotFoundException t) {
                         }
                     }
-                    if (modIds.contains(modid)) {
-                        listener.invoke(event);
-                    }
+                }
+                if (modIds.contains(modid)) {
+                    newList.add(listener);
                 }
             }
-        } catch (Throwable throwable) {
-            forgeEventBus.getExceptionHandler().handleException(eventBus, event, listeners, index, throwable);
-            Throwables.throwIfUnchecked(throwable);
-            throw new RuntimeException(throwable);
         }
-        return event.isCancelable() && event.isCanceled();
+
+        return newList.toArray(new IEventListener[0]);
     }
 }

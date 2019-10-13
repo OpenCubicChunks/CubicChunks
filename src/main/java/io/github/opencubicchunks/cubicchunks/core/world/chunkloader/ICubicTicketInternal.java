@@ -25,6 +25,7 @@
 package io.github.opencubicchunks.cubicchunks.core.world.chunkloader;
 
 import io.github.opencubicchunks.cubicchunks.api.util.CubePos;
+import io.github.opencubicchunks.cubicchunks.api.world.ICubicTicket;
 import io.github.opencubicchunks.cubicchunks.core.util.ticket.ITicket;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import mcp.MethodsReturnNonnullByDefault;
@@ -41,7 +42,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 // this is internal interface, most of it shouldn't be in API
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public interface ICubicTicket extends ITicket {
+public interface ICubicTicketInternal extends ICubicTicket, ITicket {
 
     void addRequestedCube(CubePos pos);
 
@@ -52,8 +53,6 @@ public interface ICubicTicket extends ITicket {
     void setForcedChunkCubes(ChunkPos location, IntSet yCoords);
 
     void clearForcedChunkCubes(ChunkPos location);
-
-    Map<ChunkPos, IntSet> getAllForcedChunkCubes();
 
     void setAllForcedChunkCubes(Map<ChunkPos, IntSet> cubePosMap);
 

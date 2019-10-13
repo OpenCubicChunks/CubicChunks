@@ -51,6 +51,7 @@ import io.github.opencubicchunks.cubicchunks.core.util.world.CubeSplitTickSet;
 import io.github.opencubicchunks.cubicchunks.core.world.CubeWorldEntitySpawner;
 import io.github.opencubicchunks.cubicchunks.core.world.FastCubeWorldEntitySpawner;
 import io.github.opencubicchunks.cubicchunks.core.world.IWorldEntitySpawner;
+import io.github.opencubicchunks.cubicchunks.core.world.chunkloader.CubicChunkManager;
 import io.github.opencubicchunks.cubicchunks.core.world.cube.Cube;
 import io.github.opencubicchunks.cubicchunks.core.world.provider.ICubicWorldProvider;
 import mcp.MethodsReturnNonnullByDefault;
@@ -65,6 +66,7 @@ import net.minecraft.init.Blocks;
 import net.minecraft.server.management.PlayerChunkMap;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.DifficultyInstance;
 import net.minecraft.world.NextTickListEntry;
 import net.minecraft.world.World;
@@ -72,6 +74,7 @@ import net.minecraft.world.WorldEntitySpawner;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
+import net.minecraftforge.common.ForgeChunkManager;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Implements;
 import org.spongepowered.asm.mixin.Interface;
@@ -229,10 +232,41 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
         worldChunkGc.chunkGc();
     }
 
+
+    /**
+     * CubicChunks equivalent of {@link ForgeChunkManager#forceChunk(ForgeChunkManager.Ticket, ChunkPos)}.
+     *
+     * Can accept tickets from different worlds.
+     */
+    @Override
+    public void forceChunk(ForgeChunkManager.Ticket ticket, CubePos chunk) {
+        CubicChunkManager.forceChunk(ticket, chunk);
+    }
+
+    /**
+     * CubicChunks equivalent of {@link ForgeChunkManager#reorderChunk(ForgeChunkManager.Ticket, ChunkPos)}
+     *
+     * Can accept tickets from different worlds.
+     */
+    @Override
+    public void reorderChunk(ForgeChunkManager.Ticket ticket, CubePos chunk) {
+        CubicChunkManager.reorderChunk(ticket, chunk);
+    }
+
+    /**
+     * CubicChunks equivalent of {@link ForgeChunkManager#unforceChunk(ForgeChunkManager.Ticket, ChunkPos)}
+     *
+     * Can accept tickets from different worlds.
+     */
+    @Override
+    public void unforceChunk(ForgeChunkManager.Ticket ticket, CubePos chunk) {
+        CubicChunkManager.unforceChunk(ticket, chunk);
+    }
+
+
     /**
      * @author Barteks2x
      */
-
     @Inject(method = "updateBlocks", at = @At("HEAD"), cancellable = true)
     protected void updateBlocksCubicChunks(CallbackInfo cbi) {
         if (!isCubicWorld()) {
