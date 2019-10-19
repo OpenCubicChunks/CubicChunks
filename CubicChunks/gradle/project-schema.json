@@ -10,141 +10,6 @@
                 "type": "org.gradle.api.plugins.JavaPluginConvention",
                 "target": "org.gradle.api.Project",
                 "name": "java"
-            }
-        ],
-        "configurations": [
-            "annotationProcessor",
-            "apiAnnotationProcessor",
-            "apiCompile",
-            "apiCompileClasspath",
-            "apiCompileOnly",
-            "apiElements",
-            "apiImplementation",
-            "apiRuntime",
-            "apiRuntimeClasspath",
-            "apiRuntimeOnly",
-            "archives",
-            "compile",
-            "compileClasspath",
-            "compileOnly",
-            "default",
-            "deobfCompile",
-            "deobfProvided",
-            "forgeGradleFfiDeps",
-            "forgeGradleGradleStart",
-            "forgeGradleMc",
-            "forgeGradleMcDeps",
-            "forgeGradleMcDepsClient",
-            "forgeGradleMcNatives",
-            "forgeGradleMcpData",
-            "forgeGradleMcpMappings",
-            "forgeGradleResolvedDeobfCompile",
-            "forgeGradleResovledDeobfProvided",
-            "forgeGradleUserDevPackage",
-            "implementation",
-            "provided",
-            "runtime",
-            "runtimeClasspath",
-            "runtimeElements",
-            "runtimeOnly",
-            "testAnnotationProcessor",
-            "testCompile",
-            "testCompileClasspath",
-            "testCompileOnly",
-            "testImplementation",
-            "testRuntime",
-            "testRuntimeClasspath",
-            "testRuntimeOnly"
-        ],
-        "extensions": [
-            {
-                "type": "org.gradle.api.plugins.ExtraPropertiesExtension",
-                "target": "org.gradle.api.Project",
-                "name": "ext"
-            },
-            {
-                "type": "org.gradle.api.internal.plugins.DefaultArtifactPublicationSet",
-                "target": "org.gradle.api.Project",
-                "name": "defaultArtifacts"
-            },
-            {
-                "type": "org.gradle.api.plugins.ExtraPropertiesExtension",
-                "target": "org.gradle.api.internal.plugins.DefaultArtifactPublicationSet",
-                "name": "ext"
-            },
-            {
-                "type": "org.gradle.api.reporting.ReportingExtension",
-                "target": "org.gradle.api.Project",
-                "name": "reporting"
-            },
-            {
-                "type": "org.gradle.api.plugins.ExtraPropertiesExtension",
-                "target": "org.gradle.api.reporting.ReportingExtension",
-                "name": "ext"
-            },
-            {
-                "type": "org.gradle.plugins.ide.idea.model.IdeaModel",
-                "target": "org.gradle.api.Project",
-                "name": "idea"
-            },
-            {
-                "type": "org.gradle.api.plugins.ExtraPropertiesExtension",
-                "target": "org.gradle.plugins.ide.idea.model.IdeaModel",
-                "name": "ext"
-            },
-            {
-                "type": "net.minecraftforge.gradle.user.patcherUser.forge.ForgeExtension",
-                "target": "org.gradle.api.Project",
-                "name": "minecraft"
-            },
-            {
-                "type": "org.gradle.api.plugins.ExtraPropertiesExtension",
-                "target": "net.minecraftforge.gradle.user.patcherUser.forge.ForgeExtension",
-                "name": "ext"
-            },
-            {
-                "type": "org.gradle.plugins.ide.eclipse.model.EclipseModel",
-                "target": "org.gradle.api.Project",
-                "name": "eclipse"
-            },
-            {
-                "type": "org.gradle.api.plugins.ExtraPropertiesExtension",
-                "target": "org.gradle.plugins.ide.eclipse.model.EclipseModel",
-                "name": "ext"
-            },
-            {
-                "type": "org.gradle.api.NamedDomainObjectContainer<net.minecraftforge.gradle.user.IReobfuscator>",
-                "target": "org.gradle.api.Project",
-                "name": "reobf"
-            },
-            {
-                "type": "org.gradle.api.plugins.ExtraPropertiesExtension",
-                "target": "org.gradle.api.NamedDomainObjectContainer<net.minecraftforge.gradle.user.IReobfuscator>",
-                "name": "ext"
-            },
-            {
-                "type": "io.github.opencubicchunks.gradle.McGitVersionExtension",
-                "target": "org.gradle.api.Project",
-                "name": "mcGitVersion"
-            },
-            {
-                "type": "org.gradle.api.plugins.ExtraPropertiesExtension",
-                "target": "org.gradle.api.tasks.SourceSet",
-                "name": "ext"
-            }
-        ]
-    },
-    ":CubicChunks": {
-        "conventions": [
-            {
-                "type": "org.gradle.api.plugins.BasePluginConvention",
-                "target": "org.gradle.api.Project",
-                "name": "base"
-            },
-            {
-                "type": "org.gradle.api.plugins.JavaPluginConvention",
-                "target": "org.gradle.api.Project",
-                "name": "java"
             },
             {
                 "type": "org.gradle.api.plugins.MavenPluginConvention",
@@ -254,16 +119,6 @@
                 "name": "ext"
             },
             {
-                "type": "net.minecraftforge.gradle.user.patcherUser.forge.ForgeExtension",
-                "target": "org.gradle.api.Project",
-                "name": "minecraft"
-            },
-            {
-                "type": "org.gradle.api.plugins.ExtraPropertiesExtension",
-                "target": "net.minecraftforge.gradle.user.patcherUser.forge.ForgeExtension",
-                "name": "ext"
-            },
-            {
                 "type": "org.gradle.plugins.ide.eclipse.model.EclipseModel",
                 "target": "org.gradle.api.Project",
                 "name": "eclipse"
@@ -272,21 +127,6 @@
                 "type": "org.gradle.api.plugins.ExtraPropertiesExtension",
                 "target": "org.gradle.plugins.ide.eclipse.model.EclipseModel",
                 "name": "ext"
-            },
-            {
-                "type": "org.gradle.api.NamedDomainObjectContainer<net.minecraftforge.gradle.user.IReobfuscator>",
-                "target": "org.gradle.api.Project",
-                "name": "reobf"
-            },
-            {
-                "type": "org.gradle.api.plugins.ExtraPropertiesExtension",
-                "target": "org.gradle.api.NamedDomainObjectContainer<net.minecraftforge.gradle.user.IReobfuscator>",
-                "name": "ext"
-            },
-            {
-                "type": "io.github.opencubicchunks.gradle.McGitVersionExtension",
-                "target": "org.gradle.api.Project",
-                "name": "mcGitVersion"
             },
             {
                 "type": "org.gradle.api.publish.PublishingExtension",
@@ -304,9 +144,34 @@
                 "name": "ext"
             },
             {
+                "type": "net.minecraftforge.gradle.user.patcherUser.forge.ForgeExtension",
+                "target": "org.gradle.api.Project",
+                "name": "minecraft"
+            },
+            {
+                "type": "org.gradle.api.plugins.ExtraPropertiesExtension",
+                "target": "net.minecraftforge.gradle.user.patcherUser.forge.ForgeExtension",
+                "name": "ext"
+            },
+            {
+                "type": "org.gradle.api.NamedDomainObjectContainer<net.minecraftforge.gradle.user.IReobfuscator>",
+                "target": "org.gradle.api.Project",
+                "name": "reobf"
+            },
+            {
+                "type": "org.gradle.api.plugins.ExtraPropertiesExtension",
+                "target": "org.gradle.api.NamedDomainObjectContainer<net.minecraftforge.gradle.user.IReobfuscator>",
+                "name": "ext"
+            },
+            {
                 "type": "io.github.opencubicchunks.gradle.MixinGenExtension",
                 "target": "org.gradle.api.Project",
                 "name": "mixinGen"
+            },
+            {
+                "type": "io.github.opencubicchunks.gradle.McGitVersionExtension",
+                "target": "org.gradle.api.Project",
+                "name": "mcGitVersion"
             },
             {
                 "type": "com.github.jengelman.gradle.plugins.shadow.ShadowExtension",
