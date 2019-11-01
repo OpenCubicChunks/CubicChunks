@@ -50,7 +50,8 @@ allprojects {
         mappings = theMappingsVersion
 
         replace("@@VERSION@@", project.version.toString())
-        replace("public static final boolean IS_DEV = true;", "public static final boolean IS_DEV = false;")
+        replace("public static final String VERSION = \"9999.9999.9999.9999\";",
+                "public static final String VERSION = \"" + project.version.toString() + "\";")
         replaceIn("io/github/opencubicchunks/cubicchunks/core/CubicChunks.java")
 
         val args = listOf(

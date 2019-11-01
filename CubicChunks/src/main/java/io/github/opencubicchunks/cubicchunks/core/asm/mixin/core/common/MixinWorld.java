@@ -46,6 +46,7 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.DifficultyInstance;
 import net.minecraft.world.GameRules;
+import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldProvider;
 import net.minecraft.world.biome.Biome;
@@ -295,6 +296,29 @@ public abstract class MixinWorld implements ICubicWorldInternal {
             Chunk chunk = this.getChunk(pos);
             return chunk.getBlockState(pos);
         }
+    }
+
+    @Inject(method = "getTopSolidOrLiquidBlock", at = @At("HEAD"), cancellable = true)
+    private void getTopSolidOrLiquidBlockCubicChunks(BlockPos pos, CallbackInfoReturnable<BlockPos> cir) {
+        if (!isCubicWorld()) {
+            return;
+        }
+        cir.cancel();
+        Chunk chunk = this.getChunk(pos);
+        BlockPos currentPos = getPrecipitationHeight(pos);
+        int minY = currentPos.getY() - 64;
+        while (currentPos.getY() >= minY) {
+            BlockPos nextPos = currentPos.down();
+            IBlockState state = chunk.getBlockState(nextPos);
+
+            if (state.getMaterial().blocksMovement()
+                    && !state.getBlock().isLeaves(state, (IBlockAccess) this, nextPos)
+                    && !state.getBlock().isFoliage((IBlockAccess) this, nextPos)) {
+                break;
+            }
+            currentPos = nextPos;
+        }
+        cir.setReturnValue(currentPos);
     }
 
     @Override public boolean isBlockColumnLoaded(BlockPos pos) {

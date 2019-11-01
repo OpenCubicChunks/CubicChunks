@@ -95,8 +95,7 @@ public class CubicChunks {
 
     public static final boolean DEBUG_ENABLED = System.getProperty("cubicchunks.debug", "false").equalsIgnoreCase("true");
     public static final String MODID = "cubicchunks";
-    public static final boolean IS_DEV = true; // this is replaced by forgegradle, do not change
-    public static final String VERSION = IS_DEV ? "9999.9999.9999.9999" : "@@VERSION@@";
+    public static final String VERSION = "9999.9999.9999.9999"; // replaced by ForgeGradle
 
     @Nonnull
     public static Logger LOGGER = LogManager.getLogger("EarlyCubicChunks");//use some logger even before it's set. useful for unit tests
