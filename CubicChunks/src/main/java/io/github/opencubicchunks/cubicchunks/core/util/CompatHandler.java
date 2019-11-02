@@ -70,6 +70,10 @@ public class CompatHandler {
             "reccomplex"
     );
 
+    private static final Set<String> POST_DECORATE_EVENT_FAKE_HEIGHT = ImmutableSet.of(
+            "joshxmas"
+    );
+
     private static final Set<String> FAKE_CHUNK_LOAD = ImmutableSet.of(
             "zerocore"
     );
@@ -135,6 +139,10 @@ public class CompatHandler {
 
     public static boolean postBiomeDecorateWithFakeWorldHeight(DecorateBiomeEvent.Decorate event) {
         return postEventPerModFakeHeight(event.getWorld(), event, MinecraftForge.EVENT_BUS, DECORATE_EVENT_FAKE_HEIGHT);
+    }
+
+    public static boolean postBiomePostDecorateWithFakeWorldHeight(DecorateBiomeEvent.Post event) {
+        return postEventPerModFakeHeight(event.getWorld(), event, MinecraftForge.EVENT_BUS, POST_DECORATE_EVENT_FAKE_HEIGHT);
     }
 
     private static boolean postEventPerModFakeHeight(World world, Event event, EventBus eventBus, Set<String> modIds) {
@@ -233,4 +241,5 @@ public class CompatHandler {
 
         return newList.toArray(new IEventListener[0]);
     }
+
 }
