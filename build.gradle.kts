@@ -132,6 +132,7 @@ dependencies {
     }
 
     embed("io.github.opencubicchunks:regionlib:0.61.0-SNAPSHOT")
+    embed("io.github.opencubicchunks:cubicchunks-api:1.12.2-0.0-SNAPSHOT")
 }
 
 idea {
@@ -246,20 +247,8 @@ jmh {
 }
 
 javadoc.apply {
-    source = sourceSets["api"].allJava
+    source = sourceSets["main"].allJava
     (options as StandardJavadocDocletOptions).tags = listOf("reason")
-}
-val apiJavadocJar by tasks.creating(Jar::class) {
-    classifier = "javadoc"
-    from(tasks["javadoc"])
-}
-val apiSourcesJar by tasks.creating(Jar::class) {
-    classifier = "api-sources"
-    from(sourceSets["api"].java.srcDirs)
-}
-val apiJar by tasks.creating(Jar::class) {
-    classifier = "api"
-    from(sourceSets["api"].output)
 }
 val sourcesJar by tasks.creating(Jar::class) {
     classifier = "sources"
@@ -272,12 +261,11 @@ reobf {
     create("shadowJar").apply {
         mappingType = ReobfMappingType.SEARGE
     }
-    create("apiJar").apply {
-        mappingType = ReobfMappingType.SEARGE
-    }
 }
-build.dependsOn("reobfShadowJar", "reobfApiJar", devShadowJar)
-
+build.dependsOn("reobfShadowJar", devShadowJar)
+if (gradle.includedBuilds.any { it.name == "CubicChunksAPI" }) {
+    tasks["publish"].dependsOn(gradle.includedBuild("CubicChunksAPI").task(":publish"))
+}
 publishing {
     repositories {
         maven {
@@ -301,26 +289,25 @@ publishing {
         }
     }
     (publications) {
-        "api"(MavenPublication::class) {
+        "mod"(MavenPublication::class) {
             version = ext["mavenProjectVersion"]!!.toString()
-            artifactId = "cubicchunks-api"
+            artifactId = "cubicchunks"
             from(components["java"])
             artifacts.clear()
-            artifact(apiSourcesJar) {
+            artifact(sourcesJar) {
                 classifier = "sources"
             }
-            artifact(apiJar) {
+            artifact(shadowJar) {
                 classifier = ""
             }
-            artifact(apiJavadocJar) {
-                classifier = "javadoc"
+            artifact(devShadowJar) {
+                classifier = "dev"
             }
             pom {
-                name.set("Cubic Chunks API")
-                description.set("API for the CubicChunks mod for Minecraft")
+                name.set(projectName)
+                description.set("Unlimited world height mod for Minecraft")
                 packaging = "jar"
                 url.set("https://github.com/OpenCubicChunks/CubicChunks")
-                description.set("API for CubicChunks mod for Minecraft")
                 scm {
                     connection.set("scm:git:git://github.com/OpenCubicChunks/CubicChunks.git")
                     developerConnection.set("scm:git:ssh://git@github.com:OpenCubicChunks/CubicChunks.git")
@@ -349,64 +336,20 @@ publishing {
                 }
             }
         }
-        "mod"(MavenPublication::class) {
-            version = ext["mavenProjectVersion"]!!.toString()
-            artifactId = "cubicchunks"
-            from(components["java"])
-            artifacts.clear()
-            artifact(sourcesJar) {
-                classifier = "sources"
-            }
-            artifact(shadowJar) {
-                classifier = ""
-            }
-            artifact(devShadowJar) {
-                classifier = "dev"
-            }
-            pom {
-                name.set(projectName)
-                description.set("Unlimited world height mod for Minecraft")
-                packaging = "jar"
-                url.set("https://github.com/OpenCubicChunks/CubicChunks")
-                scm {
-                    connection.set("scm:git:git://github.com/OpenCubicChunks/CubicChunks.git")
-                    developerConnection.set("scm:git:ssh://git@github.com:OpenCubicChunks/CubicChunks.git")
-                    url.set("https://github.com/OpenCubicChunks/RegionLib")
-                }
-
-                licenses {
-                    license {
-                        name.set("The MIT License")
-                        url.set("http://www.tldrlegal.com/license/mit-license")
-                        distribution.set("repo")
-                    }
-                }
-
-                developers {
-                    developer {
-                        id.set("Barteks2x")
-                        name.set("Barteks2x")
-                    }
-                    // TODO: add more developers
-                }
-
-                issueManagement {
-                    system.set("github")
-                    url.set("https://github.com/OpenCubicChunks/CubicChunks/issues")
-                }
-            }
-        }
     }
 }
 afterEvaluate {
-    tasks["publishApiPublicationToMavenRepository"].dependsOn("reobfApiJar")
     tasks["publishModPublicationToMavenRepository"].dependsOn("reobfShadowJar")
     tasks["publishModPublicationToMavenRepository"].dependsOn(devShadowJar)
+}
+configurations {
+    create("mainArchives")
 }
 // tasks must be before artifacts, don't change the order
 artifacts {
     withGroovyBuilder {
-        "archives"(apiJar, apiSourcesJar, apiJavadocJar, shadowJar, sourcesJar, devShadowJar)
+        "mainArchives"(devShadowJar, sourcesJar)
+        "archives"(shadowJar)
     }
 }
 
@@ -430,7 +373,6 @@ repositories {
 
 jar.apply {
     from(sourceSets["main"].output)
-    from(sourceSets["api"].output)
     exclude("LICENSE.txt", "log4j2.xml")
 
     configureManifest(manifest)
@@ -448,7 +390,6 @@ fun configureShadowJar(task: ShadowJar, classifier: String) {
     task.configurations = listOf(coreShadow)
     task.exclude("META-INF/MUMFREY*")
     task.from(sourceSets["main"].output)
-    task.from(sourceSets["api"].output)
     task.exclude("log4j2.xml")
     task.into("/") {
         from(embed)

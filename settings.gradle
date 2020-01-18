@@ -1,0 +1,7 @@
+if (startParameter.searchUpwards) {
+    includeBuild("CubicChunksAPI") {
+        dependencySubstitution {
+            substitute module('io.github.opencubicchunks:cubicchunks-api') with project(':')
+        }
+    }
+}
