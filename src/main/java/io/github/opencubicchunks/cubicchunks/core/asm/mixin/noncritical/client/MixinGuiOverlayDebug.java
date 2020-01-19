@@ -24,10 +24,17 @@
  */
 package io.github.opencubicchunks.cubicchunks.core.asm.mixin.noncritical.client;
 
+import io.github.opencubicchunks.cubicchunks.api.util.Coords;
+import io.github.opencubicchunks.cubicchunks.api.world.IColumn;
+import io.github.opencubicchunks.cubicchunks.api.world.ICube;
 import io.github.opencubicchunks.cubicchunks.api.world.ICubicWorld;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiOverlayDebug;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.biome.Biome;
+import net.minecraft.world.biome.BiomeProvider;
+import net.minecraft.world.chunk.Chunk;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -35,6 +42,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Constant;
 import org.spongepowered.asm.mixin.injection.Group;
 import org.spongepowered.asm.mixin.injection.ModifyConstant;
+import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.Slice;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -77,5 +85,15 @@ public class MixinGuiOverlayDebug {
             ))
     private int getMaxWorldHeight(int orig) {
         return ((ICubicWorld) mc.world).getMaxHeight();
+    }
+
+    @Redirect(method = "call", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/chunk/Chunk;getBiome(Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/world/biome/BiomeProvider;)Lnet/minecraft/world/biome/Biome;"))
+    private Biome getBiome(Chunk chunk, BlockPos pos, BiomeProvider provider) {
+        if (((ICubicWorld) chunk.getWorld()).isCubicWorld()) {
+            ICube cube = ((IColumn) chunk).getCube(Coords.blockToCube(pos.getY()));
+            return cube.getBiome(pos);
+        } else {
+            return chunk.getBiome(pos, provider);
+        }
     }
 }
