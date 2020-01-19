@@ -15,4 +15,4 @@ jobs:
       with:
         java-version: 1.8
     - name: Build with Gradle
-      run: ./gradlew setupCIWorkspace build
+      run: ./gradlew setupCIWorkspace && ./gradlew build
