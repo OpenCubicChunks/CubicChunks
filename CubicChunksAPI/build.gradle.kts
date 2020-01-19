@@ -171,9 +171,7 @@ publishing {
             artifact(sourcesJar) {
                 classifier = "sources"
             }
-            artifact(jar) {
-                classifier = "api"
-            }
+            artifact(jar)
             artifact(javadocJar) {
                 classifier = "javadoc"
             }
