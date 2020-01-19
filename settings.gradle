@@ -1,3 +1,4 @@
+rootProject.name = "CubicChunks"
 if (startParameter.searchUpwards) {
     includeBuild("CubicChunksAPI") {
         dependencySubstitution {
