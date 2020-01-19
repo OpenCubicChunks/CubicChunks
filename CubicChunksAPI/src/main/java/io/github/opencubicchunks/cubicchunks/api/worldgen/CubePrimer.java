@@ -28,8 +28,10 @@ import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
+import net.minecraft.world.biome.Biome;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
@@ -39,6 +41,46 @@ public class CubePrimer {
 
     private final char[] data = new char[4096];
     private byte[] extData = null; // NEID-compat
+    private Biome[] biomes3d = null;
+
+    public boolean hasBiomes() {
+        return biomes3d != null;
+    }
+
+    /**
+     * Returns biome in a given 4x4x4 block section.
+     * <p>
+     * Note: in current implementation, internal storage is for 2x16x2 blocks. This will be changed soon due to changes in 1.15.x.
+     */
+    @Nullable
+    public Biome getBiome(int localBiomeX, int localBiomeY, int localBiomeZ) {
+        if (biomes3d == null) {
+            throw new IllegalStateException("There are no biomes in this cube primer");
+        }
+        int biomeX = localBiomeX * 2;
+        int biomeZ = localBiomeZ * 2;
+        return this.biomes3d[biomeX << 3 | biomeZ];
+    }
+
+    /**
+     * Sets biome in a given 4x4x4 block section.
+     * <p>
+     * Note: in current implementation, internal storage is for 2x16x2 blocks. This will be changed soon due to changes in 1.15.x.
+     */
+    public void setBiome(int localBiomeX, int localBiomeY, int localBiomeZ, Biome biome) {
+        if (this.biomes3d == null) {
+            this.biomes3d = new Biome[8 * 8];
+        }
+
+        int biomeX = localBiomeX * 2;
+        int biomeZ = localBiomeZ * 2;
+
+        for (int dx = 0; dx < 2; dx++) {
+            for (int dz = 0; dz < 2; dz++) {
+                this.biomes3d[(biomeX + dx) << 3 | (biomeZ + dz)] = biome;
+            }
+        }
+    }
 
     /**
      * Get the block state at the given location
@@ -46,7 +88,6 @@ public class CubePrimer {
      * @param x cube local x
      * @param y cube local y
      * @param z cube local z
-     *
      * @return the block state
      */
     public IBlockState getBlockState(int x, int y, int z) {
@@ -63,9 +104,9 @@ public class CubePrimer {
     /**
      * Set the block state at the given location
      *
-     * @param x cube local x
-     * @param y cube local y
-     * @param z cube local z
+     * @param x     cube local x
+     * @param y     cube local y
+     * @param z     cube local z
      * @param state the block state
      */
     public void setBlockState(int x, int y, int z, @Nonnull IBlockState state) {
@@ -88,7 +129,6 @@ public class CubePrimer {
      * @param x cube local x
      * @param y cube local y
      * @param z cube local z
-     *
      * @return a unique array index for that coordinate
      */
     private static int getBlockIndex(int x, int y, int z) {

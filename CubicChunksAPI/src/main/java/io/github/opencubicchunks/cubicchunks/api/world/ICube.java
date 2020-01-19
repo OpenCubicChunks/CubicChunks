@@ -257,6 +257,9 @@ public interface ICube extends XYZAddressable {
 
     /**
      * Set biome at a cube-local 2x2 block column.
+     *
+     * @deprecated Due to changes in Minecraft 1.15.x, biome storage will be changed to 1 biome per 4x4x4 blocks
      */
+    @Deprecated
     void setBiome(int localBiomeX, int localBiomeZ, Biome biome);
 }
