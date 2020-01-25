@@ -22,57 +22,41 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package io.github.opencubicchunks.cubicchunks.core.server.chunkio;
+package io.github.opencubicchunks.cubicchunks.api.world;
 
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.world.chunk.Chunk;
-import net.minecraft.world.storage.IThreadedFileIO;
 
-import java.io.IOException;
+/**
+ * CubicChunks equivalent of {@link net.minecraftforge.event.world.ChunkDataEvent}
+ */
+public class CubeDataEvent extends CubeEvent {
 
-import javax.annotation.Nullable;
+    private final NBTTagCompound data;
 
-import io.github.opencubicchunks.cubicchunks.core.world.cube.Cube;
+    public CubeDataEvent(ICube cube, NBTTagCompound data) {
+        super(cube);
+        this.data = data;
+    }
 
-public interface ICubeIO extends IThreadedFileIO {
-	void flush() throws IOException;
-
-	@Nullable Chunk loadColumn(int chunkX, int chunkZ) throws IOException;
-
-	@Nullable PartialCubeData loadCubeAsyncPart(Chunk column, int cubeY) throws IOException;
-
-	void loadCubeSyncPart(PartialCubeData info);
-
-	void saveColumn(Chunk column);
-
-	void saveCube(Cube cube);
-
-    boolean cubeExists(int cubeX, int cubeY, int cubeZ);
-
-    boolean columnExists(int columnX, int columnZ);
-
-    int getPendingColumnCount();
-
-    int getPendingCubeCount();
+    public NBTTagCompound getData() {
+        return data;
+    }
 
     /**
-	 * Stores partially read cube, before sync read but after async read
-	 */
-	class PartialCubeData {
-		final NBTTagCompound nbt;
-		final Cube cube;
+     * CubicChunks equivalent of {@link net.minecraftforge.event.world.ChunkDataEvent.Load}
+     */
+    public static class Load extends CubeDataEvent {
+        public Load(ICube cube, NBTTagCompound data) {
+            super(cube, data);
+        }
+    }
 
-		PartialCubeData(Cube cube, NBTTagCompound nbt) {
-			this.cube = cube;
-			this.nbt = nbt;
-		}
-
-		public Cube getCube() {
-			return cube;
-		}
-
-		public NBTTagCompound getNbt() {
-			return nbt;
-		}
-	}
+    /**
+     * CubicChunks equivalent of {@link net.minecraftforge.event.world.ChunkDataEvent.Save}
+     */
+    public static class Save extends CubeDataEvent {
+        public Save(ICube cube, NBTTagCompound data) {
+            super(cube, data);
+        }
+    }
 }

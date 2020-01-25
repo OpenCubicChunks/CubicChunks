@@ -22,57 +22,40 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package io.github.opencubicchunks.cubicchunks.core.server.chunkio;
+package io.github.opencubicchunks.cubicchunks.api.world;
 
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.world.chunk.Chunk;
-import net.minecraft.world.storage.IThreadedFileIO;
+import net.minecraftforge.event.world.WorldEvent;
 
-import java.io.IOException;
+/**
+ * CubicChunks equivalent of {@link net.minecraftforge.event.world.ChunkEvent}.
+ */
+public class CubeEvent extends WorldEvent {
+    private final ICube chunk;
 
-import javax.annotation.Nullable;
+    public CubeEvent(ICube cube) {
+        super(cube.getWorld());
+        this.chunk = cube;
+    }
 
-import io.github.opencubicchunks.cubicchunks.core.world.cube.Cube;
-
-public interface ICubeIO extends IThreadedFileIO {
-	void flush() throws IOException;
-
-	@Nullable Chunk loadColumn(int chunkX, int chunkZ) throws IOException;
-
-	@Nullable PartialCubeData loadCubeAsyncPart(Chunk column, int cubeY) throws IOException;
-
-	void loadCubeSyncPart(PartialCubeData info);
-
-	void saveColumn(Chunk column);
-
-	void saveCube(Cube cube);
-
-    boolean cubeExists(int cubeX, int cubeY, int cubeZ);
-
-    boolean columnExists(int columnX, int columnZ);
-
-    int getPendingColumnCount();
-
-    int getPendingCubeCount();
+    public ICube getCube() {
+        return chunk;
+    }
 
     /**
-	 * Stores partially read cube, before sync read but after async read
-	 */
-	class PartialCubeData {
-		final NBTTagCompound nbt;
-		final Cube cube;
+     * CubicChunks equivalent of {@link net.minecraftforge.event.world.ChunkEvent.Load}.
+     */
+    public static class Load extends CubeEvent {
+        public Load(ICube cube) {
+            super(cube);
+        }
+    }
 
-		PartialCubeData(Cube cube, NBTTagCompound nbt) {
-			this.cube = cube;
-			this.nbt = nbt;
-		}
-
-		public Cube getCube() {
-			return cube;
-		}
-
-		public NBTTagCompound getNbt() {
-			return nbt;
-		}
-	}
+    /**
+     * CubicChunks equivalent of {@link net.minecraftforge.event.world.ChunkEvent.Unload}.
+     */
+    public static class Unload extends CubeEvent {
+        public Unload(ICube cube) {
+            super(cube);
+        }
+    }
 }

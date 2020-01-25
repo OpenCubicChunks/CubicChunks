@@ -26,6 +26,7 @@ package io.github.opencubicchunks.cubicchunks.core.world.cube;
 
 import io.github.opencubicchunks.cubicchunks.api.util.Coords;
 import io.github.opencubicchunks.cubicchunks.api.util.CubePos;
+import io.github.opencubicchunks.cubicchunks.api.world.CubeEvent;
 import io.github.opencubicchunks.cubicchunks.api.world.IColumn;
 import io.github.opencubicchunks.cubicchunks.api.world.ICube;
 import io.github.opencubicchunks.cubicchunks.api.world.ICubicWorld;
@@ -67,6 +68,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.function.BooleanSupplier;
 
 import static io.github.opencubicchunks.cubicchunks.api.util.Coords.*;
+import static net.minecraftforge.common.MinecraftForge.*;
 
 /**
  * A cube is our extension of minecraft's chunk system to three dimensions. Each cube encloses a cubic area in the world
@@ -545,6 +547,7 @@ public class Cube implements ICube {
             trackSurface();
         }
         CompatHandler.onCubeLoad(new ChunkEvent.Load(getColumn()));
+        EVENT_BUS.post(new CubeEvent.Load(this));
     }
 
     @SuppressWarnings("deprecation")
@@ -593,6 +596,7 @@ public class Cube implements ICube {
         for (TileEntity blockEntity : this.tileEntityMap.values()) {
             this.world.markTileEntityForRemoval(blockEntity);
         }
+        EVENT_BUS.post(new CubeEvent.Unload(this));
     }
 
     @Override

@@ -19,11 +19,15 @@
 
 package io.github.opencubicchunks.cubicchunks.core.server.chunkio.async.forge;
 
+import io.github.opencubicchunks.cubicchunks.api.world.CubeDataEvent;
+import io.github.opencubicchunks.cubicchunks.api.world.ICube;
 import io.github.opencubicchunks.cubicchunks.core.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.core.server.chunkio.ICubeIO;
 import io.github.opencubicchunks.cubicchunks.core.world.cube.Cube;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.world.chunk.Chunk;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.world.ChunkDataEvent;
 
 import java.io.IOException;
 import java.util.concurrent.CompletableFuture;
@@ -74,7 +78,12 @@ class AsyncCubeIOProvider extends AsyncIOProvider<Cube> {
 
         if (cubeData != null) {
             this.loader.loadCubeSyncPart(cubeData);
+            assert cubeData != null;
+            ICube cube = this.cubeData.getCube();
+            assert cube != null;
+            MinecraftForge.EVENT_BUS.post(new CubeDataEvent.Load(cube, this.cubeData.getNbt()));
         }
+
         // TBD:
         // this.provider.cubeGenerator.recreateStructures(this.cube, this.cubeInfo.x, this.cubeInfo.z);
 

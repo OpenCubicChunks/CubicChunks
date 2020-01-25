@@ -24,6 +24,7 @@
  */
 package io.github.opencubicchunks.cubicchunks.core.client;
 
+import io.github.opencubicchunks.cubicchunks.api.world.CubeEvent;
 import io.github.opencubicchunks.cubicchunks.core.asm.mixin.core.client.IChunkProviderClient;
 import io.github.opencubicchunks.cubicchunks.core.world.ICubeProviderInternal;
 import io.github.opencubicchunks.cubicchunks.core.CubicChunks;
@@ -42,6 +43,8 @@ import net.minecraft.world.chunk.Chunk;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
+
+import static net.minecraftforge.common.MinecraftForge.EVENT_BUS;
 
 //TODO: break off ICubeProviderInternal
 @MethodsReturnNonnullByDefault
@@ -127,10 +130,10 @@ public class CubeProviderClient extends ChunkProviderClient implements ICubeProv
             return null;
         }
         cube = new Cube(column, pos.getY()); // auto added to column
-        cube.setCubeLoaded();
         ((IColumn) column).addCube(cube);
         this.cubeMap.put(cube);
-
+        EVENT_BUS.post(new CubeEvent.Load(cube));
+        cube.setCubeLoaded();
         return cube;
     }
 
