@@ -5,10 +5,7 @@ import net.minecraftforge.gradle.tasks.DeobfuscateJar
 import net.minecraftforge.gradle.user.ReobfMappingType
 import nl.javadude.gradle.plugins.license.LicensePlugin
 import org.gradle.api.internal.HasConvention
-import org.gradle.kotlin.dsl.creating
-import org.gradle.kotlin.dsl.extra
 import org.spongepowered.asm.gradle.plugins.MixinGradlePlugin
-import kotlin.apply
 
 // Gradle repositories and dependencies
 buildscript {
@@ -70,6 +67,9 @@ val deobfMcSRG: DeobfuscateJar by tasks
 val deobfMcMCP: DeobfuscateJar by tasks
 
 defaultTasks = listOf("licenseFormat", "build")
+if (gradle.includedBuilds.any { it.name == "CubicChunksAPI" }) {
+    tasks["clean"].dependsOn(gradle.includedBuild("CubicChunksAPI").task(":clean"))
+}
 
 //it can't be named forgeVersion because ForgeExtension has property named forgeVersion
 val theForgeVersion: String by project
