@@ -19,6 +19,7 @@
     "client": [
         "client.MixinGuiOverlayDebug",
         "client.MixinRenderChunk",
+        "client.MixinRenderWorker",
         "client.MixinViewFrustum_VertViewDistance"
     ],
     "server": []
