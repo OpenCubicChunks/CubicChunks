@@ -139,6 +139,7 @@ public class CubeWatcher implements ITicket, ICubeWatcher {
 
         if (this.sentToPlayers) {
             PacketDispatcher.sendTo(new PacketUnloadCube(this.cubePos), player);
+            playerCubeMap.removeSchedulesSendCubeToPlayer(cube, player);
         }
 
         this.players.remove(player);

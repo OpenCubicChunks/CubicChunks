@@ -840,6 +840,10 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
         cubesToSend.put(player, cube);
     }
 
+    public void removeSchedulesSendCubeToPlayer(Cube cube, EntityPlayerMP player) {
+        cubesToSend.remove(player, cube);
+    }
+
     @Nullable public CubeWatcher getCubeWatcher(CubePos pos) {
         return this.cubeWatchers.get(pos.getX(), pos.getY(), pos.getZ());
     }
