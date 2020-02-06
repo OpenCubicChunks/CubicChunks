@@ -85,7 +85,7 @@ public interface ICubicWorldInternal extends ICubicWorld {
     void fakeWorldHeight(int height);
 
     default BlockPos getTopSolidOrLiquidBlockVanilla(BlockPos pos) {
-        Chunk chunk = ((World) this).getChunk(pos);
+        Chunk chunk = ((World) this).getChunkFromBlockCoords(pos);
 
         BlockPos current = new BlockPos(pos.getX(), chunk.getTopFilledSegment() + 16, pos.getZ());
         while (current.getY() >= 0) {
