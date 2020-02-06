@@ -24,14 +24,12 @@
  */
 package io.github.opencubicchunks.cubicchunks.core.asm;
 
-import net.minecraftforge.common.ForgeVersion;
+import com.google.common.eventbus.EventBus;
 import net.minecraftforge.fml.common.DummyModContainer;
-import net.minecraftforge.fml.common.ModContainer;
+import net.minecraftforge.fml.common.LoadController;
 import net.minecraftforge.fml.common.ModMetadata;
 import net.minecraftforge.fml.common.versioning.ArtifactVersion;
-import net.minecraftforge.fml.common.versioning.DefaultArtifactVersion;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -42,12 +40,18 @@ public class CubicChunksCoreContainer extends DummyModContainer {
         ModMetadata meta = getMetadata();
         meta.modId = "cubicchunkscore";
         meta.name = "Cubic Chunks Coremod";
-        meta.version = "@@VERSION@@";
+        meta.version = "0.0.9999.0";
         meta.logoFile = "/assets/cubicchunks/logo.png";
+        meta.parent = "cubicchunks";
     }
 
     @Override
     public List<ArtifactVersion> getDependencies() {
-        return Collections.emptyList();//Arrays.asList(new DefaultArtifactVersion("cubicchunks", "[0.0.780.0,)"));
+        return Collections.emptyList();
+    }
+
+    @Override
+    public boolean registerBus(EventBus bus, LoadController controller) {
+        return true;
     }
 }
