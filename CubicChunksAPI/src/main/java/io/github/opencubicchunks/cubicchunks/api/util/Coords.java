@@ -30,9 +30,8 @@ import net.minecraft.entity.Entity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 
-import java.util.Random;
-
 import javax.annotation.ParametersAreNonnullByDefault;
+import java.util.Random;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
@@ -114,7 +113,7 @@ public class Coords {
      * @return the minimum coordinate for population area
      */
     public static int getMinCubePopulationPos(int coord) {
-        return localToBlock(blockToCube(coord), ICube.SIZE / 2);
+        return localToBlock(blockToCube(coord - ICube.SIZE / 2), ICube.SIZE / 2);
     }
 
     /**
