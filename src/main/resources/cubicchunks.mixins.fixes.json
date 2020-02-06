@@ -27,6 +27,7 @@
         "common.MixinBlockPortal_Size_HeightLimits",
         "common.MixinBlockSkull_WitherSpawnLimits",
         "common.MixinBlockStaticLiquid",
+        "common.MixinCubicEndWorkaround",
         "common.MixinEntityBoat",
         "common.MixinEntityFallingBlock_HeightLimits",
         "common.MixinEntityLivingBase",
