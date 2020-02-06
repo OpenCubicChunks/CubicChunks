@@ -38,6 +38,7 @@ import io.github.opencubicchunks.cubicchunks.core.lighting.FirstLightProcessor;
 import io.github.opencubicchunks.cubicchunks.core.lighting.ILightingManager;
 import io.github.opencubicchunks.cubicchunks.core.lighting.LightingManager;
 import io.github.opencubicchunks.cubicchunks.core.server.CubeProviderServer;
+import io.github.opencubicchunks.cubicchunks.core.server.SpawnCubes;
 import io.github.opencubicchunks.cubicchunks.core.util.world.CubeSplitTickList;
 import io.github.opencubicchunks.cubicchunks.core.util.world.CubeSplitTickSet;
 import io.github.opencubicchunks.cubicchunks.core.world.ICubeProviderInternal;
@@ -78,7 +79,9 @@ public interface ICubicWorldInternal extends ICubicWorld {
     @Override
     Cube getCubeFromBlockCoords(BlockPos pos);
 
-    public interface Server extends ICubicWorldInternal, ICubicWorldServer {
+    void fakeWorldHeight(int height);
+
+    interface Server extends ICubicWorldInternal, ICubicWorldServer {
 
         /**
          * Initializes the world to be a CubicChunks world. Must be done before any players are online and before any chunks
@@ -104,9 +107,13 @@ public interface ICubicWorldInternal extends ICubicWorld {
         CubeSplitTickSet getScheduledTicks();
 
         CubeSplitTickList getThisTickScheduledTicks();
+
+        SpawnCubes getSpawnArea();
+
+        void setSpawnArea(SpawnCubes spawn);
     }
 
-    public interface Client extends ICubicWorldInternal {
+    interface Client extends ICubicWorldInternal {
 
         /**
          * Initializes the world to be a CubicChunks world. Must be done before any players are online and before any chunks

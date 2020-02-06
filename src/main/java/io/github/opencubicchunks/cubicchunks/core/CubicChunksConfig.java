@@ -26,7 +26,9 @@ package io.github.opencubicchunks.cubicchunks.core;
 
 import com.google.common.collect.Range;
 import com.google.common.collect.TreeRangeSet;
+
 import mcp.MethodsReturnNonnullByDefault;
+import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.config.Config;
 import net.minecraftforge.common.config.ConfigManager;
 import net.minecraftforge.fml.client.event.ConfigChangedEvent;
@@ -123,6 +125,30 @@ public class CubicChunksConfig {
     @Config.Comment("Above this height, biome temperature will no longer change")
     public static int biomeTemperatureScaleMaxY = 256;
 
+    @Config.LangKey("cubicchunks.config.compatibility_generator_type")
+    @Config.Comment("Vanilla compatibility generator type, which will convert vanilla world type generators output in cubic")
+    public static String compatibilityGeneratorType = "cubicchunks:default";
+
+    @Config.LangKey("cubicchunks.config.spawn_generate_distance_horizontal")
+    @Config.Comment("Horizontal distance for initially generated spawn area")
+    @Config.RequiresWorldRestart
+    public static int spawnGenerateDistanceXZ = 12;
+
+    @Config.LangKey("cubicchunks.config.spawn_generate_distance_vertical")
+    @Config.Comment("Vertical distance for initially generated spawn area")
+    @Config.RequiresWorldRestart
+    public static int spawnGenerateDistanceY = 8;
+
+    @Config.LangKey("cubicchunks.config.spawn_forceload_distance_horizontal")
+    @Config.Comment("Horizontal distance for spawn chunks kept loaded in memory")
+    @Config.RequiresWorldRestart
+    public static int spawnLoadDistanceXZ = 8;
+
+    @Config.LangKey("cubicchunks.config.spawn_forceload_distance_vertical")
+    @Config.Comment("Vertical distance for spawn chunks kept loaded in memory")
+    @Config.RequiresWorldRestart
+    public static int spawnLoadDistanceY = 8;
+
     public static int defaultMaxCubesPerChunkloadingTicket = 25 * 16;
     public static Map<String, Integer> modMaxCubesPerChunkloadingTicket = new HashMap<>();
 
@@ -175,15 +201,15 @@ public class CubicChunksConfig {
         sync();
     }
 
-    public static void flipForceCubicChunks() {
-        switch (forceLoadCubicChunks) {
-            case NONE:
-                forceLoadCubicChunks = ForceCCMode.NEW_WORLD;
-                break;
-            case NEW_WORLD:
-                forceLoadCubicChunks = ForceCCMode.NONE;
-                break;
-        }
+    public static void disableCubicChunks() {
+        forceLoadCubicChunks = ForceCCMode.NONE;
+        sync();
+    }
+    
+    public static void setGenerator(ResourceLocation generatorTypeIn) {
+        if(forceLoadCubicChunks == ForceCCMode.NONE)
+            forceLoadCubicChunks = ForceCCMode.NEW_WORLD;
+        compatibilityGeneratorType = generatorTypeIn.toString();
         sync();
     }
 

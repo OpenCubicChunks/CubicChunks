@@ -36,15 +36,13 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.SetMultimap;
 import io.github.opencubicchunks.cubicchunks.core.world.chunkloader.CubicChunkManager;
-import io.github.opencubicchunks.cubicchunks.core.world.chunkloader.ICubicTicket;
+import io.github.opencubicchunks.cubicchunks.core.world.chunkloader.ICubicTicketInternal;
 import net.minecraft.nbt.CompressedStreamTools;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.math.ChunkPos;
-import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
-import net.minecraft.world.storage.ThreadedFileIOBase;
 import net.minecraftforge.common.ForgeChunkManager;
 import net.minecraftforge.common.ForgeVersion;
 import net.minecraftforge.common.util.Constants;
@@ -146,10 +144,10 @@ public abstract class MixinForgeChunkManager {
                     ForgeChunkManager.Ticket tick = CubicChunkManager.makeTicket(modId, type, world);
                     CubicChunkManager.onDeserializeTicket(ticket, tick); // CubicChunks - read cubic chunks ticket data
                     if (ticket.hasKey("ModData")) {
-                        ((ICubicTicket) tick).setModData(ticket.getCompoundTag("ModData"));
+                        ((ICubicTicketInternal) tick).setModData(ticket.getCompoundTag("ModData"));
                     }
                     if (ticket.hasKey("Player")) {
-                        ((ICubicTicket) tick).setPlayer(ticket.getString("Player"));
+                        ((ICubicTicketInternal) tick).setPlayer(ticket.getString("Player"));
                         if (!playerLoadedTickets.containsKey(tick.getModId())) {
                             playerLoadedTickets.put(modId, ArrayListMultimap.create());
                         }
@@ -158,8 +156,8 @@ public abstract class MixinForgeChunkManager {
                         loadedTickets.put(modId, tick);
                     }
                     if (type == ForgeChunkManager.Type.ENTITY) {
-                        ((ICubicTicket) tick).setEntityChunkX(ticket.getInteger("chunkX"));
-                        ((ICubicTicket) tick).setEntityChunkZ(ticket.getInteger("chunkZ"));
+                        ((ICubicTicketInternal) tick).setEntityChunkX(ticket.getInteger("chunkX"));
+                        ((ICubicTicketInternal) tick).setEntityChunkZ(ticket.getInteger("chunkZ"));
                         UUID uuid = new UUID(ticket.getLong("PersistentIDMSB"), ticket.getLong("PersistentIDLSB"));
                         // add the ticket to the "pending entity" list
                         pendingEntities.put(uuid, tick);
@@ -172,7 +170,7 @@ public abstract class MixinForgeChunkManager {
                     // force the world to load the entity's chunk
                     // the load will come back through the loadEntity method and attach the entity
                     // to the ticket
-                    world.getChunkFromChunkCoords(((ICubicTicket) tick).getEntityChunkX(), ((ICubicTicket) tick).getEntityChunkZ());
+                    world.getChunkFromChunkCoords(((ICubicTicketInternal) tick).getEntityChunkX(), ((ICubicTicketInternal) tick).getEntityChunkZ());
                     CubicChunkManager.onLoadEntityTicketChunk(world, tick); // CubicChunks - load entity cube
                 }
             }

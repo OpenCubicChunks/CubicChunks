@@ -28,14 +28,15 @@ import io.github.opencubicchunks.cubicchunks.core.asm.optifine.IOptifineExtended
 import io.github.opencubicchunks.cubicchunks.core.asm.optifine.IOptifineRenderChunk;
 import net.minecraft.client.renderer.chunk.RenderChunk;
 import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
-import net.optifine.util.RenderChunkUtils;
 import org.spongepowered.asm.mixin.Dynamic;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Pseudo;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-@Mixin(RenderChunkUtils.class)
+@Pseudo
+@Mixin(targets = "net.optifine.util.RenderChunkUtils")
 public class MixinRenderChunkUtils {
 
     @Dynamic @Inject(method = "getCountBlocks(Lnet/minecraft/client/renderer/chunk/RenderChunk;)I", at = @At("HEAD"),

@@ -25,72 +25,59 @@
 package io.github.opencubicchunks.cubicchunks.core.network;
 
 import io.github.opencubicchunks.cubicchunks.core.CubicChunks;
+import io.github.opencubicchunks.cubicchunks.core.asm.mixin.core.client.INetHandlerPlayClient;
+import io.github.opencubicchunks.cubicchunks.core.util.SideUtils;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.network.ThreadQuickExitException;
 import net.minecraft.util.IThreadListener;
-import net.minecraftforge.fml.client.FMLClientHandler;
+import net.minecraft.world.World;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
 
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 
-/**
- * Abstract implementation od IMessageHandler that makes EntityPlayer available.
- * It also has separate methods for handling messages serverside and clientside.
- */
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
 public abstract class AbstractMessageHandler<T extends IMessage> implements IMessageHandler<T, IMessage> {
 
-    // TODO: return void
-    /**
-     * Handle a message received on the client side
-     *
-     * @return a message to send back to the Server, or null if no reply is necessary
-     */
-    @Nullable @SideOnly(Side.CLIENT)
-    public abstract void handleClientMessage(EntityPlayer player, T message, MessageContext ctx);
+    public abstract void handleClientMessage(World world, EntityPlayer player, T message, MessageContext ctx);
 
-    /**
-     * Handle a message received on the server side
-     *
-     * @return a message to send back to the Client, or null if no reply is necessary
-     */
-    @Nullable
     public abstract void handleServerMessage(EntityPlayer player, T message, MessageContext ctx);
 
-    /*
-    * Here is where I parse the side and get the player to pass on to the abstract methods.
-    * This way it is immediately clear which side received the packet without having to
-    * remember or check on which side it was registered and the player is immediately
-    * available without a lengthy syntax.
-    */
     @Nullable @Override
-    public IMessage onMessage(T message, MessageContext ctx) {
+    public final IMessage onMessage(T message, MessageContext ctx) {
         try {
-            IThreadListener taskQueue = Minecraft.getMinecraft();
+            // converting to method reference will break on dedicated server
+            @SuppressWarnings("Convert2MethodRef")
+            IThreadListener taskQueue = SideUtils.<IThreadListener>getForSide(
+                    () -> () -> Minecraft.getMinecraft(),
+                    () -> () -> FMLCommonHandler.instance().getMinecraftServerInstance()
+            );
             if (!taskQueue.isCallingFromMinecraftThread()) {
                 taskQueue.addScheduledTask(() -> onMessage(message, ctx));
                 return null;
             }
-            // due to compile-time issues, FML will crash if you try to use Minecraft.getMinecraft() here,
-            // even when you restrict this code to the client side and before the code is ever accessed;
-            // a solution is to use proxy classes to get the player.
-            if (ctx.side.isClient()) {
-                // the only reason to check side here is to use our more aptly named handling methods
-                // client side proxy will return the client side EntityPlayer
-                handleClientMessage(CubicChunks.proxy.getPlayerEntity(ctx), message, ctx);
-                return null;
+            World mainWorld = SideUtils.getForSide(
+                    () -> ClientAccessProxy::getWorld,
+                    () -> () -> FMLCommonHandler.instance().getMinecraftServerInstance().getWorld(0)
+            );
+            if (mainWorld == null) {
+                CubicChunks.LOGGER.warn("Received packet when world doesn't exist!");
+                return null; // there is no world, so we received packet after quitting world. Ignore it.
             }
-            // server side proxy will return the server side EntityPlayer
-            handleServerMessage(CubicChunks.proxy.getPlayerEntity(ctx), message, ctx);
+            EntityPlayer player = SideUtils.getForSide(ctx,
+                    () -> ClientAccessProxy::getPlayer,
+                    () -> c -> c.getServerHandler().player
+            );
+            if (ctx.side.isClient()) {
+                handleClientMessage(mainWorld, player, message, ctx);
+            } else {
+                handleServerMessage(player, message, ctx);
+            }
             return null;
         } catch (Throwable t) {
             // catch *EVERYTHING* because Minecraft is dumb and will only print the stacktrace and continue
@@ -98,6 +85,17 @@ public abstract class AbstractMessageHandler<T extends IMessage> implements IMes
             CubicChunks.LOGGER.catching(t);
             FMLCommonHandler.instance().exitJava(-1, false);
             throw t;
+        }
+    }
+
+    private static class ClientAccessProxy {
+        static EntityPlayer getPlayer(MessageContext c) {
+            return c.side.isClient() ? Minecraft.getMinecraft().player : c.getServerHandler().player;
+        }
+
+        @Nullable static World getWorld() {
+            return Minecraft.getMinecraft().getConnection() == null ? null :
+                    ((INetHandlerPlayClient) Minecraft.getMinecraft().getConnection()).getWorld();
         }
     }
 }

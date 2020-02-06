@@ -38,9 +38,9 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
-import net.optifine.render.ChunkVisibility;
 import org.spongepowered.asm.mixin.Dynamic;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Pseudo;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -49,7 +49,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import java.util.Map;
 import java.util.Set;
 
-@Mixin(ChunkVisibility.class)
+@Pseudo
+@Mixin(targets = "net.optifine.render.ChunkVisibility")
 public class MixinChunkVisibility {
 
     /**

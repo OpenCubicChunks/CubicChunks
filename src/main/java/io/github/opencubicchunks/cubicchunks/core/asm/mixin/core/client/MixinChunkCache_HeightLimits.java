@@ -57,7 +57,11 @@ public abstract class MixinChunkCache_HeightLimits {
 
     @ModifyConstant(method = "getLightForExt",
             constant = @Constant(intValue = 0, expandZeroConditions = Constant.Condition.GREATER_THAN_OR_EQUAL_TO_ZERO),
-            slice = @Slice(from = @At(value = "INVOKE:FIRST", target = "Lnet/minecraft/util/math/BlockPos;getY()I"))
+            slice = @Slice(
+                    from = @At(value = "INVOKE:FIRST", target = "Lnet/minecraft/util/math/BlockPos;getY()I"),
+                    to = @At(value = "INVOKE:FIRST",
+                            target = "Lnet/minecraft/world/ChunkCache;getBlockState(Lnet/minecraft/util/math/BlockPos;)Lnet/minecraft/block/state/IBlockState;")
+            )
     )
     private int getLightForExt_getMinHeight(int orig) {
         return ((ICubicWorld) world).getMinHeight();

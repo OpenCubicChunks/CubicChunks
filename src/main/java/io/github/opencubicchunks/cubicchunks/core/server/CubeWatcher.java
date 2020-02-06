@@ -33,7 +33,7 @@ import io.github.opencubicchunks.cubicchunks.api.world.ICubeProviderServer;
 import io.github.opencubicchunks.cubicchunks.api.world.ICubeWatcher;
 import io.github.opencubicchunks.cubicchunks.core.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.core.asm.mixin.ICubicWorldInternal;
-import io.github.opencubicchunks.cubicchunks.core.entity.CubicEntityTracker;
+import io.github.opencubicchunks.cubicchunks.core.entity.ICubicEntityTracker;
 import io.github.opencubicchunks.cubicchunks.core.lighting.LightingManager;
 import io.github.opencubicchunks.cubicchunks.core.network.PacketCubeBlockChange;
 import io.github.opencubicchunks.cubicchunks.core.network.PacketDispatcher;
@@ -111,7 +111,7 @@ public class CubeWatcher implements ITicket, ICubeWatcher {
 
         if (this.sentToPlayers) {
             this.sendToPlayer(player);
-            ((CubicEntityTracker) playerCubeMap.getWorldServer().getEntityTracker())
+            ((ICubicEntityTracker) playerCubeMap.getWorldServer().getEntityTracker())
                     .sendLeashedEntitiesInCube(player, this.getCube());
         }
     }
@@ -139,6 +139,7 @@ public class CubeWatcher implements ITicket, ICubeWatcher {
 
         if (this.sentToPlayers) {
             PacketDispatcher.sendTo(new PacketUnloadCube(this.cubePos), player);
+            playerCubeMap.removeSchedulesSendCubeToPlayer(cube, player);
         }
 
         this.players.remove(player);

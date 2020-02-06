@@ -24,6 +24,7 @@
  */
 package io.github.opencubicchunks.cubicchunks.core.asm.mixin.selectable.client.vertviewdist;
 
+import io.github.opencubicchunks.cubicchunks.core.asm.mixin.core.client.IViewFrustum;
 import net.minecraft.client.renderer.RenderGlobal;
 import net.minecraft.client.renderer.ViewFrustum;
 import net.minecraft.client.renderer.chunk.RenderChunk;
@@ -56,7 +57,7 @@ public class MixinRenderGlobalNoOptifine {
         if (MathHelper.abs(playerPos.getX() - blockpos.getX()) <= this.renderDistanceChunks * 16
                 && MathHelper.abs(playerPos.getY() - blockpos.getY()) <= this.verticalRenderDistanceCubes * 16
                 && MathHelper.abs(playerPos.getZ() - blockpos.getZ()) <= this.renderDistanceChunks * 16) {
-            return this.viewFrustum.getRenderChunk(blockpos);
+            return ((IViewFrustum) this.viewFrustum).getRenderChunkAt(blockpos);
         }
         return null;
     }

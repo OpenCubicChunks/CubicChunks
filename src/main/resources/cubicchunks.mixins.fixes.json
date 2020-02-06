@@ -3,40 +3,43 @@
     "package": "io.github.opencubicchunks.cubicchunks.core.asm.mixin.fixes",
     "refmap": "cubicchunks.mixins.refmap.json",
     "compatibilityLevel": "JAVA_8",
-    "minVersion": "0.6.15-SNAPSHOT",
+    "minVersion": "0.7.10",
+    "injectors": {
+        "defaultRequire": 1
+    },
+    "overwrites": {
+        "conformVisibility": true
+    },
     "mixins": [
-        "common.MixinBlockChorusFlower",
-        "common.MixinBlockSkull_WitherSpawnLimits",
         "common.EntityBat_AiHeightLimit",
-        "common.MixinWalkNodeProcessor_HeightLimit",
-        "common.MixinEntityMinecart_KillFix",
-        "common.MixinEntityBoat",
+        "common.fakeheight.IASMEventHandler",
+        "common.fakeheight.IEventBus",
+        "common.fakeheight.MixinBiomeDecorator",
+        "common.fakeheight.MixinForgeEventFactory",
+        "common.fakeheight.MixinTerrainGen",
+        "common.isblockloaded.MixinEntity",
+        "common.MixinBiomeTemperatureConfig",
+        "common.MixinBlockChorusFlower",
         "common.MixinBlockFalling_HeightLimits",
+        "common.MixinBlockGrass",
         "common.MixinBlockLilyPad_HeightLimits",
+        "common.MixinBlockMushroom",
         "common.MixinBlockPortal_Size_HeightLimits",
+        "common.MixinBlockSkull_WitherSpawnLimits",
+        "common.MixinBlockStaticLiquid",
+        "common.MixinEntityBoat",
         "common.MixinEntityFallingBlock_HeightLimits",
         "common.MixinEntityLivingBase",
-        "common.MixinWorld",
-        "common.MixinRandomPositionGenerator",
+        "common.MixinEntityMinecart_KillFix",
+        "common.MixinItemChorusFruit",
+        "common.MixinNetHandlerPlayServer",
+        "common.MixinPacketBufferBlockPosWrite",
         "common.MixinPathNavigateGround",
+        "common.MixinRandomPositionGenerator",
         "common.MixinTeleporter",
         "common.MixinTileEntityEndGateway",
-        "common.MixinPacketBufferBlockPosWrite",
-        "common.MixinNetHandlerPlayServer",
-        "common.MixinItemChorusFruit",
-        "common.MixinBlockGrass",
-        "common.MixinBlockMushroom",
-        "common.MixinBlockStaticLiquid",
-        "common.MixinBiomeTemperatureConfig",
-        "common.isblockloaded.MixinEntity",
-        "common.worldgen.tree.MixinWorldGenCanopyTree",
-        "common.worldgen.tree.MixinWorldGenHugeTrees",
-        "common.worldgen.tree.MixinWorldGenShrub",
-        "common.worldgen.tree.MixinWorldGenSwamp",
-        "common.worldgen.tree.MixinWorldGenTaiga1",
-        "common.worldgen.tree.MixinWorldGenTaiga2",
-        "common.worldgen.tree.MixinWorldGenTree_BirchSavanna",
-        "common.worldgen.tree.MixinWorldGenTrees",
+        "common.MixinWalkNodeProcessor_HeightLimit",
+        "common.MixinWorld",
         "common.worldgen.MixinWorldGenBigMushroom",
         "common.worldgen.MixinWorldGenBlockBlob",
         "common.worldgen.MixinWorldGenBonusChest",
@@ -51,20 +54,20 @@
         "common.worldgen.MixinWorldGenLakes",
         "common.worldgen.MixinWorldGenSpikes",
         "common.worldgen.MixinWorldGenTallGrass",
-        "common.worldgen.MixinWorldGenVines"
+        "common.worldgen.MixinWorldGenVines",
+        "common.worldgen.tree.MixinWorldGenCanopyTree",
+        "common.worldgen.tree.MixinWorldGenHugeTrees",
+        "common.worldgen.tree.MixinWorldGenShrub",
+        "common.worldgen.tree.MixinWorldGenSwamp",
+        "common.worldgen.tree.MixinWorldGenTaiga1",
+        "common.worldgen.tree.MixinWorldGenTaiga2",
+        "common.worldgen.tree.MixinWorldGenTree_BirchSavanna",
+        "common.worldgen.tree.MixinWorldGenTrees"
     ],
     "client": [
-        "client.MixinEntityPlayerSP",
         "client.isblockloaded.MixinEntity",
-        "client.MixinEntity_PrepareSpawn"
+        "client.MixinEntity_PrepareSpawn",
+        "client.MixinEntityPlayerSP"
     ],
-    "server": [
-    ],
-    "injectors": {
-        "defaultRequire": 1
-    },
-    "overwrites": {
-        "conformVisibility": true
-    }
+    "server": []
 }
-

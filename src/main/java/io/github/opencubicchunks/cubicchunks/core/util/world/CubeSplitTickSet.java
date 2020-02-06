@@ -27,6 +27,7 @@ package io.github.opencubicchunks.cubicchunks.core.util.world;
 import io.github.opencubicchunks.cubicchunks.api.util.CubePos;
 import net.minecraft.world.NextTickListEntry;
 
+import java.util.AbstractSet;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -52,8 +53,8 @@ import java.util.Set;
  */
 public class CubeSplitTickSet implements Set<NextTickListEntry> {
 
-    private final Map<CubePos, Set<NextTickListEntry>> byCube = new HashMap<>();
-    private final Set<NextTickListEntry> all = new HashSet<>();
+    private final Map<CubePos, NextTickListEntryHashSet> byCube = new HashMap<>();
+    private final NextTickListEntryHashSet all = new NextTickListEntryHashSet();
 
     public Set<NextTickListEntry> getForCube(CubePos pos) {
         Set<NextTickListEntry> val = byCube.get(pos);
@@ -111,7 +112,7 @@ public class CubeSplitTickSet implements Set<NextTickListEntry> {
 
     @Override public boolean add(NextTickListEntry e) {
         boolean ret = all.add(e);
-        byCube.computeIfAbsent(CubePos.fromBlockCoords(e.position), x -> new HashSet<>()).add(e);
+        byCube.computeIfAbsent(CubePos.fromBlockCoords(e.position), x -> new NextTickListEntryHashSet()).add(e);
         return ret;
     }
 
@@ -162,5 +163,69 @@ public class CubeSplitTickSet implements Set<NextTickListEntry> {
     @Override public void clear() {
         all.clear();
         byCube.clear();
+    }
+
+    // vanilla bug, see https://github.com/SleepyTrousers/EnderCore/issues/105
+    // NextTickListEntry equals and compareTo are not consistent,
+    // breaking HashMap when there are a lot of hash collisions
+
+    public static final class EqualsHashCodeWrapper<T> {
+
+        final T entry;
+
+        public EqualsHashCodeWrapper(T entry) {
+            this.entry = entry;
+        }
+
+        @Override
+        public int hashCode() {
+            return entry.hashCode();
+        }
+
+        @Override
+        public boolean equals(Object entry) {
+            if (!(entry instanceof EqualsHashCodeWrapper)) {
+                return false;
+            }
+            return this.entry.equals(((EqualsHashCodeWrapper<?>) entry).entry);
+        }
+    }
+
+    public static final class NextTickListEntryHashSet extends AbstractSet<NextTickListEntry> {
+
+        private final Set<EqualsHashCodeWrapper<NextTickListEntry>> backingSet = new HashSet<>();
+
+        @Override public Iterator<NextTickListEntry> iterator() {
+            return new Iterator<NextTickListEntry>() {
+                final Iterator<EqualsHashCodeWrapper<NextTickListEntry>> it = backingSet.iterator();
+                @Override public boolean hasNext() {
+                    return it.hasNext();
+                }
+
+                @Override public NextTickListEntry next() {
+                    return it.next().entry;
+                }
+            };
+        }
+
+        @Override
+        public int size() {
+            return backingSet.size();
+        }
+
+        @Override
+        public boolean contains(Object entry) {
+            return backingSet.contains(new EqualsHashCodeWrapper<>(entry));
+        }
+
+        @Override
+        public boolean add(NextTickListEntry entry) {
+            return backingSet.add(new EqualsHashCodeWrapper<>(entry));
+        }
+
+        @Override
+        public boolean remove(Object entry) {
+            return backingSet.remove(new EqualsHashCodeWrapper<>(entry));
+        }
     }
 }

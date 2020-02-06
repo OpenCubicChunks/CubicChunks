@@ -25,6 +25,7 @@
 package io.github.opencubicchunks.cubicchunks.core.server.chunkio;
 
 import io.github.opencubicchunks.cubicchunks.api.util.Coords;
+import io.github.opencubicchunks.cubicchunks.api.world.CubeDataEvent;
 import io.github.opencubicchunks.cubicchunks.api.world.IColumn;
 import io.github.opencubicchunks.cubicchunks.api.world.IHeightMap;
 import io.github.opencubicchunks.cubicchunks.core.CubicChunks;
@@ -55,6 +56,8 @@ import java.util.List;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
+import static net.minecraftforge.common.MinecraftForge.EVENT_BUS;
+
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
 class IONbtWriter {
@@ -74,7 +77,7 @@ class IONbtWriter {
         writeBaseColumn(column, level);
         writeBiomes(column, level);
         writeOpacityIndex(column, level);
-        MinecraftForge.EVENT_BUS.post(new ChunkDataEvent.Save((Chunk) column, columnNbt));
+        EVENT_BUS.post(new ChunkDataEvent.Save((Chunk) column, columnNbt));
         return columnNbt;
     }
 
@@ -92,6 +95,7 @@ class IONbtWriter {
         writeScheduledTicks(cube, level);
         writeLightingInfo(cube, level);
         writeBiomes(cube, level);
+        writeModData(cube, cubeNbt);
         return cubeNbt;
     }
 
@@ -249,6 +253,10 @@ class IONbtWriter {
                 edgeNeedSkyLightUpdate |= 1 << i;
         }
         lightingInfo.setByte("EdgeNeedSkyLightUpdate", edgeNeedSkyLightUpdate);
+    }
+
+    private static void writeModData(Cube cube, NBTTagCompound level) {
+        EVENT_BUS.post(new CubeDataEvent.Save(cube, level));
     }
 
     private static void writeBiomes(Cube cube, NBTTagCompound nbt) {// biomes
