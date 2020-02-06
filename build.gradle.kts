@@ -193,7 +193,10 @@ minecraft {
     replace("@@VERSION@@", project.version.toString())
     replace("public static final String VERSION = \"9999.9999.9999.9999\";",
                 "public static final String VERSION = \"" + project.version.toString() + "\";")
+    replace("meta.version = \"0.0.9999.0\";",
+            "meta.version = \"${project.version}\";")
     replaceIn("io/github/opencubicchunks/cubicchunks/core/CubicChunks.java")
+    replaceIn("io/github/opencubicchunks/cubicchunks/core/asm/CubicChunksCoreContainer.java")
 
     val args = listOf(
             "-Dfml.coreMods.load=io.github.opencubicchunks.cubicchunks.core.asm.coremod.CubicChunksCoreMod", //the core mod class, needed for mixins
