@@ -27,7 +27,7 @@ buildscript {
     }
     dependencies {
         classpath("gradle.plugin.nl.javadude.gradle.plugins:license-gradle-plugin:0.14.0")
-        classpath("net.minecraftforge.gradle:ForgeGradle:2.3-SNAPSHOT")
+        classpath("net.minecraftforge.gradle:ForgeGradle:2.2-SNAPSHOT")
     }
 }
 
