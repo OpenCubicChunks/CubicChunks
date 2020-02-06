@@ -35,6 +35,8 @@ import net.minecraft.block.state.BlockStateContainer;
 import net.minecraft.block.state.IBlockState;
 import net.minecraftforge.common.property.IUnlistedProperty;
 
+import net.minecraft.block.state.BlockStateContainer.StateImplementation;
+
 public class NonCollidingBlockStateContainer extends BlockStateContainer {
 
     public NonCollidingBlockStateContainer(Block blockIn, IProperty<?>[] properties) {

@@ -24,27 +24,25 @@
  */
 package io.github.opencubicchunks.cubicchunks.core.asm.mixin.fixes.common;
 
-import com.google.common.primitives.Doubles;
-import com.google.common.primitives.Floats;
 import net.minecraft.network.NetHandlerPlayServer;
-import net.minecraft.network.play.client.CPacketPlayer;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Constant;
+import org.spongepowered.asm.mixin.injection.ModifyConstant;
+import org.spongepowered.asm.mixin.injection.Slice;
 
 @Mixin(NetHandlerPlayServer.class)
 public class MixinNetHandlerPlayServer {
 
-    /**
-     * @author Barteks2x
-     * @reason modify to check for infinite Y and not check for limited Y
-     */
-    @Overwrite
-    private static boolean isMovePlayerPacketInvalid(CPacketPlayer packetIn) {
-        if (Doubles.isFinite(packetIn.getX(0.0D)) && Doubles.isFinite(packetIn.getY(0.0D)) && Doubles.isFinite(packetIn.getZ(0.0D)) && Floats
-                .isFinite(packetIn.getPitch(0.0F)) && Floats.isFinite(packetIn.getYaw(0.0F))) {
-            return Math.abs(packetIn.getX(0.0D)) > 3.0E7D /*|| Math.abs(packetIn.getY(0.0D)) > 3.0E7D*/ || Math.abs(packetIn.getZ(0.0D)) > 3.0E7D;
-        } else {
-            return true;
-        }
+    @ModifyConstant(method = "isMovePlayerPacketInvalid",
+            slice = @Slice(
+                    from = @At(value = "INVOKE:LAST", target = "Lnet/minecraft/network/play/client/CPacketPlayer;getY(D)D"),
+                    to = @At(value = "INVOKE:LAST", target = "Lnet/minecraft/network/play/client/CPacketPlayer;getZ(D)D")
+            ),
+            constant = @Constant(doubleValue = 3.0E7D),
+            require = 0
+    )
+    private static double getMaxY(double old) {
+        return Integer.MAX_VALUE - 4096;
     }
 }

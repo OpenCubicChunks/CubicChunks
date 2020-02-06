@@ -25,10 +25,12 @@
 package io.github.opencubicchunks.cubicchunks.core.server.chunkio;
 
 import io.github.opencubicchunks.cubicchunks.api.util.Coords;
+import io.github.opencubicchunks.cubicchunks.api.world.CubeDataEvent;
 import io.github.opencubicchunks.cubicchunks.api.world.IColumn;
 import io.github.opencubicchunks.cubicchunks.api.world.IHeightMap;
 import io.github.opencubicchunks.cubicchunks.core.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.core.asm.mixin.ICubicWorldInternal;
+import io.github.opencubicchunks.cubicchunks.core.asm.mixin.core.common.IDataFixerAccess;
 import io.github.opencubicchunks.cubicchunks.core.world.ClientHeightMap;
 import io.github.opencubicchunks.cubicchunks.core.world.ServerHeightMap;
 import io.github.opencubicchunks.cubicchunks.core.world.cube.Cube;
@@ -39,6 +41,7 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.datafix.DataFixer;
 import net.minecraft.world.NextTickListEntry;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.chunk.Chunk;
@@ -55,6 +58,8 @@ import java.util.List;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
+import static net.minecraftforge.common.MinecraftForge.EVENT_BUS;
+
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
 class IONbtWriter {
@@ -69,12 +74,13 @@ class IONbtWriter {
         NBTTagCompound columnNbt = new NBTTagCompound();
         NBTTagCompound level = new NBTTagCompound();
         columnNbt.setTag("Level", level);
-        columnNbt.setInteger("DataVersion", FMLCommonHandler.instance().getMinecraftServerInstance().getDataFixer().version);
+        DataFixer.class.getName();
+        columnNbt.setInteger("DataVersion", ((IDataFixerAccess) FMLCommonHandler.instance().getMinecraftServerInstance().getDataFixer()).getVersion());
         //FMLCommonHandler.instance().getMinecraftServerInstance().getDataFixer().writeVersionData(columnNbt);
         writeBaseColumn(column, level);
         writeBiomes(column, level);
         writeOpacityIndex(column, level);
-        MinecraftForge.EVENT_BUS.post(new ChunkDataEvent.Save((Chunk) column, columnNbt));
+        EVENT_BUS.post(new ChunkDataEvent.Save((Chunk) column, columnNbt));
         return columnNbt;
     }
 
@@ -83,7 +89,8 @@ class IONbtWriter {
         //Added to preserve compatibility with vanilla NBT chunk format.
         NBTTagCompound level = new NBTTagCompound();
         cubeNbt.setTag("Level", level);
-        cubeNbt.setInteger("DataVersion", FMLCommonHandler.instance().getMinecraftServerInstance().getDataFixer().version);
+        DataFixer.class.getName();
+        cubeNbt.setInteger("DataVersion", ((IDataFixerAccess) FMLCommonHandler.instance().getMinecraftServerInstance().getDataFixer()).getVersion());
         //FMLCommonHandler.instance().getDataFixer().writeVersionData(cubeNbt);
         writeBaseCube(cube, level);
         writeBlocks(cube, level);
@@ -92,6 +99,7 @@ class IONbtWriter {
         writeScheduledTicks(cube, level);
         writeLightingInfo(cube, level);
         writeBiomes(cube, level);
+        writeModData(cube, cubeNbt);
         return cubeNbt;
     }
 
@@ -249,6 +257,10 @@ class IONbtWriter {
                 edgeNeedSkyLightUpdate |= 1 << i;
         }
         lightingInfo.setByte("EdgeNeedSkyLightUpdate", edgeNeedSkyLightUpdate);
+    }
+
+    private static void writeModData(Cube cube, NBTTagCompound level) {
+        EVENT_BUS.post(new CubeDataEvent.Save(cube, level));
     }
 
     private static void writeBiomes(Cube cube, NBTTagCompound nbt) {// biomes

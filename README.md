@@ -11,7 +11,17 @@ This MinecraftForge mod extends Minecraft height and depth. The only limitation 
 ### Cloning the repository
 Note: you need git installed to do that
 ```
-git clone
+git clone --recursive
+```
+You need a git submodule for the project to compile.
+If you don't yet have the submodule but already cloned the repository:
+```
+git submodule update --init --recursive
+```
+
+To get latest version of the submodule:
+```
+git submodule update --recursive --remote
 ```
 
 ### Compiling the mod

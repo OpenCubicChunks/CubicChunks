@@ -24,6 +24,7 @@
  */
 package io.github.opencubicchunks.cubicchunks.core.asm.mixin.selectable.client;
 
+import io.github.opencubicchunks.cubicchunks.core.asm.mixin.core.client.IViewFrustum;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.client.renderer.RenderGlobal;
 import net.minecraft.client.renderer.ViewFrustum;
@@ -34,9 +35,7 @@ import net.minecraft.util.math.MathHelper;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Group;
-import org.spongepowered.asm.mixin.injection.Redirect;
+
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -71,6 +70,6 @@ public class MixinRenderGlobalNoOptifine {
         return MathHelper.abs(playerPos.getX() - blockpos.getX()) > this.renderDistanceChunks * 16 ? null :
                 MathHelper.abs(playerPos.getY() - blockpos.getY()) > this.renderDistanceChunks * 16 ? null :
                         MathHelper.abs(playerPos.getZ() - blockpos.getZ()) > this.renderDistanceChunks * 16 ? null :
-                                this.viewFrustum.getRenderChunk(blockpos);
+                                ((IViewFrustum) this.viewFrustum).getRenderChunkAt(blockpos);
     }
 }

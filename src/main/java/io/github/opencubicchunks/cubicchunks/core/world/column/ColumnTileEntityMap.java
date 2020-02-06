@@ -41,6 +41,8 @@ import java.util.Set;
 
 import javax.annotation.Nonnull;
 
+import java.util.Map.Entry;
+
 public class ColumnTileEntityMap implements Map<BlockPos, TileEntity> {
 
     private final IColumn column;

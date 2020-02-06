@@ -38,9 +38,9 @@ import gnu.trove.list.array.TByteArrayList;
 import gnu.trove.list.array.TIntArrayList;
 import io.github.opencubicchunks.cubicchunks.core.world.ClientHeightMap;
 import io.netty.buffer.ByteBuf;
-import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.math.ChunkPos;
+import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.EmptyChunk;
 import net.minecraftforge.fml.common.network.ByteBufUtils;
@@ -114,8 +114,8 @@ public class PacketHeightMapUpdate implements IMessage {
     public static class Handler extends AbstractClientMessageHandler<PacketHeightMapUpdate> {
 
         @Nullable @Override
-        public void handleClientMessage(EntityPlayer player, PacketHeightMapUpdate message, MessageContext ctx) {
-            ICubicWorldInternal.Client worldClient = (ICubicWorldInternal.Client) Minecraft.getMinecraft().world;
+        public void handleClientMessage(World world, EntityPlayer player, PacketHeightMapUpdate message, MessageContext ctx) {
+            ICubicWorldInternal.Client worldClient = (ICubicWorldInternal.Client) world;
             CubeProviderClient cubeCache = worldClient.getCubeCache();
 
             int columnX = message.getColumnPos().chunkXPos;

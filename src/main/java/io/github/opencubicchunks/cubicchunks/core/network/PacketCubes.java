@@ -31,13 +31,13 @@ import io.github.opencubicchunks.cubicchunks.core.util.PacketUtils;
 import io.github.opencubicchunks.cubicchunks.core.world.cube.Cube;
 import io.netty.buffer.ByteBuf;
 import mcp.MethodsReturnNonnullByDefault;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.World;
 import net.minecraftforge.fml.common.network.ByteBufUtils;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
@@ -130,8 +130,8 @@ public class PacketCubes implements IMessage {
 
     public static class Handler extends AbstractClientMessageHandler<PacketCubes> {
 
-        @Nullable @Override
-        public void handleClientMessage(EntityPlayer player, PacketCubes message, MessageContext ctx) {
+        @Override
+        public void handleClientMessage(World world, EntityPlayer player, PacketCubes message, MessageContext ctx) {
             WorldClient worldClient = (WorldClient) player.getEntityWorld();
             CubeProviderClient cubeCache = (CubeProviderClient) worldClient.getChunkProvider();
 

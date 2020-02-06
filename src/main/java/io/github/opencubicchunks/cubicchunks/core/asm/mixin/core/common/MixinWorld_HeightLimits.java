@@ -31,7 +31,6 @@ import io.github.opencubicchunks.cubicchunks.core.world.cube.BlankCube;
 import io.github.opencubicchunks.cubicchunks.api.util.Coords;
 import io.github.opencubicchunks.cubicchunks.api.world.ICube;
 import io.github.opencubicchunks.cubicchunks.api.world.ICubicWorld;
-import io.github.opencubicchunks.cubicchunks.core.world.cube.BlankCube;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
@@ -40,7 +39,6 @@ import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldProvider;
 import net.minecraft.world.biome.Biome;
-import net.minecraft.world.biome.BiomeProvider;
 import net.minecraft.world.chunk.Chunk;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -132,8 +130,7 @@ public abstract class MixinWorld_HeightLimits implements ICubicWorld {
             slice = @Slice(
                     from = @At(value = "INVOKE", target = "Lnet/minecraft/util/math/BlockPos;getY()I"),
                     to = @At(value = "INVOKE",
-                            target = "Lnet/minecraft/world/World;getChunkFromBlockCoords(Lnet/minecraft/util/math/BlockPos;)"
-                                    + "Lnet/minecraft/world/chunk/Chunk;")
+                            target = "Lnet/minecraft/world/World;getChunkFromBlockCoords(Lnet/minecraft/util/math/BlockPos;)Lnet/minecraft/world/chunk/Chunk;")
             ))
     private int getLightGetYReplace(int zero) {
         return getMinHeight();
@@ -288,7 +285,8 @@ public abstract class MixinWorld_HeightLimits implements ICubicWorld {
         ci.cancel();
     }
 
-    @ModifyConstant(method = {"canSnowAtBody", "canBlockFreezeBody"}, constant = @Constant(intValue = 256), remap = false)
+    @ModifyConstant(method =
+            {"canSnowAtBody", "canBlockFreezeBody"}, constant = @Constant(intValue = 256), remap = false)
     private int canSnowAt_getMaxHeight(int _256) {
         return getMaxHeight();
     }

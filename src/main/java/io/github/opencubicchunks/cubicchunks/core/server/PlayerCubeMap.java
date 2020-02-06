@@ -45,7 +45,7 @@ import io.github.opencubicchunks.cubicchunks.api.world.ICube;
 import io.github.opencubicchunks.cubicchunks.core.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.core.CubicChunksConfig;
 import io.github.opencubicchunks.cubicchunks.core.asm.mixin.ICubicWorldInternal;
-import io.github.opencubicchunks.cubicchunks.core.entity.CubicEntityTracker;
+import io.github.opencubicchunks.cubicchunks.core.entity.ICubicEntityTracker;
 import io.github.opencubicchunks.cubicchunks.core.lighting.LightingManager;
 import io.github.opencubicchunks.cubicchunks.core.network.PacketCubes;
 import io.github.opencubicchunks.cubicchunks.core.network.PacketDispatcher;
@@ -450,7 +450,7 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
             }
             //Sending entities per cube.
             for (Cube cube : cubes) {
-                ((CubicEntityTracker) getWorldServer().getEntityTracker()).sendLeashedEntitiesInCube(player, cube);
+                ((ICubicEntityTracker) getWorldServer().getEntityTracker()).sendLeashedEntitiesInCube(player, cube);
                 CubeWatcher watcher = getCubeWatcher(cube.getCoords());
                 assert watcher != null;
                 MinecraftForge.EVENT_BUS.post(new CubeWatchEvent(cube, cube.getCoords(), watcher, player));
@@ -851,6 +851,10 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
 
     public void scheduleSendCubeToPlayer(Cube cube, EntityPlayerMP player) {
         cubesToSend.put(player, cube);
+    }
+
+    public void removeSchedulesSendCubeToPlayer(Cube cube, EntityPlayerMP player) {
+        cubesToSend.remove(player, cube);
     }
 
     @Nullable public CubeWatcher getCubeWatcher(CubePos pos) {

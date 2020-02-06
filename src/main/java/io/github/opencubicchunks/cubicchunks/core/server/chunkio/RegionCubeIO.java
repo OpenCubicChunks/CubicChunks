@@ -50,10 +50,8 @@ import org.apache.logging.log4j.Logger;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.Optional;
 import java.util.WeakHashMap;
@@ -130,7 +128,7 @@ public class RegionCubeIO implements ICubeIO {
             nbt = saveEntry.nbt;
         } else {
             // IOException makes using Optional impossible :(
-            Optional<ByteBuffer> buf = this.save.load(new EntryLocation2D(chunkX, chunkZ));
+            Optional<ByteBuffer> buf = this.save.load(new EntryLocation2D(chunkX, chunkZ), true);
             if (!buf.isPresent()) {
                 return null;
             }
@@ -147,7 +145,7 @@ public class RegionCubeIO implements ICubeIO {
             nbt = saveEntry.nbt;
         } else {
             // does the database have the cube?
-            Optional<ByteBuffer> buf = this.save.load(new EntryLocation3D(column.xPosition, cubeY, column.zPosition));
+            Optional<ByteBuffer> buf = this.save.load(new EntryLocation3D(column.xPosition, cubeY, column.zPosition), true);
             if (!buf.isPresent()) {
                 return null;
             }

@@ -50,7 +50,7 @@ public abstract class MixinWorld_HeightLimits implements ICubicWorld {
 
     @Final @Shadow public WorldProvider provider;
 
-    @Shadow public abstract boolean isValid(BlockPos pos);
+    @Shadow public abstract boolean isPosValid(BlockPos pos);
 
     @Shadow public abstract boolean isBlockLoaded(BlockPos pos);
 

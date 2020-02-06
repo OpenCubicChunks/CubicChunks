@@ -70,5 +70,9 @@ public interface ICubeIO extends IThreadedFileIO {
 		public Cube getCube() {
 			return cube;
 		}
+
+		public NBTTagCompound getNbt() {
+			return nbt;
+		}
 	}
 }

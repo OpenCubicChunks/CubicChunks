@@ -24,8 +24,7 @@
  */
 package io.github.opencubicchunks.cubicchunks.core.asm;
 
-import io.github.opencubicchunks.cubicchunks.core.asm.mixin.ICubicWorldInternal;
-import io.github.opencubicchunks.cubicchunks.core.world.cube.Cube;
+import io.github.opencubicchunks.cubicchunks.api.world.ICubicWorld;
 import io.github.opencubicchunks.cubicchunks.core.asm.mixin.ICubicWorldInternal;
 import io.github.opencubicchunks.cubicchunks.core.world.cube.Cube;
 import mcp.MethodsReturnNonnullByDefault;
@@ -46,7 +45,7 @@ public class MixinUtils {
     }
 
     public static boolean canTickPosition(World world, BlockPos pos, @Nullable Predicate<Cube> canTickCube) {
-        if (!world.isValid(pos)) {
+        if (!((ICubicWorld) world).isPosValid(pos)) {
             return true; // can tick everything outside of limits
         }
         if (!world.isBlockLoaded(pos)) {

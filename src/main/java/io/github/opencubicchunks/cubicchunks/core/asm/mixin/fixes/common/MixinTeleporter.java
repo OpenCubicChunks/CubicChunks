@@ -123,7 +123,7 @@ public class MixinTeleporter {
                         if (this.worldServerInstance.isAirBlock(pos.setPos(ix, iy, iz))) {
                             while (this.worldServerInstance.isAirBlock(pos)) {
                                 pos.setPos(ix, --iy - 1, iz);
-                                if (worldServerInstance.isOutsideBuildHeight(pos))
+                                if (!((ICubicWorld) worldServerInstance).isInvalidHeight(pos))
                                     break;
                             }
 

@@ -27,6 +27,7 @@ package io.github.opencubicchunks.cubicchunks.core.client;
 import static io.github.opencubicchunks.cubicchunks.api.util.Coords.blockToLocal;
 
 import io.github.opencubicchunks.cubicchunks.api.util.Coords;
+import io.github.opencubicchunks.cubicchunks.api.world.ICubicWorld;
 import io.github.opencubicchunks.cubicchunks.core.asm.mixin.ICubicWorldInternal;
 import io.github.opencubicchunks.cubicchunks.core.world.cube.Cube;
 import mcp.MethodsReturnNonnullByDefault;
@@ -120,7 +121,7 @@ public class RenderCubeCache extends ChunkCache {
 
     @Override
     public IBlockState getBlockState(BlockPos pos) {
-        if (world.isOutsideBuildHeight(pos)) {
+        if (((ICubicWorld) world).isInvalidHeight(pos)) {
             return Blocks.AIR.getDefaultState();
         }
         int arrayX = Coords.blockToCube(pos.getX()) - this.chunkX;
@@ -139,7 +140,7 @@ public class RenderCubeCache extends ChunkCache {
         if (type == EnumSkyBlock.SKY && this.world.provider.hasNoSky()) {
             return 0;
         }
-        if (world.isOutsideBuildHeight(pos)) {
+        if (((ICubicWorld) world).isInvalidHeight(pos)) {
             return type.defaultLightValue;
         }
         if (this.getBlockState(pos).useNeighborBrightness()) {
@@ -170,7 +171,7 @@ public class RenderCubeCache extends ChunkCache {
 
     @Override
     public int getLightFor(EnumSkyBlock type, BlockPos pos) {
-        if (world.isOutsideBuildHeight(pos)) {
+        if (((ICubicWorld) world).isInvalidHeight(pos)) {
             return type.defaultLightValue;
         }
         int arrayX = Coords.blockToCube(pos.getX()) - this.chunkX;
@@ -195,7 +196,7 @@ public class RenderCubeCache extends ChunkCache {
 
     @Override
     public boolean isSideSolid(BlockPos pos, EnumFacing side, boolean defaultValue) {
-        if (world.isOutsideBuildHeight(pos)) {
+        if (((ICubicWorld) world).isInvalidHeight(pos)) {
             return defaultValue;
         }
         int arrayX = Coords.blockToCube(pos.getX()) - this.chunkX;

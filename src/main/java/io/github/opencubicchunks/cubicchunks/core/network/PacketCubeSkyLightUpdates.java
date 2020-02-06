@@ -26,17 +26,17 @@ package io.github.opencubicchunks.cubicchunks.core.network;
 
 import static io.github.opencubicchunks.cubicchunks.api.util.Coords.cubeToMinBlock;
 
+import gnu.trove.list.TShortList;
+import io.github.opencubicchunks.cubicchunks.api.util.Bits;
+import io.github.opencubicchunks.cubicchunks.api.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.core.client.CubeProviderClient;
 import io.github.opencubicchunks.cubicchunks.core.lighting.LightingManager;
 import io.github.opencubicchunks.cubicchunks.core.util.AddressTools;
-import io.github.opencubicchunks.cubicchunks.api.util.Bits;
-import io.github.opencubicchunks.cubicchunks.api.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.core.world.cube.Cube;
-import gnu.trove.list.TShortList;
 import io.netty.buffer.ByteBuf;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.NibbleArray;
 import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
@@ -136,8 +136,8 @@ public class PacketCubeSkyLightUpdates implements IMessage {
     public static class Handler extends AbstractClientMessageHandler<PacketCubeSkyLightUpdates> {
 
         @Nullable @Override
-        public void handleClientMessage(EntityPlayer player, PacketCubeSkyLightUpdates message, MessageContext ctx) {
-            WorldClient worldClient = Minecraft.getMinecraft().world;
+        public void handleClientMessage(World world, EntityPlayer player, PacketCubeSkyLightUpdates message, MessageContext ctx) {
+            WorldClient worldClient = (WorldClient) world;
             CubeProviderClient cubeCache = (CubeProviderClient) worldClient.getChunkProvider();
 
             // get the cube

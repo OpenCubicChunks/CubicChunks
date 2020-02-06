@@ -24,11 +24,8 @@
  */
 package io.github.opencubicchunks.cubicchunks.core.world;
 
-import io.github.opencubicchunks.cubicchunks.core.server.CubeWatcher;
-import io.github.opencubicchunks.cubicchunks.core.server.PlayerCubeMap;
-import io.github.opencubicchunks.cubicchunks.core.world.cube.Cube;
-import io.github.opencubicchunks.cubicchunks.core.server.CubeWatcher;
 import io.github.opencubicchunks.cubicchunks.api.util.CubePos;
+import io.github.opencubicchunks.cubicchunks.core.server.CubeWatcher;
 import io.github.opencubicchunks.cubicchunks.core.server.PlayerCubeMap;
 import io.github.opencubicchunks.cubicchunks.core.world.cube.Cube;
 import mcp.MethodsReturnNonnullByDefault;
@@ -55,11 +52,12 @@ import java.util.Random;
 import java.util.Set;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class CubeWorldEntitySpawner extends WorldEntitySpawner {
+public class CubeWorldEntitySpawner implements IWorldEntitySpawner {
 
     private static final int CUBES_PER_CHUNK = 16;
     private static final int MOB_COUNT_DIV = (int) Math.pow(17.0D, 2.0D) * CUBES_PER_CHUNK;
@@ -190,8 +188,8 @@ public class CubeWorldEntitySpawner extends WorldEntitySpawner {
                     }
 
                     if (!world.canCreatureTypeSpawnHere(mobType, biomeMobs, blockPos) ||
-                            !canCreatureTypeSpawnAtLocation(EntitySpawnPlacementRegistry
-                                    .getPlacementForEntity(biomeMobs.entityClass), (World) world, blockPos)) {
+                            !WorldEntitySpawner.canCreatureTypeSpawnAtLocation(EntitySpawnPlacementRegistry
+                                    .getPlacementForEntity(biomeMobs.entityClass), world, blockPos)) {
                         continue;
                     }
                     EntityLiving toSpawn;
@@ -247,7 +245,7 @@ public class CubeWorldEntitySpawner extends WorldEntitySpawner {
                 (type.getAnimal() && !spawnOnSetTickRate));
     }
 
-    private static BlockPos getRandomChunkPosition(WorldServer world, CubePos pos) {
+    @Nullable private static BlockPos getRandomChunkPosition(WorldServer world, CubePos pos) {
         int blockX = pos.getMinBlockX() + world.rand.nextInt(Cube.SIZE);
         int blockZ = pos.getMinBlockZ() + world.rand.nextInt(Cube.SIZE);
 

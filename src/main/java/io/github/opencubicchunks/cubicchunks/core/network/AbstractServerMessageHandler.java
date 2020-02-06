@@ -26,10 +26,10 @@ package io.github.opencubicchunks.cubicchunks.core.network;
 
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.world.World;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 
-import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 
 @MethodsReturnNonnullByDefault
@@ -38,7 +38,7 @@ public abstract class AbstractServerMessageHandler<T extends IMessage> extends A
 
     // implementing a final version of the client message handler both prevents it from
     // appearing automatically and prevents us from ever accidentally overriding it
-    @Nullable public final void handleClientMessage(EntityPlayer player, T message, MessageContext ctx) {
+    @Override public final void handleClientMessage(World world, EntityPlayer player, T message, MessageContext ctx) {
     }
 }
 
