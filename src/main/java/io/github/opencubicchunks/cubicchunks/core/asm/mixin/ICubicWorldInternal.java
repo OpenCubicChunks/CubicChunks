@@ -44,7 +44,10 @@ import io.github.opencubicchunks.cubicchunks.core.util.world.CubeSplitTickSet;
 import io.github.opencubicchunks.cubicchunks.core.world.ICubeProviderInternal;
 import io.github.opencubicchunks.cubicchunks.core.world.cube.Cube;
 import mcp.MethodsReturnNonnullByDefault;
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.World;
+import net.minecraft.world.chunk.Chunk;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -81,12 +84,30 @@ public interface ICubicWorldInternal extends ICubicWorld {
 
     void fakeWorldHeight(int height);
 
+    default BlockPos getTopSolidOrLiquidBlockVanilla(BlockPos pos) {
+        Chunk chunk = ((World) this).getChunkFromBlockCoords(pos);
+
+        BlockPos current = new BlockPos(pos.getX(), chunk.getTopFilledSegment() + 16, pos.getZ());
+        while (current.getY() >= 0) {
+            BlockPos next = current.down();
+            IBlockState state = chunk.getBlockState(next);
+
+            if (state.getMaterial().blocksMovement() && !state.getBlock().isLeaves(state, (World) this, next) && !state.getBlock().isFoliage((World) this, next)) {
+                break;
+            }
+            current = next;
+        }
+
+        return current;
+    }
+
     interface Server extends ICubicWorldInternal, ICubicWorldServer {
 
         /**
          * Initializes the world to be a CubicChunks world. Must be done before any players are online and before any chunks
          * are loaded. Cannot be used more than once.
-         * @param heightRange world height range
+         *
+         * @param heightRange     world height range
          * @param generationRange expected height range for world generation. Maximum Y should be above 0.
          */
         void initCubicWorldServer(IntRange heightRange, IntRange generationRange);
