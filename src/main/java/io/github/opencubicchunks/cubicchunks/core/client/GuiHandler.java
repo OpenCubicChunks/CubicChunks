@@ -1,8 +1,8 @@
 /*
  *  This file is part of CubicChunks, licensed under the MIT License (MIT).
  *
- *  Copyright (c) 2015-2019 OpenCubicChunks
- *  Copyright (c) 2015-2019 contributors
+ *  Copyright (c) 2015-2020 OpenCubicChunks
+ *  Copyright (c) 2015-2020 contributors
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a copy
  *  of this software and associated documentation files (the "Software"), to deal
@@ -29,6 +29,8 @@ import static java.lang.Math.floorMod;
 import io.github.opencubicchunks.cubicchunks.api.world.ICubicWorldType;
 import io.github.opencubicchunks.cubicchunks.core.CubicChunksConfig;
 import io.github.opencubicchunks.cubicchunks.core.CubicChunksConfig.ForceCCMode;
+import io.github.opencubicchunks.cubicchunks.core.asm.mixin.core.common.access.CreateWorldScreenAccess;
+import io.github.opencubicchunks.cubicchunks.core.asm.mixin.core.common.access.VideoSettingsScreenAccess;
 import io.github.opencubicchunks.cubicchunks.core.util.CompatUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screen.CreateWorldScreen;
@@ -50,8 +52,8 @@ public class GuiHandler {
 
     private static final SliderPercentageOption VERT_RENDER_DISTANCE = new SliderPercentageOption(
         "cubicchunks.options.vertRenderDistance", // lang key
-        AbstractOption.RENDER_DISTANCE.func_216732_b(), // minValue, func_216732_b == getMinValue
-        AbstractOption.RENDER_DISTANCE.func_216733_c(), // maxValue, func_216733_c == getMaxValue
+        AbstractOption.RENDER_DISTANCE.getMinValue(),
+        AbstractOption.RENDER_DISTANCE.getMaxValue(),
         1.0F, // increment
         (gameSettings) -> { // getRawValue
             return (double) CubicChunksConfig.CLIENT.verticalRenderDistance.get();
@@ -62,7 +64,7 @@ public class GuiHandler {
         },
         (gameSettings, option) -> { // getText
             double distance = CubicChunksConfig.CLIENT.verticalRenderDistance.get();
-            return option.func_216617_a() + I18n.format("options.chunks", (int) distance);
+            return option.getDisplayString() + I18n.format("options.chunks", (int) distance);
         });
 
     private static final IteratableOption FORCE_CUBIC_WORLD_OPTION = new IteratableOption(
@@ -71,7 +73,7 @@ public class GuiHandler {
             int newId = floorMod(CubicChunksConfig.SERVER.forceCCMode.get().ordinal() + delta, ForceCCMode.values().length);
             CubicChunksConfig.SERVER.forceCCMode.set(ForceCCMode.values()[newId]);
         },
-        (gameSettings, option) -> option.func_216617_a() + I18n.format(CubicChunksConfig.SERVER.forceCCMode.get().translationKey())
+        (gameSettings, option) -> option.getDisplayString() + I18n.format(CubicChunksConfig.SERVER.forceCCMode.get().translationKey())
     );
 
     public static void handleGui(GuiScreenEvent.InitGuiEvent.Post event) {
@@ -86,25 +88,27 @@ public class GuiHandler {
     private static void handleVideoSettings(VideoSettingsScreen videoSettings) {
         if (!CompatUtil.hasOptifine()) {
             // func_214384_a == create
-            OptionsRowList.Row row = OptionsRowList.Row.func_214384_a(Minecraft.getInstance().gameSettings, videoSettings.width, VERT_RENDER_DISTANCE);
-            videoSettings.optionsRowList.children().add(1, row);
+            OptionsRowList.Row row = OptionsRowList.Row.create(Minecraft.getInstance().gameSettings, videoSettings.width, VERT_RENDER_DISTANCE);
+            ((VideoSettingsScreenAccess) videoSettings).getOptionsRowList().children().add(1, row);
         } else {
             LOGGER.error("Found OptiFine, OptiFine video settings GUI support not implemented.");
         }
     }
 
     private static void handleCreateWorld(CreateWorldScreen createWorld) {
+        CreateWorldScreenAccess createWorldAccess = (CreateWorldScreenAccess) createWorld;
         // move customize button Y to the same Y as the CC enable button will be for alignment
-        createWorld.btnCustomizeType.y = createWorld.btnAllowCommands.y - 21;
+        createWorldAccess.getBtnCustomizeType().y = createWorldAccess.getBtnAllowCommands().y - 21;
         Widget enableCC = FORCE_CUBIC_WORLD_OPTION.createWidget(Minecraft.getInstance().gameSettings,
-            createWorld.btnAllowCommands.x, createWorld.btnCustomizeType.y, 150);
+                createWorldAccess.getBtnAllowCommands().x, createWorldAccess.getBtnCustomizeType().y, 150);
         Widget fakeWidget = new Widget(0, 0, createWorld.width, createWorld.height, "") {
             @Override public void render(int arg1, int arg2, float arg3) {
-                enableCC.visible = createWorld.btnMapType.visible && !(WorldType.WORLD_TYPES[createWorld.selectedIndex] instanceof ICubicWorldType);
+                enableCC.visible = createWorldAccess.getBtnMapType().visible
+                        && !(WorldType.WORLD_TYPES[createWorldAccess.getSelectedIndex()] instanceof ICubicWorldType);
             }
         };
         fakeWidget.active = false;
-        createWorld.addButton(fakeWidget);
-        createWorld.addButton(enableCC);
+        createWorldAccess.invokeAddButton(fakeWidget);
+        createWorldAccess.invokeAddButton(enableCC);
     }
 }

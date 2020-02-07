@@ -1,10 +1,19 @@
 {
     "required": true,
     "package": "io.github.opencubicchunks.cubicchunks.core.asm.mixin.core",
-    "refmap": "cubicgen.refmap.json",
+    "refmap": "cubicchunks.refmap.json",
     "compatibilityLevel": "JAVA_8",
-    "minVersion": "0.6.15-SNAPSHOT",
+    "minVersion": "0.8",
+    "injectors": {
+        "defaultRequire": 1
+    },
+    "overwrites": {
+        "conformVisibility": true
+    },
     "mixins": [
+        "common.access.CreateWorldScreenAccess",
+        "common.access.ScreenAccess",
+        "common.access.VideoSettingsScreenAccess",
         "common.MixinChunk",
         "common.MixinChunkPrimer",
         "common.MixinServerWorld",
@@ -16,12 +25,5 @@
         "client.MixinClientWorld",
         "client.MixinIntegratedServer"
     ],
-    "server": [
-    ],
-    "injectors": {
-        "defaultRequire": 1
-    },
-    "overwrites": {
-        "conformVisibility": true
-    }
+    "server": []
 }

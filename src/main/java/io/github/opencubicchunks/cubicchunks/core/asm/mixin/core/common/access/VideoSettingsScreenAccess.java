@@ -22,36 +22,15 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package io.github.opencubicchunks.cubicchunks.core.world;
+package io.github.opencubicchunks.cubicchunks.core.asm.mixin.core.common.access;
 
-import io.github.opencubicchunks.cubicchunks.api.util.IntRange;
-import io.github.opencubicchunks.cubicchunks.api.world.ICubicWorld;
-import io.github.opencubicchunks.cubicchunks.api.world.ICubicWorldServer;
+import net.minecraft.client.gui.screen.VideoSettingsScreen;
+import net.minecraft.client.gui.widget.list.OptionsRowList;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.gen.Accessor;
 
-public interface ICubicWorldInternal extends ICubicWorld {
-
-    void initCubicWorld(IntRange heightRange, IntRange generationRange);
-
-    void initCubicWorldCommon();
-
-    interface Client extends ICubicWorldInternal {
-
-        @Override default void initCubicWorld(IntRange heightRange, IntRange generationRange) {
-            initCubicWorldCommon();
-            initCubicClientWorld();
-        }
-
-        void initCubicClientWorld();
-    }
-
-    interface Server extends ICubicWorldInternal, ICubicWorldServer {
-
-        @Override default void initCubicWorld(IntRange heightRange,
-            IntRange generationRange) {
-            initCubicWorldCommon();
-            initCubicServerWorld();
-        }
-
-        void initCubicServerWorld();
-    }
+@Mixin(VideoSettingsScreen.class)
+public interface VideoSettingsScreenAccess {
+    @Accessor
+    OptionsRowList getOptionsRowList();
 }

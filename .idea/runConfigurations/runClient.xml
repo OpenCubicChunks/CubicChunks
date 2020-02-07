@@ -2,19 +2,19 @@
   <configuration default="false" name="runClient" type="Application" factoryName="Application" singleton="false">
     <envs>
       <env name="MOD_CLASSES" value="examplemod%%$PROJECT_DIR$/build/resources/main:examplemod%%$PROJECT_DIR$/build/classes/java/main" />
-      <env name="MCP_MAPPINGS" value="snapshot_20190613-1.14.2" />
-      <env name="MCP_VERSION" value="20190603.175704" />
-      <env name="FORGE_VERSION" value="26.0.25" />
+      <env name="MCP_MAPPINGS" value="snapshot_20200207-1.15.1" />
+      <env name="MCP_VERSION" value="20200122.131323" />
+      <env name="FORGE_VERSION" value="31.1.1" />
       <env name="assetIndex" value="1.14" />
       <env name="assetDirectory" value="$USER_HOME$/.gradle/caches/forge_gradle/assets" />
       <env name="nativesDirectory" value="$PROJECT_DIR$/build/natives" />
       <env name="FORGE_GROUP" value="net.minecraftforge" />
       <env name="target" value="fmluserdevclient" />
-      <env name="MC_VERSION" value="1.14.2" />
+      <env name="MC_VERSION" value="1.15.2" />
     </envs>
     <option name="MAIN_CLASS_NAME" value="net.minecraftforge.userdev.LaunchTesting" />
-    <module name="1.14.main" />
-    <option name="VM_PARAMETERS" value="-Dforge.logging.console.level=debug -Dmixin.checks.interfaces=true -Dmixin.temphack.configs=cubicchunks.mixins.core.json -Dforge.logging.markers= -Dmixin.debug.verbose=true -Dmixin.debug.export=true -Dcubicchunks.debug=true -XX:-OmitStackTraceInFastThrow -ea -da:io.netty..." />
+    <module name="1.15.main" />
+    <option name="VM_PARAMETERS" value="-Dforge.logging.console.level=debug -Dmixin.checks.interfaces=true -Dmixin.temphack.configs=cubicchunks.mixins.core.json -Dforge.logging.markers=SCAN,REGISTRIES,REGISTRYDUMP -Dmixin.debug.verbose=true -Dmixin.debug.export=true -Dcubicchunks.debug=true -XX:-OmitStackTraceInFastThrow -ea -da:io.netty..." />
     <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/run" />
     <method v="2">
       <option name="Make" enabled="true" />

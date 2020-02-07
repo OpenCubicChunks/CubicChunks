@@ -1,8 +1,8 @@
 /*
  *  This file is part of CubicChunks, licensed under the MIT License (MIT).
  *
- *  Copyright (c) 2015-2019 OpenCubicChunks
- *  Copyright (c) 2015-2019 contributors
+ *  Copyright (c) 2015-2020 OpenCubicChunks
+ *  Copyright (c) 2015-2020 contributors
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a copy
  *  of this software and associated documentation files (the "Software"), to deal
@@ -25,14 +25,12 @@
 package io.github.opencubicchunks.cubicchunks.core.util;
 
 import com.google.common.collect.ImmutableList;
-import net.minecraft.world.ServerMultiWorld;
-import net.minecraft.world.ServerWorld;
 import net.minecraft.world.World;
-import net.minecraft.world.chunk.AbstractChunkProvider;
-import net.minecraft.world.chunk.ServerChunkProvider;
+import net.minecraft.world.server.ServerChunkProvider;
+import net.minecraft.world.server.ServerMultiWorld;
+import net.minecraft.world.server.ServerWorld;
 
 import java.util.List;
-import java.util.Optional;
 
 public class CompatUtil {
     public static boolean hasOptifine() {

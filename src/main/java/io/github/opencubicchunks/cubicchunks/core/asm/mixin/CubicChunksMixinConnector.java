@@ -22,36 +22,18 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package io.github.opencubicchunks.cubicchunks.core.world;
+package io.github.opencubicchunks.cubicchunks.core.asm.mixin;
 
-import io.github.opencubicchunks.cubicchunks.api.util.IntRange;
-import io.github.opencubicchunks.cubicchunks.api.world.ICubicWorld;
-import io.github.opencubicchunks.cubicchunks.api.world.ICubicWorldServer;
+import org.spongepowered.asm.launch.MixinBootstrap;
+import org.spongepowered.asm.mixin.Mixins;
+import org.spongepowered.asm.mixin.connect.IMixinConnector;
 
-public interface ICubicWorldInternal extends ICubicWorld {
-
-    void initCubicWorld(IntRange heightRange, IntRange generationRange);
-
-    void initCubicWorldCommon();
-
-    interface Client extends ICubicWorldInternal {
-
-        @Override default void initCubicWorld(IntRange heightRange, IntRange generationRange) {
-            initCubicWorldCommon();
-            initCubicClientWorld();
-        }
-
-        void initCubicClientWorld();
-    }
-
-    interface Server extends ICubicWorldInternal, ICubicWorldServer {
-
-        @Override default void initCubicWorld(IntRange heightRange,
-            IntRange generationRange) {
-            initCubicWorldCommon();
-            initCubicServerWorld();
-        }
-
-        void initCubicServerWorld();
+public class CubicChunksMixinConnector implements IMixinConnector {
+    @Override
+    public void connect() {
+        MixinBootstrap.init();
+        Mixins.addConfigurations(
+                "cubicchunks.mixins.core.json"
+        );
     }
 }

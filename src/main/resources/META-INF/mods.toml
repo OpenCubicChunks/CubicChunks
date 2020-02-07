@@ -1,5 +1,5 @@
 modLoader="javafml"
-loaderVersion="[26,)"
+loaderVersion="[31,)"
 issueTrackerURL="https://github.com/OpenCubicChunks/CubicChunks/issues"
 
 [[mods]] #mandatory
@@ -23,12 +23,12 @@ Extends Minecraft height by changing chunk size to 16x16x16 blocks.
 [[dependencies.cubicchunks]] #optional
     modId="forge"
     mandatory=true
-    versionRange="[26,)"
+    versionRange="[31.1,)"
     ordering="NONE"
     side="BOTH"
 [[dependencies.examplemod]]
     modId="minecraft"
     mandatory=true
-    versionRange="[1.14.2,1.15)"
+    versionRange="[1.15.2,1.16)"
     ordering="NONE"
     side="BOTH"

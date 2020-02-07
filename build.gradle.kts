@@ -1,17 +1,21 @@
 import net.minecraftforge.gradle.common.util.RunConfig
+import net.minecraftforge.gradle.userdev.UserDevPlugin
 import org.ajoberstar.grgit.Grgit
 import org.ajoberstar.grgit.operation.DescribeOp
 import org.gradle.api.internal.HasConvention
+import org.spongepowered.asm.gradle.plugins.MixinGradlePlugin
 import java.text.SimpleDateFormat
 import java.util.*
 
 buildscript {
     repositories {
         maven { setUrl("https://files.minecraftforge.net/maven") }
+        maven { setUrl("http://repo.spongepowered.org/maven") }
         jcenter()
         mavenCentral()
     }
     dependencies {
+        classpath("org.spongepowered:mixingradle:0.7-SNAPSHOT")
         classpath("net.minecraftforge.gradle:ForgeGradle:3.+")
     }
 }
@@ -23,8 +27,14 @@ plugins {
     id("org.ajoberstar.grgit").version("3.1.1")
     id("com.github.johnrengelman.shadow").version("4.0.2")
     id("com.github.hierynomus.license").version("0.15.0")
+    id("io.github.opencubicchunks.gradle.mixingen")
+    id("io.github.opencubicchunks.gradle.mcGitVersion")
 }
-apply(plugin = "net.minecraftforge.gradle")
+
+apply {
+    plugin<UserDevPlugin>()
+    plugin<MixinGradlePlugin>()
+}
 
 val modid: String by project
 val forgeVersion: String by project
@@ -61,10 +71,11 @@ idea {
 minecraft {
     mappings("snapshot", mappingsVersion)
 
-    accessTransformer(file("$rootDir/src/main/resources/META-INF/accesstransformer.cfg"))
 
     fun setupConfig(conf: RunConfig) {
         conf.apply {
+            workingDirectory(project.file("run"))
+
             property("forge.logging.markers", "SCAN,REGISTRIES,REGISTRYDUMP")
             property("forge.logging.console.level", "debug")
             property("mixin.temphack.configs", "cubicchunks.mixins.core.json")
@@ -85,19 +96,50 @@ minecraft {
     }
 
     runs.create("client") {
-        workingDirectory(project.file("run"))
         setupConfig(this)
     }
     runs.create("server") {
-        workingDirectory(project.file("run"))
         setupConfig(this)
     }
+    runs.create("data") {
+        setupConfig(this)
+        args("--mod", modid, "--all", "--output", file("src/generated/resources/"))
+    }
+}
+
+mixinGen {
+    filePattern = "cubicchunks.mixins.%s.json"
+    defaultRefmap = "cubicchunks.refmap.json"
+    defaultPackagePrefix = "io.github.opencubicchunks.cubicchunks.core.asm.mixin"
+    defaultCompatibilityLevel = "JAVA_8"
+    defaultMinVersion = "0.8"
+
+    config("core") {
+        required = true
+        conformVisibility = true
+        injectorsDefaultRequire = 1
+    }
+    /*config("fixes") {
+        required = true
+        conformVisibility = true
+        injectorsDefaultRequire = 1
+    }
+    config("noncritical") {
+        required = false
+        conformVisibility = true
+    }
+    config("selectable") {
+        required = true
+        conformVisibility = true
+        injectorsDefaultRequire = 1
+        configurationPlugin = "io.github.opencubicchunks.cubicchunks.core.asm.CubicChunksMixinConfig"
+    }*/
 }
 
 license {
     val ext = (this as HasConvention).convention.extraProperties
     ext["project"] = "CubicChunks"
-    ext["year"] = "2015-2019"
+    ext["year"] = "2015-2020"
     exclude("**/*.info")
     exclude("**/package-info.java")
     exclude("**/*.json")
@@ -114,16 +156,9 @@ license {
 dependencies {
     minecraft("net.minecraftforge:forge:$forgeVersion")
 
-    val mixinFile = project.file("../../../Mixin/build/libs/mixin-0.7.11-SNAPSHOT.jar")
-    if (mixinFile.exists()) {
-        implementation(files(mixinFile))
-    } else {
-        implementation("org.spongepowered:mixin:0.7.11-SNAPSHOT") {
-            isTransitive = false
-        }
-    }
+    implementation("org.spongepowered:mixin:0.8.1-SNAPSHOT")
 
-    implementation("io.github.opencubicchunks:regionlib:0.55.0-SNAPSHOT")
+    implementation("io.github.opencubicchunks:regionlib:0.61.0-SNAPSHOT")
 
     implementation(java.sourceSets["api"].output)
 }
@@ -153,14 +188,6 @@ tasks.getByName<Jar>("jar") {
         )
     }
 }
-
-tasks.getByName<JavaCompile>("compileJava") {
-    options.compilerArgs.addAll(listOf(
-            "-AreobfSrgFile=${project.file("dummyMappingsFile.srg")}",
-            "-AdefaultObfuscationEnv=searge"
-    ))
-}
-
 
 // Example configuration to allow publishing using the maven-publish task
 // we define a custom artifact that is sourced from the reobfJar output task

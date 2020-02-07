@@ -1,8 +1,8 @@
 /*
  *  This file is part of CubicChunks, licensed under the MIT License (MIT).
  *
- *  Copyright (c) 2015-2019 OpenCubicChunks
- *  Copyright (c) 2015-2019 contributors
+ *  Copyright (c) 2015-2020 OpenCubicChunks
+ *  Copyright (c) 2015-2020 contributors
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a copy
  *  of this software and associated documentation files (the "Software"), to deal
@@ -33,12 +33,12 @@ import io.github.opencubicchunks.cubicchunks.core.world.ICubicWorldSettings;
 import io.github.opencubicchunks.cubicchunks.core.world.WorldSavedCubicChunksData;
 import net.minecraft.profiler.IProfiler;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.world.ServerWorld;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldType;
-import net.minecraft.world.chunk.ServerChunkProvider;
 import net.minecraft.world.chunk.listener.IChunkStatusListener;
 import net.minecraft.world.dimension.DimensionType;
+import net.minecraft.world.server.ServerChunkProvider;
+import net.minecraft.world.server.ServerWorld;
 import net.minecraft.world.storage.DimensionSavedDataManager;
 import net.minecraft.world.storage.SaveHandler;
 import net.minecraft.world.storage.WorldInfo;

@@ -88,16 +88,16 @@ public class Coords {
     }
 
     public static int getCubeXForEntity(Entity entity) {
-        return blockToCube(MathHelper.floor(entity.posX));
+        return blockToCube(MathHelper.floor(entity.getPosX()));
     }
 
     public static int getCubeZForEntity(Entity entity) {
-        return blockToCube(MathHelper.floor(entity.posZ));
+        return blockToCube(MathHelper.floor(entity.getPosZ()));
     }
 
     public static int getCubeYForEntity(Entity entity) {
         // the entity is in the cube it's inside, not the cube it's standing on
-        return blockToCube(MathHelper.floor(entity.posY));
+        return blockToCube(MathHelper.floor(entity.getPosY()));
     }
 
     public static BlockPos getCubeCenter(ICube cube) {

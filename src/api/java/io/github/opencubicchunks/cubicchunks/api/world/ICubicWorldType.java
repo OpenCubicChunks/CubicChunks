@@ -26,8 +26,8 @@ package io.github.opencubicchunks.cubicchunks.api.world;
 
 import io.github.opencubicchunks.cubicchunks.api.util.IntRange;
 import mcp.MethodsReturnNonnullByDefault;
-import net.minecraft.world.ServerWorld;
 import net.minecraft.world.World;
+import net.minecraft.world.server.ServerWorld;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 

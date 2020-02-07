@@ -14,7 +14,15 @@
         ],
         "configurations": [
             "annotationProcessor",
+            "apiAnnotationProcessor",
+            "apiCompile",
+            "apiCompileClasspath",
+            "apiCompileOnly",
             "apiElements",
+            "apiImplementation",
+            "apiRuntime",
+            "apiRuntimeClasspath",
+            "apiRuntimeOnly",
             "archives",
             "compile",
             "compileClasspath",
@@ -130,6 +138,16 @@
                 "name": "ext"
             },
             {
+                "type": "io.github.opencubicchunks.gradle.MixinGenExtension",
+                "target": "org.gradle.api.Project",
+                "name": "mixinGen"
+            },
+            {
+                "type": "io.github.opencubicchunks.gradle.McGitVersionExtension",
+                "target": "org.gradle.api.Project",
+                "name": "mcGitVersion"
+            },
+            {
                 "type": "net.minecraftforge.gradle.userdev.UserDevExtension",
                 "target": "org.gradle.api.Project",
                 "name": "minecraft"
@@ -157,6 +175,16 @@
             {
                 "type": "org.gradle.api.plugins.ExtraPropertiesExtension",
                 "target": "net.minecraftforge.gradle.userdev.DependencyManagementExtension",
+                "name": "ext"
+            },
+            {
+                "type": "org.spongepowered.asm.gradle.plugins.MixinExtension",
+                "target": "org.gradle.api.Project",
+                "name": "mixin"
+            },
+            {
+                "type": "org.gradle.api.plugins.ExtraPropertiesExtension",
+                "target": "org.spongepowered.asm.gradle.plugins.MixinExtension",
                 "name": "ext"
             },
             {

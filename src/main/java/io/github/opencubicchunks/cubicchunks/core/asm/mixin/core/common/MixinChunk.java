@@ -1,8 +1,8 @@
 /*
  *  This file is part of CubicChunks, licensed under the MIT License (MIT).
  *
- *  Copyright (c) 2015-2019 OpenCubicChunks
- *  Copyright (c) 2015-2019 contributors
+ *  Copyright (c) 2015-2020 OpenCubicChunks
+ *  Copyright (c) 2015-2020 contributors
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a copy
  *  of this software and associated documentation files (the "Software"), to deal
@@ -31,12 +31,13 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import net.minecraft.block.Block;
 import net.minecraft.fluid.Fluid;
 import net.minecraft.util.math.ChunkPos;
+import net.minecraft.util.palette.UpgradeData;
 import net.minecraft.world.ITickList;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
+import net.minecraft.world.biome.BiomeContainer;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkSection;
-import net.minecraft.world.chunk.UpgradeData;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -57,11 +58,11 @@ public class MixinChunk {
     private boolean isCubic;
     private Int2ObjectMap<Cube> cubeMap;
 
-    @Inject(method = "<init>(Lnet/minecraft/world/World;Lnet/minecraft/util/math/ChunkPos;[Lnet/minecraft/world/biome/Biome;"
-        + "Lnet/minecraft/world/chunk/UpgradeData;Lnet/minecraft/world/ITickList;Lnet/minecraft/world/ITickList;"
-        + "J[Lnet/minecraft/world/chunk/ChunkSection;Ljava/util/function/Consumer;)V", at = @At("RETURN"))
-    private void afterConstruct(World world, ChunkPos pos, Biome[] biomes, UpgradeData upgradeData, ITickList<Block> toTick,
-        ITickList<Fluid> toTickFluids, long p_i49946_7_, ChunkSection[] sections, Consumer<Chunk> p_i49946_10_, CallbackInfo ci) {
+    @Inject(method = "<init>(Lnet/minecraft/world/World;Lnet/minecraft/util/math/ChunkPos;Lnet/minecraft/world/biome/BiomeContainer;Lnet/minecraft/util/palette/UpgradeData;Lnet/minecraft/world/ITickList;Lnet/minecraft/world/ITickList;J[Lnet/minecraft/world/chunk/ChunkSection;Ljava/util/function/Consumer;)V", at = @At("RETURN"))
+    private void afterConstruct(World world, ChunkPos chunkPosIn, BiomeContainer biomeContainerIn,
+                                UpgradeData upgradeDataIn, ITickList<Block> tickBlocksIn, ITickList<Fluid> tickFluidsIn,
+                                long inhabitedTimeIn, ChunkSection[] sectionsIn, Consumer<Chunk> postLoadConsumerIn,
+                                CallbackInfo ci) {
         if (!((ICubicWorld) world).isCubicWorld()) {
             return;
         }
@@ -76,7 +77,7 @@ public class MixinChunk {
     }
 
     @Redirect(method = {
-        "func_217326_a",
+        "read",
         "getFluidState(III)Lnet/minecraft/fluid/IFluidState;",
         "getBlockState"
     }, at = @At(
@@ -106,7 +107,7 @@ public class MixinChunk {
         return cube == null ? EMPTY_SECTION : cube.getSection();
     }
 
-    @Redirect(method = {"setBlockState", "func_217326_a"}, at = @At(
+    @Redirect(method = {"setBlockState", "read"}, at = @At(
         value = "FIELD",
         target = "Lnet/minecraft/world/chunk/Chunk;sections:[Lnet/minecraft/world/chunk/ChunkSection;",
         args = "array=set"

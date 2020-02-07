@@ -22,36 +22,26 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package io.github.opencubicchunks.cubicchunks.core.world;
+package io.github.opencubicchunks.cubicchunks.core.asm.mixin.core.common.access;
 
-import io.github.opencubicchunks.cubicchunks.api.util.IntRange;
-import io.github.opencubicchunks.cubicchunks.api.world.ICubicWorld;
-import io.github.opencubicchunks.cubicchunks.api.world.ICubicWorldServer;
+import net.minecraft.client.gui.screen.CreateWorldScreen;
+import net.minecraft.client.gui.widget.Widget;
+import net.minecraft.client.gui.widget.button.Button;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.gen.Accessor;
+import org.spongepowered.asm.mixin.gen.Invoker;
 
-public interface ICubicWorldInternal extends ICubicWorld {
+@Mixin(CreateWorldScreen.class)
+public interface CreateWorldScreenAccess extends ScreenAccess {
+    @Accessor
+    Button getBtnCustomizeType();
 
-    void initCubicWorld(IntRange heightRange, IntRange generationRange);
+    @Accessor
+    Button getBtnAllowCommands();
 
-    void initCubicWorldCommon();
+    @Accessor
+    Button getBtnMapType();
 
-    interface Client extends ICubicWorldInternal {
-
-        @Override default void initCubicWorld(IntRange heightRange, IntRange generationRange) {
-            initCubicWorldCommon();
-            initCubicClientWorld();
-        }
-
-        void initCubicClientWorld();
-    }
-
-    interface Server extends ICubicWorldInternal, ICubicWorldServer {
-
-        @Override default void initCubicWorld(IntRange heightRange,
-            IntRange generationRange) {
-            initCubicWorldCommon();
-            initCubicServerWorld();
-        }
-
-        void initCubicServerWorld();
-    }
+    @Accessor
+    int getSelectedIndex();
 }

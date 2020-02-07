@@ -4,16 +4,16 @@
     <option name="MAIN_CLASS_NAME" value="net.minecraftforge.userdev.LaunchTesting"/>
     <option name="VM_PARAMETERS" value="-Dforge.logging.console.level=debug -Dmixin.checks.interfaces=true -Dmixin.temphack.configs=cubicchunks.mixins.core.json -Dforge.logging.markers=SCAN,REGISTRIES,REGISTRYDUMP -Dmixin.debug.verbose=true -Dmixin.debug.export=true -Dcubicchunks.debug=true -XX:-OmitStackTraceInFastThrow -ea -da:io.netty..."/>
     <option name="PROGRAM_PARAMETERS" value=""/>
-    <option name="WORKING_DIRECTORY" value="/home/bartosz/Desktop/dev/java/Minecraft/CubicChunks/CubicChunks/1.14/run"/>
-    <module name="1.14_main"/>
+    <option name="WORKING_DIRECTORY" value="/home/bartosz/Desktop/dev/java/Minecraft/CubicChunks/CubicChunks/1.15/run"/>
+    <module name="1.15_main"/>
     <envs>
-      <env name="MOD_CLASSES" value="examplemod%%/home/bartosz/Desktop/dev/java/Minecraft/CubicChunks/CubicChunks/1.14/build/resources/main:examplemod%%/home/bartosz/Desktop/dev/java/Minecraft/CubicChunks/CubicChunks/1.14/build/classes/java/main"/>
-      <env name="MCP_MAPPINGS" value="snapshot_20190613-1.14.2"/>
-      <env name="MCP_VERSION" value="20190603.175704"/>
-      <env name="FORGE_VERSION" value="26.0.25"/>
+      <env name="MOD_CLASSES" value="examplemod%%/home/bartosz/Desktop/dev/java/Minecraft/CubicChunks/CubicChunks/1.15/build/resources/main:examplemod%%/home/bartosz/Desktop/dev/java/Minecraft/CubicChunks/CubicChunks/1.15/build/classes/java/main"/>
+      <env name="MCP_MAPPINGS" value="snapshot_20200207-1.15.1"/>
+      <env name="MCP_VERSION" value="20200122.131323"/>
+      <env name="FORGE_VERSION" value="31.1.1"/>
       <env name="FORGE_GROUP" value="net.minecraftforge"/>
       <env name="target" value="fmluserdevserver"/>
-      <env name="MC_VERSION" value="1.14.2"/>
+      <env name="MC_VERSION" value="1.15.2"/>
     </envs>
     <method v="2">
       <option enabled="true" name="Make"/>
