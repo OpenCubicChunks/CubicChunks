@@ -73,7 +73,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @Mod(modid = CubicChunks.MODID,
         name = "CubicChunks",
         version = CubicChunks.VERSION,
-        dependencies = "after:forge@[12.18.3.2316,]")
+        dependencies = "after:Forge@[12.18.3.2316,]")
 @Mod.EventBusSubscriber
 public class CubicChunks {
 

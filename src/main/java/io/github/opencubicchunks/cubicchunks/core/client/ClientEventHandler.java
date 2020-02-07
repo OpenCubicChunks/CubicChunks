@@ -59,7 +59,9 @@ import net.minecraftforge.fml.relauncher.Side;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -261,7 +263,9 @@ public class ClientEventHandler {
 
                 refreshText(gui, enableCC);
             }));
-            LIST_OF_GEN_OPTIONS.addAll(VanillaCompatibilityGeneratorProviderBase.REGISTRY.getKeys());
+            // can't use getKeys in 1.10.2 here because it results in AbstractMethodError in obfuscated environment
+            LIST_OF_GEN_OPTIONS.addAll(VanillaCompatibilityGeneratorProviderBase.REGISTRY.getEntries()
+                    .stream().map(Map.Entry::getKey).collect(Collectors.toList()));
             CURRENT_GEN_OPTION = LIST_OF_GEN_OPTIONS.indexOf(new ResourceLocation(CubicChunksConfig.compatibilityGeneratorType));
         }
         
