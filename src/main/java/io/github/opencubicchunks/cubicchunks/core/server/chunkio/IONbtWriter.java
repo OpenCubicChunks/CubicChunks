@@ -107,7 +107,7 @@ class IONbtWriter {
         nbt.setByte("v", (byte) 1);
         nbt.setLong("InhabitedTime", column.getInhabitedTime());
 
-        if (((Chunk) column).getCapabilities() != null) {
+        if (column.getCapabilities() != null) {
             try {
                 nbt.setTag("ForgeCaps", ((Chunk) column).getCapabilities().serializeNBT());
             } catch (Exception exception) {
@@ -144,6 +144,15 @@ class IONbtWriter {
         cubeNbt.setBoolean("fullyPopulated", cube.isFullyPopulated());
 
         cubeNbt.setBoolean("initLightDone", cube.isInitialLightingDone());
+
+        if (cube.getCapabilities() != null) {
+            try {
+                cubeNbt.setTag("ForgeCaps", cube.getCapabilities().serializeNBT());
+            } catch (Exception exception) {
+                CubicChunks.LOGGER.error("A capability provider has thrown an exception trying to write state. It will not persist. "
+                        + "Report this to the mod author", exception);
+            }
+        }
     }
 
     private static void writeBlocks(Cube cube, NBTTagCompound cubeNbt) {

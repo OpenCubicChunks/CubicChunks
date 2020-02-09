@@ -86,7 +86,7 @@ public class IONbtReader {
         }
 
         // create the column
-        Chunk column = new Chunk((World) world, x, z);
+        Chunk column = new Chunk(world, x, z);
 
         // read the rest of the column properties
         column.setInhabitedTime(nbt.getLong("InhabitedTime"));
@@ -172,6 +172,10 @@ public class IONbtReader {
         cube.setFullyPopulated(nbt.getBoolean("fullyPopulated"));
 
         cube.setInitialLightingDone(nbt.getBoolean("initLightDone"));
+
+        if (cube.getCapabilities() != null && nbt.hasKey("ForgeCaps")) {
+            cube.getCapabilities().deserializeNBT(nbt.getCompoundTag("ForgeCaps"));
+        }
         return cube;
     }
 

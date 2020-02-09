@@ -38,6 +38,8 @@ import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
+import net.minecraftforge.common.capabilities.CapabilityDispatcher;
+import net.minecraftforge.common.capabilities.ICapabilityProvider;
 
 import java.util.Map;
 
@@ -46,7 +48,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public interface ICube extends XYZAddressable {
+public interface ICube extends XYZAddressable, ICapabilityProvider {
 
     /**
      * Side length of a cube
@@ -262,4 +264,8 @@ public interface ICube extends XYZAddressable {
      */
     @Deprecated
     void setBiome(int localBiomeX, int localBiomeZ, Biome biome);
+
+    @Nullable
+    CapabilityDispatcher getCapabilities();
+
 }

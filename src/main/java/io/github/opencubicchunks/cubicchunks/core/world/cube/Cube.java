@@ -56,6 +56,11 @@ import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.common.capabilities.Capability;
+import net.minecraftforge.common.capabilities.CapabilityDispatcher;
+import net.minecraftforge.event.AttachCapabilitiesEvent;
+import net.minecraftforge.event.ForgeEventFactory;
 import net.minecraftforge.event.world.ChunkEvent;
 
 import javax.annotation.Nonnull;
@@ -177,6 +182,7 @@ public class Cube implements ICube {
      */
     private long lastTicked = Long.MIN_VALUE;
 
+    private final CapabilityDispatcher capabilities;
 
     /**
      * Create a new cube in the specified column at the specified location. The newly created cube will only contain air
@@ -199,6 +205,10 @@ public class Cube implements ICube {
         this.cubeLightUpdateInfo = ((ICubicWorldInternal) world).getLightingManager().createCubeLightUpdateInfo(this);
 
         this.storage = NULL_STORAGE;
+
+        AttachCapabilitiesEvent<ICube> event = new AttachCapabilitiesEvent<>(ICube.class, this);
+        MinecraftForge.EVENT_BUS.post(event);
+        this.capabilities = event.getCapabilities().size() > 0 ? new CapabilityDispatcher(event.getCapabilities(), null) : null;
     }
 
     /**
@@ -265,6 +275,11 @@ public class Cube implements ICube {
         this.tileEntityMap = tileEntityMap;
         this.tileEntityPosQueue = tileEntityPosQueue;
         this.cubeLightUpdateInfo = lightInfo;
+
+        AttachCapabilitiesEvent<ICube> event = new AttachCapabilitiesEvent<>(ICube.class, this);
+        MinecraftForge.EVENT_BUS.post(event);
+        this.capabilities = event.getCapabilities().size() > 0 ? new CapabilityDispatcher(event.getCapabilities(), null) : null;
+
     }
 
     //======================================
@@ -732,5 +747,22 @@ public class Cube implements ICube {
 
     public boolean hasBeenTicked() {
         return ticked;
+    }
+
+    @Override
+    @Nullable
+    public CapabilityDispatcher getCapabilities() {
+        return this.capabilities;
+    }
+
+    @Override
+    public boolean hasCapability(Capability<?> capability, @Nullable EnumFacing facing) {
+        return this.capabilities != null && this.capabilities.hasCapability(capability, facing);
+    }
+
+    @Override
+    @Nullable
+    public <T> T getCapability(Capability<T> capability, @Nullable EnumFacing facing) {
+        return this.capabilities == null ? null : this.capabilities.getCapability(capability, facing);
     }
 }
