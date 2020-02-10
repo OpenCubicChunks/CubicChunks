@@ -36,11 +36,14 @@ import io.github.opencubicchunks.cubicchunks.api.worldgen.ICubeGenerator;
 import io.github.opencubicchunks.cubicchunks.core.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.core.asm.mixin.ICubicWorldInternal;
 import io.github.opencubicchunks.cubicchunks.core.lighting.LightingManager;
+import io.github.opencubicchunks.cubicchunks.core.server.CubeWatcher;
+import io.github.opencubicchunks.cubicchunks.core.server.SpawnCubes;
 import io.github.opencubicchunks.cubicchunks.core.util.AddressTools;
 import io.github.opencubicchunks.cubicchunks.core.util.CompatHandler;
 import io.github.opencubicchunks.cubicchunks.core.util.ticket.ITicket;
 import io.github.opencubicchunks.cubicchunks.core.util.ticket.TicketList;
 import io.github.opencubicchunks.cubicchunks.core.world.EntityContainer;
+import io.github.opencubicchunks.cubicchunks.core.world.chunkloader.ICubicTicketInternal;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
@@ -60,12 +63,12 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.CapabilityDispatcher;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
-import net.minecraftforge.event.ForgeEventFactory;
 import net.minecraftforge.event.world.ChunkEvent;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
@@ -73,7 +76,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.function.BooleanSupplier;
 
 import static io.github.opencubicchunks.cubicchunks.api.util.Coords.*;
-import static net.minecraftforge.common.MinecraftForge.*;
+import static net.minecraftforge.common.MinecraftForge.EVENT_BUS;
 
 /**
  * A cube is our extension of minecraft's chunk system to three dimensions. Each cube encloses a cubic area in the world
@@ -753,6 +756,28 @@ public class Cube implements ICube {
     @Nullable
     public CapabilityDispatcher getCapabilities() {
         return this.capabilities;
+    }
+
+    @Override
+    public EnumSet<ForcedLoadReason> getForceLoadStatus() {
+        EnumSet<ForcedLoadReason> forcedLoadReasons = EnumSet.noneOf(ForcedLoadReason.class);
+        if (this.tickets.canUnload()) {
+            return forcedLoadReasons;
+        }
+        if (this.tickets.anyMatch(t -> t instanceof SpawnCubes)) {
+            forcedLoadReasons.add(ForcedLoadReason.SPAWN_AREA);
+        }
+        if (this.tickets.anyMatch(t -> t instanceof CubeWatcher)) {
+            forcedLoadReasons.add(ForcedLoadReason.SPAWN_AREA);
+        }
+        if (this.tickets.anyMatch(t -> t instanceof ICubicTicketInternal)) {
+            forcedLoadReasons.add(ForcedLoadReason.MOD_TICKET);
+        }
+        if (this.tickets.anyMatch(t ->
+                !(t instanceof SpawnCubes) && !(t instanceof CubeWatcher) && !(t instanceof ICubicTicketInternal))) {
+            forcedLoadReasons.add(ForcedLoadReason.OTHER);
+        }
+        return forcedLoadReasons;
     }
 
     @Override

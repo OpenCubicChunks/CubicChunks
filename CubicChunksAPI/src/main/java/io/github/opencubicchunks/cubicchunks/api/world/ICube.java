@@ -41,6 +41,7 @@ import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 import net.minecraftforge.common.capabilities.CapabilityDispatcher;
 import net.minecraftforge.common.capabilities.ICapabilityProvider;
 
+import java.util.EnumSet;
 import java.util.Map;
 
 import javax.annotation.Nullable;
@@ -268,4 +269,13 @@ public interface ICube extends XYZAddressable, ICapabilityProvider {
     @Nullable
     CapabilityDispatcher getCapabilities();
 
+    /**
+     * Returns a set of reasons this cube is forced to remain loaded if it's forced to remain loaded,
+     * or empty enum set if it can be unloaded.
+     */
+    EnumSet<ForcedLoadReason> getForceLoadStatus();
+
+    enum ForcedLoadReason {
+        SPAWN_AREA, PLAYER, MOD_TICKET, OTHER
+    }
 }

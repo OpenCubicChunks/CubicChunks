@@ -25,16 +25,15 @@
 package io.github.opencubicchunks.cubicchunks.core.util.ticket;
 
 import com.google.common.collect.Lists;
-import io.github.opencubicchunks.cubicchunks.api.world.ICube;
 import io.github.opencubicchunks.cubicchunks.core.asm.mixin.ICubicWorldInternal;
 import io.github.opencubicchunks.cubicchunks.core.world.cube.Cube;
 import mcp.MethodsReturnNonnullByDefault;
 
-import java.util.List;
-
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
+import java.util.List;
+import java.util.function.Predicate;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
@@ -111,5 +110,9 @@ public class TicketList {
      */
     public boolean canUnload() {
         return tickets.isEmpty();
+    }
+
+    public boolean anyMatch(Predicate<ITicket> predicate) {
+        return tickets.stream().anyMatch(predicate);
     }
 }
