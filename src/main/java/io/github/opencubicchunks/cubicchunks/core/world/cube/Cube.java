@@ -768,7 +768,7 @@ public class Cube implements ICube {
             forcedLoadReasons.add(ForcedLoadReason.SPAWN_AREA);
         }
         if (this.tickets.anyMatch(t -> t instanceof CubeWatcher)) {
-            forcedLoadReasons.add(ForcedLoadReason.SPAWN_AREA);
+            forcedLoadReasons.add(ForcedLoadReason.PLAYER);
         }
         if (this.tickets.anyMatch(t -> t instanceof ICubicTicketInternal)) {
             forcedLoadReasons.add(ForcedLoadReason.MOD_TICKET);
