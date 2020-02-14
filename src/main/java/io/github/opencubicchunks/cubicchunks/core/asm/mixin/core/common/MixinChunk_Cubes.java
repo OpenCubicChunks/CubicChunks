@@ -542,7 +542,11 @@ public abstract class MixinChunk_Cubes implements IColumn {
 
     @ModifyConstant(method = "removeEntityAtIndex",
             constant = @Constant(expandZeroConditions = Constant.Condition.LESS_THAN_ZERO, intValue = 0),
-            require = 1
+            require = 2,
+            slice = @Slice(
+                    from = @At("HEAD"),
+                    to = @At(value = "INVOKE", target = "Lnet/minecraft/util/ClassInheritanceMultiMap;remove(Ljava/lang/Object;)Z")
+            )
     )
     private int removeEntityAtIndex_getMinY(int zero) {
         return blockToCube(getWorld().getMinHeight());
