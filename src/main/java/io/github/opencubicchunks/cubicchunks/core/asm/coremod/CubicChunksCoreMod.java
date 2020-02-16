@@ -106,5 +106,9 @@ public class CubicChunksCoreMod implements IFMLLoadingPlugin {
         Mixins.addConfiguration("cubicchunks.mixins.noncritical.json");
         MixinEnvironment.getDefaultEnvironment().registerTokenProviderClass(
                 "io.github.opencubicchunks.cubicchunks.core.asm.coremod.CubicChunksCoreMod$TokenProvider");
+        // this is a reentrant transformer, but in certain cases (VanillaFix+RandomPatches+optifine+CC)
+        // mixin detects it at just the wrong moment, causing certain CC mixins to not be applied
+        MixinEnvironment.getDefaultEnvironment()
+                .addTransformerExclusion("com.therandomlabs.randompatches.core.RPTransformer");
     }
 }
