@@ -160,7 +160,8 @@ public class CubeSplitTickSet implements Set<NextTickListEntry> {
         return ret;
     }
 
-    @Override public void clear() {
+    @Override
+    public void clear() {
         all.clear();
         byCube.clear();
     }
@@ -168,8 +169,10 @@ public class CubeSplitTickSet implements Set<NextTickListEntry> {
     // vanilla bug, see https://github.com/SleepyTrousers/EnderCore/issues/105
     // NextTickListEntry equals and compareTo are not consistent,
     // breaking HashMap when there are a lot of hash collisions
+    // fix based on https://github.com/gnembon/carpetmod112/blob/a84ad2617ab3c2ca7b10b28264ba325f8adecd3f/patches/net/minecraft/world/NextTickListEntry.java.patch
+    // thanks to Earthcomputer for bringing it up
 
-    public static final class EqualsHashCodeWrapper<T> {
+    public static final class EqualsHashCodeWrapper<T extends Comparable<T>> implements Comparable<EqualsHashCodeWrapper<T>> {
 
         final T entry;
 
@@ -188,6 +191,14 @@ public class CubeSplitTickSet implements Set<NextTickListEntry> {
                 return false;
             }
             return this.entry.equals(((EqualsHashCodeWrapper<?>) entry).entry);
+        }
+
+        @Override
+        public int compareTo(EqualsHashCodeWrapper<T> other) {
+            if (this.equals(other)) {
+                return 0;
+            }
+            return this.entry.compareTo(other.entry);
         }
     }
 
@@ -215,7 +226,10 @@ public class CubeSplitTickSet implements Set<NextTickListEntry> {
 
         @Override
         public boolean contains(Object entry) {
-            return backingSet.contains(new EqualsHashCodeWrapper<>(entry));
+            if (!(entry instanceof NextTickListEntry)) {
+                return false;
+            }
+            return backingSet.contains(new EqualsHashCodeWrapper<>((NextTickListEntry) entry));
         }
 
         @Override
@@ -225,7 +239,10 @@ public class CubeSplitTickSet implements Set<NextTickListEntry> {
 
         @Override
         public boolean remove(Object entry) {
-            return backingSet.remove(new EqualsHashCodeWrapper<>(entry));
+            if (!(entry instanceof NextTickListEntry)) {
+                return false;
+            }
+            return backingSet.remove(new EqualsHashCodeWrapper<>((NextTickListEntry) entry));
         }
     }
 }
