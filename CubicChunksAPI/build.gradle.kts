@@ -137,7 +137,7 @@ compileJava.apply {
 }
 
 val deobfJar by tasks.creating(Jar::class) {
-    classifier = "dev"
+    classifier = "api-dev"
     from(sourceSets["main"].output)
 }
 

@@ -92,6 +92,17 @@ group = "io.github.opencubicchunks"
 
 sourceSets {
     create("optifine_dummy")
+    if (System.getProperty("cubicchunks.isStandaloneBuild") == "true") {
+        println("Adding API sourceset")
+        getByName("api").apply {
+            java {
+                srcDir("CubicChunksAPI/src/main/java")
+            }
+            resources {
+                srcDir("CubicChunksAPI/src/main/resources")
+            }
+        }
+    }
 }
 
 // configurations, needed for extendsFrom
@@ -134,7 +145,8 @@ dependencies {
     }
 
     embed("io.github.opencubicchunks:regionlib:0.61.0-SNAPSHOT")
-    embed("io.github.opencubicchunks:cubicchunks-api:1.12.2-0.0-SNAPSHOT")
+    if (System.getProperty("cubicchunks.isStandaloneBuild") == "false")
+        compile("io.github.opencubicchunks:cubicchunks-api:1.12.2-0.0-SNAPSHOT")
 }
 
 idea {
@@ -255,6 +267,7 @@ javadoc.apply {
     source = sourceSets["main"].allJava
     (options as StandardJavadocDocletOptions).tags = listOf("reason")
 }
+
 val sourceJar: Jar by tasks
 sourceJar.apply {
     classifier = "sources-srg"
@@ -269,6 +282,39 @@ val devShadowJar by tasks.creating(ShadowJar::class) {
 val javadocJar by tasks.creating(Jar::class) {
     classifier = "javadoc"
     from(tasks["javadoc"])
+}
+if (System.getProperty("cubicchunks.isStandaloneBuild") == "true") {
+    val deobfApiJar by tasks.creating(Jar::class) {
+        classifier = "api-dev"
+        from(sourceSets["api"].output)
+    }
+
+    val deobfApiSrcJar by tasks.creating(Jar::class) {
+        classifier = "api-sources"
+        from(sourceSets["api"].java.srcDirs)
+    }
+
+    val javadocApi by tasks.creating(Javadoc::class) {
+        source = sourceSets["api"].allJava
+        classpath = javadoc.classpath
+    }
+
+    val javadocApiJar by tasks.creating(Jar::class) {
+        classifier = "api-javadoc"
+        from(javadocApi)
+    }
+
+    val apiJar by tasks.creating(Jar::class) {
+        classifier = "api"
+        from(sourceSets["api"].output)
+    }
+
+    reobf {
+        create("apiJar").apply {
+            mappingType = ReobfMappingType.SEARGE
+        }
+    }
+    build.dependsOn("reobfApiJar", deobfApiJar, deobfApiSrcJar, javadocApiJar)
 }
 reobf {
     create("shadowJar").apply {
@@ -302,6 +348,59 @@ publishing {
         }
     }
     (publications) {
+        if (System.getProperty("cubicchunks.isStandaloneBuild") == "true") {
+            "api"(MavenPublication::class) {
+                version = ext["mavenProjectVersion"]!!.toString()
+                artifactId = "cubicchunks-api"
+                from(components["java"])
+                artifacts.clear()
+                artifact(tasks["deobfApiSrcJar"]) {
+                    classifier = "sources"
+                }
+                artifact(tasks["apiJar"]) {
+                    classifier = ""
+                }
+                artifact(tasks["javadocApiJar"]) {
+                    classifier = "javadoc"
+                }
+                artifact(tasks["deobfApiJar"]) {
+                    classifier = "dev"
+                }
+                pom {
+                    name.set("Cubic Chunks API")
+                    description.set("API for the CubicChunks mod for Minecraft")
+                    packaging = "jar"
+                    url.set("https://github.com/OpenCubicChunks/CubicChunks")
+                    description.set("API for CubicChunks mod for Minecraft")
+                    scm {
+                        connection.set("scm:git:git://github.com/OpenCubicChunks/CubicChunks.git")
+                        developerConnection.set("scm:git:ssh://git@github.com:OpenCubicChunks/CubicChunks.git")
+                        url.set("https://github.com/OpenCubicChunks/RegionLib")
+                    }
+
+                    licenses {
+                        license {
+                            name.set("The MIT License")
+                            url.set("http://www.tldrlegal.com/license/mit-license")
+                            distribution.set("repo")
+                        }
+                    }
+
+                    developers {
+                        developer {
+                            id.set("Barteks2x")
+                            name.set("Barteks2x")
+                        }
+                        // TODO: add more developers
+                    }
+
+                    issueManagement {
+                        system.set("github")
+                        url.set("https://github.com/OpenCubicChunks/CubicChunks/issues")
+                    }
+                }
+            }
+        }
         "mod"(MavenPublication::class) {
             version = ext["mavenProjectVersion"]!!.toString()
             artifactId = "cubicchunks"
@@ -354,15 +453,22 @@ publishing {
 afterEvaluate {
     tasks["publishModPublicationToMavenRepository"].dependsOn("reobfShadowJar")
     tasks["publishModPublicationToMavenRepository"].dependsOn(devShadowJar)
+    if (System.getProperty("cubicchunks.isStandaloneBuild") == "true") {
+        tasks["publishApiPublicationToMavenRepository"].dependsOn("deobfApiSrcJar", "reobfApiJar", "javadocApiJar", "deobfApiJar")
+    }
 }
 configurations {
     create("mainArchives")
+    create("apiArchives")
 }
 // tasks must be before artifacts, don't change the order
 artifacts {
     withGroovyBuilder {
         "mainArchives"(devShadowJar, deobfSourcesJar, javadocJar)
         "archives"(shadowJar)
+        if (System.getProperty("cubicchunks.isStandaloneBuild") == "true") {
+            "apiArchives"(tasks["deobfApiSrcJar"], tasks["apiJar"], tasks["javadocApiJar"], tasks["deobfApiJar"])
+        }
     }
 }
 
