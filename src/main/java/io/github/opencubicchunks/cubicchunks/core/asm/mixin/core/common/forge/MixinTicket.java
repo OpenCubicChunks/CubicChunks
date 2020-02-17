@@ -40,6 +40,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
@@ -102,7 +103,7 @@ public abstract class MixinTicket implements ICubicTicketInternal {
     }
 
     @Override public Map<ChunkPos, IntSet> getAllForcedChunkCubes() {
-        return cubePosMap;
+        return Collections.unmodifiableMap(cubePosMap);
     }
 
     @Override public void setAllForcedChunkCubes(Map<ChunkPos, IntSet> cubePosMap) {

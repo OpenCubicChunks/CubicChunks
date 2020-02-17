@@ -156,6 +156,7 @@ public interface ICube extends XYZAddressable, ICapabilityProvider {
      * @param <T> dummy generic parameter to return a type that is both {@link Chunk} and {@link IColumn}
      * @return this cube's column
      */
+    @SuppressWarnings({"deprecation", "RedundantSuppression"})
     <T extends Chunk & IColumn> T getColumn();
 
     /**
@@ -261,6 +262,9 @@ public interface ICube extends XYZAddressable, ICapabilityProvider {
     /**
      * Set biome at a cube-local 2x2 block column.
      *
+     * @param localBiomeX cube-local X coordinate. One unit is 2 blocks
+     * @param localBiomeZ cube-local Z coordinate. One unit is 2 blocks
+     * @param biome biome at the given cube coordinates
      * @deprecated Due to changes in Minecraft 1.15.x, biome storage will be changed to 1 biome per 4x4x4 blocks
      */
     @Deprecated
@@ -272,6 +276,8 @@ public interface ICube extends XYZAddressable, ICapabilityProvider {
     /**
      * Returns a set of reasons this cube is forced to remain loaded if it's forced to remain loaded,
      * or empty enum set if it can be unloaded.
+     *
+     * @return EnumSet of reasons for this cube to stay loaded. Empty if it can be unloaded.
      */
     EnumSet<ForcedLoadReason> getForceLoadStatus();
 

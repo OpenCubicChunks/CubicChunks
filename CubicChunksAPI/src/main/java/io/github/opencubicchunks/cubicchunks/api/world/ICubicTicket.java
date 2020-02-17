@@ -37,8 +37,11 @@ import java.util.Map;
  */
 public interface ICubicTicket {
     /**
-     * Returns an immutable view of all forced cubes, in the form of map from column position,
-     * to set of cube Y positions in that column.
+     * Returns an unmodifiable view of all forced cubes, in the form of map from column position,
+     * to set of cube Y positions in that column. An implementation is allowed to return a copy
+     * instead of a live view.
+     *
+     * @return unmodifiable view of forced cubes grouped by column position
      */
     Map<ChunkPos, IntSet> getAllForcedChunkCubes();
 }

@@ -746,7 +746,7 @@ public abstract class MixinChunk_Cubes implements IColumn {
     private void getPrecipitationHeight_CubicChunks_Replace(BlockPos pos, CallbackInfoReturnable<BlockPos> cbi) {
         if (isColumn) {
             // TODO: precipitationHeightMap
-            BlockPos ret = new BlockPos(pos.getX(), getHeightValue(blockToLocal(pos.getX()), blockToLocal(pos.getZ())), pos.getZ());
+            BlockPos ret = new BlockPos(pos.getX(), getHeightValue(blockToLocal(pos.getX()), pos.getY(), blockToLocal(pos.getZ())), pos.getZ());
             cbi.setReturnValue(ret);
             cbi.cancel();
         }

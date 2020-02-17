@@ -51,7 +51,7 @@ public interface ICubicStructureGenerator {
      * @param range horizontal search distance for structure sources (in cubes)
      * @param rangeY vertical search distance for structure sources (in cubes)
      * @param spacingBitCount only structure sources on a grid of size 2^spacingBitCount will be considered for generation
-     * @param spacingBitCount only structure sources on a grid of size 2^spacingBitCount will be considered for generation (y coordinate)
+     * @param spacingBitCountY only structure sources on a grid of size 2^spacingBitCount will be considered for generation (y coordinate)
      */
     default void generate(World world, CubePrimer cube, CubePos cubePos, Handler handler,
             int range, int rangeY, int spacingBitCount, int spacingBitCountY) {

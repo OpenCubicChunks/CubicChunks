@@ -54,6 +54,7 @@ apply {
 
 mcGitVersion {
     isSnapshot = true
+    setCommitVersion("tags/v0.0", "0.0")
 }
 
 // tasks
@@ -199,8 +200,6 @@ minecraft {
     replaceIn("io/github/opencubicchunks/cubicchunks/core/CubicChunks.java")
     replaceIn("io/github/opencubicchunks/cubicchunks/core/asm/CubicChunksCoreContainer.java")
 
-    makeObfSourceJar = false
-
     val args = listOf(
             "-Dfml.coreMods.load=io.github.opencubicchunks.cubicchunks.core.asm.coremod.CubicChunksCoreMod", //the core mod class, needed for mixins
             "-Dmixin.env.compatLevel=JAVA_8", //needed to use java 8 when using mixins
@@ -256,7 +255,11 @@ javadoc.apply {
     source = sourceSets["main"].allJava
     (options as StandardJavadocDocletOptions).tags = listOf("reason")
 }
-val sourcesJar by tasks.creating(Jar::class) {
+val sourceJar: Jar by tasks
+sourceJar.apply {
+    classifier = "sources-srg"
+}
+val deobfSourcesJar by tasks.creating(Jar::class) {
     classifier = "sources"
     from(sourceSets["main"].java.srcDirs)
 }
@@ -272,7 +275,7 @@ reobf {
         mappingType = ReobfMappingType.SEARGE
     }
 }
-build.dependsOn("reobfShadowJar", devShadowJar)
+build.dependsOn("reobfShadowJar", devShadowJar, javadocJar, deobfSourcesJar, "sourceJar")
 if (gradle.includedBuilds.any { it.name == "CubicChunksAPI" }) {
     tasks["publish"].dependsOn(gradle.includedBuild("CubicChunksAPI").task(":publish"))
 }
@@ -304,7 +307,7 @@ publishing {
             artifactId = "cubicchunks"
             from(components["java"])
             artifacts.clear()
-            artifact(sourcesJar) {
+            artifact(deobfSourcesJar) {
                 classifier = "sources"
             }
             artifact(shadowJar) {
@@ -358,7 +361,7 @@ configurations {
 // tasks must be before artifacts, don't change the order
 artifacts {
     withGroovyBuilder {
-        "mainArchives"(devShadowJar, sourcesJar, javadocJar)
+        "mainArchives"(devShadowJar, deobfSourcesJar, javadocJar)
         "archives"(shadowJar)
     }
 }

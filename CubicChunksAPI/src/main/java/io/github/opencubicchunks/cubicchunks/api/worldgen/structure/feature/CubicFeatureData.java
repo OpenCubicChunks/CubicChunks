@@ -54,9 +54,14 @@ public class CubicFeatureData extends WorldSavedData {
     /**
      * Writes the NBT tag of an instance of this structure type to the internal NBT tag, using the chunkcoordinates as
      * the key
+     *
+     * @param tag   tag compound instance to write
+     * @param cubeX cube X coordinate to use as key
+     * @param cubeY cube Y coordinate to use as key
+     * @param cubeZ cube Z coordinate to use as key
      */
-    public void writeInstance(NBTTagCompound tagCompoundIn, int chunkX, int chunkY, int chunkZ) {
-        this.tagCompound.setTag(formatChunkCoords(chunkX, chunkY, chunkZ), tagCompoundIn);
+    public void writeInstance(NBTTagCompound tag, int cubeX, int cubeY, int cubeZ) {
+        this.tagCompound.setTag(formatChunkCoords(cubeX, cubeY, cubeZ), tag);
     }
 
     public static String formatChunkCoords(int chunkX, int chunkY, int chunkZ) {

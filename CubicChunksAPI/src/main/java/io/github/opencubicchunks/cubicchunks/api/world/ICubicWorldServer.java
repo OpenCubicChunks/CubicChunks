@@ -59,6 +59,9 @@ public interface ICubicWorldServer extends ICubicWorld {
      * CubicChunks equivalent of {@link ForgeChunkManager#forceChunk(ForgeChunkManager.Ticket, ChunkPos)}.
      *
      * Can accept tickets from different worlds.
+     *
+     * @param ticket ForgeChunkManager ticket
+     * @param chunk position of the cube to force load
      */
     void forceChunk(ForgeChunkManager.Ticket ticket, CubePos chunk);
 
@@ -66,6 +69,9 @@ public interface ICubicWorldServer extends ICubicWorld {
      * CubicChunks equivalent of {@link ForgeChunkManager#reorderChunk(ForgeChunkManager.Ticket, ChunkPos)}
      *
      * Can accept tickets from different worlds.
+     *
+     * @param ticket ForgeChunkManager ticket
+     * @param chunk position of the cube to reorder
      */
     void reorderChunk(ForgeChunkManager.Ticket ticket, CubePos chunk);
 
@@ -73,6 +79,9 @@ public interface ICubicWorldServer extends ICubicWorld {
      * CubicChunks equivalent of {@link ForgeChunkManager#unforceChunk(ForgeChunkManager.Ticket, ChunkPos)}
      *
      * Can accept tickets from different worlds.
+     *
+     * @param ticket ForgeChunkManager ticket
+     * @param chunk position of the cube to unforce
      */
     void unforceChunk(ForgeChunkManager.Ticket ticket, CubePos chunk);
 

@@ -51,11 +51,17 @@ public class CubePrimer {
      * Returns biome in a given 4x4x4 block section.
      * <p>
      * Note: in current implementation, internal storage is for 2x16x2 blocks. This will be changed soon due to changes in 1.15.x.
+     *
+     * @param localBiomeX cube-local X coordinate. One unit is 4 blocks
+     * @param localBiomeY cube-local Y coordinate. One unit is 4 blocks
+     * @param localBiomeZ cube-local Z coordinate. One unit is 4 blocks
+     * @return currently set biome at the given position in this cube. Null if no biome has been set.
      */
+    @SuppressWarnings("unused")
     @Nullable
     public Biome getBiome(int localBiomeX, int localBiomeY, int localBiomeZ) {
         if (biomes3d == null) {
-            throw new IllegalStateException("There are no biomes in this cube primer");
+            return null;
         }
         int biomeX = localBiomeX * 2;
         int biomeZ = localBiomeZ * 2;
@@ -66,7 +72,15 @@ public class CubePrimer {
      * Sets biome in a given 4x4x4 block section.
      * <p>
      * Note: in current implementation, internal storage is for 2x16x2 blocks. This will be changed soon due to changes in 1.15.x.
+     *
+     * @param localBiomeX cube-local X coordinate. One unit is 4 blocks
+     * @param localBiomeY cube-local Y coordinate. One unit is 4 blocks
+     * @param localBiomeZ cube-local Z coordinate. One unit is 4 blocks
+     * @param biome biome to set in this cube position. After thig method returns, {@link #getBiome(int, int, int)}
+     *              is guaranteed to return this biome for the same supplied input coordinates. Currently it may also
+     *              affect the returned value at other coordinates due to internal storage differences.
      */
+    @SuppressWarnings("unused")
     public void setBiome(int localBiomeX, int localBiomeY, int localBiomeZ, Biome biome) {
         if (this.biomes3d == null) {
             this.biomes3d = new Biome[8 * 8];

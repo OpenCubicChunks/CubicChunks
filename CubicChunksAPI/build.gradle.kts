@@ -2,7 +2,6 @@
 
 
 import net.minecraftforge.gradle.tasks.DeobfuscateJar
-import net.minecraftforge.gradle.user.ReobfMappingType
 import nl.javadude.gradle.plugins.license.LicensePlugin
 import org.gradle.api.internal.HasConvention
 import org.gradle.kotlin.dsl.creating
@@ -49,16 +48,19 @@ apply {
 
 mcGitVersion {
     isSnapshot = true
+    setCommitVersion("tags/v0.0", "0.0")
 }
 
 // tasks
 val build by tasks
 val jar: Jar by tasks
+val sourceJar: Jar by tasks
 val javadoc: Javadoc by tasks
 val test: Test by tasks
 val processResources: ProcessResources by tasks
 val deobfMcSRG: DeobfuscateJar by tasks
 val deobfMcMCP: DeobfuscateJar by tasks
+val compileJava : JavaCompile by tasks
 
 defaultTasks = listOf("licenseFormat", "build")
 
@@ -101,7 +103,7 @@ idea {
 }
 
 base {
-    archivesBaseName = "CubicChunksAPI"
+    archivesBaseName = "CubicChunks"
 }
 
 java {
@@ -130,14 +132,37 @@ license {
     mapping(mapOf("java" to "SLASHSTAR_STYLE"))
 }
 
-val sourcesJar by tasks.creating(Jar::class) {
-    classifier = "sources"
+compileJava.apply {
+    options.isDeprecation = true
+}
+
+val deobfJar by tasks.creating(Jar::class) {
+    classifier = "dev"
+    from(sourceSets["main"].output)
+}
+
+val deobfSrcJar by tasks.creating(Jar::class) {
+    classifier = "api-sources"
     from(sourceSets["main"].java.srcDirs)
 }
 
 val javadocJar by tasks.creating(Jar::class) {
-    classifier = "javadoc"
+    classifier = "api-javadoc"
     from(tasks["javadoc"])
+}
+
+sourceJar.apply {
+    classifier = "api-sources-srg"
+}
+
+jar.apply {
+    classifier = "api"
+}
+
+artifacts {
+    withGroovyBuilder {
+        "archives"(jar, deobfSrcJar, javadocJar, sourceJar, deobfSrcJar, deobfJar)
+    }
 }
 
 publishing {
@@ -168,7 +193,7 @@ publishing {
             artifactId = "cubicchunks-api"
             from(components["java"])
             artifacts.clear()
-            artifact(sourcesJar) {
+            artifact(deobfSrcJar) {
                 classifier = "sources"
             }
             artifact(jar)

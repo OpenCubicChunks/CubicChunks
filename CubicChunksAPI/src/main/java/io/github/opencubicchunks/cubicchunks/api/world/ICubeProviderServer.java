@@ -62,6 +62,13 @@ public interface ICubeProviderServer extends ICubeProvider {
     /**
      * Returns true if the specified cube has been already generated (either loaded or saved
      * on disk).
+     *
+     * @param cubeX x coordinate of the cube
+     * @param cubeY y coordinate of the cube
+     * @param cubeZ z coordinate of the cube
+     * @return true iff, for this position, {@link #getCube(int, int, int, Requirement)} with {@link Requirement#LOAD}
+     * would return a non-null value. The result is guaranteed to be true only if the world save is not corrupted
+     * and can otherwise be correctly read.
      */
     boolean isCubeGenerated(int cubeX, int cubeY, int cubeZ);
 

@@ -24,15 +24,13 @@
  */
 package io.github.opencubicchunks.cubicchunks.api.world;
 
-import io.github.opencubicchunks.cubicchunks.api.util.Coords;
 import io.github.opencubicchunks.cubicchunks.api.util.XZAddressable;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.util.math.BlockPos;
 
-import java.util.Collection;
-
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
+import java.util.Collection;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault

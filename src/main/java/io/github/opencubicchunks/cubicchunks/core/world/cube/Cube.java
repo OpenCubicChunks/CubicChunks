@@ -464,10 +464,12 @@ public class Cube implements ICube {
         return new BlockPos(x, y, z);
     }
 
+    @SuppressWarnings("unchecked")
     public <T extends World & ICubicWorld> T getWorld() {
         return (T) this.world;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public <T extends Chunk & IColumn> T getColumn() {
         return (T) this.column;

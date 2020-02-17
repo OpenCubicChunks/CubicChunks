@@ -130,6 +130,8 @@ public class CubeGeneratorsRegistry {
     /**
      * Populators added here will be launched prior to any other. It is
      * recommended to use this function in init or pre init event of a mod.
+     *
+     * @param populator populator instance to register
      */
     public static void registerForCompatibilityGenerator(ICubicPopulator populator) {
         if (!customPopulatorsForFlatCubicGenerator.contains(populator))
