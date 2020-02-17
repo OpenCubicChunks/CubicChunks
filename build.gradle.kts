@@ -69,6 +69,7 @@ val deobfMcMCP: DeobfuscateJar by tasks
 defaultTasks = listOf("licenseFormat", "build")
 if (gradle.includedBuilds.any { it.name == "CubicChunksAPI" }) {
     tasks["clean"].dependsOn(gradle.includedBuild("CubicChunksAPI").task(":clean"))
+    tasks["clean"].mustRunAfter(gradle.includedBuild("CubicChunksAPI").task(":clean"))
 }
 
 //it can't be named forgeVersion because ForgeExtension has property named forgeVersion
@@ -198,6 +199,8 @@ minecraft {
     replaceIn("io/github/opencubicchunks/cubicchunks/core/CubicChunks.java")
     replaceIn("io/github/opencubicchunks/cubicchunks/core/asm/CubicChunksCoreContainer.java")
 
+    makeObfSourceJar = false
+
     val args = listOf(
             "-Dfml.coreMods.load=io.github.opencubicchunks.cubicchunks.core.asm.coremod.CubicChunksCoreMod", //the core mod class, needed for mixins
             "-Dmixin.env.compatLevel=JAVA_8", //needed to use java 8 when using mixins
@@ -259,6 +262,10 @@ val sourcesJar by tasks.creating(Jar::class) {
 }
 val devShadowJar by tasks.creating(ShadowJar::class) {
     configureShadowJar(this, "dev")
+}
+val javadocJar by tasks.creating(Jar::class) {
+    classifier = "javadoc"
+    from(tasks["javadoc"])
 }
 reobf {
     create("shadowJar").apply {
@@ -351,7 +358,7 @@ configurations {
 // tasks must be before artifacts, don't change the order
 artifacts {
     withGroovyBuilder {
-        "mainArchives"(devShadowJar, sourcesJar)
+        "mainArchives"(devShadowJar, sourcesJar, javadocJar)
         "archives"(shadowJar)
     }
 }
