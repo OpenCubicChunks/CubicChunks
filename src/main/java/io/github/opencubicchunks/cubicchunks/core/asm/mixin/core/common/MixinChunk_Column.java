@@ -36,12 +36,12 @@ import net.minecraft.world.chunk.Chunk;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Implements;
 import org.spongepowered.asm.mixin.Interface;
+import org.spongepowered.asm.mixin.Intrinsic;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 
-import java.util.Collection;
-
 import javax.annotation.ParametersAreNonnullByDefault;
+import java.util.Collection;
 
 /**
  * Implements the IColumn interface
@@ -68,6 +68,8 @@ public abstract class MixinChunk_Column implements IColumn {
     @Shadow @Final private World world;
 
     @Shadow public boolean unloadQueued;
+
+    @Shadow @Final private int[] heightMap;
 
     @Override public Cube getLoadedCube(int cubeY) {
         if (cachedCube != null && cachedCube.getY() == cubeY) {
@@ -145,5 +147,16 @@ public abstract class MixinChunk_Column implements IColumn {
 
     @Override public int getZ() {
         return z;
+    }
+
+    @Override
+    public int getHeightValue(int localX, int blockY, int localZ) {
+        return this.heightMap[localZ << 4 | localX];
+    }
+
+    @Intrinsic
+    @Override
+    public int getHeightValue(int localX, int localZ) {
+        return this.heightMap[localZ << 4 | localX];
     }
 }
