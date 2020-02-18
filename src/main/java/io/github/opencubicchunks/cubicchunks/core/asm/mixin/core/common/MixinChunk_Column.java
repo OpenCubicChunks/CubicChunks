@@ -71,6 +71,8 @@ public abstract class MixinChunk_Column implements IColumn {
 
     @Shadow @Final private int[] heightMap;
 
+    @Shadow public abstract int getHeightValue(int x, int z);
+
     @Override public Cube getLoadedCube(int cubeY) {
         if (cachedCube != null && cachedCube.getY() == cubeY) {
             return cachedCube;
@@ -155,8 +157,7 @@ public abstract class MixinChunk_Column implements IColumn {
     }
 
     @Intrinsic
-    @Override
-    public int getHeightValue(int localX, int localZ) {
-        return this.heightMap[localZ << 4 | localX];
+    public int chunk$getHeightValue(int localX, int localZ) {
+        return getHeightValue(localX, localZ);
     }
 }
