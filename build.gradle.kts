@@ -264,17 +264,20 @@ jmh {
 }
 
 javadoc.apply {
-    source = sourceSets["main"].allJava
+    source(sourceSets["main"].allJava, sourceSets["api"].allJava)
     (options as StandardJavadocDocletOptions).tags = listOf("reason")
 }
 
 val sourceJar: Jar by tasks
 sourceJar.apply {
+    from(sourceSets["main"].java.srcDirs)
+    from(sourceSets["api"].java.srcDirs)
     classifier = "sources-srg"
 }
 val deobfSourcesJar by tasks.creating(Jar::class) {
     classifier = "sources"
     from(sourceSets["main"].java.srcDirs)
+    from(sourceSets["api"].java.srcDirs)
 }
 val devShadowJar by tasks.creating(ShadowJar::class) {
     configureShadowJar(this, "dev")
@@ -492,6 +495,8 @@ repositories {
 
 jar.apply {
     from(sourceSets["main"].output)
+    from(sourceSets["api"].output)
+
     exclude("LICENSE.txt", "log4j2.xml")
 
     configureManifest(manifest)
@@ -509,6 +514,7 @@ fun configureShadowJar(task: ShadowJar, classifier: String) {
     task.configurations = listOf(coreShadow)
     task.exclude("META-INF/MUMFREY*")
     task.from(sourceSets["main"].output)
+    task.from(sourceSets["api"].output)
     task.exclude("log4j2.xml")
     task.into("/") {
         from(embed)
