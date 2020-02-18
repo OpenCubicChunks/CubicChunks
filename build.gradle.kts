@@ -140,7 +140,7 @@ dependencies {
     testCompile("org.mockito:mockito-core:2.1.0-RC.2")
     testCompile("org.spongepowered:launchwrappertestsuite:1.0-SNAPSHOT")
 
-    coreShadow("org.spongepowered:mixin:0.7.10-SNAPSHOT") {
+    coreShadow("org.spongepowered:mixin:0.8.1-SNAPSHOT") {
         isTransitive = false
     }
 
