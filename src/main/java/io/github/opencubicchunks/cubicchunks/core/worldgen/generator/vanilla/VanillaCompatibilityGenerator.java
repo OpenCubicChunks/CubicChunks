@@ -204,9 +204,9 @@ public class VanillaCompatibilityGenerator implements ICubeGenerator {
                 rand.setSeed(rand.nextInt() ^ cubeX);
                 rand.setSeed(rand.nextInt() ^ cubeZ);
                 // Fill with bottom block
-                for (int x = 0; x < Cube.SIZE; x++) {
-                    for (int y = 0; y < Cube.SIZE; y++) {
-                        for (int z = 0; z < Cube.SIZE; z++) {
+                for (int y = 0; y < Cube.SIZE; y++) {
+                    for (int z = 0; z < Cube.SIZE; z++) {
+                        for (int x = 0; x < Cube.SIZE; x++) {
                             IBlockState state = extensionBlockBottom;
                             if (state.getBlock() != Blocks.AIR) {
                                 int blockY = Coords.localToBlock(cubeY, y);
@@ -218,9 +218,10 @@ public class VanillaCompatibilityGenerator implements ICubeGenerator {
                 }
             } else if (cubeY >= worldHeightCubes) {
                 // Fill with top block
-                for (int x = 0; x < Cube.SIZE; x++) {
-                    for (int y = 0; y < Cube.SIZE; y++) {
-                        for (int z = 0; z < Cube.SIZE; z++) {
+                for (int y = 0; y < Cube.SIZE; y++) {
+                    for (int z = 0; z < Cube.SIZE; z++) {
+                        for (int x = 0; x < Cube.SIZE; x++) {
+
                             primer.setBlockState(x, y, z, extensionBlockTop);
                         }
                     }
@@ -246,9 +247,9 @@ public class VanillaCompatibilityGenerator implements ICubeGenerator {
                 // Copy from vanilla, replacing bedrock as appropriate
                 ExtendedBlockStorage storage = lastChunk.getBlockStorageArray()[cubeY];
                 if (storage != null && !storage.isEmpty()) {
-                    for (int x = 0; x < Cube.SIZE; x++) {
-                        for (int y = 0; y < Cube.SIZE; y++) {
-                            for (int z = 0; z < Cube.SIZE; z++) {
+                    for (int y = 0; y < Cube.SIZE; y++) {
+                        for (int z = 0; z < Cube.SIZE; z++) {
+                            for (int x = 0; x < Cube.SIZE; x++) {
                                 IBlockState state = storage.get(x, y, z);
                                 if (state == Blocks.BEDROCK.getDefaultState()) {
                                     if (y < Cube.SIZE / 2) {

@@ -229,10 +229,9 @@ public class Cube implements ICube {
         int miny = cubeToMinBlock(cubeY);
         IHeightMap opindex = ((IColumn) column).getOpacityIndex();
 
-        for (int x = 0; x < Cube.SIZE; x++) {
+        for (int y = Cube.SIZE - 1; y >= 0; y--) {
             for (int z = 0; z < Cube.SIZE; z++) {
-
-                for (int y = Cube.SIZE - 1; y >= 0; y--) {
+                for (int x = 0; x < Cube.SIZE; x++) {
                     IBlockState newstate = primer.getBlockState(x, y, z);
 
                     if (newstate.getMaterial() != Material.AIR) {

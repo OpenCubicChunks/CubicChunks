@@ -146,6 +146,6 @@ public class CubePrimer {
      * @return a unique array index for that coordinate
      */
     private static int getBlockIndex(int x, int y, int z) {
-        return x << 8 | z << 4 | y;
+        return y << 8 | z << 4 | x;
     }
 }
