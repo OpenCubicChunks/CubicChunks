@@ -206,11 +206,11 @@ public class CubeWorldEntitySpawner implements IWorldEntitySpawner {
 
                     toSpawn.setLocationAndAngles(entityX, entityY, entityZ, rand.nextFloat() * 360.0F, 0.0F);
 
-                    Event.Result canSpawn = ForgeEventFactory.canEntitySpawn(toSpawn, (World) world, entityX, entityY, entityZ);
+                    Event.Result canSpawn = ForgeEventFactory.canEntitySpawn(toSpawn, world, entityX, entityY, entityZ, null);
                     if (canSpawn == Event.Result.ALLOW ||
                             (canSpawn == Event.Result.DEFAULT && toSpawn.getCanSpawnHere() &&
                                     toSpawn.isNotColliding())) {
-                        if (!ForgeEventFactory.doSpecialSpawn(toSpawn, (World) world, entityX, entityY, entityZ)) {
+                        if (!ForgeEventFactory.doSpecialSpawn(toSpawn, world, entityX, entityY, entityZ, null)) {
                             entityData = toSpawn.onInitialSpawn(world.getDifficultyForLocation(new BlockPos(toSpawn)), entityData);
                         }
 

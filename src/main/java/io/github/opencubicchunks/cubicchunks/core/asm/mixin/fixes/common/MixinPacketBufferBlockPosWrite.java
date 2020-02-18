@@ -43,6 +43,7 @@ public abstract class MixinPacketBufferBlockPosWrite {
     @Shadow public abstract PacketBuffer writeVarInt(int input);
 
     /**
+     * @return block position from packet buffer
      * @author Barteks2x
      * @reason BlockPos.toLong works only between y=-2048 and y=2047
      */
@@ -58,6 +59,8 @@ public abstract class MixinPacketBufferBlockPosWrite {
     }
 
     /**
+     * @param pos block position to write
+     * @return this
      * @author Barteks2x
      * @reason BlockPos.toLong works only between y=-2048 and y=2047
      */

@@ -65,6 +65,9 @@ public class PacketUtils {
      * Writes signed int with variable length encoding, using at most 5 bytes.
      *
      * Unlike vanilla/forge one, this ensures that value and ~value are written using the same amount of bytes
+     *
+     * @param buf byte buffer
+     * @param i integer to write
      */
     public static void writeSignedVarInt(ByteBuf buf, int i) {
         int signBit = (i >>> 31) << 6;
@@ -81,6 +84,8 @@ public class PacketUtils {
      * Reads signed int with variable length encoding, using at most 5 bytes.
      *
      * @see PacketUtils#writeSignedVarInt(ByteBuf, int)
+     * @param buf byte buffer
+     * @return read integer
      */
     public static int readSignedVarInt(ByteBuf buf) {
         int val = 0;

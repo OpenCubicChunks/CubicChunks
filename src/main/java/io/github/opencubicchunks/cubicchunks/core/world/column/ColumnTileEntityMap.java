@@ -28,6 +28,7 @@ import io.github.opencubicchunks.cubicchunks.api.world.IColumn;
 import io.github.opencubicchunks.cubicchunks.api.world.ICube;
 import io.github.opencubicchunks.cubicchunks.api.util.Coords;
 import io.github.opencubicchunks.cubicchunks.core.world.cube.Cube;
+import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
 
@@ -40,9 +41,13 @@ import java.util.NoSuchElementException;
 import java.util.Set;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
 
 import java.util.Map.Entry;
 
+@MethodsReturnNonnullByDefault
+@ParametersAreNonnullByDefault
 public class ColumnTileEntityMap implements Map<BlockPos, TileEntity> {
 
     private final IColumn column;
@@ -52,15 +57,15 @@ public class ColumnTileEntityMap implements Map<BlockPos, TileEntity> {
     }
 
     @Override public int size() {
-        return ((Collection<Cube>) column.getLoadedCubes()).stream()
-                .map(Cube::getTileEntityMap)
+        return column.getLoadedCubes().stream()
+                .map(ICube::getTileEntityMap)
                 .map(Map::size)
-                .reduce((a, b) -> a + b).orElse(0);
+                .reduce(Integer::sum).orElse(0);
     }
 
     @Override public boolean isEmpty() {
-        return ((Collection<Cube>) column.getLoadedCubes()).stream()
-                .map(Cube::getTileEntityMap)
+        return  column.getLoadedCubes().stream()
+                .map(ICube::getTileEntityMap)
                 .allMatch(Map::isEmpty);
     }
 
@@ -85,6 +90,7 @@ public class ColumnTileEntityMap implements Map<BlockPos, TileEntity> {
         return cube.getTileEntityMap().containsValue(o);
     }
 
+    @Nullable
     @Override public TileEntity get(Object o) {
         if (!(o instanceof BlockPos)) {
             return null;
@@ -106,6 +112,7 @@ public class ColumnTileEntityMap implements Map<BlockPos, TileEntity> {
         return cube.getTileEntityMap().put(blockPos, tileEntity);
     }
 
+    @Nullable
     @Override public TileEntity remove(Object o) {
         if (!(o instanceof BlockPos)) {
             return null;
@@ -140,7 +147,7 @@ public class ColumnTileEntityMap implements Map<BlockPos, TileEntity> {
 
             @Nonnull @Override public Iterator<BlockPos> iterator() {
                 return new Iterator<BlockPos>() {
-                    Iterator<Cube> cubes = (Iterator<Cube>) column.getLoadedCubes().iterator();
+                    Iterator<? extends ICube> cubes = column.getLoadedCubes().iterator();
                     Iterator<BlockPos> curIt = !cubes.hasNext() ? null : cubes.next().getTileEntityMap().keySet().iterator();
                     BlockPos nextVal;
 
@@ -200,7 +207,7 @@ public class ColumnTileEntityMap implements Map<BlockPos, TileEntity> {
 
             @Override public Iterator<TileEntity> iterator() {
                 return new Iterator<TileEntity>() {
-                    Iterator<Cube> cubes = (Iterator<Cube>) column.getLoadedCubes().iterator();
+                    Iterator<? extends ICube> cubes = column.getLoadedCubes().iterator();
                     Iterator<TileEntity> curIt = !cubes.hasNext() ? null : cubes.next().getTileEntityMap().values().iterator();
                     TileEntity nextVal;
 
@@ -266,7 +273,7 @@ public class ColumnTileEntityMap implements Map<BlockPos, TileEntity> {
 
             @Nonnull @Override public Iterator<Entry<BlockPos, TileEntity>> iterator() {
                 return new Iterator<Entry<BlockPos, TileEntity>>() {
-                    Iterator<Cube> cubes = (Iterator<Cube>) column.getLoadedCubes().iterator();
+                    Iterator<? extends ICube> cubes = column.getLoadedCubes().iterator();
                     Iterator<Entry<BlockPos, TileEntity>> curIt = !cubes.hasNext() ? null : cubes.next().getTileEntityMap().entrySet().iterator();
                     Entry<BlockPos, TileEntity> nextVal;
 

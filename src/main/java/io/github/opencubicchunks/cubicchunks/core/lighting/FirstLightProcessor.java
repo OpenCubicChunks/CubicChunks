@@ -205,7 +205,7 @@ public class FirstLightProcessor {
         IColumn column = cube.getColumn();
         // Iterate over all affected cubes.
         Iterable<? extends ICube> cubes = column.getLoadedCubes(blockToCube(maxMaxHeight), blockToCube(minMinHeight));
-        for (Cube otherCube : (Iterable<Cube>) cubes) {
+        for (ICube otherCube : cubes) {
             int minCubeBlockY = otherCube.getCoords().getMinBlockY();
             int maxCubeBlockY = otherCube.getCoords().getMaxBlockY();
             for (int blockX = minBlockX; blockX <= maxBlockX; blockX++) {
@@ -270,7 +270,7 @@ public class FirstLightProcessor {
      *
      * @return true if the update was successful, false otherwise
      */
-    private boolean diffuseSkylightInBlockColumn(Cube cube, MutableBlockPos pos, int minBlockY, int maxBlockY,
+    private boolean diffuseSkylightInBlockColumn(ICube cube, MutableBlockPos pos, int minBlockY, int maxBlockY,
             Int2ObjectMap<FastCubeBlockAccess> blockAccessMap, List<BlockPos> posToUpdate) {
         int cubeMinBlockY = cubeToMinBlock(cube.getY());
         int cubeMaxBlockY = cubeToMaxBlock(cube.getY());
@@ -336,7 +336,7 @@ public class FirstLightProcessor {
      *
      * @return true if light in the given cube can be updated, false otherwise
      */
-    private static boolean canUpdateCube(@Nonnull Cube cube) {
+    private static boolean canUpdateCube(@Nonnull ICube cube) {
         BlockPos cubeCenter = getCubeCenter(cube);
         return cube.getWorld().testForCubes(cubeCenter, UPDATE_RADIUS, Objects::nonNull);
     }

@@ -36,13 +36,13 @@ import net.minecraft.world.WorldServer;
 @Mixin(value = WorldServer.class, priority = 1001)
 public abstract class MixinWorldServer_UpdateBlocks implements ICubicWorldServer {
 
-    /**
+    /*
      * This redirection (if selected by {@link io.github.opencubicchunks.cubicchunks.core.asm.CubicChunksMixinConfig})
      * will return value {@code 0} instead of {@code getGameRules().getInt("randomTickSpeed")} for cubic type worlds.
      * Redirected function is located inside WorldServer.updateBlocks() function at a line 404.
      * Returned zero will cause {@code if (i > 0)} check at a line 474 to fail and random block ticks skipped.
      * For cubic worlds random block ticks handled inside {@link Cube} class.
-     **/
+     */
     @Redirect(method = "updateBlocks", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/GameRules;getInt(Ljava/lang/String;)I"), require = 1)
     public int redirectGetRandomTickSpeed(GameRules gameRules, String ruleName) {
         return this.isCubicWorld() ? 0 : gameRules.getInt(ruleName);

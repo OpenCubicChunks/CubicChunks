@@ -92,6 +92,9 @@ public class MixinTeleporter {
     }
     
     /**
+     * @param entityIn entity to make portal for
+     * @return true
+     * @author Foghrye4
      * @reason Original function contain so much height limitations in a weird
      *         ways that fixing it with redirections is a way too complex task
      **/

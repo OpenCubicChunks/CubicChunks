@@ -151,7 +151,7 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
     public Chunk loadChunk(int columnX, int columnZ, @Nullable Runnable runnable) {
         // TODO: Set this to LOAD when PlayerCubeMap works
         if (runnable == null) {
-            return (Chunk) getColumn(columnX, columnZ, /*Requirement.LOAD*/Requirement.LIGHT);
+            return getColumn(columnX, columnZ, /*Requirement.LOAD*/Requirement.LIGHT);
         }
 
         // TODO here too

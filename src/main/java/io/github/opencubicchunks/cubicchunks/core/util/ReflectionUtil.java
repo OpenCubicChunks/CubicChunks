@@ -38,6 +38,10 @@ public class ReflectionUtil {
 
     /**
      * Casts any object to inferred type. Useful for reflection.
+     *
+     * @param in an object
+     * @param <T> an inferred type
+     * @return the input object, cast to arbitrary type T
      */
     @SuppressWarnings("unchecked") public static <T> T cast(Object in) {
         return (T) in;

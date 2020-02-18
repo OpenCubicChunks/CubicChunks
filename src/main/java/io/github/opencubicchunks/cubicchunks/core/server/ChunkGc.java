@@ -24,18 +24,16 @@
  */
 package io.github.opencubicchunks.cubicchunks.core.server;
 
-import io.github.opencubicchunks.cubicchunks.api.world.ICubeProviderServer;
-import io.github.opencubicchunks.cubicchunks.core.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.api.world.IColumn;
+import io.github.opencubicchunks.cubicchunks.core.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.core.CubicChunksConfig;
 import io.github.opencubicchunks.cubicchunks.core.world.cube.Cube;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.world.chunk.Chunk;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Collection;
 import java.util.Iterator;
-
-import javax.annotation.ParametersAreNonnullByDefault;
 
 /**
  * Chunk Garbage Collector, automatically unloads unused chunks.
@@ -75,6 +73,7 @@ public class ChunkGc {
             if (storedCol == null) {
                 throw new RuntimeException("Cube with no stored column!");
             }
+            //noinspection EqualsBetweenInconvertibleTypes
             if (storedCol != cubeCol) {
                 throw new RuntimeException("CubeColumn and StoredColumn are different!");
             }
@@ -84,6 +83,7 @@ public class ChunkGc {
         int totalCubes = 0;
         while (columnIt.hasNext()) {
             Chunk storedCol = columnIt.next();
+            @SuppressWarnings("unchecked")
             Collection<Cube> storedColumnCubes = (Collection<Cube>) ((IColumn) storedCol).getLoadedCubes();
             for (Cube c : storedColumnCubes) {
                 if (cubeCache.getLoadedCube(c.getCoords()) != c) {

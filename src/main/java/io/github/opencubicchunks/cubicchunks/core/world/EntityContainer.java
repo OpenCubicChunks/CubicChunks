@@ -25,7 +25,6 @@
 package io.github.opencubicchunks.cubicchunks.core.world;
 
 import io.github.opencubicchunks.cubicchunks.core.CubicChunks;
-import io.github.opencubicchunks.cubicchunks.core.util.ClassInheritanceMultiMapFactory;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityList;
@@ -47,13 +46,15 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class EntityContainer {
+    @SuppressWarnings("unchecked")
+    public static final ClassInheritanceMultiMap<Entity>[] EMPTY_ARR = new ClassInheritanceMultiMap[]{new BlankEntityContainer.BlankEntityMap()};
 
     @Nonnull protected ClassInheritanceMultiMap<Entity> entities;
     protected boolean hasActiveEntities; //TODO: hasActiveEntitys is like an isModifyed right?
     protected long lastSaveTime;
 
     public EntityContainer() {
-        this.entities = ClassInheritanceMultiMapFactory.create(Entity.class);
+        this.entities = new ClassInheritanceMultiMap<>(Entity.class);
         this.hasActiveEntities = false;
         this.lastSaveTime = 0;
     }

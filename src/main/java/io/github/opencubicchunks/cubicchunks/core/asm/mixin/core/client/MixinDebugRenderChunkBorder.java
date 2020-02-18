@@ -46,6 +46,10 @@ public class MixinDebugRenderChunkBorder {
     }
 
     /**
+     * @param partialTicks partial ticks
+     * @param  finishTimeNano max time to finish frame to fit into fps limit
+     * @param ci callback info
+     *
      * @author Babbaj
      * @reason Change chunk border renderer to work at any Y value.
      */

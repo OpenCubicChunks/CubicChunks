@@ -26,7 +26,6 @@ package io.github.opencubicchunks.cubicchunks.core.network;
 
 import io.github.opencubicchunks.cubicchunks.core.CubicChunks;
 import mcp.MethodsReturnNonnullByDefault;
-import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraftforge.fml.common.network.NetworkRegistry;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
@@ -84,46 +83,11 @@ public class PacketDispatcher {
     /**
      * Send this message to the specified player.
      * See {@link SimpleNetworkWrapper#sendTo(IMessage, EntityPlayerMP)}
+     *
+     * @param message message to send
+     * @param player to send the packet to
      */
     public static void sendTo(IMessage message, EntityPlayerMP player) {
         PacketDispatcher.dispatcher.sendTo(message, player);
-    }
-
-    /**
-     * Send this message to everyone within a certain range of a point.
-     * See {@link SimpleNetworkWrapper#sendToAllAround(IMessage, NetworkRegistry.TargetPoint)}
-     */
-    public static void sendToAllAround(IMessage message, NetworkRegistry.TargetPoint point) {
-        PacketDispatcher.dispatcher.sendToAllAround(message, point);
-    }
-
-    /**
-     * Sends a message to everyone within a certain range of the coordinates in the same dimension.
-     */
-    public static void sendToAllAround(IMessage message, int dimension, double x, double y, double z, double range) {
-        PacketDispatcher.sendToAllAround(message, new NetworkRegistry.TargetPoint(dimension, x, y, z, range));
-    }
-
-    /**
-     * Sends a message to everyone within a certain range of the player provided.
-     */
-    public static void sendToAllAround(IMessage message, EntityPlayer player, double range) {
-        PacketDispatcher.sendToAllAround(message, player.world.provider.getDimension(), player.posX, player.posY, player.posZ, range);
-    }
-
-    /**
-     * Send this message to everyone within the supplied dimension.
-     * See {@link SimpleNetworkWrapper#sendToDimension(IMessage, int)}
-     */
-    public static void sendToDimension(IMessage message, int dimensionId) {
-        PacketDispatcher.dispatcher.sendToDimension(message, dimensionId);
-    }
-
-    /**
-     * Send this message to the server.
-     * See {@link SimpleNetworkWrapper#sendToServer(IMessage)}
-     */
-    public static void sendToServer(IMessage message) {
-        PacketDispatcher.dispatcher.sendToServer(message);
     }
 }

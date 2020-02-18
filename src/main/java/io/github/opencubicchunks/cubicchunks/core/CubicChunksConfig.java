@@ -65,12 +65,6 @@ public class CubicChunksConfig {
     @Config.Comment("The maximum number of cubic chunks to generate per tick.")
     public static int maxGeneratedCubesPerTick = 49 * 16;
 
-    @Config.LangKey("cubicchunks.config.fast_entity_spawner")
-    @Config.Comment("Enabling this option allows using fast entity spawner instead of vanilla-alike."
-            + " Fast entity spawner can reduce server lag. Entity respawn speed will be slightly slower (only one pack per tick)"
-            + " and amount of spawned mob will depend only from amount of players.")
-    public static boolean useFastEntitySpawner = false;
-
     @Config.LangKey("cubicchunks.config.use_vanilla_world_generators")
     @Config.Comment("Enabling this option will force cubic chunks to use world generators designed for two dimensional chunks, which are often used "
             + "for custom ore generators added by mods. To do so cubic chunks will pregenerate cubes in a range of height from 0 to 255. This is "

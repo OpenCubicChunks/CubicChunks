@@ -45,16 +45,14 @@ import net.minecraft.world.WorldServer;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.NibbleArray;
 import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
-import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.world.ChunkDataEvent;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-
-import javax.annotation.ParametersAreNonnullByDefault;
 
 import static net.minecraftforge.common.MinecraftForge.EVENT_BUS;
 
@@ -77,7 +75,7 @@ class IONbtWriter {
         writeBaseColumn(column, level);
         writeBiomes(column, level);
         writeOpacityIndex(column, level);
-        EVENT_BUS.post(new ChunkDataEvent.Save((Chunk) column, columnNbt));
+        EVENT_BUS.post(new ChunkDataEvent.Save(column, columnNbt));
         return columnNbt;
     }
 
@@ -109,7 +107,7 @@ class IONbtWriter {
 
         if (column.getCapabilities() != null) {
             try {
-                nbt.setTag("ForgeCaps", ((Chunk) column).getCapabilities().serializeNBT());
+                nbt.setTag("ForgeCaps", column.getCapabilities().serializeNBT());
             } catch (Exception exception) {
                 CubicChunks.LOGGER.error("A capability provider has thrown an exception trying to write state. It will not persist. "
                                 + "Report this to the mod author", exception);
@@ -174,6 +172,7 @@ class IONbtWriter {
             int y = i >> 8 & 15;
             int z = i >> 4 & 15;
 
+            @SuppressWarnings("deprecation")
             int id = Block.BLOCK_STATE_IDS.get(ebs.getData().get(x, y, z));
 
             int in1 = (id >> 12) & 0xF;

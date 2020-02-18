@@ -154,6 +154,8 @@ public class WatchersSortingList<T> implements Iterable<T> {
 
     /**
      * Schedule element to be removed if it is contained in list.
+     *
+     * @param entry entry to remove
      */
     public void remove(T entry) {
         int idx = indexMap.removeInt(entry);
@@ -166,6 +168,8 @@ public class WatchersSortingList<T> implements Iterable<T> {
     /**
      * Remove such elements {@code a} whom return {@code true} on call
      * {@code predicate.test(a)} from that list immediately.
+     *
+     * @param predicate a predicate matching entries to remove
      */
     public void removeIf(Predicate<T> predicate) {
         for (int i = start; i < start + size; i++) {
@@ -183,7 +187,8 @@ public class WatchersSortingList<T> implements Iterable<T> {
 
     /**
      * Append element to start of a list.
-     * 
+     *
+     * @param element element to add
      * @throws NullPointerException in attempt to add {@code null}.
      * @throws IllegalArgumentException if list already contain such element.
      */
@@ -200,7 +205,8 @@ public class WatchersSortingList<T> implements Iterable<T> {
 
     /**
      * Add element to an end of list.
-     * 
+     *
+     * @param element element to add
      * @throws NullPointerException in attempt to add {@code null}.
      * @throws IllegalArgumentException if list already contain such element.
      */
@@ -214,7 +220,10 @@ public class WatchersSortingList<T> implements Iterable<T> {
         size++;
     }
     
-    /** @return {@code true} if list contains element. */
+    /**
+     * @param element element to check
+     * @return {@code true} if list contains element.
+     */
     public boolean contains(T element) {
         return indexMap.containsKey(element);
     }

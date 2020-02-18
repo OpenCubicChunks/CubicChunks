@@ -42,6 +42,7 @@ import org.spongepowered.asm.mixin.injection.ModifyArg;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+@SuppressWarnings("target")
 @Mixin(RenderChunk.class)
 public abstract class MixinRenderChunk implements IOptifineRenderChunk {
 

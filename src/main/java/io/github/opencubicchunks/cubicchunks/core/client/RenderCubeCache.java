@@ -193,6 +193,7 @@ public class RenderCubeCache extends ChunkCache {
         }
     }
 
+    @SuppressWarnings("deprecation")
     @Override
     public boolean isSideSolid(BlockPos pos, EnumFacing side, boolean defaultValue) {
         if (world.isOutsideBuildHeight(pos)) {

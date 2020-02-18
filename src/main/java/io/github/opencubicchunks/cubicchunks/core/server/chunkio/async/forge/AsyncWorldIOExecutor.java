@@ -23,11 +23,11 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 import com.google.common.collect.Sets;
+import io.github.opencubicchunks.cubicchunks.api.world.ICubeProviderServer;
 import io.github.opencubicchunks.cubicchunks.core.CubicChunks;
+import io.github.opencubicchunks.cubicchunks.core.asm.mixin.ICubicWorldInternal;
 import io.github.opencubicchunks.cubicchunks.core.server.CubeProviderServer;
 import io.github.opencubicchunks.cubicchunks.core.server.chunkio.ICubeIO;
-import io.github.opencubicchunks.cubicchunks.api.world.ICubeProviderServer;
-import io.github.opencubicchunks.cubicchunks.core.asm.mixin.ICubicWorldInternal;
 import io.github.opencubicchunks.cubicchunks.core.world.cube.Cube;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.server.MinecraftServer;
@@ -38,23 +38,17 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.PlayerEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 
-import java.util.ArrayList;
-import java.util.HashSet;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.BiConsumer;
 import java.util.function.Consumer;
-
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-import javax.annotation.ParametersAreNonnullByDefault;
 
 /**
  * Brazenly copied from Forge and Sponge and reimplemented to suit our needs: Load cubes and columns outside the main
@@ -117,7 +111,7 @@ public class AsyncWorldIOExecutor {
      */
     @Nullable
     public static Cube syncCubeLoad(World world, ICubeIO loader, CubeProviderServer cache, int cubeX, int cubeY, int cubeZ) {
-        Chunk column = cache.loadChunk(cubeX, cubeZ);
+        Chunk column = cache.getColumn(cubeX, cubeZ, ICubeProviderServer.Requirement.LIGHT);
         QueuedCube key = new QueuedCube(cubeX, cubeY, cubeZ, world);
         AsyncCubeIOProvider task = cubeTasks.remove(key); // Remove task because we will call the sync callbacks directly
         if (task != null) {
@@ -173,7 +167,8 @@ public class AsyncWorldIOExecutor {
      * <p>
      * Uses the given ThreadPoolExecutor.
      */
-    private static void runTask(ThreadPoolExecutor executor, AsyncIOProvider task) {
+    @SuppressWarnings("SynchronizationOnLocalVariableOrMethodParameter")
+    private static void runTask(ThreadPoolExecutor executor, AsyncIOProvider<?> task) {
         if (!executor.remove(task)) // If it wasn't in the pool, and run hasn't isFinished, then wait for the async thread.
         {
             synchronized (task) // Warn incorrect - task shared via map

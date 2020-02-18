@@ -71,6 +71,7 @@ public abstract class MixinChunk_Column implements IColumn {
 
     @Shadow @Final private int[] heightMap;
 
+    @SuppressWarnings({"deprecation", "RedundantSuppression"})
     @Shadow public abstract int getHeightValue(int x, int z);
 
     @Override public Cube getLoadedCube(int cubeY) {
@@ -110,6 +111,7 @@ public abstract class MixinChunk_Column implements IColumn {
         return !cubeMap.isEmpty();
     }
 
+    @SuppressWarnings("unchecked")
     public <T extends World & ICubicWorldInternal> T getWorld() {
         return (T) this.world;
     }
@@ -129,12 +131,12 @@ public abstract class MixinChunk_Column implements IColumn {
     }
 
 
-    @Override public Collection getLoadedCubes() {
+    @Override public Collection<? extends ICube> getLoadedCubes() {
         return this.cubeMap.all();
     }
 
 
-    @Override public Iterable getLoadedCubes(int startY, int endY) {
+    @Override public Iterable<? extends ICube> getLoadedCubes(int startY, int endY) {
         return this.cubeMap.cubes(startY, endY);
     }
 

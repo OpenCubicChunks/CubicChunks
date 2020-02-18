@@ -73,6 +73,8 @@ public interface ICubicWorldInternal extends ICubicWorld {
     /**
      * Returns the {@link ILightingManager} for this world, or throws {@link NotCubicChunksWorldException}
      * if this is not a CubicChunks world.
+     *
+     * @return lighting manager instance for this world
      */
     LightingManager getLightingManager();
 

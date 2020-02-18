@@ -117,8 +117,10 @@ public abstract class MixinChunk_Cubes implements IColumn {
 
     @Shadow public abstract byte[] getBiomeArray();
 
+    @SuppressWarnings({"deprecation", "RedundantSuppression"})
     @Shadow public abstract int getHeightValue(int x, int z);
 
+    @SuppressWarnings("unchecked")
     public <T extends World & ICubicWorldInternal> T getWorld() {
         return (T) this.world;
     }
@@ -772,6 +774,9 @@ public abstract class MixinChunk_Cubes implements IColumn {
     // ==============================================
 
     /**
+     * @param startY bottom Y coordinate
+     * @param endY top Y coordinate
+     * @return true if the specified height range is empty
      * @author Barteks2x
      * @reason original function limited to storage arrays.
      */

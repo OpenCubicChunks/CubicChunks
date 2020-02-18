@@ -49,7 +49,6 @@ import io.github.opencubicchunks.cubicchunks.core.server.SpawnCubes;
 import io.github.opencubicchunks.cubicchunks.core.util.world.CubeSplitTickList;
 import io.github.opencubicchunks.cubicchunks.core.util.world.CubeSplitTickSet;
 import io.github.opencubicchunks.cubicchunks.core.world.CubeWorldEntitySpawner;
-import io.github.opencubicchunks.cubicchunks.core.world.FastCubeWorldEntitySpawner;
 import io.github.opencubicchunks.cubicchunks.core.world.IWorldEntitySpawner;
 import io.github.opencubicchunks.cubicchunks.core.world.chunkloader.CubicChunkManager;
 import io.github.opencubicchunks.cubicchunks.core.world.cube.Cube;
@@ -130,8 +129,7 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
     @Override public void initCubicWorldServer(IntRange heightRange, IntRange generationRange) {
         super.initCubicWorld(heightRange, generationRange);
         this.isCubicWorld = true;
-        IWorldEntitySpawner spawner = CubicChunksConfig.useFastEntitySpawner ?
-                new FastCubeWorldEntitySpawner() : new CubeWorldEntitySpawner();
+        IWorldEntitySpawner spawner = new CubeWorldEntitySpawner();
         IWorldEntitySpawner.Handler spawnHandler = cast(entitySpawner);
         spawnHandler.setEntitySpawner(spawner);
 
@@ -170,12 +168,6 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
     @Override public void tickCubicWorld() {
         if (!this.isCubicWorld()) {
             throw new NotCubicChunksWorldException();
-        }
-        IWorldEntitySpawner.Handler spawnHandler = cast(entitySpawner);
-        // update world entity spawner
-        if (CubicChunksConfig.useFastEntitySpawner != (spawnHandler.getEntitySpawner().getClass() == FastCubeWorldEntitySpawner.class)) {
-            spawnHandler.setEntitySpawner(CubicChunksConfig.useFastEntitySpawner ?
-                    new FastCubeWorldEntitySpawner() : new CubeWorldEntitySpawner());
         }
         if (this.spawnArea != null) {
             this.spawnArea.update((World) (Object) this);
@@ -265,6 +257,9 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
 
 
     /**
+     * Handles cubic chunks world block updates.
+     *
+     * @param cbi callback info
      * @author Barteks2x
      */
     @Inject(method = "updateBlocks", at = @At("HEAD"), cancellable = true)

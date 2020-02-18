@@ -41,9 +41,12 @@ public abstract class MixinBiomeTemperatureConfig {
     @Shadow public abstract float getDefaultTemperature();
 
     /**
+     * @param pos block position
+     * @return temperature
      * @author Barteks2x
      * @reason Configure how it changes with height
      */
+    @SuppressWarnings("OverwriteModifiers")
     @Overwrite
     public float getTemperature(BlockPos pos) { // this must be non-final for galacticraft compatibility https://github.com/SpongePowered/Mixin/issues/347
         if (pos.getY() > CubicChunksConfig.biomeTemperatureCenterY) {

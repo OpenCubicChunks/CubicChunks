@@ -90,6 +90,7 @@ public class WorldgenHangWatchdog {
         return t;
     }
 
+    @SuppressWarnings("deprecation")
     private void run() {
         if (!ENABLED) {
             return;

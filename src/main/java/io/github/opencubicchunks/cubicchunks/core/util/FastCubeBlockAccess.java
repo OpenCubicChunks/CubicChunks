@@ -26,6 +26,7 @@ package io.github.opencubicchunks.cubicchunks.core.util;
 
 import static io.github.opencubicchunks.cubicchunks.api.util.Coords.blockToLocal;
 
+import io.github.opencubicchunks.cubicchunks.api.world.ICube;
 import io.github.opencubicchunks.cubicchunks.core.client.CubeProviderClient;
 import io.github.opencubicchunks.cubicchunks.core.lighting.ILightBlockAccess;
 import io.github.opencubicchunks.cubicchunks.core.server.CubeProviderServer;
@@ -67,7 +68,7 @@ public class FastCubeBlockAccess implements ILightBlockAccess {
     private final int dx, dy, dz;
     @Nonnull private final World world;
 
-    public FastCubeBlockAccess(ICubeProviderInternal cache, Cube cube, int radius) {
+    public FastCubeBlockAccess(ICubeProviderInternal cache, ICube cube, int radius) {
         this(cube.getWorld(), cache,
                 cube.getCoords().sub(radius, radius, radius), cube.getCoords().add(radius, radius, radius));
     }

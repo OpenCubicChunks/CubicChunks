@@ -61,7 +61,7 @@ public class MixinRenderGlobalOptifine_E {
 
     @Shadow private WorldClient world;
 
-    /**
+    /*
      * Optifine-specific version of the entity render fix. Versions 1.12.2_HD_U_C7_pre and up
      *
      * This method sets position for MixinRenderGlobal#getRenderChunkYPos to use

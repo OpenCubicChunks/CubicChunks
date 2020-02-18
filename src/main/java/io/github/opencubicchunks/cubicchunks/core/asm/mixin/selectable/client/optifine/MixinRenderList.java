@@ -51,6 +51,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.nio.IntBuffer;
 import java.util.Iterator;
 
+@SuppressWarnings("target")
 @Mixin({RenderList.class, VboRenderList.class})
 public abstract class MixinRenderList extends ChunkRenderContainer {
 

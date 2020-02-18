@@ -24,26 +24,22 @@
  */
 package io.github.opencubicchunks.cubicchunks.core.world;
 
-import static io.github.opencubicchunks.cubicchunks.core.lighting.LightingManager.MAX_CLIENT_LIGHT_SCAN_DEPTH;
-
 import com.google.common.base.Throwables;
-import io.github.opencubicchunks.cubicchunks.core.lighting.LightingManager;
-import io.github.opencubicchunks.cubicchunks.core.world.cube.Cube;
-import io.github.opencubicchunks.cubicchunks.api.world.IHeightMap;
 import io.github.opencubicchunks.cubicchunks.api.util.Coords;
+import io.github.opencubicchunks.cubicchunks.api.world.IHeightMap;
+import io.github.opencubicchunks.cubicchunks.core.lighting.LightingManager;
 import io.github.opencubicchunks.cubicchunks.core.world.cube.Cube;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.chunk.Chunk;
 
+import javax.annotation.Nonnull;
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-
-import javax.annotation.Nonnull;
-import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
@@ -140,7 +136,8 @@ public class ClientHeightMap implements IHeightMap {
             out.close();
             return buf.toByteArray();
         } catch (IOException e) {
-            throw Throwables.propagate(e);
+            Throwables.throwIfUnchecked(e);
+            throw new AssertionError();
         }
     }
 
@@ -155,7 +152,8 @@ public class ClientHeightMap implements IHeightMap {
 
             in.close();
         } catch (IOException e) {
-            throw Throwables.propagate(e);
+            Throwables.throwIfUnchecked(e);
+            throw new AssertionError();
         }
     }
 

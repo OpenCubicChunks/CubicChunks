@@ -32,7 +32,7 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 @Mixin(EventBus.class)
 public interface IEventBus {
 
-    @Accessor boolean isShutdown();
-    @Accessor int getBusID();
-    @Accessor IEventExceptionHandler getExceptionHandler();
+    @Accessor(remap = false) boolean isShutdown();
+    @Accessor(remap = false) int getBusID();
+    @Accessor(remap = false) IEventExceptionHandler getExceptionHandler();
 }

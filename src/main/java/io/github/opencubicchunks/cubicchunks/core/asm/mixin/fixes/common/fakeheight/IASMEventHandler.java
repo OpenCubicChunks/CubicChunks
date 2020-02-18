@@ -31,5 +31,5 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 
 @Mixin(ASMEventHandler.class)
 public interface IASMEventHandler {
-    @Accessor ModContainer getOwner();
+    @Accessor(remap = false) ModContainer getOwner();
 }

@@ -89,6 +89,8 @@ public class LightingManager implements ILightingManager {
     }
     /**
      * Registers height change listener, that receives all height changes after initial lighting is done
+     *
+     * @param listener height change listener
      */
     public void registerHeightChangeListener(IHeightChangeListener listener) {
         heightUpdateListeners.add(listener);

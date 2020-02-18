@@ -264,11 +264,21 @@ public class Cube implements ICube {
 
     /**
      * Constructor to be used from subclasses to provide all field values
+     *
+     * @param tickets cube ticket list
+     * @param world the world instance
+     * @param column the column this cube belongs to
+     * @param coords position of this cube
+     * @param storage block storage
+     * @param entities entity container
+     * @param tileEntityMap tile entity storage
+     * @param tileEntityPosQueue queue for updating tile entities
+     * @param lightInfo lighting info storage
      */
-    protected Cube(TicketList tickers, World world, Chunk column, CubePos coords, ExtendedBlockStorage storage,
+    protected Cube(TicketList tickets, World world, Chunk column, CubePos coords, ExtendedBlockStorage storage,
                    EntityContainer entities, Map<BlockPos, TileEntity> tileEntityMap,
                    ConcurrentLinkedQueue<BlockPos> tileEntityPosQueue, LightingManager.CubeLightUpdateInfo lightInfo) {
-        this.tickets = tickers;
+        this.tickets = tickets;
         this.world = world;
         this.column = column;
         this.coords = coords;
@@ -423,6 +433,7 @@ public class Cube implements ICube {
         return biome;
     }
 
+    @SuppressWarnings({"deprecation", "RedundantSuppression"})
     @Override
     public void setBiome(int localBiomeX, int localBiomeZ, Biome biome) {
         if (this.blockBiomeArray == null)
@@ -468,7 +479,7 @@ public class Cube implements ICube {
         return (T) this.world;
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({"unchecked", "deprecation", "RedundantSuppression"})
     @Override
     public <T extends Chunk & IColumn> T getColumn() {
         return (T) this.column;
@@ -543,6 +554,9 @@ public class Cube implements ICube {
 
     /**
      * Returns true if the cube still needs to be ticked this tick.
+     *
+     * @param totalTime world time
+     * @return true if cube still needs to be ticked at this world time
      */
     public boolean checkAndUpdateTick(long totalTime) {
         boolean ret = totalTime != this.lastTicked;
@@ -707,6 +721,8 @@ public class Cube implements ICube {
 
     /**
      * Sets internal isSurfaceTracked value. Intended to be used only for deserialization.
+     *
+     * @param value true if surface is already tracked
      */
     public void setSurfaceTracked(boolean value) {
         this.isSurfaceTracked = value;
@@ -724,6 +740,8 @@ public class Cube implements ICube {
 
     /**
      * Notify this cube that it's initial diffuse skylight has been calculated
+     *
+     * @param initialLightingDone true if initial lighting is done
      */
     public void setInitialLightingDone(boolean initialLightingDone) {
         this.isInitialLightingDone = initialLightingDone;

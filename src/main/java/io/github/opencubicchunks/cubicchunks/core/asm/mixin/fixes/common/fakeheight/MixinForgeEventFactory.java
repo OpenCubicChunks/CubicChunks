@@ -39,6 +39,13 @@ import java.util.Random;
 public class MixinForgeEventFactory {
 
     /**
+     * @param pre true if it's before population
+     * @param gen chunk generator
+     * @param world the world instance
+     * @param rand Random instance for this chunk
+     * @param x chunk X coordinate
+     * @param z chunk Z coordinate
+     * @param hasVillageGenerated true if village has been generated here
      * @author Barteks2x
      * @reason Fake world height for mods that break with very tall worlds
      */

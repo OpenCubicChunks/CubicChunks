@@ -117,6 +117,7 @@ public class CubeProviderClient extends ChunkProviderClient implements ICubeProv
      * It is used when the server sends a new Cube to this client,
      * and the network handler wants us to create a new Cube.
      *
+     * @param pos cube position
      * @return a newly created or cached cube
      */
     @Nullable
@@ -140,6 +141,8 @@ public class CubeProviderClient extends ChunkProviderClient implements ICubeProv
     /**
      * This is like ChunkProviderClient.unloadChunk()
      * It is used when the server tells the client to unload a Cube.
+     *
+     * @param pos position to unload
      */
     public void unloadCube(CubePos pos) {
         Cube cube = getLoadedCube(pos);

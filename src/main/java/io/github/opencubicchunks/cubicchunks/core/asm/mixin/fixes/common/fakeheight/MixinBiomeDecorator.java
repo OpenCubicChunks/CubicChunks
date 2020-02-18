@@ -36,9 +36,9 @@ import org.spongepowered.asm.mixin.injection.Slice;
 
 @Mixin(BiomeDecorator.class)
 public class MixinBiomeDecorator {
-    @Redirect(method = "genDecorations",
+    @Redirect(method = "genDecorations", remap = false,
             slice = @Slice(
-                    from = @At(value = "NEW", target = "net/minecraftforge/event/terraingen/DecorateBiomeEvent$Post"),
+                    from = @At(value = "NEW", target = "net/minecraftforge/event/terraingen/DecorateBiomeEvent$Post", remap = false),
                     to = @At(value = "TAIL")
             ),
             at = @At(

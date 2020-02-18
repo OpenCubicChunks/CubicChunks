@@ -39,6 +39,11 @@ import java.util.Random;
 public class MixinTerrainGen {
 
     /**
+     * @param world the world instance
+     * @param rand Random instance for this chunk
+     * @param chunkPos chunk position
+     * @param type decoration event type
+     * @return true if decoration is not denied
      * @author Bartels2x
      * @reason Fake world height for mods that break with very tall worlds
      */

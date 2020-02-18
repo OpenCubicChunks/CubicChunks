@@ -40,12 +40,18 @@ public interface ILightBlockAccess {
     int getLightFor(EnumSkyBlock lightType, BlockPos pos);
 
     /**
+     * @param lightType type pf light
+     * @param pos block position
+     * @param val light value to set (0-15 range_
      * @return success (if cube is loaded)
      */
     boolean setLightFor(EnumSkyBlock lightType, BlockPos pos, int val);
 
     /**
      * Faster version of world.getRawLight that works for skylight
+     *
+     * @param pos block position
+     * @return computed light value
      */
     default int computeLightValue(BlockPos pos) {
         if (canSeeSky(pos)) {

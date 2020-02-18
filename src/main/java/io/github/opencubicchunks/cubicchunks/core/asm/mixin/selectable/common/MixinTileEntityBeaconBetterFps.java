@@ -31,6 +31,7 @@ import io.github.opencubicchunks.cubicchunks.api.world.ICubicWorld;
 import net.minecraft.tileentity.TileEntityBeacon;
 import net.minecraft.tileentity.TileEntityLockable;
 
+@SuppressWarnings("target")
 @Mixin(TileEntityBeacon.class)
 public abstract class MixinTileEntityBeaconBetterFps extends TileEntityLockable {
     

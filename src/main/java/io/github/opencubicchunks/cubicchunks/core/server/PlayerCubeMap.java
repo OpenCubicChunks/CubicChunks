@@ -901,6 +901,7 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
      * by players. Iterator first element defined by seed.
      * 
      * @param seed seed for random iterator
+     * @return cube watcher iterator
      */
     public Iterator<CubeWatcher> getRandomWrappedCubeWatcherIterator(int seed) {
         return this.cubeWatchers.randomWrappedIterator(seed);
@@ -911,11 +912,11 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
         final Iterator<CubeWatcher> iterator = this.cubeWatchers.iterator();
         ImmutableSetMultimap<ChunkPos, Ticket> persistentChunksFor = ForgeChunkManager.getPersistentChunksFor(world);
         world.profiler.startSection("forcedChunkLoading");
+        @SuppressWarnings("unchecked")
         final Iterator<Cube> persistentCubesIterator = persistentChunksFor.keys().stream()
                 .filter(Objects::nonNull)
                 .map(input -> (Collection<Cube>) ((IColumn) world.getChunk(input.x, input.z)).getLoadedCubes())
-                .collect(ArrayList<Cube>::new, (list, cubeCollection) -> ((ArrayList<Cube>) list).addAll(cubeCollection),
-                        (list, cubeList) -> ((ArrayList<Cube>) list).addAll(cubeList))
+                .collect(ArrayList<Cube>::new, ArrayList::addAll, ArrayList::addAll)
                 .iterator();
         world.profiler.endSection();
         

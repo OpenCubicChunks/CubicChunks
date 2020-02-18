@@ -86,13 +86,16 @@ public abstract class MixinWorld_Tick implements ICubicWorld {
 
     /**
      * Allows to get Y position of the updated entity.
+     *
+     * @param entity entity to update
+     * @param force true if normal chunk area loaded checks should be ignored
+     * @param ci callback info
      */
     @Group(name = "updateEntity")
     @Inject(method = "updateEntityWithOptionalForce",
             at = @At(value = "INVOKE", target = "Lnet/minecraft/world/World;getPersistentChunks()Lcom/google/common/collect/ImmutableSetMultimap;", remap = false),
-            locals = LocalCapture.CAPTURE_FAILHARD,
             require = 1)
-    public void onIsAreaLoadedForUpdateEntityWithOptionalForce(Entity entity, boolean force, CallbackInfo ci, int i, int j) {
+    public void onIsAreaLoadedForUpdateEntityWithOptionalForce(Entity entity, boolean force, CallbackInfo ci) {
         updateEntity_entityPosY = MathHelper.floor(entity.posY);
         updateEntity_entityPosX = MathHelper.floor(entity.posX);
         updateEntity_entityPosZ = MathHelper.floor(entity.posZ);

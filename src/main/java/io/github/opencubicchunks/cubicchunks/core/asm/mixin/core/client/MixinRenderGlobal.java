@@ -24,14 +24,12 @@
  */
 package io.github.opencubicchunks.cubicchunks.core.asm.mixin.core.client;
 
-import io.github.opencubicchunks.cubicchunks.core.util.ClassInheritanceMultiMapFactory;
+import io.github.opencubicchunks.cubicchunks.core.world.EntityContainer;
 import io.github.opencubicchunks.cubicchunks.core.world.cube.BlankCube;
 import io.github.opencubicchunks.cubicchunks.api.world.ICube;
-import io.github.opencubicchunks.cubicchunks.core.util.ClassInheritanceMultiMapFactory;
 import io.github.opencubicchunks.cubicchunks.api.util.Coords;
 import io.github.opencubicchunks.cubicchunks.api.world.ICubicWorld;
 import io.github.opencubicchunks.cubicchunks.api.world.IColumn;
-import io.github.opencubicchunks.cubicchunks.core.world.cube.BlankCube;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.client.renderer.RenderGlobal;
 import net.minecraft.client.renderer.ViewFrustum;
@@ -77,7 +75,7 @@ public class MixinRenderGlobal {
 
     @Shadow private ViewFrustum viewFrustum;
 
-    /**
+    /*
      * This allows to get the Y position of rendered entity by injecting itself directly before call to
      * chunk.getEntityLists
      */
@@ -101,7 +99,7 @@ public class MixinRenderGlobal {
         }
     }
 
-    /**
+    /*
      * After chunk.getEntityLists() renderGlobal needs to get correct element of the array.
      * The array element number is calculated using renderChunk.getPosition().getY() / 16.
      * getY() is redirected to this method to always return 0.
@@ -118,7 +116,7 @@ public class MixinRenderGlobal {
         return pos.getY();
     }
 
-    /**
+    /*
      * Return a 1-element array for Cubic Chunks world,
      * or original chunk.getEntityLists if not cubic chunks world.
      */
@@ -134,7 +132,7 @@ public class MixinRenderGlobal {
 
         ICube cube = ((IColumn) chunk).getCube(Coords.blockToCube(position.getY()));
         if (cube instanceof BlankCube) {
-            return ClassInheritanceMultiMapFactory.EMPTY_ARR;
+            return EntityContainer.EMPTY_ARR;
         }
 
         return new ClassInheritanceMultiMap[]{cube.getEntitySet()};

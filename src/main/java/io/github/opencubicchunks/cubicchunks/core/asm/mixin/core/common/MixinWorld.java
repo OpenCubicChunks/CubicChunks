@@ -234,6 +234,8 @@ public abstract class MixinWorld implements ICubicWorldInternal {
     /**
      * Some mod's world generation will try to do their work over the whole world height.
      * This allows to fake the world height for them.
+     *
+     * @return world height
      * @author Barteks2x
      * @reason Optionally return fake height
      */
@@ -247,6 +249,10 @@ public abstract class MixinWorld implements ICubicWorldInternal {
 
 
     /**
+     * @param pos block position
+     * @param unusedTileEntity tile entity instance, unused
+     * @param ci callback info
+     *
      * @author Foghrye4
      * @reason Original {@link World#markChunkDirty(BlockPos, TileEntity)}
      *         called by TileEntities whenever they need to force Chunk to save
@@ -279,10 +285,11 @@ public abstract class MixinWorld implements ICubicWorldInternal {
     }
 */
     /**
+     * @param pos block position
+     * @return blockstate at that position
      * @author Barteks2x
      * @reason Injection causes performance issues, overwrite for cubic chunks version
      */
-
     @Overwrite
     public IBlockState getBlockState(BlockPos pos) {
         if (this.isOutsideBuildHeight(pos)) { // TODO: maybe avoid height check for cubic chunks world?

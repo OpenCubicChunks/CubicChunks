@@ -166,6 +166,13 @@ java {
     targetCompatibility = JavaVersion.VERSION_1_8
 }
 
+val compileJava: JavaCompile by tasks
+
+compileJava.apply {
+    options.isDeprecation = true
+    options.compilerArgs.add("-Xlint:unchecked")
+}
+
 mixin {
     token("MC_FORGE", extractForgeMinorVersion())
 }

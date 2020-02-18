@@ -48,6 +48,7 @@ public class MixinRenderGlobalNoOptifine {
     private int verticalRenderDistanceCubes;
     /**
      * @author Barteks2x
+     * @reason remove vanilla height restrictions. This is short, simple method so using overwrite.
      */
     @Overwrite
     @Nullable

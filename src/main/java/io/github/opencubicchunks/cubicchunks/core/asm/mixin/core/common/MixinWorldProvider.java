@@ -67,6 +67,7 @@ public abstract class MixinWorldProvider implements ICubicWorldProvider {
     private boolean getActualHeightForceOriginalFlag = false;
 
     /**
+     * @return world height
      * @reason return the real world height instead of hardcoded 256
      * @author Barteks2x
      */

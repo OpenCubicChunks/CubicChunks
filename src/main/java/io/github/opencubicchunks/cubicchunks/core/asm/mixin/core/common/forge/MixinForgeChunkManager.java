@@ -81,7 +81,7 @@ public abstract class MixinForgeChunkManager {
     @Shadow(remap = false) private static int dormantChunkCacheSize;
 
     // ChunkEntry is package-private
-    @Shadow(remap = false) private static Map/*<World, Cache<Long, ForgeChunkManager.ChunkEntry>>*/ dormantChunkCache;
+    @Shadow(remap = false) private static Map<Object, Object>/*<World, Cache<Long, ForgeChunkManager.ChunkEntry>>*/ dormantChunkCache;
 
     @Shadow(remap = false) private static SetMultimap<String, ForgeChunkManager.Ticket> playerTickets;
 

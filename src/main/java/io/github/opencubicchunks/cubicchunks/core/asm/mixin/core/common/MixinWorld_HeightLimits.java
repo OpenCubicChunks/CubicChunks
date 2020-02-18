@@ -87,6 +87,9 @@ public abstract class MixinWorld_HeightLimits implements ICubicWorld {
     /**
      * This @Overwrite allows World to "see" blocks outside of 0..255 height range.
      *
+     * @param pos block position
+     * @return true if the given position is outside world height range
+     *
      * @author Barteks2x
      * @reason It's very simple method and this seems to be the cleanest way to modify it.
      */
@@ -96,6 +99,9 @@ public abstract class MixinWorld_HeightLimits implements ICubicWorld {
     }
 
     /**
+     * @param pos block positionn
+     * @return light value at the given position
+     *
      * @author Barteks2x
      * @reason Replace {@link World#getLight(BlockPos)} with method that works outside of 0..255 height range. It would
      * be possible to fix it using @Redirect and @ModifyConstant but this way is much cleaner, especially for simple
@@ -191,6 +197,10 @@ public abstract class MixinWorld_HeightLimits implements ICubicWorld {
     // NOTE: This may break some things
 
     /**
+     * @param pos block position
+     * @param allowEmpty true if client empty cubes should be considered loaded
+     * @param cbi callback info
+     *
      * @author Barteks2x
      * @reason CubicChunks needs to check if cube is loaded instead of chunk
      */
