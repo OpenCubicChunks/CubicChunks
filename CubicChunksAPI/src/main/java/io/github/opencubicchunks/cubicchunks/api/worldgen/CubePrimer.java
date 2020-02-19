@@ -39,7 +39,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 public class CubePrimer {
     public static final IBlockState DEFAULT_STATE = Blocks.AIR.getDefaultState();
 
-    private final char[] data = new char[4096];
+    private final char[] data;
     private byte[] extData = null; // NEID-compat
     private Biome[] biomes3d = null;
 
@@ -47,6 +47,13 @@ public class CubePrimer {
         return biomes3d != null;
     }
 
+    public CubePrimer() {
+        this(new char[4096]);
+    }
+
+    protected CubePrimer(char[] data) {
+        this.data = data;
+    }
     /**
      * Returns biome in a given 4x4x4 block section.
      * <p>

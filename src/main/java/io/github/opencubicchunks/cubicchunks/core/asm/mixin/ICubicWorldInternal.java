@@ -134,6 +134,10 @@ public interface ICubicWorldInternal extends ICubicWorld {
         SpawnCubes getSpawnArea();
 
         void setSpawnArea(SpawnCubes spawn);
+
+        CompatGenerationScope doCompatibilityGeneration();
+
+        boolean isCompatGenerationScope();
     }
 
     interface Client extends ICubicWorldInternal {
@@ -149,5 +153,9 @@ public interface ICubicWorldInternal extends ICubicWorld {
         CubeProviderClient getCubeCache();
 
         void setHeightBounds(int minHeight, int maxHeight);
+    }
+
+    interface CompatGenerationScope extends AutoCloseable {
+        void close();
     }
 }

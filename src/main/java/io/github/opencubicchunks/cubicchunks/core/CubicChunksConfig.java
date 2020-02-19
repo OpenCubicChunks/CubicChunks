@@ -52,6 +52,11 @@ public class CubicChunksConfig {
     @Config.LangKey("cubicchunks.config.chunk_gc_interval")
     public static int chunkGCInterval = 20 * 10;
 
+    @Config.Comment("Eliminates a few data copies in compatibility generator. May break some mods." +
+            " Disable if you experience issues in modded dimensions or world types")
+    @Config.LangKey("cubicchunks.config.optimized_compatibility_generator")
+    public static boolean optimizedCompatibilityGenerator = true;
+
 
     @Config.LangKey("cubicchunks.config.force_cc")
     @Config.Comment("Determines when a cubic chunks world should be created for non-cubic-chunks world types.\n"

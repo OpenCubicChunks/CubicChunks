@@ -37,6 +37,7 @@ import io.github.opencubicchunks.cubicchunks.api.world.IHeightMap;
 import io.github.opencubicchunks.cubicchunks.core.CubicChunksConfig;
 import io.github.opencubicchunks.cubicchunks.core.asm.mixin.ICubicWorldInternal;
 import io.github.opencubicchunks.cubicchunks.core.world.ClientHeightMap;
+import io.github.opencubicchunks.cubicchunks.core.world.IColumnInternal;
 import io.github.opencubicchunks.cubicchunks.core.world.ServerHeightMap;
 import io.github.opencubicchunks.cubicchunks.core.world.column.ColumnTileEntityMap;
 import io.github.opencubicchunks.cubicchunks.core.world.column.CubeMap;
@@ -54,6 +55,7 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
+import net.minecraft.world.chunk.ChunkPrimer;
 import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.world.ChunkEvent.Load;
@@ -86,7 +88,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 @Mixin(value = Chunk.class, priority = 999)
-public abstract class MixinChunk_Cubes implements IColumn {
+public abstract class MixinChunk_Cubes implements IColumnInternal {
 
     @Shadow @Final private ExtendedBlockStorage[] storageArrays;
     @Shadow @Final public static ExtendedBlockStorage NULL_BLOCK_STORAGE;
@@ -114,6 +116,8 @@ public abstract class MixinChunk_Cubes implements IColumn {
     private Cube cachedCube; // todo: make it always nonnull using BlankCube
 
     private boolean isColumn = false;
+
+    private ChunkPrimer compatGenerationPrimer;
 
     @Shadow public abstract byte[] getBiomeArray();
 
@@ -203,6 +207,20 @@ public abstract class MixinChunk_Cubes implements IColumn {
         Arrays.fill(getBiomeArray(), (byte) -1);
     }
 
+    @ModifyConstant(method = "<init>(Lnet/minecraft/world/World;Lnet/minecraft/world/chunk/ChunkPrimer;II)V",
+            constant = @Constant(intValue = 16, ordinal = 0), require = 1)
+    private int getInitChunkLoopEnd(int _16, World world, ChunkPrimer primer, int x, int z) {
+        if (((ICubicWorldInternal.Server) world).isCompatGenerationScope()) {
+            this.compatGenerationPrimer = primer;
+            return -1;
+        }
+        return _16;
+    }
+
+    @Override
+    public ChunkPrimer getCompatGenerationPrimer() {
+        return compatGenerationPrimer;
+    }
 
     // private ExtendedBlockStorage getLastExtendedBlockStorage() - shouldn't be used by anyone
 

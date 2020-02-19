@@ -112,6 +112,7 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
 
     private ChunkGc worldChunkGc;
     private SpawnCubes spawnArea;
+    private boolean runningCompatibilityGenerator;
 
     @Shadow protected abstract void playerCheckLight();
 
@@ -255,6 +256,17 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
         CubicChunkManager.unforceChunk(ticket, chunk);
     }
 
+
+    @Override
+    public CompatGenerationScope doCompatibilityGeneration() {
+        runningCompatibilityGenerator = true;
+        return () -> runningCompatibilityGenerator = false;
+    }
+
+    @Override
+    public boolean isCompatGenerationScope() {
+        return runningCompatibilityGenerator;
+    }
 
     /**
      * Handles cubic chunks world block updates.

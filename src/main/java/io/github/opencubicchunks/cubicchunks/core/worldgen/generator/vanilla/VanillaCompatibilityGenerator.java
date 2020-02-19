@@ -32,13 +32,16 @@ import io.github.opencubicchunks.cubicchunks.api.worldgen.CubeGeneratorsRegistry
 import io.github.opencubicchunks.cubicchunks.api.worldgen.CubePrimer;
 import io.github.opencubicchunks.cubicchunks.api.worldgen.ICubeGenerator;
 import io.github.opencubicchunks.cubicchunks.core.CubicChunks;
+import io.github.opencubicchunks.cubicchunks.core.CubicChunksConfig;
 import io.github.opencubicchunks.cubicchunks.core.asm.mixin.ICubicWorldInternal;
 import io.github.opencubicchunks.cubicchunks.core.asm.mixin.core.common.IGameRegistry;
 import io.github.opencubicchunks.cubicchunks.core.util.CompatHandler;
+import io.github.opencubicchunks.cubicchunks.core.world.IColumnInternal;
 import io.github.opencubicchunks.cubicchunks.core.world.cube.Cube;
 import io.github.opencubicchunks.cubicchunks.core.worldgen.WorldgenHangWatchdog;
 import io.github.opencubicchunks.cubicchunks.core.worldgen.generator.WorldGenUtils;
 import mcp.MethodsReturnNonnullByDefault;
+import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.EnumCreatureType;
 import net.minecraft.init.Blocks;
@@ -47,6 +50,7 @@ import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.Biome.SpawnListEntry;
 import net.minecraft.world.chunk.Chunk;
+import net.minecraft.world.chunk.ChunkPrimer;
 import net.minecraft.world.chunk.IChunkProvider;
 import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 import net.minecraft.world.gen.IChunkGenerator;
@@ -229,7 +233,14 @@ public class VanillaCompatibilityGenerator implements ICubeGenerator {
             } else {
                 // Make vanilla generate a chunk for us to copy
                 if (lastChunk.x != cubeX || lastChunk.z != cubeZ) {
-                    lastChunk = vanilla.generateChunk(cubeX, cubeZ);
+                    if (CubicChunksConfig.optimizedCompatibilityGenerator) {
+                        try (ICubicWorldInternal.CompatGenerationScope ignored =
+                                     ((ICubicWorldInternal.Server) world).doCompatibilityGeneration()) {
+                            lastChunk = vanilla.generateChunk(cubeX, cubeZ);
+                        }
+                    } else {
+                        lastChunk = vanilla.generateChunk(cubeX, cubeZ);
+                    }
                 }
 
                 if (!optimizationHack) {
@@ -245,6 +256,10 @@ public class VanillaCompatibilityGenerator implements ICubeGenerator {
                 }
 
                 // Copy from vanilla, replacing bedrock as appropriate
+                ChunkPrimer chunkPrimer = ((IColumnInternal) lastChunk).getCompatGenerationPrimer();
+                if (chunkPrimer != null) {
+                    return new CubePrimerWrapper(chunkPrimer, cubeY);
+                }
                 ExtendedBlockStorage storage = lastChunk.getBlockStorageArray()[cubeY];
                 if (storage != null && !storage.isEmpty()) {
                     for (int y = 0; y < Cube.SIZE; y++) {
@@ -367,5 +382,24 @@ public class VanillaCompatibilityGenerator implements ICubeGenerator {
     @Override
     public BlockPos getClosestStructure(String name, BlockPos pos, boolean findUnexplored) {
         return vanilla.getNearestStructurePos(world, name, pos, findUnexplored);
+    }
+
+    private static class CubePrimerWrapper extends CubePrimer {
+        private final ChunkPrimer chunkPrimer;
+        private final int cubeYBase;
+
+        public CubePrimerWrapper(ChunkPrimer chunkPrimer, int cubeY) {
+            super(null);
+            this.chunkPrimer = chunkPrimer;
+            this.cubeYBase = Coords.cubeToMinBlock(cubeY);
+        }
+
+        public IBlockState getBlockState(int x, int y, int z) {
+            return chunkPrimer.getBlockState(x, y | cubeYBase, z);
+        }
+
+        public void setBlockState(int x, int y, int z, @Nonnull IBlockState state) {
+            chunkPrimer.setBlockState(x, y | cubeYBase, z, state);
+        }
     }
 }
