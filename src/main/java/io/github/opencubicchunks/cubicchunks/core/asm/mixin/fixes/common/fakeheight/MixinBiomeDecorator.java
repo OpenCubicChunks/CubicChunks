@@ -36,14 +36,15 @@ import org.spongepowered.asm.mixin.injection.Slice;
 
 @Mixin(BiomeDecorator.class)
 public class MixinBiomeDecorator {
-    @Redirect(method = "genDecorations", remap = false,
+    @Redirect(method = "genDecorations",
             slice = @Slice(
                     from = @At(value = "NEW", target = "net/minecraftforge/event/terraingen/DecorateBiomeEvent$Post", remap = false),
                     to = @At(value = "TAIL")
             ),
             at = @At(
                     value = "INVOKE",
-                    target = "Lnet/minecraftforge/fml/common/eventhandler/EventBus;post(Lnet/minecraftforge/fml/common/eventhandler/Event;)Z"
+                    target = "Lnet/minecraftforge/fml/common/eventhandler/EventBus;post(Lnet/minecraftforge/fml/common/eventhandler/Event;)Z",
+                    remap = false
             )
     )
     private boolean postEvent(EventBus eventBus, Event event) {
