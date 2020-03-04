@@ -25,6 +25,8 @@
 package io.github.opencubicchunks.cubicchunks.api.util;
 
 import mcp.MethodsReturnNonnullByDefault;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -46,6 +48,10 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class XYZMap<T extends XYZAddressable> implements Iterable<T> {
+
+    private static final Logger LOGGER = LogManager.getLogger("cubicchunks");
+
+    private static final boolean CHECK_THREADED_WRITES = "true".equalsIgnoreCase(System.getProperty("cubicchunks.debug.checkThreadedXYZMapWrites"));
 
     /**
      * A larger prime number used as seed for hash calculation.
@@ -88,6 +94,8 @@ public class XYZMap<T extends XYZAddressable> implements Iterable<T> {
      * binary mask used to wrap indices
      */
     private int mask;
+
+    private final Thread debugStartThreadRef = Thread.currentThread();
 
     /**
      * Creates a new XYZMap with the given load factor and initial capacity. The
@@ -174,6 +182,7 @@ public class XYZMap<T extends XYZAddressable> implements Iterable<T> {
      * Removes all elements from the map.
      */
     public void clear() {
+        checkThreadedWrite();
         Arrays.fill(this.bucketsByHash, null);
         Arrays.fill(this.bucketsByPointer, null);
         Arrays.fill(this.pointers, 0);
@@ -193,6 +202,7 @@ public class XYZMap<T extends XYZAddressable> implements Iterable<T> {
     @Nullable
     @SuppressWarnings("unchecked")
     public T put(T value) {
+        checkThreadedWrite();
         int x = value.getX();
         int y = value.getY();
         int z = value.getZ();
@@ -212,7 +222,7 @@ public class XYZMap<T extends XYZAddressable> implements Iterable<T> {
         this.bucketsByPointer[++size] = value;
         this.bucketsByHash[pointerIndex] = value;
         this.pointers[pointerIndex] = size;
-        
+
         // If the load threshold has been reached, increase the map's size.
         if (this.size > this.loadThreshold)
             grow();
@@ -232,6 +242,7 @@ public class XYZMap<T extends XYZAddressable> implements Iterable<T> {
     @Nullable
     @SuppressWarnings("unchecked")
     public T remove(int x, int y, int z) {
+        checkThreadedWrite();
 
         int pointerIndex = this.getPointerIndex(x, y, z);
         int index = pointers[pointerIndex];
@@ -437,6 +448,14 @@ public class XYZMap<T extends XYZAddressable> implements Iterable<T> {
         this.mask = this.bucketsByPointer.length - 1;
     }
 
+    private void checkThreadedWrite() {
+        if (CHECK_THREADED_WRITES) {
+            if (Thread.currentThread() != debugStartThreadRef) {
+                LOGGER.error("Invalid threaded write access", new RuntimeException("Detected XYZ map write access from unexpected thread!"));
+            }
+        }
+    }
+
     // Interface: Iterable<T>
     // ------------------------------------------------------------------------------------------
 
@@ -459,6 +478,7 @@ public class XYZMap<T extends XYZAddressable> implements Iterable<T> {
 
             @Override
             public void remove() {
+                checkThreadedWrite();
                 int pointerIndex = getElementPointerIndex(--at);
                 collapseBucket(pointerIndex, at);
             }
@@ -468,7 +488,7 @@ public class XYZMap<T extends XYZAddressable> implements Iterable<T> {
     /**
      * Return iterator over elements started from random position defined by
      * seed
-     * 
+     *
      * @param seed defines start position
      * @return An iterator that starts at randomized position based on seed
      **/
@@ -503,6 +523,7 @@ public class XYZMap<T extends XYZAddressable> implements Iterable<T> {
 
             @Override
             public void remove() {
+                checkThreadedWrite();
                 int pointerIndex = getElementPointerIndex(--at);
                 collapseBucket(pointerIndex, at);
             }
