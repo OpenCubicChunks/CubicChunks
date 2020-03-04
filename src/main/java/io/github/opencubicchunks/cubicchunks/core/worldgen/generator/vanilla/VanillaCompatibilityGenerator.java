@@ -75,8 +75,8 @@ public class VanillaCompatibilityGenerator implements ICubeGenerator {
 
     private boolean isInit = false;
     private int worldHeightCubes;
-    @Nonnull private IChunkGenerator vanilla;
-    @Nonnull private World world;
+    @Nonnull private final IChunkGenerator vanilla;
+    @Nonnull private final World world;
     /**
      * Last chunk that was generated from the vanilla world gen
      */
@@ -237,6 +237,8 @@ public class VanillaCompatibilityGenerator implements ICubeGenerator {
                         try (ICubicWorldInternal.CompatGenerationScope ignored =
                                      ((ICubicWorldInternal.Server) world).doCompatibilityGeneration()) {
                             lastChunk = vanilla.generateChunk(cubeX, cubeZ);
+                            ChunkPrimer chunkPrimer = ((IColumnInternal) lastChunk).getCompatGenerationPrimer();
+                            replaceBedrock(chunkPrimer);
                         }
                     } else {
                         lastChunk = vanilla.generateChunk(cubeX, cubeZ);
@@ -284,6 +286,32 @@ public class VanillaCompatibilityGenerator implements ICubeGenerator {
             return primer;
         } finally {
             WorldgenHangWatchdog.endWorldGen();
+        }
+    }
+
+    private void replaceBedrock(ChunkPrimer chunkPrimer) {
+        for (int y = 0; y < 8; y++) {
+            replaceBedrockAtLayer(chunkPrimer, y);
+        }
+        int startY = Coords.localToBlock(worldHeightCubes - 1, 8);
+        int endY = Coords.cubeToMinBlock(worldHeightCubes);
+        for (int y = startY; y < endY; y++) {
+            replaceBedrockAtLayer(chunkPrimer, y);
+        }
+    }
+
+    private void replaceBedrockAtLayer(ChunkPrimer chunkPrimer, int y) {
+        for (int z = 0; z < Cube.SIZE; z++) {
+            for (int x = 0; x < Cube.SIZE; x++) {
+                IBlockState state = chunkPrimer.getBlockState(x, y, z);
+                if (state == Blocks.BEDROCK.getDefaultState()) {
+                    if (y < 64) {
+                        chunkPrimer.setBlockState(x, y, z, extensionBlockBottom);
+                    } else {
+                        chunkPrimer.setBlockState(x, y, z, extensionBlockTop);
+                    }
+                }
+            }
         }
     }
 
