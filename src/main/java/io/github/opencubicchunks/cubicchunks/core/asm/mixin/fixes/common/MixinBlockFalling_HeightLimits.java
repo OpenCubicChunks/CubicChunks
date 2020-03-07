@@ -31,10 +31,12 @@ import net.minecraft.block.Block;
 import net.minecraft.block.BlockFalling;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.entity.item.EntityFallingBlock;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Constant;
 import org.spongepowered.asm.mixin.injection.Group;
@@ -87,14 +89,25 @@ public abstract class MixinBlockFalling_HeightLimits extends Block {
     }
 
     @Redirect(method = "checkFallable",
-            at = @At(value = "INVOKE", target = "Lnet/minecraft/world/World;getBlockState(Lnet/minecraft/util/math/BlockPos;)Lnet/minecraft/block/state/IBlockState;"),
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lnet/minecraft/world/World;getBlockState(Lnet/minecraft/util/math/BlockPos;)Lnet/minecraft/block/state/IBlockState;"
+            ),
+            // skip the first getBlockState as failing this check won't reschedule the tick, and won't create an entity
+            slice = @Slice(
+                    from = @At(
+                            value = "CONSTANT",
+                            args = "intValue=32"
+                    ),
+                    to = @At(value = "TAIL")
+            ),
             require = 2)
     private IBlockState checkCanFallThroughGetBlockState(World world, BlockPos pos, World worldIn, BlockPos origPos) {
         if (pos == origPos) {
             // this means a getBlockState that is actually used to do something
             return world.getBlockState(pos);
         }
-        if(!((ICubicWorld)worldIn).isCubicWorld() || ((ICubicWorld)worldIn).getCubeCache().getLoadedCube(CubePos.fromBlockCoords(pos.down()))!=null) {
+        if (!((ICubicWorld) worldIn).isCubicWorld() || world.isBlockLoaded(pos.down(), false)) {
             return world.getBlockState(pos);
         }
         // a state that nothing can fall through
@@ -104,7 +117,7 @@ public abstract class MixinBlockFalling_HeightLimits extends Block {
     @Redirect(method = "checkFallable",
             at = @At(value = "INVOKE", target = "Lnet/minecraft/world/World;isAirBlock(Lnet/minecraft/util/math/BlockPos;)Z"), require = 2)
     private boolean checkIsAirBlock(World worldIn, BlockPos pos) {
-        if(!((ICubicWorld)worldIn).isCubicWorld() || ((ICubicWorld)worldIn).getCubeCache().getLoadedCube(CubePos.fromBlockCoords(pos.down()))!=null) {
+        if (!((ICubicWorld) worldIn).isCubicWorld() || worldIn.isBlockLoaded(pos.down(), false)) {
             return worldIn.isAirBlock(pos);
         }
         return false;
