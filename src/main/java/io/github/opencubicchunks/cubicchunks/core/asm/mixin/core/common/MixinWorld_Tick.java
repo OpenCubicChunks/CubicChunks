@@ -62,6 +62,8 @@ public abstract class MixinWorld_Tick implements ICubicWorld {
         throw new Error();
     }
 
+    @Shadow public abstract boolean isValid(BlockPos pos);
+
     /**
      * Redirect {@code isAreaLoaded} here, to use Y coordinate of the entity.
      * <p>
@@ -79,9 +81,13 @@ public abstract class MixinWorld_Tick implements ICubicWorld {
         }
 
         BlockPos entityPos = new BlockPos(updateEntity_entityPosX, updateEntity_entityPosY, updateEntity_entityPosZ);
+        if (!isValid(entityPos)) {
+            return true; // can tick everything outside of limits
+        }
+        int r = (endBlockX - startBlockX) >> 1;
 
-        return this.isRemote ||
-                MixinUtils.canTickPosition((World) (Object) this, entityPos, cube -> cube.getTickets().shouldTick());
+        return isAreaLoaded(updateEntity_entityPosX - r, updateEntity_entityPosY - r, updateEntity_entityPosZ - r,
+                updateEntity_entityPosX + r, updateEntity_entityPosY + r, updateEntity_entityPosZ + r, true);
     }
 
     /**
