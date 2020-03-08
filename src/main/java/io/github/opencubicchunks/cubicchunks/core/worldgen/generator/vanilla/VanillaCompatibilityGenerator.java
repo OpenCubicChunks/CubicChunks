@@ -120,11 +120,13 @@ public class VanillaCompatibilityGenerator implements ICubeGenerator {
         Map<IBlockState, Integer> blockHistogramBottom = new HashMap<>();
         Map<IBlockState, Integer> blockHistogramTop = new HashMap<>();
 
+        ExtendedBlockStorage bottomEBS = lastChunk.getBlockStorageArray()[0];
         for (int x = 0; x < Cube.SIZE; x++) {
             for (int z = 0; z < Cube.SIZE; z++) {
                 // Scan three layers top / bottom each to guard against bedrock walls
                 for (int y = 0; y < 3; y++) {
-                    IBlockState blockState = lastChunk.getBlockState(x, y, z);
+                    IBlockState blockState = bottomEBS == null ?
+                            Blocks.AIR.getDefaultState() : bottomEBS.get(x, y, z);
                     if (blockState.getBlock() == Blocks.BEDROCK) {
                         continue; // Never use bedrock for world extension
                     }
@@ -134,7 +136,10 @@ public class VanillaCompatibilityGenerator implements ICubeGenerator {
                 }
 
                 for (int y = worldHeightBlocks - 1; y > worldHeightBlocks - 4; y--) {
-                    IBlockState blockState = lastChunk.getBlockState(x, y, z);
+                    int localY = Coords.blockToLocal(y);
+                    ExtendedBlockStorage ebs = lastChunk.getBlockStorageArray()[Coords.blockToCube(y)];
+
+                    IBlockState blockState = ebs == null ? Blocks.AIR.getDefaultState() : ebs.get(x, localY, z);
                     if (blockState.getBlock() == Blocks.BEDROCK) {
                         continue; // Never use bedrock for world extension
                     }
