@@ -1,0 +1,12 @@
+#################################
+###        general gui        ###
+#################################
+
+cubicchunks.gui.worldmenu.cc_disable=КубическиеЧанки: Нет
+cubicchunks.gui.worldmenu.cc_default=КубическиеЧанки: По умолчанию
+
+#################################
+###          options          ###
+#################################
+
+cubicchunks.gui.vertical_cube_load_distance=Вертикальная дистанция: %d кубов
