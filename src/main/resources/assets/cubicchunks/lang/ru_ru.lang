@@ -2,8 +2,8 @@
 ###        general gui        ###
 #################################
 
-cubicchunks.gui.worldmenu.cc_disable=КубическиеЧанки: Нет
-cubicchunks.gui.worldmenu.cc_default=КубическиеЧанки: По умолчанию
+cubicchunks.gui.worldmenu.cc_disable=CubicChunks: Нет
+cubicchunks.gui.worldmenu.cc_default=CubicChunks: По умолчанию
 
 #################################
 ###          options          ###
