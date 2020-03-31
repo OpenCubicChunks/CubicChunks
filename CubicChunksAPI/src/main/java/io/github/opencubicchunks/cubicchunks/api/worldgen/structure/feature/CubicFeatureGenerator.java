@@ -30,7 +30,6 @@ import io.github.opencubicchunks.cubicchunks.api.worldgen.CubePrimer;
 import io.github.opencubicchunks.cubicchunks.api.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.api.util.XYZMap;
 import io.github.opencubicchunks.cubicchunks.api.world.ICube;
-import io.github.opencubicchunks.cubicchunks.api.worldgen.structure.ICubicStructureGenerator;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.crash.CrashReport;
 import net.minecraft.crash.CrashReportCategory;
@@ -59,6 +58,7 @@ public abstract class CubicFeatureGenerator implements ICubicFeatureGenerator {
 
     protected final int spacingBitCount;
     protected final int spacingBitCountY;
+    private boolean syncToStructureDataFile;
 
     private CubicFeatureData structureData;
 
@@ -69,9 +69,14 @@ public abstract class CubicFeatureGenerator implements ICubicFeatureGenerator {
      */
     protected XYZMap<ICubicFeatureStart> structureMap = new XYZMap<>(0.5f, 1024);
 
-    protected CubicFeatureGenerator(int spacingBitCount, int spacingBitCountY) {
+    protected CubicFeatureGenerator(int spacingBitCount, int spacingBitCountY, boolean syncToStructureDataFile) {
         this.spacingBitCount = spacingBitCount;
         this.spacingBitCountY = spacingBitCountY;
+        this.syncToStructureDataFile = syncToStructureDataFile;
+    }
+
+    protected CubicFeatureGenerator(int spacingBitCount, int spacingBitCountY) {
+        this(spacingBitCount, spacingBitCountY, true);
     }
 
     @Override public void generate(World world, @Nullable CubePrimer cube, CubePos cubePos) {
@@ -160,6 +165,9 @@ public abstract class CubicFeatureGenerator implements ICubicFeatureGenerator {
     }
 
     protected void initializeStructureData(World world) {
+        if (!syncToStructureDataFile) {
+            return;
+        }
         if (this.structureData != null) {
             return;
         }
@@ -190,8 +198,10 @@ public abstract class CubicFeatureGenerator implements ICubicFeatureGenerator {
     }
 
     private void setStructureStart(int chunkX, int chunkY, int chunkZ, StructureStart start) {
-        this.structureData.writeInstance(start.writeStructureComponentsToNBT(chunkX, chunkZ), chunkX, chunkY, chunkZ);
-        this.structureData.markDirty();
+        if (syncToStructureDataFile) {
+            this.structureData.writeInstance(start.writeStructureComponentsToNBT(chunkX, chunkZ), chunkX, chunkY, chunkZ);
+            this.structureData.markDirty();
+        }
     }
 
     protected abstract boolean canSpawnStructureAtCoords(World world, Random rand, int chunkX, int chunkY, int chunkZ);

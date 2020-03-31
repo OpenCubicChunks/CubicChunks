@@ -29,6 +29,8 @@ import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.commons.ClassRemapper;
+import org.objectweb.asm.commons.Remapper;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.InsnList;
 import org.objectweb.asm.tree.InsnNode;
@@ -61,6 +63,20 @@ public class CubicChunksWorldEditTransformer implements IClassTransformer {
 
         ClassWriter cw = new ClassWriter(0);
         node.accept(cw);
+        return cw.toByteArray();
+    }
+
+    private byte[] unrelocate(byte[] basicClass) {
+        Remapper remapper = new Remapper() {
+            @Override
+            public String map(String typeName) {
+                return typeName.replace("io/github/opencubicchunks/cubicchunks/cubicgen/blue/endless", "blue/endless");
+            }
+        };
+        ClassWriter cw = new ClassWriter(0);
+        ClassRemapper classRemapper = new ClassRemapper(cw, remapper);
+        ClassReader classReader = new ClassReader(basicClass);
+        classReader.accept(classRemapper, 0);
         return cw.toByteArray();
     }
 

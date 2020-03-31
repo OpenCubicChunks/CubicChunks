@@ -24,20 +24,11 @@
  */
 package io.github.opencubicchunks.cubicchunks.core.asm.mixin.selectable.common;
 
-import java.util.List;
-
-import javax.annotation.Nullable;
-
-import io.github.opencubicchunks.cubicchunks.core.world.cube.Cube;
-import io.github.opencubicchunks.cubicchunks.core.asm.mixin.ICubicWorldInternal;
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-
-import static io.github.opencubicchunks.cubicchunks.api.util.Coords.*;
+import static io.github.opencubicchunks.cubicchunks.api.util.Coords.blockToCube;
+import static io.github.opencubicchunks.cubicchunks.api.util.Coords.blockToLocal;
 
 import io.github.opencubicchunks.cubicchunks.api.util.CubePos;
+import io.github.opencubicchunks.cubicchunks.core.asm.mixin.ICubicWorldInternal;
 import io.github.opencubicchunks.cubicchunks.core.world.cube.Cube;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
@@ -45,9 +36,20 @@ import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+
+import java.util.List;
+
+import javax.annotation.Nullable;
 
 @Mixin(value = World.class, priority = 1001)
 public abstract class MixinWorld_CollisionCheck implements ICubicWorldInternal {
+
+    @Shadow public abstract boolean isOutsideBuildHeight(BlockPos pos);
 
     @Inject(method = "getCollisionBoxes(Lnet/minecraft/entity/Entity;Lnet/minecraft/util/math/AxisAlignedBB;ZLjava/util/List;)Z",
             at = @At("HEAD"), cancellable = true)
@@ -67,8 +69,9 @@ public abstract class MixinWorld_CollisionCheck implements ICubicWorldInternal {
             int y2 = MathHelper.ceil(maxY);
             int z2 = MathHelper.ceil(maxZ);
             BlockPos.PooledMutableBlockPos pooledmutableblockpos = BlockPos.PooledMutableBlockPos.retain();
-            next_cube_pos:for (int cx = blockToCube(x1); cx <= blockToCube(x2); cx++)
-                for (int cy = blockToCube(y1); cy <= blockToCube(y2); cy++)
+            next_cube_pos:
+            for (int cx = blockToCube(x1); cx <= blockToCube(x2); cx++) {
+                for (int cy = blockToCube(y1); cy <= blockToCube(y2); cy++) {
                     for (int cz = blockToCube(z1); cz <= blockToCube(z2); cz++) {
                         CubePos coords = new CubePos(cx, cy, cz);
                         int minBlockX = coords.getMinBlockX();
@@ -89,14 +92,19 @@ public abstract class MixinWorld_CollisionCheck implements ICubicWorldInternal {
                                 boolean isXboundary = x == x1 || x == x2;
                                 for (int z = minBlockZ; z <= maxBlockZ; z++) {
                                     boolean isZboundary = z == z1 || z == z2;
-                                        if(isXboundary && isZboundary)
+                                    if (isXboundary && isZboundary) {
+                                        continue;
+                                    }
+                                    for (int y = minBlockY; y <= maxBlockY; y++) {
+                                        boolean isYboundary = y == y2;
+                                        if (isYboundary && (isZboundary || isXboundary)) {
                                             continue;
-                                        for (int y = minBlockY; y <= maxBlockY; y++) {
-                                            boolean isYboundary = y == y2;
-                                            if (isYboundary && (isZboundary || isXboundary))
-                                                continue;
+                                        }
                                         pooledmutableblockpos.setPos(x, y, z);
-                                        IBlockState bstate = loadedCube.getStorage().get(blockToLocal(x),blockToLocal(y), blockToLocal(z));
+                                        if (isOutsideBuildHeight(pooledmutableblockpos)) {
+                                            continue;
+                                        }
+                                        IBlockState bstate = loadedCube.getStorage().get(blockToLocal(x), blockToLocal(y), blockToLocal(z));
                                         bstate.addCollisionBoxToList((World) (Object) this, pooledmutableblockpos, aabb, aabbList, entity, false);
                                         net.minecraftforge.common.MinecraftForge.EVENT_BUS
                                                 .post(new net.minecraftforge.event.world.GetCollisionBoxesEvent((World) (Object) this, null, aabb,
@@ -109,6 +117,8 @@ public abstract class MixinWorld_CollisionCheck implements ICubicWorldInternal {
                             }
                         }
                     }
+                }
+            }
             pooledmutableblockpos.release();
             ci.setReturnValue(!aabbList.isEmpty());
             ci.cancel();
