@@ -90,8 +90,8 @@ public class CubicChunks {
         }
     }
 
-    public static final int MIN_BLOCK_Y = Integer.MIN_VALUE >> 1;
-    public static final int MAX_BLOCK_Y = Integer.MAX_VALUE >> 1;
+    public static final int MIN_SUPPORTED_BLOCK_Y = Integer.MIN_VALUE + 4096;
+    public static final int MAX_SUPPORTED_BLOCK_Y = Integer.MAX_VALUE - 4095;
 
     public static final boolean DEBUG_ENABLED = System.getProperty("cubicchunks.debug", "false").equalsIgnoreCase("true");
     public static final String MODID = "cubicchunks";
@@ -140,7 +140,7 @@ public class CubicChunks {
                     IIntegratedServer integratedServer = cast(event.getServer());
                     ICubicWorldSettings settings = cast(integratedServer.getWorldSettings());
                     if (settings.isCubic()) {
-                        event.getServer().setBuildLimit(CubicChunks.MAX_BLOCK_Y);
+                        event.getServer().setBuildLimit(CubicChunks.MAX_SUPPORTED_BLOCK_Y);
                     }
                 },
                 () -> () -> {

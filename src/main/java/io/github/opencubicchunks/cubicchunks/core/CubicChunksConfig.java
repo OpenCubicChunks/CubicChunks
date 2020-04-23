@@ -148,6 +148,16 @@ public class CubicChunksConfig {
     @Config.RequiresWorldRestart
     public static int spawnLoadDistanceY = 8;
 
+    @Config.LangKey("cubicchunks.config.default_min_height")
+    @Config.Comment("World min height. Values that are not an integer multiple of 16 may cause unintended behavior")
+    @Config.RangeInt(min = CubicChunks.MIN_SUPPORTED_BLOCK_Y, max = 0)
+    public static int defaultMinHeight = -(1 << 30);
+
+    @Config.LangKey("cubicchunks.config.default_max_height")
+    @Config.Comment("World max height. Values that are not an integer multiple of 16 may cause unintended behavior")
+    @Config.RangeInt(min = 16, max = CubicChunks.MAX_SUPPORTED_BLOCK_Y)
+    public static int defaultMaxHeight = 1 << 30;
+
     public static int defaultMaxCubesPerChunkloadingTicket = 25 * 16;
     public static Map<String, Integer> modMaxCubesPerChunkloadingTicket = new HashMap<>();
 

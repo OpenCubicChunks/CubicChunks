@@ -38,12 +38,24 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @MethodsReturnNonnullByDefault
 public class WorldGenUtils {
 
-    public static IBlockState getRandomBedrockReplacement(World world, Random rand, IBlockState state, int blockY, int medrockLevels) {
-        int heightAboveBottom = blockY - ((IMinMaxHeight) world).getMinHeight();
-        if (heightAboveBottom < 5) {
-            int bedrockChance = Math.max(1, heightAboveBottom + 1);
-            if (rand.nextInt(bedrockChance) == 0) {
-                return Blocks.BEDROCK.getDefaultState();
+    public static IBlockState getRandomBedrockReplacement(World world, Random rand, IBlockState state, int blockY,
+            int bedrockLevels, boolean topBedrock, boolean bottomBedrock) {
+        if (bottomBedrock) {
+            int heightAboveBottom = blockY - ((IMinMaxHeight) world).getMinHeight();
+            if (heightAboveBottom < bedrockLevels) {
+                int bedrockChance = Math.max(1, heightAboveBottom + 1);
+                if (rand.nextInt(bedrockChance) == 0) {
+                    return Blocks.BEDROCK.getDefaultState();
+                }
+            }
+        }
+        if (topBedrock) {
+            int heightBelowTop =  ((IMinMaxHeight) world).getMaxHeight() - blockY - 1;
+            if (heightBelowTop < bedrockLevels) {
+                int bedrockChance = Math.max(1, heightBelowTop + 1);
+                if (rand.nextInt(bedrockChance) == 0) {
+                    return Blocks.BEDROCK.getDefaultState();
+                }
             }
         }
         return state;

@@ -41,11 +41,11 @@ public class WorldSavedCubicChunksData extends WorldSavedData {
         super(name);
     }
     
-    public WorldSavedCubicChunksData(String name, boolean isCC) {
+    public WorldSavedCubicChunksData(String name, boolean isCC, int minHeight, int maxHeight) {
         this(name);
         if (isCC) {
-            minHeight = CubicChunks.MIN_BLOCK_Y;
-            maxHeight = CubicChunks.MAX_BLOCK_Y;
+            this.minHeight = minHeight;
+            this.maxHeight = maxHeight;
             isCubicChunks = true;
             compatibilityGeneratorType = new ResourceLocation(CubicChunksConfig.compatibilityGeneratorType);
         }

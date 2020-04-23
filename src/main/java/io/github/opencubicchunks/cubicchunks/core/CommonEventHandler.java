@@ -44,6 +44,7 @@ import net.minecraft.world.WorldServerMulti;
 import net.minecraft.world.WorldType;
 import net.minecraft.world.chunk.IChunkProvider;
 import net.minecraft.world.gen.ChunkProviderServer;
+import net.minecraftforge.common.DimensionManager;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.world.WorldEvent;
@@ -93,7 +94,17 @@ public class CommonEventHandler {
         }
 
         if (savedData == null) {
-            savedData = new WorldSavedCubicChunksData("cubicChunksData", isCC);
+            int minY = CubicChunksConfig.defaultMinHeight;
+            int maxY = CubicChunksConfig.defaultMaxHeight;
+            if (world.provider.getDimension() != 0) {
+                WorldSavedCubicChunksData overworld = (WorldSavedCubicChunksData) DimensionManager
+                        .getWorld(0).getPerWorldStorage().getOrLoadData(WorldSavedCubicChunksData.class, "cubicChunksData");
+                if (overworld != null) {
+                    minY = overworld.minHeight;
+                    maxY = overworld.maxHeight;
+                }
+            }
+            savedData = new WorldSavedCubicChunksData("cubicChunksData", isCC, minY, maxY);
         }
         savedData.markDirty();
         evt.getObject().getPerWorldStorage().setData("cubicChunksData", savedData);

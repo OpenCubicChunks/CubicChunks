@@ -41,20 +41,25 @@ import io.github.opencubicchunks.cubicchunks.core.world.cube.Cube;
 import io.github.opencubicchunks.cubicchunks.core.worldgen.WorldgenHangWatchdog;
 import io.github.opencubicchunks.cubicchunks.core.worldgen.generator.WorldGenUtils;
 import mcp.MethodsReturnNonnullByDefault;
-import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.EnumCreatureType;
+import net.minecraft.init.Biomes;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
+import net.minecraft.world.WorldProvider;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.Biome.SpawnListEntry;
+import net.minecraft.world.biome.BiomeProviderSingle;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkPrimer;
 import net.minecraft.world.chunk.IChunkProvider;
 import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
+import net.minecraft.world.gen.ChunkGeneratorOverworld;
+import net.minecraft.world.gen.ChunkGeneratorSettings;
 import net.minecraft.world.gen.IChunkGenerator;
 import net.minecraftforge.fml.common.IWorldGenerator;
+import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 
 import java.util.HashMap;
 import java.util.List;
@@ -95,6 +100,8 @@ public class VanillaCompatibilityGenerator implements ICubeGenerator {
      */
     @Nonnull private IBlockState extensionBlockTop = Blocks.AIR.getDefaultState();
 
+    private boolean hasTopBedrock = false, hasBottomBedrock = true;
+
     /**
      * Create a new VanillaCompatibilityGenerator
      *
@@ -102,6 +109,23 @@ public class VanillaCompatibilityGenerator implements ICubeGenerator {
      * @param world The world in which cubes are being generated
      */
     public VanillaCompatibilityGenerator(IChunkGenerator vanilla, World world) {
+        if (vanilla instanceof ChunkGeneratorOverworld && ((ICubicWorld) world).getMaxHeight() == 16) {
+            ChunkGeneratorSettings.Factory factory = new ChunkGeneratorSettings.Factory();
+            factory.seaLevel = 67;
+            factory.stretchY *= 8;
+            factory.baseSize += 0.15;
+            factory.useCaves = false;
+            factory.useDungeons = false;
+            factory.useStrongholds = false;
+            factory.useRavines = false;
+            factory.fixedBiome = Biome.REGISTRY.getIDForObject(Biomes.PLAINS);
+            String settingsString = factory.toString();
+            ObfuscationReflectionHelper.setPrivateValue(WorldProvider.class, world.provider,
+                    new BiomeProviderSingle(Biomes.PLAINS), "field_76578_c");
+
+            vanilla = new ChunkGeneratorOverworld(world, world.getSeed(), false,
+                    settingsString);
+        }
         this.vanilla = vanilla;
         this.world = world;
     }
@@ -127,9 +151,6 @@ public class VanillaCompatibilityGenerator implements ICubeGenerator {
                 for (int y = 0; y < 3; y++) {
                     IBlockState blockState = bottomEBS == null ?
                             Blocks.AIR.getDefaultState() : bottomEBS.get(x, y, z);
-                    if (blockState.getBlock() == Blocks.BEDROCK) {
-                        continue; // Never use bedrock for world extension
-                    }
 
                     int count = blockHistogramBottom.getOrDefault(blockState, 0);
                     blockHistogramBottom.put(blockState, count + 1);
@@ -140,9 +161,6 @@ public class VanillaCompatibilityGenerator implements ICubeGenerator {
                     ExtendedBlockStorage ebs = lastChunk.getBlockStorageArray()[Coords.blockToCube(y)];
 
                     IBlockState blockState = ebs == null ? Blocks.AIR.getDefaultState() : ebs.get(x, localY, z);
-                    if (blockState.getBlock() == Blocks.BEDROCK) {
-                        continue; // Never use bedrock for world extension
-                    }
 
                     int count = blockHistogramTop.getOrDefault(blockState, 0);
                     blockHistogramTop.put(blockState, count + 1);
@@ -154,23 +172,25 @@ public class VanillaCompatibilityGenerator implements ICubeGenerator {
 
         int topcount = 0;
         for (Map.Entry<IBlockState, Integer> entry : blockHistogramBottom.entrySet()) {
-            if (entry.getValue() > topcount) {
+            if (entry.getValue() > topcount && entry.getKey().getBlock() != Blocks.BEDROCK) {
                 extensionBlockBottom = entry.getKey();
                 topcount = entry.getValue();
             }
         }
+        hasBottomBedrock = blockHistogramBottom.getOrDefault(Blocks.BEDROCK.getDefaultState(), 0) > 0;
         CubicChunks.LOGGER.info("Detected filler block " + extensionBlockBottom.getBlock().getTranslationKey() + " " +
-                "from layers [0, 2]");
+                "from layers [0, 2], bedrock=" + hasBottomBedrock);
 
         topcount = 0;
         for (Map.Entry<IBlockState, Integer> entry : blockHistogramTop.entrySet()) {
-            if (entry.getValue() > topcount) {
+            if (entry.getValue() > topcount && entry.getKey().getBlock() != Blocks.BEDROCK) {
                 extensionBlockTop = entry.getKey();
                 topcount = entry.getValue();
             }
         }
+        hasTopBedrock = blockHistogramTop.getOrDefault(Blocks.BEDROCK.getDefaultState(), 0) > 0;
         CubicChunks.LOGGER.info("Detected filler block " + extensionBlockTop.getBlock().getTranslationKey() + " from" +
-                " layers [" + (worldHeightBlocks - 3) + ", " + (worldHeightBlocks - 1) + "]");
+                " layers [" + (worldHeightBlocks - 3) + ", " + (worldHeightBlocks - 1) + "], bedrock=" + hasTopBedrock);
     }
 
     @Override
@@ -208,37 +228,26 @@ public class VanillaCompatibilityGenerator implements ICubeGenerator {
             tryInit(vanilla, world);
             CubePrimer primer = new CubePrimer();
 
-            if (cubeY < 0) {
-                Random rand = new Random(world.getSeed());
-                rand.setSeed(rand.nextInt() ^ cubeX);
-                rand.setSeed(rand.nextInt() ^ cubeZ);
+            Random rand = new Random(world.getSeed());
+            rand.setSeed(rand.nextInt() ^ cubeX);
+            rand.setSeed(rand.nextInt() ^ cubeZ);
+            if (cubeY < 0 || cubeY >= worldHeightCubes) {
                 // Fill with bottom block
                 for (int y = 0; y < Cube.SIZE; y++) {
                     for (int z = 0; z < Cube.SIZE; z++) {
                         for (int x = 0; x < Cube.SIZE; x++) {
-                            IBlockState state = extensionBlockBottom;
-                            if (state.getBlock() != Blocks.AIR) {
-                                int blockY = Coords.localToBlock(cubeY, y);
-                                state = WorldGenUtils.getRandomBedrockReplacement(world, rand, state, blockY, 5);
-                            }
+                            IBlockState state = cubeY < 0 ? extensionBlockBottom : extensionBlockTop;
+                            int blockY = Coords.localToBlock(cubeY, y);
+                            state = WorldGenUtils.getRandomBedrockReplacement(world, rand, state, blockY, 1,
+                                    hasTopBedrock, hasBottomBedrock);
                             primer.setBlockState(x, y, z, state);
-                        }
-                    }
-                }
-            } else if (cubeY >= worldHeightCubes) {
-                // Fill with top block
-                for (int y = 0; y < Cube.SIZE; y++) {
-                    for (int z = 0; z < Cube.SIZE; z++) {
-                        for (int x = 0; x < Cube.SIZE; x++) {
-
-                            primer.setBlockState(x, y, z, extensionBlockTop);
                         }
                     }
                 }
             } else {
                 // Make vanilla generate a chunk for us to copy
                 if (lastChunk.x != cubeX || lastChunk.z != cubeZ) {
-                    if (CubicChunksConfig.optimizedCompatibilityGenerator) {
+                    if (CubicChunksConfig.optimizedCompatibilityGenerator&&false) {
                         try (ICubicWorldInternal.CompatGenerationScope ignored =
                                      ((ICubicWorldInternal.Server) world).doCompatibilityGeneration()) {
                             lastChunk = vanilla.generateChunk(cubeX, cubeZ);
@@ -268,18 +277,31 @@ public class VanillaCompatibilityGenerator implements ICubeGenerator {
                     return new CubePrimerWrapper(chunkPrimer, cubeY);
                 }
                 ExtendedBlockStorage storage = lastChunk.getBlockStorageArray()[cubeY];
+                if (((ICubicWorld) world).getMaxHeight() == 16) {
+                    if (cubeY != 0) {
+                        storage = null;
+                    } else {
+                        storage = lastChunk.getBlockStorageArray()[4];
+                    }
+                }
                 if (storage != null && !storage.isEmpty()) {
                     for (int y = 0; y < Cube.SIZE; y++) {
+                        int blockY = Coords.localToBlock(cubeY, y);
                         for (int z = 0; z < Cube.SIZE; z++) {
                             for (int x = 0; x < Cube.SIZE; x++) {
                                 IBlockState state = storage.get(x, y, z);
                                 if (state == Blocks.BEDROCK.getDefaultState()) {
                                     if (y < Cube.SIZE / 2) {
-                                        primer.setBlockState(x, y, z, extensionBlockBottom);
+                                        state = extensionBlockBottom;
                                     } else {
-                                        primer.setBlockState(x, y, z, extensionBlockTop);
+                                        state = extensionBlockTop;
                                     }
+                                    state = WorldGenUtils.getRandomBedrockReplacement(world, rand, state, blockY, 1,
+                                            hasTopBedrock, hasBottomBedrock);
+                                    primer.setBlockState(x, y, z, state);
                                 } else {
+                                    state = WorldGenUtils.getRandomBedrockReplacement(world, rand, state, blockY, 1,
+                                            hasTopBedrock, hasBottomBedrock);
                                     primer.setBlockState(x, y, z, state);
                                 }
                             }

@@ -113,7 +113,7 @@ public class ServerHeightMap implements IHeightMap {
 
     @Override
     public void onOpacityChange(int localX, int blockY, int localZ, int opacity) {
-        if (blockY > CubicChunks.MAX_BLOCK_Y || blockY < CubicChunks.MIN_BLOCK_Y) {
+        if (blockY > CubicChunks.MAX_SUPPORTED_BLOCK_Y || blockY < CubicChunks.MIN_SUPPORTED_BLOCK_Y) {
             return;
         }
         int xzIndex = getIndex(localX, localZ);
