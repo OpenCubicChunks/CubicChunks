@@ -45,8 +45,10 @@ public class Coords {
     public static final int BIOMES_PER_CUBE = 8 * 1 * 8;
 
     public static BlockPos midPos(BlockPos p1, BlockPos p2) {
-        //bitshift instead of / - round always down
-        return new BlockPos((p1.getX() + p2.getX()) >> 1, (p1.getY() + p2.getY()) >> 1, (p1.getZ() + p2.getZ()) >> 1);
+        //bitshifting each number and then adding the result - this rounds the number down and prevents overflow
+        return new BlockPos((p1.getX() >> 1) + (p2.getX() >> 1) + (p1.getX() & p2.getX() & 1),
+            (p1.getY() >> 1) + (p2.getY() >> 1) + (p1.getY() & p2.getY() & 1),
+            (p1.getZ() >> 1) + (p2.getZ() >> 1) + (p1.getZ() & p2.getZ() & 1));
     }
 
     public static int blockToLocal(int val) {
