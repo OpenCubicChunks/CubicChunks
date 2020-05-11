@@ -28,21 +28,18 @@ import mcp.MethodsReturnNonnullByDefault;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.List;
-
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.NoSuchElementException;
 
 /**
  * Hash table implementation for objects in a 3-dimensional cartesian coordinate
  * system.
  *
  * @param <T> class of the objects to be contained in this map
- *
  * @see XYZAddressable
  */
 @ParametersAreNonnullByDefault
@@ -59,20 +56,13 @@ public class XYZMap<T extends XYZAddressable> implements Iterable<T> {
     private static final int HASH_SEED = 1183822147;
 
     /**
-     * Backing array containing all elements of this map, accessed by pointers.
-     * This array contain no gaps with {@code null}, therefore it is possible to
-     * iterate thru elements using simple index increment. Added to optimize map
-     * iterator.
-     */
-    @Nonnull private XYZAddressable[] bucketsByPointer;
-    /**
      * Backing array containing all elements of this map, accessed by hash.
      * Elements of this array accessed a same way as regular Java HashSet and
      * HashMap items, fastest way possible. It is used to optimize
      * {@code get(III)} function.
      */
-    @Nonnull private XYZAddressable[] bucketsByHash;
-    @Nonnull private int[] pointers;
+    @Nonnull
+    private Node<T>[] bucketsByHash;
     /**
      * the current number of elements in this map
      */
@@ -102,7 +92,7 @@ public class XYZMap<T extends XYZAddressable> implements Iterable<T> {
      * map will automatically grow if the specified load is surpassed.
      *
      * @param loadFactor the load factor
-     * @param capacity the initial capacity
+     * @param capacity   the initial capacity
      */
     public XYZMap(float loadFactor, int capacity) {
 
@@ -116,11 +106,14 @@ public class XYZMap<T extends XYZAddressable> implements Iterable<T> {
         while (tCapacity < capacity) {
             tCapacity <<= 1;
         }
-        this.bucketsByPointer = new XYZAddressable[tCapacity];
-        this.bucketsByHash = new XYZAddressable[tCapacity];
-        this.pointers = new int[tCapacity];
+        this.bucketsByHash = this.nodeArray(tCapacity);
 
         this.refreshFields();
+    }
+
+    @SuppressWarnings("unchecked")
+    private Node<T>[] nodeArray(int size) {
+        return (Node<T>[]) new Node[size];
     }
 
     /**
@@ -138,7 +131,6 @@ public class XYZMap<T extends XYZAddressable> implements Iterable<T> {
      * @param x the x-coordinate
      * @param y the y-coordinate
      * @param z the z-coordinate
-     *
      * @return a 32b hash based on the given coordinates
      */
     private static int hash(int x, int y, int z) {
@@ -159,7 +151,6 @@ public class XYZMap<T extends XYZAddressable> implements Iterable<T> {
      * @param x the x-coordinate
      * @param y the y-coordinate
      * @param z the z-coordinate
-     *
      * @return the desired pointer index for the given coordinates
      */
     private int getPointerIndex(int x, int y, int z) {
@@ -171,7 +162,6 @@ public class XYZMap<T extends XYZAddressable> implements Iterable<T> {
      * if necessary.
      *
      * @param pointerIndex the previous index
-     *
      * @return the next index
      */
     private int getNextPointerIndex(int pointerIndex) {
@@ -182,10 +172,8 @@ public class XYZMap<T extends XYZAddressable> implements Iterable<T> {
      * Removes all elements from the map.
      */
     public void clear() {
-        checkThreadedWrite();
+        this.checkThreadedWrite();
         Arrays.fill(this.bucketsByHash, null);
-        Arrays.fill(this.bucketsByPointer, null);
-        Arrays.fill(this.pointers, 0);
         this.size = 0;
     }
 
@@ -195,37 +183,42 @@ public class XYZMap<T extends XYZAddressable> implements Iterable<T> {
      * replaced.
      *
      * @param value value to be associated with its coordinates
-     *
      * @return the previous value associated with the given value's coordinates
-     *         or null if no such value exists
+     * or null if no such value exists
      */
     @Nullable
     @SuppressWarnings("unchecked")
     public T put(T value) {
-        checkThreadedWrite();
+        this.checkThreadedWrite();
         int x = value.getX();
         int y = value.getY();
         int z = value.getZ();
-        int pointerIndex = this.getPointerIndex(x, y, z);
-        int index = pointers[pointerIndex];
+        int hash = hash(x, y, z);
+        Node<T> node = this.bucketsByHash[hash & this.mask];
+        if (node != null) {
+            Node prev;
+            do {
+                if (node.hash == hash && node.x == x && node.y == y && node.z == z) {
+                    //value already existed
+                    T old = node.value;
+                    node.value = value;
+                    return old;
+                }
+                prev = node;
+                node = node.next;
+            } while (node != null);
 
-        while (index != 0) {
-            XYZAddressable bucket = this.bucketsByPointer[index];
-            if (bucket.getX() == x && bucket.getY() == y && bucket.getZ() == z) {
-                this.bucketsByPointer[index] = value;
-                this.bucketsByHash[pointerIndex] = value;
-                return (T) bucket;
-            }
-            pointerIndex = this.getNextPointerIndex(pointerIndex);
-            index = pointers[pointerIndex];
+            //node wasn't there before
+            node = new Node<>(hash, x, y, z, value);
+            prev.next = node;
+            node.prev = prev;
+        } else {
+            this.bucketsByHash[hash & this.mask] = new Node<>(hash, x, y, z, value);
         }
-        this.bucketsByPointer[++size] = value;
-        this.bucketsByHash[pointerIndex] = value;
-        this.pointers[pointerIndex] = size;
 
-        // If the load threshold has been reached, increase the map's size.
-        if (this.size > this.loadThreshold)
-            grow();
+        if (++this.size > this.loadThreshold) {
+            this.grow();
+        }
         return null;
     }
 
@@ -235,33 +228,32 @@ public class XYZMap<T extends XYZAddressable> implements Iterable<T> {
      * @param x the x-coordinate
      * @param y the y-coordinate
      * @param z the z-coordinate
-     *
      * @return the entry associated with the specified coordinates or null if no
-     *         such entry exists
+     * such entry exists
      */
     @Nullable
     @SuppressWarnings("unchecked")
     public T remove(int x, int y, int z) {
-        checkThreadedWrite();
+        this.checkThreadedWrite();
 
-        int pointerIndex = this.getPointerIndex(x, y, z);
-        int index = pointers[pointerIndex];
-
-        // Search for the element. Only the buckets from the element's supposed
-        // index up to the next free slot must
-        // be checked.
-        while (index != 0) {
-            XYZAddressable bucket = this.bucketsByPointer[index];
-            // If the correct bucket was found, remove it.
-            if (bucket.getX() == x && bucket.getY() == y && bucket.getZ() == z) {
-                this.collapseBucket(pointerIndex, index);
-                return (T) bucket;
+        int hash = hash(x, y, z);
+        Node<T> node = this.bucketsByHash[hash & this.mask];
+        while (node != null) {
+            if (node.hash == hash && node.x == x && node.y == y && node.z == z) {
+                this.size--;
+                if (node.next != null) {
+                    node.next.prev = node.prev;
+                }
+                if (node.prev != null) {
+                    node.prev.next = node.next;
+                } else {
+                    //if the previous node is null, this node is a root node
+                    this.bucketsByHash[hash & this.mask] = node.next;
+                }
+                return node.value;
             }
-            pointerIndex = this.getNextPointerIndex(pointerIndex);
-            index = pointers[pointerIndex];
+            node = node.next;
         }
-
-        // nothing was removed
         return null;
     }
 
@@ -271,9 +263,8 @@ public class XYZMap<T extends XYZAddressable> implements Iterable<T> {
      * coordinates.
      *
      * @param value the value to be removed
-     *
      * @return the entry associated with the given value's coordinates or null
-     *         if no such entry exists
+     * if no such entry exists
      */
     @Nullable
     public T remove(T value) {
@@ -287,27 +278,20 @@ public class XYZMap<T extends XYZAddressable> implements Iterable<T> {
      * @param x the x-coordinate
      * @param y the y-coordinate
      * @param z the z-coordinate
-     *
      * @return the entry associated with the specified coordinates or null if no
-     *         such value exists
+     * such value exists
      */
     @Nullable
     @SuppressWarnings("unchecked")
     public T get(int x, int y, int z) {
-        int index = this.getPointerIndex(x, y, z);
-        XYZAddressable bucket = this.bucketsByHash[index];
-        while (bucket != null) {
-
-            // If the correct bucket was found, return it.
-            if (bucket.getX() == x && bucket.getY() == y && bucket.getZ() == z) {
-                return (T) bucket;
+        int hash = hash(x, y, z);
+        Node<T> node = this.bucketsByHash[hash & this.mask];
+        while (node != null) {
+            if (node.hash == hash && node.x == x && node.y == y && node.z == z) {
+                return node.value;
             }
-
-            index = getNextPointerIndex(index);
-            bucket = this.bucketsByHash[index];
+            node = node.next;
         }
-
-        // nothing was found
         return null;
     }
 
@@ -318,25 +302,18 @@ public class XYZMap<T extends XYZAddressable> implements Iterable<T> {
      * @param x the x-coordinate
      * @param y the z-coordinate
      * @param z the y-coordinate
-     *
      * @return true if there exists an entry associated with the given
-     *         coordinates in this map
+     * coordinates in this map
      */
     public boolean contains(int x, int y, int z) {
-        int index = this.getPointerIndex(x, y, z);
-        XYZAddressable bucket = this.bucketsByHash[index];
-        while (bucket != null) {
-
-            // If the correct bucket was found, return it.
-            if (bucket.getX() == x && bucket.getY() == y && bucket.getZ() == z) {
+        int hash = hash(x, y, z);
+        Node<T> node = this.bucketsByHash[hash & this.mask];
+        while (node != null) {
+            if (node.hash == hash && node.x == x && node.y == y && node.z == z) {
                 return true;
             }
-
-            index = getNextPointerIndex(index);
-            bucket = this.bucketsByHash[index];
+            node = node.next;
         }
-
-        // nothing was found
         return false;
     }
 
@@ -346,7 +323,6 @@ public class XYZMap<T extends XYZAddressable> implements Iterable<T> {
      * xyz-coordinates equal the given value's coordinates.
      *
      * @param value the value
-     *
      * @return true if the given value is contained within this map
      */
     public boolean contains(T value) {
@@ -358,84 +334,27 @@ public class XYZMap<T extends XYZAddressable> implements Iterable<T> {
      * values accordingly.
      */
     private void grow() {
-        int newLength = this.bucketsByPointer.length * 2;
+        int newLength = this.bucketsByHash.length << 1;
         int newMask = newLength - 1;
-        XYZAddressable[] newBucketsByPointer = new XYZAddressable[newLength];
-        XYZAddressable[] newBucketsByHash = new XYZAddressable[newLength];
-        int[] newPointers = new int[newLength];
-        for (int i = 1; i <= size; i++) {
-            XYZAddressable bucket = bucketsByPointer[i];
-            newBucketsByPointer[i] = bucket;
-            int pointerIndex = hash(bucket.getX(), bucket.getY(), bucket.getZ()) & newMask;
-            while (newPointers[pointerIndex] != 0)
-                pointerIndex = ++pointerIndex & newMask;
-            newPointers[pointerIndex] = i;
-            newBucketsByHash[pointerIndex] = bucket;
-        }
-        bucketsByPointer = newBucketsByPointer;
-        bucketsByHash = newBucketsByHash;
-        pointers = newPointers;
-        mask=newMask;
-        loadThreshold = (int) (newLength * this.loadFactor) - 2;
-    }
+        Node<T>[] newBucketsByHash = this.nodeArray(newLength);
+        for (Node<T> node : this.bucketsByHash) {
+            while (node != null) {
+                Node<T> inTable = newBucketsByHash[node.hash & newMask];
+                newBucketsByHash[node.hash & newMask] = node;
+                Node<T> oldNext = node.next;
+                node.prev = node.next = null;
 
-    /**
-     * Removes the value contained at the given index by shifting suitable
-     * values on its right to the left.
-     *
-     * @param holePointerIndex the index of the ponter to be collapsed
-     * @param holeIndex an index of the bucket to be collapsed
-     */
-    private void collapseBucket(final int holePointerIndex, final int holeIndex) {
-        final int lastElement = size;
-        final int oldLastPointerIndex = getElementPointerIndex(lastElement);
-
-        List<XYZAddressable> nextPointersBuckets = new ArrayList<XYZAddressable>(10);
-        List<Integer> nextBucketIndexes = new ArrayList<Integer>(10);
-
-        this.pointers[oldLastPointerIndex] = holeIndex;
-        this.pointers[holePointerIndex] = 0;
-        this.bucketsByPointer[holeIndex] = this.bucketsByPointer[lastElement];
-        this.bucketsByPointer[lastElement] = null;
-        this.bucketsByHash[holePointerIndex] = null;
-        this.size--;
-
-        int pointerIndex = this.getNextPointerIndex(holePointerIndex);
-        int index = pointers[pointerIndex];
-        while (index != 0) {
-            XYZAddressable bucket = this.bucketsByPointer[index];
-            nextPointersBuckets.add(bucket);
-            nextBucketIndexes.add(index);
-            this.pointers[pointerIndex] = 0;
-            this.bucketsByHash[pointerIndex] = null;
-            pointerIndex = this.getNextPointerIndex(pointerIndex);
-            index = pointers[pointerIndex];
-        }
-
-        for (int i = 0; i < nextPointersBuckets.size(); i++) {
-            XYZAddressable bucket = nextPointersBuckets.get(i);
-            int x = bucket.getX();
-            int y = bucket.getY();
-            int z = bucket.getZ();
-            int newBucketPointerIndex = this.getPointerIndex(x, y, z);
-            int newIndex = pointers[newBucketPointerIndex];
-            while (newIndex != 0) {
-                newBucketPointerIndex = this.getNextPointerIndex(newBucketPointerIndex);
-                newIndex = pointers[newBucketPointerIndex];
+                if (inTable != null) {
+                    //hash collision
+                    inTable.prev = node;
+                    node.next = inTable;
+                }
+                node = oldNext;
             }
-            this.pointers[newBucketPointerIndex] = nextBucketIndexes.get(i);
-            this.bucketsByHash[newBucketPointerIndex] = bucket;
         }
-
-    }
-
-    private int getElementPointerIndex(int index) {
-        XYZAddressable lastElement = this.bucketsByPointer[index];
-        int pointerIndex = this.getPointerIndex(lastElement.getX(), lastElement.getY(), lastElement.getZ());
-        while (pointers[pointerIndex] != index) {
-            pointerIndex = this.getNextPointerIndex(pointerIndex);
-        }
-        return pointerIndex;
+        this.bucketsByHash = newBucketsByHash;
+        this.mask = newMask;
+        this.loadThreshold = (int) (newLength * this.loadFactor) - 2;
     }
 
     /**
@@ -444,8 +363,8 @@ public class XYZMap<T extends XYZAddressable> implements Iterable<T> {
      */
     private void refreshFields() {
         // we need that 1 extra space, make sure it will be there
-        this.loadThreshold = (int) (this.bucketsByPointer.length * this.loadFactor) - 2;
-        this.mask = this.bucketsByPointer.length - 1;
+        this.loadThreshold = (int) (this.bucketsByHash.length * this.loadFactor) - 2;
+        this.mask = this.bucketsByHash.length - 1;
     }
 
     private void checkThreadedWrite() {
@@ -461,26 +380,51 @@ public class XYZMap<T extends XYZAddressable> implements Iterable<T> {
 
     public Iterator<T> iterator() {
         return new Iterator<T>() {
-
-            int at = 1;
+            private int index = 0;
+            private Node<T> node;
+            private Node<T> next = this.seek();
 
             @Override
             public boolean hasNext() {
-                return at <= size;
+                return this.next != null;
             }
 
-            @Nullable
             @Override
-            @SuppressWarnings("unchecked")
             public T next() {
-                return (T) bucketsByPointer[at++];
+                if (!this.hasNext())    {
+                    throw new NoSuchElementException();
+                }
+                this.node = this.next;
+                this.next = this.seek();
+                return this.node.value;
+            }
+
+            private Node<T> seek() {
+                if (this.node != null && this.node.next != null) {
+                    return this.node.next;
+                }
+
+                while (this.index < XYZMap.this.bucketsByHash.length) {
+                    Node<T> node = XYZMap.this.bucketsByHash[this.index++];
+                    if (node != null) {
+                        return node;
+                    }
+                }
+                return null;
             }
 
             @Override
             public void remove() {
-                checkThreadedWrite();
-                int pointerIndex = getElementPointerIndex(--at);
-                collapseBucket(pointerIndex, at);
+                XYZMap.this.checkThreadedWrite();
+                if (this.node.next != null) {
+                    this.node.next.prev = this.node.prev;
+                }
+                if (this.node.prev != null) {
+                    this.node.prev.next = this.node.next;
+                } else {
+                    XYZMap.this.bucketsByHash[this.node.hash & XYZMap.this.mask] = this.node.next;
+                }
+                XYZMap.this.size--;
             }
         };
     }
@@ -493,40 +437,25 @@ public class XYZMap<T extends XYZAddressable> implements Iterable<T> {
      * @return An iterator that starts at randomized position based on seed
      **/
     public Iterator<T> randomWrappedIterator(int seed) {
-        return new Iterator<T>() {
+        throw new UnsupportedOperationException();
+    }
 
-            // Start point: 1. Shall not be larger that array length
-            // (obviously).
-            // 2. Shall not, in most cases, be larger than allocated buckets
-            // zone (because it must be uniformly random).
-            // 3. Shall not be zero (because zero element always null in this
-            // implementation).
-            boolean start = size > 0;
-            int startFrom = start ? (getNextPointerIndex(seed) % size | 1) : 0;
-            int at = startFrom;
+    private static final class Node<T extends XYZAddressable> {
+        private final int hash;
+        private final int x;
+        private final int y;
+        private final int z;
+        private T value;
 
-            @Override
-            public boolean hasNext() {
-                // 'at' equal to 'startFrom' allowed until first iteration.
-                return at != startFrom || start;
-            }
+        private Node<T> next;
+        private Node<T> prev;
 
-            @Override
-            @SuppressWarnings("unchecked")
-            public T next() {
-                start = false;
-                T toReturn = (T) bucketsByPointer[at++];
-                if (at > size)
-                    at = 1;
-                return toReturn;
-            }
-
-            @Override
-            public void remove() {
-                checkThreadedWrite();
-                int pointerIndex = getElementPointerIndex(--at);
-                collapseBucket(pointerIndex, at);
-            }
-        };
+        public Node(int hash, int x, int y, int z, T value) {
+            this.hash = hash;
+            this.x = x;
+            this.y = y;
+            this.z = z;
+            this.value = value;
+        }
     }
 }
