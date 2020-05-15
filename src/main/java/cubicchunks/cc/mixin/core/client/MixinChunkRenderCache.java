@@ -1,4 +1,4 @@
-package cubicchunks.cc.mixin;
+package cubicchunks.cc.mixin.core.client;
 
 import net.minecraft.client.renderer.chunk.ChunkRenderCache;
 import net.minecraft.world.World;

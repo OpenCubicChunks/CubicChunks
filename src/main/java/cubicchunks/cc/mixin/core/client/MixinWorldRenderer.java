@@ -1,5 +1,6 @@
-package cubicchunks.cc.mixin;
+package cubicchunks.cc.mixin.core.client;
 
+import cubicchunks.cc.mixin.core.client.interfaces.IMixinViewFrustum;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.ViewFrustum;
 import net.minecraft.client.renderer.WorldRenderer;

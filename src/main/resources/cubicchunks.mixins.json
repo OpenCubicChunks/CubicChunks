@@ -4,14 +4,14 @@
   "compatibilityLevel": "JAVA_8",
   "refmap": "cubicchunks.refmap.json",
   "mixins": [
-    "IMixinViewFrustum",
-    "MixinChunk",
-    "MixinChunkPrimer",
-    "MixinChunkRenderCache",
-    "MixinChunkSerializer",
+    "core.client.interfaces.IMixinViewFrustum",
+    "core.common.MixinChunk",
+    "core.common.MixinChunkPrimer",
+    "core.client.MixinChunkRenderCache",
+    "core.common.MixinChunkSerializer",
     "core.client.MixinViewFrustum",
-    "MixinWorld",
-    "MixinWorldRenderer"
+    "core.common.MixinWorld",
+    "core.client.MixinWorldRenderer"
   ],
   "client": [
   ],

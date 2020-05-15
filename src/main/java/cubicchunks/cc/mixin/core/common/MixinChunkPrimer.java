@@ -1,4 +1,4 @@
-package cubicchunks.cc.mixin;
+package cubicchunks.cc.mixin.core.common;
 
 import net.minecraft.world.chunk.ChunkPrimer;
 import net.minecraft.world.chunk.ChunkSection;
