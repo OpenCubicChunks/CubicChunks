@@ -38,7 +38,7 @@ import static net.minecraft.world.chunk.storage.ChunkSerializer.*;
 
 @Mixin(ChunkSerializer.class)
 public class MixinChunkSerializer {
-    @Inject(at = @At("HEAD"), method = "read")
+    @Inject(at = @At("HEAD"), method = "read", cancellable = true)
     private static void read(ServerWorld worldIn, TemplateManager templateManagerIn, PointOfInterestManager poiManager, ChunkPos pos, CompoundNBT compound, CallbackInfoReturnable<ChunkPrimer> cir) {
         ChunkGenerator<?> chunkgenerator = worldIn.getChunkProvider().getChunkGenerator();
         BiomeProvider biomeprovider = chunkgenerator.getBiomeProvider();

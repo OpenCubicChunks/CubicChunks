@@ -7,11 +7,8 @@
     "IMixinIWorld",
     "IMixinViewFrustum",
     "MixinChunk",
-    "MixinChunkGenStatus",
-    "MixinChunkLoaderUtil",
     "MixinChunkPrimer",
     "MixinChunkSerializer",
-    "MixinIChunk",
     "MixinViewFrustum",
     "MixinWorld",
     "MixinWorldRenderer"
