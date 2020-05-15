@@ -1,0 +1,25 @@
+{
+  "required": true,
+  "package": "cubicchunks.cc.mixin",
+  "compatibilityLevel": "JAVA_8",
+  "refmap": "cubicchunks.refmap.json",
+  "mixins": [
+    "IMixinIWorld",
+    "IMixinViewFrustum",
+    "MixinChunk",
+    "MixinChunkGenStatus",
+    "MixinChunkLoaderUtil",
+    "MixinChunkPrimer",
+    "MixinChunkSerializer",
+    "MixinIChunk",
+    "MixinViewFrustum",
+    "MixinWorld",
+    "MixinWorldRenderer"
+  ],
+  "client": [
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "minVersion": "0.8"
+}
