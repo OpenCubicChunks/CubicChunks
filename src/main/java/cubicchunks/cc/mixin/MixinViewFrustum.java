@@ -25,7 +25,7 @@ public class MixinViewFrustum {
     @Shadow
     public ChunkRenderDispatcher.ChunkRender[] renderChunks;
 
-    @Inject(method = "updateChunkPositions", at = @At(value = "HEAD"))
+    @Inject(method = "updateChunkPositions", at = @At(value = "HEAD"), cancellable = true, require = 1)
     private void setCountChunkXYZ(double viewEntityX, double viewEntityZ, CallbackInfo ci) {
         Entity view = Minecraft.getInstance().getRenderViewEntity();
         double x = view.getPosX();

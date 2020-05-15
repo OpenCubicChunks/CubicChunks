@@ -17,7 +17,6 @@ public class TestWorldType extends WorldType {
 
     @Override
     public ChunkGenerator<?> createChunkGenerator(World world) {
-        ChunkGeneratorType<OverworldGenSettings, CCOverworldChunkGenerator> chunkgeneratortype4 = SURFACE;
         if(world.dimension.getType() == DimensionType.OVERWORLD) {
             return SURFACE.create(world, new OverworldBiomeProvider(new OverworldBiomeProviderSettings(world.getWorldInfo())), new OverworldGenSettings());
         }
