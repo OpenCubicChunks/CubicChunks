@@ -8,6 +8,10 @@ import org.spongepowered.asm.mixin.Shadow;
 
 @Mixin(Chunk.class)
 public class MixinChunk {
+    /*
+    This is done to raise worldheight.
+     */
+
     @Final
     @Shadow
     private final ChunkSection[] sections = new ChunkSection[32];

@@ -13,7 +13,7 @@ public class CubeChunkLoaderUtil {
         int x = nbt.getInt("xPos");
         int y = nbt.getInt("yPos");
         int z = nbt.getInt("zPos");
-        CubeChunkLoaderUtil.CubeAnvilConverterData chunkloaderutil$anvilconverterdata = new CubeChunkLoaderUtil.CubeAnvilConverterData(x, y ,z);
+        CubeChunkLoaderUtil.CubeAnvilConverterData chunkloaderutil$anvilconverterdata = new CubeChunkLoaderUtil.CubeAnvilConverterData(x, y, z);
         chunkloaderutil$anvilconverterdata.blocks = nbt.getByteArray("Blocks");
         chunkloaderutil$anvilconverterdata.data = new NibbleArrayReader(nbt.getByteArray("Data"), 7);
         chunkloaderutil$anvilconverterdata.skyLight = new NibbleArrayReader(nbt.getByteArray("SkyLight"), 7);

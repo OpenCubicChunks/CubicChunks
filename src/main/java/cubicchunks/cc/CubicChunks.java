@@ -1,5 +1,6 @@
 package cubicchunks.cc;
 
+import cubicchunks.cc.misc.TestWorldType;
 import net.minecraft.block.Block;
 import net.minecraft.world.WorldType;
 import net.minecraft.world.biome.Biome;
@@ -18,13 +19,12 @@ import org.apache.logging.log4j.Logger;
 
 // The value here should match an entry in the META-INF/mods.toml file
 @Mod(CubicChunks.MODID)
-public class CubicChunks
-{
+public class CubicChunks {
     // Directly reference a log4j logger.
 
     public static final String MODID = "cubicchunks";
-    public static WorldType CUBIC = new TestWorldType();
     public static final Logger LOGGER = LogManager.getLogger();
+    public static WorldType CUBIC = new TestWorldType();
 
     public CubicChunks() {
         // Register the setup method for modloading
@@ -36,10 +36,9 @@ public class CubicChunks
         MinecraftForge.EVENT_BUS.register(this);
     }
 
-    private void setup(final FMLCommonSetupEvent event)
-    {
+    private void setup(final FMLCommonSetupEvent event) {
         for (Biome biome : ForgeRegistries.BIOMES) {
-            for(GenerationStage.Decoration stage : GenerationStage.Decoration.values()) {
+            for (GenerationStage.Decoration stage : GenerationStage.Decoration.values()) {
                 biome.getFeatures(stage).clear();
             }
         }
@@ -47,6 +46,7 @@ public class CubicChunks
 
     private void doClientStuff(final FMLClientSetupEvent event) {
     }
+
     // You can use SubscribeEvent and let the Event Bus discover methods to call
     @SubscribeEvent
     public void onServerStarting(FMLServerStartingEvent event) {
@@ -56,7 +56,7 @@ public class CubicChunks
 
     // You can use EventBusSubscriber to automatically subscribe events on the contained class (this is subscribing to the MOD
     // Event bus for receiving Registry Events)
-    @Mod.EventBusSubscriber(bus=Mod.EventBusSubscriber.Bus.MOD)
+    @Mod.EventBusSubscriber(bus = Mod.EventBusSubscriber.Bus.MOD)
     public static class RegistryEvents {
         @SubscribeEvent
         public static void onBlocksRegistry(final RegistryEvent.Register<Block> blockRegistryEvent) {

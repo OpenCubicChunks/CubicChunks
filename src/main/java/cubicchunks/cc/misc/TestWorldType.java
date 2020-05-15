@@ -1,4 +1,4 @@
-package cubicchunks.cc;
+package cubicchunks.cc.misc;
 
 import net.minecraft.world.World;
 import net.minecraft.world.WorldType;
@@ -10,14 +10,15 @@ import net.minecraft.world.gen.ChunkGeneratorType;
 import net.minecraft.world.gen.OverworldGenSettings;
 
 public class TestWorldType extends WorldType {
+    public static final ChunkGeneratorType<OverworldGenSettings, CCOverworldChunkGenerator> SURFACE = new ChunkGeneratorType<>(CCOverworldChunkGenerator::new, true, OverworldGenSettings::new);
+
     public TestWorldType() {
         super("cubic");
     }
-    public static final ChunkGeneratorType<OverworldGenSettings, CCOverworldChunkGenerator> SURFACE = new ChunkGeneratorType<>(CCOverworldChunkGenerator::new, true ,OverworldGenSettings::new);
 
     @Override
     public ChunkGenerator<?> createChunkGenerator(World world) {
-        if(world.dimension.getType() == DimensionType.OVERWORLD) {
+        if (world.dimension.getType() == DimensionType.OVERWORLD) {
             return SURFACE.create(world, new OverworldBiomeProvider(new OverworldBiomeProviderSettings(world.getWorldInfo())), new OverworldGenSettings());
         }
         return super.createChunkGenerator(world);

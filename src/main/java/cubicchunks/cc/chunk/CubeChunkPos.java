@@ -9,11 +9,13 @@ import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 public class CubeChunkPos {
-    /** Value representing an absent or invalid chunkpos */
+    /**
+     * Value representing an absent or invalid chunkpos
+     */
     public static final long SENTINEL = asLong(1875016, 1875016, 1875016);
     public final int x;
-    public  int y;
     public final int z;
+    public int y;
 
     public CubeChunkPos(int x, int y, int z) {
         this.x = x;
@@ -28,32 +30,70 @@ public class CubeChunkPos {
     }
 
     public CubeChunkPos(long longIn) {
-        this.x = (int)longIn;
-        this.y = (int)longIn;
-        this.z = (int)(longIn >> 32);
-    }
-
-    public long asLong() {
-        return asLong(this.x, this.y, this.z);
+        this.x = (int) longIn;
+        this.y = (int) longIn;
+        this.z = (int) (longIn >> 32);
     }
 
     /**
      * Converts the chunk coordinate pair to a long
      */
     public static long asLong(int x, int y, int z) {
-        return (long)x & 4294967295L | ((long)y & 4294967295L) | ((long)z & 4294967295L) << 32;
+        return (long) x & 4294967295L | ((long) y & 4294967295L) | ((long) z & 4294967295L) << 32;
     }
 
     public static int getX(long chunkAsLong) {
-        return (int)(chunkAsLong & 4294967295L);
+        return (int) (chunkAsLong & 4294967295L);
     }
 
     public static int getY(long chunkAsLong) {
-        return (int)(chunkAsLong & 4294967295L);
+        return (int) (chunkAsLong & 4294967295L);
     }
 
     public static int getZ(long chunkAsLong) {
-        return (int)(chunkAsLong >>> 32 & 4294967295L);
+        return (int) (chunkAsLong >>> 32 & 4294967295L);
+    }
+
+    public static Stream<CubeChunkPos> getAllInBox(CubeChunkPos center, int radius) {
+        return getAllInBox(new CubeChunkPos(center.x - radius, center.y - radius, center.z - radius), new CubeChunkPos(center.x + radius, center.y - radius, center.z + radius));
+    }
+
+    public static Stream<CubeChunkPos> getAllInBox(final CubeChunkPos start, final CubeChunkPos end) {
+        int x = Math.abs(start.x - end.x) + 1;
+        int y = Math.abs(start.y - end.y) + 1;
+        int z = Math.abs(start.z - end.z) + 1;
+        final int k = start.x < end.x ? 1 : -1;
+        final int l = start.z < end.z ? 1 : -1;
+        return StreamSupport.stream(new Spliterators.AbstractSpliterator<CubeChunkPos>(x * z, 64) {
+            @Nullable
+            private CubeChunkPos current;
+
+            public boolean tryAdvance(Consumer<? super CubeChunkPos> p_tryAdvance_1_) {
+                if (this.current == null) {
+                    this.current = start;
+                } else {
+                    int currentX = this.current.x;
+                    int currentY = this.current.y;
+                    int currentZ = this.current.z;
+                    if (currentX == end.x) {
+                        if (currentZ == end.z) {
+                            return false;
+                        }
+
+                        this.current = new CubeChunkPos(start.x, currentY, currentZ + l);
+                    } else {
+                        this.current = new CubeChunkPos(currentX + k, currentY, currentZ);
+                    }
+                }
+
+                p_tryAdvance_1_.accept(this.current);
+                return true;
+            }
+        }, false);
+    }
+
+    public long asLong() {
+        return asLong(this.x, this.y, this.z);
     }
 
     public int hashCode() {
@@ -100,7 +140,6 @@ public class CubeChunkPos {
     public int getXEnd() {
         return (this.x << 4) + 15;
     }
-
 
     /**
      * Get the last world Y coordinate that belongs to this Chunk
@@ -168,43 +207,5 @@ public class CubeChunkPos {
 
     public int getChessboardDistance(CubeChunkPos chunkPosIn) {
         return Math.max(Math.abs(this.x - chunkPosIn.x), Math.abs(this.z - chunkPosIn.z));
-    }
-
-    public static Stream<CubeChunkPos> getAllInBox(CubeChunkPos center, int radius) {
-        return getAllInBox(new CubeChunkPos(center.x - radius, center.y  - radius, center.z - radius), new CubeChunkPos(center.x + radius,center.y  - radius, center.z + radius));
-    }
-
-    public static Stream<CubeChunkPos> getAllInBox(final CubeChunkPos start, final CubeChunkPos end) {
-        int x = Math.abs(start.x - end.x) + 1;
-        int y = Math.abs(start.y - end.y) + 1;
-        int z = Math.abs(start.z - end.z) + 1;
-        final int k = start.x < end.x ? 1 : -1;
-        final int l = start.z < end.z ? 1 : -1;
-        return StreamSupport.stream(new Spliterators.AbstractSpliterator<CubeChunkPos>((long)(x * z), 64) {
-            @Nullable
-            private CubeChunkPos current;
-
-            public boolean tryAdvance(Consumer<? super CubeChunkPos> p_tryAdvance_1_) {
-                if (this.current == null) {
-                    this.current = start;
-                } else {
-                    int currentX = this.current.x;
-                    int currentY = this.current.y;
-                    int currentZ = this.current.z;
-                    if (currentX == end.x) {
-                        if (currentZ == end.z) {
-                            return false;
-                        }
-
-                        this.current = new CubeChunkPos(start.x, currentY, currentZ + l);
-                    } else {
-                        this.current = new CubeChunkPos(currentX + k, currentY, currentZ);
-                    }
-                }
-
-                p_tryAdvance_1_.accept(this.current);
-                return true;
-            }
-        }, false);
     }
 }

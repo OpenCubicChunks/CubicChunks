@@ -38,6 +38,11 @@ import static net.minecraft.world.chunk.storage.ChunkSerializer.*;
 
 @Mixin(ChunkSerializer.class)
 public class MixinChunkSerializer {
+    /*
+    TODO: Clean up this mess and make this much much better and less busy.
+      Purpose of this was to change the variable "achunksection" to be 32.
+     */
+
     @Inject(at = @At("HEAD"), method = "read", cancellable = true)
     private static void read(ServerWorld worldIn, TemplateManager templateManagerIn, PointOfInterestManager poiManager, ChunkPos pos, CompoundNBT compound, CallbackInfoReturnable<ChunkPrimer> cir) {
         ChunkGenerator<?> chunkgenerator = worldIn.getChunkProvider().getChunkGenerator();
@@ -63,7 +68,7 @@ public class MixinChunkSerializer {
             worldlightmanager.retainData(pos, true);
         }
 
-        for(int j = 0; j < listnbt.size(); ++j) {
+        for (int j = 0; j < listnbt.size(); ++j) {
             CompoundNBT compoundnbt1 = listnbt.getCompound(j);
             int k = compoundnbt1.getByte("Y");
             if (compoundnbt1.contains("Palette", 9) && compoundnbt1.contains("BlockStates", 12)) {
@@ -109,7 +114,8 @@ public class MixinChunkSerializer {
             ichunk = new Chunk(worldIn.getWorld(), pos, biomecontainer, upgradedata, iticklist, iticklist1, k1, achunksection, (p_222648_1_) -> {
                 readEntities(compoundnbt, p_222648_1_);
             });
-            if (compoundnbt.contains("ForgeCaps")) ((Chunk)ichunk).readCapsFromNBT(compoundnbt.getCompound("ForgeCaps"));
+            if (compoundnbt.contains("ForgeCaps"))
+                ((Chunk) ichunk).readCapsFromNBT(compoundnbt.getCompound("ForgeCaps"));
         } else {
             ChunkPrimer chunkprimer = new ChunkPrimer(pos, upgradedata, achunksection, chunkprimerticklist, chunkprimerticklist1);
             chunkprimer.func_225548_a_(biomecontainer);
@@ -121,7 +127,7 @@ public class MixinChunkSerializer {
             }
 
             if (!flag && chunkprimer.getStatus().isAtLeast(ChunkStatus.LIGHT)) {
-                for(BlockPos blockpos : BlockPos.getAllInBoxMutable(pos.getXStart(), 0, pos.getZStart(), pos.getXEnd(), 255, pos.getZEnd())) {
+                for (BlockPos blockpos : BlockPos.getAllInBoxMutable(pos.getXStart(), 0, pos.getZStart(), pos.getXEnd(), 255, pos.getZEnd())) {
                     if (ichunk.getBlockState(blockpos).getLightValue(ichunk, blockpos) != 0) {
                         chunkprimer.addLightPosition(blockpos);
                     }
@@ -133,7 +139,7 @@ public class MixinChunkSerializer {
         CompoundNBT compoundnbt3 = compoundnbt.getCompound("Heightmaps");
         EnumSet<Heightmap.Type> enumset = EnumSet.noneOf(Heightmap.Type.class);
 
-        for(Heightmap.Type heightmap$type : ichunk.getStatus().getHeightMaps()) {
+        for (Heightmap.Type heightmap$type : ichunk.getStatus().getHeightMaps()) {
             String s = heightmap$type.getId();
             if (compoundnbt3.contains(s, 12)) {
                 ichunk.setHeightmap(heightmap$type, compoundnbt3.getLongArray(s));
@@ -152,45 +158,45 @@ public class MixinChunkSerializer {
 
         ListNBT listnbt3 = compoundnbt.getList("PostProcessing", 9);
 
-        for(int l1 = 0; l1 < listnbt3.size(); ++l1) {
+        for (int l1 = 0; l1 < listnbt3.size(); ++l1) {
             ListNBT listnbt1 = listnbt3.getList(l1);
 
-            for(int l = 0; l < listnbt1.size(); ++l) {
+            for (int l = 0; l < listnbt1.size(); ++l) {
                 ichunk.func_201636_b(listnbt1.getShort(l), l1);
             }
         }
 
         if (chunkstatus$type == ChunkStatus.Type.LEVELCHUNK) {
             net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.event.world.ChunkDataEvent.Load(ichunk, compoundnbt, chunkstatus$type));
-            cir.setReturnValue(new ChunkPrimerWrapper((Chunk)ichunk));
+            cir.setReturnValue(new ChunkPrimerWrapper((Chunk) ichunk));
         } else {
-            ChunkPrimer chunkprimer1 = (ChunkPrimer)ichunk;
+            ChunkPrimer chunkprimer1 = (ChunkPrimer) ichunk;
             ListNBT listnbt4 = compoundnbt.getList("Entities", 10);
 
-            for(int i2 = 0; i2 < listnbt4.size(); ++i2) {
+            for (int i2 = 0; i2 < listnbt4.size(); ++i2) {
                 chunkprimer1.addEntity(listnbt4.getCompound(i2));
             }
 
             ListNBT listnbt5 = compoundnbt.getList("TileEntities", 10);
 
-            for(int i1 = 0; i1 < listnbt5.size(); ++i1) {
+            for (int i1 = 0; i1 < listnbt5.size(); ++i1) {
                 CompoundNBT compoundnbt2 = listnbt5.getCompound(i1);
                 ichunk.addTileEntity(compoundnbt2);
             }
 
             ListNBT listnbt6 = compoundnbt.getList("Lights", 9);
 
-            for(int j2 = 0; j2 < listnbt6.size(); ++j2) {
+            for (int j2 = 0; j2 < listnbt6.size(); ++j2) {
                 ListNBT listnbt2 = listnbt6.getList(j2);
 
-                for(int j1 = 0; j1 < listnbt2.size(); ++j1) {
+                for (int j1 = 0; j1 < listnbt2.size(); ++j1) {
                     chunkprimer1.addLightValue(listnbt2.getShort(j1), j2);
                 }
             }
 
             CompoundNBT compoundnbt5 = compoundnbt.getCompound("CarvingMasks");
 
-            for(String s1 : compoundnbt5.keySet()) {
+            for (String s1 : compoundnbt5.keySet()) {
                 GenerationStage.Carving generationstage$carving = GenerationStage.Carving.valueOf(s1);
                 chunkprimer1.setCarvingMask(generationstage$carving, BitSet.valueOf(compoundnbt5.getByteArray(s1)));
             }

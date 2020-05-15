@@ -1,4 +1,4 @@
-package cubicchunks.cc.mixin;
+package cubicchunks.cc.mixin.core.client;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.ViewFrustum;
@@ -16,14 +16,13 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(ViewFrustum.class)
 public class MixinViewFrustum {
     @Shadow
+    public ChunkRenderDispatcher.ChunkRender[] renderChunks;
+    @Shadow
     protected int countChunksY;
     @Shadow
     protected int countChunksX;
     @Shadow
     protected int countChunksZ;
-
-    @Shadow
-    public ChunkRenderDispatcher.ChunkRender[] renderChunks;
 
     @Inject(method = "updateChunkPositions", at = @At(value = "HEAD"), cancellable = true, require = 1)
     private void setCountChunkXYZ(double viewEntityX, double viewEntityZ, CallbackInfo ci) {
@@ -35,17 +34,17 @@ public class MixinViewFrustum {
         int viewZ = MathHelper.floor(z);
         int viewY = MathHelper.floor(y);
 
-        for(int xIndex = 0; xIndex < this.countChunksX; ++xIndex) {
+        for (int xIndex = 0; xIndex < this.countChunksX; ++xIndex) {
             int l = this.countChunksX * 16;
             int i1 = viewX - 8 - l / 2;
             int j1 = i1 + Math.floorMod(xIndex * 16 - i1, l);
 
-            for(int zIndex = 0; zIndex < this.countChunksZ; ++zIndex) {
+            for (int zIndex = 0; zIndex < this.countChunksZ; ++zIndex) {
                 int l1 = this.countChunksZ * 16;
                 int i2 = viewZ - 8 - l1 / 2;
                 int j2 = i2 + Math.floorMod(zIndex * 16 - i2, l1);
 
-                for(int yIndex = 0; yIndex < this.countChunksY; ++yIndex) {
+                for (int yIndex = 0; yIndex < this.countChunksY; ++yIndex) {
                     int l2 = this.countChunksY * 16;
                     int i3 = viewY - 8 - l2 / 2;
                     int j3 = i3 + Math.floorMod(yIndex * 16 - i3, l2);
@@ -55,6 +54,7 @@ public class MixinViewFrustum {
             }
         }
     }
+
     @Inject(method = "getRenderChunk", at = @At(value = "HEAD"), cancellable = true)
     private void getRenderChunk(BlockPos pos, CallbackInfoReturnable<ChunkRenderDispatcher.ChunkRender> cbi) {
         int x = MathHelper.intFloorDiv(pos.getX(), 16);
