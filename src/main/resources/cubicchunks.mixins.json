@@ -4,16 +4,21 @@
   "compatibilityLevel": "JAVA_8",
   "refmap": "cubicchunks.refmap.json",
   "mixins": [
-    "core.client.interfaces.IMixinViewFrustum",
+    "core.client.IBlockReaderMixin",
+    "core.client.interfaces.IMixinChunk",
+    "core.common.MixinBiomeContainer",
     "core.common.MixinChunk",
+    "core.common.MixinChunkGenerator",
     "core.common.MixinChunkPrimer",
-    "core.client.MixinChunkRenderCache",
     "core.common.MixinChunkSerializer",
-    "core.client.MixinViewFrustum",
     "core.common.MixinWorld",
-    "core.client.MixinWorldRenderer"
+    "core.server.MixinIntegratedServer"
   ],
   "client": [
+    "core.client.MixinChunkRenderCache",
+    "core.client.MixinViewFrustum",
+    "core.client.MixinWorldRenderer",
+    "core.client.interfaces.IMixinViewFrustum"
   ],
   "injectors": {
     "defaultRequire": 1

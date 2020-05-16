@@ -1,5 +1,6 @@
 package cubicchunks.cc.mixin.core.common;
 
+import cubicchunks.cc.CubicChunks;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkSection;
 import org.spongepowered.asm.mixin.Final;
@@ -14,5 +15,5 @@ public class MixinChunk {
 
     @Final
     @Shadow
-    private final ChunkSection[] sections = new ChunkSection[32];
+    private final ChunkSection[] sections = new ChunkSection[Math.round((float) CubicChunks.worldMAXHeight / 16)];
 }

@@ -1,6 +1,7 @@
 package cubicchunks.cc.mixin.core.common;
 
 import cubicchunks.cc.CubicChunks;
+import cubicchunks.cc.chunk.generator.CubeChunkPos;
 import net.minecraft.block.Block;
 import net.minecraft.fluid.Fluid;
 import net.minecraft.fluid.Fluids;
@@ -48,7 +49,7 @@ public class MixinChunkSerializer {
         ChunkGenerator<?> chunkgenerator = worldIn.getChunkProvider().getChunkGenerator();
         BiomeProvider biomeprovider = chunkgenerator.getBiomeProvider();
         CompoundNBT compoundnbt = compound.getCompound("Level");
-        ChunkPos chunkpos = new ChunkPos(compoundnbt.getInt("xPos"), compoundnbt.getInt("zPos"));
+        CubeChunkPos chunkpos = new CubeChunkPos(compoundnbt.getInt("xPos"), compoundnbt.getInt("Y") , compoundnbt.getInt("zPos"));
         if (!Objects.equals(pos, chunkpos)) {
             CubicChunks.LOGGER.error("Chunk file at {} is in the wrong location; relocating. (Expected {}, got {})", pos, pos, chunkpos);
         }
@@ -60,7 +61,7 @@ public class MixinChunkSerializer {
         boolean flag = compoundnbt.getBoolean("isLightOn");
         ListNBT listnbt = compoundnbt.getList("Sections", 10);
         int i = 16;
-        ChunkSection[] achunksection = new ChunkSection[32];
+        ChunkSection[] achunksection = new ChunkSection[Math.round((float)CubicChunks.worldMAXHeight / 16)];
         boolean flag1 = worldIn.getDimension().hasSkyLight();
         AbstractChunkProvider abstractchunkprovider = worldIn.getChunkProvider();
         WorldLightManager worldlightmanager = abstractchunkprovider.getLightManager();
@@ -70,7 +71,7 @@ public class MixinChunkSerializer {
 
         for (int j = 0; j < listnbt.size(); ++j) {
             CompoundNBT compoundnbt1 = listnbt.getCompound(j);
-            int k = compoundnbt1.getByte("Y");
+            int k = 512;
             if (compoundnbt1.contains("Palette", 9) && compoundnbt1.contains("BlockStates", 12)) {
                 ChunkSection chunksection = new ChunkSection(k << 4);
                 chunksection.getData().readChunkPalette(compoundnbt1.getList("Palette", 10), compoundnbt1.getLongArray("BlockStates"));

@@ -1,5 +1,6 @@
 package cubicchunks.cc.misc;
 
+import cubicchunks.cc.CubicChunks;
 import net.minecraft.entity.EntityClassification;
 import net.minecraft.util.SharedSeedRandom;
 import net.minecraft.util.Util;
@@ -42,7 +43,7 @@ public class CCOverworldChunkGenerator extends NoiseChunkGenerator<OverworldGenS
     private final VillageSiege siegeSpawner = new VillageSiege();
 
     public CCOverworldChunkGenerator(IWorld worldIn, BiomeProvider provider, OverworldGenSettings settingsIn) {
-        super(worldIn, provider, 4, 8, 512, settingsIn, true);
+        super(worldIn, provider, 4, 8, CubicChunks.worldMAXHeight, settingsIn, true);
         this.randomSeed.skip(2620);
         this.depthNoise = new OctavesNoiseGenerator(this.randomSeed, 15, 0);
         this.isAmplified = worldIn.getWorldInfo().getGenerator() == WorldType.AMPLIFIED;

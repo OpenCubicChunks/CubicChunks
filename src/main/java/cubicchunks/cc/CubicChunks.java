@@ -21,6 +21,7 @@ import org.apache.logging.log4j.Logger;
 @Mod(CubicChunks.MODID)
 public class CubicChunks {
     // Directly reference a log4j logger.
+    public static int worldMAXHeight = 512;
 
     public static final String MODID = "cubicchunks";
     public static final Logger LOGGER = LogManager.getLogger();

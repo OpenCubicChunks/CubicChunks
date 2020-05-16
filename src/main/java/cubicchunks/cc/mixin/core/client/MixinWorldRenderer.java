@@ -12,9 +12,7 @@ import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Redirect;
-import org.spongepowered.asm.mixin.injection.Slice;
+import org.spongepowered.asm.mixin.injection.*;
 
 @Mixin(WorldRenderer.class)
 public class MixinWorldRenderer {
@@ -43,6 +41,8 @@ public class MixinWorldRenderer {
         return null;
     }
 
+
+
     @Redirect(method = "setupTerrain", at = @At(value = "FIELD",
             target = "Lnet/minecraft/client/renderer/WorldRenderer;renderDistanceChunks:I"),
             slice = @Slice(from = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/WorldRenderer;loadRenderers()V")))
@@ -51,5 +51,10 @@ public class MixinWorldRenderer {
 //            return mc.gameSettings.renderDistanceChunks;
 //        }
         return mc.gameSettings.renderDistanceChunks;
+    }
+
+    @ModifyConstant(method = "renderWorldBorder", constant = @Constant(intValue = 256))
+    private static int modifyrenderWorldBorder(int original) {
+        return 512;
     }
 }

@@ -1,6 +1,7 @@
-package cubicchunks.cc.chunk;
+package cubicchunks.cc.chunk.generator;
 
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.ChunkPos;
 
 import javax.annotation.Nullable;
 import java.util.Spliterators;
@@ -8,28 +9,31 @@ import java.util.function.Consumer;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
-public class CubeChunkPos {
+public class CubeChunkPos extends ChunkPos {
     /**
      * Value representing an absent or invalid chunkpos
      */
     public static final long SENTINEL = asLong(1875016, 1875016, 1875016);
     public final int x;
     public final int z;
-    public int y;
+    public final int y;
 
     public CubeChunkPos(int x, int y, int z) {
+        super(x, z);
         this.x = x;
         this.y = y;
         this.z = z;
     }
 
     public CubeChunkPos(BlockPos pos) {
+        super(pos);
         this.x = pos.getX() >> 4;
         this.y = pos.getY() >> 4;
         this.z = pos.getZ() >> 4;
     }
 
     public CubeChunkPos(long longIn) {
+        super(longIn);
         this.x = (int) longIn;
         this.y = (int) longIn;
         this.z = (int) (longIn >> 32);
@@ -62,8 +66,9 @@ public class CubeChunkPos {
         int x = Math.abs(start.x - end.x) + 1;
         int y = Math.abs(start.y - end.y) + 1;
         int z = Math.abs(start.z - end.z) + 1;
-        final int k = start.x < end.x ? 1 : -1;
-        final int l = start.z < end.z ? 1 : -1;
+        final int startEndX = start.x < end.x ? 1 : -1;
+        final int startEndY = start.y < end.y ? 1 : -1;
+        final int startEndZ = start.z < end.z ? 1 : -1;
         return StreamSupport.stream(new Spliterators.AbstractSpliterator<CubeChunkPos>(x * z, 64) {
             @Nullable
             private CubeChunkPos current;
@@ -80,9 +85,9 @@ public class CubeChunkPos {
                             return false;
                         }
 
-                        this.current = new CubeChunkPos(start.x, currentY, currentZ + l);
+                        this.current = new CubeChunkPos(start.x, currentY, currentZ + startEndZ);
                     } else {
-                        this.current = new CubeChunkPos(currentX + k, currentY, currentZ);
+                        this.current = new CubeChunkPos(currentX + startEndX, currentY, currentZ);
                     }
                 }
 
