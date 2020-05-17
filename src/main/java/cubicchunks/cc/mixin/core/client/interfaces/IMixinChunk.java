@@ -1,6 +1,7 @@
 package cubicchunks.cc.mixin.core.client.interfaces;
 
 
+import cubicchunks.cc.CubicChunks;
 import net.minecraft.world.IBlockReader;
 import net.minecraft.world.chunk.ChunkSection;
 import net.minecraft.world.chunk.IChunk;
@@ -14,6 +15,7 @@ public interface IMixinChunk extends IBlockReader {
 
     /**
      * @author Voronoi
+     * @reason Need to overwrite as this is an interface.
      */
     @Overwrite
     default boolean isEmptyBetween(int startY, int endY) {
@@ -21,8 +23,8 @@ public interface IMixinChunk extends IBlockReader {
             startY = 0;
         }
 
-        if (endY >= 512) {
-            endY = 511;
+        if (endY >= CubicChunks.worldMAXHeight) {
+            endY = CubicChunks.worldMAXHeight - 1;
         }
 
         endY = endY >> 4;

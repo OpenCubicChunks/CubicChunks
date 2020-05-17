@@ -1,12 +1,10 @@
 package cubicchunks.cc;
 
 import cubicchunks.cc.misc.TestWorldType;
-import net.minecraft.block.Block;
 import net.minecraft.world.WorldType;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.gen.GenerationStage;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
@@ -17,6 +15,9 @@ import net.minecraftforge.registries.ForgeRegistries;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+/**
+ * Requires Mixin BootStrap in order to use in forge.
+ */
 // The value here should match an entry in the META-INF/mods.toml file
 @Mod(CubicChunks.MODID)
 public class CubicChunks {
@@ -37,6 +38,7 @@ public class CubicChunks {
         MinecraftForge.EVENT_BUS.register(this);
     }
 
+    //Clear ALL Generation stages to prevent the Y Height Crashes
     private void setup(final FMLCommonSetupEvent event) {
         for (Biome biome : ForgeRegistries.BIOMES) {
             for (GenerationStage.Decoration stage : GenerationStage.Decoration.values()) {
@@ -57,12 +59,4 @@ public class CubicChunks {
 
     // You can use EventBusSubscriber to automatically subscribe events on the contained class (this is subscribing to the MOD
     // Event bus for receiving Registry Events)
-    @Mod.EventBusSubscriber(bus = Mod.EventBusSubscriber.Bus.MOD)
-    public static class RegistryEvents {
-        @SubscribeEvent
-        public static void onBlocksRegistry(final RegistryEvent.Register<Block> blockRegistryEvent) {
-            // register a new block here
-
-        }
-    }
 }

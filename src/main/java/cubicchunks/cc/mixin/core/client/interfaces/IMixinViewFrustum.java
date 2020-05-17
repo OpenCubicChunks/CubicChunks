@@ -8,6 +8,10 @@ import org.spongepowered.asm.mixin.gen.Invoker;
 
 @Mixin(ViewFrustum.class)
 public interface IMixinViewFrustum {
+    /**
+    Allows us to get this method in {@link cubicchunks.cc.mixin.core.client.MixinWorldRenderer}
+     */
+
     @Invoker("getRenderChunk")
     ChunkRenderDispatcher.ChunkRender getRenderChunkAt(BlockPos pos);
 }

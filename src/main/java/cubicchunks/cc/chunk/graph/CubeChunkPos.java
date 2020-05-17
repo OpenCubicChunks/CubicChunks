@@ -1,7 +1,6 @@
-package cubicchunks.cc.chunk.generator;
+package cubicchunks.cc.chunk.graph;
 
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.ChunkPos;
 
 import javax.annotation.Nullable;
 import java.util.Spliterators;
@@ -9,34 +8,32 @@ import java.util.function.Consumer;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
-public class CubeChunkPos extends ChunkPos {
+//Essentially take the ChunkPos and add a 3rd Dimension too it but the goal is too do everything out of SectionPos.
+public class CubeChunkPos  {
     /**
-     * Value representing an absent or invalid chunkpos
+     * Value representing an absent or invalid cubechunkpos
      */
     public static final long SENTINEL = asLong(1875016, 1875016, 1875016);
-    public final int x;
-    public final int z;
-    public final int y;
+    public final int cubeX;
+    public final int cubeZ;
+    public final int cubeY;
 
-    public CubeChunkPos(int x, int y, int z) {
-        super(x, z);
-        this.x = x;
-        this.y = y;
-        this.z = z;
+    public CubeChunkPos(int cubeX, int cubeY, int cubeZ) {
+        this.cubeX = cubeX;
+        this.cubeY = cubeY;
+        this.cubeZ = cubeZ;
     }
 
     public CubeChunkPos(BlockPos pos) {
-        super(pos);
-        this.x = pos.getX() >> 4;
-        this.y = pos.getY() >> 4;
-        this.z = pos.getZ() >> 4;
+        this.cubeX = pos.getX() >> 4;
+        this.cubeY = pos.getY() >> 4;
+        this.cubeZ = pos.getZ() >> 4;
     }
 
     public CubeChunkPos(long longIn) {
-        super(longIn);
-        this.x = (int) longIn;
-        this.y = (int) longIn;
-        this.z = (int) (longIn >> 32);
+        this.cubeX = (int) longIn;
+        this.cubeY = (int) longIn;
+        this.cubeZ = (int) (longIn >> 32);
     }
 
     /**
@@ -59,16 +56,16 @@ public class CubeChunkPos extends ChunkPos {
     }
 
     public static Stream<CubeChunkPos> getAllInBox(CubeChunkPos center, int radius) {
-        return getAllInBox(new CubeChunkPos(center.x - radius, center.y - radius, center.z - radius), new CubeChunkPos(center.x + radius, center.y - radius, center.z + radius));
+        return getAllInBox(new CubeChunkPos(center.cubeX - radius, center.cubeY - radius, center.cubeZ - radius), new CubeChunkPos(center.cubeX + radius, center.cubeY - radius, center.cubeZ + radius));
     }
 
     public static Stream<CubeChunkPos> getAllInBox(final CubeChunkPos start, final CubeChunkPos end) {
-        int x = Math.abs(start.x - end.x) + 1;
-        int y = Math.abs(start.y - end.y) + 1;
-        int z = Math.abs(start.z - end.z) + 1;
-        final int startEndX = start.x < end.x ? 1 : -1;
-        final int startEndY = start.y < end.y ? 1 : -1;
-        final int startEndZ = start.z < end.z ? 1 : -1;
+        int x = Math.abs(start.cubeX - end.cubeX) + 1;
+        int y = Math.abs(start.cubeY - end.cubeY) + 1;
+        int z = Math.abs(start.cubeZ - end.cubeZ) + 1;
+        final int startEndX = start.cubeX < end.cubeX ? 1 : -1;
+        final int startEndY = start.cubeY < end.cubeY ? 1 : -1;
+        final int startEndZ = start.cubeZ < end.cubeZ ? 1 : -1;
         return StreamSupport.stream(new Spliterators.AbstractSpliterator<CubeChunkPos>(x * z, 64) {
             @Nullable
             private CubeChunkPos current;
@@ -77,15 +74,15 @@ public class CubeChunkPos extends ChunkPos {
                 if (this.current == null) {
                     this.current = start;
                 } else {
-                    int currentX = this.current.x;
-                    int currentY = this.current.y;
-                    int currentZ = this.current.z;
-                    if (currentX == end.x) {
-                        if (currentZ == end.z) {
+                    int currentX = this.current.cubeX;
+                    int currentY = this.current.cubeY;
+                    int currentZ = this.current.cubeZ;
+                    if (currentX == end.cubeX) {
+                        if (currentZ == end.cubeZ) {
                             return false;
                         }
 
-                        this.current = new CubeChunkPos(start.x, currentY, currentZ + startEndZ);
+                        this.current = new CubeChunkPos(start.cubeX, currentY, currentZ + startEndZ);
                     } else {
                         this.current = new CubeChunkPos(currentX + startEndX, currentY, currentZ);
                     }
@@ -98,12 +95,12 @@ public class CubeChunkPos extends ChunkPos {
     }
 
     public long asLong() {
-        return asLong(this.x, this.y, this.z);
+        return asLong(this.cubeX, this.cubeY, this.cubeZ);
     }
 
     public int hashCode() {
-        int i = 1664525 * this.x + 1013904223;
-        int j = 1664525 * (this.z ^ -559038737) + 1013904223;
+        int i = 1664525 * this.cubeX + 1013904223;
+        int j = 1664525 * (this.cubeZ ^ -559038737) + 1013904223;
         return i ^ j;
     }
 
@@ -114,7 +111,7 @@ public class CubeChunkPos extends ChunkPos {
             return false;
         } else {
             CubeChunkPos chunkpos = (CubeChunkPos) cubeChunkPos;
-            return this.x == chunkpos.x && this.y == chunkpos.y && this.z == chunkpos.z;
+            return this.cubeX == chunkpos.cubeX && this.cubeY == chunkpos.cubeY && this.cubeZ == chunkpos.cubeZ;
         }
     }
 
@@ -122,95 +119,95 @@ public class CubeChunkPos extends ChunkPos {
      * Get the first world X coordinate that belongs to this Chunk
      */
     public int getXStart() {
-        return this.x << 4;
+        return this.cubeX << 4;
     }
 
     /**
      * Get the first world Y coordinate that belongs to this Chunk
      */
     public int getYStart() {
-        return this.y << 4;
+        return this.cubeY << 4;
     }
 
     /**
      * Get the first world Z coordinate that belongs to this Chunk
      */
     public int getZStart() {
-        return this.z << 4;
+        return this.cubeZ << 4;
     }
 
     /**
      * Get the last world X coordinate that belongs to this Chunk
      */
     public int getXEnd() {
-        return (this.x << 4) + 15;
+        return (this.cubeX << 4) + 15;
     }
 
     /**
      * Get the last world Y coordinate that belongs to this Chunk
      */
     public int getYEnd() {
-        return (this.y << 4) + 15;
+        return (this.cubeY << 4) + 15;
     }
 
     /**
      * Get the last world Z coordinate that belongs to this Chunk
      */
     public int getZEnd() {
-        return (this.z << 4) + 15;
+        return (this.cubeZ << 4) + 15;
     }
 
     /**
      * Gets the x-coordinate of the region file containing this chunk.
      */
     public int getRegionCoordX() {
-        return this.x >> 5;
+        return this.cubeX >> 5;
     }
 
     /**
      * Gets the y-coordinate of the region file containing this chunk.
      */
     public int getRegionCoordY() {
-        return this.y >> 5;
+        return this.cubeY >> 5;
     }
 
     /**
      * Gets the z-coordinate of the region file containing this chunk.
      */
     public int getRegionCoordZ() {
-        return this.z >> 5;
+        return this.cubeZ >> 5;
     }
 
     /**
      * Gets the x-coordinate of this chunk within the region file that contains it.
      */
     public int getRegionPositionX() {
-        return this.x & 31;
+        return this.cubeX & 31;
     }
 
     /**
      * Gets the z-coordinate of this chunk within the region file that contains it.
      */
     public int getRegionPositionZ() {
-        return this.z & 31;
+        return this.cubeZ & 31;
     }
 
     /**
      * Get the World coordinates of the Block with the given Chunk coordinates relative to this chunk
      */
     public BlockPos getBlock(int x, int y, int z) {
-        return new BlockPos((this.x << 4) + x, (this.y << 4) + 4, (this.z << 4) + z);
+        return new BlockPos((this.cubeX << 4) + x, (this.cubeY << 4) + 4, (this.cubeZ << 4) + z);
     }
 
     public String toString() {
-        return "[" + this.x + ", " + this.y + ", " + this.z + "]";
+        return "[" + this.cubeX + ", " + this.cubeY + ", " + this.cubeZ + "]";
     }
 
-    public BlockPos asBlockPos() {
-        return new BlockPos(this.x << 4, this.y << 4, this.z << 4);
+    public BlockPos getBlock() {
+        return new BlockPos(this.cubeX << 4, this.cubeY << 4, this.cubeZ << 4);
     }
 
     public int getChessboardDistance(CubeChunkPos chunkPosIn) {
-        return Math.max(Math.abs(this.x - chunkPosIn.x), Math.abs(this.z - chunkPosIn.z));
+        return Math.max(Math.abs(this.cubeX - chunkPosIn.cubeX), Math.abs(this.cubeZ - chunkPosIn.cubeZ));
     }
 }

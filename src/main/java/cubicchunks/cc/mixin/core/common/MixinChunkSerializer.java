@@ -1,7 +1,6 @@
 package cubicchunks.cc.mixin.core.common;
 
 import cubicchunks.cc.CubicChunks;
-import cubicchunks.cc.chunk.generator.CubeChunkPos;
 import net.minecraft.block.Block;
 import net.minecraft.fluid.Fluid;
 import net.minecraft.fluid.Fluids;
@@ -49,7 +48,7 @@ public class MixinChunkSerializer {
         ChunkGenerator<?> chunkgenerator = worldIn.getChunkProvider().getChunkGenerator();
         BiomeProvider biomeprovider = chunkgenerator.getBiomeProvider();
         CompoundNBT compoundnbt = compound.getCompound("Level");
-        CubeChunkPos chunkpos = new CubeChunkPos(compoundnbt.getInt("xPos"), compoundnbt.getInt("Y") , compoundnbt.getInt("zPos"));
+        ChunkPos chunkpos = new ChunkPos(compoundnbt.getInt("xPos"), compoundnbt.getInt("zPos"));
         if (!Objects.equals(pos, chunkpos)) {
             CubicChunks.LOGGER.error("Chunk file at {} is in the wrong location; relocating. (Expected {}, got {})", pos, pos, chunkpos);
         }
@@ -71,13 +70,13 @@ public class MixinChunkSerializer {
 
         for (int j = 0; j < listnbt.size(); ++j) {
             CompoundNBT compoundnbt1 = listnbt.getCompound(j);
-            int k = 512;
+            int chunkSectionArraySize = 512;
             if (compoundnbt1.contains("Palette", 9) && compoundnbt1.contains("BlockStates", 12)) {
-                ChunkSection chunksection = new ChunkSection(k << 4);
+                ChunkSection chunksection = new ChunkSection(chunkSectionArraySize << 4);
                 chunksection.getData().readChunkPalette(compoundnbt1.getList("Palette", 10), compoundnbt1.getLongArray("BlockStates"));
                 chunksection.recalculateRefCounts();
                 if (!chunksection.isEmpty()) {
-                    achunksection[k] = chunksection;
+                    achunksection[chunkSectionArraySize] = chunksection;
                 }
 
                 poiManager.checkConsistencyWithBlocks(pos, chunksection);
@@ -85,11 +84,11 @@ public class MixinChunkSerializer {
 
             if (flag) {
                 if (compoundnbt1.contains("BlockLight", 7)) {
-                    worldlightmanager.setData(LightType.BLOCK, SectionPos.from(pos, k), new NibbleArray(compoundnbt1.getByteArray("BlockLight")));
+                    worldlightmanager.setData(LightType.BLOCK, SectionPos.from(pos, chunkSectionArraySize), new NibbleArray(compoundnbt1.getByteArray("BlockLight")));
                 }
 
                 if (flag1 && compoundnbt1.contains("SkyLight", 7)) {
-                    worldlightmanager.setData(LightType.SKY, SectionPos.from(pos, k), new NibbleArray(compoundnbt1.getByteArray("SkyLight")));
+                    worldlightmanager.setData(LightType.SKY, SectionPos.from(pos, chunkSectionArraySize), new NibbleArray(compoundnbt1.getByteArray("SkyLight")));
                 }
             }
         }
@@ -128,7 +127,7 @@ public class MixinChunkSerializer {
             }
 
             if (!flag && chunkprimer.getStatus().isAtLeast(ChunkStatus.LIGHT)) {
-                for (BlockPos blockpos : BlockPos.getAllInBoxMutable(pos.getXStart(), 0, pos.getZStart(), pos.getXEnd(), 255, pos.getZEnd())) {
+                for (BlockPos blockpos : BlockPos.getAllInBoxMutable(pos.getXStart(), 0, pos.getZStart(), pos.getXEnd(), 16, pos.getZEnd())) {
                     if (ichunk.getBlockState(blockpos).getLightValue(ichunk, blockpos) != 0) {
                         chunkprimer.addLightPosition(blockpos);
                     }
@@ -137,30 +136,30 @@ public class MixinChunkSerializer {
         }
 
         ichunk.setLight(flag);
-        CompoundNBT compoundnbt3 = compoundnbt.getCompound("Heightmaps");
+        CompoundNBT heightMapCompound = compoundnbt.getCompound("Heightmaps");
         EnumSet<Heightmap.Type> enumset = EnumSet.noneOf(Heightmap.Type.class);
 
         for (Heightmap.Type heightmap$type : ichunk.getStatus().getHeightMaps()) {
             String s = heightmap$type.getId();
-            if (compoundnbt3.contains(s, 12)) {
-                ichunk.setHeightmap(heightmap$type, compoundnbt3.getLongArray(s));
+            if (heightMapCompound.contains(s, 12)) {
+                ichunk.setHeightmap(heightmap$type, heightMapCompound.getLongArray(s));
             } else {
                 enumset.add(heightmap$type);
             }
         }
 
         Heightmap.updateChunkHeightmaps(ichunk, enumset);
-        CompoundNBT compoundnbt4 = compoundnbt.getCompound("Structures");
-        ichunk.setStructureStarts(unpackStructureStart(chunkgenerator, templateManagerIn, compoundnbt4));
-        ichunk.setStructureReferences(unpackStructureReferences(pos, compoundnbt4));
+        CompoundNBT structuresList = compoundnbt.getCompound("Structures");
+        ichunk.setStructureStarts(unpackStructureStart(chunkgenerator, templateManagerIn, structuresList));
+        ichunk.setStructureReferences(unpackStructureReferences(pos, structuresList));
         if (compoundnbt.getBoolean("shouldSave")) {
             ichunk.setModified(true);
         }
 
-        ListNBT listnbt3 = compoundnbt.getList("PostProcessing", 9);
+        ListNBT postProcessingList = compoundnbt.getList("PostProcessing", 9);
 
-        for (int l1 = 0; l1 < listnbt3.size(); ++l1) {
-            ListNBT listnbt1 = listnbt3.getList(l1);
+        for (int l1 = 0; l1 < postProcessingList.size(); ++l1) {
+            ListNBT listnbt1 = postProcessingList.getList(l1);
 
             for (int l = 0; l < listnbt1.size(); ++l) {
                 ichunk.func_201636_b(listnbt1.getShort(l), l1);

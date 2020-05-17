@@ -6,6 +6,7 @@ import net.minecraft.client.renderer.chunk.ChunkRenderDispatcher;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.SectionPos;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -26,6 +27,7 @@ public class MixinViewFrustum {
 
     @Inject(method = "updateChunkPositions", at = @At(value = "HEAD"), cancellable = true, require = 1)
     private void setCountChunkXYZ(double viewEntityX, double viewEntityZ, CallbackInfo ci) {
+        SectionPos pos =  SectionPos.from(1000L);
         Entity view = Minecraft.getInstance().getRenderViewEntity();
         double x = view.getPosX();
         double y = view.getPosY();

@@ -10,6 +10,10 @@ import net.minecraft.world.gen.ChunkGeneratorType;
 import net.minecraft.world.gen.OverworldGenSettings;
 
 public class TestWorldType extends WorldType {
+
+    /**
+     * Reason for this is to push the over world generator with the modified height. We're starting with 0-512.
+     */
     public static final ChunkGeneratorType<OverworldGenSettings, CCOverworldChunkGenerator> SURFACE = new ChunkGeneratorType<>(CCOverworldChunkGenerator::new, true, OverworldGenSettings::new);
 
     public TestWorldType() {

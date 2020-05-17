@@ -1,4 +1,4 @@
-package cubicchunks.cc.mixin.core.common;
+package cubicchunks.cc.mixin.core.client;
 
 import cubicchunks.cc.CubicChunks;
 import net.minecraft.world.World;

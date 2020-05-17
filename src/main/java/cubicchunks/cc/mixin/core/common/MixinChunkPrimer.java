@@ -12,6 +12,7 @@ public class MixinChunkPrimer {
 
     /*
   This is done to raise worldheight.
+  Definitely not permanent.
    */
     @Final
     @Shadow

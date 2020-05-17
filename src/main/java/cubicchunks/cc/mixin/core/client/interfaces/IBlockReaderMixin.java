@@ -1,4 +1,4 @@
-package cubicchunks.cc.mixin.core.client;
+package cubicchunks.cc.mixin.core.client.interfaces;
 
 import cubicchunks.cc.CubicChunks;
 import net.minecraft.world.IBlockReader;
@@ -9,6 +9,7 @@ import org.spongepowered.asm.mixin.Overwrite;
 public interface IBlockReaderMixin {
     /**
      * @author Voronoi
+     * @reason Need to overwrite as this is an interface.
      */
     @Overwrite
     default int getHeight() {
