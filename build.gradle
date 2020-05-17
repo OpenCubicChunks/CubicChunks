@@ -74,6 +74,9 @@ repositories{
         name = "ModMaven"
         url = "https://modmaven.k-4u.nl"
     }
+    maven {
+        url "https://maven.tterrag.com/"
+    }
 
     maven {url='https://dist.creeper.host/Sponge/maven'}
 

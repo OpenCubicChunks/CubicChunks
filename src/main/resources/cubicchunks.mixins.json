@@ -19,7 +19,6 @@
     "core.common.ticket.MixinChunkTaskPriorityQueueSorter",
     "core.common.ticket.MixinPlayerTicketTracker",
     "core.common.ticket.MixinServerChunkProvider",
-    "core.common.ticket.MixinTicketManager",
     "core.common.ticket.PlayerChunkTicketTrackerFactory",
     "core.common.ticket.PlayerTicketTrackerFactory",
     "core.server.MixinIntegratedServer"

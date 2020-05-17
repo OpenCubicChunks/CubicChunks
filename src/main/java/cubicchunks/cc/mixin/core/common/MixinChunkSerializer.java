@@ -60,7 +60,7 @@ public class MixinChunkSerializer {
         boolean flag = compoundnbt.getBoolean("isLightOn");
         ListNBT listnbt = compoundnbt.getList("Sections", 10);
         int i = 16;
-        ChunkSection[] achunksection = new ChunkSection[Math.round((float)CubicChunks.worldMAXHeight / 16)];
+        ChunkSection[] achunksection = new ChunkSection[CubicChunks.worldMAXHeight >> 4];
         boolean flag1 = worldIn.getDimension().hasSkyLight();
         AbstractChunkProvider abstractchunkprovider = worldIn.getChunkProvider();
         WorldLightManager worldlightmanager = abstractchunkprovider.getLightManager();
