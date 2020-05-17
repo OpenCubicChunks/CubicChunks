@@ -1,4 +1,4 @@
-package cubicchunks.cc.mixin.core.common;
+package cubicchunks.cc.chunk.graph;
 
 import net.minecraft.util.math.SectionPos;
 import net.minecraft.world.server.TicketType;

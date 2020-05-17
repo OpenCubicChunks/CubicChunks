@@ -9,6 +9,6 @@ import org.spongepowered.asm.mixin.gen.Invoker;
 public interface IChunkManager {
 
     @Invoker("func_219220_a")
-    ChunkHolder func_219220_a(long chunkPosIn);
+    ChunkHolder invokefunc_219220_a(long chunkPosIn);
 
 }

@@ -9,7 +9,7 @@ import org.spongepowered.asm.mixin.gen.Invoker;
 public interface IMixinChunkHolder {
 
     @Invoker("processUpdates")
-    void processUpdates(ChunkManager chunkManagerIn);
+    void invokeprocessUpdates(ChunkManager chunkManagerIn);
 
-    @Invoker("func_219220_a") ChunkHolder func_219220_a(long chunkPosIn);
+//    @Invoker("invokefunc_219220_a") ChunkHolder invokefunc_219220_a(long chunkPosIn);
 }

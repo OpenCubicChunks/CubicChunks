@@ -2,15 +2,17 @@ package cubicchunks.cc.mixin.core.common.ticket;
 
 import com.google.common.collect.Sets;
 import com.mojang.datafixers.util.Either;
-import cubicchunks.cc.mixin.core.common.CCTicketType;
+import cubicchunks.cc.chunk.graph.CCTicketType;
 import it.unimi.dsi.fastutil.longs.LongIterator;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
+import net.minecraft.util.SortedArraySet;
 import net.minecraft.util.concurrent.ITaskExecutor;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkTaskPriorityQueueSorter;
 import net.minecraft.world.server.ChunkHolder;
 import net.minecraft.world.server.ChunkManager;
+import net.minecraft.world.server.Ticket;
 import net.minecraft.world.server.TicketManager;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -24,12 +26,12 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 
 @Mixin(TicketManager.class)
-public class MixinTicketManager {
-    @Final @Shadow private final TicketManager.PlayerChunkTracker playerChunkTracker = new TicketManager.PlayerChunkTracker(8);
+public abstract class MixinTicketManager {
+    @Final @Shadow private final TicketManager.PlayerChunkTracker playerChunkTracker = PlayerChunkTicketTrackerFactory.construct((TicketManager)(Object)this,8);
 
-    @Shadow @Final private final TicketManager.PlayerTicketTracker playerTicketTracker = new TicketManager.PlayerTicketTracker(33);
+    @Shadow @Final private final TicketManager.PlayerTicketTracker playerTicketTracker = PlayerTicketTrackerFactory.construct((TicketManager)(Object)this, 33);
 
-    @Shadow @Final private final TicketManager.ChunkTicketTracker ticketTracker = new TicketManager.ChunkTicketTracker();
+    @Shadow @Final private final TicketManager.ChunkTicketTracker ticketTracker = ChunkTicketTrackerFactory.construct((TicketManager)(Object)this);
 
     @Shadow @Final private final Set<ChunkHolder> chunkHolders = Sets.newHashSet();
 
@@ -40,8 +42,9 @@ public class MixinTicketManager {
     @Shadow @Final private  ITaskExecutor<ChunkTaskPriorityQueueSorter.RunnableEntry> field_219386_n;
 
 
+    @Shadow protected abstract SortedArraySet<Ticket<?>> getTicketSet(long p_229848_1_);
 
-    @Inject(method = "processUpdates(Lnet/minecraft/world/server/ChunkManager;)Z", at = @At("HEAD"))
+    @Inject(method = "processUpdates(Lnet/minecraft/world/server/ChunkManager;)Z", at = @At("HEAD"), cancellable = true)
     private void processUpdates(ChunkManager chunkManager, CallbackInfoReturnable<Boolean> cir) {
         this.playerChunkTracker.processAllUpdates();
         this.playerTicketTracker.processAllUpdates();
@@ -53,7 +56,7 @@ public class MixinTicketManager {
 
         if (!this.chunkHolders.isEmpty()) {
             this.chunkHolders.forEach((chunkHolder) -> {
-                ((IMixinChunkHolder)chunkHolder).processUpdates(chunkManager);
+                ((IMixinChunkHolder)chunkHolder).invokeprocessUpdates(chunkManager);
             });
             this.chunkHolders.clear();
             cir.setReturnValue(true);
@@ -63,8 +66,8 @@ public class MixinTicketManager {
 
                 while(longiterator.hasNext()) {
                     long nextLong = longiterator.nextLong();
-                    if (((IMixinTicketManager)this).getTicketSet(nextLong).stream().anyMatch((p_219369_0_) -> p_219369_0_.getType() == CCTicketType.CCPLAYER)) {
-                        ChunkHolder chunkholder = ((IChunkManager)chunkManager).func_219220_a(nextLong);
+                    if ((this).getTicketSet(nextLong).stream().anyMatch((p_219369_0_) -> p_219369_0_.getType() == CCTicketType.CCPLAYER)) {
+                        ChunkHolder chunkholder = ((IChunkManager)chunkManager).invokefunc_219220_a(nextLong);
                         if (chunkholder == null) {
                             throw new IllegalStateException();
                         }
