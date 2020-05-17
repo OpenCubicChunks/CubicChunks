@@ -13,5 +13,4 @@ public class MixinWorld {
     private static void isYOutOfBounds(int y, CallbackInfoReturnable<Boolean> cir) {
         cir.setReturnValue(y < -512 || y >= CubicChunks.worldMAXHeight);
     }
-
 }

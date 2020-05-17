@@ -9,6 +9,14 @@
     "core.common.MixinChunkPaletteFormat",
     "core.common.MixinChunkPrimer",
     "core.common.MixinChunkSerializer",
+    "core.common.MixinIForgeDimension",
+    "core.common.MixinIWorldGenerationReader",
+    "core.common.ticket.ITicketManager",
+    "core.common.ticket.MixinChunkTaskPriorityQueue",
+    "core.common.ticket.MixinChunkTaskPriorityQueueSorter",
+    "core.common.ticket.MixinPlayerTicketTracker",
+    "core.common.ticket.MixinServerChunkProvider",
+    "core.common.ticket.MixinTicketManager",
     "core.server.MixinIntegratedServer"
   ],
   "client": [

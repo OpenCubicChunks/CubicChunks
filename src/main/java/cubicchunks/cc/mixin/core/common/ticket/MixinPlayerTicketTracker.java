@@ -1,0 +1,12 @@
+package cubicchunks.cc.mixin.core.common.ticket;
+
+import net.minecraft.world.server.TicketManager;
+import org.spongepowered.asm.mixin.Mixin;
+
+@Mixin(TicketManager.PlayerTicketTracker.class)
+public class MixinPlayerTicketTracker {
+//    @Inject(method = "func_215504_a(JIZZ)V", at = @At("HEAD"))
+//    private void ticketUpdate(long chunkPosIn, int p_215504_3_, boolean p_215504_4_, boolean p_215504_5_, CallbackInfo ci) {
+//
+//    }
+}
