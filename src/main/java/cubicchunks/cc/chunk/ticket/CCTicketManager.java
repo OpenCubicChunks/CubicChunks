@@ -18,8 +18,10 @@ import net.minecraft.util.concurrent.ITaskExecutor;
 import net.minecraft.util.math.SectionPos;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkStatus;
-import net.minecraft.world.chunk.ChunkTaskPriorityQueueSorter;
-import net.minecraft.world.server.*;
+import net.minecraft.world.server.ChunkHolder;
+import net.minecraft.world.server.ChunkManager;
+import net.minecraft.world.server.Ticket;
+import net.minecraft.world.server.TicketType;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -38,20 +40,20 @@ public abstract class CCTicketManager {
     private final CCTicketManager.PlayerTicketTracker playerTicketTracker = new CCTicketManager.PlayerTicketTracker(33);
     private final Set<ChunkHolder> chunkHolders = Sets.newHashSet();
     //TODO: perhaps have to make CubeTaskPriorityQueueSorter
-    private final ChunkTaskPriorityQueueSorter levelUpdateListener;
-    private final ITaskExecutor<ChunkTaskPriorityQueueSorter.FunctionEntry<Runnable>> playerTicketThrottler;
-    private final ITaskExecutor<ChunkTaskPriorityQueueSorter.RunnableEntry> playerTicketThrottlerSorter;
+    private final CubeTaskPriorityQueueSorter levelUpdateListener;
+    private final ITaskExecutor<CubeTaskPriorityQueueSorter.FunctionEntry<Runnable>> playerTicketThrottler;
+    private final ITaskExecutor<CubeTaskPriorityQueueSorter.RunnableEntry> playerTicketThrottlerSorter;
     private final LongSet sectionPositions = new LongOpenHashSet();
     private final Executor mainThreadExecutor;
     private long currentTime;
 
-    protected CCTicketManager(Executor p_i50707_1_, Executor p_i50707_2_) {
-        ITaskExecutor<Runnable> itaskexecutor = ITaskExecutor.inline("player ticket throttler", p_i50707_2_::execute);
-        ChunkTaskPriorityQueueSorter chunktaskpriorityqueuesorter = new ChunkTaskPriorityQueueSorter(ImmutableList.of(itaskexecutor), p_i50707_1_, 4);
-        this.levelUpdateListener = chunktaskpriorityqueuesorter;
-        this.playerTicketThrottler = chunktaskpriorityqueuesorter.func_219087_a(itaskexecutor, true);
-        this.playerTicketThrottlerSorter = chunktaskpriorityqueuesorter.func_219091_a(itaskexecutor);
-        this.mainThreadExecutor = p_i50707_2_;
+    protected CCTicketManager(Executor executor, Executor executor2) {
+        ITaskExecutor<Runnable> itaskexecutor = ITaskExecutor.inline("player ticket throttler", executor2::execute);
+        CubeTaskPriorityQueueSorter CubeTaskPriorityQueueSorter = new CubeTaskPriorityQueueSorter(ImmutableList.of(itaskexecutor), executor, 4);
+        this.levelUpdateListener = CubeTaskPriorityQueueSorter;
+        this.playerTicketThrottler = CubeTaskPriorityQueueSorter.createExecutor(itaskexecutor, true);
+        this.playerTicketThrottlerSorter = CubeTaskPriorityQueueSorter.func_219091_a(itaskexecutor);
+        this.mainThreadExecutor = executor2;
     }
 
     protected void tick() {
@@ -71,8 +73,8 @@ public abstract class CCTicketManager {
 
     }
 
-    private static int getLevel(SortedArraySet<Ticket<?>> p_229844_0_) {
-        return !p_229844_0_.isEmpty() ? p_229844_0_.getSmallest().getLevel() : ChunkManager.MAX_LOADED_LEVEL + 1;
+    private static int getLevel(SortedArraySet<Ticket<?>> ticketSet) {
+        return !ticketSet.isEmpty() ? ticketSet.getSmallest().getLevel() : ChunkManager.MAX_LOADED_LEVEL + 1;
     }
 
     protected abstract boolean contains(long p_219371_1_);
@@ -88,14 +90,9 @@ public abstract class CCTicketManager {
         this.playerTicketTracker.processAllUpdates();
         int i = Integer.MAX_VALUE - this.ticketTracker.update(Integer.MAX_VALUE);
         boolean flag = i != 0;
-        if (flag) {
-            ;
-        }
 
         if (!this.chunkHolders.isEmpty()) {
-            this.chunkHolders.forEach((chunkHolder) -> {
-                ((InvokeChunkHolder)chunkHolder).processUpdatesCC(chunkManager);
-            });
+            this.chunkHolders.forEach((chunkHolder) -> ((InvokeChunkHolder)chunkHolder).processUpdatesCC(chunkManager));
             this.chunkHolders.clear();
             return true;
         } else {
@@ -104,21 +101,17 @@ public abstract class CCTicketManager {
 
                 while(longiterator.hasNext()) {
                     long j = longiterator.nextLong();
-                    if (this.getTicketSet(j).stream().anyMatch((p_219369_0_) -> {
-                        return p_219369_0_.getType() == TicketType.PLAYER;
-                    })) {
+                    if (this.getTicketSet(j).stream().anyMatch((p_219369_0_) -> p_219369_0_.getType() == TicketType.PLAYER)) {
                         ChunkHolder chunkholder = ((InvokeChunkManager)chunkManager).chunkHold(j);
                         if (chunkholder == null) {
                             throw new IllegalStateException();
                         }
 
                         CompletableFuture<Either<Chunk, ChunkHolder.IChunkLoadingError>> completablefuture = chunkholder.getEntityTickingFuture();
-                        completablefuture.thenAccept((p_219363_3_) -> {
-                            this.mainThreadExecutor.execute(() -> {
-                                this.playerTicketThrottlerSorter.enqueue(ChunkTaskPriorityQueueSorter.func_219073_a(() -> {
-                                }, j, false));
-                            });
-                        });
+                        completablefuture.thenAccept((p_219363_3_) -> this.mainThreadExecutor.execute(() -> {
+                            this.playerTicketThrottlerSorter.enqueue(CubeTaskPriorityQueueSorter.func_219073_a(() -> {
+                            }, j, false));
+                        }));
                     }
                 }
 
@@ -142,9 +135,7 @@ public abstract class CCTicketManager {
 
     private void release(long sectionPosIn, Ticket<?> ticketIn) {
         SortedArraySet<Ticket<?>> sortedarrayset = this.getTicketSet(sectionPosIn);
-        if (sortedarrayset.remove(ticketIn)) {
-            ;
-        }
+        sortedarrayset.remove(ticketIn);
 
         if (sortedarrayset.isEmpty()) {
             this.tickets.remove(sectionPosIn);
@@ -367,13 +358,13 @@ public abstract class CCTicketManager {
             if (oldWithinViewDistance != withinViewDistance) {
                 Ticket<?> ticket = new Ticket<>(CCTicketType.CCPLAYER, CCTicketManager.PLAYER_TICKET_LEVEL, SectionPos.from(sectionPosIn));
                 if (withinViewDistance) {
-                    CCTicketManager.this.playerTicketThrottler.enqueue(ChunkTaskPriorityQueueSorter.func_219069_a(() -> {
+                    CCTicketManager.this.playerTicketThrottler.enqueue(CubeTaskPriorityQueueSorter.func_219069_a(() -> {
                         CCTicketManager.this.mainThreadExecutor.execute(() -> {
                             if (this.isWithinViewDistance(this.getLevel(sectionPosIn))) {
                                 CCTicketManager.this.register(sectionPosIn, ticket);
                                 CCTicketManager.this.sectionPositions.add(sectionPosIn);
                             } else {
-                                CCTicketManager.this.playerTicketThrottlerSorter.enqueue(ChunkTaskPriorityQueueSorter.func_219073_a(() -> {
+                                CCTicketManager.this.playerTicketThrottlerSorter.enqueue(CubeTaskPriorityQueueSorter.func_219073_a(() -> {
                                 }, sectionPosIn, false));
                             }
 
@@ -382,7 +373,7 @@ public abstract class CCTicketManager {
                         return distance;
                     }));
                 } else {
-                    CCTicketManager.this.playerTicketThrottlerSorter.enqueue(ChunkTaskPriorityQueueSorter.func_219073_a(() -> {
+                    CCTicketManager.this.playerTicketThrottlerSorter.enqueue(CubeTaskPriorityQueueSorter.func_219073_a(() -> {
                         CCTicketManager.this.mainThreadExecutor.execute(() -> {
                             CCTicketManager.this.release(sectionPosIn, ticket);
                         });
@@ -403,9 +394,7 @@ public abstract class CCTicketManager {
                     int k = this.getLevel(i);
                     if (j != k) {
                         //func_219066_a = update level
-                        CCTicketManager.this.levelUpdateListener.func_219066_a(new SectionPos(i), () -> {
-                            return this.distances.get(i);
-                        }, k, (ix) -> {
+                        CCTicketManager.this.levelUpdateListener.func_219066_a(SectionPos.from(i), () -> this.distances.get(i), k, (ix) -> {
                             if (ix >= this.distances.defaultReturnValue()) {
                                 this.distances.remove(i);
                             } else {

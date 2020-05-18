@@ -42,11 +42,9 @@ public class CubeTaskPriorityQueueSorter  {
     }
 
     public static CubeTaskPriorityQueueSorter.FunctionEntry<Runnable> func_219069_a(Runnable p_219069_0_, long pos, IntSupplier p_219069_3_) {
-        return new CubeTaskPriorityQueueSorter.FunctionEntry<>((p_219072_1_) -> {
-            return () -> {
-                p_219069_0_.run();
-                p_219072_1_.enqueue(Unit.INSTANCE);
-            };
+        return new CubeTaskPriorityQueueSorter.FunctionEntry<>((p_219072_1_) -> () -> {
+            p_219069_0_.run();
+            p_219072_1_.enqueue(Unit.INSTANCE);
         }, pos, p_219069_3_);
     }
 
@@ -58,25 +56,15 @@ public class CubeTaskPriorityQueueSorter  {
         return new CubeTaskPriorityQueueSorter.RunnableEntry(p_219073_0_, p_219073_1_, p_219073_3_);
     }
 
-    public <T> ITaskExecutor<CubeTaskPriorityQueueSorter.FunctionEntry<T>> func_219087_a(ITaskExecutor<T> p_219087_1_, boolean p_219087_2_) {
-        return this.sorter.<ITaskExecutor<CubeTaskPriorityQueueSorter.FunctionEntry<T>>>func_213141_a((p_219086_3_) -> {
-            return new ITaskQueue.RunnableWithPriority(0, () -> {
-                this.getQueue(p_219087_1_);
-                p_219086_3_.enqueue(ITaskExecutor.inline("chunk priority sorter around " + p_219087_1_.getName(), (p_219071_3_) -> {
-                    this.func_219067_a(p_219087_1_, p_219071_3_.task, p_219071_3_.SectionPos, p_219071_3_.field_219430_c, p_219087_2_);
-                }));
-            });
-        }).join();
+    public <T> ITaskExecutor<CubeTaskPriorityQueueSorter.FunctionEntry<T>> createExecutor(ITaskExecutor<T> iTaskExecutor, boolean p_219087_2_) {
+        return this.sorter.<ITaskExecutor<CubeTaskPriorityQueueSorter.FunctionEntry<T>>>func_213141_a((p_219086_3_) -> new ITaskQueue.RunnableWithPriority(0, () -> {
+            this.getQueue(iTaskExecutor);
+            p_219086_3_.enqueue(ITaskExecutor.inline("chunk priority sorter around " + iTaskExecutor.getName(), (p_219071_3_) -> this.execute(iTaskExecutor, p_219071_3_.task, p_219071_3_.SectionPos, p_219071_3_.field_219430_c, p_219087_2_)));
+        })).join();
     }
 
     public ITaskExecutor<CubeTaskPriorityQueueSorter.RunnableEntry> func_219091_a(ITaskExecutor<Runnable> p_219091_1_) {
-        return this.sorter.<ITaskExecutor<CubeTaskPriorityQueueSorter.RunnableEntry>>func_213141_a((p_219080_2_) -> {
-            return new ITaskQueue.RunnableWithPriority(0, () -> {
-                p_219080_2_.enqueue(ITaskExecutor.inline("chunk priority sorter around " + p_219091_1_.getName(), (p_219075_2_) -> {
-                    this.func_219074_a(p_219091_1_, p_219075_2_.field_219435_b, p_219075_2_.field_219434_a, p_219075_2_.field_219436_c);
-                }));
-            });
-        }).join();
+        return this.sorter.<ITaskExecutor<CubeTaskPriorityQueueSorter.RunnableEntry>>func_213141_a((p_219080_2_) -> new ITaskQueue.RunnableWithPriority(0, () -> p_219080_2_.enqueue(ITaskExecutor.inline("chunk priority sorter around " + p_219091_1_.getName(), (p_219075_2_) -> this.sort(p_219091_1_, p_219075_2_.pos, p_219075_2_.runnable, p_219075_2_.field_219436_c))))).join();
     }
 
     public void func_219066_a(SectionPos pos, IntSupplier p_219066_2_, int p_219066_3_, IntConsumer p_219066_4_) {
@@ -89,7 +77,7 @@ public class CubeTaskPriorityQueueSorter  {
         }));
     }
 
-    private <T> void func_219074_a(ITaskExecutor<T> p_219074_1_, long p_219074_2_, Runnable p_219074_4_, boolean p_219074_5_) {
+    private <T> void sort(ITaskExecutor<T> p_219074_1_, long p_219074_2_, Runnable p_219074_4_, boolean p_219074_5_) {
         this.sorter.enqueue(new ITaskQueue.RunnableWithPriority(1, () -> {
             CubeTaskPriorityQueue<Function<ITaskExecutor<Unit>, T>> CubeTaskPriorityQueue = this.getQueue(p_219074_1_);
             CubeTaskPriorityQueue.clearPostion(p_219074_2_, p_219074_5_);
@@ -101,7 +89,7 @@ public class CubeTaskPriorityQueueSorter  {
         }));
     }
 
-    private <T> void func_219067_a(ITaskExecutor<T> p_219067_1_, Function<ITaskExecutor<Unit>, T> p_219067_2_, long p_219067_3_, IntSupplier p_219067_5_, boolean p_219067_6_) {
+    private <T> void execute(ITaskExecutor<T> p_219067_1_, Function<ITaskExecutor<Unit>, T> p_219067_2_, long p_219067_3_, IntSupplier p_219067_5_, boolean p_219067_6_) {
         this.sorter.enqueue(new ITaskQueue.RunnableWithPriority(2, () -> {
             CubeTaskPriorityQueue<Function<ITaskExecutor<Unit>, T>> CubeTaskPriorityQueue = this.getQueue(p_219067_1_);
             int i = p_219067_5_.getAsInt();
@@ -123,12 +111,10 @@ public class CubeTaskPriorityQueueSorter  {
             if (stream == null) {
                 this.field_219095_c.add(p_219078_2_);
             } else {
-                Util.gather(stream.map((p_219092_1_) -> {
-                    return p_219092_1_.map(p_219078_2_::func_213141_a, (p_219077_0_) -> {
-                        p_219077_0_.run();
-                        return CompletableFuture.completedFuture(Unit.INSTANCE);
-                    });
-                }).collect(Collectors.toList())).thenAccept((p_219088_3_) -> {
+                Util.gather(stream.map((p_219092_1_) -> p_219092_1_.map(p_219078_2_::func_213141_a, (p_219077_0_) -> {
+                    p_219077_0_.run();
+                    return CompletableFuture.completedFuture(Unit.INSTANCE);
+                })).collect(Collectors.toList())).thenAccept((p_219088_3_) -> {
                     this.func_219078_a(p_219078_1_, p_219078_2_);
                 });
             }
@@ -147,9 +133,7 @@ public class CubeTaskPriorityQueueSorter  {
 
     @VisibleForTesting
     public String func_225396_a() {
-        return (String)this.queues.entrySet().stream().map((p_225397_0_) -> {
-            return p_225397_0_.getKey().getName() + "=[" + (String)p_225397_0_.getValue().func_225414_b().stream().map((p_225398_0_) -> p_225398_0_ + ":" + SectionPos.from(p_225398_0_)).collect(Collectors.joining(",")) + "]";
-        }).collect(Collectors.joining(",")) + ", s=" + this.field_219095_c.size();
+        return this.queues.entrySet().stream().map((p_225397_0_) -> p_225397_0_.getKey().getName() + "=[" + p_225397_0_.getValue().func_225414_b().stream().map((p_225398_0_) -> p_225398_0_ + ":" + SectionPos.from(p_225398_0_)).collect(Collectors.joining(",")) + "]").collect(Collectors.joining(",")) + ", s=" + this.field_219095_c.size();
     }
 
     public void close() {
@@ -169,13 +153,13 @@ public class CubeTaskPriorityQueueSorter  {
     }
 
     public static final class RunnableEntry {
-        private final Runnable field_219434_a;
-        private final long field_219435_b;
+        private final Runnable runnable;
+        private final long pos;
         private final boolean field_219436_c;
 
-        private RunnableEntry(Runnable p_i50026_1_, long p_i50026_2_, boolean p_i50026_4_) {
-            this.field_219434_a = p_i50026_1_;
-            this.field_219435_b = p_i50026_2_;
+        private RunnableEntry(Runnable runnable, long pos, boolean p_i50026_4_) {
+            this.runnable = runnable;
+            this.pos = pos;
             this.field_219436_c = p_i50026_4_;
         }
     }

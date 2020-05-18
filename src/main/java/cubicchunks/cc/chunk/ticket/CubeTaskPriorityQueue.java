@@ -40,9 +40,7 @@ public class CubeTaskPriorityQueue<T> {
          }
 
          if (list != null && !list.isEmpty()) {
-            this.levelToPosToElements.get(p_219407_3_).computeIfAbsent(pos.asLong(), (p_219411_0_) -> {
-               return Lists.newArrayList();
-            }).addAll(list);
+            this.levelToPosToElements.get(p_219407_3_).computeIfAbsent(pos.asLong(), (p_219411_0_) -> Lists.newArrayList()).addAll(list);
             this.firstNonEmptyLvl = Math.min(this.firstNonEmptyLvl, p_219407_3_);
          }
 
