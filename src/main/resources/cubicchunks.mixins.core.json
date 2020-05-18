@@ -13,6 +13,7 @@
   "mixins": [
     "common.MixinAnvilSaveHandler",
     "common.MixinBiomeContainer",
+    "common.MixinChunkDistanceGraph",
     "common.MixinIForgeDimension",
     "common.MixinIWorldGenerationReader",
     "common.MixinMinecraftServer",
@@ -33,6 +34,7 @@
     "common.ticket.interfaces.ChunkTicketTrackerFactory",
     "common.ticket.interfaces.ICCTicketManager",
     "common.ticket.interfaces.IChunkManager",
+    "common.ticket.interfaces.ILevelBasedGraph",
     "common.ticket.interfaces.IMinecraftServer",
     "common.ticket.interfaces.IMixinChunkHolder",
     "common.ticket.interfaces.PlayerChunkTrackerFactory",
