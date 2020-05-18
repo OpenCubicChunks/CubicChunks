@@ -32,7 +32,7 @@
         "common.ticket.MixinServerChunkProvider",
         "common.ticket.MixinTicketManager",
         "common.ticket.MixinTicketManagerPlayerTicketTracker",
-      "common.ticket.interfaces.PlayerChunkTicketTrackerFactory",
+      "common.ticket.interfaces.PlayerChunkTrackerFactory",
       "common.ticket.interfaces.PlayerTicketTrackerFactory"
     ],
     "client": [
