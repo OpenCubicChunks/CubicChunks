@@ -1,56 +1,59 @@
 {
-  "required": true,
-  "package": "cubicchunks.cc.mixin.core",
-  "refmap": "cubicchunks.refmap.json",
-  "compatibilityLevel": "JAVA_8",
-  "minVersion": "0.8",
-  "injectors": {
-    "defaultRequire": 1
-  },
-  "overwrites": {
-    "conformVisibility": true
-  },
-  "mixins": [
-    "common.MixinAnvilSaveHandler",
-    "common.MixinBiomeContainer",
-    "common.MixinChunkDistanceGraph",
-    "common.MixinIForgeDimension",
-    "common.MixinIWorldGenerationReader",
-    "common.MixinMinecraftServer",
-    "common.chunk.MixinChunk_Column",
-    "common.chunk.MixinChunk_Cube",
-    "common.chunk.MixinChunkCache_HeightLimits",
-    "common.chunk.MixinChunkGenerator",
-    "common.chunk.MixinChunkPaletteFormat",
-    "common.chunk.MixinChunkPrimer",
-    "common.chunk.MixinChunkSerializer",
-    "common.ticket.ITicketType",
-    "common.ticket.MixinChunkTaskPriorityQueue",
-    "common.ticket.MixinChunkTaskPriorityQueueSorter",
-    "common.ticket.MixinPlayerTicketTracker",
-    "common.ticket.MixinServerChunkProvider",
-    "common.ticket.MixinTicketManager",
-    "common.ticket.MixinTicketManagerPlayerTicketTracker",
-    "common.ticket.interfaces.ChunkTicketTrackerFactory",
-    "common.ticket.interfaces.ICCTicketManager",
-    "common.ticket.interfaces.IChunkManager",
-    "common.ticket.interfaces.ILevelBasedGraph",
-    "common.ticket.interfaces.IMinecraftServer",
-    "common.ticket.interfaces.IMixinChunkHolder",
-    "common.ticket.interfaces.PlayerChunkTrackerFactory",
-    "common.ticket.interfaces.PlayerTicketTrackerFactory"
-  ],
-  "client": [
-    "client.MixinChunk",
-    "client.MixinDebugRenderChunkBorder",
-    "client.MixinViewFrustum",
-    "client.MixinWorld",
-    "client.MixinWorldRenderer",
-    "client.interfaces.IBlockReaderMixin",
-    "client.interfaces.IMixinChunk",
-    "client.interfaces.IMixinViewFrustum"
-  ],
-  "server": [
-    "server.MixinIntegratedServer"
-  ]
+    "required": true,
+    "package": "cubicchunks.cc.mixin.core",
+    "refmap": "cubicchunks.refmap.json",
+    "compatibilityLevel": "JAVA_8",
+    "minVersion": "0.8",
+    "injectors": {
+        "defaultRequire": 1
+    },
+    "overwrites": {
+        "conformVisibility": true
+    },
+    "mixins": [
+        "common.MixinAnvilSaveHandler",
+        "common.MixinBiomeContainer",
+        "common.MixinChunkDistanceGraph",
+        "common.MixinIForgeDimension",
+        "common.MixinIWorldGenerationReader",
+        "common.MixinMinecraftServer",
+        "common.chunk.MixinChunk_Column",
+        "common.chunk.MixinChunk_Cube",
+        "common.chunk.MixinChunkCache_HeightLimits",
+        "common.chunk.MixinChunkGenerator",
+        "common.chunk.MixinChunkPaletteFormat",
+        "common.chunk.MixinChunkPrimer",
+        "common.chunk.MixinChunkSerializer",
+        "common.ticket.ITicketType",
+        "common.ticket.MixinChunkTaskPriorityQueue",
+        "common.ticket.MixinChunkTaskPriorityQueueSorter",
+        "common.ticket.MixinPlayerTicketTracker",
+        "common.ticket.MixinServerChunkProvider",
+        "common.ticket.MixinTicketManager",
+        "common.ticket.MixinTicketManagerPlayerTicketTracker",
+        "common.ticket.interfaces.ChunkTicketTrackerFactory",
+        "common.ticket.interfaces.ICCTicketManager",
+        "common.ticket.interfaces.IChunkManager",
+        "common.ticket.interfaces.ILevelBasedGraph",
+        "common.ticket.interfaces.IMinecraftServer",
+        "common.ticket.interfaces.IMixinChunkHolder",
+        "common.ticket.interfaces.InvokeChunkHolder",
+        "common.ticket.interfaces.InvokeChunkManager",
+        "common.ticket.interfaces.InvokeTicket",
+        "common.ticket.interfaces.PlayerChunkTrackerFactory",
+        "common.ticket.interfaces.PlayerTicketTrackerFactory"
+    ],
+    "client": [
+        "client.MixinChunk",
+        "client.MixinDebugRenderChunkBorder",
+        "client.MixinViewFrustum",
+        "client.MixinWorld",
+        "client.MixinWorldRenderer",
+        "client.interfaces.IBlockReaderMixin",
+        "client.interfaces.IMixinChunk",
+        "client.interfaces.IMixinViewFrustum"
+    ],
+    "server": [
+        "server.MixinIntegratedServer"
+    ]
 }
