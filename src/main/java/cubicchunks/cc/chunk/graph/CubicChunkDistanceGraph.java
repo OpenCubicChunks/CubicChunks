@@ -9,7 +9,7 @@ public abstract class CubicChunkDistanceGraph  extends LevelBasedGraph {
     }
 
     protected boolean isRoot(long pos) {
-        return pos == CubeChunkPos.SENTINEL;
+        return pos == Long.MAX_VALUE;
     }
 
     protected void notifyNeighbors(long pos, int level, boolean isDecreasing) {
@@ -47,7 +47,7 @@ public abstract class CubicChunkDistanceGraph  extends LevelBasedGraph {
                 for (int z2 = -1; z2 <= 1; ++z2) {
                     long j1 = SectionPos.asLong(x + x2,y + y2 , z + z2);
                     if (j1 == pos) {
-                        j1 = CubeChunkPos.SENTINEL;
+                        j1 = Long.MAX_VALUE;
                     }
 
                     if (j1 != excludedSourcePos) {
@@ -71,13 +71,13 @@ public abstract class CubicChunkDistanceGraph  extends LevelBasedGraph {
      * Returns level propagated from start position with specified level to the neighboring end position.
      */
     protected int getEdgeLevel(long startPos, long endPos, int startLevel) {
-        return startPos == CubeChunkPos.SENTINEL ? this.getSourceLevel(endPos) : startLevel + 1;
+        return startPos == Long.MAX_VALUE ? this.getSourceLevel(endPos) : startLevel + 1;
     }
 
     protected abstract int getSourceLevel(long pos);
 
     public void updateSourceLevel(long pos, int level, boolean isDecreasing) {
-        this.scheduleUpdate(CubeChunkPos.SENTINEL, pos, level, isDecreasing);
+        this.scheduleUpdate(Long.MAX_VALUE, pos, level, isDecreasing);
     }
 
 }
