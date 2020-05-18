@@ -3,6 +3,7 @@ package cubicchunks.cc.chunk.ticket;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
 import com.mojang.datafixers.util.Either;
+import cubicchunks.cc.chunk.graph.CCTicketType;
 import it.unimi.dsi.fastutil.longs.*;
 import it.unimi.dsi.fastutil.objects.ObjectIterator;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
@@ -12,6 +13,7 @@ import net.minecraft.util.SectionDistanceGraph;
 import net.minecraft.util.SortedArraySet;
 import net.minecraft.util.concurrent.ITaskExecutor;
 import net.minecraft.util.math.ChunkPos;
+import net.minecraft.util.math.SectionPos;
 import net.minecraft.util.math.SectionPos;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkStatus;
@@ -77,10 +79,10 @@ public abstract class CCTicketManager {
     protected abstract boolean contains(long p_219371_1_);
 
     @Nullable
-    protected abstract ChunkHolder getChunkHolder(long chunkPosIn);
+    protected abstract ChunkHolder getChunkHolder(long sectionPosIn);
 
     @Nullable
-    protected abstract ChunkHolder setChunkLevel(long chunkPosIn, int newLevel, @Nullable ChunkHolder holder, int oldLevel);
+    protected abstract ChunkHolder setChunkLevel(long sectionPosIn, int newLevel, @Nullable ChunkHolder holder, int oldLevel);
 
     public boolean processUpdates(ChunkManager p_219353_1_) {
         this.playerChunkTracker.processAllUpdates();
@@ -128,44 +130,44 @@ public abstract class CCTicketManager {
         }
     }
 
-    private void register(long chunkPosIn, Ticket<?> ticketIn) {
-        SortedArraySet<Ticket<?>> sortedarrayset = this.getTicketSet(chunkPosIn);
+    private void register(long sectionPosIn, Ticket<?> ticketIn) {
+        SortedArraySet<Ticket<?>> sortedarrayset = this.getTicketSet(sectionPosIn);
         int i = getLevel(sortedarrayset);
         Ticket<?> ticket = sortedarrayset.func_226175_a_(ticketIn);
         ticket.setTimestamp(this.currentTime);
         if (ticketIn.getLevel() < i) {
-            this.ticketTracker.updateSourceLevel(chunkPosIn, ticketIn.getLevel(), true);
+            this.ticketTracker.updateSourceLevel(sectionPosIn, ticketIn.getLevel(), true);
         }
 
     }
 
-    private void release(long chunkPosIn, Ticket<?> ticketIn) {
-        SortedArraySet<Ticket<?>> sortedarrayset = this.getTicketSet(chunkPosIn);
+    private void release(long sectionPosIn, Ticket<?> ticketIn) {
+        SortedArraySet<Ticket<?>> sortedarrayset = this.getTicketSet(sectionPosIn);
         if (sortedarrayset.remove(ticketIn)) {
             ;
         }
 
         if (sortedarrayset.isEmpty()) {
-            this.tickets.remove(chunkPosIn);
+            this.tickets.remove(sectionPosIn);
         }
 
-        this.ticketTracker.updateSourceLevel(chunkPosIn, getLevel(sortedarrayset), false);
+        this.ticketTracker.updateSourceLevel(sectionPosIn, getLevel(sortedarrayset), false);
     }
 
-    public <T> void registerWithLevel(TicketType<T> type, ChunkPos pos, int level, T value) {
+    public <T> void registerWithLevel(TicketType<T> type, SectionPos pos, int level, T value) {
         this.register(pos.asLong(), new Ticket<>(type, level, value));
     }
 
-    public <T> void releaseWithLevel(TicketType<T> type, ChunkPos pos, int level, T value) {
+    public <T> void releaseWithLevel(TicketType<T> type, SectionPos pos, int level, T value) {
         Ticket<T> ticket = new Ticket<>(type, level, value);
         this.release(pos.asLong(), ticket);
     }
 
-    public <T> void register(TicketType<T> type, ChunkPos pos, int distance, T value) {
+    public <T> void register(TicketType<T> type, SectionPos pos, int distance, T value) {
         this.register(pos.asLong(), new Ticket<>(type, 33 - distance, value));
     }
 
-    public <T> void release(TicketType<T> type, ChunkPos pos, int distance, T value) {
+    public <T> void release(TicketType<T> type, SectionPos pos, int distance, T value) {
         Ticket<T> ticket = new Ticket<>(type, 33 - distance, value);
         this.release(pos.asLong(), ticket);
     }
@@ -176,8 +178,8 @@ public abstract class CCTicketManager {
         });
     }
 
-    protected void forceChunk(ChunkPos pos, boolean add) {
-        Ticket<ChunkPos> ticket = new Ticket<>(TicketType.FORCED, 31, pos);
+    protected void forceChunk(SectionPos pos, boolean add) {
+        Ticket<SectionPos> ticket = new Ticket<>(TicketType.FORCED, 31, pos);
         if (add) {
             this.register(pos.asLong(), ticket);
         } else {
@@ -231,9 +233,9 @@ public abstract class CCTicketManager {
         return this.playerChunkTracker.chunksInRange.size();
     }
 
-    public boolean isOutsideSpawningRadius(long chunkPosIn) {
+    public boolean isOutsideSpawningRadius(long sectionPosIn) {
         this.playerChunkTracker.processAllUpdates();
-        return this.playerChunkTracker.chunksInRange.containsKey(chunkPosIn);
+        return this.playerChunkTracker.chunksInRange.containsKey(sectionPosIn);
     }
 
     public String func_225412_c() {
@@ -318,15 +320,15 @@ public abstract class CCTicketManager {
          *
          * @param oldLevel Previous level of the chunk if it was smaller than {@link #range}, {@code range + 2} otherwise.
          */
-        protected void chunkLevelChanged(long chunkPosIn, int oldLevel, int newLevel) {
+        protected void chunkLevelChanged(long sectionPosIn, int oldLevel, int newLevel) {
         }
 
         protected int getSourceLevel(long pos) {
             return this.hasPlayerInChunk(pos) ? 0 : Integer.MAX_VALUE;
         }
 
-        private boolean hasPlayerInChunk(long chunkPosIn) {
-            ObjectSet<ServerPlayerEntity> objectset = TicketManager.this.playersByChunkPos.get(chunkPosIn);
+        private boolean hasPlayerInChunk(long sectionPosIn) {
+            ObjectSet<ServerPlayerEntity> objectset = CCTicketManager.this.playersByChunkPos.get(sectionPosIn);
             return objectset != null && !objectset.isEmpty();
         }
 
@@ -352,8 +354,8 @@ public abstract class CCTicketManager {
          *
          * @param oldLevel Previous level of the chunk if it was smaller than {@link #range}, {@code range + 2} otherwise.
          */
-        protected void chunkLevelChanged(long chunkPosIn, int oldLevel, int newLevel) {
-            this.field_215514_g.add(chunkPosIn);
+        protected void chunkLevelChanged(long sectionPosIn, int oldLevel, int newLevel) {
+            this.field_215514_g.add(sectionPosIn);
         }
 
         public void setViewDistance(int viewDistanceIn) {
@@ -366,30 +368,30 @@ public abstract class CCTicketManager {
             this.viewDistance = viewDistanceIn;
         }
 
-        private void func_215504_a(long chunkPosIn, int p_215504_3_, boolean p_215504_4_, boolean p_215504_5_) {
+        private void func_215504_a(long sectionPosIn, int p_215504_3_, boolean p_215504_4_, boolean p_215504_5_) {
             if (p_215504_4_ != p_215504_5_) {
-                Ticket<?> ticket = new Ticket<>(TicketType.PLAYER, CCTicketManager.PLAYER_TICKET_LEVEL, new ChunkPos(chunkPosIn));
+                Ticket<?> ticket = new Ticket<>(CCTicketType.CCPLAYER, CCTicketManager.PLAYER_TICKET_LEVEL, SectionPos.from(sectionPosIn));
                 if (p_215504_5_) {
                     CCTicketManager.this.playerTicketThrottler.enqueue(ChunkTaskPriorityQueueSorter.func_219069_a(() -> {
                         CCTicketManager.this.mainThreadExecutor.execute(() -> {
-                            if (this.func_215505_c(this.getLevel(chunkPosIn))) {
-                                CCTicketManager.this.register(chunkPosIn, ticket);
-                                CCTicketManager.this.chunkPositions.add(chunkPosIn);
+                            if (this.func_215505_c(this.getLevel(sectionPosIn))) {
+                                CCTicketManager.this.register(sectionPosIn, ticket);
+                                CCTicketManager.this.chunkPositions.add(sectionPosIn);
                             } else {
                                 CCTicketManager.this.playerTicketThrottlerSorter.enqueue(ChunkTaskPriorityQueueSorter.func_219073_a(() -> {
-                                }, chunkPosIn, false));
+                                }, sectionPosIn, false));
                             }
 
                         });
-                    }, chunkPosIn, () -> {
+                    }, sectionPosIn, () -> {
                         return p_215504_3_;
                     }));
                 } else {
                     CCTicketManager.this.playerTicketThrottlerSorter.enqueue(ChunkTaskPriorityQueueSorter.func_219073_a(() -> {
                         CCTicketManager.this.mainThreadExecutor.execute(() -> {
-                            CCTicketManager.this.release(chunkPosIn, ticket);
+                            CCTicketManager.this.release(sectionPosIn, ticket);
                         });
-                    }, chunkPosIn, true));
+                    }, sectionPosIn, true));
                 }
             }
 
@@ -405,7 +407,7 @@ public abstract class CCTicketManager {
                     int j = this.field_215513_f.get(i);
                     int k = this.getLevel(i);
                     if (j != k) {
-                        CCTicketManager.this.levelUpdateListener.func_219066_a(new ChunkPos(i), () -> {
+                        CCTicketManager.this.levelUpdateListener.func_219066_a(new SectionPos(i), () -> {
                             return this.field_215513_f.get(i);
                         }, k, (p_215506_3_) -> {
                             if (p_215506_3_ >= this.field_215513_f.defaultReturnValue()) {
