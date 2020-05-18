@@ -12,8 +12,6 @@ import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.util.SectionDistanceGraph;
 import net.minecraft.util.SortedArraySet;
 import net.minecraft.util.concurrent.ITaskExecutor;
-import net.minecraft.util.math.ChunkPos;
-import net.minecraft.util.math.SectionPos;
 import net.minecraft.util.math.SectionPos;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkStatus;
@@ -40,7 +38,7 @@ public abstract class CCTicketManager {
     private final ChunkTaskPriorityQueueSorter levelUpdateListener;
     private final ITaskExecutor<ChunkTaskPriorityQueueSorter.FunctionEntry<Runnable>> playerTicketThrottler;
     private final ITaskExecutor<ChunkTaskPriorityQueueSorter.RunnableEntry> playerTicketThrottlerSorter;
-    private final LongSet chunkPositions = new LongOpenHashSet();
+    private final LongSet sectionPositions = new LongOpenHashSet();
     private final Executor mainThreadExecutor;
     private long currentTime;
 
@@ -100,8 +98,8 @@ public abstract class CCTicketManager {
             this.chunkHolders.clear();
             return true;
         } else {
-            if (!this.chunkPositions.isEmpty()) {
-                LongIterator longiterator = this.chunkPositions.iterator();
+            if (!this.sectionPositions.isEmpty()) {
+                LongIterator longiterator = this.sectionPositions.iterator();
 
                 while(longiterator.hasNext()) {
                     long j = longiterator.nextLong();
@@ -123,7 +121,7 @@ public abstract class CCTicketManager {
                     }
                 }
 
-                this.chunkPositions.clear();
+                this.sectionPositions.clear();
             }
 
             return flag;
@@ -179,7 +177,7 @@ public abstract class CCTicketManager {
     }
 
     protected void forceChunk(SectionPos pos, boolean add) {
-        Ticket<SectionPos> ticket = new Ticket<>(TicketType.FORCED, 31, pos);
+        Ticket<SectionPos> ticket = new Ticket<>(CCTicketType.CCFORCED, 31, pos);
         if (add) {
             this.register(pos.asLong(), ticket);
         } else {
@@ -376,7 +374,7 @@ public abstract class CCTicketManager {
                         CCTicketManager.this.mainThreadExecutor.execute(() -> {
                             if (this.func_215505_c(this.getLevel(sectionPosIn))) {
                                 CCTicketManager.this.register(sectionPosIn, ticket);
-                                CCTicketManager.this.chunkPositions.add(sectionPosIn);
+                                CCTicketManager.this.sectionPositions.add(sectionPosIn);
                             } else {
                                 CCTicketManager.this.playerTicketThrottlerSorter.enqueue(ChunkTaskPriorityQueueSorter.func_219073_a(() -> {
                                 }, sectionPosIn, false));
