@@ -6,6 +6,6 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Invoker;
 
 @Mixin(TicketManager.class)
-public interface ICCTicketManager {
+public interface InvokeTicketManager {
     @Invoker("register") void registerCC(long chunkPosIn, Ticket<?> ticketIn);
 }

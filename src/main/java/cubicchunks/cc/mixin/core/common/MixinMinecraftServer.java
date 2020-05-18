@@ -1,6 +1,6 @@
 package cubicchunks.cc.mixin.core.common;
 
-import cubicchunks.cc.mixin.core.common.ticket.interfaces.ICCTicketManager;
+import cubicchunks.cc.mixin.core.common.ticket.interfaces.InvokeTicketManager;
 import it.unimi.dsi.fastutil.longs.LongIterator;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.Unit;
@@ -71,6 +71,6 @@ public class MixinMinecraftServer {
         serverchunkprovider.getLightManager().func_215598_a(5);
     }
     public <T> void register(TicketType<T> type, SectionPos pos, int distance, T value) {
-        ((ICCTicketManager)this).registerCC(pos.asLong(), new Ticket<>(type, 33 - distance, value));
+        ((InvokeTicketManager)this).registerCC(pos.asLong(), new Ticket<>(type, 33 - distance, value));
     }
 }
