@@ -86,7 +86,7 @@ public abstract class CCTicketManager {
     public boolean processUpdates(ChunkManager chunkManager) {
         this.playerChunkTracker.processAllUpdates();
         this.playerTicketTracker.processAllUpdates();
-        int i = Integer.MAX_VALUE - this.ticketTracker.func_215493_a(Integer.MAX_VALUE);
+        int i = Integer.MAX_VALUE - this.ticketTracker.update(Integer.MAX_VALUE);
         boolean flag = i != 0;
         if (flag) {
             ;
@@ -282,8 +282,8 @@ public abstract class CCTicketManager {
             }
         }
 
-        public int func_215493_a(int p_215493_1_) {
-            return this.processUpdates(p_215493_1_);
+        public int update(int distance) {
+            return this.processUpdates(distance);
         }
     }
 
@@ -292,10 +292,10 @@ public abstract class CCTicketManager {
         protected final Long2ByteMap chunksInRange = new Long2ByteOpenHashMap();
         protected final int range;
 
-        public PlayerCubeTracker(int p_i50684_2_) {
-            super(p_i50684_2_ + 2, 16, 256);
-            this.range = p_i50684_2_;
-            this.chunksInRange.defaultReturnValue((byte)(p_i50684_2_ + 2));
+        public PlayerCubeTracker(int i) {
+            super(i + 2, 16, 256);
+            this.range = i;
+            this.chunksInRange.defaultReturnValue((byte)(i + 2));
         }
 
         protected int getLevel(long sectionPosIn) {
@@ -341,10 +341,10 @@ public abstract class CCTicketManager {
         private final Long2IntMap distances = Long2IntMaps.synchronize(new Long2IntOpenHashMap());
         private final LongSet positionsAffected = new LongOpenHashSet();
 
-        protected PlayerTicketTracker(int p_i50682_2_) {
-            super(p_i50682_2_);
+        protected PlayerTicketTracker(int i) {
+            super(i);
             this.viewDistance = 0;
-            this.distances.defaultReturnValue(p_i50682_2_ + 2);
+            this.distances.defaultReturnValue(i + 2);
         }
 
         /**
@@ -361,7 +361,7 @@ public abstract class CCTicketManager {
             for(it.unimi.dsi.fastutil.longs.Long2ByteMap.Entry entry : this.chunksInRange.long2ByteEntrySet()) {
                 byte b0 = entry.getByteValue();
                 long i = entry.getLongKey();
-                this.updateTicket(i, b0, this.func_215505_c(b0), b0 <= viewDistanceIn - 2);
+                this.updateTicket(i, b0, this.isWithinViewDistance(b0), b0 <= viewDistanceIn - 2);
             }
 
             this.viewDistance = viewDistanceIn;
@@ -373,7 +373,7 @@ public abstract class CCTicketManager {
                 if (withinViewDistance) {
                     CCTicketManager.this.playerTicketThrottler.enqueue(ChunkTaskPriorityQueueSorter.func_219069_a(() -> {
                         CCTicketManager.this.mainThreadExecutor.execute(() -> {
-                            if (this.func_215505_c(this.getLevel(sectionPosIn))) {
+                            if (this.isWithinViewDistance(this.getLevel(sectionPosIn))) {
                                 CCTicketManager.this.register(sectionPosIn, ticket);
                                 CCTicketManager.this.sectionPositions.add(sectionPosIn);
                             } else {
@@ -409,15 +409,15 @@ public abstract class CCTicketManager {
                         //func_219066_a = update level
                         CCTicketManager.this.levelUpdateListener.func_219066_a(new SectionPos(i), () -> {
                             return this.distances.get(i);
-                        }, k, (p_215506_3_) -> {
-                            if (p_215506_3_ >= this.distances.defaultReturnValue()) {
+                        }, k, (ix) -> {
+                            if (ix >= this.distances.defaultReturnValue()) {
                                 this.distances.remove(i);
                             } else {
-                                this.distances.put(i, p_215506_3_);
+                                this.distances.put(i, ix);
                             }
 
                         });
-                        this.updateTicket(i, k, this.func_215505_c(j), this.func_215505_c(k));
+                        this.updateTicket(i, k, this.isWithinViewDistance(j), this.isWithinViewDistance(k));
                     }
                 }
 
@@ -426,7 +426,7 @@ public abstract class CCTicketManager {
 
         }
 
-        private boolean func_215505_c(int p_215505_1_) {
+        private boolean isWithinViewDistance(int p_215505_1_) {
             return p_215505_1_ <= this.viewDistance - 2;
         }
     }
