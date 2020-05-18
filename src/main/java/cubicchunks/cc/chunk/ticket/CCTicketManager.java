@@ -172,9 +172,7 @@ public abstract class CCTicketManager {
     }
 
     private SortedArraySet<Ticket<?>> getTicketSet(long p_229848_1_) {
-        return this.tickets.computeIfAbsent(p_229848_1_, (p_229851_0_) -> {
-            return SortedArraySet.newSet(4);
-        });
+        return this.tickets.computeIfAbsent(p_229848_1_, (p_229851_0_) -> SortedArraySet.newSet(4));
     }
 
     protected void forceCube(SectionPos pos, boolean add) {
@@ -189,9 +187,7 @@ public abstract class CCTicketManager {
 
     public void updatePlayerPosition(SectionPos sectionPosIn, ServerPlayerEntity player) {
         long i = sectionPosIn.asChunkPos().asLong();
-        this.playersByChunkPos.computeIfAbsent(i, (p_219361_0_) -> {
-            return new ObjectOpenHashSet<>();
-        }).add(player);
+        this.playersByChunkPos.computeIfAbsent(i, (p_219361_0_) -> new ObjectOpenHashSet<>()).add(player);
         this.playerChunkTracker.updateSourceLevel(i, 0, true);
         this.playerTicketTracker.updateSourceLevel(i, 0, true);
     }

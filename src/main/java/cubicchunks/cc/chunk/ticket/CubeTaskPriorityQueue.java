@@ -17,47 +17,45 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 public class CubeTaskPriorityQueue<T> {
-   public static final int field_219419_a = ChunkManager.MAX_LOADED_LEVEL + 2;
-   private final List<Long2ObjectLinkedOpenHashMap<List<Optional<T>>>> field_219420_b = IntStream.range(0, field_219419_a).mapToObj((p_219415_0_) -> new Long2ObjectLinkedOpenHashMap<List<Optional<T>>>()).collect(Collectors.toList());
-   private volatile int field_219421_c = field_219419_a;
-   private final String field_219422_d;
-   private final LongSet field_219423_e = new LongOpenHashSet();
-   private final int field_219424_f;
+   public static final int levelCount = ChunkManager.MAX_LOADED_LEVEL + 2;
+   private final List<Long2ObjectLinkedOpenHashMap<List<Optional<T>>>> levelToPosToElements = IntStream.range(0, levelCount).mapToObj((p_219415_0_) -> new Long2ObjectLinkedOpenHashMap<List<Optional<T>>>()).collect(Collectors.toList());
+   private volatile int firstNonEmptyLvl = levelCount;
+   private final String name;
+   private final LongSet cubePostions = new LongOpenHashSet();
+   private final int sizeMax;
 
-   public CubeTaskPriorityQueue(String p_i50714_1_, int p_i50714_2_) {
-      this.field_219422_d = p_i50714_1_;
-      this.field_219424_f = p_i50714_2_;
+   public CubeTaskPriorityQueue(String name, int maxSize) {
+      this.name = name;
+      this.sizeMax = maxSize;
    }
 
-   protected void func_219407_a(int p_219407_1_, SectionPos pos, int p_219407_3_) {
-      if (p_219407_1_ < field_219419_a) {
-         Long2ObjectLinkedOpenHashMap<List<Optional<T>>> long2objectlinkedopenhashmap = this.field_219420_b.get(p_219407_1_);
+   protected void updateLevel(int p_219407_1_, SectionPos pos, int p_219407_3_) {
+      if (p_219407_1_ < levelCount) {
+         Long2ObjectLinkedOpenHashMap<List<Optional<T>>> long2objectlinkedopenhashmap = this.levelToPosToElements.get(p_219407_1_);
          List<Optional<T>> list = long2objectlinkedopenhashmap.remove(pos.asLong());
-         if (p_219407_1_ == this.field_219421_c) {
-            while (this.field_219421_c < field_219419_a && this.field_219420_b.get(this.field_219421_c).isEmpty()) {
-               ++this.field_219421_c;
+         if (p_219407_1_ == this.firstNonEmptyLvl) {
+            while (this.firstNonEmptyLvl < levelCount && this.levelToPosToElements.get(this.firstNonEmptyLvl).isEmpty()) {
+               ++this.firstNonEmptyLvl;
             }
          }
 
          if (list != null && !list.isEmpty()) {
-            this.field_219420_b.get(p_219407_3_).computeIfAbsent(pos.asLong(), (p_219411_0_) -> {
+            this.levelToPosToElements.get(p_219407_3_).computeIfAbsent(pos.asLong(), (p_219411_0_) -> {
                return Lists.newArrayList();
             }).addAll(list);
-            this.field_219421_c = Math.min(this.field_219421_c, p_219407_3_);
+            this.firstNonEmptyLvl = Math.min(this.firstNonEmptyLvl, p_219407_3_);
          }
 
       }
    }
 
-   protected void func_219412_a(Optional<T> p_219412_1_, long p_219412_2_, int p_219412_4_) {
-      this.field_219420_b.get(p_219412_4_).computeIfAbsent(p_219412_2_, (p_219410_0_) -> {
-         return Lists.newArrayList();
-      }).add(p_219412_1_);
-      this.field_219421_c = Math.min(this.field_219421_c, p_219412_4_);
+   protected void add(Optional<T> p_219412_1_, long p_219412_2_, int p_219412_4_) {
+      this.levelToPosToElements.get(p_219412_4_).computeIfAbsent(p_219412_2_, (p_219410_0_) -> Lists.newArrayList()).add(p_219412_1_);
+      this.firstNonEmptyLvl = Math.min(this.firstNonEmptyLvl, p_219412_4_);
    }
 
-   protected void func_219416_a(long p_219416_1_, boolean p_219416_3_) {
-      for (Long2ObjectLinkedOpenHashMap<List<Optional<T>>> long2objectlinkedopenhashmap : this.field_219420_b) {
+   protected void clearPostion(long p_219416_1_, boolean p_219416_3_) {
+      for (Long2ObjectLinkedOpenHashMap<List<Optional<T>>> long2objectlinkedopenhashmap : this.levelToPosToElements) {
          List<Optional<T>> list = long2objectlinkedopenhashmap.get(p_219416_1_);
          if (list != null) {
             if (p_219416_3_) {
@@ -72,49 +70,47 @@ public class CubeTaskPriorityQueue<T> {
          }
       }
 
-      while (this.field_219421_c < field_219419_a && this.field_219420_b.get(this.field_219421_c).isEmpty()) {
-         ++this.field_219421_c;
+      while (this.firstNonEmptyLvl < levelCount && this.levelToPosToElements.get(this.firstNonEmptyLvl).isEmpty()) {
+         ++this.firstNonEmptyLvl;
       }
 
-      this.field_219423_e.remove(p_219416_1_);
+      this.cubePostions.remove(p_219416_1_);
    }
 
-   private Runnable func_219418_a(long p_219418_1_) {
+   private Runnable createCubePositionAdder(long p_219418_1_) {
       return () -> {
-         this.field_219423_e.add(p_219418_1_);
+         this.cubePostions.add(p_219418_1_);
       };
    }
 
    @Nullable
-   public Stream<Either<T, Runnable>> func_219417_a() {
-      if (this.field_219423_e.size() >= this.field_219424_f) {
+   public Stream<Either<T, Runnable>> poll() {
+      if (this.cubePostions.size() >= this.sizeMax) {
          return null;
-      } else if (this.field_219421_c >= field_219419_a) {
+      } else if (this.firstNonEmptyLvl >= levelCount) {
          return null;
       } else {
-         int i = this.field_219421_c;
-         Long2ObjectLinkedOpenHashMap<List<Optional<T>>> long2objectlinkedopenhashmap = this.field_219420_b.get(i);
+         int i = this.firstNonEmptyLvl;
+         Long2ObjectLinkedOpenHashMap<List<Optional<T>>> long2objectlinkedopenhashmap = this.levelToPosToElements.get(i);
          long j = long2objectlinkedopenhashmap.firstLongKey();
 
          List<Optional<T>> list;
-         for (list = long2objectlinkedopenhashmap.removeFirst(); this.field_219421_c < field_219419_a && this.field_219420_b.get(this.field_219421_c).isEmpty(); ++this.field_219421_c) {
+         for (list = long2objectlinkedopenhashmap.removeFirst(); this.firstNonEmptyLvl < levelCount && this.levelToPosToElements.get(this.firstNonEmptyLvl).isEmpty(); ++this.firstNonEmptyLvl) {
             ;
          }
 
-         return list.stream().map((p_219408_3_) -> {
-            return p_219408_3_.<Either<T, Runnable>>map(Either::left).orElseGet(() -> {
-               return Either.right(this.func_219418_a(j));
-            });
-         });
+         return list.stream().map((p_219408_3_) -> p_219408_3_.<Either<T, Runnable>>map(Either::left).orElseGet(() -> {
+            return Either.right(this.createCubePositionAdder(j));
+         }));
       }
    }
 
    public String toString() {
-      return this.field_219422_d + " " + this.field_219421_c + "...";
+      return this.name + " " + this.firstNonEmptyLvl + "...";
    }
 
    @VisibleForTesting
    LongSet func_225414_b() {
-      return new LongOpenHashSet(this.field_219423_e);
+      return new LongOpenHashSet(this.cubePostions);
    }
 }
