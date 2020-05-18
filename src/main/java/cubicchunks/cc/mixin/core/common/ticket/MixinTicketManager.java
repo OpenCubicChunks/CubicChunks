@@ -6,4 +6,8 @@ import org.spongepowered.asm.mixin.Mixin;
 @Mixin(TicketManager.class)
 public class MixinTicketManager {
 
+    public void ccTick()
+    {
+        //DEFINE IT.
+    }
 }
