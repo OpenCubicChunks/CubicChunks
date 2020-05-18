@@ -360,16 +360,16 @@ public abstract class CCTicketManager {
             for(it.unimi.dsi.fastutil.longs.Long2ByteMap.Entry entry : this.chunksInRange.long2ByteEntrySet()) {
                 byte b0 = entry.getByteValue();
                 long i = entry.getLongKey();
-                this.func_215504_a(i, b0, this.func_215505_c(b0), b0 <= viewDistanceIn - 2);
+                this.updateTicket(i, b0, this.func_215505_c(b0), b0 <= viewDistanceIn - 2);
             }
 
             this.viewDistance = viewDistanceIn;
         }
 
-        private void func_215504_a(long sectionPosIn, int p_215504_3_, boolean p_215504_4_, boolean p_215504_5_) {
-            if (p_215504_4_ != p_215504_5_) {
+        private void updateTicket(long sectionPosIn, int distance, boolean oldWithinViewDistance, boolean withinViewDistance) {
+            if (oldWithinViewDistance != withinViewDistance) {
                 Ticket<?> ticket = new Ticket<>(CCTicketType.CCPLAYER, CCTicketManager.PLAYER_TICKET_LEVEL, SectionPos.from(sectionPosIn));
-                if (p_215504_5_) {
+                if (withinViewDistance) {
                     CCTicketManager.this.playerTicketThrottler.enqueue(ChunkTaskPriorityQueueSorter.func_219069_a(() -> {
                         CCTicketManager.this.mainThreadExecutor.execute(() -> {
                             if (this.func_215505_c(this.getLevel(sectionPosIn))) {
@@ -382,7 +382,7 @@ public abstract class CCTicketManager {
 
                         });
                     }, sectionPosIn, () -> {
-                        return p_215504_3_;
+                        return distance;
                     }));
                 } else {
                     CCTicketManager.this.playerTicketThrottlerSorter.enqueue(ChunkTaskPriorityQueueSorter.func_219073_a(() -> {
@@ -415,7 +415,7 @@ public abstract class CCTicketManager {
                             }
 
                         });
-                        this.func_215504_a(i, k, this.func_215505_c(j), this.func_215505_c(k));
+                        this.updateTicket(i, k, this.func_215505_c(j), this.func_215505_c(k));
                     }
                 }
 
