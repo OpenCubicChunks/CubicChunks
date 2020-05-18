@@ -58,7 +58,7 @@ public abstract class CCTicketManager {
         while(objectiterator.hasNext()) {
             Long2ObjectMap.Entry<SortedArraySet<Ticket<?>>> entry = objectiterator.next();
             if (entry.getValue().removeIf((p_219370_1_) -> {
-                return p_219370_1_.isExpired(this.currentTime);
+                return TicketPublicAccess.isExpired(p_219370_1_, this.currentTime);
             })) {
                 this.ticketTracker.updateSourceLevel(entry.getLongKey(), getLevel(entry.getValue()), false);
             }
