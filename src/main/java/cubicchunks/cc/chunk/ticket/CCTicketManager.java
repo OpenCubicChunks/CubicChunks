@@ -338,13 +338,13 @@ public abstract class CCTicketManager {
 
     public class PlayerTicketTracker extends PlayerCubeTracker {
         private int viewDistance;
-        private final Long2IntMap field_215513_f = Long2IntMaps.synchronize(new Long2IntOpenHashMap());
-        private final LongSet field_215514_g = new LongOpenHashSet();
+        private final Long2IntMap distances = Long2IntMaps.synchronize(new Long2IntOpenHashMap());
+        private final LongSet positionsAffected = new LongOpenHashSet();
 
         protected PlayerTicketTracker(int p_i50682_2_) {
             super(p_i50682_2_);
             this.viewDistance = 0;
-            this.field_215513_f.defaultReturnValue(p_i50682_2_ + 2);
+            this.distances.defaultReturnValue(p_i50682_2_ + 2);
         }
 
         /**
@@ -354,7 +354,7 @@ public abstract class CCTicketManager {
          * @param oldLevel Previous level of the chunk if it was smaller than {@link #range}, {@code range + 2} otherwise.
          */
         protected void chunkLevelChanged(long sectionPosIn, int oldLevel, int newLevel) {
-            this.field_215514_g.add(sectionPosIn);
+            this.positionsAffected.add(sectionPosIn);
         }
 
         public void setViewDistance(int viewDistanceIn) {
@@ -398,22 +398,22 @@ public abstract class CCTicketManager {
 
         public void processAllUpdates() {
             super.processAllUpdates();
-            if (!this.field_215514_g.isEmpty()) {
-                LongIterator longiterator = this.field_215514_g.iterator();
+            if (!this.positionsAffected.isEmpty()) {
+                LongIterator longiterator = this.positionsAffected.iterator();
 
                 while(longiterator.hasNext()) {
                     long i = longiterator.nextLong();
-                    int j = this.field_215513_f.get(i);
+                    int j = this.distances.get(i);
                     int k = this.getLevel(i);
                     if (j != k) {
                         //func_219066_a = update level
                         CCTicketManager.this.levelUpdateListener.func_219066_a(new SectionPos(i), () -> {
-                            return this.field_215513_f.get(i);
+                            return this.distances.get(i);
                         }, k, (p_215506_3_) -> {
-                            if (p_215506_3_ >= this.field_215513_f.defaultReturnValue()) {
-                                this.field_215513_f.remove(i);
+                            if (p_215506_3_ >= this.distances.defaultReturnValue()) {
+                                this.distances.remove(i);
                             } else {
-                                this.field_215513_f.put(i, p_215506_3_);
+                                this.distances.put(i, p_215506_3_);
                             }
 
                         });
@@ -421,7 +421,7 @@ public abstract class CCTicketManager {
                     }
                 }
 
-                this.field_215514_g.clear();
+                this.positionsAffected.clear();
             }
 
         }
