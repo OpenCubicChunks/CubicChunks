@@ -1,7 +1,6 @@
 package cubicchunks.cc.mixin.core.common;
 
 import cubicchunks.cc.mixin.core.common.ticket.interfaces.ICCTicketManager;
-import cubicchunks.cc.mixin.core.common.ticket.interfaces.IMinecraftServer;
 import it.unimi.dsi.fastutil.longs.LongIterator;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.Unit;

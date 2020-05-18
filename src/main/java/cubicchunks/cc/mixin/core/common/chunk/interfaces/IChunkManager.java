@@ -1,4 +1,4 @@
-package cubicchunks.cc.mixin.core.common.ticket.interfaces;
+package cubicchunks.cc.mixin.core.common.chunk.interfaces;
 
 import net.minecraft.world.server.ChunkHolder;
 import net.minecraft.world.server.ChunkManager;
@@ -6,8 +6,9 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Invoker;
 
 @Mixin(ChunkManager.class)
-public interface InvokeChunkManager {
+public interface IChunkManager {
 
     @Invoker("func_219220_a")
-    ChunkHolder chunkHold(long chunkPosIn);
+    ChunkHolder invokefunc_219220_a(long chunkPosIn);
+
 }

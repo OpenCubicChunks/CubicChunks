@@ -1,4 +1,4 @@
-package cubicchunks.cc.mixin.core.common.ticket;
+package cubicchunks.cc.mixin.core.common;
 
 import net.minecraft.world.server.ServerChunkProvider;
 import org.spongepowered.asm.mixin.Mixin;

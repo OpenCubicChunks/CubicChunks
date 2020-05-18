@@ -1,4 +1,4 @@
-package cubicchunks.cc.mixin.core.common.ticket.interfaces;
+package cubicchunks.cc.mixin.core.common;
 
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.dimension.DimensionType;
