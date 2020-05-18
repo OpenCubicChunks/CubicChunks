@@ -22,9 +22,9 @@
         "common.MixinChunkSerializer",
         "common.MixinIForgeDimension",
         "common.MixinIWorldGenerationReader",
-        "common.ticket.ChunkTicketTrackerFactory",
-        "common.ticket.IChunkManager",
-        "common.ticket.IMixinChunkHolder",
+      "common.ticket.interfaces.ChunkTicketTrackerFactory",
+      "common.ticket.interfaces.IChunkManager",
+      "common.ticket.interfaces.IMixinChunkHolder",
         "common.ticket.ITicketType",
         "common.ticket.MixinChunkTaskPriorityQueue",
         "common.ticket.MixinChunkTaskPriorityQueueSorter",
@@ -32,8 +32,8 @@
         "common.ticket.MixinServerChunkProvider",
         "common.ticket.MixinTicketManager",
         "common.ticket.MixinTicketManagerPlayerTicketTracker",
-        "common.ticket.PlayerChunkTicketTrackerFactory",
-        "common.ticket.PlayerTicketTrackerFactory"
+      "common.ticket.interfaces.PlayerChunkTicketTrackerFactory",
+      "common.ticket.interfaces.PlayerTicketTrackerFactory"
     ],
     "client": [
         "client.interfaces.IBlockReaderMixin",

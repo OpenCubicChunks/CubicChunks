@@ -1,4 +1,4 @@
-package cubicchunks.cc.mixin.core.common.ticket;
+package cubicchunks.cc.mixin.core.common.ticket.interfaces;
 
 import net.minecraft.world.server.ChunkHolder;
 import net.minecraft.world.server.ChunkManager;
