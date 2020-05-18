@@ -1,13 +1,13 @@
-package cubicchunks.cc.mixin.core.common.ticket;
+package cubicchunks.cc.chunk.ticket;
 
 import net.minecraft.util.SectionDistanceGraph;
 
 public class CCTicketManager {
 
-    public class CubeTicketManager extends SectionDistanceGraph
+    public static class CubeTicketManager extends SectionDistanceGraph
     {
 
-        protected CubeTicketManager(int p_i50706_1_, int p_i50706_2_, int p_i50706_3_) {
+        public CubeTicketManager(int p_i50706_1_, int p_i50706_2_, int p_i50706_3_) {
             super(p_i50706_1_, p_i50706_2_, p_i50706_3_);
         }
 
@@ -27,10 +27,10 @@ public class CCTicketManager {
         }
     }
 
-    public class PlayerCubeTracker extends SectionDistanceGraph
+    public static class PlayerCubeTracker extends SectionDistanceGraph
     {
 
-        protected PlayerCubeTracker(int p_i50706_1_, int p_i50706_2_, int p_i50706_3_) {
+        public PlayerCubeTracker(int p_i50706_1_, int p_i50706_2_, int p_i50706_3_) {
             super(p_i50706_1_, p_i50706_2_, p_i50706_3_);
         }
 
@@ -50,10 +50,10 @@ public class CCTicketManager {
         }
     }
 
-    public class PlayerTicketTracker extends PlayerCubeTracker
+    public static class PlayerTicketTracker extends PlayerCubeTracker
     {
 
-        protected PlayerTicketTracker(int p_i50706_1_, int p_i50706_2_, int p_i50706_3_) {
+        public PlayerTicketTracker(int p_i50706_1_, int p_i50706_2_, int p_i50706_3_) {
             super(p_i50706_1_, p_i50706_2_, p_i50706_3_);
         }
     }

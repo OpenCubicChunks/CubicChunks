@@ -9,6 +9,9 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 
 @Mixin(TicketManager.PlayerTicketTracker.class)
 public class MixinTicketManagerPlayerTicketTracker {
+
+
+
     @Redirect(method = "func_215504_a", at = @At(value = "FIELD", target = "Lnet/minecraft/world/server/TicketType;PLAYER:Lnet/minecraft/world/server/TicketType;"))
     private TicketType<?> getCCTicketType() {
         return CCTicketType.CCPLAYER;
