@@ -1,4 +1,4 @@
-package cubicchunks.cc.mixin.core.common;
+package cubicchunks.cc.mixin.core.common.chunk;
 
 import cubicchunks.cc.CubicChunks;
 import net.minecraft.block.Block;

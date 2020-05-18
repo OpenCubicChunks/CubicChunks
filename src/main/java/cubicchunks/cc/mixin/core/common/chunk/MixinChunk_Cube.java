@@ -1,4 +1,4 @@
-package cubicchunks.cc.mixin.core.common;
+package cubicchunks.cc.mixin.core.common.chunk;
 
 import net.minecraft.world.chunk.Chunk;
 import org.spongepowered.asm.mixin.Mixin;
