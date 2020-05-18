@@ -49,10 +49,10 @@ public abstract class CCTicketManager {
 
     protected CCTicketManager(Executor executor, Executor executor2) {
         ITaskExecutor<Runnable> itaskexecutor = ITaskExecutor.inline("player ticket throttler", executor2::execute);
-        CubeTaskPriorityQueueSorter CubeTaskPriorityQueueSorter = new CubeTaskPriorityQueueSorter(ImmutableList.of(itaskexecutor), executor, 4);
-        this.levelUpdateListener = CubeTaskPriorityQueueSorter;
-        this.playerTicketThrottler = CubeTaskPriorityQueueSorter.createExecutor(itaskexecutor, true);
-        this.playerTicketThrottlerSorter = CubeTaskPriorityQueueSorter.func_219091_a(itaskexecutor);
+        CubeTaskPriorityQueueSorter cubeTaskPriorityQueueSorter = new CubeTaskPriorityQueueSorter(ImmutableList.of(itaskexecutor), executor, 4);
+        this.levelUpdateListener = cubeTaskPriorityQueueSorter;
+        this.playerTicketThrottler = cubeTaskPriorityQueueSorter.createExecutor(itaskexecutor, true);
+        this.playerTicketThrottlerSorter = cubeTaskPriorityQueueSorter.createSorterExecutor(itaskexecutor);
         this.mainThreadExecutor = executor2;
     }
 
@@ -109,7 +109,7 @@ public abstract class CCTicketManager {
 
                         CompletableFuture<Either<Chunk, ChunkHolder.IChunkLoadingError>> completablefuture = chunkholder.getEntityTickingFuture();
                         completablefuture.thenAccept((p_219363_3_) -> this.mainThreadExecutor.execute(() -> {
-                            this.playerTicketThrottlerSorter.enqueue(CubeTaskPriorityQueueSorter.func_219073_a(() -> {
+                            this.playerTicketThrottlerSorter.enqueue(CubeTaskPriorityQueueSorter.createSorterMsg(() -> {
                             }, j, false));
                         }));
                     }
@@ -216,16 +216,16 @@ public abstract class CCTicketManager {
      */
     public int getSpawningChunksCount() {
         this.playerChunkTracker.processAllUpdates();
-        return this.playerChunkTracker.chunksInRange.size();
+        return this.playerChunkTracker.cubesInRange.size();
     }
 
     public boolean isOutsideSpawningRadius(long sectionPosIn) {
         this.playerChunkTracker.processAllUpdates();
-        return this.playerChunkTracker.chunksInRange.containsKey(sectionPosIn);
+        return this.playerChunkTracker.cubesInRange.containsKey(sectionPosIn);
     }
 
     public String func_225412_c() {
-        return this.levelUpdateListener.func_225396_a();
+        return this.levelUpdateListener.debugString();
     }
     public class CubeTicketTracker extends SectionDistanceGraph
     {
@@ -276,25 +276,25 @@ public abstract class CCTicketManager {
 
     public class PlayerCubeTracker extends SectionDistanceGraph
     {
-        protected final Long2ByteMap chunksInRange = new Long2ByteOpenHashMap();
+        protected final Long2ByteMap cubesInRange = new Long2ByteOpenHashMap();
         protected final int range;
 
         public PlayerCubeTracker(int i) {
             super(i + 2, 16, 256);
             this.range = i;
-            this.chunksInRange.defaultReturnValue((byte)(i + 2));
+            this.cubesInRange.defaultReturnValue((byte)(i + 2));
         }
 
         protected int getLevel(long sectionPosIn) {
-            return this.chunksInRange.get(sectionPosIn);
+            return this.cubesInRange.get(sectionPosIn);
         }
 
         protected void setLevel(long sectionPosIn, int level) {
             byte b0;
             if (level > this.range) {
-                b0 = this.chunksInRange.remove(sectionPosIn);
+                b0 = this.cubesInRange.remove(sectionPosIn);
             } else {
-                b0 = this.chunksInRange.put(sectionPosIn, (byte)level);
+                b0 = this.cubesInRange.put(sectionPosIn, (byte)level);
             }
 
             this.chunkLevelChanged(sectionPosIn, b0, level);
@@ -302,7 +302,7 @@ public abstract class CCTicketManager {
 
         /**
          * Called after {@link CCTicketManager.PlayerCubeTracker#setLevel(long, int)} puts/removes chunk into/from {@link
-         * #chunksInRange}.
+         * #cubesInRange}.
          *
          * @param oldLevel Previous level of the chunk if it was smaller than {@link #range}, {@code range + 2} otherwise.
          */
@@ -336,7 +336,7 @@ public abstract class CCTicketManager {
 
         /**
          * Called after {@link CCTicketManager.PlayerCubeTracker#setLevel(long, int)} puts/removes chunk into/from {@link
-         * #chunksInRange}.
+         * #cubesInRange}.
          *
          * @param oldLevel Previous level of the chunk if it was smaller than {@link #range}, {@code range + 2} otherwise.
          */
@@ -345,7 +345,7 @@ public abstract class CCTicketManager {
         }
 
         public void setViewDistance(int viewDistanceIn) {
-            for(it.unimi.dsi.fastutil.longs.Long2ByteMap.Entry entry : this.chunksInRange.long2ByteEntrySet()) {
+            for(it.unimi.dsi.fastutil.longs.Long2ByteMap.Entry entry : this.cubesInRange.long2ByteEntrySet()) {
                 byte b0 = entry.getByteValue();
                 long i = entry.getLongKey();
                 this.updateTicket(i, b0, this.isWithinViewDistance(b0), b0 <= viewDistanceIn - 2);
@@ -358,22 +358,20 @@ public abstract class CCTicketManager {
             if (oldWithinViewDistance != withinViewDistance) {
                 Ticket<?> ticket = new Ticket<>(CCTicketType.CCPLAYER, CCTicketManager.PLAYER_TICKET_LEVEL, SectionPos.from(sectionPosIn));
                 if (withinViewDistance) {
-                    CCTicketManager.this.playerTicketThrottler.enqueue(CubeTaskPriorityQueueSorter.func_219069_a(() -> {
+                    CCTicketManager.this.playerTicketThrottler.enqueue(CubeTaskPriorityQueueSorter.createMsg(() -> {
                         CCTicketManager.this.mainThreadExecutor.execute(() -> {
                             if (this.isWithinViewDistance(this.getLevel(sectionPosIn))) {
                                 CCTicketManager.this.register(sectionPosIn, ticket);
                                 CCTicketManager.this.sectionPositions.add(sectionPosIn);
                             } else {
-                                CCTicketManager.this.playerTicketThrottlerSorter.enqueue(CubeTaskPriorityQueueSorter.func_219073_a(() -> {
+                                CCTicketManager.this.playerTicketThrottlerSorter.enqueue(CubeTaskPriorityQueueSorter.createSorterMsg(() -> {
                                 }, sectionPosIn, false));
                             }
 
                         });
-                    }, sectionPosIn, () -> {
-                        return distance;
-                    }));
+                    }, sectionPosIn, () -> distance));
                 } else {
-                    CCTicketManager.this.playerTicketThrottlerSorter.enqueue(CubeTaskPriorityQueueSorter.func_219073_a(() -> {
+                    CCTicketManager.this.playerTicketThrottlerSorter.enqueue(CubeTaskPriorityQueueSorter.createSorterMsg(() -> {
                         CCTicketManager.this.mainThreadExecutor.execute(() -> {
                             CCTicketManager.this.release(sectionPosIn, ticket);
                         });
@@ -394,7 +392,7 @@ public abstract class CCTicketManager {
                     int k = this.getLevel(i);
                     if (j != k) {
                         //func_219066_a = update level
-                        CCTicketManager.this.levelUpdateListener.func_219066_a(SectionPos.from(i), () -> this.distances.get(i), k, (ix) -> {
+                        CCTicketManager.this.levelUpdateListener.updateLevel(SectionPos.from(i), () -> this.distances.get(i), k, (ix) -> {
                             if (ix >= this.distances.defaultReturnValue()) {
                                 this.distances.remove(i);
                             } else {
