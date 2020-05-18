@@ -177,7 +177,7 @@ public abstract class CCTicketManager {
         });
     }
 
-    protected void forceChunk(SectionPos pos, boolean add) {
+    protected void forceCube(SectionPos pos, boolean add) {
         Ticket<SectionPos> ticket = new Ticket<>(CCTicketType.CCFORCED, 31, pos);
         if (add) {
             this.register(pos.asLong(), ticket);
