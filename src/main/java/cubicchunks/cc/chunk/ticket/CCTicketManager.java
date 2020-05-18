@@ -4,6 +4,9 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
 import com.mojang.datafixers.util.Either;
 import cubicchunks.cc.chunk.graph.CCTicketType;
+import cubicchunks.cc.mixin.core.common.ticket.interfaces.InvokeChunkHolder;
+import cubicchunks.cc.mixin.core.common.ticket.interfaces.InvokeChunkManager;
+import cubicchunks.cc.mixin.core.common.ticket.interfaces.InvokeTicket;
 import it.unimi.dsi.fastutil.longs.*;
 import it.unimi.dsi.fastutil.objects.ObjectIterator;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
@@ -57,9 +60,7 @@ public abstract class CCTicketManager {
 
         while(objectiterator.hasNext()) {
             Long2ObjectMap.Entry<SortedArraySet<Ticket<?>>> entry = objectiterator.next();
-            if (entry.getValue().removeIf((p_219370_1_) -> {
-                return p_219370_1_.isExpired(this.currentTime);
-            })) {
+            if (entry.getValue().removeIf((ticket) -> ((InvokeTicket)ticket).isexpiredCC(this.currentTime))) {
                 this.ticketTracker.updateSourceLevel(entry.getLongKey(), getLevel(entry.getValue()), false);
             }
 
@@ -82,7 +83,7 @@ public abstract class CCTicketManager {
     @Nullable
     protected abstract ChunkHolder setChunkLevel(long sectionPosIn, int newLevel, @Nullable ChunkHolder holder, int oldLevel);
 
-    public boolean processUpdates(ChunkManager p_219353_1_) {
+    public boolean processUpdates(ChunkManager chunkManager) {
         this.playerChunkTracker.processAllUpdates();
         this.playerTicketTracker.processAllUpdates();
         int i = Integer.MAX_VALUE - this.ticketTracker.func_215493_a(Integer.MAX_VALUE);
@@ -92,8 +93,8 @@ public abstract class CCTicketManager {
         }
 
         if (!this.chunkHolders.isEmpty()) {
-            this.chunkHolders.forEach((p_219343_1_) -> {
-                p_219343_1_.processUpdates(p_219353_1_);
+            this.chunkHolders.forEach((chunkHolder) -> {
+                ((InvokeChunkHolder)chunkHolder).processUpdatesCC(chunkManager);
             });
             this.chunkHolders.clear();
             return true;
@@ -106,7 +107,7 @@ public abstract class CCTicketManager {
                     if (this.getTicketSet(j).stream().anyMatch((p_219369_0_) -> {
                         return p_219369_0_.getType() == TicketType.PLAYER;
                     })) {
-                        ChunkHolder chunkholder = p_219353_1_.func_219220_a(j);
+                        ChunkHolder chunkholder = ((InvokeChunkManager)chunkManager).chunkHold(j);
                         if (chunkholder == null) {
                             throw new IllegalStateException();
                         }
@@ -132,7 +133,7 @@ public abstract class CCTicketManager {
         SortedArraySet<Ticket<?>> sortedarrayset = this.getTicketSet(sectionPosIn);
         int i = getLevel(sortedarrayset);
         Ticket<?> ticket = sortedarrayset.func_226175_a_(ticketIn);
-        ticket.setTimestamp(this.currentTime);
+        ((InvokeTicket)ticket).setTimestampCC(this.currentTime);
         if (ticketIn.getLevel() < i) {
             this.ticketTracker.updateSourceLevel(sectionPosIn, ticketIn.getLevel(), true);
         }
@@ -405,6 +406,7 @@ public abstract class CCTicketManager {
                     int j = this.field_215513_f.get(i);
                     int k = this.getLevel(i);
                     if (j != k) {
+                        //func_219066_a = update level
                         CCTicketManager.this.levelUpdateListener.func_219066_a(new SectionPos(i), () -> {
                             return this.field_215513_f.get(i);
                         }, k, (p_215506_3_) -> {
