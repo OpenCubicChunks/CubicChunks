@@ -55,7 +55,6 @@
         "client.MixinWorldRenderer"
     ],
     "server": [
-        "server.MixinIntegratedServer",
-        "server.MixinServerChunkProvider"
+        "server.MixinIntegratedServer"
     ]
 }

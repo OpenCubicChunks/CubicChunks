@@ -1,20 +1,20 @@
 package cubicchunks.cc.mixin.core.common;
 
+import cubicchunks.cc.chunk.ticket.ICCTicketManager;
+import cubicchunks.cc.server.IServerChunkProvider;
+import net.minecraft.util.math.SectionPos;
 import net.minecraft.world.server.ServerChunkProvider;
+import net.minecraft.world.server.TicketManager;
+import net.minecraft.world.server.TicketType;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 
 @Mixin(ServerChunkProvider.class)
-public class MixinServerChunkProvider {
+public class MixinServerChunkProvider implements IServerChunkProvider {
+    @Shadow TicketManager ticketManager;
 
-    //Make this Section/cube future.
-//    @Inject(method = "func_217233_c(IILnet/minecraft/world/chunk/ChunkStatus;Z)Ljava/util/concurrent/CompletableFuture;", at = @At("HEAD"))
-//    private void chunkFuture(int chunkX, int chunkZ, ChunkStatus requiredStatus, boolean load, CallbackInfoReturnable<CompletableFuture<Either<IChunk, ChunkHolder.IChunkLoadingError>>> cir) {
-//
-//    }
-//
-//    //Make this get Section/cube.
-//    @Inject(method = "getChunk(IILnet/minecraft/world/chunk/ChunkStatus;Z)Lnet/minecraft/world/chunk/IChunk;", at = @At("HEAD"))
-//    private void getChunk(int chunkX, int chunkZ, ChunkStatus requiredStatus, boolean load, CallbackInfoReturnable<IChunk> cir) {
-//
-//    }
+    @Override
+    public <T> void registerTicket(TicketType<T> type, SectionPos pos, int distance, T value) {
+        ((ICCTicketManager)this.ticketManager).register(type, pos, distance, value);
+    }
 }
