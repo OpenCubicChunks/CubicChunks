@@ -21,6 +21,7 @@ import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.server.*;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -71,13 +72,19 @@ public abstract class CCTicketManager implements ICCTicketManager {
         this.playerTicketThrottlerSorter = cubeTaskPriorityQueueSorter.createSorterExecutor(itaskexecutor);
     }
 
+    //TODO:
+    /**
+     * @author NotStirred
+     * @reason idk & cba
+     */
+    @Overwrite
     protected void tick() {
         ++this.currentTime;
         ObjectIterator<Long2ObjectMap.Entry<SortedArraySet<Ticket<?>>>> objectiterator = this.tickets.long2ObjectEntrySet().fastIterator();
 
         while (objectiterator.hasNext()) {
             Long2ObjectMap.Entry<SortedArraySet<Ticket<?>>> entry = objectiterator.next();
-            if (entry.getValue().removeIf((ticket) -> ((InvokeTicket) ticket).isexpiredCC(this.currentTime))) {
+            if (entry.getValue().removeIf((ticket) -> ((InvokeTicket) ticket).cc$isexpired(this.currentTime))) {
                 this.ticketTracker.updateSourceLevel(entry.getLongKey(), getLevel(entry.getValue()), false);
             }
 
@@ -146,7 +153,6 @@ public abstract class CCTicketManager implements ICCTicketManager {
         if (ticketIn.getLevel() < i) {
             this.ticketTracker.updateSourceLevel(sectionPosIn, ticketIn.getLevel(), true);
         }
-
     }
 
     private void release(long sectionPosIn, Ticket<?> ticketIn) {
@@ -171,9 +177,19 @@ public abstract class CCTicketManager implements ICCTicketManager {
         this.release(pos.asLong(), ticket);
     }
 
+    public void cc$release(long cubePos, Ticket<?> ticket)
+    {
+        this.release(cubePos, ticket);
+    }
+
     @Override
     public <T> void register(TicketType<T> type, SectionPos pos, int distance, T value) {
         this.register(pos.asLong(), new Ticket<>(type, 33 - distance, value));
+    }
+
+    public void cc$register(long cubePos, Ticket<?> ticket)
+    {
+        this.register(cubePos, ticket);
     }
 
     @Override
@@ -181,6 +197,8 @@ public abstract class CCTicketManager implements ICCTicketManager {
         Ticket<T> ticket = new Ticket<>(type, 33 - distance, value);
         this.release(pos.asLong(), ticket);
     }
+
+
 
     private SortedArraySet<Ticket<?>> getTicketSet(long p_229848_1_) {
         return this.tickets.computeIfAbsent(p_229848_1_, (p_229851_0_) -> SortedArraySet.newSet(4));
@@ -282,4 +300,5 @@ public abstract class CCTicketManager implements ICCTicketManager {
     public CubeTaskPriorityQueueSorter getlevelUpdateListener() {
         return levelUpdateListener;
     }
+
 }

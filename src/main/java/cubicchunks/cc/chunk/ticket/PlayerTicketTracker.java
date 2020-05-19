@@ -43,12 +43,12 @@ public class PlayerTicketTracker extends PlayerCubeTracker {
 
     private void updateTicket(long sectionPosIn, int distance, boolean oldWithinViewDistance, boolean withinViewDistance) {
         if (oldWithinViewDistance != withinViewDistance) {
-            Ticket<?> ticket = new Ticket<>(CCTicketType.CCPLAYER, TicketManager.PLAYER_TICKET_LEVEL, SectionPos.from(sectionPosIn));
+            Ticket<?> ticket = new Ticket<>(CCTicketType.CCPLAYER, ICCTicketManager.PLAYER_TICKET_LEVEL, SectionPos.from(sectionPosIn));
             if (withinViewDistance) {
                 iccTicketManager.getPlayerTicketThrottler().enqueue(CubeTaskPriorityQueueSorter.createMsg(() -> {
                     iccTicketManager.executor().execute(() -> {
                         if (this.isWithinViewDistance(this.getLevel(sectionPosIn))) {
-                            iccTicketManager.register(sectionPosIn, ticket);
+                            iccTicketManager.cc$register(sectionPosIn, ticket);
                             iccTicketManager.getChunkPositions().add(sectionPosIn);
                         } else {
                             iccTicketManager.getplayerTicketThrottlerSorter().enqueue(CubeTaskPriorityQueueSorter.createSorterMsg(() -> {
@@ -60,7 +60,7 @@ public class PlayerTicketTracker extends PlayerCubeTracker {
             } else {
                 iccTicketManager.getplayerTicketThrottlerSorter().enqueue(CubeTaskPriorityQueueSorter.createSorterMsg(() -> {
                     iccTicketManager.executor().execute(() -> {
-                        iccTicketManager.release(sectionPosIn, ticket);
+                        iccTicketManager.cc$release(sectionPosIn, ticket);
                     });
                 }, sectionPosIn, true));
             }
@@ -79,7 +79,7 @@ public class PlayerTicketTracker extends PlayerCubeTracker {
                 int k = this.getLevel(i);
                 if (j != k) {
                     //func_219066_a = update level
-                    iccTicketManager.levelUpdateListener.updateLevel(SectionPos.from(i), () -> this.distances.get(i), k, (ix) -> {
+                    iccTicketManager.getlevelUpdateListener().updateLevel(SectionPos.from(i), () -> this.distances.get(i), k, (ix) -> {
                         if (ix >= this.distances.defaultReturnValue()) {
                             this.distances.remove(i);
                         } else {

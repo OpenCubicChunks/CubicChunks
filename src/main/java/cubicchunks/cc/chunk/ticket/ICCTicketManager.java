@@ -8,6 +8,7 @@ import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.util.SortedArraySet;
 import net.minecraft.util.concurrent.ITaskExecutor;
 import net.minecraft.util.math.SectionPos;
+import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.server.ChunkHolder;
 import net.minecraft.world.server.ChunkManager;
 import net.minecraft.world.server.Ticket;
@@ -16,6 +17,8 @@ import net.minecraft.world.server.TicketType;
 import java.util.concurrent.Executor;
 
 public interface ICCTicketManager {
+    int PLAYER_TICKET_LEVEL = 33 + ChunkStatus.getDistance(ChunkStatus.FULL) - 2;
+
     boolean processUpdates(ChunkManager chunkManager);
 
     <T> void registerWithLevel(TicketType<T> type, SectionPos pos, int level, T value);
@@ -23,6 +26,10 @@ public interface ICCTicketManager {
     <T> void releaseWithLevel(TicketType<T> type, SectionPos pos, int level, T value);
 
     <T> void register(TicketType<T> type, SectionPos pos, int distance, T value);
+
+    void cc$register(long chunkPosIn, Ticket<?> ticketIn);
+
+    void cc$release(long chunkPosIn, Ticket<?> ticketIn);
 
     <T> void release(TicketType<T> type, SectionPos pos, int distance, T value);
 
