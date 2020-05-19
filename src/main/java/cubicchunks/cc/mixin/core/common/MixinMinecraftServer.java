@@ -1,6 +1,7 @@
 package cubicchunks.cc.mixin.core.common;
 
 import cubicchunks.cc.mixin.core.common.ticket.interfaces.InvokeTicketManager;
+import cubicchunks.cc.mixin.core.server.interfaces.IServerChunkProvider;
 import it.unimi.dsi.fastutil.longs.LongIterator;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.Unit;
@@ -11,10 +12,7 @@ import net.minecraft.util.math.SectionPos;
 import net.minecraft.world.ForcedChunksSaveData;
 import net.minecraft.world.chunk.listener.IChunkStatusListener;
 import net.minecraft.world.dimension.DimensionType;
-import net.minecraft.world.server.ServerChunkProvider;
-import net.minecraft.world.server.ServerWorld;
-import net.minecraft.world.server.Ticket;
-import net.minecraft.world.server.TicketType;
+import net.minecraft.world.server.*;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -41,7 +39,7 @@ public class MixinMinecraftServer {
         ServerChunkProvider serverchunkprovider = serverworld.getChunkProvider();
         serverchunkprovider.getLightManager().func_215598_a(500);
         this.serverTime = Util.milliTime();
-        register(TicketType.START, SectionPos.from(blockpos), 11, Unit.INSTANCE);
+        ((IServerChunkProvider)serverchunkprovider).registerTicket(TicketType.START, SectionPos.from(blockpos), 11, Unit.INSTANCE);
 
         while(serverchunkprovider.func_217229_b() != 441) {
             this.serverTime = Util.milliTime() + 10L;
@@ -69,9 +67,5 @@ public class MixinMinecraftServer {
         ((IMinecraftServer)this).runSchedule();
         p_213186_1_.stop();
         serverchunkprovider.getLightManager().func_215598_a(5);
-    }
-
-    public <T> void register(TicketType<T> type, SectionPos pos, int distance, T value) {
-        ((InvokeTicketManager)this).registerCC(pos.asLong(), new Ticket<>(type, 33 - distance, value));
     }
 }

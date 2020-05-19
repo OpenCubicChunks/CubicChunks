@@ -41,7 +41,8 @@
     "common.ticket.interfaces.InvokeTicket",
     "common.ticket.interfaces.InvokeTicketManager",
     "common.ticket.interfaces.PlayerChunkTrackerFactory",
-    "common.ticket.interfaces.PlayerTicketTrackerFactory"
+    "common.ticket.interfaces.PlayerTicketTrackerFactory",
+    "server.MixinServerChunkProvider"
   ],
   "client": [
     "client.MixinChunk",
