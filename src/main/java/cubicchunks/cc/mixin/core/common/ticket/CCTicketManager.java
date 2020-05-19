@@ -49,7 +49,6 @@ public abstract class CCTicketManager implements ICCTicketManager {
     private ITaskExecutor<CubeTaskPriorityQueueSorter.FunctionEntry<Runnable>> playerTicketThrottler;
     private ITaskExecutor<CubeTaskPriorityQueueSorter.RunnableEntry> playerTicketThrottlerSorter;
 
-
     @Inject(method = "<init>", at = @At("RETURN"))
     public void init(Executor executor, Executor executor2, CallbackInfo ci) {
         ITaskExecutor<Runnable> itaskexecutor = ITaskExecutor.inline("player ticket throttler", executor2::execute);
@@ -130,7 +129,7 @@ public abstract class CCTicketManager implements ICCTicketManager {
 
     //BEGIN OVERWRITE
 
-    //TODO:
+    //TODO: check if there is another way to do this
     /**
      * @author NotStirred
      * @reason idk & cba
@@ -160,8 +159,7 @@ public abstract class CCTicketManager implements ICCTicketManager {
     }
 
     @Intrinsic
-    protected ChunkHolder ccIntrinsic$setChunkLevel(long chunkPosIn, int newLevel, @Nullable ChunkHolder holder, int oldLevel)
-    {
+    protected ChunkHolder ccIntrinsic$setChunkLevel(long chunkPosIn, int newLevel, @Nullable ChunkHolder holder, int oldLevel) {
         return this.setChunkLevel(chunkPosIn, newLevel, holder, oldLevel);
     }
 

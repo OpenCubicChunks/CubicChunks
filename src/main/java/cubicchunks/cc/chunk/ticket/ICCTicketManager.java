@@ -30,9 +30,9 @@ public interface ICCTicketManager {
 
     void cc$register(long chunkPosIn, Ticket<?> ticketIn);
 
-    void cc$release(long chunkPosIn, Ticket<?> ticketIn);
-
     <T> void release(TicketType<T> type, SectionPos pos, int distance, T value);
+
+    void cc$release(long chunkPosIn, Ticket<?> ticketIn);
 
     void updatePlayerPosition(SectionPos sectionPosIn, ServerPlayerEntity player);
 
@@ -45,9 +45,6 @@ public interface ICCTicketManager {
     String func_225412_c();
 
     Long2ObjectOpenHashMap<SortedArraySet<Ticket<?>>> getTickets();
-
-    //TODO: figure out if this is actually supposed to be here
-    //ChunkHolder func_219335_b(long chunkPosIn);
 
     Long2ObjectMap<ObjectSet<ServerPlayerEntity>> getplayersByChunkPos();
 
