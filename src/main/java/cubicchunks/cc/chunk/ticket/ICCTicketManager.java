@@ -45,7 +45,8 @@ public interface ICCTicketManager {
 
     Long2ObjectOpenHashMap<SortedArraySet<Ticket<?>>> getTickets();
 
-    ChunkHolder func_219335_b(long chunkPosIn);
+    //TODO: figure out if this is actually supposed to be here
+    //ChunkHolder func_219335_b(long chunkPosIn);
 
     Long2ObjectMap<ObjectSet<ServerPlayerEntity>> getplayersByChunkPos();
 

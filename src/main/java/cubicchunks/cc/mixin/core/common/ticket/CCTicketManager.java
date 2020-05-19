@@ -19,10 +19,7 @@ import net.minecraft.util.math.SectionPos;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.server.*;
-import org.spongepowered.asm.mixin.Final;
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
-import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.*;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -33,6 +30,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 
 @Mixin(TicketManager.class)
+@Implements(@Interface(iface = IIntrinsicCCTicketManager.class, prefix = "ccIntrinsic$"))
 public abstract class CCTicketManager implements ICCTicketManager {
 
     @Final
@@ -62,6 +60,11 @@ public abstract class CCTicketManager implements ICCTicketManager {
     private Executor field_219388_p;
     @Shadow
     private long currentTime;
+
+    //SHADOW METHODS
+
+    @Shadow
+    protected abstract ChunkHolder func_219335_b(long chunkPos);
 
     @Inject(method = "<init>", at = @At("RETURN"))
     public void init(Executor executor, Executor executor2, CallbackInfo ci) {
@@ -198,6 +201,11 @@ public abstract class CCTicketManager implements ICCTicketManager {
         this.release(pos.asLong(), ticket);
     }
 
+    @Intrinsic
+    protected ChunkHolder ccIntrinsic$getChunkHolder(long chunkPos)
+    {
+        return this.func_219335_b(chunkPos);
+    }
 
 
     private SortedArraySet<Ticket<?>> getTicketSet(long p_229848_1_) {
