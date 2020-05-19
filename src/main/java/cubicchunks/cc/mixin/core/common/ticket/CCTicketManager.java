@@ -31,18 +31,16 @@ import java.util.concurrent.Executor;
 
 @Mixin(TicketManager.class)
 @Implements(@Interface(iface = IIntrinsicCCTicketManager.class, prefix = "ccIntrinsic$"))
-
 public abstract class CCTicketManager implements ICCTicketManager {
-    @Final @Shadow private static final int PLAYER_TICKET_LEVEL = 33 + ChunkStatus.getDistance(ChunkStatus.FULL) - 2;
-    @Final @Shadow private final Long2ObjectMap<ObjectSet<ServerPlayerEntity>> playersByChunkPos = new Long2ObjectOpenHashMap<>();
-    @Final @Shadow private final Long2ObjectOpenHashMap<SortedArraySet<Ticket<?>>> tickets = new Long2ObjectOpenHashMap<>();
-    @Final @Shadow private final LongSet field_219387_o = new LongOpenHashSet();
+    @Final @Shadow private Long2ObjectMap<ObjectSet<ServerPlayerEntity>> playersByChunkPos;
+    @Final @Shadow private Long2ObjectOpenHashMap<SortedArraySet<Ticket<?>>> tickets;
+    @Final @Shadow private LongSet field_219387_o;
     @Final @Shadow private Executor field_219388_p;
     @Shadow private long currentTime;
-    @Final @Shadow private final Set<ChunkHolder> chunkHolders = Sets.newHashSet();
+    @Final @Shadow private Set<ChunkHolder> chunkHolders;
+    //Abstracts
     @Shadow protected abstract ChunkHolder func_219335_b(long chunkPos);
     @Shadow protected abstract boolean contains(long p_219371_1_);
-
 
     private final CubeTicketTracker ticketTracker = new CubeTicketTracker(this);
     private final PlayerCubeTracker playerCubeTracker = new PlayerCubeTracker(this, 8);
@@ -61,6 +59,77 @@ public abstract class CCTicketManager implements ICCTicketManager {
         this.playerTicketThrottlerSorter = cubeTaskPriorityQueueSorter.createSorterExecutor(itaskexecutor);
     }
 
+    private static int getLevel(SortedArraySet<Ticket<?>> ticketSet) {
+        return !ticketSet.isEmpty() ? ticketSet.getSmallest().getLevel() : ChunkManager.MAX_LOADED_LEVEL + 1;
+    }
+
+    @Nullable
+    protected abstract ChunkHolder getChunkHolder(long sectionPosIn);
+
+    @Nullable
+    protected abstract ChunkHolder setChunkLevel(long sectionPosIn, int newLevel, @Nullable ChunkHolder holder, int oldLevel);
+
+    private void register(long sectionPosIn, Ticket<?> ticketIn) {
+        SortedArraySet<Ticket<?>> sortedarrayset = this.getTicketSet(sectionPosIn);
+        int i = getLevel(sortedarrayset);
+        Ticket<?> ticket = sortedarrayset.func_226175_a_(ticketIn);
+        ((InvokeTicket) ticket).setTimestampCC(this.currentTime);
+        if (ticketIn.getLevel() < i) {
+            this.ticketTracker.updateSourceLevel(sectionPosIn, ticketIn.getLevel(), true);
+        }
+    }
+    public void cc$register(long cubePos, Ticket<?> ticket)
+    {
+        this.register(cubePos, ticket);
+    }
+
+    private void release(long sectionPosIn, Ticket<?> ticketIn) {
+        SortedArraySet<Ticket<?>> sortedarrayset = this.getTicketSet(sectionPosIn);
+        sortedarrayset.remove(ticketIn);
+
+        if (sortedarrayset.isEmpty()) {
+            this.tickets.remove(sectionPosIn);
+        }
+
+        this.ticketTracker.updateSourceLevel(sectionPosIn, getLevel(sortedarrayset), false);
+    }
+    public void cc$release(long cubePos, Ticket<?> ticket)
+    {
+        this.release(cubePos, ticket);
+    }
+
+    private SortedArraySet<Ticket<?>> getTicketSet(long p_229848_1_) {
+        return this.tickets.computeIfAbsent(p_229848_1_, (p_229851_0_) -> SortedArraySet.newSet(4));
+    }
+
+    protected void forceCube(SectionPos pos, boolean add) {
+        Ticket<SectionPos> ticket = new Ticket<>(CCTicketType.CCFORCED, 31, pos);
+        if (add) {
+            this.register(pos.asLong(), ticket);
+        } else {
+            this.release(pos.asLong(), ticket);
+        }
+
+    }
+
+    protected String func_225413_c(long p_225413_1_) {
+        SortedArraySet<Ticket<?>> sortedarrayset = this.tickets.get(p_225413_1_);
+        String s;
+        if (sortedarrayset != null && !sortedarrayset.isEmpty()) {
+            s = sortedarrayset.getSmallest().toString();
+        } else {
+            s = "no_ticket";
+        }
+
+        return s;
+    }
+
+    protected void setViewDistance(int viewDistance) {
+        this.playerTicketTracker.setViewDistance(viewDistance);
+    }
+
+    //BEGIN OVERWRITE
+
     //TODO:
     /**
      * @author NotStirred
@@ -76,23 +145,32 @@ public abstract class CCTicketManager implements ICCTicketManager {
             if (entry.getValue().removeIf((ticket) -> ((InvokeTicket) ticket).cc$isexpired(this.currentTime))) {
                 this.ticketTracker.updateSourceLevel(entry.getLongKey(), getLevel(entry.getValue()), false);
             }
-
             if (entry.getValue().isEmpty()) {
                 objectiterator.remove();
             }
         }
-
     }
 
-    private static int getLevel(SortedArraySet<Ticket<?>> ticketSet) {
-        return !ticketSet.isEmpty() ? ticketSet.getSmallest().getLevel() : ChunkManager.MAX_LOADED_LEVEL + 1;
+    //BEING INTRINSIC
+
+    @Intrinsic
+    protected ChunkHolder ccIntrinsic$getChunkHolder(long chunkPos)
+    {
+        return this.func_219335_b(chunkPos);
     }
 
-    @Nullable
-    protected abstract ChunkHolder getChunkHolder(long sectionPosIn);
+    @Intrinsic
+    protected ChunkHolder ccIntrinsic$setChunkLevel(long chunkPosIn, int newLevel, @Nullable ChunkHolder holder, int oldLevel)
+    {
+        return this.setChunkLevel(chunkPosIn, newLevel, holder, oldLevel);
+    }
 
-    @Nullable
-    protected abstract ChunkHolder setChunkLevel(long sectionPosIn, int newLevel, @Nullable ChunkHolder holder, int oldLevel);
+    @Intrinsic
+    protected boolean ccIntrinsic$contains(long variable) {
+        return this.contains(variable);
+    }
+
+    //BEGIN OVERRIDES
 
     @Override
     public boolean processUpdates(ChunkManager chunkManager) {
@@ -132,27 +210,6 @@ public abstract class CCTicketManager implements ICCTicketManager {
         }
     }
 
-    private void register(long sectionPosIn, Ticket<?> ticketIn) {
-        SortedArraySet<Ticket<?>> sortedarrayset = this.getTicketSet(sectionPosIn);
-        int i = getLevel(sortedarrayset);
-        Ticket<?> ticket = sortedarrayset.func_226175_a_(ticketIn);
-        ((InvokeTicket) ticket).setTimestampCC(this.currentTime);
-        if (ticketIn.getLevel() < i) {
-            this.ticketTracker.updateSourceLevel(sectionPosIn, ticketIn.getLevel(), true);
-        }
-    }
-
-    private void release(long sectionPosIn, Ticket<?> ticketIn) {
-        SortedArraySet<Ticket<?>> sortedarrayset = this.getTicketSet(sectionPosIn);
-        sortedarrayset.remove(ticketIn);
-
-        if (sortedarrayset.isEmpty()) {
-            this.tickets.remove(sectionPosIn);
-        }
-
-        this.ticketTracker.updateSourceLevel(sectionPosIn, getLevel(sortedarrayset), false);
-    }
-
     @Override
     public <T> void registerWithLevel(TicketType<T> type, SectionPos pos, int level, T value) {
         this.register(pos.asLong(), new Ticket<>(type, level, value));
@@ -164,51 +221,15 @@ public abstract class CCTicketManager implements ICCTicketManager {
         this.release(pos.asLong(), ticket);
     }
 
-    public void cc$release(long cubePos, Ticket<?> ticket)
-    {
-        this.release(cubePos, ticket);
-    }
-
     @Override
     public <T> void register(TicketType<T> type, SectionPos pos, int distance, T value) {
         this.register(pos.asLong(), new Ticket<>(type, 33 - distance, value));
-    }
-
-    public void cc$register(long cubePos, Ticket<?> ticket)
-    {
-        this.register(cubePos, ticket);
     }
 
     @Override
     public <T> void release(TicketType<T> type, SectionPos pos, int distance, T value) {
         Ticket<T> ticket = new Ticket<>(type, 33 - distance, value);
         this.release(pos.asLong(), ticket);
-    }
-
-    @Intrinsic
-    protected ChunkHolder ccIntrinsic$getChunkHolder(long chunkPos)
-    {
-        return this.func_219335_b(chunkPos);
-    }
-
-    @Intrinsic
-    protected boolean ccIntrinsic$contains(long variable) {
-        return this.contains(variable);
-    }
-
-
-    private SortedArraySet<Ticket<?>> getTicketSet(long p_229848_1_) {
-        return this.tickets.computeIfAbsent(p_229848_1_, (p_229851_0_) -> SortedArraySet.newSet(4));
-    }
-
-    protected void forceCube(SectionPos pos, boolean add) {
-        Ticket<SectionPos> ticket = new Ticket<>(CCTicketType.CCFORCED, 31, pos);
-        if (add) {
-            this.register(pos.asLong(), ticket);
-        } else {
-            this.release(pos.asLong(), ticket);
-        }
-
     }
 
     @Override
@@ -229,23 +250,6 @@ public abstract class CCTicketManager implements ICCTicketManager {
             this.playerCubeTracker.updateSourceLevel(i, Integer.MAX_VALUE, false);
             this.playerTicketTracker.updateSourceLevel(i, Integer.MAX_VALUE, false);
         }
-
-    }
-
-    protected String func_225413_c(long p_225413_1_) {
-        SortedArraySet<Ticket<?>> sortedarrayset = this.tickets.get(p_225413_1_);
-        String s;
-        if (sortedarrayset != null && !sortedarrayset.isEmpty()) {
-            s = sortedarrayset.getSmallest().toString();
-        } else {
-            s = "no_ticket";
-        }
-
-        return s;
-    }
-
-    protected void setViewDistance(int viewDistance) {
-        this.playerTicketTracker.setViewDistance(viewDistance);
     }
 
     /**
@@ -289,6 +293,12 @@ public abstract class CCTicketManager implements ICCTicketManager {
     }
 
     @Override
+    public Set<ChunkHolder> getChunkHolders()
+    {
+        return this.chunkHolders;
+    }
+
+    @Override
     public Executor executor() {
         return field_219388_p;
     }
@@ -297,6 +307,4 @@ public abstract class CCTicketManager implements ICCTicketManager {
     public CubeTaskPriorityQueueSorter getlevelUpdateListener() {
         return levelUpdateListener;
     }
-
-
 }

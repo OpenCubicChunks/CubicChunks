@@ -14,6 +14,7 @@ import net.minecraft.world.server.ChunkManager;
 import net.minecraft.world.server.Ticket;
 import net.minecraft.world.server.TicketType;
 
+import java.util.Set;
 import java.util.concurrent.Executor;
 
 public interface ICCTicketManager {
@@ -55,6 +56,8 @@ public interface ICCTicketManager {
     ITaskExecutor<CubeTaskPriorityQueueSorter.RunnableEntry> getplayerTicketThrottlerSorter();
 
     LongSet getChunkPositions();
+
+    Set<ChunkHolder> getChunkHolders();
 
     Executor executor();
 
