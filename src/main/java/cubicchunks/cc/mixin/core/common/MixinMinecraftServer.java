@@ -1,7 +1,6 @@
 package cubicchunks.cc.mixin.core.common;
 
-import cubicchunks.cc.mixin.core.common.ticket.interfaces.InvokeTicketManager;
-import cubicchunks.cc.mixin.core.server.interfaces.IServerChunkProvider;
+import cubicchunks.cc.server.IServerChunkProvider;
 import it.unimi.dsi.fastutil.longs.LongIterator;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.Unit;

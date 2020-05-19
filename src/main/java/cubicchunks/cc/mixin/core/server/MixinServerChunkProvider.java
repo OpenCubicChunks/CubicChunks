@@ -1,14 +1,12 @@
 package cubicchunks.cc.mixin.core.server;
 
 import cubicchunks.cc.chunk.ticket.ICCTicketManager;
-import cubicchunks.cc.mixin.core.server.interfaces.IServerChunkProvider;
-import net.minecraft.util.math.ChunkPos;
+import cubicchunks.cc.server.IServerChunkProvider;
 import net.minecraft.util.math.SectionPos;
 import net.minecraft.world.server.ServerChunkProvider;
 import net.minecraft.world.server.TicketManager;
 import net.minecraft.world.server.TicketType;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 
 @Mixin(ServerChunkProvider.class)
