@@ -1,17 +1,9 @@
 package cubicchunks.cc.chunk.ticket;
 
 import cubicchunks.cc.chunk.graph.CCTicketType;
-import cubicchunks.cc.mixin.core.common.ticket.CCTicketManager;
 import it.unimi.dsi.fastutil.longs.*;
-import it.unimi.dsi.fastutil.objects.ObjectSet;
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.util.SectionDistanceGraph;
-import net.minecraft.util.SortedArraySet;
 import net.minecraft.util.math.SectionPos;
-import net.minecraft.world.server.ChunkHolder;
-import net.minecraft.world.server.ChunkManager;
 import net.minecraft.world.server.Ticket;
-import net.minecraft.world.server.TicketManager;
 
 public class PlayerTicketTracker extends PlayerCubeTracker {
     private int viewDistance;

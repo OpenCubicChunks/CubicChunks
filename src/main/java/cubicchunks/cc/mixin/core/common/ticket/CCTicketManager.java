@@ -31,40 +31,26 @@ import java.util.concurrent.Executor;
 
 @Mixin(TicketManager.class)
 @Implements(@Interface(iface = IIntrinsicCCTicketManager.class, prefix = "ccIntrinsic$"))
-public abstract class CCTicketManager implements ICCTicketManager {
 
-    @Final
-    @Shadow
-    private static final int PLAYER_TICKET_LEVEL = 33 + ChunkStatus.getDistance(ChunkStatus.FULL) - 2;
-    @Final
-    @Shadow
-    private final Long2ObjectMap<ObjectSet<ServerPlayerEntity>> playersByChunkPos = new Long2ObjectOpenHashMap<>();
-    @Final
-    @Shadow
-    private final Long2ObjectOpenHashMap<SortedArraySet<Ticket<?>>> tickets = new Long2ObjectOpenHashMap<>();
+public abstract class CCTicketManager implements ICCTicketManager {
+    @Final @Shadow private static final int PLAYER_TICKET_LEVEL = 33 + ChunkStatus.getDistance(ChunkStatus.FULL) - 2;
+    @Final @Shadow private final Long2ObjectMap<ObjectSet<ServerPlayerEntity>> playersByChunkPos = new Long2ObjectOpenHashMap<>();
+    @Final @Shadow private final Long2ObjectOpenHashMap<SortedArraySet<Ticket<?>>> tickets = new Long2ObjectOpenHashMap<>();
+    @Final @Shadow private final LongSet field_219387_o = new LongOpenHashSet();
+    @Final @Shadow private Executor field_219388_p;
+    @Shadow private long currentTime;
+    @Final @Shadow private final Set<ChunkHolder> chunkHolders = Sets.newHashSet();
+    @Shadow protected abstract ChunkHolder func_219335_b(long chunkPos);
+    @Shadow protected abstract boolean contains(long p_219371_1_);
+
+
     private final CubeTicketTracker ticketTracker = new CubeTicketTracker(this);
     private final PlayerCubeTracker playerCubeTracker = new PlayerCubeTracker(this, 8);
     private final PlayerTicketTracker playerTicketTracker = new PlayerTicketTracker(this, 33);
-
-    @Final
-    @Shadow
-    private final Set<ChunkHolder> chunkHolders = Sets.newHashSet();
     private CubeTaskPriorityQueueSorter levelUpdateListener;
     private ITaskExecutor<CubeTaskPriorityQueueSorter.FunctionEntry<Runnable>> playerTicketThrottler;
     private ITaskExecutor<CubeTaskPriorityQueueSorter.RunnableEntry> playerTicketThrottlerSorter;
-    @Final
-    @Shadow
-    private final LongSet field_219387_o = new LongOpenHashSet();
-    @Final
-    @Shadow
-    private Executor field_219388_p;
-    @Shadow
-    private long currentTime;
 
-    //SHADOW METHODS
-
-    @Shadow
-    protected abstract ChunkHolder func_219335_b(long chunkPos);
 
     @Inject(method = "<init>", at = @At("RETURN"))
     public void init(Executor executor, Executor executor2, CallbackInfo ci) {
@@ -101,8 +87,6 @@ public abstract class CCTicketManager implements ICCTicketManager {
     private static int getLevel(SortedArraySet<Ticket<?>> ticketSet) {
         return !ticketSet.isEmpty() ? ticketSet.getSmallest().getLevel() : ChunkManager.MAX_LOADED_LEVEL + 1;
     }
-
-    protected abstract boolean contains(long p_219371_1_);
 
     @Nullable
     protected abstract ChunkHolder getChunkHolder(long sectionPosIn);
@@ -207,6 +191,11 @@ public abstract class CCTicketManager implements ICCTicketManager {
         return this.func_219335_b(chunkPos);
     }
 
+    @Intrinsic
+    protected boolean ccIntrinsic$contains(long variable) {
+        return this.contains(variable);
+    }
+
 
     private SortedArraySet<Ticket<?>> getTicketSet(long p_229848_1_) {
         return this.tickets.computeIfAbsent(p_229848_1_, (p_229851_0_) -> SortedArraySet.newSet(4));
@@ -308,5 +297,6 @@ public abstract class CCTicketManager implements ICCTicketManager {
     public CubeTaskPriorityQueueSorter getlevelUpdateListener() {
         return levelUpdateListener;
     }
+
 
 }
