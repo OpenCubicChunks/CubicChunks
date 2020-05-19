@@ -14,6 +14,7 @@ import net.minecraft.world.server.ChunkManager;
 import net.minecraft.world.server.Ticket;
 import net.minecraft.world.server.TicketType;
 
+import javax.annotation.Nullable;
 import java.util.Set;
 import java.util.concurrent.Executor;
 
@@ -48,13 +49,19 @@ public interface ITicketManager {
 
     Long2ObjectMap<ObjectSet<ServerPlayerEntity>> getplayersByChunkPos();
 
-    ITaskExecutor<CubeTaskPriorityQueueSorter.FunctionEntry<Runnable>> getPlayerTicketThrottler();
+    ITaskExecutor<CubeTaskPriorityQueueSorter.FunctionEntry<Runnable>> getCc$playerTicketThrottler();
 
     ITaskExecutor<CubeTaskPriorityQueueSorter.RunnableEntry> getplayerTicketThrottlerSorter();
 
     LongSet getChunkPositions();
 
     Set<ChunkHolder> getChunkHolders();
+
+    ChunkHolder cc$getChunkHolder(long chunkPosIn);
+
+    ChunkHolder cc$setChunkLevel(long chunkPosIn, int newLevel, @Nullable ChunkHolder holder, int oldLevel);
+
+    boolean cc$contains(long p_219371_1_);
 
     Executor executor();
 

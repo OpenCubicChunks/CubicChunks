@@ -12,7 +12,10 @@ import net.minecraft.world.ForcedChunksSaveData;
 import net.minecraft.world.chunk.listener.IChunkStatusListener;
 import net.minecraft.world.dimension.DimensionType;
 import net.minecraft.world.server.*;
+import org.apache.logging.log4j.Logger;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -21,6 +24,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(MinecraftServer.class)
 public class MixinMinecraftServer {
 
+
+
     @Shadow
     protected long serverTime = Util.milliTime();
 
@@ -28,11 +33,16 @@ public class MixinMinecraftServer {
     private boolean isRunningScheduledTasks;
 
 
-    @Inject(method = "loadInitialChunks(Lnet/minecraft/world/chunk/listener/IChunkStatusListener;)V", at = @At(value = "HEAD"))
-    private void loadSpawnChunks(IChunkStatusListener p_213186_1_, CallbackInfo ci) {
+    @Shadow @Final private static Logger LOGGER;
+
+    /**
+     * @author NotStirred
+     */
+    @Overwrite
+    protected void loadInitialChunks(IChunkStatusListener p_213186_1_) {
 //        this.setUserMessage(new TranslationTextComponent("menu.generatingTerrain"));
         ServerWorld serverworld = ((IMinecraftServer)this).getServerWorld(DimensionType.OVERWORLD);
-//        LOGGER.info("Preparing start region for dimension " + DimensionType.getKey(serverworld.dimension.getType()));
+        LOGGER.info("Preparing start region for dimension " + DimensionType.getKey(serverworld.dimension.getType()));
         BlockPos blockpos = serverworld.getSpawnPoint();
         p_213186_1_.start(new ChunkPos(blockpos));
         ServerChunkProvider serverchunkprovider = serverworld.getChunkProvider();
@@ -43,6 +53,7 @@ public class MixinMinecraftServer {
         while(serverchunkprovider.func_217229_b() != 441) {
             this.serverTime = Util.milliTime() + 10L;
             ((IMinecraftServer)this).runSchedule();
+            LOGGER.info("Current loaded chunks: " + serverchunkprovider.func_217229_b());
         }
 
         this.serverTime = Util.milliTime() + 10L;

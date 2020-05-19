@@ -37,7 +37,7 @@ public class PlayerTicketTracker extends PlayerCubeTracker {
         if (oldWithinViewDistance != withinViewDistance) {
             Ticket<?> ticket = new Ticket<>(CCTicketType.CCPLAYER, ITicketManager.PLAYER_TICKET_LEVEL, SectionPos.from(sectionPosIn));
             if (withinViewDistance) {
-                iTicketManager.getPlayerTicketThrottler().enqueue(CubeTaskPriorityQueueSorter.createMsg(() -> {
+                iTicketManager.getCc$playerTicketThrottler().enqueue(CubeTaskPriorityQueueSorter.createMsg(() -> {
                     iTicketManager.executor().execute(() -> {
                         if (this.isWithinViewDistance(this.getLevel(sectionPosIn))) {
                             iTicketManager.cc$register(sectionPosIn, ticket);
