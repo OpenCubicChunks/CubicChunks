@@ -1,6 +1,6 @@
 package cubicchunks.cc.mixin.core.common;
 
-import cubicchunks.cc.chunk.ticket.ICCTicketManager;
+import cubicchunks.cc.chunk.ticket.ITicketManager;
 import cubicchunks.cc.server.IServerChunkProvider;
 import net.minecraft.util.math.SectionPos;
 import net.minecraft.world.server.ServerChunkProvider;
@@ -15,6 +15,6 @@ public class MixinServerChunkProvider implements IServerChunkProvider {
 
     @Override
     public <T> void registerTicket(TicketType<T> type, SectionPos pos, int distance, T value) {
-        ((ICCTicketManager)this.ticketManager).register(type, pos, distance, value);
+        ((ITicketManager)this.ticketManager).register(type, pos, distance, value);
     }
 }

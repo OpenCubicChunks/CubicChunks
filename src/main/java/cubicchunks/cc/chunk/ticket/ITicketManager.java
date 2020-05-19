@@ -17,7 +17,7 @@ import net.minecraft.world.server.TicketType;
 import java.util.Set;
 import java.util.concurrent.Executor;
 
-public interface ICCTicketManager {
+public interface ITicketManager {
     int PLAYER_TICKET_LEVEL = 33 + ChunkStatus.getDistance(ChunkStatus.FULL) - 2;
 
     boolean processUpdates(ChunkManager chunkManager);

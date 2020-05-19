@@ -32,7 +32,7 @@
         "common.MixinIWorldGenerationReader",
         "common.MixinMinecraftServer",
         "common.MixinServerChunkProvider",
-        "common.ticket.CCTicketManager",
+        "common.ticket.MixinTicketManager",
         "common.ticket.interfaces.ChunkTicketTrackerFactory",
         "common.ticket.interfaces.InvokeLevelBasedGraph",
         "common.ticket.interfaces.InvokeTicket",

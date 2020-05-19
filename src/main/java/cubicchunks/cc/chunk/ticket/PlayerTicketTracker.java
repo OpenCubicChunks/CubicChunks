@@ -9,12 +9,12 @@ public class PlayerTicketTracker extends PlayerCubeTracker {
     private int viewDistance;
     private final Long2IntMap distances = Long2IntMaps.synchronize(new Long2IntOpenHashMap());
     private final LongSet positionsAffected = new LongOpenHashSet();
-    private final ICCTicketManager iccTicketManager;
+    private final ITicketManager iTicketManager;
 
 
-    public PlayerTicketTracker(ICCTicketManager iccTicketManager, int i) {
-        super(iccTicketManager, i);
-        this.iccTicketManager = iccTicketManager;
+    public PlayerTicketTracker(ITicketManager iTicketManager, int i) {
+        super(iTicketManager, i);
+        this.iTicketManager = iTicketManager;
         this.viewDistance = 0;
         this.distances.defaultReturnValue(i + 2);
     }
@@ -35,24 +35,24 @@ public class PlayerTicketTracker extends PlayerCubeTracker {
 
     private void updateTicket(long sectionPosIn, int distance, boolean oldWithinViewDistance, boolean withinViewDistance) {
         if (oldWithinViewDistance != withinViewDistance) {
-            Ticket<?> ticket = new Ticket<>(CCTicketType.CCPLAYER, ICCTicketManager.PLAYER_TICKET_LEVEL, SectionPos.from(sectionPosIn));
+            Ticket<?> ticket = new Ticket<>(CCTicketType.CCPLAYER, ITicketManager.PLAYER_TICKET_LEVEL, SectionPos.from(sectionPosIn));
             if (withinViewDistance) {
-                iccTicketManager.getPlayerTicketThrottler().enqueue(CubeTaskPriorityQueueSorter.createMsg(() -> {
-                    iccTicketManager.executor().execute(() -> {
+                iTicketManager.getPlayerTicketThrottler().enqueue(CubeTaskPriorityQueueSorter.createMsg(() -> {
+                    iTicketManager.executor().execute(() -> {
                         if (this.isWithinViewDistance(this.getLevel(sectionPosIn))) {
-                            iccTicketManager.cc$register(sectionPosIn, ticket);
-                            iccTicketManager.getChunkPositions().add(sectionPosIn);
+                            iTicketManager.cc$register(sectionPosIn, ticket);
+                            iTicketManager.getChunkPositions().add(sectionPosIn);
                         } else {
-                            iccTicketManager.getplayerTicketThrottlerSorter().enqueue(CubeTaskPriorityQueueSorter.createSorterMsg(() -> {
+                            iTicketManager.getplayerTicketThrottlerSorter().enqueue(CubeTaskPriorityQueueSorter.createSorterMsg(() -> {
                             }, sectionPosIn, false));
                         }
 
                     });
                 }, sectionPosIn, () -> distance));
             } else {
-                iccTicketManager.getplayerTicketThrottlerSorter().enqueue(CubeTaskPriorityQueueSorter.createSorterMsg(() -> {
-                    iccTicketManager.executor().execute(() -> {
-                        iccTicketManager.cc$release(sectionPosIn, ticket);
+                iTicketManager.getplayerTicketThrottlerSorter().enqueue(CubeTaskPriorityQueueSorter.createSorterMsg(() -> {
+                    iTicketManager.executor().execute(() -> {
+                        iTicketManager.cc$release(sectionPosIn, ticket);
                     });
                 }, sectionPosIn, true));
             }
@@ -71,7 +71,7 @@ public class PlayerTicketTracker extends PlayerCubeTracker {
                 int k = this.getLevel(i);
                 if (j != k) {
                     //func_219066_a = update level
-                    iccTicketManager.getlevelUpdateListener().updateLevel(SectionPos.from(i), () -> this.distances.get(i), k, (ix) -> {
+                    iTicketManager.getlevelUpdateListener().updateLevel(SectionPos.from(i), () -> this.distances.get(i), k, (ix) -> {
                         if (ix >= this.distances.defaultReturnValue()) {
                             this.distances.remove(i);
                         } else {

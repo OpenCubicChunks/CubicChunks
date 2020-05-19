@@ -10,13 +10,13 @@ public class PlayerCubeTracker extends SectionDistanceGraph {
     public final Long2ByteMap cubesInRange = new Long2ByteOpenHashMap();
     protected final int range;
 
-    private final ICCTicketManager iccTicketManager;
+    private final ITicketManager iTicketManager;
 
-    public PlayerCubeTracker(ICCTicketManager iccTicketManager, int i) {
+    public PlayerCubeTracker(ITicketManager iTicketManager, int i) {
         super(i + 2, 16, 256);
         this.range = i;
         this.cubesInRange.defaultReturnValue((byte) (i + 2));
-        this.iccTicketManager = iccTicketManager;
+        this.iTicketManager = iTicketManager;
     }
 
     protected int getLevel(long sectionPosIn) {
@@ -42,7 +42,7 @@ public class PlayerCubeTracker extends SectionDistanceGraph {
     }
 
     private boolean hasPlayerInChunk(long sectionPosIn) {
-        ObjectSet<ServerPlayerEntity> objectset = iccTicketManager.getplayersByChunkPos().get(sectionPosIn);
+        ObjectSet<ServerPlayerEntity> objectset = iTicketManager.getplayersByChunkPos().get(sectionPosIn);
         return objectset != null && !objectset.isEmpty();
     }
 

@@ -1,26 +1,23 @@
 package cubicchunks.cc.chunk.ticket;
 
-import cubicchunks.cc.mixin.core.common.ticket.CCTicketManager;
 import net.minecraft.util.SectionDistanceGraph;
 import net.minecraft.util.SortedArraySet;
 import net.minecraft.world.server.ChunkHolder;
 import net.minecraft.world.server.ChunkManager;
 import net.minecraft.world.server.Ticket;
-import net.minecraft.world.server.TicketManager;
-import org.spongepowered.asm.mixin.Mixin;
 
 public class CubeTicketTracker extends SectionDistanceGraph  {
-    private final ICCTicketManager iccTicketManager;
+    private final ITicketManager iTicketManager;
 
-    public CubeTicketTracker(ICCTicketManager iccTicketManager) {
+    public CubeTicketTracker(ITicketManager iTicketManager) {
         //TODO: change the arguments passed into super to CCCubeManager or CCColumnManager
         super(ChunkManager.MAX_LOADED_LEVEL + 2, 16, 256);
-        this.iccTicketManager = iccTicketManager;
+        this.iTicketManager = iTicketManager;
     }
 
     @Override
     protected int getSourceLevel(long pos) {
-        SortedArraySet<Ticket<?>> sortedarrayset = iccTicketManager.getTickets().get(pos);
+        SortedArraySet<Ticket<?>> sortedarrayset = iTicketManager.getTickets().get(pos);
         if (sortedarrayset == null) {
             return Integer.MAX_VALUE;
         } else {
@@ -30,8 +27,8 @@ public class CubeTicketTracker extends SectionDistanceGraph  {
 
     @Override
     protected int getLevel(long sectionPosIn) {
-        if (!((IIntrinsicCCTicketManager)iccTicketManager).contains(sectionPosIn)) {
-            ChunkHolder chunkholder = ((IIntrinsicCCTicketManager)iccTicketManager).getChunkHolder(sectionPosIn);
+        if (!((IIntrinsicCCTicketManager) iTicketManager).contains(sectionPosIn)) {
+            ChunkHolder chunkholder = ((IIntrinsicCCTicketManager) iTicketManager).getChunkHolder(sectionPosIn);
             if (chunkholder != null) {
                 return chunkholder.getChunkLevel();
             }
@@ -42,12 +39,12 @@ public class CubeTicketTracker extends SectionDistanceGraph  {
 
     @Override
     protected void setLevel(long sectionPosIn, int level) {
-        ChunkHolder chunkholder = ((IIntrinsicCCTicketManager)iccTicketManager).getChunkHolder(sectionPosIn);
+        ChunkHolder chunkholder = ((IIntrinsicCCTicketManager) iTicketManager).getChunkHolder(sectionPosIn);
         int i = chunkholder == null ? ChunkManager.MAX_LOADED_LEVEL + 1 : chunkholder.getChunkLevel();
         if (i != level) {
-            chunkholder = ((IIntrinsicCCTicketManager)iccTicketManager).setChunkLevel(sectionPosIn, level, chunkholder, i);
+            chunkholder = ((IIntrinsicCCTicketManager) iTicketManager).setChunkLevel(sectionPosIn, level, chunkholder, i);
             if (chunkholder != null) {
-                iccTicketManager.getChunkHolders().add(chunkholder);
+                iTicketManager.getChunkHolders().add(chunkholder);
             }
 
         }
