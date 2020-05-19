@@ -4,9 +4,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
 import com.mojang.datafixers.util.Either;
 import cubicchunks.cc.chunk.graph.CCTicketType;
-import cubicchunks.cc.chunk.ticket.CubeTaskPriorityQueueSorter;
-import cubicchunks.cc.chunk.ticket.CubeTicketTracker;
-import cubicchunks.cc.chunk.ticket.ICCTicketManager;
+import cubicchunks.cc.chunk.ticket.*;
 import cubicchunks.cc.mixin.core.common.chunk.interfaces.InvokeChunkHolder;
 import cubicchunks.cc.mixin.core.common.chunk.interfaces.InvokeChunkManager;
 import cubicchunks.cc.mixin.core.common.ticket.interfaces.InvokeTicket;
@@ -42,9 +40,10 @@ public abstract class CCTicketManager implements ICCTicketManager {
     @Final
     @Shadow
     private final Long2ObjectOpenHashMap<SortedArraySet<Ticket<?>>> tickets = new Long2ObjectOpenHashMap<>();
-    private final CubeTicketTracker ticketTracker = new CubeTicketTracker();
-    private final CCTicketManager.PlayerCubeTracker playerChunkTracker = new CCTicketManager.PlayerCubeTracker(8);
-    private final CCTicketManager.PlayerTicketTracker playerTicketTracker = new CCTicketManager.PlayerTicketTracker(33);
+    private final CubeTicketTracker ticketTracker = new CubeTicketTracker(this);
+    private final PlayerCubeTracker playerChunkTracker = new PlayerCubeTracker(this, 8);
+    private final PlayerTicketTracker playerTicketTracker = new PlayerTicketTracker(this, 33);
+
     @Final
     @Shadow
     private final Set<ChunkHolder> chunkHolders = Sets.newHashSet();
@@ -60,10 +59,7 @@ public abstract class CCTicketManager implements ICCTicketManager {
     @Shadow
     private long currentTime;
 
-    @Override
-    public Long2ObjectOpenHashMap<SortedArraySet<Ticket<?>>> getTickets() {
-        return tickets;
-    }
+
 
     protected CCTicketManager(Executor executor, Executor executor2) {
         ITaskExecutor<Runnable> itaskexecutor = ITaskExecutor.inline("player ticket throttler", executor2::execute);
@@ -256,4 +252,33 @@ public abstract class CCTicketManager implements ICCTicketManager {
         return this.levelUpdateListener.debugString();
     }
 
+    @Override
+    public Long2ObjectOpenHashMap<SortedArraySet<Ticket<?>>> getTickets() {
+        return tickets;
+    }
+
+    @Override
+    public ITaskExecutor<CubeTaskPriorityQueueSorter.FunctionEntry<Runnable>> getPlayerTicketThrottler() {
+        return playerTicketThrottler;
+    }
+
+    @Override
+    public ITaskExecutor<CubeTaskPriorityQueueSorter.RunnableEntry> getplayerTicketThrottlerSorter() {
+        return playerTicketThrottlerSorter;
+    }
+
+    @Override
+    public LongSet getChunkPositions() {
+        return field_219387_o;
+    }
+
+    @Override
+    public Executor executor() {
+        return field_219388_p;
+    }
+
+    @Override
+    public CubeTaskPriorityQueueSorter getlevelUpdateListener() {
+        return levelUpdateListener;
+    }
 }

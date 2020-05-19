@@ -30,7 +30,7 @@ public class CubeTicketTracker extends SectionDistanceGraph  {
 
     @Override
     protected int getLevel(long sectionPosIn) {
-        if (!CCTicketManager.this.contains(sectionPosIn)) {
+        if (!iccTicketManager.contains(sectionPosIn)) {
             ChunkHolder chunkholder = iccTicketManager.getChunkHolder(sectionPosIn);
             if (chunkholder != null) {
                 return chunkholder.getChunkLevel();
@@ -42,12 +42,12 @@ public class CubeTicketTracker extends SectionDistanceGraph  {
 
     @Override
     protected void setLevel(long sectionPosIn, int level) {
-        ChunkHolder chunkholder = CCTicketManager.this.getChunkHolder(sectionPosIn);
+        ChunkHolder chunkholder = iccTicketManager.getChunkHolder(sectionPosIn);
         int i = chunkholder == null ? ChunkManager.MAX_LOADED_LEVEL + 1 : chunkholder.getChunkLevel();
         if (i != level) {
-            chunkholder = CCTicketManager.this.setChunkLevel(sectionPosIn, level, chunkholder, i);
+            chunkholder = iccTicketManager.setChunkLevel(sectionPosIn, level, chunkholder, i);
             if (chunkholder != null) {
-                CCTicketManager.this.chunkHolders.add(chunkholder);
+                iccTicketManager.chunkHolders.add(chunkholder);
             }
 
         }

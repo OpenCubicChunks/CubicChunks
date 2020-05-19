@@ -2,14 +2,18 @@ package cubicchunks.cc.chunk.ticket;
 
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.longs.LongSet;
 import it.unimi.dsi.fastutil.objects.ObjectSet;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.util.SortedArraySet;
+import net.minecraft.util.concurrent.ITaskExecutor;
 import net.minecraft.util.math.SectionPos;
 import net.minecraft.world.server.ChunkHolder;
 import net.minecraft.world.server.ChunkManager;
 import net.minecraft.world.server.Ticket;
 import net.minecraft.world.server.TicketType;
+
+import java.util.concurrent.Executor;
 
 public interface ICCTicketManager {
     boolean processUpdates(ChunkManager chunkManager);
@@ -38,5 +42,13 @@ public interface ICCTicketManager {
 
     Long2ObjectMap<ObjectSet<ServerPlayerEntity>> getplayersByChunkPos();
 
+    ITaskExecutor<CubeTaskPriorityQueueSorter.FunctionEntry<Runnable>> getPlayerTicketThrottler();
 
+    ITaskExecutor<CubeTaskPriorityQueueSorter.RunnableEntry> getplayerTicketThrottlerSorter();
+
+    LongSet getChunkPositions();
+
+    Executor executor();
+
+    CubeTaskPriorityQueueSorter getlevelUpdateListener();
 }
