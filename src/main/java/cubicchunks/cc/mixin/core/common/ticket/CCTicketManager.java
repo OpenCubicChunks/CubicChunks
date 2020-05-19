@@ -22,6 +22,9 @@ import net.minecraft.world.server.*;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import javax.annotation.Nullable;
 import java.util.Set;
@@ -41,33 +44,31 @@ public abstract class CCTicketManager implements ICCTicketManager {
     @Shadow
     private final Long2ObjectOpenHashMap<SortedArraySet<Ticket<?>>> tickets = new Long2ObjectOpenHashMap<>();
     private final CubeTicketTracker ticketTracker = new CubeTicketTracker(this);
-    private final PlayerCubeTracker playerChunkTracker = new PlayerCubeTracker(this, 8);
+    private final PlayerCubeTracker playerCubeTracker = new PlayerCubeTracker(this, 8);
     private final PlayerTicketTracker playerTicketTracker = new PlayerTicketTracker(this, 33);
 
     @Final
     @Shadow
     private final Set<ChunkHolder> chunkHolders = Sets.newHashSet();
-    private final CubeTaskPriorityQueueSorter levelUpdateListener;
-    private final ITaskExecutor<CubeTaskPriorityQueueSorter.FunctionEntry<Runnable>> playerTicketThrottler;
-    private final ITaskExecutor<CubeTaskPriorityQueueSorter.RunnableEntry> playerTicketThrottlerSorter;
+    private CubeTaskPriorityQueueSorter levelUpdateListener;
+    private ITaskExecutor<CubeTaskPriorityQueueSorter.FunctionEntry<Runnable>> playerTicketThrottler;
+    private ITaskExecutor<CubeTaskPriorityQueueSorter.RunnableEntry> playerTicketThrottlerSorter;
     @Final
     @Shadow
     private final LongSet field_219387_o = new LongOpenHashSet();
     @Final
     @Shadow
-    private final Executor field_219388_p;
+    private Executor field_219388_p;
     @Shadow
     private long currentTime;
 
-
-
-    protected CCTicketManager(Executor executor, Executor executor2) {
+    @Inject(method = "<init>", at = @At("RETURN"))
+    public void init(Executor executor, Executor executor2, CallbackInfo ci) {
         ITaskExecutor<Runnable> itaskexecutor = ITaskExecutor.inline("player ticket throttler", executor2::execute);
         CubeTaskPriorityQueueSorter cubeTaskPriorityQueueSorter = new CubeTaskPriorityQueueSorter(ImmutableList.of(itaskexecutor), executor, 4);
         this.levelUpdateListener = cubeTaskPriorityQueueSorter;
         this.playerTicketThrottler = cubeTaskPriorityQueueSorter.createExecutor(itaskexecutor, true);
         this.playerTicketThrottlerSorter = cubeTaskPriorityQueueSorter.createSorterExecutor(itaskexecutor);
-        this.field_219388_p = executor2;
     }
 
     protected void tick() {
@@ -101,7 +102,7 @@ public abstract class CCTicketManager implements ICCTicketManager {
 
     @Override
     public boolean processUpdates(ChunkManager chunkManager) {
-        this.playerChunkTracker.processAllUpdates();
+        this.playerCubeTracker.processAllUpdates();
         this.playerTicketTracker.processAllUpdates();
         int i = Integer.MAX_VALUE - this.ticketTracker.update(Integer.MAX_VALUE);
         boolean flag = i != 0;
@@ -199,7 +200,7 @@ public abstract class CCTicketManager implements ICCTicketManager {
     public void updatePlayerPosition(SectionPos sectionPosIn, ServerPlayerEntity player) {
         long i = sectionPosIn.asChunkPos().asLong();
         this.playersByChunkPos.computeIfAbsent(i, (p_219361_0_) -> new ObjectOpenHashSet<>()).add(player);
-        this.playerChunkTracker.updateSourceLevel(i, 0, true);
+        this.playerCubeTracker.updateSourceLevel(i, 0, true);
         this.playerTicketTracker.updateSourceLevel(i, 0, true);
     }
 
@@ -210,7 +211,7 @@ public abstract class CCTicketManager implements ICCTicketManager {
         objectset.remove(player);
         if (objectset.isEmpty()) {
             this.playersByChunkPos.remove(i);
-            this.playerChunkTracker.updateSourceLevel(i, Integer.MAX_VALUE, false);
+            this.playerCubeTracker.updateSourceLevel(i, Integer.MAX_VALUE, false);
             this.playerTicketTracker.updateSourceLevel(i, Integer.MAX_VALUE, false);
         }
 
@@ -237,14 +238,14 @@ public abstract class CCTicketManager implements ICCTicketManager {
      */
     @Override
     public int getSpawningChunksCount() {
-        this.playerChunkTracker.processAllUpdates();
-        return this.playerChunkTracker.cubesInRange.size();
+        this.playerCubeTracker.processAllUpdates();
+        return this.playerCubeTracker.cubesInRange.size();
     }
 
     @Override
     public boolean isOutsideSpawningRadius(long sectionPosIn) {
-        this.playerChunkTracker.processAllUpdates();
-        return this.playerChunkTracker.cubesInRange.containsKey(sectionPosIn);
+        this.playerCubeTracker.processAllUpdates();
+        return this.playerCubeTracker.cubesInRange.containsKey(sectionPosIn);
     }
 
     @Override

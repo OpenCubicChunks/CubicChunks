@@ -7,7 +7,7 @@ import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.util.SectionDistanceGraph;
 
 public class PlayerCubeTracker extends SectionDistanceGraph {
-    protected final Long2ByteMap cubesInRange = new Long2ByteOpenHashMap();
+    public final Long2ByteMap cubesInRange = new Long2ByteOpenHashMap();
     protected final int range;
 
     private final ICCTicketManager iccTicketManager;
