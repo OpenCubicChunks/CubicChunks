@@ -11,6 +11,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public class MixinWorld {
     @Inject(at = @At("RETURN"), method = "isYOutOfBounds", cancellable = true)
     private static void isYOutOfBounds(int y, CallbackInfoReturnable<Boolean> cir) {
-        cir.setReturnValue(y < -512 || y >= CubicChunks.worldMAXHeight);
+        cir.setReturnValue(y < -CubicChunks.worldMAXHeight || y >= CubicChunks.worldMAXHeight);
     }
 }

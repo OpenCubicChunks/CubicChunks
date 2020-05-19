@@ -70,6 +70,7 @@ public class MixinMinecraftServer {
         p_213186_1_.stop();
         serverchunkprovider.getLightManager().func_215598_a(5);
     }
+
     public <T> void register(TicketType<T> type, SectionPos pos, int distance, T value) {
         ((InvokeTicketManager)this).registerCC(pos.asLong(), new Ticket<>(type, 33 - distance, value));
     }

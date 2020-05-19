@@ -1,0 +1,259 @@
+package cubicchunks.cc.mixin.core.common.ticket;
+
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Sets;
+import com.mojang.datafixers.util.Either;
+import cubicchunks.cc.chunk.graph.CCTicketType;
+import cubicchunks.cc.chunk.ticket.CubeTaskPriorityQueueSorter;
+import cubicchunks.cc.chunk.ticket.CubeTicketTracker;
+import cubicchunks.cc.chunk.ticket.ICCTicketManager;
+import cubicchunks.cc.mixin.core.common.chunk.interfaces.InvokeChunkHolder;
+import cubicchunks.cc.mixin.core.common.chunk.interfaces.InvokeChunkManager;
+import cubicchunks.cc.mixin.core.common.ticket.interfaces.InvokeTicket;
+import it.unimi.dsi.fastutil.longs.*;
+import it.unimi.dsi.fastutil.objects.ObjectIterator;
+import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
+import it.unimi.dsi.fastutil.objects.ObjectSet;
+import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.util.SortedArraySet;
+import net.minecraft.util.concurrent.ITaskExecutor;
+import net.minecraft.util.math.SectionPos;
+import net.minecraft.world.chunk.Chunk;
+import net.minecraft.world.chunk.ChunkStatus;
+import net.minecraft.world.server.*;
+import org.spongepowered.asm.mixin.Final;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
+
+import javax.annotation.Nullable;
+import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
+
+@Mixin(TicketManager.class)
+public abstract class CCTicketManager implements ICCTicketManager {
+
+    @Final
+    @Shadow
+    private static final int PLAYER_TICKET_LEVEL = 33 + ChunkStatus.getDistance(ChunkStatus.FULL) - 2;
+    @Final
+    @Shadow
+    private final Long2ObjectMap<ObjectSet<ServerPlayerEntity>> playersByChunkPos = new Long2ObjectOpenHashMap<>();
+    @Final
+    @Shadow
+    private final Long2ObjectOpenHashMap<SortedArraySet<Ticket<?>>> tickets = new Long2ObjectOpenHashMap<>();
+    private final CubeTicketTracker ticketTracker = new CubeTicketTracker();
+    private final CCTicketManager.PlayerCubeTracker playerChunkTracker = new CCTicketManager.PlayerCubeTracker(8);
+    private final CCTicketManager.PlayerTicketTracker playerTicketTracker = new CCTicketManager.PlayerTicketTracker(33);
+    @Final
+    @Shadow
+    private final Set<ChunkHolder> chunkHolders = Sets.newHashSet();
+    private final CubeTaskPriorityQueueSorter levelUpdateListener;
+    private final ITaskExecutor<CubeTaskPriorityQueueSorter.FunctionEntry<Runnable>> playerTicketThrottler;
+    private final ITaskExecutor<CubeTaskPriorityQueueSorter.RunnableEntry> playerTicketThrottlerSorter;
+    @Final
+    @Shadow
+    private final LongSet field_219387_o = new LongOpenHashSet();
+    @Final
+    @Shadow
+    private final Executor field_219388_p;
+    @Shadow
+    private long currentTime;
+
+    @Override
+    public Long2ObjectOpenHashMap<SortedArraySet<Ticket<?>>> getTickets() {
+        return tickets;
+    }
+
+    protected CCTicketManager(Executor executor, Executor executor2) {
+        ITaskExecutor<Runnable> itaskexecutor = ITaskExecutor.inline("player ticket throttler", executor2::execute);
+        CubeTaskPriorityQueueSorter cubeTaskPriorityQueueSorter = new CubeTaskPriorityQueueSorter(ImmutableList.of(itaskexecutor), executor, 4);
+        this.levelUpdateListener = cubeTaskPriorityQueueSorter;
+        this.playerTicketThrottler = cubeTaskPriorityQueueSorter.createExecutor(itaskexecutor, true);
+        this.playerTicketThrottlerSorter = cubeTaskPriorityQueueSorter.createSorterExecutor(itaskexecutor);
+        this.field_219388_p = executor2;
+    }
+
+    protected void tick() {
+        ++this.currentTime;
+        ObjectIterator<Long2ObjectMap.Entry<SortedArraySet<Ticket<?>>>> objectiterator = this.tickets.long2ObjectEntrySet().fastIterator();
+
+        while (objectiterator.hasNext()) {
+            Long2ObjectMap.Entry<SortedArraySet<Ticket<?>>> entry = objectiterator.next();
+            if (entry.getValue().removeIf((ticket) -> ((InvokeTicket) ticket).isexpiredCC(this.currentTime))) {
+                this.ticketTracker.updateSourceLevel(entry.getLongKey(), getLevel(entry.getValue()), false);
+            }
+
+            if (entry.getValue().isEmpty()) {
+                objectiterator.remove();
+            }
+        }
+
+    }
+
+    private static int getLevel(SortedArraySet<Ticket<?>> ticketSet) {
+        return !ticketSet.isEmpty() ? ticketSet.getSmallest().getLevel() : ChunkManager.MAX_LOADED_LEVEL + 1;
+    }
+
+    protected abstract boolean contains(long p_219371_1_);
+
+    @Nullable
+    protected abstract ChunkHolder getChunkHolder(long sectionPosIn);
+
+    @Nullable
+    protected abstract ChunkHolder setChunkLevel(long sectionPosIn, int newLevel, @Nullable ChunkHolder holder, int oldLevel);
+
+    @Override
+    public boolean processUpdates(ChunkManager chunkManager) {
+        this.playerChunkTracker.processAllUpdates();
+        this.playerTicketTracker.processAllUpdates();
+        int i = Integer.MAX_VALUE - this.ticketTracker.update(Integer.MAX_VALUE);
+        boolean flag = i != 0;
+
+        if (!this.chunkHolders.isEmpty()) {
+            this.chunkHolders.forEach((chunkHolder) -> ((InvokeChunkHolder) chunkHolder).processUpdatesCC(chunkManager));
+            this.chunkHolders.clear();
+            return true;
+        } else {
+            if (!this.field_219387_o.isEmpty()) {
+                LongIterator longiterator = this.field_219387_o.iterator();
+
+                while (longiterator.hasNext()) {
+                    long j = longiterator.nextLong();
+                    if (this.getTicketSet(j).stream().anyMatch((p_219369_0_) -> p_219369_0_.getType() == TicketType.PLAYER)) {
+                        ChunkHolder chunkholder = ((InvokeChunkManager) chunkManager).chunkHold(j);
+                        if (chunkholder == null) {
+                            throw new IllegalStateException();
+                        }
+
+                        CompletableFuture<Either<Chunk, ChunkHolder.IChunkLoadingError>> completablefuture = chunkholder.getEntityTickingFuture();
+                        completablefuture.thenAccept((p_219363_3_) -> this.field_219388_p.execute(() -> {
+                            this.playerTicketThrottlerSorter.enqueue(CubeTaskPriorityQueueSorter.createSorterMsg(() -> {
+                            }, j, false));
+                        }));
+                    }
+                }
+
+                this.field_219387_o.clear();
+            }
+
+            return flag;
+        }
+    }
+
+    private void register(long sectionPosIn, Ticket<?> ticketIn) {
+        SortedArraySet<Ticket<?>> sortedarrayset = this.getTicketSet(sectionPosIn);
+        int i = getLevel(sortedarrayset);
+        Ticket<?> ticket = sortedarrayset.func_226175_a_(ticketIn);
+        ((InvokeTicket) ticket).setTimestampCC(this.currentTime);
+        if (ticketIn.getLevel() < i) {
+            this.ticketTracker.updateSourceLevel(sectionPosIn, ticketIn.getLevel(), true);
+        }
+
+    }
+
+    private void release(long sectionPosIn, Ticket<?> ticketIn) {
+        SortedArraySet<Ticket<?>> sortedarrayset = this.getTicketSet(sectionPosIn);
+        sortedarrayset.remove(ticketIn);
+
+        if (sortedarrayset.isEmpty()) {
+            this.tickets.remove(sectionPosIn);
+        }
+
+        this.ticketTracker.updateSourceLevel(sectionPosIn, getLevel(sortedarrayset), false);
+    }
+
+    @Override
+    public <T> void registerWithLevel(TicketType<T> type, SectionPos pos, int level, T value) {
+        this.register(pos.asLong(), new Ticket<>(type, level, value));
+    }
+
+    @Override
+    public <T> void releaseWithLevel(TicketType<T> type, SectionPos pos, int level, T value) {
+        Ticket<T> ticket = new Ticket<>(type, level, value);
+        this.release(pos.asLong(), ticket);
+    }
+
+    @Override
+    public <T> void register(TicketType<T> type, SectionPos pos, int distance, T value) {
+        this.register(pos.asLong(), new Ticket<>(type, 33 - distance, value));
+    }
+
+    @Override
+    public <T> void release(TicketType<T> type, SectionPos pos, int distance, T value) {
+        Ticket<T> ticket = new Ticket<>(type, 33 - distance, value);
+        this.release(pos.asLong(), ticket);
+    }
+
+    private SortedArraySet<Ticket<?>> getTicketSet(long p_229848_1_) {
+        return this.tickets.computeIfAbsent(p_229848_1_, (p_229851_0_) -> SortedArraySet.newSet(4));
+    }
+
+    protected void forceCube(SectionPos pos, boolean add) {
+        Ticket<SectionPos> ticket = new Ticket<>(CCTicketType.CCFORCED, 31, pos);
+        if (add) {
+            this.register(pos.asLong(), ticket);
+        } else {
+            this.release(pos.asLong(), ticket);
+        }
+
+    }
+
+    @Override
+    public void updatePlayerPosition(SectionPos sectionPosIn, ServerPlayerEntity player) {
+        long i = sectionPosIn.asChunkPos().asLong();
+        this.playersByChunkPos.computeIfAbsent(i, (p_219361_0_) -> new ObjectOpenHashSet<>()).add(player);
+        this.playerChunkTracker.updateSourceLevel(i, 0, true);
+        this.playerTicketTracker.updateSourceLevel(i, 0, true);
+    }
+
+    @Override
+    public void removePlayer(SectionPos sectionPosIn, ServerPlayerEntity player) {
+        long i = sectionPosIn.asChunkPos().asLong();
+        ObjectSet<ServerPlayerEntity> objectset = this.playersByChunkPos.get(i);
+        objectset.remove(player);
+        if (objectset.isEmpty()) {
+            this.playersByChunkPos.remove(i);
+            this.playerChunkTracker.updateSourceLevel(i, Integer.MAX_VALUE, false);
+            this.playerTicketTracker.updateSourceLevel(i, Integer.MAX_VALUE, false);
+        }
+
+    }
+
+    protected String func_225413_c(long p_225413_1_) {
+        SortedArraySet<Ticket<?>> sortedarrayset = this.tickets.get(p_225413_1_);
+        String s;
+        if (sortedarrayset != null && !sortedarrayset.isEmpty()) {
+            s = sortedarrayset.getSmallest().toString();
+        } else {
+            s = "no_ticket";
+        }
+
+        return s;
+    }
+
+    protected void setViewDistance(int viewDistance) {
+        this.playerTicketTracker.setViewDistance(viewDistance);
+    }
+
+    /**
+     * Returns the number of chunks taken into account when calculating the mob cap
+     */
+    @Override
+    public int getSpawningChunksCount() {
+        this.playerChunkTracker.processAllUpdates();
+        return this.playerChunkTracker.cubesInRange.size();
+    }
+
+    @Override
+    public boolean isOutsideSpawningRadius(long sectionPosIn) {
+        this.playerChunkTracker.processAllUpdates();
+        return this.playerChunkTracker.cubesInRange.containsKey(sectionPosIn);
+    }
+
+    @Override
+    public String func_225412_c() {
+        return this.levelUpdateListener.debugString();
+    }
+
+}
