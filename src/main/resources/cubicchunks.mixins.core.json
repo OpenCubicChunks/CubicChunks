@@ -18,6 +18,7 @@
         "common.chunk.MixinChunkCache_HeightLimits",
         "common.chunk.MixinChunkGenerator",
         "common.chunk.MixinChunkHolder",
+        "common.chunk.MixinChunkManager",
         "common.chunk.MixinChunkPaletteFormat",
         "common.chunk.MixinChunkPrimer",
         "common.chunk.MixinChunkSerializer",
@@ -39,6 +40,7 @@
         "common.ticket.interfaces.PlayerTicketTrackerFactory",
         "common.ticket.ITicketType",
         "common.ticket.MixinPlayerTicketTracker",
+        "common.ticket.MixinProxyTicketManager",
         "common.ticket.MixinTicketManager",
         "common.ticket.MixinTicketManagerPlayerTicketTracker"
     ],

@@ -38,8 +38,6 @@ public abstract class MixinTicketManager implements ITicketManager {
     //Abstracts
     @Shadow protected abstract ChunkHolder func_219335_b(long chunkPos);
 
-    @Shadow @Nullable protected abstract ChunkHolder setChunkLevel(long chunkPosIn, int newLevel, @Nullable ChunkHolder holder, int oldLevel);
-
     @Shadow protected abstract boolean contains(long p_219371_1_);
 
     private final CubeTicketTracker cc$ticketTracker = new CubeTicketTracker(this);
@@ -192,11 +190,6 @@ public abstract class MixinTicketManager implements ITicketManager {
     public ChunkHolder cc$getChunkHolder(long chunkPos)
     {
         return this.func_219335_b(chunkPos);
-    }
-
-    @Override
-    public ChunkHolder cc$setChunkLevel(long chunkPosIn, int newLevel, @Nullable ChunkHolder holder, int oldLevel) {
-        return this.setChunkLevel(chunkPosIn, newLevel, holder, oldLevel);
     }
 
     @Override

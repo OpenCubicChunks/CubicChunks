@@ -59,7 +59,7 @@ public interface ITicketManager {
 
     ChunkHolder cc$getChunkHolder(long chunkPosIn);
 
-    ChunkHolder cc$setChunkLevel(long chunkPosIn, int newLevel, @Nullable ChunkHolder holder, int oldLevel);
+    ChunkHolder setSectionLevel(long chunkPosIn, int newLevel, @Nullable ChunkHolder holder, int oldLevel);
 
     boolean cc$contains(long p_219371_1_);
 

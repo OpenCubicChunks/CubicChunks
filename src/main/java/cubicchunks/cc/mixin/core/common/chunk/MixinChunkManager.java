@@ -1,5 +1,6 @@
 package cubicchunks.cc.mixin.core.common.chunk;
 
+import cubicchunks.cc.chunk.IChunkManager;
 import cubicchunks.cc.chunk.ICubeHolder;
 import cubicchunks.cc.chunk.ticket.CubeTaskPriorityQueueSorter;
 import it.unimi.dsi.fastutil.longs.Long2ObjectLinkedOpenHashMap;
@@ -19,7 +20,7 @@ import static net.minecraft.util.math.SectionPos.*;
 import static net.minecraft.world.server.ChunkManager.MAX_LOADED_LEVEL;
 
 @Mixin(ChunkManager.class)
-public class MixinChunkManager {
+public class MixinChunkManager implements IChunkManager {
 
     private CubeTaskPriorityQueueSorter cubeTaskPriorityQueueSorter;
 
@@ -34,7 +35,8 @@ public class MixinChunkManager {
     @Shadow private boolean immutableLoadedChunksDirty;
 
     @Nullable
-    private ChunkHolder setSectionLevel(long sectionPosIn, int newLevel, @Nullable ChunkHolder holder, int oldLevel) {
+    @Override
+    public ChunkHolder setSectionLevel(long sectionPosIn, int newLevel, @Nullable ChunkHolder holder, int oldLevel) {
         if (oldLevel > MAX_LOADED_LEVEL && newLevel > MAX_LOADED_LEVEL) {
             return holder;
         } else {
