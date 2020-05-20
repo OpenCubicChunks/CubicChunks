@@ -43,6 +43,7 @@ public class CubeTicketTracker extends SectionDistanceGraph  {
         int i = chunkholder == null ? ChunkManager.MAX_LOADED_LEVEL + 1 : chunkholder.getChunkLevel();
         if (i != level) {
             chunkholder = iTicketManager.cc$setChunkLevel(sectionPosIn, level, chunkholder, i);
+            chunkholder = iTicketManager.cc$setChunkLevel(sectionPosIn, level, chunkholder, i);
             if (chunkholder != null) {
                 iTicketManager.getChunkHolders().add(chunkholder);
             }

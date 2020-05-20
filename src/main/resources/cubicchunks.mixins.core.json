@@ -18,7 +18,6 @@
         "common.chunk.MixinChunkCache_HeightLimits",
         "common.chunk.MixinChunkGenerator",
         "common.chunk.MixinChunkHolder",
-        "common.chunk.MixinChunkManager",
         "common.chunk.MixinChunkPaletteFormat",
         "common.chunk.MixinChunkPrimer",
         "common.chunk.MixinChunkSerializer",

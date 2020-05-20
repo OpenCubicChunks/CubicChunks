@@ -8,6 +8,7 @@ import net.minecraft.util.Util;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.SectionPos;
+import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraft.world.ForcedChunksSaveData;
 import net.minecraft.world.chunk.listener.IChunkStatusListener;
 import net.minecraft.world.dimension.DimensionType;
@@ -40,7 +41,7 @@ public class MixinMinecraftServer {
      */
     @Overwrite
     protected void loadInitialChunks(IChunkStatusListener p_213186_1_) {
-//        this.setUserMessage(new TranslationTextComponent("menu.generatingTerrain"));
+        //this.setUserMessage(new TranslationTextComponent("menu.generatingTerrain"));
         ServerWorld serverworld = ((IMinecraftServer)this).getServerWorld(DimensionType.OVERWORLD);
         LOGGER.info("Preparing start region for dimension " + DimensionType.getKey(serverworld.dimension.getType()));
         BlockPos blockpos = serverworld.getSpawnPoint();

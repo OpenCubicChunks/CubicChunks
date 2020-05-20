@@ -123,47 +123,6 @@ public abstract class MixinTicketManager implements ITicketManager {
 
     //BEGIN OVERWRITE
 
-    //TODO: check if there is another way to do this
-    /**
-     * @author NotStirred
-     * @reason idk & cba
-     */
-    @Overwrite
-    protected void tick() {
-        ++this.currentTime;
-        ObjectIterator<Long2ObjectMap.Entry<SortedArraySet<Ticket<?>>>> objectiterator = this.tickets.long2ObjectEntrySet().fastIterator();
-
-        while (objectiterator.hasNext()) {
-            Long2ObjectMap.Entry<SortedArraySet<Ticket<?>>> entry = objectiterator.next();
-            if (entry.getValue().removeIf((ticket) -> ((InvokeTicket) ticket).cc$isexpired(this.currentTime))) {
-                this.cc$ticketTracker.updateSourceLevel(entry.getLongKey(), getLevel(entry.getValue()), false);
-            }
-            if (entry.getValue().isEmpty()) {
-                objectiterator.remove();
-            }
-        }
-    }
-
-    //BEGIN OVERRIDES
-
-    @Override
-    public ChunkHolder cc$getChunkHolder(long chunkPos)
-    {
-        return this.func_219335_b(chunkPos);
-    }
-
-    @Override
-    public ChunkHolder cc$setChunkLevel(long chunkPosIn, int newLevel, @Nullable ChunkHolder holder, int oldLevel) {
-        return this.setChunkLevel(chunkPosIn, newLevel, holder, oldLevel);
-    }
-
-    @Override
-    public boolean cc$contains(long variable) {
-        return this.contains(variable);
-    }
-
-
-
     /**
      * @author NotStirred
      * @reason to overwrite the vanilla processUpdates
@@ -204,6 +163,45 @@ public abstract class MixinTicketManager implements ITicketManager {
 
             return flag;
         }
+    }
+
+    //TODO: check if there is another way to do this
+    /**
+     * @author NotStirred
+     * @reason idk & cba
+     */
+    @Overwrite
+    protected void tick() {
+        ++this.currentTime;
+        ObjectIterator<Long2ObjectMap.Entry<SortedArraySet<Ticket<?>>>> objectiterator = this.tickets.long2ObjectEntrySet().fastIterator();
+
+        while (objectiterator.hasNext()) {
+            Long2ObjectMap.Entry<SortedArraySet<Ticket<?>>> entry = objectiterator.next();
+            if (entry.getValue().removeIf((ticket) -> ((InvokeTicket) ticket).cc$isexpired(this.currentTime))) {
+                this.cc$ticketTracker.updateSourceLevel(entry.getLongKey(), getLevel(entry.getValue()), false);
+            }
+            if (entry.getValue().isEmpty()) {
+                objectiterator.remove();
+            }
+        }
+    }
+
+    //BEGIN OVERRIDES
+
+    @Override
+    public ChunkHolder cc$getChunkHolder(long chunkPos)
+    {
+        return this.func_219335_b(chunkPos);
+    }
+
+    @Override
+    public ChunkHolder cc$setChunkLevel(long chunkPosIn, int newLevel, @Nullable ChunkHolder holder, int oldLevel) {
+        return this.setChunkLevel(chunkPosIn, newLevel, holder, oldLevel);
+    }
+
+    @Override
+    public boolean cc$contains(long variable) {
+        return this.contains(variable);
     }
 
     @Override
