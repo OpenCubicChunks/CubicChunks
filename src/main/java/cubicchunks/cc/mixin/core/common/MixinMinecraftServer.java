@@ -51,10 +51,10 @@ public class MixinMinecraftServer {
         this.serverTime = Util.milliTime();
         ((IServerChunkProvider)serverchunkprovider).registerTicket(TicketType.START, SectionPos.from(blockpos), 11, Unit.INSTANCE);
 
-        while(serverchunkprovider.func_217229_b() != 441) {
+        while(serverchunkprovider.getLoadedChunksCount() != 441) {
             this.serverTime = Util.milliTime() + 10L;
             ((IMinecraftServer)this).runSchedule();
-            LOGGER.info("Current loaded chunks: " + serverchunkprovider.func_217229_b());
+            LOGGER.info("Current loaded chunks: " + serverchunkprovider.getLoadedChunksCount());
         }
 
         this.serverTime = Util.milliTime() + 10L;
