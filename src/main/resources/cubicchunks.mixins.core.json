@@ -13,8 +13,6 @@
     "mixins": [
         "common.chunk.interfaces.InvokeChunkHolder",
         "common.chunk.interfaces.InvokeChunkManager",
-        "common.chunk.MixinChunk_Column",
-        "common.chunk.MixinChunk_Cube",
         "common.chunk.MixinChunkCache_HeightLimits",
         "common.chunk.MixinChunkGenerator",
         "common.chunk.MixinChunkHolder",
@@ -22,11 +20,7 @@
         "common.chunk.MixinChunkPaletteFormat",
         "common.chunk.MixinChunkPrimer",
         "common.chunk.MixinChunkSerializer",
-        "common.chunk.MixinChunkTaskPriorityQueue",
-        "common.chunk.MixinChunkTaskPriorityQueueSorter",
         "common.IMinecraftServer",
-        "common.MixinAnvilSaveHandler",
-        "common.MixinBiomeContainer",
         "common.MixinChunkDistanceGraph",
         "common.MixinIForgeDimension",
         "common.MixinIWorldGenerationReader",
@@ -38,11 +32,8 @@
         "common.ticket.interfaces.InvokeTicketManager",
         "common.ticket.interfaces.PlayerChunkTrackerFactory",
         "common.ticket.interfaces.PlayerTicketTrackerFactory",
-        "common.ticket.ITicketType",
-        "common.ticket.MixinPlayerTicketTracker",
         "common.ticket.MixinProxyTicketManager",
-        "common.ticket.MixinTicketManager",
-        "common.ticket.MixinTicketManagerPlayerTicketTracker"
+        "common.ticket.MixinTicketManager"
     ],
     "client": [
         "client.interfaces.IBlockReaderMixin",
