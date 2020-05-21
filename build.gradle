@@ -33,8 +33,16 @@ minecraft {
     runs {
         client {
             workingDirectory project.file('run')
-            arg "-mixin.config="+archivesBaseName+".mixins.json"
-
+            arg "-mixin.config="+archivesBaseName+".mixins.core.json"
+            jvmArgs([
+                    "-XX:+UseG1GC",
+                    "-Xmx1G",
+                    "-XX:+UnlockExperimentalVMOptions",
+                    "-XX:G1NewSizePercent=20",
+                    "-XX:G1ReservePercent=20",
+                    "-XX:MaxGCPauseMillis=50",
+                    "-XX:G1HeapRegionSize=32M"
+            ])
 
             // Recommended logging level for the console
             property 'forge.logging.console.level', 'debug'
@@ -48,8 +56,16 @@ minecraft {
 
         server {
             workingDirectory project.file('run')
-            arg "-mixin.config="+archivesBaseName+".mixins.json"
-
+            arg "-mixin.config="+archivesBaseName+".mixins.core.json"
+            jvmArgs([
+                    "-XX:+UseG1GC",
+                    "-Xmx1G",
+                    "-XX:+UnlockExperimentalVMOptions",
+                    "-XX:G1NewSizePercent=20",
+                    "-XX:G1ReservePercent=20",
+                    "-XX:MaxGCPauseMillis=50",
+                    "-XX:G1HeapRegionSize=32M"
+            ])
 
             // Recommended logging level for the console
             property 'forge.logging.console.level', 'debug'
