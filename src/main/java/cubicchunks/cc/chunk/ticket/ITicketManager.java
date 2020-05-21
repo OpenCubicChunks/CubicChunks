@@ -55,11 +55,11 @@ public interface ITicketManager {
 
     Set<ChunkHolder> getCubeHolders();
 
-    ChunkHolder cc$getChunkHolder(long chunkPosIn);
+    ChunkHolder getSectionHolder(long chunkPosIn);
 
     ChunkHolder setSectionLevel(long chunkPosIn, int newLevel, @Nullable ChunkHolder holder, int oldLevel);
 
-    boolean cc$contains(long p_219371_1_);
+    boolean containsSections(long sectionPos);
 
     Executor executor();
 

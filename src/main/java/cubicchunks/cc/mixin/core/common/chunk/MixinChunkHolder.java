@@ -1,8 +1,8 @@
 package cubicchunks.cc.mixin.core.common.chunk;
 
 import com.mojang.datafixers.util.Either;
-import cubicchunks.cc.chunk.ICubeHolder;
 import cubicchunks.cc.chunk.ICubeHolderListener;
+import cubicchunks.cc.chunk.ISectionHolder;
 import net.minecraft.util.Util;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.SectionPos;
@@ -24,7 +24,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicReferenceArray;
 
 @Mixin(ChunkHolder.class)
-public abstract class MixinChunkHolder implements ICubeHolder {
+public abstract class MixinChunkHolder implements ISectionHolder {
 
     @Shadow public abstract ChunkPos getPosition();
 
@@ -163,4 +163,6 @@ public abstract class MixinChunkHolder implements ICubeHolder {
         ((ICubeHolderListener)this.field_219327_v).onUpdateSectionLevel(this.sectionPos, this::func_219281_j, this.chunkLevel, this::func_219275_d);
         this.prevChunkLevel = this.chunkLevel;
     }
+
+
 }

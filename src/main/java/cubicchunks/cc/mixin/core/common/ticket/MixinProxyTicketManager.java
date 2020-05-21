@@ -19,4 +19,14 @@ public abstract class MixinProxyTicketManager extends MixinTicketManager {
     public ChunkHolder setSectionLevel(long sectionPosIn, int newLevel, @Nullable ChunkHolder holder, int oldLevel) {
         return ((IChunkManager)this$0).setSectionLevel(sectionPosIn, newLevel, holder, oldLevel);
     }
+
+    @Override
+    public boolean containsSections(long sectionPos) {
+        return ((IChunkManager)this$0).getUnloadableSections().contains(sectionPos);
+    }
+
+    @Override
+    public ChunkHolder getSectionHolder(long sectionPosIn) {
+        return ((IChunkManager)this$0).getSectionHolder(sectionPosIn);
+    }
 }

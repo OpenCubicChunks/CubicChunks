@@ -30,21 +30,18 @@ import java.util.concurrent.Executor;
 
 @Mixin(TicketManager.class)
 public abstract class MixinTicketManager implements ITicketManager {
-    private final Long2ObjectOpenHashMap<SortedArraySet<Ticket<?>>> tickets = new Long2ObjectOpenHashMap<>();
+    private final Long2ObjectOpenHashMap<SortedArraySet<Ticket<?>>> sectionTickets = new Long2ObjectOpenHashMap<>();
     private final Long2ObjectMap<ObjectSet<ServerPlayerEntity>> playersBySectionPos = new Long2ObjectOpenHashMap<>();
 
     private final Set<ChunkHolder> cubeHolders = new HashSet<>();
     private final LongSet cubePositions = new LongOpenHashSet();
+
 
     //@Final @Shadow private Long2ObjectMap<ObjectSet<ServerPlayerEntity>> playersByChunkPos;
     //@Final @Shadow private LongSet chunkPositions;
     @Final @Shadow private Executor field_219388_p;
     @Shadow private long currentTime;
     //@Final @Shadow private Set<ChunkHolder> chunkHolders;
-    //Abstracts
-    @Shadow protected abstract ChunkHolder getChunkHolder(long chunkPos);
-
-    @Shadow protected abstract boolean contains(long p_219371_1_);
 
     @Shadow protected static int getLevel(SortedArraySet<Ticket<?>> p_229844_0_) {
         throw new Error("Mixin did not apply correctly");
@@ -85,7 +82,7 @@ public abstract class MixinTicketManager implements ITicketManager {
         sortedarrayset.remove(ticketIn);
 
         if (sortedarrayset.isEmpty()) {
-            this.tickets.remove(sectionPosIn);
+            this.sectionTickets.remove(sectionPosIn);
         }
 
         this.cc$ticketTracker.updateSourceLevel(sectionPosIn, getLevel(sortedarrayset), false);
@@ -96,7 +93,7 @@ public abstract class MixinTicketManager implements ITicketManager {
     }
 
     private SortedArraySet<Ticket<?>> getTicketSet(long p_229848_1_) {
-        return this.tickets.computeIfAbsent(p_229848_1_, (p_229851_0_) -> SortedArraySet.newSet(4));
+        return this.sectionTickets.computeIfAbsent(p_229848_1_, (p_229851_0_) -> SortedArraySet.newSet(4));
     }
 
     protected void forceCube(SectionPos pos, boolean add) {
@@ -110,7 +107,7 @@ public abstract class MixinTicketManager implements ITicketManager {
     }
 
     protected String func_225413_c(long p_225413_1_) {
-        SortedArraySet<Ticket<?>> sortedarrayset = this.tickets.get(p_225413_1_);
+        SortedArraySet<Ticket<?>> sortedarrayset = this.sectionTickets.get(p_225413_1_);
         String s;
         if (sortedarrayset != null && !sortedarrayset.isEmpty()) {
             s = sortedarrayset.getSmallest().toString();
@@ -176,7 +173,7 @@ public abstract class MixinTicketManager implements ITicketManager {
     @Overwrite
     protected void tick() {
         ++this.currentTime;
-        ObjectIterator<Long2ObjectMap.Entry<SortedArraySet<Ticket<?>>>> objectiterator = this.tickets.long2ObjectEntrySet().fastIterator();
+        ObjectIterator<Long2ObjectMap.Entry<SortedArraySet<Ticket<?>>>> objectiterator = this.sectionTickets.long2ObjectEntrySet().fastIterator();
 
         while (objectiterator.hasNext()) {
             Long2ObjectMap.Entry<SortedArraySet<Ticket<?>>> entry = objectiterator.next();
@@ -190,18 +187,6 @@ public abstract class MixinTicketManager implements ITicketManager {
     }
 
     //BEGIN OVERRIDES
-
-    @Override
-    public ChunkHolder cc$getChunkHolder(long chunkPos)
-    {
-        return this.getChunkHolder(chunkPos);
-    }
-
-    @Override
-    public boolean cc$contains(long variable) {
-        return this.contains(variable);
-    }
-
     @Override
     public <T> void registerWithLevel(TicketType<T> type, SectionPos pos, int level, T value) {
         this.registerSection(pos.asLong(), new Ticket<>(type, level, value));
@@ -261,7 +246,7 @@ public abstract class MixinTicketManager implements ITicketManager {
 
     @Override
     public Long2ObjectOpenHashMap<SortedArraySet<Ticket<?>>> getSectionTickets() {
-        return tickets;
+        return sectionTickets;
     }
 
     @Override

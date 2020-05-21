@@ -3,7 +3,7 @@ package cubicchunks.cc.mixin.core.common.chunk;
 import com.google.common.collect.ImmutableList;
 import com.mojang.datafixers.DataFixer;
 import cubicchunks.cc.chunk.IChunkManager;
-import cubicchunks.cc.chunk.ICubeHolder;
+import cubicchunks.cc.chunk.ISectionHolder;
 import cubicchunks.cc.chunk.ticket.CubeTaskPriorityQueueSorter;
 import it.unimi.dsi.fastutil.longs.Long2ObjectLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
@@ -12,7 +12,6 @@ import net.minecraft.util.concurrent.DelegatedTaskExecutor;
 import net.minecraft.util.concurrent.ITaskExecutor;
 import net.minecraft.util.concurrent.ThreadTaskExecutor;
 import net.minecraft.util.math.ChunkPos;
-import net.minecraft.world.chunk.ChunkTaskPriorityQueueSorter;
 import net.minecraft.world.chunk.IChunkLightProvider;
 import net.minecraft.world.chunk.listener.IChunkStatusListener;
 import net.minecraft.world.gen.ChunkGenerator;
@@ -21,7 +20,6 @@ import net.minecraft.world.server.ChunkHolder;
 import net.minecraft.world.server.ChunkManager;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraft.world.server.ServerWorldLightManager;
-import net.minecraft.world.storage.DimensionSavedDataManager;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -44,9 +42,9 @@ public class MixinChunkManager implements IChunkManager {
 
     private CubeTaskPriorityQueueSorter cubeTaskPriorityQueueSorter;
 
-    private final Long2ObjectLinkedOpenHashMap<ChunkHolder> loadedCubes = new Long2ObjectLinkedOpenHashMap<>();
-    private final LongSet unloadableCubes = new LongOpenHashSet();
-    private final Long2ObjectLinkedOpenHashMap<ChunkHolder> cubesToUnload = new Long2ObjectLinkedOpenHashMap<>();
+    private final Long2ObjectLinkedOpenHashMap<ChunkHolder> loadedSections = new Long2ObjectLinkedOpenHashMap<>();
+    private final LongSet unloadableSections = new LongOpenHashSet();
+    private final Long2ObjectLinkedOpenHashMap<ChunkHolder> sectionsToUnload = new Long2ObjectLinkedOpenHashMap<>();
 
     @Shadow @Final private ServerWorldLightManager lightManager;
 
@@ -75,23 +73,23 @@ public class MixinChunkManager implements IChunkManager {
 
             if (holder != null) {
                 if (newLevel > MAX_LOADED_LEVEL) {
-                    this.unloadableCubes.add(sectionPosIn);
+                    this.unloadableSections.add(sectionPosIn);
                 } else {
-                    this.unloadableCubes.remove(sectionPosIn);
+                    this.unloadableSections.remove(sectionPosIn);
                 }
             }
 
             if (newLevel <= MAX_LOADED_LEVEL && holder == null) {
-                holder = this.cubesToUnload.remove(sectionPosIn);
+                holder = this.sectionsToUnload.remove(sectionPosIn);
                 if (holder != null) {
                     holder.setChunkLevel(newLevel);
                 } else {
 
                     holder = new ChunkHolder(new ChunkPos(extractX(sectionPosIn), extractZ(sectionPosIn)), newLevel, this.lightManager,
                             this.cubeTaskPriorityQueueSorter, (ChunkHolder.IPlayerProvider) this);
-                    ((ICubeHolder)holder).setYPos(extractY(sectionPosIn));
+                    ((ISectionHolder)holder).setYPos(extractY(sectionPosIn));
                 }
-                this.loadedCubes.put(sectionPosIn, holder);
+                this.loadedSections.put(sectionPosIn, holder);
                 this.immutableLoadedChunksDirty = true;
             }
 
@@ -99,5 +97,15 @@ public class MixinChunkManager implements IChunkManager {
         }
     }
 
+    @Override
+    public LongSet getUnloadableSections()
+    {
+        return this.unloadableSections;
+    }
 
+    @Override
+    public ChunkHolder getSectionHolder(long sectionPosIn)
+    {
+        return loadedSections.get(sectionPosIn);
+    }
 }
