@@ -4,7 +4,7 @@ package cubicchunks.cc.chunk.ticket;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Sets;
 import com.mojang.datafixers.util.Either;
-import cubicchunks.cc.chunk.ICubeHolderListener;
+import cubicchunks.cc.chunk.ISectionHolderListener;
 import net.minecraft.util.Unit;
 import net.minecraft.util.Util;
 import net.minecraft.util.concurrent.DelegatedTaskExecutor;
@@ -28,7 +28,7 @@ import java.util.function.IntSupplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class CubeTaskPriorityQueueSorter implements AutoCloseable, ChunkHolder.IListener, ICubeHolderListener {
+public class CubeTaskPriorityQueueSorter implements AutoCloseable, ChunkHolder.IListener, ISectionHolderListener {
     private static final Logger LOGGER = LogManager.getLogger();
     private final Map<ITaskExecutor<?>, CubeTaskPriorityQueue<? extends Function<ITaskExecutor<Unit>, ?>>> queues;
     private final Set<ITaskExecutor<?>> actors;

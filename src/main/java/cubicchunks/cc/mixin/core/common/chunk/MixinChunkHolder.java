@@ -1,7 +1,7 @@
 package cubicchunks.cc.mixin.core.common.chunk;
 
 import com.mojang.datafixers.util.Either;
-import cubicchunks.cc.chunk.ICubeHolderListener;
+import cubicchunks.cc.chunk.ISectionHolderListener;
 import cubicchunks.cc.chunk.ISectionHolder;
 import net.minecraft.util.Util;
 import net.minecraft.util.math.ChunkPos;
@@ -160,7 +160,7 @@ public abstract class MixinChunkHolder implements ISectionHolder {
             this.entityTickingFuture = UNLOADED_CHUNK_FUTURE;
         }
 
-        ((ICubeHolderListener)this.field_219327_v).onUpdateSectionLevel(this.sectionPos, this::func_219281_j, this.chunkLevel, this::func_219275_d);
+        ((ISectionHolderListener)this.field_219327_v).onUpdateSectionLevel(this.sectionPos, this::func_219281_j, this.chunkLevel, this::func_219275_d);
         this.prevChunkLevel = this.chunkLevel;
     }
 
