@@ -21,24 +21,34 @@ import org.spongepowered.asm.mixin.*;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import javax.annotation.Nullable;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 
 @Mixin(TicketManager.class)
 public abstract class MixinTicketManager implements ITicketManager {
-    @Final @Shadow private Long2ObjectMap<ObjectSet<ServerPlayerEntity>> playersByChunkPos;
-    @Final @Shadow private Long2ObjectOpenHashMap<SortedArraySet<Ticket<?>>> tickets;
-    @Final @Shadow private LongSet field_219387_o;
+    private final Long2ObjectOpenHashMap<SortedArraySet<Ticket<?>>> tickets = new Long2ObjectOpenHashMap<>();
+    private final Long2ObjectMap<ObjectSet<ServerPlayerEntity>> playersBySectionPos = new Long2ObjectOpenHashMap<>();
+
+    private final Set<ChunkHolder> cubeHolders = new HashSet<>();
+    private final LongSet cubePositions = new LongOpenHashSet();
+
+    //@Final @Shadow private Long2ObjectMap<ObjectSet<ServerPlayerEntity>> playersByChunkPos;
+    //@Final @Shadow private LongSet chunkPositions;
     @Final @Shadow private Executor field_219388_p;
     @Shadow private long currentTime;
-    @Final @Shadow private Set<ChunkHolder> chunkHolders;
+    //@Final @Shadow private Set<ChunkHolder> chunkHolders;
     //Abstracts
-    @Shadow protected abstract ChunkHolder func_219335_b(long chunkPos);
+    @Shadow protected abstract ChunkHolder getChunkHolder(long chunkPos);
 
     @Shadow protected abstract boolean contains(long p_219371_1_);
+
+    @Shadow protected static int getLevel(SortedArraySet<Ticket<?>> p_229844_0_) {
+        throw new Error("Mixin did not apply correctly");
+    }
 
     private final CubeTicketTracker cc$ticketTracker = new CubeTicketTracker(this);
     private final PlayerCubeTracker cc$playerCubeTracker = new PlayerCubeTracker(this, 8);
@@ -56,11 +66,7 @@ public abstract class MixinTicketManager implements ITicketManager {
         this.cc$playerTicketThrottlerSorter = cubeTaskPriorityQueueSorter.createSorterExecutor(itaskexecutor);
     }
 
-    private static int getLevel(SortedArraySet<Ticket<?>> ticketSet) {
-        return !ticketSet.isEmpty() ? ticketSet.getSmallest().getLevel() : ChunkManager.MAX_LOADED_LEVEL + 1;
-    }
-
-    private void register(long sectionPosIn, Ticket<?> ticketIn) {
+    private void registerSection(long sectionPosIn, Ticket<?> ticketIn) {
         SortedArraySet<Ticket<?>> sortedarrayset = this.getTicketSet(sectionPosIn);
         int i = getLevel(sortedarrayset);
         Ticket<?> ticket = sortedarrayset.func_226175_a_(ticketIn);
@@ -71,10 +77,10 @@ public abstract class MixinTicketManager implements ITicketManager {
     }
     public void cc$register(long cubePos, Ticket<?> ticket)
     {
-        this.register(cubePos, ticket);
+        this.registerSection(cubePos, ticket);
     }
 
-    private void release(long sectionPosIn, Ticket<?> ticketIn) {
+    private void releaseSection(long sectionPosIn, Ticket<?> ticketIn) {
         SortedArraySet<Ticket<?>> sortedarrayset = this.getTicketSet(sectionPosIn);
         sortedarrayset.remove(ticketIn);
 
@@ -86,7 +92,7 @@ public abstract class MixinTicketManager implements ITicketManager {
     }
     public void cc$release(long cubePos, Ticket<?> ticket)
     {
-        this.release(cubePos, ticket);
+        this.releaseSection(cubePos, ticket);
     }
 
     private SortedArraySet<Ticket<?>> getTicketSet(long p_229848_1_) {
@@ -96,9 +102,9 @@ public abstract class MixinTicketManager implements ITicketManager {
     protected void forceCube(SectionPos pos, boolean add) {
         Ticket<SectionPos> ticket = new Ticket<>(CCTicketType.CCFORCED, 31, pos);
         if (add) {
-            this.register(pos.asLong(), ticket);
+            this.registerSection(pos.asLong(), ticket);
         } else {
-            this.release(pos.asLong(), ticket);
+            this.releaseSection(pos.asLong(), ticket);
         }
 
     }
@@ -125,20 +131,20 @@ public abstract class MixinTicketManager implements ITicketManager {
      * @author NotStirred
      * @reason to overwrite the vanilla processUpdates
      */
-    @Overwrite
-    public boolean processUpdates(ChunkManager chunkManager) {
+    @Inject(method = "processUpdates", at = @At("RETURN"), cancellable = true)
+    public void processUpdates(ChunkManager chunkManager, CallbackInfoReturnable<Boolean> callbackInfoReturnable) {
         this.cc$playerCubeTracker.processAllUpdates();
         this.cc$playerTicketTracker.processAllUpdates();
         int i = Integer.MAX_VALUE - this.cc$ticketTracker.update(Integer.MAX_VALUE);
         boolean flag = i != 0;
-
-        if (!this.chunkHolders.isEmpty()) {
-            this.chunkHolders.forEach((chunkHolder) -> ((InvokeChunkHolder) chunkHolder).processUpdatesCC(chunkManager));
-            this.chunkHolders.clear();
-            return true;
+        if (!this.cubeHolders.isEmpty()) {
+            this.cubeHolders.forEach((cubeHolder) -> ((InvokeChunkHolder) cubeHolder).processUpdatesCC(chunkManager));
+            this.cubeHolders.clear();
+            callbackInfoReturnable.setReturnValue(true);
+            return;
         } else {
-            if (!this.field_219387_o.isEmpty()) {
-                LongIterator longiterator = this.field_219387_o.iterator();
+            if (!this.cubePositions.isEmpty()) {
+                LongIterator longiterator = this.cubePositions.iterator();
 
                 while (longiterator.hasNext()) {
                     long j = longiterator.nextLong();
@@ -155,11 +161,10 @@ public abstract class MixinTicketManager implements ITicketManager {
                         }));
                     }
                 }
-
-                this.field_219387_o.clear();
+                this.cubePositions.clear();
             }
-
-            return flag;
+            callbackInfoReturnable.setReturnValue(flag | callbackInfoReturnable.getReturnValueZ());
+            return;
         }
     }
 
@@ -189,7 +194,7 @@ public abstract class MixinTicketManager implements ITicketManager {
     @Override
     public ChunkHolder cc$getChunkHolder(long chunkPos)
     {
-        return this.func_219335_b(chunkPos);
+        return this.getChunkHolder(chunkPos);
     }
 
     @Override
@@ -199,41 +204,41 @@ public abstract class MixinTicketManager implements ITicketManager {
 
     @Override
     public <T> void registerWithLevel(TicketType<T> type, SectionPos pos, int level, T value) {
-        this.register(pos.asLong(), new Ticket<>(type, level, value));
+        this.registerSection(pos.asLong(), new Ticket<>(type, level, value));
     }
 
     @Override
     public <T> void releaseWithLevel(TicketType<T> type, SectionPos pos, int level, T value) {
         Ticket<T> ticket = new Ticket<>(type, level, value);
-        this.release(pos.asLong(), ticket);
+        this.releaseSection(pos.asLong(), ticket);
     }
 
     @Override
     public <T> void register(TicketType<T> type, SectionPos pos, int distance, T value) {
-        this.register(pos.asLong(), new Ticket<>(type, 33 - distance, value));
+        this.registerSection(pos.asLong(), new Ticket<>(type, 33 - distance, value));
     }
 
     @Override
     public <T> void release(TicketType<T> type, SectionPos pos, int distance, T value) {
         Ticket<T> ticket = new Ticket<>(type, 33 - distance, value);
-        this.release(pos.asLong(), ticket);
+        this.releaseSection(pos.asLong(), ticket);
     }
 
     @Override
     public void updatePlayerPosition(SectionPos sectionPosIn, ServerPlayerEntity player) {
-        long i = sectionPosIn.asChunkPos().asLong();
-        this.playersByChunkPos.computeIfAbsent(i, (p_219361_0_) -> new ObjectOpenHashSet<>()).add(player);
+        long i = sectionPosIn.asLong();
+        this.playersBySectionPos.computeIfAbsent(i, (x) -> new ObjectOpenHashSet<>()).add(player);
         this.cc$playerCubeTracker.updateSourceLevel(i, 0, true);
         this.cc$playerTicketTracker.updateSourceLevel(i, 0, true);
     }
 
     @Override
     public void removePlayer(SectionPos sectionPosIn, ServerPlayerEntity player) {
-        long i = sectionPosIn.asChunkPos().asLong();
-        ObjectSet<ServerPlayerEntity> objectset = this.playersByChunkPos.get(i);
+        long i = sectionPosIn.asLong();
+        ObjectSet<ServerPlayerEntity> objectset = this.playersBySectionPos.get(i);
         objectset.remove(player);
         if (objectset.isEmpty()) {
-            this.playersByChunkPos.remove(i);
+            this.playersBySectionPos.remove(i);
             this.cc$playerCubeTracker.updateSourceLevel(i, Integer.MAX_VALUE, false);
             this.cc$playerTicketTracker.updateSourceLevel(i, Integer.MAX_VALUE, false);
         }
@@ -243,29 +248,24 @@ public abstract class MixinTicketManager implements ITicketManager {
      * Returns the number of chunks taken into account when calculating the mob cap
      */
     @Override
-    public int getSpawningChunksCount() {
+    public int getSpawningCubesCount() {
         this.cc$playerCubeTracker.processAllUpdates();
         return this.cc$playerCubeTracker.cubesInRange.size();
     }
 
     @Override
-    public boolean isOutsideSpawningRadius(long sectionPosIn) {
+    public boolean isSectionOutsideSpawningRadius(long sectionPosIn) {
         this.cc$playerCubeTracker.processAllUpdates();
         return this.cc$playerCubeTracker.cubesInRange.containsKey(sectionPosIn);
     }
 
     @Override
-    public String func_225412_c() {
-        return this.cc$levelUpdateListener.debugString();
-    }
-
-    @Override
-    public Long2ObjectOpenHashMap<SortedArraySet<Ticket<?>>> getTickets() {
+    public Long2ObjectOpenHashMap<SortedArraySet<Ticket<?>>> getSectionTickets() {
         return tickets;
     }
 
     @Override
-    public ITaskExecutor<CubeTaskPriorityQueueSorter.FunctionEntry<Runnable>> getCc$playerTicketThrottler() {
+    public ITaskExecutor<CubeTaskPriorityQueueSorter.FunctionEntry<Runnable>> getSectionPlayerTicketThrottler() {
         return cc$playerTicketThrottler;
     }
 
@@ -274,15 +274,15 @@ public abstract class MixinTicketManager implements ITicketManager {
         return cc$playerTicketThrottlerSorter;
     }
 
-    @Override
-    public LongSet getChunkPositions() {
-        return field_219387_o;
-    }
+//    @Override
+//    public LongSet getChunkPositions() {
+//        return cubePositions;
+//    }
 
     @Override
-    public Set<ChunkHolder> getChunkHolders()
+    public Set<ChunkHolder> getCubeHolders()
     {
-        return this.chunkHolders;
+        return this.cubeHolders;
     }
 
     @Override

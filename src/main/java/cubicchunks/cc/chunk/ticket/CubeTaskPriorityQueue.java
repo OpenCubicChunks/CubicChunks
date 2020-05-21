@@ -29,7 +29,7 @@ public class CubeTaskPriorityQueue<T> {
       this.sizeMax = maxSize;
    }
 
-   protected void updateLevel(int p_219407_1_, SectionPos pos, int p_219407_3_) {
+   protected void updateSectionLevel(int p_219407_1_, SectionPos pos, int p_219407_3_) {
       if (p_219407_1_ < levelCount) {
          Long2ObjectLinkedOpenHashMap<List<Optional<T>>> long2objectlinkedopenhashmap = this.levelToPosToElements.get(p_219407_1_);
          List<Optional<T>> list = long2objectlinkedopenhashmap.remove(pos.asLong());

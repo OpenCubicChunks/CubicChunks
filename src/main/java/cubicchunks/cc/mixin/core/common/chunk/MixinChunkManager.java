@@ -1,20 +1,40 @@
 package cubicchunks.cc.mixin.core.common.chunk;
 
+import com.google.common.collect.ImmutableList;
+import com.mojang.datafixers.DataFixer;
 import cubicchunks.cc.chunk.IChunkManager;
 import cubicchunks.cc.chunk.ICubeHolder;
 import cubicchunks.cc.chunk.ticket.CubeTaskPriorityQueueSorter;
 import it.unimi.dsi.fastutil.longs.Long2ObjectLinkedOpenHashMap;
+import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
+import net.minecraft.util.concurrent.DelegatedTaskExecutor;
+import net.minecraft.util.concurrent.ITaskExecutor;
+import net.minecraft.util.concurrent.ThreadTaskExecutor;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.chunk.ChunkTaskPriorityQueueSorter;
+import net.minecraft.world.chunk.IChunkLightProvider;
+import net.minecraft.world.chunk.listener.IChunkStatusListener;
+import net.minecraft.world.gen.ChunkGenerator;
+import net.minecraft.world.gen.feature.template.TemplateManager;
 import net.minecraft.world.server.ChunkHolder;
 import net.minecraft.world.server.ChunkManager;
+import net.minecraft.world.server.ServerWorld;
 import net.minecraft.world.server.ServerWorldLightManager;
+import net.minecraft.world.storage.DimensionSavedDataManager;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 import javax.annotation.Nullable;
+
+import java.io.File;
+import java.util.concurrent.Executor;
+import java.util.function.Supplier;
 
 import static net.minecraft.util.math.SectionPos.*;
 import static net.minecraft.world.server.ChunkManager.MAX_LOADED_LEVEL;
@@ -24,15 +44,24 @@ public class MixinChunkManager implements IChunkManager {
 
     private CubeTaskPriorityQueueSorter cubeTaskPriorityQueueSorter;
 
-    @Shadow @Final private ChunkTaskPriorityQueueSorter field_219263_q;
-
-    @Shadow @Final private Long2ObjectLinkedOpenHashMap<ChunkHolder> loadedChunks;
-    @Shadow @Final private LongSet unloadableChunks;
-    @Shadow @Final private Long2ObjectLinkedOpenHashMap<ChunkHolder> chunksToUnload;
+    private final Long2ObjectLinkedOpenHashMap<ChunkHolder> loadedCubes = new Long2ObjectLinkedOpenHashMap<>();
+    private final LongSet unloadableCubes = new LongOpenHashSet();
+    private final Long2ObjectLinkedOpenHashMap<ChunkHolder> cubesToUnload = new Long2ObjectLinkedOpenHashMap<>();
 
     @Shadow @Final private ServerWorldLightManager lightManager;
 
     @Shadow private boolean immutableLoadedChunksDirty;
+
+    @Inject(method = "<init>", at = @At("RETURN"), locals = LocalCapture.CAPTURE_FAILHARD)
+    private void onConstruct(ServerWorld worldIn, File worldDirectory, DataFixer p_i51538_3_, TemplateManager templateManagerIn,
+                             Executor p_i51538_5_, ThreadTaskExecutor mainThreadIn, IChunkLightProvider p_i51538_7_,
+                             ChunkGenerator generatorIn, IChunkStatusListener p_i51538_9_, Supplier p_i51538_10_,
+                             int p_i51538_11_, CallbackInfo ci, DelegatedTaskExecutor delegatedtaskexecutor,
+                             ITaskExecutor itaskexecutor, DelegatedTaskExecutor delegatedtaskexecutor1) {
+
+        this.cubeTaskPriorityQueueSorter = new CubeTaskPriorityQueueSorter(ImmutableList.of(delegatedtaskexecutor,
+                itaskexecutor, delegatedtaskexecutor1), p_i51538_5_, Integer.MAX_VALUE);
+    }
 
     @Nullable
     @Override
@@ -46,26 +75,29 @@ public class MixinChunkManager implements IChunkManager {
 
             if (holder != null) {
                 if (newLevel > MAX_LOADED_LEVEL) {
-                    this.unloadableChunks.add(sectionPosIn);
+                    this.unloadableCubes.add(sectionPosIn);
                 } else {
-                    this.unloadableChunks.remove(sectionPosIn);
+                    this.unloadableCubes.remove(sectionPosIn);
                 }
             }
 
             if (newLevel <= MAX_LOADED_LEVEL && holder == null) {
-                holder = this.chunksToUnload.remove(sectionPosIn);
+                holder = this.cubesToUnload.remove(sectionPosIn);
                 if (holder != null) {
                     holder.setChunkLevel(newLevel);
                 } else {
 
-                    holder = new ChunkHolder(new ChunkPos(extractX(sectionPosIn), extractZ(sectionPosIn)), newLevel, this.lightManager, this.field_219263_q, (ChunkHolder.IPlayerProvider) this);
+                    holder = new ChunkHolder(new ChunkPos(extractX(sectionPosIn), extractZ(sectionPosIn)), newLevel, this.lightManager,
+                            this.cubeTaskPriorityQueueSorter, (ChunkHolder.IPlayerProvider) this);
                     ((ICubeHolder)holder).setYPos(extractY(sectionPosIn));
                 }
-                this.loadedChunks.put(sectionPosIn, holder);
+                this.loadedCubes.put(sectionPosIn, holder);
                 this.immutableLoadedChunksDirty = true;
             }
 
             return holder;
         }
     }
+
+
 }

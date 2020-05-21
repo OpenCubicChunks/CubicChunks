@@ -4,11 +4,13 @@ package cubicchunks.cc.chunk.ticket;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Sets;
 import com.mojang.datafixers.util.Either;
+import cubicchunks.cc.chunk.ICubeHolderListener;
 import net.minecraft.util.Unit;
 import net.minecraft.util.Util;
 import net.minecraft.util.concurrent.DelegatedTaskExecutor;
 import net.minecraft.util.concurrent.ITaskExecutor;
 import net.minecraft.util.concurrent.ITaskQueue;
+import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.SectionPos;
 import net.minecraft.world.server.ChunkHolder;
 import org.apache.logging.log4j.LogManager;
@@ -26,7 +28,7 @@ import java.util.function.IntSupplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class CubeTaskPriorityQueueSorter  implements AutoCloseable {
+public class CubeTaskPriorityQueueSorter implements AutoCloseable, ChunkHolder.IListener, ICubeHolderListener {
     private static final Logger LOGGER = LogManager.getLogger();
     private final Map<ITaskExecutor<?>, CubeTaskPriorityQueue<? extends Function<ITaskExecutor<Unit>, ?>>> queues;
     private final Set<ITaskExecutor<?>> actors;
@@ -60,18 +62,18 @@ public class CubeTaskPriorityQueueSorter  implements AutoCloseable {
         })).join();
     }
 
-    public ITaskExecutor<CubeTaskPriorityQueueSorter.RunnableEntry> createSorterExecutor(ITaskExecutor<Runnable> p_219091_1_) {
-        return this.sorter.<ITaskExecutor<CubeTaskPriorityQueueSorter.RunnableEntry>>func_213141_a((p_219080_2_) -> new ITaskQueue.RunnableWithPriority(0, () -> p_219080_2_.enqueue(ITaskExecutor.inline("chunk priority sorter around " + p_219091_1_.getName(), (p_219075_2_) -> this.sort(p_219091_1_, p_219075_2_.pos, p_219075_2_.runnable, p_219075_2_.field_219436_c))))).join();
+    public void onUpdateSectionLevel(SectionPos pos, IntSupplier getLevel, int level, IntConsumer setLevel) {
+        this.sorter.enqueue(new ITaskQueue.RunnableWithPriority(0, () -> {
+            int i = getLevel.getAsInt();
+            this.queues.values().forEach((cubeTaskPriorityQueue) -> {
+                cubeTaskPriorityQueue.updateSectionLevel(i, pos, level);
+            });
+            setLevel.accept(level);
+        }));
     }
 
-    public void updateLevel(SectionPos pos, IntSupplier p_219066_2_, int p_219066_3_, IntConsumer p_219066_4_) {
-        this.sorter.enqueue(new ITaskQueue.RunnableWithPriority(0, () -> {
-            int i = p_219066_2_.getAsInt();
-            this.queues.values().forEach((p_219076_3_) -> {
-                p_219076_3_.updateLevel(i, pos, p_219066_3_);
-            });
-            p_219066_4_.accept(p_219066_3_);
-        }));
+    public ITaskExecutor<CubeTaskPriorityQueueSorter.RunnableEntry> createSorterExecutor(ITaskExecutor<Runnable> p_219091_1_) {
+        return this.sorter.<ITaskExecutor<CubeTaskPriorityQueueSorter.RunnableEntry>>func_213141_a((p_219080_2_) -> new ITaskQueue.RunnableWithPriority(0, () -> p_219080_2_.enqueue(ITaskExecutor.inline("chunk priority sorter around " + p_219091_1_.getName(), (p_219075_2_) -> this.sort(p_219091_1_, p_219075_2_.pos, p_219075_2_.runnable, p_219075_2_.field_219436_c))))).join();
     }
 
     private <T> void sort(ITaskExecutor<T> p_219074_1_, long p_219074_2_, Runnable p_219074_4_, boolean p_219074_5_) {
@@ -137,6 +139,11 @@ public class CubeTaskPriorityQueueSorter  implements AutoCloseable {
         this.queues.keySet().forEach(ITaskExecutor::close);
     }
 
+    @Override
+    public void func_219066_a(ChunkPos pos, IntSupplier p_219066_2_, int p_219066_3_, IntConsumer p_219066_4_) {
+        throw new AbstractMethodError("This function should never be called! EVER");
+    }
+
     public static final class FunctionEntry<T> {
         private final Function<ITaskExecutor<Unit>, T> task;
         private final long SectionPos;
@@ -159,8 +166,5 @@ public class CubeTaskPriorityQueueSorter  implements AutoCloseable {
             this.pos = pos;
             this.field_219436_c = p_i50026_4_;
         }
-    }
-    public interface IListener {
-        void func_219066_a(SectionPos pos, IntSupplier p_219066_2_, int p_219066_3_, IntConsumer p_219066_4_);
     }
 }

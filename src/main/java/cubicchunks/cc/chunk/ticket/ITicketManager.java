@@ -39,23 +39,21 @@ public interface ITicketManager {
 
     void removePlayer(SectionPos sectionPosIn, ServerPlayerEntity player);
 
-    int getSpawningChunksCount();
+    int getSpawningCubesCount();
 
-    boolean isOutsideSpawningRadius(long sectionPosIn);
+    boolean isSectionOutsideSpawningRadius(long sectionPosIn);
 
-    String func_225412_c();
-
-    Long2ObjectOpenHashMap<SortedArraySet<Ticket<?>>> getTickets();
+    Long2ObjectOpenHashMap<SortedArraySet<Ticket<?>>> getSectionTickets();
 
     Long2ObjectMap<ObjectSet<ServerPlayerEntity>> getplayersByChunkPos();
 
-    ITaskExecutor<CubeTaskPriorityQueueSorter.FunctionEntry<Runnable>> getCc$playerTicketThrottler();
+    ITaskExecutor<CubeTaskPriorityQueueSorter.FunctionEntry<Runnable>> getSectionPlayerTicketThrottler();
 
     ITaskExecutor<CubeTaskPriorityQueueSorter.RunnableEntry> getplayerTicketThrottlerSorter();
 
     LongSet getChunkPositions();
 
-    Set<ChunkHolder> getChunkHolders();
+    Set<ChunkHolder> getCubeHolders();
 
     ChunkHolder cc$getChunkHolder(long chunkPosIn);
 
