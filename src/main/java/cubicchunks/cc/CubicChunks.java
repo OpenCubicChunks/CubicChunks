@@ -1,6 +1,7 @@
 package cubicchunks.cc;
 
 import cubicchunks.cc.misc.TestWorldType;
+import cubicchunks.cc.network.PacketDispatcher;
 import net.minecraft.world.WorldType;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.gen.GenerationStage;
@@ -28,6 +29,8 @@ public class CubicChunks {
     public static final Logger LOGGER = LogManager.getLogger();
     public static WorldType CUBIC = new TestWorldType();
 
+    public static final String PROTOCOL_VERSION = "0";
+
     public CubicChunks() {
         // Register the setup method for modloading
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::setup);
@@ -40,6 +43,7 @@ public class CubicChunks {
 
     //Clear ALL Generation stages to prevent the Y Height Crashes
     private void setup(final FMLCommonSetupEvent event) {
+        PacketDispatcher.register();
         for (Biome biome : ForgeRegistries.BIOMES) {
             for (GenerationStage.Decoration stage : GenerationStage.Decoration.values()) {
                 biome.getFeatures(stage).clear();
