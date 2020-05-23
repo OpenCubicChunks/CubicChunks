@@ -22,6 +22,7 @@ import net.minecraft.world.gen.Heightmap;
 import net.minecraft.world.gen.feature.structure.StructureStart;
 
 import javax.annotation.Nullable;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
