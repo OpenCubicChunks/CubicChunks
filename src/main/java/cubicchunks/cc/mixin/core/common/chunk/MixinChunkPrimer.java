@@ -8,14 +8,9 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 
 @Mixin(ChunkPrimer.class)
-public class MixinChunkPrimer {
+public abstract class MixinChunkPrimer {
 
-    /*
-  This is done to raise worldheight.
-  Definitely not permanent.
-   */
-    @Final
-    @Shadow
-    private final ChunkSection[] sections = new ChunkSection[Math.round((float) CubicChunks.worldMAXHeight / 16)];
+    //This is done to raise worldheight. Definitely not permanent.
+    @Final @Shadow private final ChunkSection[] sections = new ChunkSection[Math.round((float) CubicChunks.worldMAXHeight / 16)];
 
 }

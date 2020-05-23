@@ -122,12 +122,8 @@ public abstract class MixinTicketManager implements ITicketManager {
         this.cc$playerTicketTracker.setViewDistance(viewDistance);
     }
 
-    //BEGIN OVERWRITE
+    //BEGIN INJECT
 
-    /**
-     * @author NotStirred
-     * @reason to overwrite the vanilla processUpdates
-     */
     @Inject(method = "processUpdates", at = @At("RETURN"), cancellable = true)
     public void processUpdates(ChunkManager chunkManager, CallbackInfoReturnable<Boolean> callbackInfoReturnable) {
         this.cc$playerCubeTracker.processAllUpdates();
@@ -164,6 +160,8 @@ public abstract class MixinTicketManager implements ITicketManager {
             return;
         }
     }
+
+    //BEGIN OVERWRITE
 
     //TODO: check if there is another way to do this
     /**
