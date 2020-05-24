@@ -11,6 +11,8 @@ import net.minecraft.world.chunk.ChunkSection;
 
 import java.util.HashMap;
 
+//ChunkSection is the simple section, with only basic information in it.
+//WorldSection is the complete section, with all entity, fluid, etc information in it.
 public class WorldSection extends ChunkSection {
     private final SectionPos sectionPos;
 

@@ -34,7 +34,7 @@ public abstract class MixinTicketManager implements ITicketManager {
     private final Long2ObjectMap<ObjectSet<ServerPlayerEntity>> playersBySectionPos = new Long2ObjectOpenHashMap<>();
 
     private final Set<ChunkHolder> cubeHolders = new HashSet<>();
-    private final LongSet cubePositions = new LongOpenHashSet();
+    private final LongSet sectionPositions = new LongOpenHashSet();
 
 
     //@Final @Shadow private Long2ObjectMap<ObjectSet<ServerPlayerEntity>> playersByChunkPos;
@@ -46,6 +46,8 @@ public abstract class MixinTicketManager implements ITicketManager {
     @Shadow protected static int getLevel(SortedArraySet<Ticket<?>> p_229844_0_) {
         throw new Error("Mixin did not apply correctly");
     }
+
+    @Shadow protected abstract void register(long chunkPosIn, Ticket<?> ticketIn);
 
     private final CubeTicketTracker cc$ticketTracker = new CubeTicketTracker(this);
     private final PlayerCubeTracker cc$playerCubeTracker = new PlayerCubeTracker(this, 8);
@@ -71,6 +73,7 @@ public abstract class MixinTicketManager implements ITicketManager {
         if (ticketIn.getLevel() < i) {
             this.cc$ticketTracker.updateSourceLevel(sectionPosIn, ticketIn.getLevel(), true);
         }
+        this.register(SectionPos.from(sectionPosIn).asChunkPos().asLong(), ticketIn);
     }
     public void cc$register(long cubePos, Ticket<?> ticket)
     {
@@ -136,13 +139,13 @@ public abstract class MixinTicketManager implements ITicketManager {
             callbackInfoReturnable.setReturnValue(true);
             return;
         } else {
-            if (!this.cubePositions.isEmpty()) {
-                LongIterator longiterator = this.cubePositions.iterator();
+            if (!this.sectionPositions.isEmpty()) {
+                LongIterator longiterator = this.sectionPositions.iterator();
 
                 while (longiterator.hasNext()) {
                     long j = longiterator.nextLong();
                     if (this.getTicketSet(j).stream().anyMatch((p_219369_0_) -> p_219369_0_.getType() == CCTicketType.CCPLAYER)) {
-                        ChunkHolder chunkholder = ((InvokeChunkManager) chunkManager).chunkHold(j);
+                        ChunkHolder chunkholder = ((InvokeChunkManager) chunkManager).chunkHold(SectionPos.from(j).asChunkPos().asLong());
                         if (chunkholder == null) {
                             throw new IllegalStateException();
                         }
@@ -154,7 +157,7 @@ public abstract class MixinTicketManager implements ITicketManager {
                         }));
                     }
                 }
-                this.cubePositions.clear();
+                this.sectionPositions.clear();
             }
             callbackInfoReturnable.setReturnValue(flag | callbackInfoReturnable.getReturnValueZ());
             return;
@@ -257,10 +260,10 @@ public abstract class MixinTicketManager implements ITicketManager {
         return cc$playerTicketThrottlerSorter;
     }
 
-//    @Override
-//    public LongSet getChunkPositions() {
-//        return cubePositions;
-//    }
+    @Override
+    public LongSet getSectionPositions() {
+        return sectionPositions;
+    }
 
     @Override
     public Set<ChunkHolder> getCubeHolders()
@@ -274,7 +277,13 @@ public abstract class MixinTicketManager implements ITicketManager {
     }
 
     @Override
-    public CubeTaskPriorityQueueSorter getlevelUpdateListener() {
+    public CubeTaskPriorityQueueSorter getCubeTaskPriorityQueueSorter() {
         return cc$levelUpdateListener;
+    }
+
+    @Override
+    public Long2ObjectMap<ObjectSet<ServerPlayerEntity>> getPlayersBySectionPos()
+    {
+        return this.playersBySectionPos;
     }
 }

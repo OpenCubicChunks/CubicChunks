@@ -1,5 +1,6 @@
-package cubicchunks.cc.chunk;
+package cubicchunks.cc.chunk.section;
 
+import cubicchunks.cc.chunk.ISection;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import it.unimi.dsi.fastutil.shorts.ShortList;
 import net.minecraft.block.Block;
@@ -22,7 +23,6 @@ import net.minecraft.world.gen.Heightmap;
 import net.minecraft.world.gen.feature.structure.StructureStart;
 
 import javax.annotation.Nullable;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
@@ -30,17 +30,10 @@ import java.util.stream.Stream;
 
 public class SectionPrimerWrapper extends SectionPrimer implements ISection, IChunk {
 
-    SectionPos sectionPos;
+    WorldSection worldSection;
     public SectionPrimerWrapper(SectionPos pos)
     {
         super(pos, null);
-        this.sectionPos = pos;
-    }
-
-    @Nullable
-    @Override
-    public BlockState setBlockState(BlockPos pos, BlockState state, boolean isMoving) {
-        return this.getSection().setBlockState(pos.getX(), pos.getY(), pos.getZ(), state);
     }
 
     @Override

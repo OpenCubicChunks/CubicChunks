@@ -42,7 +42,7 @@ public class PlayerCubeTracker extends SectionDistanceGraph {
     }
 
     private boolean hasPlayerInChunk(long sectionPosIn) {
-        ObjectSet<ServerPlayerEntity> objectset = iTicketManager.getplayersByChunkPos().get(sectionPosIn);
+        ObjectSet<ServerPlayerEntity> objectset = iTicketManager.getPlayersBySectionPos().get(sectionPosIn);
         return objectset != null && !objectset.isEmpty();
     }
 
