@@ -24,7 +24,7 @@ public class PlayerTicketTracker extends PlayerCubeTracker {
     }
 
     public void setViewDistance(int viewDistanceIn) {
-        for (it.unimi.dsi.fastutil.longs.Long2ByteMap.Entry entry : this.cubesInRange.long2ByteEntrySet()) {
+        for (it.unimi.dsi.fastutil.longs.Long2ByteMap.Entry entry : this.sectionsInRange.long2ByteEntrySet()) {
             byte b0 = entry.getByteValue();
             long i = entry.getLongKey();
             this.updateTicket(i, b0, this.isWithinViewDistance(b0), b0 <= viewDistanceIn - 2);
@@ -43,14 +43,14 @@ public class PlayerTicketTracker extends PlayerCubeTracker {
                             iTicketManager.cc$register(sectionPosIn, ticket);
                             iTicketManager.getSectionPositions().add(sectionPosIn);
                         } else {
-                            iTicketManager.getplayerTicketThrottlerSorter().enqueue(CubeTaskPriorityQueueSorter.createSorterMsg(() -> {
+                            iTicketManager.getPlayerTicketThrottlerSorter().enqueue(CubeTaskPriorityQueueSorter.createSorterMsg(() -> {
                             }, sectionPosIn, false));
                         }
 
                     });
                 }, sectionPosIn, () -> distance));
             } else {
-                iTicketManager.getplayerTicketThrottlerSorter().enqueue(CubeTaskPriorityQueueSorter.createSorterMsg(() -> {
+                iTicketManager.getPlayerTicketThrottlerSorter().enqueue(CubeTaskPriorityQueueSorter.createSorterMsg(() -> {
                     iTicketManager.executor().execute(() -> {
                         iTicketManager.cc$release(sectionPosIn, ticket);
                     });

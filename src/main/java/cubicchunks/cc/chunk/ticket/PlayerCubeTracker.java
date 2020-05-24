@@ -7,7 +7,7 @@ import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.util.SectionDistanceGraph;
 
 public class PlayerCubeTracker extends SectionDistanceGraph {
-    public final Long2ByteMap cubesInRange = new Long2ByteOpenHashMap();
+    public final Long2ByteMap sectionsInRange = new Long2ByteOpenHashMap();
     protected final int range;
 
     private final ITicketManager iTicketManager;
@@ -15,20 +15,20 @@ public class PlayerCubeTracker extends SectionDistanceGraph {
     public PlayerCubeTracker(ITicketManager iTicketManager, int i) {
         super(i + 2, 16, 256);
         this.range = i;
-        this.cubesInRange.defaultReturnValue((byte) (i + 2));
+        this.sectionsInRange.defaultReturnValue((byte) (i + 2));
         this.iTicketManager = iTicketManager;
     }
 
     protected int getLevel(long sectionPosIn) {
-        return this.cubesInRange.get(sectionPosIn);
+        return this.sectionsInRange.get(sectionPosIn);
     }
 
     protected void setLevel(long sectionPosIn, int level) {
         byte b0;
         if (level > this.range) {
-            b0 = this.cubesInRange.remove(sectionPosIn);
+            b0 = this.sectionsInRange.remove(sectionPosIn);
         } else {
-            b0 = this.cubesInRange.put(sectionPosIn, (byte) level);
+            b0 = this.sectionsInRange.put(sectionPosIn, (byte) level);
         }
 
         this.chunkLevelChanged(sectionPosIn, b0, level);
