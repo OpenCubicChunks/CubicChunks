@@ -29,6 +29,7 @@
         "common.MixinIWorldGenerationReader",
         "common.MixinMinecraftServer",
         "common.MixinServerChunkProvider",
+        "common.progress.MixinLoggingChunkStatusListener",
         "common.ticket.interfaces.ChunkTicketTrackerFactory",
         "common.ticket.interfaces.InvokeLevelBasedGraph",
         "common.ticket.interfaces.InvokeTicket",
@@ -46,7 +47,10 @@
         "client.MixinDebugRenderChunkBorder",
         "client.MixinViewFrustum",
         "client.MixinWorld",
-        "client.MixinWorldRenderer"
+        "client.MixinWorldRenderer",
+        "client.progress.MixinChainedChunkStatusListener",
+        "client.progress.MixinTrackingChunkStatusListener",
+        "client.progress.MixinWorldLoadProgressScreen"
     ],
     "server": []
 }

@@ -1,5 +1,6 @@
 package cubicchunks.cc.mixin.core.common;
 
+import cubicchunks.cc.chunk.ISectionStatusListener;
 import cubicchunks.cc.server.IServerChunkProvider;
 import it.unimi.dsi.fastutil.longs.LongIterator;
 import net.minecraft.server.MinecraftServer;
@@ -8,6 +9,7 @@ import net.minecraft.util.Util;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.SectionPos;
+import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraft.world.ForcedChunksSaveData;
 import net.minecraft.world.chunk.listener.IChunkStatusListener;
@@ -18,14 +20,9 @@ import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(MinecraftServer.class)
-public class MixinMinecraftServer {
-
-
+public abstract class MixinMinecraftServer {
 
     @Shadow
     protected long serverTime = Util.milliTime();
@@ -33,28 +30,33 @@ public class MixinMinecraftServer {
     @Shadow
     private boolean isRunningScheduledTasks;
 
-
     @Shadow @Final private static Logger LOGGER;
+
+    @Shadow protected abstract void setUserMessage(ITextComponent userMessageIn);
 
     /**
      * @author NotStirred
      */
     @Overwrite
-    protected void loadInitialChunks(IChunkStatusListener p_213186_1_) {
-        //this.setUserMessage(new TranslationTextComponent("menu.generatingTerrain"));
+    protected void loadInitialChunks(IChunkStatusListener statusListener) {
+        this.setUserMessage(new TranslationTextComponent("menu.generatingTerrain"));
         ServerWorld serverworld = ((IMinecraftServer)this).getServerWorld(DimensionType.OVERWORLD);
         LOGGER.info("Preparing start region for dimension " + DimensionType.getKey(serverworld.dimension.getType()));
         BlockPos blockpos = serverworld.getSpawnPoint();
-        p_213186_1_.start(new ChunkPos(blockpos));
+        SectionPos sectionPos = SectionPos.from(blockpos);
+
+        statusListener.start(new ChunkPos(blockpos));
+        ((ISectionStatusListener) statusListener).startSections(sectionPos);
+
         ServerChunkProvider serverchunkprovider = serverworld.getChunkProvider();
         serverchunkprovider.getLightManager().func_215598_a(500);
         this.serverTime = Util.milliTime();
-        ((IServerChunkProvider)serverchunkprovider).registerTicket(TicketType.START, SectionPos.from(blockpos), 11, Unit.INSTANCE);
+        ((IServerChunkProvider)serverchunkprovider).registerTicket(TicketType.START, sectionPos, 11, Unit.INSTANCE);
 
-        while(serverchunkprovider.getLoadedChunksCount() != 441) {
+        while(serverchunkprovider.getLoadedChunksCount() != 21*21*22) {//441 from columns and 21^3 from CC
             this.serverTime = Util.milliTime() + 10L;
             ((IMinecraftServer)this).runSchedule();
-            LOGGER.info("Current loaded chunks: " + serverchunkprovider.getLoadedChunksCount());
+            //LOGGER.info("Current loaded chunks: " + serverchunkprovider.getLoadedChunksCount());
         }
 
         this.serverTime = Util.milliTime() + 10L;
@@ -76,7 +78,7 @@ public class MixinMinecraftServer {
 
         this.serverTime = Util.milliTime() + 10L;
         ((IMinecraftServer)this).runSchedule();
-        p_213186_1_.stop();
+        statusListener.stop();
         serverchunkprovider.getLightManager().func_215598_a(5);
     }
 }

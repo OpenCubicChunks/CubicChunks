@@ -2,6 +2,7 @@ package io.github.opencubicchunks.gradle;
 
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
+import org.gradle.api.Task;
 import org.gradle.api.plugins.JavaPluginConvention;
 
 import javax.annotation.Nonnull;
@@ -13,7 +14,9 @@ public class MixinAutoGen implements Plugin<Project> {
     @Override public void apply(@Nonnull Project target) {
         MixinGenExtension extension = new MixinGenExtension();
         target.getExtensions().add("mixinGen", extension);
-        target.getTasks().create("generateMixinConfigs").doLast(task -> {
+        Task generateMixinConfigs = target.getTasks().create("generateMixinConfigs");
+        generateMixinConfigs.setGroup("mixin");
+        generateMixinConfigs.doLast(task -> {
             JavaPluginConvention convention = Utils.getJavaPluginConvention(target);
             try {
                 extension.generateFiles(convention);
