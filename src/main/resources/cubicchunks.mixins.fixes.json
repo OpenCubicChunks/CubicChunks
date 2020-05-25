@@ -1,24 +1,16 @@
 {
-    "required": true,
+    "required": false,
     "package": "io.github.opencubicchunks.cubicchunks.core.asm.mixin.fixes",
     "refmap": "cubicchunks.mixins.refmap.json",
     "compatibilityLevel": "JAVA_8",
     "minVersion": "0.7.10",
-    "injectors": {
-        "defaultRequire": 1
-    },
     "overwrites": {
         "conformVisibility": true
     },
     "mixins": [
         "common.EntityBat_AiHeightLimit",
-        "common.fakeheight.IASMEventHandler",
-        "common.fakeheight.IEventBus",
-        "common.fakeheight.MixinBiomeDecorator",
-        "common.fakeheight.MixinForgeEventFactory",
-        "common.fakeheight.MixinTerrainGen",
-        "common.isblockloaded.MixinEntity",
         "common.MixinBiomeTemperatureConfig",
+        "common.MixinBlockBeaconAsyncUpdate",
         "common.MixinBlockChorusFlower",
         "common.MixinBlockFalling_HeightLimits",
         "common.MixinBlockGrass",
@@ -41,6 +33,12 @@
         "common.MixinTileEntityEndGateway",
         "common.MixinWalkNodeProcessor_HeightLimit",
         "common.MixinWorld",
+        "common.fakeheight.IASMEventHandler",
+        "common.fakeheight.IEventBus",
+        "common.fakeheight.MixinBiomeDecorator",
+        "common.fakeheight.MixinForgeEventFactory",
+        "common.fakeheight.MixinTerrainGen",
+        "common.isblockloaded.MixinEntity",
         "common.worldgen.MixinWorldGenBigMushroom",
         "common.worldgen.MixinWorldGenBlockBlob",
         "common.worldgen.MixinWorldGenBonusChest",
@@ -66,9 +64,9 @@
         "common.worldgen.tree.MixinWorldGenTrees"
     ],
     "client": [
-        "client.isblockloaded.MixinEntity",
         "client.MixinEntity_PrepareSpawn",
-        "client.MixinEntityPlayerSP"
+        "client.MixinEntityPlayerSP",
+        "client.isblockloaded.MixinEntity"
     ],
     "server": []
 }
