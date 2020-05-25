@@ -6,8 +6,8 @@ import net.minecraft.client.renderer.chunk.ChunkRenderDispatcher;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.SectionPos;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -15,7 +15,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(ViewFrustum.class)
-public class MixinViewFrustum {
+public abstract class MixinViewFrustum {
     @Shadow
     public ChunkRenderDispatcher.ChunkRender[] renderChunks;
     @Shadow
@@ -25,9 +25,22 @@ public class MixinViewFrustum {
     @Shadow
     protected int countChunksZ;
 
+    @Shadow protected abstract int getIndex(int x, int y, int z);
+
+    /**
+     * @author Barteks2x
+     * @reason vertical view distance = horizontal
+     */
+    @Overwrite
+    protected void setCountChunksXYZ(int renderDistanceChunks) {
+        int d = renderDistanceChunks * 2 + 1;
+        this.countChunksX = d;
+        this.countChunksY = d;
+        this.countChunksZ = d;
+    }
+
     @Inject(method = "updateChunkPositions", at = @At(value = "HEAD"), cancellable = true, require = 1)
     private void setCountChunkXYZ(double viewEntityX, double viewEntityZ, CallbackInfo ci) {
-        SectionPos pos =  SectionPos.from(1000L);
         Entity view = Minecraft.getInstance().getRenderViewEntity();
         double x = view.getPosX();
         double y = view.getPosY();
@@ -37,24 +50,25 @@ public class MixinViewFrustum {
         int viewY = MathHelper.floor(y);
 
         for (int xIndex = 0; xIndex < this.countChunksX; ++xIndex) {
-            int l = this.countChunksX * 16;
-            int i1 = viewX - 8 - l / 2;
-            int j1 = i1 + Math.floorMod(xIndex * 16 - i1, l);
+            int xBase = this.countChunksX * 16;
+            int xTemp = viewX - 8 - xBase / 2;
+            int posX = xTemp + Math.floorMod(xIndex * 16 - xTemp, xBase);
 
             for (int zIndex = 0; zIndex < this.countChunksZ; ++zIndex) {
-                int l1 = this.countChunksZ * 16;
-                int i2 = viewZ - 8 - l1 / 2;
-                int j2 = i2 + Math.floorMod(zIndex * 16 - i2, l1);
+                int zBase = this.countChunksZ * 16;
+                int zTemp = viewZ - 8 - zBase / 2;
+                int posZ = zTemp + Math.floorMod(zIndex * 16 - zTemp, zBase);
 
                 for (int yIndex = 0; yIndex < this.countChunksY; ++yIndex) {
-                    int l2 = this.countChunksY * 16;
-                    int i3 = viewY - 8 - l2 / 2;
-                    int j3 = i3 + Math.floorMod(yIndex * 16 - i3, l2);
+                    int yBase = this.countChunksY * 16;
+                    int yTemp = viewY - 8 - yBase / 2;
+                    int posY = yTemp + Math.floorMod(yIndex * 16 - yTemp, yBase);
                     ChunkRenderDispatcher.ChunkRender chunkrenderdispatcher$chunkrender = this.renderChunks[this.getIndex(xIndex, yIndex, zIndex)];
-                    chunkrenderdispatcher$chunkrender.setPosition(j1, j3, j2);
+                    chunkrenderdispatcher$chunkrender.setPosition(posX, posY, posZ);
                 }
             }
         }
+        ci.cancel();
     }
 
     @Inject(method = "getRenderChunk", at = @At(value = "HEAD"), cancellable = true)
@@ -62,25 +76,11 @@ public class MixinViewFrustum {
         int x = MathHelper.intFloorDiv(pos.getX(), 16);
         int y = MathHelper.intFloorDiv(pos.getY(), 16);
         int z = MathHelper.intFloorDiv(pos.getZ(), 16);
-        x %= this.countChunksX;
-        if (x < 0) {
-            x += this.countChunksX;
-        }
-        y %= this.countChunksY;
-        if (y < 0) {
-            y += this.countChunksY;
-        }
-        z %= this.countChunksZ;
-        if (z < 0) {
-            z += this.countChunksZ;
-        }
-        final int index = (z * this.countChunksY + y) * this.countChunksX + x;
-        ChunkRenderDispatcher.ChunkRender renderChunk = this.renderChunks[index];
+        x = MathHelper.normalizeAngle(x, this.countChunksX);
+        y = MathHelper.normalizeAngle(y, this.countChunksY);
+        z = MathHelper.normalizeAngle(z, this.countChunksZ);
+        ChunkRenderDispatcher.ChunkRender renderChunk = this.renderChunks[this.getIndex(x, y, z)];
         cbi.cancel();
         cbi.setReturnValue(renderChunk);
-    }
-
-    private int getIndex(int x, int y, int z) {
-        return (z * this.countChunksY + y) * this.countChunksX + x;
     }
 }

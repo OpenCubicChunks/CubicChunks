@@ -25,6 +25,7 @@
         "common.IMinecraftServer",
         "common.MixinChunkDistanceGraph",
         "common.MixinIForgeDimension",
+        "common.MixinIntegratedServer",
         "common.MixinIWorldGenerationReader",
         "common.MixinMinecraftServer",
         "common.MixinServerChunkProvider",
@@ -47,7 +48,5 @@
         "client.MixinWorld",
         "client.MixinWorldRenderer"
     ],
-    "server": [
-        "server.MixinIntegratedServer"
-    ]
+    "server": []
 }
