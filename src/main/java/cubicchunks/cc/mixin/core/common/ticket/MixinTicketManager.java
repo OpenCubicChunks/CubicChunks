@@ -14,6 +14,7 @@ import it.unimi.dsi.fastutil.objects.ObjectSet;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.util.SortedArraySet;
 import net.minecraft.util.concurrent.ITaskExecutor;
+import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.SectionPos;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.server.*;
@@ -74,6 +75,11 @@ public abstract class MixinTicketManager implements ITicketManager {
             this.cc$ticketTracker.updateSourceLevel(sectionPosIn, ticketIn.getLevel(), true);
         }
         this.register(SectionPos.from(sectionPosIn).asChunkPos().asLong(), ticketIn);
+    }
+
+    public void cc$register(long sectionPosIn, Ticket<?> ticketIn)
+    {
+        this.registerSection(sectionPosIn, ticketIn);
     }
 
     private void releaseSection(long sectionPosIn, Ticket<?> ticketIn) {
