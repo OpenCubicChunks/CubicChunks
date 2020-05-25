@@ -134,14 +134,23 @@ public class CompatHandler {
     // is a relatively small part of the whole worldgen
 
     public static boolean postChunkPopulatePreWithFakeWorldHeight(PopulateChunkEvent.Pre event) {
+        if (!(MinecraftForge.EVENT_BUS instanceof IEventBus)) {
+            MinecraftForge.EVENT_BUS.post(event);
+        }
         return postEventPerModFakeHeight(event.getWorld(), event, MinecraftForge.EVENT_BUS, POPULATE_EVENT_PRE_FAKE_HEIGHT);
     }
 
     public static boolean postBiomeDecorateWithFakeWorldHeight(DecorateBiomeEvent.Decorate event) {
+        if (!(MinecraftForge.EVENT_BUS instanceof IEventBus)) {
+            MinecraftForge.EVENT_BUS.post(event);
+        }
         return postEventPerModFakeHeight(event.getWorld(), event, MinecraftForge.EVENT_BUS, DECORATE_EVENT_FAKE_HEIGHT);
     }
 
     public static boolean postBiomePostDecorateWithFakeWorldHeight(DecorateBiomeEvent.Post event) {
+        if (!(MinecraftForge.EVENT_BUS instanceof IEventBus)) {
+            MinecraftForge.EVENT_BUS.post(event);
+        }
         return postEventPerModFakeHeight(event.getWorld(), event, MinecraftForge.EVENT_BUS, POST_DECORATE_EVENT_FAKE_HEIGHT);
     }
 
@@ -153,7 +162,7 @@ public class CompatHandler {
     }
 
     public static void onCubeLoad(ChunkEvent.Load load) {
-        if (fakeChunkLoadListeners.length == 0) {
+        if (fakeChunkLoadListeners == null || fakeChunkLoadListeners.length == 0) {
             return;
         }
         onChunkLoadImpl(load);
@@ -209,6 +218,10 @@ public class CompatHandler {
     }
 
     private static <T> IEventListener[] getFakeEventListeners(ListenerList listenerList, EventBus eventBus, Set<String> modIds) {
+        if (!(eventBus instanceof IEventBus)) {
+            CubicChunks.LOGGER.error("Failed to initialize CompatHandler! No event bus mixin!");
+            return null;
+        }
         IEventBus forgeEventBus = (IEventBus) eventBus;
         IEventListener[] listeners = listenerList.getListeners(forgeEventBus.getBusID());
         List<IEventListener> newList = new ArrayList<>();

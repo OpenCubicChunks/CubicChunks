@@ -190,9 +190,8 @@ mixinGen {
         injectorsDefaultRequire = 1
     }
     config("fixes") {
-        required = true
+        required = false
         conformVisibility = true
-        injectorsDefaultRequire = 1
     }
     config("noncritical") {
         required = false
