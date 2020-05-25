@@ -19,6 +19,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import javax.annotation.Nullable;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicReferenceArray;
@@ -57,40 +58,33 @@ public abstract class MixinChunkHolder implements ISectionHolder {
 
     @Shadow protected abstract void func_219275_d(int p_219275_1_);
 
+    private static final Either<ChunkSection, ChunkHolder.IChunkLoadingError> MISSING_SECTION = Either.right(ChunkHolder.IChunkLoadingError.UNLOADED);
+    private static final CompletableFuture<Either<ChunkSection, ChunkHolder.IChunkLoadingError>> MISSING_CHUNK_FUTURE = CompletableFuture.completedFuture(MISSING_SECTION);
+    private static final Either<ChunkSection, ChunkHolder.IChunkLoadingError> UNLOADED_SECTION = Either.right(ChunkHolder.IChunkLoadingError.UNLOADED);
+    private static final CompletableFuture<Either<ChunkSection, ChunkHolder.IChunkLoadingError>> UNLOADED_SECTION_FUTURE = CompletableFuture.completedFuture(UNLOADED_SECTION);
+
+    private volatile CompletableFuture<Either<ChunkSection, ChunkHolder.IChunkLoadingError>> tickingSectionFuture;
+
+    private final AtomicReferenceArray<CompletableFuture<Either<ChunkSection, ChunkHolder.IChunkLoadingError>>> sectionFutureBySectionStatus = new AtomicReferenceArray<>(CHUNK_STATUS_LIST.size());
+
     private SectionPos sectionPos;
-    private final AtomicReferenceArray<CompletableFuture<Either<ChunkSection, ChunkHolder.IChunkLoadingError>>> chunkFutureByChunkStatus = new AtomicReferenceArray<>(CHUNK_STATUS_LIST.size());
 
-
-    @Override
-    public void setYPos(int yPos) { //Whenever ChunkHolder is instantiated this should be called to finish the construction of the object
-        this.sectionPos = SectionPos.of(getPosition().x, yPos, getPosition().z);
-    }
-
-    @Override
-    public int getYPos()
-    {
-        return this.sectionPos.getY();
-    }
-
-    @Override
-    public SectionPos getSectionPos() {
-        return sectionPos;
-    }
+    //BEGIN INJECTS:
 
     @Inject(method = "processUpdates", at = @At("HEAD"), cancellable = true)
     void processUpdates(ChunkManager chunkManagerIn, CallbackInfo ci)
     {
         /**
-        If sectionPos == null, this is a ChunkManager
-        else, this is a CubeManager.
-        This is being implemented as a mixin, instead of having a specific CubeManager class.
-        this.sectionPos is essentially being used as a flag for changing behaviour.
+         If sectionPos == null, this is a ChunkManager
+         else, this is a CubeManager.
+         This is being implemented as a mixin, instead of having a specific CubeManager class.
+         this.sectionPos is essentially being used as a flag for changing behaviour.
          */
         if(this.sectionPos == null) {
-            //This is a ChunkHolder.
+            //This is a ChunkHolder, we dont ci.cancel() and let the vanilla code run.
             return;
         }
-        //This is a CubeHolder.
+        //This is a CubeHolder, we ci.cancel() preventing vanilla code, and running ours (below)
         ci.cancel();
 
         ChunkStatus chunkstatus = getChunkStatusFromLevel(this.prevChunkLevel);
@@ -107,11 +101,11 @@ public abstract class MixinChunkHolder implements ISectionHolder {
             });
 
             for(int i = flag1 ? chunkstatus1.ordinal() + 1 : 0; i <= chunkstatus.ordinal(); ++i) {
-                CompletableFuture<Either<ChunkSection, ChunkHolder.IChunkLoadingError>> completablefuture = this.chunkFutureByChunkStatus.get(i);
+                CompletableFuture<Either<ChunkSection, ChunkHolder.IChunkLoadingError>> completablefuture = this.sectionFutureBySectionStatus.get(i);
                 if (completablefuture != null) {
                     completablefuture.complete(either);
                 } else {
-                    this.chunkFutureByChunkStatus.set(i, CompletableFuture.completedFuture(either));
+                    this.sectionFutureBySectionStatus.set(i, CompletableFuture.completedFuture(either));
                 }
             }
         }
@@ -164,5 +158,29 @@ public abstract class MixinChunkHolder implements ISectionHolder {
         this.prevChunkLevel = this.chunkLevel;
     }
 
+    //BEGIN OVERRIDES:
 
+    @Override
+    public void setYPos(int yPos) { //Whenever ChunkHolder is instantiated this should be called to finish the construction of the object
+        this.sectionPos = SectionPos.of(getPosition().x, yPos, getPosition().z);
+    }
+
+    @Override
+    public int getYPos()
+    {
+        return this.sectionPos.getY();
+    }
+
+    @Override
+    public SectionPos getSectionPos() {
+        return sectionPos;
+    }
+
+    @Nullable
+    @Override
+    public ChunkSection getSectionIfComplete() {
+        CompletableFuture<Either<ChunkSection, ChunkHolder.IChunkLoadingError>> completablefuture = this.tickingSectionFuture;
+        Either<ChunkSection, ChunkHolder.IChunkLoadingError> either = completablefuture.getNow((Either<ChunkSection, ChunkHolder.IChunkLoadingError>)null);
+        return either == null ? null : either.left().orElse((ChunkSection)null);
+    }
 }

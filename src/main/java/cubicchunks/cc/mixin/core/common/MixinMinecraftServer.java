@@ -53,10 +53,17 @@ public abstract class MixinMinecraftServer {
         this.serverTime = Util.milliTime();
         ((IServerChunkProvider)serverchunkprovider).registerTicket(TicketType.START, sectionPos, 11, Unit.INSTANCE);
 
+        int i2 = 0;
         while(serverchunkprovider.getLoadedChunksCount() != 21*21*22) {//441 from columns and 21^3 from CC
             this.serverTime = Util.milliTime() + 10L;
             ((IMinecraftServer)this).runSchedule();
-            //LOGGER.info("Current loaded chunks: " + serverchunkprovider.getLoadedChunksCount());
+
+            if (i2 == 100) {
+                LOGGER.info("Current loaded chunks: " + serverchunkprovider.getLoadedChunksCount());
+                i2 = 0;
+            }
+
+            i2++;
         }
 
         this.serverTime = Util.milliTime() + 10L;
