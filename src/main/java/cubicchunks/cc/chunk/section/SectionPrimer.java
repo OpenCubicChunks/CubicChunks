@@ -37,6 +37,7 @@ public class SectionPrimer implements ISection, IChunk {
 
     private final SectionPos sectionPos;
     private final ChunkSection section;
+    private ChunkStatus status = ChunkStatus.EMPTY;
 
 
     //TODO: add TickList<Block> and TickList<Fluid>
@@ -192,7 +193,15 @@ public class SectionPrimer implements ISection, IChunk {
     }
 
     @Override public ChunkStatus getStatus() {
-        throw new UnsupportedOperationException("For later implementation");
+        return getSectionStatus();
+    }
+
+    @Override public ChunkStatus getSectionStatus() {
+        return this.status;
+    }
+
+    public void setStatus(ChunkStatus status) {
+        this.status = status;
     }
 
     @Override public void removeTileEntity(BlockPos pos) {

@@ -120,7 +120,7 @@ public class SectionPrimerWrapper extends SectionPrimer implements ISection, ICh
     }
 
     @Override
-    public ChunkStatus getStatus() {
+    public ChunkStatus getSectionStatus() {
         return null;
     }
 

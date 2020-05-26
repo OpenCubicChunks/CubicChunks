@@ -1,5 +1,6 @@
 package cubicchunks.cc.mixin.core.common.chunk;
 
+import static cubicchunks.cc.chunk.util.Utils.unsafeCast;
 import static net.minecraft.util.math.SectionPos.extractX;
 import static net.minecraft.util.math.SectionPos.extractY;
 import static net.minecraft.util.math.SectionPos.extractZ;
@@ -11,14 +12,13 @@ import com.mojang.datafixers.DataFixer;
 import com.mojang.datafixers.util.Either;
 import cubicchunks.cc.SectionSerializer;
 import cubicchunks.cc.chunk.IChunkManager;
-import cubicchunks.cc.chunk.IChunkSection;
 import cubicchunks.cc.chunk.ISection;
 import cubicchunks.cc.chunk.ISectionHolder;
 import cubicchunks.cc.chunk.ISectionStatusListener;
 import cubicchunks.cc.chunk.graph.CCTicketType;
 import cubicchunks.cc.chunk.section.SectionPrimer;
-import cubicchunks.cc.chunk.ticket.SectionTaskPriorityQueueSorter;
 import cubicchunks.cc.chunk.ticket.ITicketManager;
+import cubicchunks.cc.chunk.ticket.SectionTaskPriorityQueueSorter;
 import cubicchunks.cc.network.PacketCubes;
 import cubicchunks.cc.network.PacketDispatcher;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
@@ -29,12 +29,8 @@ import net.minecraft.crash.ReportedException;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.network.DebugPacketSender;
-import net.minecraft.network.IPacket;
-import net.minecraft.network.play.server.SChunkDataPacket;
 import net.minecraft.network.play.server.SMountEntityPacket;
 import net.minecraft.network.play.server.SSetPassengersPacket;
-import net.minecraft.network.play.server.SUpdateLightPacket;
 import net.minecraft.util.Util;
 import net.minecraft.util.concurrent.DelegatedTaskExecutor;
 import net.minecraft.util.concurrent.ITaskExecutor;
@@ -43,7 +39,6 @@ import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.SectionPos;
 import net.minecraft.village.PointOfInterestManager;
-import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkSection;
 import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.chunk.IChunk;
@@ -240,12 +235,11 @@ public abstract class MixinChunkManager implements IChunkManager {
         if (chunkStatusIn == ChunkStatus.EMPTY) {
             return this.sectionLoad(sectionPos);
         } else {
-            CompletableFuture<Either<IChunk, ChunkHolder.IChunkLoadingError>> completablefuture = (CompletableFuture<Either<IChunk,
-                    ChunkHolder.IChunkLoadingError>>) (Object)
-                    ((ISectionHolder) chunkHolderIn).createSectionFuture(chunkStatusIn.getParent(), (ChunkManager) (Object) this);
-            return (CompletableFuture<Either<ISection, ChunkHolder.IChunkLoadingError>>)
-                    (Object) completablefuture.thenComposeAsync((Either<IChunk,
-                            ChunkHolder.IChunkLoadingError> inputSection) -> {
+            CompletableFuture<Either<IChunk, ChunkHolder.IChunkLoadingError>> completablefuture = unsafeCast(
+                    ((ISectionHolder) chunkHolderIn).createSectionFuture(chunkStatusIn.getParent(), (ChunkManager) (Object) this)
+            );
+            return unsafeCast(completablefuture.thenComposeAsync(
+                    (Either<IChunk, ChunkHolder.IChunkLoadingError> inputSection) -> {
                         Optional<IChunk> optional = inputSection.left();
                         if (!optional.isPresent()) {
                             return CompletableFuture.completedFuture(inputSection);
@@ -256,7 +250,7 @@ public abstract class MixinChunkManager implements IChunkManager {
                             }
 
                             IChunk iChunk = optional.get();
-                            if (((IChunkSection) iChunk).getStatus().isAtLeast(chunkStatusIn)) {
+                            if (iChunk.getStatus().isAtLeast(chunkStatusIn)) {
                                 CompletableFuture<Either<IChunk, ChunkHolder.IChunkLoadingError>> completablefuture1;
                                 if (chunkStatusIn == ChunkStatus.LIGHT) {
                                     completablefuture1 = this.chunkGenerate(chunkHolderIn, chunkStatusIn);
@@ -273,7 +267,7 @@ public abstract class MixinChunkManager implements IChunkManager {
                                 return this.chunkGenerate(chunkHolderIn, chunkStatusIn);
                             }
                         }
-                    }, this.mainThread);
+                    }, this.mainThread));
         }
     }
 
