@@ -19,7 +19,7 @@ import java.util.function.Supplier;
 public class PacketDispatcher {
 
     private static SimpleChannel CHANNEL = NetworkRegistry.newSimpleChannel(
-            new ResourceLocation(CubicChunks.MODID, "net"),
+            new ResourceLocation("ocbc", "net"),
             () -> CubicChunks.PROTOCOL_VERSION,
             CubicChunks.PROTOCOL_VERSION::equals, CubicChunks.PROTOCOL_VERSION::equals);;
 
