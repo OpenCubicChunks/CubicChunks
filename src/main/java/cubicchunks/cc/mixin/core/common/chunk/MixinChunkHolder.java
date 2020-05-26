@@ -7,6 +7,8 @@ import cubicchunks.cc.chunk.IChunkManager;
 import cubicchunks.cc.chunk.ISection;
 import cubicchunks.cc.chunk.ISectionHolderListener;
 import cubicchunks.cc.chunk.ISectionHolder;
+import cubicchunks.cc.chunk.section.SectionPrimer;
+import cubicchunks.cc.chunk.section.SectionPrimerWrapper;
 import cubicchunks.cc.network.PacketCubes;
 import cubicchunks.cc.network.PacketDispatcher;
 import cubicchunks.cc.network.PacketSectionBlockChanges;
@@ -24,8 +26,11 @@ import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.SectionPos;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
+import net.minecraft.world.chunk.ChunkPrimer;
+import net.minecraft.world.chunk.ChunkPrimerWrapper;
 import net.minecraft.world.chunk.ChunkSection;
 import net.minecraft.world.chunk.ChunkStatus;
+import net.minecraft.world.chunk.IChunk;
 import net.minecraft.world.lighting.WorldLightManager;
 import net.minecraft.world.server.ChunkHolder;
 import net.minecraft.world.server.ChunkManager;
@@ -39,6 +44,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicReferenceArray;
 
@@ -79,13 +85,6 @@ public abstract class MixinChunkHolder implements ISectionHolder {
 
     private CompletableFuture<ISection> sectionFuture = CompletableFuture.completedFuture((ISection) null);
 
-    private static final Either<ISection, ChunkHolder.IChunkLoadingError> MISSING_SECTION = Either.right(ChunkHolder.IChunkLoadingError.UNLOADED);
-    private static final CompletableFuture<Either<ISection, ChunkHolder.IChunkLoadingError>> MISSING_CHUNK_FUTURE = CompletableFuture.completedFuture(MISSING_SECTION);
-    private static final Either<ChunkSection, ChunkHolder.IChunkLoadingError> UNLOADED_SECTION =
-            Either.right(ChunkHolder.IChunkLoadingError.UNLOADED);
-    private static final CompletableFuture<Either<ChunkSection, ChunkHolder.IChunkLoadingError>> UNLOADED_SECTION_FUTURE =
-            CompletableFuture.completedFuture(UNLOADED_SECTION);
-
     private volatile CompletableFuture<Either<ChunkSection, ChunkHolder.IChunkLoadingError>> tickingSectionFuture = UNLOADED_SECTION_FUTURE;
     private volatile CompletableFuture<Either<ChunkSection, ChunkHolder.IChunkLoadingError>> entityTickingSectionFuture = UNLOADED_SECTION_FUTURE;
 
@@ -106,8 +105,6 @@ public abstract class MixinChunkHolder implements ISectionHolder {
     @Shadow private short[] changedBlockPositions;
     @Shadow private int changedBlocks;
     private SectionPos sectionPos;
-    private final AtomicReferenceArray<CompletableFuture<Either<ChunkSection, ChunkHolder.IChunkLoadingError>>> chunkFutureByChunkStatus =
-            new AtomicReferenceArray<>(CHUNK_STATUS_LIST.size());
 
     // TODO: this is going to be one section per ChunkHolder for section holders
     private final Int2ObjectArrayMap<ShortArraySet> changedLocalBlocks = new Int2ObjectArrayMap<>();
@@ -362,5 +359,22 @@ public abstract class MixinChunkHolder implements ISectionHolder {
     private void sendToTracking(Object packetIn, boolean boundaryOnly) {
         this.playerProvider.getTrackingPlayers(this.pos, boundaryOnly)
                 .forEach(player -> PacketDispatcher.sendTo(packetIn, player));
+    }
+
+
+    // func_219294_a
+    @Override
+    public void onSectionWrapperCreated(SectionPrimerWrapper primer) {
+        for(int i = 0; i < this.sectionFutureBySectionStatus.length(); ++i) {
+            CompletableFuture<Either<ISection, ChunkHolder.IChunkLoadingError>> future = this.sectionFutureBySectionStatus.get(i);
+            if (future != null) {
+                Optional<ISection> optional = future.getNow(MISSING_SECTION).left();
+                if (optional.isPresent() && optional.get() instanceof SectionPrimer) {
+                    this.sectionFutureBySectionStatus.set(i, CompletableFuture.completedFuture(Either.left(primer)));
+                }
+            }
+        }
+
+        this.chainSection(CompletableFuture.completedFuture(Either.left((ISection) primer.getChunkSection())));
     }
 }

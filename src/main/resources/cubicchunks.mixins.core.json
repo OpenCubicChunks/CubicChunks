@@ -12,6 +12,7 @@
     },
     "mixins": [
         "common.biome.IBiomeContainer",
+        "common.chunk.ChunkSectionAccess",
         "common.chunk.IEntityTracker",
         "common.chunk.interfaces.InvokeChunkHolder",
         "common.chunk.interfaces.InvokeChunkManager",

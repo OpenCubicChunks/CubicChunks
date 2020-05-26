@@ -1,6 +1,7 @@
 package cubicchunks.cc.chunk;
 
 import com.mojang.datafixers.util.Either;
+import cubicchunks.cc.chunk.section.SectionPrimerWrapper;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.SectionPos;
 import net.minecraft.world.chunk.ChunkSection;
@@ -14,6 +15,11 @@ import java.util.concurrent.CompletableFuture;
 import java.util.function.IntFunction;
 
 public interface ISectionHolder {
+    Either<ISection, ChunkHolder.IChunkLoadingError> MISSING_SECTION = Either.right(ChunkHolder.IChunkLoadingError.UNLOADED);
+    CompletableFuture<Either<ISection, ChunkHolder.IChunkLoadingError>> MISSING_CHUNK_FUTURE = CompletableFuture.completedFuture(MISSING_SECTION);
+    Either<ChunkSection, ChunkHolder.IChunkLoadingError> UNLOADED_SECTION = Either.right(ChunkHolder.IChunkLoadingError.UNLOADED);
+    CompletableFuture<Either<ChunkSection, ChunkHolder.IChunkLoadingError>> UNLOADED_SECTION_FUTURE = CompletableFuture.completedFuture(UNLOADED_SECTION);
+
     ChunkSection getSectionIfComplete();
 
     void setYPos(int yPos);
@@ -29,4 +35,7 @@ public interface ISectionHolder {
     CompletableFuture<Either<ISection, ChunkHolder.IChunkLoadingError>> getSectionFuture(ChunkStatus chunkStatus);
 
     CompletableFuture<Either<ChunkSection, ChunkHolder.IChunkLoadingError>> getSectionEntityTickingFuture();
+
+    // func_219294_a
+    void onSectionWrapperCreated(SectionPrimerWrapper primer);
 }

@@ -29,11 +29,11 @@ public interface ITicketManager {
 
     <T> void register(TicketType<T> type, SectionPos pos, int distance, T value);
 
-    void cc$register(long chunkPosIn, Ticket<?> ticketIn);
+    void registerSection(long chunkPosIn, Ticket<?> ticketIn);
 
     <T> void release(TicketType<T> type, SectionPos pos, int distance, T value);
 
-    void cc$release(long chunkPosIn, Ticket<?> ticketIn);
+    void releaseSection(long chunkPosIn, Ticket<?> ticketIn);
 
     void updatePlayerPosition(SectionPos sectionPosIn, ServerPlayerEntity player);
 

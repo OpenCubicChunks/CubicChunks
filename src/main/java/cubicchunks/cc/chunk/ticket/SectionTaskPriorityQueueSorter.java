@@ -4,6 +4,7 @@ package cubicchunks.cc.chunk.ticket;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Sets;
 import com.mojang.datafixers.util.Either;
+import cubicchunks.cc.chunk.ISectionHolder;
 import cubicchunks.cc.chunk.ISectionHolderListener;
 import net.minecraft.util.Unit;
 import net.minecraft.util.Util;
@@ -34,10 +35,11 @@ public class SectionTaskPriorityQueueSorter implements AutoCloseable, ChunkHolde
     private final Set<ITaskExecutor<?>> actors;
     private final DelegatedTaskExecutor<ITaskQueue.RunnableWithPriority> sorter;
 
-    public SectionTaskPriorityQueueSorter(List<ITaskExecutor<?>> p_i50713_1_, Executor p_i50713_2_, int p_i50713_3_) {
-        this.queues = p_i50713_1_.stream().collect(Collectors.toMap(Function.identity(), (p_219084_1_) -> new SectionTaskPriorityQueue<>(p_219084_1_.getName() + "_queue", p_i50713_3_)));
-        this.actors = Sets.newHashSet(p_i50713_1_);
-        this.sorter = new DelegatedTaskExecutor<>(new ITaskQueue.Priority(4), p_i50713_2_, "sorter");
+    public SectionTaskPriorityQueueSorter(List<ITaskExecutor<?>> taskExecutors, Executor executor, int p_i50713_3_) {
+        this.queues = taskExecutors.stream().collect(Collectors.toMap(Function.identity(), (p_219084_1_) ->
+                new SectionTaskPriorityQueue<>(p_219084_1_.getName() + "_queue", p_i50713_3_)));
+        this.actors = Sets.newHashSet(taskExecutors);
+        this.sorter = new DelegatedTaskExecutor<>(new ITaskQueue.Priority(4), executor, "sorter");
     }
 
     public static SectionTaskPriorityQueueSorter.FunctionEntry<Runnable> createMsg(Runnable runnable, long pos, IntSupplier p_219069_3_) {
@@ -47,8 +49,8 @@ public class SectionTaskPriorityQueueSorter implements AutoCloseable, ChunkHolde
         }, pos, p_219069_3_);
     }
 
-    public static SectionTaskPriorityQueueSorter.FunctionEntry<Runnable> createMsg(ChunkHolder p_219081_0_, Runnable p_219081_1_) {
-        return createMsg(p_219081_1_, p_219081_0_.getPosition().asLong(), p_219081_0_::func_219281_j);
+    public static SectionTaskPriorityQueueSorter.FunctionEntry<Runnable> createMsg(ChunkHolder holder, Runnable p_219081_1_) {
+        return createMsg(p_219081_1_, ((ISectionHolder) holder).getSectionPos().asLong(), holder::func_219281_j);
     }
 
     public static SectionTaskPriorityQueueSorter.RunnableEntry createSorterMsg(Runnable p_219073_0_, long p_219073_1_, boolean p_219073_3_) {
@@ -90,15 +92,15 @@ public class SectionTaskPriorityQueueSorter implements AutoCloseable, ChunkHolde
 
     private <T> void execute(ITaskExecutor<T> p_219067_1_, Function<ITaskExecutor<Unit>, T> p_219067_2_, long p_219067_3_, IntSupplier p_219067_5_, boolean p_219067_6_) {
         this.sorter.enqueue(new ITaskQueue.RunnableWithPriority(2, () -> {
-            SectionTaskPriorityQueue<Function<ITaskExecutor<Unit>, T>> SectionTaskPriorityQueue = this.getQueue(p_219067_1_);
+            SectionTaskPriorityQueue<Function<ITaskExecutor<Unit>, T>> sectionTaskPriorityQueue = this.getQueue(p_219067_1_);
             int i = p_219067_5_.getAsInt();
-            SectionTaskPriorityQueue.add(Optional.of(p_219067_2_), p_219067_3_, i);
+            sectionTaskPriorityQueue.add(Optional.of(p_219067_2_), p_219067_3_, i);
             if (p_219067_6_) {
-                SectionTaskPriorityQueue.add(Optional.empty(), p_219067_3_, i);
+                sectionTaskPriorityQueue.add(Optional.empty(), p_219067_3_, i);
             }
 
             if (this.actors.remove(p_219067_1_)) {
-                this.func_219078_a(SectionTaskPriorityQueue, p_219067_1_);
+                this.func_219078_a(sectionTaskPriorityQueue, p_219067_1_);
             }
 
         }));
@@ -128,11 +130,6 @@ public class SectionTaskPriorityQueueSorter implements AutoCloseable, ChunkHolde
         } else {
             return (SectionTaskPriorityQueue<Function<ITaskExecutor<Unit>, T>>) SectionTaskPriorityQueue;
         }
-    }
-
-    @VisibleForTesting
-    public String debugString() {
-        return this.queues.entrySet().stream().map((p_225397_0_) -> p_225397_0_.getKey().getName() + "=[" + p_225397_0_.getValue().func_225414_b().stream().map((p_225398_0_) -> p_225398_0_ + ":" + SectionPos.from(p_225398_0_)).collect(Collectors.joining(",")) + "]").collect(Collectors.joining(",")) + ", s=" + this.actors.size();
     }
 
     public void close() {

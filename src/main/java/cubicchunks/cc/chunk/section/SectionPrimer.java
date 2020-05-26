@@ -52,7 +52,7 @@ public class SectionPrimer implements ISection, IChunk {
         }
     }
 
-    public ChunkSection getSection() {
+    public ChunkSection getChunkSection() {
         return this.section;
     }
 

@@ -36,6 +36,10 @@ public class SectionPrimerWrapper extends SectionPrimer implements ISection, ICh
         super(pos, null);
     }
 
+    public SectionPrimerWrapper(WorldSection chunkSection) {
+        super(chunkSection.getSectionPos(), chunkSection);
+    }
+
     @Override
     public void addTileEntity(BlockPos pos, TileEntity tileEntityIn) {
         this.addTileEntity(pos, tileEntityIn);

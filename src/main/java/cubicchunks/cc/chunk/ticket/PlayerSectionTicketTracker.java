@@ -40,7 +40,7 @@ public class PlayerSectionTicketTracker extends PlayerSectionTracker {
                 iTicketManager.getSectionPlayerTicketThrottler().enqueue(SectionTaskPriorityQueueSorter.createMsg(() -> {
                     iTicketManager.executor().execute(() -> {
                         if (this.isWithinViewDistance(this.getLevel(sectionPosIn))) {
-                            iTicketManager.cc$register(sectionPosIn, ticket);
+                            iTicketManager.registerSection(sectionPosIn, ticket);
                             iTicketManager.getSectionPositions().add(sectionPosIn);
                         } else {
                             iTicketManager.getPlayerSectionTicketThrottlerSorter().enqueue(SectionTaskPriorityQueueSorter.createSorterMsg(() -> {
@@ -52,7 +52,7 @@ public class PlayerSectionTicketTracker extends PlayerSectionTracker {
             } else {
                 iTicketManager.getPlayerSectionTicketThrottlerSorter().enqueue(SectionTaskPriorityQueueSorter.createSorterMsg(() -> {
                     iTicketManager.executor().execute(() -> {
-                        iTicketManager.cc$release(sectionPosIn, ticket);
+                        iTicketManager.releaseSection(sectionPosIn, ticket);
                     });
                 }, sectionPosIn, true));
             }

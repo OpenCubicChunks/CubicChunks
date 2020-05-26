@@ -67,7 +67,8 @@ public abstract class MixinTicketManager implements ITicketManager {
         this.playerSectionTicketThrottlerSorter = sectionTaskPriorityQueueSorter.createSorterExecutor(itaskexecutor);
     }
 
-    private void registerSection(long sectionPosIn, Ticket<?> ticketIn) {
+    @Override
+    public void registerSection(long sectionPosIn, Ticket<?> ticketIn) {
         SortedArraySet<Ticket<?>> sortedarrayset = this.getSectionTicketSet(sectionPosIn);
         int i = getLevel(sortedarrayset);
         Ticket<?> ticket = sortedarrayset.func_226175_a_(ticketIn);
@@ -78,7 +79,8 @@ public abstract class MixinTicketManager implements ITicketManager {
         this.register(SectionPos.from(sectionPosIn).asChunkPos().asLong(), ticketIn);
     }
 
-    private void releaseSection(long sectionPosIn, Ticket<?> ticketIn) {
+    @Override
+    public void releaseSection(long sectionPosIn, Ticket<?> ticketIn) {
         SortedArraySet<Ticket<?>> sortedarrayset = this.getSectionTicketSet(sectionPosIn);
         sortedarrayset.remove(ticketIn);
 

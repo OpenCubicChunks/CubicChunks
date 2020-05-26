@@ -106,9 +106,4 @@ public class SectionTaskPriorityQueue<T> {
    public String toString() {
       return this.name + " " + this.firstNonEmptyLvl + "...";
    }
-
-   @VisibleForTesting
-   LongSet func_225414_b() {
-      return new LongOpenHashSet(this.cubePostions);
-   }
 }
