@@ -1,28 +1,45 @@
 package cubicchunks.cc.mixin.core.common.chunk;
 
 import com.mojang.datafixers.util.Either;
-import cubicchunks.cc.chunk.ISectionHolderListener;
 import cubicchunks.cc.chunk.ISectionHolder;
+import cubicchunks.cc.chunk.ISectionHolderListener;
+import cubicchunks.cc.network.PacketCubes;
+import cubicchunks.cc.network.PacketDispatcher;
+import cubicchunks.cc.network.PacketSectionBlockChanges;
+import cubicchunks.cc.utils.AddressTools;
+import cubicchunks.cc.utils.Coords;
+import it.unimi.dsi.fastutil.ints.Int2ObjectArrayMap;
+import it.unimi.dsi.fastutil.ints.IntIterator;
+import it.unimi.dsi.fastutil.shorts.ShortArrayList;
+import it.unimi.dsi.fastutil.shorts.ShortArraySet;
+import net.minecraft.network.IPacket;
+import net.minecraft.network.play.server.SUpdateLightPacket;
 import net.minecraft.util.Util;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.SectionPos;
+import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkSection;
 import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.chunk.IChunk;
+import net.minecraft.world.lighting.WorldLightManager;
 import net.minecraft.world.server.ChunkHolder;
 import net.minecraft.world.server.ChunkManager;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import javax.annotation.Nullable;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicReferenceArray;
+
+import javax.annotation.Nullable;
 
 @Mixin(ChunkHolder.class)
 public abstract class MixinChunkHolder implements ISectionHolder {
@@ -59,21 +76,43 @@ public abstract class MixinChunkHolder implements ISectionHolder {
     @Shadow protected abstract void func_219275_d(int p_219275_1_);
 
     private static final Either<ChunkSection, ChunkHolder.IChunkLoadingError> MISSING_SECTION = Either.right(ChunkHolder.IChunkLoadingError.UNLOADED);
-    private static final CompletableFuture<Either<ChunkSection, ChunkHolder.IChunkLoadingError>> MISSING_CHUNK_FUTURE = CompletableFuture.completedFuture(MISSING_SECTION);
-    private static final Either<ChunkSection, ChunkHolder.IChunkLoadingError> UNLOADED_SECTION = Either.right(ChunkHolder.IChunkLoadingError.UNLOADED);
-    private static final CompletableFuture<Either<ChunkSection, ChunkHolder.IChunkLoadingError>> UNLOADED_SECTION_FUTURE = CompletableFuture.completedFuture(UNLOADED_SECTION);
+    private static final CompletableFuture<Either<ChunkSection, ChunkHolder.IChunkLoadingError>> MISSING_CHUNK_FUTURE =
+            CompletableFuture.completedFuture(MISSING_SECTION);
+    private static final Either<ChunkSection, ChunkHolder.IChunkLoadingError> UNLOADED_SECTION =
+            Either.right(ChunkHolder.IChunkLoadingError.UNLOADED);
+    private static final CompletableFuture<Either<ChunkSection, ChunkHolder.IChunkLoadingError>> UNLOADED_SECTION_FUTURE =
+            CompletableFuture.completedFuture(UNLOADED_SECTION);
 
     private volatile CompletableFuture<Either<ChunkSection, ChunkHolder.IChunkLoadingError>> tickingSectionFuture;
 
-    private final AtomicReferenceArray<CompletableFuture<Either<ChunkSection, ChunkHolder.IChunkLoadingError>>> sectionFutureBySectionStatus = new AtomicReferenceArray<>(CHUNK_STATUS_LIST.size());
+    private final AtomicReferenceArray<CompletableFuture<Either<ChunkSection, ChunkHolder.IChunkLoadingError>>> sectionFutureBySectionStatus =
+            new AtomicReferenceArray<>(CHUNK_STATUS_LIST.size());
 
+    @Shadow private int skyLightChangeMask;
+    @Shadow private int blockLightChangeMask;
+    @Shadow private int boundaryMask;
+    @Shadow private int blockChangeMask;
+
+    @Shadow protected abstract void sendTileEntity(World worldIn, BlockPos posIn);
+
+    @Shadow protected abstract void sendToTracking(IPacket<?> packetIn, boolean boundaryOnly);
+
+    @Shadow @Final private WorldLightManager lightManager;
+    @Shadow @Final private ChunkHolder.IPlayerProvider playerProvider;
+    @Shadow @Final private ChunkPos pos;
+    @Shadow private short[] changedBlockPositions;
+    @Shadow private int changedBlocks;
     private SectionPos sectionPos;
+    private final AtomicReferenceArray<CompletableFuture<Either<ChunkSection, ChunkHolder.IChunkLoadingError>>> chunkFutureByChunkStatus =
+            new AtomicReferenceArray<>(CHUNK_STATUS_LIST.size());
+
+    // TODO: this is going to be one section per ChunkHolder for section holders
+    private final Int2ObjectArrayMap<ShortArraySet> changedLocalBlocks = new Int2ObjectArrayMap<>();
 
     //BEGIN INJECTS:
 
     @Inject(method = "processUpdates", at = @At("HEAD"), cancellable = true)
-    void processUpdates(ChunkManager chunkManagerIn, CallbackInfo ci)
-    {
+    void processUpdates(ChunkManager chunkManagerIn, CallbackInfo ci) {
         /**
          If sectionPos == null, this is a ChunkManager
          else, this is a CubeManager.
@@ -154,7 +193,8 @@ public abstract class MixinChunkHolder implements ISectionHolder {
             this.entityTickingFuture = UNLOADED_CHUNK_FUTURE;
         }
 
-        ((ISectionHolderListener)this.field_219327_v).onUpdateSectionLevel(this.sectionPos, this::func_219281_j, this.chunkLevel, this::func_219275_d);
+        ((ISectionHolderListener) this.field_219327_v)
+                .onUpdateSectionLevel(this.sectionPos, this::func_219281_j, this.chunkLevel, this::func_219275_d);
         this.prevChunkLevel = this.chunkLevel;
     }
 
@@ -164,6 +204,7 @@ public abstract class MixinChunkHolder implements ISectionHolder {
     public void setYPos(int yPos) { //Whenever ChunkHolder is instantiated this should be called to finish the construction of the object
         this.sectionPos = SectionPos.of(getPosition().x, yPos, getPosition().z);
     }
+    // TODO: this needs to be completely replaced for proper section handling
 
     @Override
     public int getYPos()
@@ -180,7 +221,90 @@ public abstract class MixinChunkHolder implements ISectionHolder {
     @Override
     public ChunkSection getSectionIfComplete() {
         CompletableFuture<Either<ChunkSection, ChunkHolder.IChunkLoadingError>> completablefuture = this.tickingSectionFuture;
-        Either<ChunkSection, ChunkHolder.IChunkLoadingError> either = completablefuture.getNow((Either<ChunkSection, ChunkHolder.IChunkLoadingError>)null);
-        return either == null ? null : either.left().orElse((ChunkSection)null);
+        Either<ChunkSection, ChunkHolder.IChunkLoadingError> either =
+                completablefuture.getNow((Either<ChunkSection, ChunkHolder.IChunkLoadingError>) null);
+        return either == null ? null : either.left().orElse((ChunkSection) null);
+    }
+
+    /**
+     * @author Barteks2x
+     * @reason height limits
+     */
+    @Overwrite
+    public void markBlockChanged(int x, int y, int z) {
+        Chunk chunk = ((ChunkHolder) (Object) this).getChunkIfComplete();
+        if (chunk == null) {
+            return;
+        }
+        this.blockChangeMask |= 1 << (y >> 4);
+        short pos = (short) AddressTools.getLocalAddress(x, y & 0xF, z);
+        int sectionY = Coords.blockToCube(y);
+        ShortArraySet changed = changedLocalBlocks.get(sectionY);
+        if (changed == null) {
+            changed = new ShortArraySet(32);
+            changedLocalBlocks.put(sectionY, changed);
+        }
+        changed.add(pos);
+        changedBlocks++;
+    }
+
+    /**
+     * @author Barteks2x
+     * @reason replace packet classes with CC packets
+     */
+    @Overwrite
+    public void sendChanges(Chunk chunkIn) {
+        if (this.changedLocalBlocks.isEmpty() && this.skyLightChangeMask == 0 && this.blockLightChangeMask == 0) {
+            return;
+        }
+        World world = chunkIn.getWorld();
+        if (this.skyLightChangeMask != 0 || this.blockLightChangeMask != 0) {
+            this.sendToTracking(new SUpdateLightPacket(chunkIn.getPos(), this.lightManager, this.skyLightChangeMask & ~this.boundaryMask,
+                    this.blockLightChangeMask & ~this.boundaryMask), true);
+            int i = this.skyLightChangeMask & this.boundaryMask;
+            int j = this.blockLightChangeMask & this.boundaryMask;
+            if (i != 0 || j != 0) {
+                this.sendToTracking(new SUpdateLightPacket(chunkIn.getPos(), this.lightManager, i, j), false);
+            }
+
+            this.skyLightChangeMask = 0;
+            this.blockLightChangeMask = 0;
+            this.boundaryMask &= ~(this.skyLightChangeMask & this.blockLightChangeMask);
+        }
+
+        for (IntIterator iterator = changedLocalBlocks.keySet().iterator(); iterator.hasNext(); ) {
+            int sectionY = iterator.nextInt();
+            ShortArraySet changed = changedLocalBlocks.get(sectionY);
+            int changedBlocks = changed.size();
+            //if (changed.size() >= net.minecraftforge.common.ForgeConfig.SERVER.clumpingThreshold.get()) {
+            //    this.boundaryMask = -1;
+            //}
+
+            if (changedBlocks >= net.minecraftforge.common.ForgeConfig.SERVER.clumpingThreshold.get()) {
+                this.sendToTracking(new PacketCubes(Collections.singletonMap(SectionPos.from(pos, sectionY),
+                        chunkIn.getSections()[sectionY])), false);
+            } else if (changedBlocks != 0) {
+                this.sendToTracking(new PacketSectionBlockChanges(chunkIn.getSections()[sectionY],
+                        SectionPos.from(pos, sectionY), new ShortArrayList(changed)), false);
+                for (short pos : changed) {
+                    BlockPos blockpos1 = new BlockPos(
+                            AddressTools.getLocalX(pos) +  this.pos.x * 16,
+                            AddressTools.getLocalY(pos) + sectionY*16,
+                            AddressTools.getLocalZ(pos) + this.pos.z * 16
+                    );
+                    if (world.getBlockState(blockpos1).hasTileEntity()) {
+                        this.sendTileEntity(world, blockpos1);
+                    }
+                }
+            }
+        }
+        this.changedBlocks = 0;
+        this.blockChangeMask = 0;
+        changedLocalBlocks.clear();
+    }
+
+    private void sendToTracking(Object packetIn, boolean boundaryOnly) {
+        this.playerProvider.getTrackingPlayers(this.pos, boundaryOnly)
+                .forEach(player -> PacketDispatcher.sendTo(packetIn, player));
     }
 }

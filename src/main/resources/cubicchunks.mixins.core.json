@@ -41,6 +41,7 @@
     ],
     "client": [
         "client.interfaces.IBlockReaderMixin",
+        "client.interfaces.IClientChunkProviderChunkArray",
         "client.interfaces.IMixinChunk",
         "client.interfaces.InvokeViewFrustum",
         "client.MixinChunk",
@@ -50,7 +51,8 @@
         "client.MixinWorldRenderer",
         "client.progress.MixinChainedChunkStatusListener",
         "client.progress.MixinTrackingChunkStatusListener",
-        "client.progress.MixinWorldLoadProgressScreen"
+        "client.progress.MixinWorldLoadProgressScreen",
+        "client.world.MixinClientChunkProvider"
     ],
     "server": []
 }

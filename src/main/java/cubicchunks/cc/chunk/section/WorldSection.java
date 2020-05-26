@@ -1,6 +1,6 @@
 package cubicchunks.cc.chunk.section;
 
-import cubicchunks.cc.chunk.Coords;
+import cubicchunks.cc.utils.Coords;
 import cubicchunks.cc.chunk.biome.SectionBiomeContainer;
 import net.minecraft.entity.Entity;
 import net.minecraft.tileentity.TileEntity;

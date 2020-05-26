@@ -44,6 +44,7 @@ public class CubicChunks {
     //Clear ALL Generation stages to prevent the Y Height Crashes
     private void setup(final FMLCommonSetupEvent event) {
         PacketDispatcher.register();
+
         for (Biome biome : ForgeRegistries.BIOMES) {
             for (GenerationStage.Decoration stage : GenerationStage.Decoration.values()) {
                 biome.getFeatures(stage).clear();

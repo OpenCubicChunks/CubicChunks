@@ -23,7 +23,7 @@
  *  THE SOFTWARE.
  */
 
-package cubicchunks.cc.chunk;
+package cubicchunks.cc.utils;
 
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.entity.Entity;

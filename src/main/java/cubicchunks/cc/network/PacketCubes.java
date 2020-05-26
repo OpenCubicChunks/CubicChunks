@@ -1,5 +1,8 @@
 package cubicchunks.cc.network;
 
+import static net.minecraft.world.chunk.Chunk.EMPTY_SECTION;
+
+import cubicchunks.cc.chunk.IClientSectionProvider;
 import cubicchunks.cc.utils.MathUtil;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
@@ -10,15 +13,13 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.SectionPos;
 import net.minecraft.world.World;
+import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkSection;
 
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
-
-import static net.minecraft.world.chunk.Chunk.EMPTY_SECTION;
 
 public class PacketCubes {
     // vanilla has max chunk size of 2MB, it works out to be 128kB per cube
@@ -35,10 +36,10 @@ public class PacketCubes {
         this.packetData = new byte[calculateDataSize(cubes)];
         fillDataBuffer(wrapBuffer(this.packetData), cubes, cubeExists);
         this.tileEntityTags = new ArrayList<>();
-//        this.tileEntityTags = cubes.stream()
-//                .flatMap(cube -> cube.getTileEntities().values().stream())
-//                .map(TileEntity::getUpdateTag)
-//                .collect(Collectors.toList());
+        //this.tileEntityTags = cubes.values().stream()
+        //        .flatMap(cube -> cube.getTileEntities().values().stream())
+        //        .map(TileEntity::getUpdateTag)
+        //        .collect(Collectors.toList());
     }
 
     PacketCubes(PacketBuffer buf) {
@@ -86,55 +87,40 @@ public class PacketCubes {
         }
     }
 
-    void handle(World worldIn) {
-        ClientWorld world = (ClientWorld) worldIn;
+    public static class Handler {
 
-        PacketBuffer dataReader = new PacketBuffer(Unpooled.wrappedBuffer(packetData));
-        for (int i = 0; i < positions.length; i++) {
-            SectionPos pos = positions[i];
-            int x = pos.getX();
-            int y = pos.getY();
-            int z = pos.getZ();
-            //ClientCubeProvider cubeProvider = (ClientCubeProvider) world.getChunkProvider();
-//            ICube cube = null;// cubeProvider.loadCube(x, y, z, null, dataReader, cubeExists.get(i));
+        public static void handle(PacketCubes packet, World worldIn) {
+            ClientWorld world = (ClientWorld) worldIn;
 
-            // TODO: full cube info
-//            if (cube != null /*&&fullCube*/) {
-//                world.addEntitiesToChunk(cube.getColumn());
-//            }
-            world.markSurroundingsForRerender(x, y, z);
+            PacketBuffer dataReader = wrapBuffer(packet.packetData);
+            BitSet cubeExists = packet.cubeExists;
+            for (int i = 0; i < packet.positions.length; i++) {
+                SectionPos pos = packet.positions[i];
+                int x = pos.getX();
+                int y = pos.getY();
+                int z = pos.getZ();
+                //ClientCubeProvider cubeProvider = (ClientCubeProvider) world.getChunkProvider();
+                //            ICube cube = null;// cubeProvider.loadCube(x, y, z, null, dataReader, cubeExists.get(i));
 
-            for (CompoundNBT nbt : getTileEntityTags()) {
-                BlockPos tePos = new BlockPos(
-                        nbt.getInt("x"),
-                        nbt.getInt("y"),
-                        nbt.getInt("z"));
-                TileEntity te = world.getTileEntity(tePos);
-                if (te != null) {
-                    te.handleUpdateTag(nbt);
+                ((IClientSectionProvider) world.getChunkProvider()).loadSection(
+                        x, y, z, null, dataReader, new CompoundNBT(), cubeExists.get(i));
+
+                // TODO: full cube info
+                //            if (cube != null /*&&fullCube*/) {
+                //                world.addEntitiesToChunk(cube.getColumn());
+                //            }
+                world.markSurroundingsForRerender(x, y, z);
+
+                for (CompoundNBT nbt : packet.tileEntityTags) {
+                    BlockPos tePos = new BlockPos(nbt.getInt("x"), nbt.getInt("y"), nbt.getInt("z"));
+                    TileEntity te = world.getTileEntity(tePos);
+                    if (te != null) {
+                        te.handleUpdateTag(nbt);
+                    }
                 }
             }
         }
-
-
     }
-
-    SectionPos[] getPositions() {
-        return positions;
-    }
-
-    BitSet getCubeExists() {
-        return cubeExists;
-    }
-
-    byte[] getPacketData() {
-        return packetData;
-    }
-
-    List<CompoundNBT> getTileEntityTags() {
-        return tileEntityTags;
-    }
-
     private static void fillDataBuffer(PacketBuffer buf, Map<SectionPos, ChunkSection> cubes, BitSet existingChunks) {
         int i = 0;
         for (SectionPos sectionPos : cubes.keySet()) {

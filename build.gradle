@@ -109,7 +109,7 @@ dependencies {
 
     compile 'org.spongepowered:mixin:0.8'
 
-
+    testCompile('junit:junit:4.11')
     // You may put jars on which you depend on in ./libs or you may define them like so..
     // compile "some.group:artifact:version:classifier"
     // compile "some.group:artifact:version"
