@@ -3,6 +3,7 @@ package cubicchunks.cc.mixin.core.common;
 import cubicchunks.cc.chunk.ISectionStatusListener;
 import cubicchunks.cc.server.IServerChunkProvider;
 import it.unimi.dsi.fastutil.longs.LongIterator;
+import net.minecraft.network.rcon.IServer;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.Unit;
 import net.minecraft.util.Util;
@@ -59,7 +60,7 @@ public abstract class MixinMinecraftServer {
             ((IMinecraftServer)this).runSchedule();
 
             if (i2 == 100) {
-                LOGGER.info("Current loaded chunks: " + serverchunkprovider.getLoadedChunksCount());
+                LOGGER.info("Current loaded chunks: " + serverchunkprovider.getLoadedChunksCount() + " | " + ((IServerChunkProvider)serverchunkprovider).getLoadedSectionsCount());
                 i2 = 0;
             }
 

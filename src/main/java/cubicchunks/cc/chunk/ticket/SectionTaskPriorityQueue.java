@@ -16,7 +16,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
-public class CubeTaskPriorityQueue<T> {
+public class SectionTaskPriorityQueue<T> {
    public static final int levelCount = ChunkManager.MAX_LOADED_LEVEL + 2;
    private final List<Long2ObjectLinkedOpenHashMap<List<Optional<T>>>> levelToPosToElements = IntStream.range(0, levelCount).mapToObj((p_219415_0_) -> new Long2ObjectLinkedOpenHashMap<List<Optional<T>>>()).collect(Collectors.toList());
    private volatile int firstNonEmptyLvl = levelCount;
@@ -24,7 +24,7 @@ public class CubeTaskPriorityQueue<T> {
    private final LongSet cubePostions = new LongOpenHashSet();
    private final int sizeMax;
 
-   public CubeTaskPriorityQueue(String name, int maxSize) {
+   public SectionTaskPriorityQueue(String name, int maxSize) {
       this.name = name;
       this.sizeMax = maxSize;
    }

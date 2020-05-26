@@ -17,14 +17,24 @@ import cubicchunks.cc.chunk.ISectionHolder;
 import cubicchunks.cc.chunk.ISectionStatusListener;
 import cubicchunks.cc.chunk.graph.CCTicketType;
 import cubicchunks.cc.chunk.section.SectionPrimer;
-import cubicchunks.cc.chunk.ticket.CubeTaskPriorityQueueSorter;
+import cubicchunks.cc.chunk.ticket.SectionTaskPriorityQueueSorter;
 import cubicchunks.cc.chunk.ticket.ITicketManager;
+import cubicchunks.cc.network.PacketCubes;
+import cubicchunks.cc.network.PacketDispatcher;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import net.minecraft.crash.ReportedException;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.network.DebugPacketSender;
 import net.minecraft.network.IPacket;
+import net.minecraft.network.play.server.SChunkDataPacket;
+import net.minecraft.network.play.server.SMountEntityPacket;
+import net.minecraft.network.play.server.SSetPassengersPacket;
+import net.minecraft.network.play.server.SUpdateLightPacket;
 import net.minecraft.util.Util;
 import net.minecraft.util.concurrent.DelegatedTaskExecutor;
 import net.minecraft.util.concurrent.ITaskExecutor;
@@ -33,6 +43,7 @@ import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.SectionPos;
 import net.minecraft.village.PointOfInterestManager;
+import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkSection;
 import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.chunk.IChunk;
@@ -57,6 +68,7 @@ import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -72,7 +84,7 @@ import javax.annotation.Nullable;
 @Mixin(ChunkManager.class)
 public abstract class MixinChunkManager implements IChunkManager {
 
-    private CubeTaskPriorityQueueSorter cubeTaskPriorityQueueSorter;
+    private SectionTaskPriorityQueueSorter sectionTaskPriorityQueueSorter;
 
     private final Long2ObjectLinkedOpenHashMap<ChunkHolder> loadedSections = new Long2ObjectLinkedOpenHashMap<>();
     private final LongSet unloadableSections = new LongOpenHashSet();
@@ -81,7 +93,7 @@ public abstract class MixinChunkManager implements IChunkManager {
     private final PlayerGenerationTracker playerSectionGenerationTracker = new PlayerGenerationTracker();
 
     // field_219265_s
-    private ITaskExecutor<CubeTaskPriorityQueueSorter.FunctionEntry<Runnable>> mainExecutor;
+    private ITaskExecutor<SectionTaskPriorityQueueSorter.FunctionEntry<Runnable>> mainExecutor;
 
     private final AtomicInteger sectionsLoaded = new AtomicInteger();
 
@@ -116,6 +128,8 @@ public abstract class MixinChunkManager implements IChunkManager {
 
     @Shadow private int viewDistance;
 
+    @Shadow @Final private Int2ObjectMap<ChunkManager.EntityTracker> entities;
+
     @Inject(method = "<init>", at = @At("RETURN"), locals = LocalCapture.CAPTURE_FAILHARD)
     private void onConstruct(ServerWorld worldIn, File worldDirectory, DataFixer p_i51538_3_, TemplateManager templateManagerIn,
             Executor p_i51538_5_, ThreadTaskExecutor mainThreadIn, IChunkLightProvider p_i51538_7_,
@@ -123,9 +137,9 @@ public abstract class MixinChunkManager implements IChunkManager {
             int p_i51538_11_, CallbackInfo ci, DelegatedTaskExecutor delegatedtaskexecutor,
             ITaskExecutor itaskexecutor, DelegatedTaskExecutor delegatedtaskexecutor1) {
 
-        this.cubeTaskPriorityQueueSorter = new CubeTaskPriorityQueueSorter(ImmutableList.of(delegatedtaskexecutor,
+        this.sectionTaskPriorityQueueSorter = new SectionTaskPriorityQueueSorter(ImmutableList.of(delegatedtaskexecutor,
                 itaskexecutor, delegatedtaskexecutor1), p_i51538_5_, Integer.MAX_VALUE);
-        this.mainExecutor = this.cubeTaskPriorityQueueSorter.createExecutor(itaskexecutor, false);
+        this.mainExecutor = this.sectionTaskPriorityQueueSorter.createExecutor(itaskexecutor, false);
     }
 
     @Nullable
@@ -153,7 +167,7 @@ public abstract class MixinChunkManager implements IChunkManager {
                 } else {
 
                     holder = new ChunkHolder(new ChunkPos(extractX(sectionPosIn), extractZ(sectionPosIn)), newLevel, this.lightManager,
-                            this.cubeTaskPriorityQueueSorter, (ChunkHolder.IPlayerProvider) this);
+                            this.sectionTaskPriorityQueueSorter, (ChunkHolder.IPlayerProvider) this);
                     ((ISectionHolder) holder).setYPos(extractY(sectionPosIn));
                 }
                 this.loadedSections.put(sectionPosIn, holder);
@@ -228,7 +242,7 @@ public abstract class MixinChunkManager implements IChunkManager {
         } else {
             CompletableFuture<Either<IChunk, ChunkHolder.IChunkLoadingError>> completablefuture = (CompletableFuture<Either<IChunk,
                     ChunkHolder.IChunkLoadingError>>) (Object)
-                    ((ISectionHolder) chunkHolderIn).createFuture(chunkStatusIn.getParent(), (ChunkManager) (Object) this);
+                    ((ISectionHolder) chunkHolderIn).createSectionFuture(chunkStatusIn.getParent(), (ChunkManager) (Object) this);
             return (CompletableFuture<Either<ISection, ChunkHolder.IChunkLoadingError>>)
                     (Object) completablefuture.thenComposeAsync((Either<IChunk,
                             ChunkHolder.IChunkLoadingError> inputSection) -> {
@@ -263,49 +277,51 @@ public abstract class MixinChunkManager implements IChunkManager {
         }
     }
 
+    // func_222961_b
     @Override
-    public CompletableFuture<Either<ChunkSection, ChunkHolder.IChunkLoadingError>> createBorderFuture(ChunkHolder chunkHolder) {
-        return ((ISectionHolder)chunkHolder).createFuture(ChunkStatus.FULL, (ChunkManager)(Object)this).thenApplyAsync((p_222976_0_) -> {
+    public CompletableFuture<Either<ChunkSection, ChunkHolder.IChunkLoadingError>> createSectionBorderFuture(ChunkHolder chunkHolder) {
+        return ((ISectionHolder) chunkHolder).createSectionFuture(ChunkStatus.FULL, (ChunkManager) (Object) this).thenApplyAsync((p_222976_0_) -> {
             return p_222976_0_.mapLeft((p_222955_0_) -> {
-                ChunkSection chunkSection = (ChunkSection)p_222955_0_;
+                ChunkSection chunkSection = (ChunkSection) p_222955_0_;
                 //TODO: implement rescheduleTicks for chunkSection
                 //chunkSection.rescheduleTicks();
                 return chunkSection;
             });
         }, (p_222962_2_) -> {
-            this.mainExecutor.enqueue(CubeTaskPriorityQueueSorter.createMsg(chunkHolder, p_222962_2_));
+            this.mainExecutor.enqueue(SectionTaskPriorityQueueSorter.createMsg(chunkHolder, p_222962_2_));
         });
     }
 
     // func_219179_a
     @Override
-    public CompletableFuture<Either<ChunkSection, ChunkHolder.IChunkLoadingError>> createTickingFuture(ChunkHolder chunkHolder) {
-        SectionPos sectionPos = ((ISectionHolder)chunkHolder).getSectionPos();
-        CompletableFuture<Either<List<ISection>, ChunkHolder.IChunkLoadingError>> completablefuture = this.getSectionRegionFuture(sectionPos, 1,
+    public CompletableFuture<Either<ChunkSection, ChunkHolder.IChunkLoadingError>> createSectionTickingFuture(ChunkHolder chunkHolder) {
+        SectionPos sectionPos = ((ISectionHolder) chunkHolder).getSectionPos();
+        CompletableFuture<Either<List<ISection>, ChunkHolder.IChunkLoadingError>> completablefuture = this.createSectionRegionFuture(sectionPos, 1,
                 (p_219172_0_) -> {
-            return ChunkStatus.FULL;
-        });
-        CompletableFuture<Either<ChunkSection, ChunkHolder.IChunkLoadingError>> completablefuture1 = completablefuture.thenApplyAsync((p_219239_0_) -> {
-            return p_219239_0_.flatMap((p_219208_0_) -> {
-                ChunkSection chunkSection = (ChunkSection)p_219208_0_.get(p_219208_0_.size() / 2);
-                //TODO: implement this later
-                //chunkSection.postProcess();
-                return Either.left(chunkSection);
-            });
-        }, (p_219230_2_) -> {
-            this.mainExecutor.enqueue(CubeTaskPriorityQueueSorter.createMsg(chunkHolder, p_219230_2_));
-        });
+                    return ChunkStatus.FULL;
+                });
+        CompletableFuture<Either<ChunkSection, ChunkHolder.IChunkLoadingError>> completablefuture1 =
+                completablefuture.thenApplyAsync((p_219239_0_) -> {
+                    return p_219239_0_.flatMap((p_219208_0_) -> {
+                        ChunkSection chunkSection = (ChunkSection) p_219208_0_.get(p_219208_0_.size() / 2);
+                        //TODO: implement this later
+                        //chunkSection.postProcess();
+                        return Either.left(chunkSection);
+                    });
+                }, (p_219230_2_) -> {
+                    this.mainExecutor.enqueue(SectionTaskPriorityQueueSorter.createMsg(chunkHolder, p_219230_2_));
+                });
         completablefuture1.thenAcceptAsync((chunkSectionLoadingErrorEither) -> {
             chunkSectionLoadingErrorEither.mapLeft((chunkSection) -> {
                 this.sectionsLoaded.getAndIncrement();
-                IPacket<?>[] ipacket = new IPacket[2];
+                Object[] ipacket = new Object[2];
                 this.getSectionTrackingPlayers(sectionPos, false).forEach((serverPlayerEntity) -> {
-                    this.sendChunkData(serverPlayerEntity, ipacket, chunkSection);
+                    this.sendSectionData(serverPlayerEntity, ipacket, chunkSection, sectionPos);
                 });
                 return Either.left(chunkSection);
             });
         }, (p_219202_2_) -> {
-            this.mainExecutor.enqueue(CubeTaskPriorityQueueSorter.createMsg(chunkHolder, p_219202_2_));
+            this.mainExecutor.enqueue(SectionTaskPriorityQueueSorter.createMsg(chunkHolder, p_219202_2_));
         });
         return completablefuture1;
     }
@@ -336,53 +352,60 @@ public abstract class MixinChunkManager implements IChunkManager {
 
     // func_219236_a
     @Override
-    public CompletableFuture<Either<List<ISection>, ChunkHolder.IChunkLoadingError>> getSectionRegionFuture(ChunkPos pos, int p_219236_2_,
-            IntFunction<ChunkStatus> p_219236_3_) {
+    public CompletableFuture<Either<List<ISection>, ChunkHolder.IChunkLoadingError>> createSectionRegionFuture(SectionPos pos, int r,
+            IntFunction<ChunkStatus> getTargetStatus) {
         List<CompletableFuture<Either<ISection, ChunkHolder.IChunkLoadingError>>> list = Lists.newArrayList();
-        int i = pos.x;
-        int j = pos.z;
+        int x = pos.getX();
+        int y = pos.getY();
+        int z = pos.getZ();
 
-        for (int k = -p_219236_2_; k <= p_219236_2_; ++k) {
-            for (int l = -p_219236_2_; l <= p_219236_2_; ++l) {
-                int i1 = Math.max(Math.abs(l), Math.abs(k));
-                final ChunkPos chunkpos = new ChunkPos(i + l, j + k);
-                long j1 = chunkpos.asLong();
-                ChunkHolder chunkholder = this.getLoadedSection(j1);
-                if (chunkholder == null) {
-                    //noinspection MixinInnerClass
-                    return CompletableFuture.completedFuture(Either.right(new ChunkHolder.IChunkLoadingError() {
-                        public String toString() {
-                            return "Unloaded " + chunkpos.toString();
-                        }
-                    }));
+        //TODO: make this iterate over all 3 dimensions?
+        for (int dx = -r; dx <= r; ++dx) {
+            for (int dy = -r; dy < r; ++dy) {
+                for (int dz = -r; dz <= r; ++dz) {
+                    int distance = Math.max(Math.max(Math.abs(dz), Math.abs(dx)), Math.abs(dy));
+                    final SectionPos sectionPos = SectionPos.of(x + dz, y + dy, z + dx);
+                    long posLong = sectionPos.asLong();
+                    ChunkHolder chunkholder = this.getLoadedSection(posLong);
+                    if (chunkholder == null) {
+                        //noinspection MixinInnerClass
+                        return CompletableFuture.completedFuture(Either.right(new ChunkHolder.IChunkLoadingError() {
+                            public String toString() {
+                                return "Unloaded " + sectionPos.toString();
+                            }
+                        }));
+                    }
+
+                    ChunkStatus chunkstatus = getTargetStatus.apply(distance);
+                    CompletableFuture<Either<ISection, ChunkHolder.IChunkLoadingError>> completablefuture =
+                            ((ISectionHolder) chunkholder).createSectionFuture(chunkstatus,
+                                    (ChunkManager) (Object) this);
+                    list.add(completablefuture);
                 }
-
-                ChunkStatus chunkstatus = p_219236_3_.apply(i1);
-                CompletableFuture<Either<ISection, ChunkHolder.IChunkLoadingError>> completablefuture =
-                        ((ISectionHolder)chunkholder).createFuture(chunkstatus,
-                        (ChunkManager)(Object)this);
-                list.add(completablefuture);
             }
         }
 
         CompletableFuture<List<Either<ISection, ChunkHolder.IChunkLoadingError>>> completablefuture1 = Util.gather(list);
-        return completablefuture1.thenApply((p_219227_4_) -> {
+        return completablefuture1.thenApply((eitherISectionError) -> {
             List<ISection> list1 = Lists.newArrayList();
             int k1 = 0;
 
-            for (final Either<ISection, ChunkHolder.IChunkLoadingError> either : p_219227_4_) {
+            for (final Either<ISection, ChunkHolder.IChunkLoadingError> either : eitherISectionError) {
                 Optional<ISection> optional = either.left();
                 if (!optional.isPresent()) {
                     final int l1 = k1;
                     //noinspection MixinInnerClass
                     return Either.right(new ChunkHolder.IChunkLoadingError() {
                         public String toString() {
-                            return "Unloaded " + new ChunkPos(i + l1 % (p_219236_2_ * 2 + 1), j + l1 / (p_219236_2_ * 2 + 1)) + " " + either.right()
+                            int d = r * 2 + 1;
+                            return "Unloaded " + SectionPos.of(
+                                    x + l1 / (d * d),
+                                    y + (l1 / d) % d,
+                                    z + l1 % d) + " " + either.right()
                                     .get().toString();
                         }
                     });
                 }
-
                 list1.add(optional.get());
                 ++k1;
             }
@@ -398,12 +421,13 @@ public abstract class MixinChunkManager implements IChunkManager {
     }
 
     // getTrackingPlayers
+
     /**
      * Returns the players tracking the given chunk.
      */
     public Stream<ServerPlayerEntity> getSectionTrackingPlayers(SectionPos pos, boolean boundaryOnly) {
         return this.playerSectionGenerationTracker.getGeneratingPlayers(pos.asLong()).filter((p_219192_3_) -> {
-            int i = this.getChebyshevDistance(pos, p_219192_3_, true);
+            int i = this.getSectionChebyshevDistance(pos, p_219192_3_, true);
             if (i > this.viewDistance) {
                 return false;
             } else {
@@ -413,7 +437,7 @@ public abstract class MixinChunkManager implements IChunkManager {
     }
 
     // func_219215_b
-    private static int getChebyshevDistance(SectionPos pos, ServerPlayerEntity player, boolean p_219215_2_) {
+    private static int getSectionChebyshevDistance(SectionPos pos, ServerPlayerEntity player, boolean p_219215_2_) {
         int x;
         int y;
         int z;
@@ -437,5 +461,72 @@ public abstract class MixinChunkManager implements IChunkManager {
         int dY = sectionPosIn.getY() - y;
         int dZ = sectionPosIn.getZ() - z;
         return Math.max(Math.max(Math.abs(dX), Math.abs(dZ)), Math.abs(dY));
+    }
+
+    // func_222973_a
+    @Override
+    public CompletableFuture<Void> saveSectionScheduleTicks(ChunkSection sectionIn) {
+        return this.mainThread.runAsync(() -> {
+            //TODO: implement saveSectionScheduleTicks
+            /*
+            This means adding a method to MixinChunkSection to handle the ticking of blocks,
+            chunksection needs a blocksToBeTickedField, and that will probably need to be initialised in a secondary afterInit method
+             */
+            //sectionIn.saveScheduledTicks(this.world);
+        });
+    }
+
+    // func_219188_b
+    public CompletableFuture<Either<ChunkSection, ChunkHolder.IChunkLoadingError>> createSectionEntityTickingFuture(SectionPos pos) {
+        return this.createSectionRegionFuture(pos, 2, (index) -> {
+            return ChunkStatus.FULL;
+        }).thenApplyAsync((eitherSectionError) -> {
+            return eitherSectionError.mapLeft((sections) -> {
+                return (ChunkSection) sections.get(sections.size() / 2);
+            });
+        }, this.mainThread);
+    }
+
+    // sendChunkData
+    private void sendSectionData(ServerPlayerEntity player, Object[] packetCache, ChunkSection chunkSectionIn, SectionPos pos) {
+        if (packetCache[0] == null) {
+            packetCache[0] = new PacketCubes(Collections.singletonMap(pos, chunkSectionIn));
+            //packetCache[1] = new SUpdateLightPacket(pos, this.lightManager);
+        }
+
+        PacketDispatcher.sendTo(packetCache[0], player);
+        List<Entity> leashedEntities = Lists.newArrayList();
+        List<Entity> passengerEntities = Lists.newArrayList();
+
+        for (ChunkManager.EntityTracker entityTracker : this.entities.values()) {
+            Entity entity = ((IEntityTracker) entityTracker).getEntity();
+            if (entity != player && entity.chunkCoordX == pos.getX() && entity.chunkCoordY == pos.getY() && entity.chunkCoordZ == pos.getZ()) {
+                entityTracker.updateTrackingState(player);
+                if (entity instanceof MobEntity && ((MobEntity) entity).getLeashHolder() != null) {
+                    leashedEntities.add(entity);
+                }
+
+                if (!entity.getPassengers().isEmpty()) {
+                    passengerEntities.add(entity);
+                }
+            }
+        }
+
+        if (!leashedEntities.isEmpty()) {
+            for (Entity entity1 : leashedEntities) {
+                player.connection.sendPacket(new SMountEntityPacket(entity1, ((MobEntity) entity1).getLeashHolder()));
+            }
+        }
+
+        if (!passengerEntities.isEmpty()) {
+            for (Entity entity2 : passengerEntities) {
+                player.connection.sendPacket(new SSetPassengersPacket(entity2));
+            }
+        }
+    }
+
+    public int getLoadedSectionsCount()
+    {
+        return this.sectionsLoaded.get();
     }
 }

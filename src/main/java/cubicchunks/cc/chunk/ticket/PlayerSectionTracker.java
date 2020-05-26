@@ -6,13 +6,13 @@ import it.unimi.dsi.fastutil.objects.ObjectSet;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.util.SectionDistanceGraph;
 
-public class PlayerCubeTracker extends SectionDistanceGraph {
+public class PlayerSectionTracker extends SectionDistanceGraph {
     public final Long2ByteMap sectionsInRange = new Long2ByteOpenHashMap();
     protected final int range;
 
     private final ITicketManager iTicketManager;
 
-    public PlayerCubeTracker(ITicketManager iTicketManager, int i) {
+    public PlayerSectionTracker(ITicketManager iTicketManager, int i) {
         super(i + 2, 16, 256);
         this.range = i;
         this.sectionsInRange.defaultReturnValue((byte) (i + 2));

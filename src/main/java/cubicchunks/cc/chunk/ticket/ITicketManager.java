@@ -39,7 +39,7 @@ public interface ITicketManager {
 
     void removePlayer(SectionPos sectionPosIn, ServerPlayerEntity player);
 
-    int getSpawningCubesCount();
+    int getSpawningSectionsCount();
 
     boolean isSectionOutsideSpawningRadius(long sectionPosIn);
 
@@ -47,13 +47,13 @@ public interface ITicketManager {
 
     Long2ObjectMap<ObjectSet<ServerPlayerEntity>> getPlayersBySectionPos();
 
-    ITaskExecutor<CubeTaskPriorityQueueSorter.FunctionEntry<Runnable>> getSectionPlayerTicketThrottler();
+    ITaskExecutor<SectionTaskPriorityQueueSorter.FunctionEntry<Runnable>> getSectionPlayerTicketThrottler();
 
-    ITaskExecutor<CubeTaskPriorityQueueSorter.RunnableEntry> getPlayerTicketThrottlerSorter();
+    ITaskExecutor<SectionTaskPriorityQueueSorter.RunnableEntry> getPlayerSectionTicketThrottlerSorter();
 
     LongSet getSectionPositions();
 
-    Set<ChunkHolder> getCubeHolders();
+    Set<ChunkHolder> getSectionHolders();
 
     ChunkHolder getSectionHolder(long chunkPosIn);
 
@@ -63,5 +63,5 @@ public interface ITicketManager {
 
     Executor executor();
 
-    CubeTaskPriorityQueueSorter getCubeTaskPriorityQueueSorter();
+    SectionTaskPriorityQueueSorter getSectionTaskPriorityQueueSorter();
 }

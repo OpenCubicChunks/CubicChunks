@@ -1,11 +1,12 @@
 package cubicchunks.cc.mixin.core.common.chunk;
 
+import static cubicchunks.cc.chunk.util.Utils.unsafeCast;
+
 import com.mojang.datafixers.util.Either;
 import cubicchunks.cc.chunk.IChunkManager;
 import cubicchunks.cc.chunk.ISection;
 import cubicchunks.cc.chunk.ISectionHolderListener;
 import cubicchunks.cc.chunk.ISectionHolder;
-import cubicchunks.cc.chunk.ISectionHolderListener;
 import cubicchunks.cc.network.PacketCubes;
 import cubicchunks.cc.network.PacketDispatcher;
 import cubicchunks.cc.network.PacketSectionBlockChanges;
@@ -25,7 +26,6 @@ import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkSection;
 import net.minecraft.world.chunk.ChunkStatus;
-import net.minecraft.world.chunk.IChunk;
 import net.minecraft.world.lighting.WorldLightManager;
 import net.minecraft.world.server.ChunkHolder;
 import net.minecraft.world.server.ChunkManager;
@@ -62,19 +62,20 @@ public abstract class MixinChunkHolder implements ISectionHolder {
 
     @Shadow private boolean accessible;
 
-    @Shadow protected abstract void chain(CompletableFuture<? extends Either<? extends IChunk, ChunkHolder.IChunkLoadingError>> eitherChunk);
+    //@Shadow protected abstract void chain(CompletableFuture<? extends Either<? extends IChunk, ChunkHolder.IChunkLoadingError>> eitherChunk);
 
-    @Shadow @Final private static CompletableFuture<Either<Chunk, ChunkHolder.IChunkLoadingError>> UNLOADED_CHUNK_FUTURE;
-    @Shadow @Final public static Either<Chunk, ChunkHolder.IChunkLoadingError> UNLOADED_CHUNK;
-    @Shadow private volatile CompletableFuture<Either<Chunk, ChunkHolder.IChunkLoadingError>> entityTickingFuture;
+    //@Shadow @Final private static CompletableFuture<Either<Chunk, ChunkHolder.IChunkLoadingError>> UNLOADED_CHUNK_FUTURE;
+    //@Shadow @Final public static Either<Chunk, ChunkHolder.IChunkLoadingError> UNLOADED_CHUNK;
+    //@Shadow private volatile CompletableFuture<Either<Chunk, ChunkHolder.IChunkLoadingError>> entityTickingFuture;
     //@Shadow @Final private ChunkPos pos;
 
     @Shadow @Final private static List<ChunkStatus> CHUNK_STATUS_LIST;
-    @Shadow @Final private ChunkHolder.IListener field_219327_v;
 
-    @Shadow public abstract int func_219281_j();
+    //This is either a ChunkTaskPriorityQueueSorter or a SectionTaskPriorityQueueSorter depending on if this is a chunkholder or sectionholder.
+    @Shadow(aliases = "field_219327_v") @Final private ChunkHolder.IListener chunkHolderListener;
 
-    @Shadow protected abstract void func_219275_d(int p_219275_1_);
+    @Shadow(aliases = "func_219281_j") public abstract int getCompletedLevel();
+    @Shadow(aliases = "func_219275_d") protected abstract void setCompletedLevel(int p_219275_1_);
 
     private CompletableFuture<ISection> sectionFuture = CompletableFuture.completedFuture((ISection) null);
 
@@ -85,7 +86,8 @@ public abstract class MixinChunkHolder implements ISectionHolder {
     private static final CompletableFuture<Either<ChunkSection, ChunkHolder.IChunkLoadingError>> UNLOADED_SECTION_FUTURE =
             CompletableFuture.completedFuture(UNLOADED_SECTION);
 
-    private volatile CompletableFuture<Either<ChunkSection, ChunkHolder.IChunkLoadingError>> tickingSectionFuture;
+    private volatile CompletableFuture<Either<ChunkSection, ChunkHolder.IChunkLoadingError>> tickingSectionFuture = UNLOADED_SECTION_FUTURE;
+    private volatile CompletableFuture<Either<ChunkSection, ChunkHolder.IChunkLoadingError>> entityTickingSectionFuture = UNLOADED_SECTION_FUTURE;
 
     private final AtomicReferenceArray<CompletableFuture<Either<ISection, ChunkHolder.IChunkLoadingError>>> sectionFutureBySectionStatus = new AtomicReferenceArray<>(CHUNK_STATUS_LIST.size());
 
@@ -135,18 +137,18 @@ public abstract class MixinChunkHolder implements ISectionHolder {
 
         ChunkStatus chunkstatus = getChunkStatusFromLevel(this.prevChunkLevel);
         ChunkStatus chunkstatus1 = getChunkStatusFromLevel(this.chunkLevel);
-        boolean flag = this.prevChunkLevel <= ChunkManager.MAX_LOADED_LEVEL;
-        boolean flag1 = this.chunkLevel <= ChunkManager.MAX_LOADED_LEVEL;
-        ChunkHolder.LocationType chunkholder$locationtype = getLocationTypeFromLevel(this.prevChunkLevel);
-        ChunkHolder.LocationType chunkholder$locationtype1 = getLocationTypeFromLevel(this.chunkLevel);
-        if (flag) {
+        boolean wasFullyLoaded = this.prevChunkLevel <= ChunkManager.MAX_LOADED_LEVEL;
+        boolean isFullyLoaded = this.chunkLevel <= ChunkManager.MAX_LOADED_LEVEL;
+        ChunkHolder.LocationType previousLocationType = getLocationTypeFromLevel(this.prevChunkLevel);
+        ChunkHolder.LocationType currentLocationType = getLocationTypeFromLevel(this.chunkLevel);
+        if (wasFullyLoaded) {
             @SuppressWarnings("MixinInnerClass")
             Either<ISection, ChunkHolder.IChunkLoadingError> either = Either.right(new ChunkHolder.IChunkLoadingError() {
                 public String toString() {
                     return "Unloaded ticket level " + sectionPos.toString();
                 }
             });
-            for(int i = flag1 ? chunkstatus1.ordinal() + 1 : 0; i <= chunkstatus.ordinal(); ++i) {
+            for(int i = isFullyLoaded ? chunkstatus1.ordinal() + 1 : 0; i <= chunkstatus.ordinal(); ++i) {
                 CompletableFuture<Either<ISection, ChunkHolder.IChunkLoadingError>> completablefuture = this.sectionFutureBySectionStatus.get(i);
                 if (completablefuture != null) {
                     completablefuture.complete(either);
@@ -156,57 +158,58 @@ public abstract class MixinChunkHolder implements ISectionHolder {
             }
         }
 
-        boolean flag5 = chunkholder$locationtype.isAtLeast(ChunkHolder.LocationType.BORDER);
-        boolean flag6 = chunkholder$locationtype1.isAtLeast(ChunkHolder.LocationType.BORDER);
-        this.accessible |= flag6;
-        if (!flag5 && flag6) {
-            this.borderSectionFuture = ((IChunkManager)chunkManagerIn).createBorderFuture((ChunkHolder)(Object)this);
+        boolean wasBorder = previousLocationType.isAtLeast(ChunkHolder.LocationType.BORDER);
+        boolean isBorder = currentLocationType.isAtLeast(ChunkHolder.LocationType.BORDER);
+        this.accessible |= isBorder;
+        if (!wasBorder && isBorder) {
+            this.borderSectionFuture = ((IChunkManager)chunkManagerIn).createSectionBorderFuture((ChunkHolder)(Object)this);
             this.chainSection((CompletableFuture)this.borderSectionFuture);
         }
 
-        if (flag5 && !flag6) {
+        if (wasBorder && !isBorder) {
             CompletableFuture<Either<ChunkSection, ChunkHolder.IChunkLoadingError>> completablefuture1 = this.borderSectionFuture;
             this.borderSectionFuture = UNLOADED_SECTION_FUTURE;
-            this.chain(completablefuture1.thenApply((chunkLoadingErrorEither) -> {
-                return chunkLoadingErrorEither.ifLeft(chunkManagerIn::func_222973_a);
-            }));
+            this.chainSection(unsafeCast(completablefuture1.thenApply((chunkLoadingErrorEither) -> {
+                return chunkLoadingErrorEither.ifLeft(((IChunkManager)chunkManagerIn)::saveSectionScheduleTicks);
+            })));
         }
 
-        boolean flag7 = chunkholder$locationtype.isAtLeast(ChunkHolder.LocationType.TICKING);
-        boolean flag2 = chunkholder$locationtype1.isAtLeast(ChunkHolder.LocationType.TICKING);
-        if (!flag7 && flag2) {
-            this.tickingSectionFuture = chunkManagerIn.func_219179_a((ChunkHolder)(Object)this);
-            this.chain(this.tickingSectionFuture);
+        boolean wasTicking = previousLocationType.isAtLeast(ChunkHolder.LocationType.TICKING);
+        boolean isTicking = currentLocationType.isAtLeast(ChunkHolder.LocationType.TICKING);
+        if (!wasTicking && isTicking) {
+            this.tickingSectionFuture = ((IChunkManager)chunkManagerIn).createSectionTickingFuture((ChunkHolder)(Object)this);
+            this.chainSection(unsafeCast(this.tickingSectionFuture));
         }
 
-        if (flag7 && !flag2) {
+        if (wasTicking && !isTicking) {
             this.tickingSectionFuture.complete(UNLOADED_SECTION);
             this.tickingSectionFuture = UNLOADED_SECTION_FUTURE;
         }
 
-        boolean flag3 = chunkholder$locationtype.isAtLeast(ChunkHolder.LocationType.ENTITY_TICKING);
-        boolean flag4 = chunkholder$locationtype1.isAtLeast(ChunkHolder.LocationType.ENTITY_TICKING);
-        if (!flag3 && flag4) {
-            if (this.entityTickingFuture != UNLOADED_CHUNK_FUTURE) {
+        boolean wasEntityTicking = previousLocationType.isAtLeast(ChunkHolder.LocationType.ENTITY_TICKING);
+        boolean isEntityTicking = currentLocationType.isAtLeast(ChunkHolder.LocationType.ENTITY_TICKING);
+        if (!wasEntityTicking && isEntityTicking) {
+            if (this.entityTickingSectionFuture != UNLOADED_SECTION_FUTURE) {
                 throw (IllegalStateException) Util.pauseDevMode(new IllegalStateException());
             }
 
-            this.entityTickingFuture = chunkManagerIn.func_219188_b(this.sectionPos.asChunkPos());
-            this.chain(this.entityTickingFuture);
+            this.entityTickingSectionFuture = ((IChunkManager)chunkManagerIn).createSectionEntityTickingFuture(this.sectionPos);
+            this.chainSection(unsafeCast(this.entityTickingSectionFuture));
         }
 
-        if (flag3 && !flag4) {
-            this.entityTickingFuture.complete(UNLOADED_CHUNK);
-            this.entityTickingFuture = UNLOADED_CHUNK_FUTURE;
+        if (wasEntityTicking && !isEntityTicking) {
+            this.entityTickingSectionFuture.complete(UNLOADED_SECTION);
+            this.entityTickingSectionFuture = UNLOADED_SECTION_FUTURE;
         }
 
-        ((ISectionHolderListener)this.field_219327_v).onUpdateSectionLevel(this.sectionPos, this::func_219281_j, this.chunkLevel, this::func_219275_d);
+        ((ISectionHolderListener)this.chunkHolderListener).onUpdateSectionLevel(this.sectionPos, () -> getCompletedLevel(), this.chunkLevel,
+                p_219275_1_ -> setCompletedLevel(p_219275_1_));
         this.prevChunkLevel = this.chunkLevel;
     }
 
     // func_219276_a
     @Override
-    public CompletableFuture<Either<ISection, ChunkHolder.IChunkLoadingError>> createFuture(ChunkStatus chunkStatus, ChunkManager chunkManager)
+    public CompletableFuture<Either<ISection, ChunkHolder.IChunkLoadingError>> createSectionFuture(ChunkStatus chunkStatus, ChunkManager chunkManager)
     {
         int i = chunkStatus.ordinal();
         CompletableFuture<Either<ISection, ChunkHolder.IChunkLoadingError>> completablefuture = this.sectionFutureBySectionStatus.get(i);

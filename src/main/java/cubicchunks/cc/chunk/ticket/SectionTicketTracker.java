@@ -6,10 +6,10 @@ import net.minecraft.world.server.ChunkHolder;
 import net.minecraft.world.server.ChunkManager;
 import net.minecraft.world.server.Ticket;
 
-public class CubeTicketTracker extends SectionDistanceGraph  {
+public class SectionTicketTracker extends SectionDistanceGraph  {
     private final ITicketManager iTicketManager;
 
-    public CubeTicketTracker(ITicketManager iTicketManager) {
+    public SectionTicketTracker(ITicketManager iTicketManager) {
         //TODO: change the arguments passed into super to CCCubeManager or CCColumnManager
         super(ChunkManager.MAX_LOADED_LEVEL + 2, 16, 256);
         this.iTicketManager = iTicketManager;
@@ -44,7 +44,7 @@ public class CubeTicketTracker extends SectionDistanceGraph  {
         if (i != level) {
             chunkholder = iTicketManager.setSectionLevel(sectionPosIn, level, chunkholder, i);
             if (chunkholder != null) {
-                iTicketManager.getCubeHolders().add(chunkholder);
+                iTicketManager.getSectionHolders().add(chunkholder);
             }
 
         }

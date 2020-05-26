@@ -24,7 +24,9 @@ public interface ISectionHolder {
             ChunkHolder.IChunkLoadingError>> eitherChunk);
 
     // func_219276_a
-    CompletableFuture<Either<ISection, ChunkHolder.IChunkLoadingError>> createFuture(ChunkStatus chunkStatus, ChunkManager chunkManager);
+    CompletableFuture<Either<ISection, ChunkHolder.IChunkLoadingError>> createSectionFuture(ChunkStatus chunkStatus, ChunkManager chunkManager);
 
     CompletableFuture<Either<ISection, ChunkHolder.IChunkLoadingError>> getSectionFuture(ChunkStatus chunkStatus);
+
+    CompletableFuture<Either<ChunkSection, ChunkHolder.IChunkLoadingError>> getSectionEntityTickingFuture();
 }

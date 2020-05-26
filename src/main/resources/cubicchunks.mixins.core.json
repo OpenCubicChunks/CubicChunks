@@ -37,7 +37,8 @@
         "common.ticket.interfaces.PlayerChunkTrackerFactory",
         "common.ticket.interfaces.PlayerTicketTrackerFactory",
         "common.ticket.MixinProxyTicketManager",
-        "common.ticket.MixinTicketManager"
+        "common.ticket.MixinTicketManager",
+        "common.chunk.IEntityTracker"
     ],
     "client": [
         "client.interfaces.IBlockReaderMixin",
