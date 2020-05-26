@@ -333,7 +333,8 @@ public abstract class MixinChunkManager implements IChunkManager {
                 this.world.getProfiler().func_230035_c_("chunkLoad");
 
                 ISection iSection = SectionSerializer.loadSection(sectionPos, this.dimensionDirectory.toPath());
-                return Either.left(iSection);
+                if(iSection != null)
+                    return Either.left(iSection);
 
             } catch (ReportedException reportedexception) {
                 Throwable throwable = reportedexception.getCause();
