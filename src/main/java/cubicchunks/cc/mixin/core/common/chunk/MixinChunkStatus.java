@@ -1,7 +1,9 @@
 package cubicchunks.cc.mixin.core.common.chunk;
 
 import com.mojang.datafixers.util.Either;
+import cubicchunks.cc.chunk.ISection;
 import cubicchunks.cc.chunk.section.SectionPrimer;
+import net.minecraft.world.chunk.ChunkPrimer;
 import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.chunk.IChunk;
 import net.minecraft.world.gen.ChunkGenerator;
@@ -38,19 +40,29 @@ public class MixinChunkStatus {
     }
 
     @SuppressWarnings("UnresolvedMixinReference")
-    @Inject(method = "lambda$static$2", at = @At(
-            value = "CC_INSTANCEOF",
-            args = "class=net/minecraft/world/chunk/ChunkPrimer"
-    ))
-    private static void workerSetChunkStatus(
+    @Inject(method = "lambda$static$2", at = @At("HEAD"), cancellable = true)
+    private static void generateStructureStatus(
             ChunkStatus status, ServerWorld world, ChunkGenerator<?> generator,
             TemplateManager templateManager, ServerWorldLightManager lightManager,
             Function<IChunk, CompletableFuture<Either<IChunk, ChunkHolder.IChunkLoadingError>>> func,
             List<IChunk> chunks, IChunk chunk,
             CallbackInfoReturnable<CompletableFuture<Either<IChunk, ChunkHolder.IChunkLoadingError>>> cir) {
 
-        if (chunk instanceof SectionPrimer) {
-            ((SectionPrimer) chunk).setStatus(status);
+        cir.setReturnValue(CompletableFuture.completedFuture(Either.left(chunk)));
+        if(!(chunk instanceof ISection))
+        {
+            //vanilla
+            return;
+        }
+        //cc
+        if (!((ISection) chunk).getSectionStatus().isAtLeast(status)) {
+            if (world.getWorldInfo().isMapFeaturesEnabled()) {
+                generator.generateStructures(world.getBiomeManager().copyWithProvider(generator.getBiomeProvider()), chunk, generator, templateManager);
+            }
+
+            if (chunk instanceof SectionPrimer) {
+                ((SectionPrimer)chunk).setStatus(status);
+            }
         }
     }
 
