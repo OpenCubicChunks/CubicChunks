@@ -18,6 +18,7 @@ import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.SectionPos;
 import net.minecraft.util.palette.UpgradeData;
 import net.minecraft.world.ITickList;
+import net.minecraft.world.World;
 import net.minecraft.world.biome.BiomeContainer;
 import net.minecraft.world.chunk.ChunkSection;
 import net.minecraft.world.chunk.ChunkStatus;
@@ -75,6 +76,10 @@ public class WorldSection extends ChunkSection implements IChunk {
         return sectionPos;
     }
 
+
+    public World getWorld() {
+        return world;
+    }
 
     // vanilla stuff
 

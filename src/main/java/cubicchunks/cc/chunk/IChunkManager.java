@@ -37,4 +37,6 @@ public interface IChunkManager {
     CompletableFuture<Void> saveSectionScheduleTicks(ChunkSection sectionIn);
 
     public CompletableFuture<Either<ChunkSection, ChunkHolder.IChunkLoadingError>> createSectionEntityTickingFuture(SectionPos pos);
+
+    Iterable<ChunkHolder> getLoadedSectionsIterable();
 }

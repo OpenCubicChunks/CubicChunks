@@ -2,6 +2,7 @@ package cubicchunks.cc.chunk;
 
 import com.mojang.datafixers.util.Either;
 import cubicchunks.cc.chunk.section.SectionPrimerWrapper;
+import cubicchunks.cc.chunk.section.WorldSection;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.SectionPos;
 import net.minecraft.world.chunk.ChunkSection;
@@ -38,4 +39,6 @@ public interface ISectionHolder {
 
     // func_219294_a
     void onSectionWrapperCreated(SectionPrimerWrapper primer);
+
+    void sendChanges(WorldSection section);
 }

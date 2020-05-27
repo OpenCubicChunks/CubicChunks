@@ -7,6 +7,7 @@ import static net.minecraft.util.math.SectionPos.extractZ;
 import static net.minecraft.world.server.ChunkManager.MAX_LOADED_LEVEL;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.mojang.datafixers.DataFixer;
 import com.mojang.datafixers.util.Either;
@@ -45,10 +46,8 @@ import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.SectionPos;
 import net.minecraft.village.PointOfInterestManager;
-import net.minecraft.world.chunk.ChunkPrimer;
 import net.minecraft.world.chunk.ChunkSection;
 import net.minecraft.world.chunk.ChunkStatus;
-import net.minecraft.world.chunk.ChunkTaskPriorityQueueSorter;
 import net.minecraft.world.chunk.IChunk;
 import net.minecraft.world.chunk.IChunkLightProvider;
 import net.minecraft.world.chunk.PlayerGenerationTracker;
@@ -59,7 +58,6 @@ import net.minecraft.world.server.ChunkHolder;
 import net.minecraft.world.server.ChunkManager;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraft.world.server.ServerWorldLightManager;
-import net.minecraft.world.server.TicketType;
 import org.apache.logging.log4j.Logger;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -91,6 +89,8 @@ public abstract class MixinChunkManager implements IChunkManager {
     private SectionTaskPriorityQueueSorter sectionTaskPriorityQueueSorter;
 
     private final Long2ObjectLinkedOpenHashMap<ChunkHolder> loadedSections = new Long2ObjectLinkedOpenHashMap<>();
+    private volatile Long2ObjectLinkedOpenHashMap<ChunkHolder> immutableLoadedSections = this.loadedSections.clone();
+
     private final LongSet unloadableSections = new LongOpenHashSet();
     private final LongSet loadedSectionPositions = new LongOpenHashSet();
     private final Long2ObjectLinkedOpenHashMap<ChunkHolder> sectionsToUnload = new Long2ObjectLinkedOpenHashMap<>();
@@ -134,6 +134,8 @@ public abstract class MixinChunkManager implements IChunkManager {
     @Shadow private int viewDistance;
 
     @Shadow @Final private Int2ObjectMap<ChunkManager.EntityTracker> entities;
+
+    @Shadow @Final private Long2ObjectLinkedOpenHashMap<ChunkHolder> loadedChunks;
 
     @Inject(method = "<init>", at = @At("RETURN"), locals = LocalCapture.CAPTURE_FAILHARD)
     private void onConstruct(ServerWorld worldIn, File worldDirectory, DataFixer p_i51538_3_, TemplateManager templateManagerIn,
@@ -235,6 +237,16 @@ public abstract class MixinChunkManager implements IChunkManager {
             ((ISectionStatusListener) field_219266_t).sectionStatusChanged(
                     ((ISectionHolder) chunkHolderIn).getSectionPos(), null);
         }
+    }
+
+    @Inject(method = "refreshOffThreadCache", at = @At(value = "INVOKE", target = "Lit/unimi/dsi/fastutil/longs/Long2ObjectLinkedOpenHashMap;clone()Lit/unimi/dsi/fastutil/longs/Long2ObjectLinkedOpenHashMap;"))
+    private void onRefreshCache(CallbackInfoReturnable<Boolean> cir) {
+        this.immutableLoadedSections = loadedChunks.clone();
+    }
+
+    @Override
+    public Iterable<ChunkHolder> getLoadedSectionsIterable() {
+        return Iterables.unmodifiableIterable(this.immutableLoadedSections.values());
     }
 
     //func_219244_a
