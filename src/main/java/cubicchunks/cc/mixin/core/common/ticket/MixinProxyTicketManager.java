@@ -26,7 +26,7 @@ public abstract class MixinProxyTicketManager extends MixinTicketManager {
     }
 
     @Override
-    public ChunkHolder getSectionHolder(long sectionPosIn) {
-        return ((IChunkManager)this$0).getSectionHolder(sectionPosIn);
+    public ChunkHolder getCubeHolder(long sectionPosIn) {
+        return ((IChunkManager)this$0).getCubeHolder(sectionPosIn);
     }
 }

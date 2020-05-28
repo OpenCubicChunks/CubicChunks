@@ -37,20 +37,20 @@ public class PlayerSectionTicketTracker extends PlayerSectionTracker {
         if (oldWithinViewDistance != withinViewDistance) {
             Ticket<?> ticket = new Ticket<>(CCTicketType.CCPLAYER, ITicketManager.PLAYER_TICKET_LEVEL, SectionPos.from(sectionPosIn));
             if (withinViewDistance) {
-                iTicketManager.getSectionPlayerTicketThrottler().enqueue(SectionTaskPriorityQueueSorter.createMsg(() -> {
+                iTicketManager.getSectionPlayerTicketThrottler().enqueue(CubeTaskPriorityQueueSorter.createMsg(() -> {
                     iTicketManager.executor().execute(() -> {
                         if (this.isWithinViewDistance(this.getLevel(sectionPosIn))) {
                             iTicketManager.registerSection(sectionPosIn, ticket);
                             iTicketManager.getSectionPositions().add(sectionPosIn);
                         } else {
-                            iTicketManager.getPlayerSectionTicketThrottlerSorter().enqueue(SectionTaskPriorityQueueSorter.createSorterMsg(() -> {
+                            iTicketManager.getPlayerSectionTicketThrottlerSorter().enqueue(CubeTaskPriorityQueueSorter.createSorterMsg(() -> {
                             }, sectionPosIn, false));
                         }
 
                     });
                 }, sectionPosIn, () -> distance));
             } else {
-                iTicketManager.getPlayerSectionTicketThrottlerSorter().enqueue(SectionTaskPriorityQueueSorter.createSorterMsg(() -> {
+                iTicketManager.getPlayerSectionTicketThrottlerSorter().enqueue(CubeTaskPriorityQueueSorter.createSorterMsg(() -> {
                     iTicketManager.executor().execute(() -> {
                         iTicketManager.releaseSection(sectionPosIn, ticket);
                     });
@@ -71,7 +71,7 @@ public class PlayerSectionTicketTracker extends PlayerSectionTracker {
                 int k = this.getLevel(i);
                 if (j != k) {
                     //func_219066_a = update level
-                    iTicketManager.getSectionTaskPriorityQueueSorter().onUpdateSectionLevel(SectionPos.from(i), () -> this.distances.get(i), k, (ix) -> {
+                    iTicketManager.getCubeTaskPriorityQueueSorter().onUpdateSectionLevel(SectionPos.from(i), () -> this.distances.get(i), k, (ix) -> {
                         if (ix >= this.distances.defaultReturnValue()) {
                             this.distances.remove(i);
                         } else {

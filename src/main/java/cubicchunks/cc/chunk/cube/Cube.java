@@ -1,9 +1,8 @@
-package cubicchunks.cc.chunk.section;
+package cubicchunks.cc.chunk.cube;
 
-import cubicchunks.cc.chunk.ISection;
+import cubicchunks.cc.chunk.ICube;
 import cubicchunks.cc.mixin.core.common.chunk.ChunkSectionAccess;
-import cubicchunks.cc.utils.Coords;
-import cubicchunks.cc.chunk.biome.SectionBiomeContainer;
+import cubicchunks.cc.chunk.biome.CubeBiomeContainer;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import it.unimi.dsi.fastutil.shorts.ShortList;
 import net.minecraft.block.Block;
@@ -38,18 +37,18 @@ import javax.annotation.Nullable;
 
 //ChunkSection is the simple section, with only basic information in it.
 //WorldSection is the complete section, with all entity, fluid, etc information in it.
-public class WorldSection extends ChunkSection implements IChunk, ISection {
+public class Cube extends ChunkSection implements IChunk, ICube {
     private final SectionPos sectionPos;
 
     private final HashMap<BlockPos, TileEntity> tileEntities = new HashMap<>();
     private final ClassInheritanceMultiMap<Entity> entities = new ClassInheritanceMultiMap<>(Entity.class);
     private final ServerWorld world;
 
-    private ChunkStatus sectionStatus;
+    private ChunkStatus cubeStatus;
 
-    private SectionBiomeContainer sectionBiomeContainer;
+    private CubeBiomeContainer cubeBiomeContainer;
 
-    public WorldSection(ServerWorld world, ChunkSection section, SectionPos pos) {
+    public Cube(ServerWorld world, ChunkSection section, SectionPos pos) {
         super(pos.getWorldStartY(), ((ChunkSectionAccess) section).getBlockRefCount(),
                 ((ChunkSectionAccess) section).getBlockTickRefCount(),
                 ((ChunkSectionAccess) section).getFluidRefCount());
@@ -58,9 +57,9 @@ public class WorldSection extends ChunkSection implements IChunk, ISection {
         this.world = world;
     }
 
-    public void setSectionBiomeContainer(SectionBiomeContainer biomes)
+    public void setCubeBiomeContainer(CubeBiomeContainer biomes)
     {
-        this.sectionBiomeContainer = biomes;
+        this.cubeBiomeContainer = biomes;
     }
 
     public Map<BlockPos, TileEntity> getTileEntityMap() {
@@ -75,14 +74,14 @@ public class WorldSection extends ChunkSection implements IChunk, ISection {
         // todo: implement
     }
 
-    @Override public ChunkStatus getSectionStatus() {
-        return this.sectionStatus;
+    @Override public ChunkStatus getCubeStatus() {
+        return this.cubeStatus;
     }
 
     @Override
-    public void setSectionStatus(ChunkStatus status)
+    public void setCubeStatus(ChunkStatus status)
     {
-        this.sectionStatus = status;
+        this.cubeStatus = status;
     }
 
     public SectionPos getSectionPos() {

@@ -1,7 +1,7 @@
 package cubicchunks.cc.mixin.core.client.progress;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import cubicchunks.cc.chunk.ITrackingSectionStatusListener;
+import cubicchunks.cc.chunk.ITrackingCubeStatusListener;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.WorldLoadProgressScreen;
@@ -75,7 +75,7 @@ public class MixinWorldLoadProgressScreen extends Screen {
             for (int dz = 0; dz < totalDiameter; ++dz) {
                 Map<ChunkStatus, Integer> statusCounts = new HashMap<>();
                 for (int dy = 0; dy < totalDiameter; dy++) {
-                    ChunkStatus chunkstatus = ((ITrackingSectionStatusListener) trackerParam).getSectionStatus(dx, dy, dz);
+                    ChunkStatus chunkstatus = ((ITrackingCubeStatusListener) trackerParam).getCubeStatus(dx, dy, dz);
                     statusCounts.putIfAbsent(chunkstatus, 0);
                     //noinspection ConstantConditions
                     statusCounts.compute(chunkstatus, (status, count) -> count + 1);

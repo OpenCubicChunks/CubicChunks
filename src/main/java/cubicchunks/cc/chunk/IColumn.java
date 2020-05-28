@@ -8,5 +8,5 @@ import javax.annotation.Nullable;
 
 public interface IColumn {
 
-    void readSection(int sectionY, @Nullable BiomeContainer biomeContainerIn, PacketBuffer dataBuffer, CompoundNBT nbtIn, boolean sectionExists);
+    void readSection(int cubeY, @Nullable BiomeContainer biomeContainerIn, PacketBuffer dataBuffer, CompoundNBT nbtIn, boolean cubeExists);
 }

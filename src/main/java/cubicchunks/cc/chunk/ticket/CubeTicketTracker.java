@@ -6,10 +6,10 @@ import net.minecraft.world.server.ChunkHolder;
 import net.minecraft.world.server.ChunkManager;
 import net.minecraft.world.server.Ticket;
 
-public class SectionTicketTracker extends SectionDistanceGraph  {
+public class CubeTicketTracker extends SectionDistanceGraph  {
     private final ITicketManager iTicketManager;
 
-    public SectionTicketTracker(ITicketManager iTicketManager) {
+    public CubeTicketTracker(ITicketManager iTicketManager) {
         //TODO: change the arguments passed into super to CCCubeManager or CCColumnManager
         super(ChunkManager.MAX_LOADED_LEVEL + 2, 16, 256);
         this.iTicketManager = iTicketManager;
@@ -28,7 +28,7 @@ public class SectionTicketTracker extends SectionDistanceGraph  {
     @Override
     protected int getLevel(long sectionPosIn) {
         if (!iTicketManager.containsSections(sectionPosIn)) {
-            ChunkHolder chunkholder = iTicketManager.getSectionHolder(sectionPosIn);
+            ChunkHolder chunkholder = iTicketManager.getCubeHolder(sectionPosIn);
             if (chunkholder != null) {
                 return chunkholder.getChunkLevel();
             }
@@ -39,12 +39,12 @@ public class SectionTicketTracker extends SectionDistanceGraph  {
 
     @Override
     protected void setLevel(long sectionPosIn, int level) {
-        ChunkHolder chunkholder = iTicketManager.getSectionHolder(sectionPosIn);
+        ChunkHolder chunkholder = iTicketManager.getCubeHolder(sectionPosIn);
         int i = chunkholder == null ? ChunkManager.MAX_LOADED_LEVEL + 1 : chunkholder.getChunkLevel();
         if (i != level) {
             chunkholder = iTicketManager.setSectionLevel(sectionPosIn, level, chunkholder, i);
             if (chunkholder != null) {
-                iTicketManager.getSectionHolders().add(chunkholder);
+                iTicketManager.getCubeHolders().add(chunkholder);
             }
 
         }

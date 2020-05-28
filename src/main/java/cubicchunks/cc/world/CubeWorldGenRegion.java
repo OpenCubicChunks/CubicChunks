@@ -1,17 +1,11 @@
 package cubicchunks.cc.world;
 
-import cubicchunks.cc.chunk.ISection;
-import net.minecraft.block.Block;
-import net.minecraft.fluid.Fluid;
+import cubicchunks.cc.chunk.ICube;
 import net.minecraft.util.Util;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.SectionPos;
-import net.minecraft.world.ITickList;
-import net.minecraft.world.WorldGenTickList;
-import net.minecraft.world.biome.BiomeManager;
 import net.minecraft.world.chunk.ChunkStatus;
-import net.minecraft.world.chunk.IChunk;
 import net.minecraft.world.dimension.Dimension;
 import net.minecraft.world.gen.GenerationSettings;
 import net.minecraft.world.server.ServerWorld;
@@ -25,7 +19,7 @@ import java.util.Random;
 public class CubeWorldGenRegion {
 
     private static final Logger LOGGER = LogManager.getLogger();
-    private final List<ISection> sectionPrimers;
+    private final List<ICube> sectionPrimers;
     private final int mainCubeX;
     private final int mainCubeY;
     private final int mainCubeZ;
@@ -45,7 +39,7 @@ public class CubeWorldGenRegion {
 //    });
 //    private final BiomeManager biomeManager;
 
-    public CubeWorldGenRegion(ServerWorld worldIn, List<ISection> sectionsIn) {
+    public CubeWorldGenRegion(ServerWorld worldIn, List<ICube> sectionsIn) {
         int i = MathHelper.floor(Math.sqrt(sectionsIn.size()));
         if (i * i != sectionsIn.size()) {
             throw Util.pauseDevMode(new IllegalStateException("Cache size is not a square."));
@@ -67,14 +61,14 @@ public class CubeWorldGenRegion {
         }
     }
 
-    public ISection getSection(BlockPos blockPos)
+    public ICube getSection(BlockPos blockPos)
     {
         return this.getSection(blockPos.getX() >> 4, blockPos.getY() >> 4, blockPos.getZ() >> 4, ChunkStatus.FULL, true);
     }
 
-    public ISection getSection(int x, int y, int z, ChunkStatus requiredStatus, boolean nonnull)
+    public ICube getSection(int x, int y, int z, ChunkStatus requiredStatus, boolean nonnull)
     {
-        ISection isection;
+        ICube isection;
         if (this.cubeExists(x, y, z)) {
             SectionPos sectionPos = this.sectionPrimers.get(0).getSectionPos();
             int i = x - sectionPos.getX();
@@ -82,7 +76,7 @@ public class CubeWorldGenRegion {
             int k = z - sectionPos.getZ();
             //TODO: index into flat 3dim array correctly
             isection = this.sectionPrimers.get(i + k * this.diameter);
-            if (isection.getSectionStatus().isAtLeast(requiredStatus)) {
+            if (isection.getCubeStatus().isAtLeast(requiredStatus)) {
                 return isection;
             }
         } else {
@@ -92,15 +86,15 @@ public class CubeWorldGenRegion {
         if (!nonnull) {
             return null;
         } else {
-            ISection isection1 = this.sectionPrimers.get(0);
-            ISection isection2 = this.sectionPrimers.get(this.sectionPrimers.size() - 1);
+            ICube isection1 = this.sectionPrimers.get(0);
+            ICube isection2 = this.sectionPrimers.get(this.sectionPrimers.size() - 1);
             LOGGER.error("Requested section : {} {} {}", x, y, z);
             LOGGER.error("Region bounds : {} {} {} | {} {} {}",
                     isection1.getSectionPos().getX(), isection1.getSectionPos().getY(), isection1.getSectionPos().getZ(),
                     isection2.getSectionPos().getX(), isection2.getSectionPos().getY(), isection2.getSectionPos().getZ());
             if (isection != null) {
                 throw (RuntimeException)Util.pauseDevMode(new RuntimeException(String.format("Section is not of correct status. Expecting %s, got %s "
-                        + "| %s %s %s", requiredStatus, isection.getSectionStatus(), x, y, z)));
+                        + "| %s %s %s", requiredStatus, isection.getCubeStatus(), x, y, z)));
             } else {
                 throw (RuntimeException)Util.pauseDevMode(new RuntimeException(String.format("We are asking a region for a section out of bound | "
                         + "%s %s %s", x, y, z)));
@@ -110,8 +104,8 @@ public class CubeWorldGenRegion {
 
     public boolean cubeExists(int x, int y, int z)
     {
-        ISection isection = this.sectionPrimers.get(0);
-        ISection isection2 = this.sectionPrimers.get(this.sectionPrimers.size() - 1);
+        ICube isection = this.sectionPrimers.get(0);
+        ICube isection2 = this.sectionPrimers.get(this.sectionPrimers.size() - 1);
         return x >= isection.getSectionPos().getX() && x <= isection2.getSectionPos().getX() &&
                 y >= isection.getSectionPos().getY() && y <= isection2.getSectionPos().getY() &&
                 z >= isection.getSectionPos().getZ() && z <= isection2.getSectionPos().getZ();

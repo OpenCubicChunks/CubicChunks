@@ -1,6 +1,6 @@
-package cubicchunks.cc.chunk.section;
+package cubicchunks.cc.chunk.cube;
 
-import cubicchunks.cc.chunk.ISection;
+import cubicchunks.cc.chunk.ICube;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import it.unimi.dsi.fastutil.shorts.ShortList;
 import net.minecraft.block.Block;
@@ -28,15 +28,15 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Stream;
 
-public class SectionPrimerWrapper extends SectionPrimer implements ISection, IChunk {
+public class CubePrimerWrapper extends CubePrimer implements ICube, IChunk {
 
-    WorldSection worldSection;
-    public SectionPrimerWrapper(SectionPos pos)
+    Cube worldSection;
+    public CubePrimerWrapper(SectionPos pos)
     {
         super(pos, null);
     }
 
-    public SectionPrimerWrapper(WorldSection chunkSection) {
+    public CubePrimerWrapper(Cube chunkSection) {
         super(chunkSection.getSectionPos(), chunkSection);
     }
 
@@ -124,13 +124,13 @@ public class SectionPrimerWrapper extends SectionPrimer implements ISection, ICh
     }
 
     @Override
-    public ChunkStatus getSectionStatus() {
-        return this.worldSection.getSectionStatus();
+    public ChunkStatus getCubeStatus() {
+        return this.worldSection.getCubeStatus();
     }
     @Override
-    public void setSectionStatus(ChunkStatus status)
+    public void setCubeStatus(ChunkStatus status)
     {
-        this.worldSection.setSectionStatus(status);
+        this.worldSection.setCubeStatus(status);
     }
 
     @Override public SectionPos getSectionPos() {

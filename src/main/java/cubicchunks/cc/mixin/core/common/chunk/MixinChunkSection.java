@@ -20,7 +20,7 @@ public abstract class MixinChunkSection implements IChunkSection {
     //private ITickList<Block> blocksToBeTicked;
 
 
-    public ChunkStatus getSectionStatus() {
+    public ChunkStatus getCubeStatus() {
         return status;
     }
 }

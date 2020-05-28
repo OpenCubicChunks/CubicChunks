@@ -1,7 +1,7 @@
 package cubicchunks.cc.mixin.core.common.chunk;
 
 import com.mojang.datafixers.util.Either;
-import cubicchunks.cc.chunk.section.SectionPrimer;
+import cubicchunks.cc.chunk.cube.CubePrimer;
 import net.minecraft.world.chunk.ChunkPrimer;
 import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.chunk.IChunk;
@@ -38,8 +38,8 @@ public interface MixinISelectiveWorker {
             this.doWork(p_doWork_2_, p_doWork_3_, p_doWork_7_, chunk);
             if (chunk instanceof ChunkPrimer) {
                 ((ChunkPrimer)chunk).setStatus(status);
-            } else if (chunk instanceof SectionPrimer) {
-                ((SectionPrimer) chunk).setStatus(status);
+            } else if (chunk instanceof CubePrimer) {
+                ((CubePrimer) chunk).setStatus(status);
             }
         }
         return CompletableFuture.completedFuture(Either.left(chunk));

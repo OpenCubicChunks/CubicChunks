@@ -4,6 +4,6 @@ import net.minecraft.world.chunk.ChunkStatus;
 
 public interface IChunkSection {
 
-    ChunkStatus getSectionStatus();
+    ChunkStatus getCubeStatus();
 
 }

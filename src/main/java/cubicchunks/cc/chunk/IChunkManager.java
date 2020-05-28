@@ -2,7 +2,6 @@ package cubicchunks.cc.chunk;
 
 import com.mojang.datafixers.util.Either;
 import it.unimi.dsi.fastutil.longs.LongSet;
-import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.SectionPos;
 import net.minecraft.world.chunk.ChunkSection;
 import net.minecraft.world.chunk.ChunkStatus;
@@ -21,9 +20,9 @@ public interface IChunkManager {
 
     LongSet getUnloadableSections();
 
-    ChunkHolder getSectionHolder(long sectionPosIn);
+    ChunkHolder getCubeHolder(long sectionPosIn);
 
-    CompletableFuture<Either<ISection, ChunkHolder.IChunkLoadingError>> createSectionFuture(ChunkHolder chunkHolderIn,
+    CompletableFuture<Either<ICube, ChunkHolder.IChunkLoadingError>> createSectionFuture(ChunkHolder chunkHolderIn,
             ChunkStatus chunkStatusIn);
 
     CompletableFuture<Either<ChunkSection, ChunkHolder.IChunkLoadingError>> createSectionBorderFuture(ChunkHolder chunkHolder);
@@ -31,7 +30,7 @@ public interface IChunkManager {
 
     CompletableFuture<Either<ChunkSection, ChunkHolder.IChunkLoadingError>> createSectionTickingFuture(ChunkHolder chunkHolder);
 
-    CompletableFuture<Either<List<ISection>, ChunkHolder.IChunkLoadingError>> createSectionRegionFuture(SectionPos pos, int p_219236_2_,
+    CompletableFuture<Either<List<ICube>, ChunkHolder.IChunkLoadingError>> createSectionRegionFuture(SectionPos pos, int p_219236_2_,
             IntFunction<ChunkStatus> p_219236_3_);
 
     CompletableFuture<Void> saveSectionScheduleTicks(ChunkSection sectionIn);

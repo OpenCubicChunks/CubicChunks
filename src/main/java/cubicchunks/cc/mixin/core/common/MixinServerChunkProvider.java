@@ -1,16 +1,12 @@
 package cubicchunks.cc.mixin.core.common;
 
 import cubicchunks.cc.chunk.IChunkManager;
-import cubicchunks.cc.chunk.ISection;
-import cubicchunks.cc.chunk.ISectionHolder;
-import cubicchunks.cc.chunk.section.WorldSection;
+import cubicchunks.cc.chunk.ICubeHolder;
+import cubicchunks.cc.chunk.cube.Cube;
 import cubicchunks.cc.chunk.ticket.ITicketManager;
 import cubicchunks.cc.server.IServerChunkProvider;
-import net.minecraft.entity.EntityClassification;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.SectionPos;
-import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkSection;
 import net.minecraft.world.server.ChunkHolder;
 import net.minecraft.world.server.ChunkManager;
@@ -18,7 +14,6 @@ import net.minecraft.world.server.ServerChunkProvider;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraft.world.server.TicketManager;
 import net.minecraft.world.server.TicketType;
-import net.minecraft.world.spawner.WorldEntitySpawner;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
@@ -54,7 +49,7 @@ public class MixinServerChunkProvider implements IServerChunkProvider {
         int x = pos.getX() >> 4;
         int y = pos.getX() >> 4;
         int z = pos.getZ() >> 4;
-        ChunkHolder chunkholder = ((IChunkManager) this.chunkManager).getSectionHolder(SectionPos.asLong(x, y, z));
+        ChunkHolder chunkholder = ((IChunkManager) this.chunkManager).getCubeHolder(SectionPos.asLong(x, y, z));
         if (chunkholder != null) {
             chunkholder.markBlockChanged(pos.getX() & 15, pos.getY() & 15, pos.getZ() & 15);
         }
@@ -64,13 +59,13 @@ public class MixinServerChunkProvider implements IServerChunkProvider {
             at = @At(value = "INVOKE", target = "Lnet/minecraft/world/server/ChunkManager;getLoadedChunksIterable()Ljava/lang/Iterable;"))
     private void tickSections(CallbackInfo ci) {
 
-        ((IChunkManager) this.chunkManager).getLoadedSectionsIterable().forEach((sectionHolder) -> {
+        ((IChunkManager) this.chunkManager).getLoadedSectionsIterable().forEach((cubeHolder) -> {
             Optional<ChunkSection> optional =
-                    ((ISectionHolder) sectionHolder).getSectionEntityTickingFuture().getNow(ISectionHolder.UNLOADED_SECTION).left();
+                    ((ICubeHolder) cubeHolder).getSectionEntityTickingFuture().getNow(ICubeHolder.UNLOADED_SECTION).left();
             if (optional.isPresent()) {
-                WorldSection section = (WorldSection) optional.get();
+                Cube section = (Cube) optional.get();
                 this.world.getProfiler().startSection("broadcast");
-                ((ISectionHolder) sectionHolder).sendChanges(section);
+                ((ICubeHolder) cubeHolder).sendChanges(section);
                 this.world.getProfiler().endSection();
             }
         });

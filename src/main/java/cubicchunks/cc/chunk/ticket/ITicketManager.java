@@ -47,15 +47,15 @@ public interface ITicketManager {
 
     Long2ObjectMap<ObjectSet<ServerPlayerEntity>> getPlayersBySectionPos();
 
-    ITaskExecutor<SectionTaskPriorityQueueSorter.FunctionEntry<Runnable>> getSectionPlayerTicketThrottler();
+    ITaskExecutor<CubeTaskPriorityQueueSorter.FunctionEntry<Runnable>> getSectionPlayerTicketThrottler();
 
-    ITaskExecutor<SectionTaskPriorityQueueSorter.RunnableEntry> getPlayerSectionTicketThrottlerSorter();
+    ITaskExecutor<CubeTaskPriorityQueueSorter.RunnableEntry> getPlayerSectionTicketThrottlerSorter();
 
     LongSet getSectionPositions();
 
-    Set<ChunkHolder> getSectionHolders();
+    Set<ChunkHolder> getCubeHolders();
 
-    ChunkHolder getSectionHolder(long chunkPosIn);
+    ChunkHolder getCubeHolder(long chunkPosIn);
 
     ChunkHolder setSectionLevel(long chunkPosIn, int newLevel, @Nullable ChunkHolder holder, int oldLevel);
 
@@ -63,5 +63,5 @@ public interface ITicketManager {
 
     Executor executor();
 
-    SectionTaskPriorityQueueSorter getSectionTaskPriorityQueueSorter();
+    CubeTaskPriorityQueueSorter getCubeTaskPriorityQueueSorter();
 }

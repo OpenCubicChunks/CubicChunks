@@ -2,7 +2,7 @@ package cubicchunks.cc.mixin.core.common.ticket;
 
 import com.google.common.collect.ImmutableList;
 import com.mojang.datafixers.util.Either;
-import cubicchunks.cc.chunk.ISectionHolder;
+import cubicchunks.cc.chunk.ICubeHolder;
 import cubicchunks.cc.chunk.graph.CCTicketType;
 import cubicchunks.cc.chunk.ticket.*;
 import cubicchunks.cc.mixin.core.common.chunk.interfaces.InvokeChunkHolder;
@@ -34,7 +34,7 @@ public abstract class MixinTicketManager implements ITicketManager {
     private final Long2ObjectOpenHashMap<SortedArraySet<Ticket<?>>> sectionTickets = new Long2ObjectOpenHashMap<>();
     private final Long2ObjectMap<ObjectSet<ServerPlayerEntity>> playersBySectionPos = new Long2ObjectOpenHashMap<>();
 
-    private final Set<ChunkHolder> sectionHolders = new HashSet<>();
+    private final Set<ChunkHolder> cubeHolders = new HashSet<>();
     private final LongSet sectionPositions = new LongOpenHashSet();
 
 
@@ -50,21 +50,21 @@ public abstract class MixinTicketManager implements ITicketManager {
 
     @Shadow protected abstract void register(long chunkPosIn, Ticket<?> ticketIn);
 
-    private final SectionTicketTracker sectionTicketTracker = new SectionTicketTracker(this);
+    private final CubeTicketTracker cubeTicketTracker = new CubeTicketTracker(this);
     private final PlayerSectionTracker playerSectionTracker = new PlayerSectionTracker(this, 8);
     private final PlayerSectionTicketTracker playerSectionTicketTracker = new PlayerSectionTicketTracker(this, 33);
-    private SectionTaskPriorityQueueSorter sectionTaskPriorityQueueSorter;
-    private ITaskExecutor<SectionTaskPriorityQueueSorter.FunctionEntry<Runnable>> playerSectionTicketThrottler;
-    private ITaskExecutor<SectionTaskPriorityQueueSorter.RunnableEntry> playerSectionTicketThrottlerSorter;
+    private CubeTaskPriorityQueueSorter cubeTaskPriorityQueueSorter;
+    private ITaskExecutor<CubeTaskPriorityQueueSorter.FunctionEntry<Runnable>> playerSectionTicketThrottler;
+    private ITaskExecutor<CubeTaskPriorityQueueSorter.RunnableEntry> playerSectionTicketThrottlerSorter;
 
     @Inject(method = "<init>", at = @At("RETURN"))
     public void init(Executor executor, Executor executor2, CallbackInfo ci) {
         ITaskExecutor<Runnable> itaskexecutor = ITaskExecutor.inline("player ticket throttler", executor2::execute);
-        SectionTaskPriorityQueueSorter
-                sectionTaskPriorityQueueSorter = new SectionTaskPriorityQueueSorter(ImmutableList.of(itaskexecutor), executor, 4);
-        this.sectionTaskPriorityQueueSorter = sectionTaskPriorityQueueSorter;
-        this.playerSectionTicketThrottler = sectionTaskPriorityQueueSorter.createExecutor(itaskexecutor, true);
-        this.playerSectionTicketThrottlerSorter = sectionTaskPriorityQueueSorter.createSorterExecutor(itaskexecutor);
+        CubeTaskPriorityQueueSorter
+                cubeTaskPriorityQueueSorter = new CubeTaskPriorityQueueSorter(ImmutableList.of(itaskexecutor), executor, 4);
+        this.cubeTaskPriorityQueueSorter = cubeTaskPriorityQueueSorter;
+        this.playerSectionTicketThrottler = cubeTaskPriorityQueueSorter.createExecutor(itaskexecutor, true);
+        this.playerSectionTicketThrottlerSorter = cubeTaskPriorityQueueSorter.createSorterExecutor(itaskexecutor);
     }
 
     @Override
@@ -74,7 +74,7 @@ public abstract class MixinTicketManager implements ITicketManager {
         Ticket<?> ticket = sortedarrayset.func_226175_a_(ticketIn);
         ((InvokeTicket) ticket).setTimestampCC(this.currentTime);
         if (ticketIn.getLevel() < i) {
-            this.sectionTicketTracker.updateSourceLevel(sectionPosIn, ticketIn.getLevel(), true);
+            this.cubeTicketTracker.updateSourceLevel(sectionPosIn, ticketIn.getLevel(), true);
         }
         this.register(SectionPos.from(sectionPosIn).asChunkPos().asLong(), ticketIn);
     }
@@ -88,7 +88,7 @@ public abstract class MixinTicketManager implements ITicketManager {
             this.sectionTickets.remove(sectionPosIn);
         }
 
-        this.sectionTicketTracker.updateSourceLevel(sectionPosIn, getLevel(sortedarrayset), false);
+        this.cubeTicketTracker.updateSourceLevel(sectionPosIn, getLevel(sortedarrayset), false);
     }
 
     private SortedArraySet<Ticket<?>> getSectionTicketSet(long sectionPos) {
@@ -107,11 +107,11 @@ public abstract class MixinTicketManager implements ITicketManager {
     public void processUpdates(ChunkManager chunkManager, CallbackInfoReturnable<Boolean> callbackInfoReturnable) {
         this.playerSectionTracker.processAllUpdates();
         this.playerSectionTicketTracker.processAllUpdates();
-        int i = Integer.MAX_VALUE - this.sectionTicketTracker.update(Integer.MAX_VALUE);
+        int i = Integer.MAX_VALUE - this.cubeTicketTracker.update(Integer.MAX_VALUE);
         boolean flag = i != 0;
-        if (!this.sectionHolders.isEmpty()) {
-            this.sectionHolders.forEach((cubeHolder) -> ((InvokeChunkHolder) cubeHolder).processUpdatesCC(chunkManager));
-            this.sectionHolders.clear();
+        if (!this.cubeHolders.isEmpty()) {
+            this.cubeHolders.forEach((cubeHolder) -> ((InvokeChunkHolder) cubeHolder).processUpdatesCC(chunkManager));
+            this.cubeHolders.clear();
             callbackInfoReturnable.setReturnValue(true);
             return;
         } else {
@@ -127,9 +127,9 @@ public abstract class MixinTicketManager implements ITicketManager {
                         }
 
                         CompletableFuture<Either<ChunkSection, ChunkHolder.IChunkLoadingError>> sectionEntityTickingFuture =
-                                ((ISectionHolder)chunkholder).getSectionEntityTickingFuture();
+                                ((ICubeHolder)chunkholder).getSectionEntityTickingFuture();
                         sectionEntityTickingFuture.thenAccept((p_219363_3_) -> this.field_219388_p.execute(() -> {
-                            this.playerSectionTicketThrottlerSorter.enqueue(SectionTaskPriorityQueueSorter.createSorterMsg(() -> {
+                            this.playerSectionTicketThrottlerSorter.enqueue(CubeTaskPriorityQueueSorter.createSorterMsg(() -> {
                             }, j, false));
                         }));
                     }
@@ -154,7 +154,7 @@ public abstract class MixinTicketManager implements ITicketManager {
         while (objectiterator.hasNext()) {
             Long2ObjectMap.Entry<SortedArraySet<Ticket<?>>> entry = objectiterator.next();
             if (entry.getValue().removeIf((ticket) -> ((InvokeTicket) ticket).cc$isexpired(this.currentTime))) {
-                this.sectionTicketTracker.updateSourceLevel(entry.getLongKey(), getLevel(entry.getValue()), false);
+                this.cubeTicketTracker.updateSourceLevel(entry.getLongKey(), getLevel(entry.getValue()), false);
             }
             if (entry.getValue().isEmpty()) {
                 objectiterator.remove();
@@ -226,12 +226,12 @@ public abstract class MixinTicketManager implements ITicketManager {
     }
 
     @Override
-    public ITaskExecutor<SectionTaskPriorityQueueSorter.FunctionEntry<Runnable>> getSectionPlayerTicketThrottler() {
+    public ITaskExecutor<CubeTaskPriorityQueueSorter.FunctionEntry<Runnable>> getSectionPlayerTicketThrottler() {
         return playerSectionTicketThrottler;
     }
 
     @Override
-    public ITaskExecutor<SectionTaskPriorityQueueSorter.RunnableEntry> getPlayerSectionTicketThrottlerSorter() { return playerSectionTicketThrottlerSorter; }
+    public ITaskExecutor<CubeTaskPriorityQueueSorter.RunnableEntry> getPlayerSectionTicketThrottlerSorter() { return playerSectionTicketThrottlerSorter; }
 
     @Override
     public LongSet getSectionPositions() {
@@ -239,9 +239,9 @@ public abstract class MixinTicketManager implements ITicketManager {
     }
 
     @Override
-    public Set<ChunkHolder> getSectionHolders()
+    public Set<ChunkHolder> getCubeHolders()
     {
-        return this.sectionHolders;
+        return this.cubeHolders;
     }
 
     @Override
@@ -250,8 +250,8 @@ public abstract class MixinTicketManager implements ITicketManager {
     }
 
     @Override
-    public SectionTaskPriorityQueueSorter getSectionTaskPriorityQueueSorter() {
-        return sectionTaskPriorityQueueSorter;
+    public CubeTaskPriorityQueueSorter getCubeTaskPriorityQueueSorter() {
+        return cubeTaskPriorityQueueSorter;
     }
 
     @Override

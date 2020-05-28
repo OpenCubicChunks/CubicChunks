@@ -6,11 +6,11 @@ import net.minecraft.world.chunk.listener.IChunkStatusListener;
 
 import javax.annotation.Nullable;
 
-public interface ISectionStatusListener extends IChunkStatusListener {
+public interface ICubeStatusListener extends IChunkStatusListener {
 
     default void startSections(SectionPos center) {
     }
 
-    default void sectionStatusChanged(SectionPos chunkPosition, @Nullable ChunkStatus newStatus) {
+    default void cubeStatusChanged(SectionPos chunkPosition, @Nullable ChunkStatus newStatus) {
     }
 }

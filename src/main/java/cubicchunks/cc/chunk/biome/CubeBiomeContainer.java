@@ -2,35 +2,33 @@ package cubicchunks.cc.chunk.biome;
 
 import cubicchunks.cc.mixin.core.common.biome.IBiomeContainer;
 import net.minecraft.network.PacketBuffer;
-import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.SectionPos;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.BiomeContainer;
 import net.minecraft.world.biome.provider.BiomeProvider;
-import net.minecraftforge.registries.ForgeRegistries;
 
 import javax.annotation.Nullable;
 
-public class SectionBiomeContainer extends BiomeContainer {
+public class CubeBiomeContainer extends BiomeContainer {
 
     private static final int SIZE_BITS = (int)Math.round(Math.log(16.0D) / Math.log(2.0D)) - 2;
     public static final int BIOMES_SIZE = 1 << SIZE_BITS + SIZE_BITS + SIZE_BITS;
 
-    private SectionBiomeContainer()
+    private CubeBiomeContainer()
     {
         this(new Biome[BIOMES_SIZE]);
     }
 
-    public SectionBiomeContainer(Biome[] biomesIn) {
+    public CubeBiomeContainer(Biome[] biomesIn) {
         super(biomesIn);
     }
 
-    public SectionBiomeContainer(PacketBuffer packetBufferIn) {
+    public CubeBiomeContainer(PacketBuffer packetBufferIn) {
         super(packetBufferIn);
     }
 
-    public SectionBiomeContainer(SectionPos sectionPosIn, BiomeProvider biomeProviderIn) {
+    public CubeBiomeContainer(SectionPos sectionPosIn, BiomeProvider biomeProviderIn) {
         this();
         int x = sectionPosIn.getWorldStartX() >> 2;
         int y = sectionPosIn.getWorldStartY() >> 2;
@@ -45,7 +43,7 @@ public class SectionBiomeContainer extends BiomeContainer {
 
     }
 
-    public SectionBiomeContainer(SectionPos sectionPosIn, BiomeProvider biomeProviderIn, @Nullable int[] biomeIds) {
+    public CubeBiomeContainer(SectionPos sectionPosIn, BiomeProvider biomeProviderIn, @Nullable int[] biomeIds) {
         this();
         int x = sectionPosIn.getWorldStartX() >> 2;
         int y = sectionPosIn.getWorldStartY() >> 2;

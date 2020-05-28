@@ -1,6 +1,6 @@
-package cubicchunks.cc.chunk.section;
+package cubicchunks.cc.chunk.cube;
 
-import cubicchunks.cc.chunk.ISection;
+import cubicchunks.cc.chunk.ICube;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import it.unimi.dsi.fastutil.shorts.ShortList;
 import net.minecraft.block.Block;
@@ -23,17 +23,15 @@ import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.chunk.IChunk;
 import net.minecraft.world.gen.Heightmap;
 import net.minecraft.world.gen.feature.structure.StructureStart;
-import net.minecraft.world.lighting.WorldLightManager;
 
 import javax.annotation.Nullable;
 
 import java.util.Collection;
-import java.util.EnumSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Stream;
 
-public class SectionPrimer implements ISection, IChunk {
+public class CubePrimer implements ICube, IChunk {
 
     private final SectionPos sectionPos;
     private final ChunkSection section;
@@ -41,7 +39,7 @@ public class SectionPrimer implements ISection, IChunk {
 
 
     //TODO: add TickList<Block> and TickList<Fluid>
-    public SectionPrimer(SectionPos pos, @Nullable ChunkSection sectionIn)
+    public CubePrimer(SectionPos pos, @Nullable ChunkSection sectionIn)
     {
         this.sectionPos = pos;
         if(sectionIn == null) {
@@ -193,14 +191,14 @@ public class SectionPrimer implements ISection, IChunk {
     }
 
     @Override public ChunkStatus getStatus() {
-        return getSectionStatus();
+        return getCubeStatus();
     }
 
-    @Override public ChunkStatus getSectionStatus() {
+    @Override public ChunkStatus getCubeStatus() {
         return this.status;
     }
     @Override
-    public void setSectionStatus(ChunkStatus status)
+    public void setCubeStatus(ChunkStatus status)
     {
         this.status = status;
     }

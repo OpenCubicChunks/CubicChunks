@@ -1,9 +1,8 @@
 package cubicchunks.cc.mixin.core.common;
 
-import cubicchunks.cc.chunk.ISectionStatusListener;
+import cubicchunks.cc.chunk.ICubeStatusListener;
 import cubicchunks.cc.server.IServerChunkProvider;
 import it.unimi.dsi.fastutil.longs.LongIterator;
-import net.minecraft.network.rcon.IServer;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.Unit;
 import net.minecraft.util.Util;
@@ -47,7 +46,7 @@ public abstract class MixinMinecraftServer {
         SectionPos sectionPos = SectionPos.from(blockpos);
 
         statusListener.start(new ChunkPos(blockpos));
-        ((ISectionStatusListener) statusListener).startSections(sectionPos);
+        ((ICubeStatusListener) statusListener).startSections(sectionPos);
 
         ServerChunkProvider serverchunkprovider = serverworld.getChunkProvider();
         serverchunkprovider.getLightManager().func_215598_a(500);

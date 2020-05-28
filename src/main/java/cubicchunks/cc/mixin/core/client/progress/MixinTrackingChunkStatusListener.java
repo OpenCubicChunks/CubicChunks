@@ -1,7 +1,7 @@
 package cubicchunks.cc.mixin.core.client.progress;
 
-import cubicchunks.cc.chunk.ISectionStatusListener;
-import cubicchunks.cc.chunk.ITrackingSectionStatusListener;
+import cubicchunks.cc.chunk.ICubeStatusListener;
+import cubicchunks.cc.chunk.ITrackingCubeStatusListener;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import net.minecraft.util.math.SectionPos;
 import net.minecraft.world.chunk.ChunkStatus;
@@ -17,7 +17,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import javax.annotation.Nullable;
 
 @Mixin(TrackingChunkStatusListener.class)
-public abstract class MixinTrackingChunkStatusListener implements ISectionStatusListener, ITrackingSectionStatusListener {
+public abstract class MixinTrackingChunkStatusListener implements ICubeStatusListener, ITrackingCubeStatusListener {
 
     @Shadow private boolean tracking;
 
@@ -25,39 +25,39 @@ public abstract class MixinTrackingChunkStatusListener implements ISectionStatus
 
     @Shadow @Final private int positionOffset;
     private SectionPos centerSection;
-    private final Long2ObjectOpenHashMap<ChunkStatus> sectionStatuses = new Long2ObjectOpenHashMap<>();
+    private final Long2ObjectOpenHashMap<ChunkStatus> cubeStatuses = new Long2ObjectOpenHashMap<>();
 
     @Override
     public void startSections(SectionPos center) {
         if (this.tracking) {
-            ((ISectionStatusListener) this.loggingListener).startSections(center);
+            ((ICubeStatusListener) this.loggingListener).startSections(center);
             this.centerSection = center;
         }
     }
 
     @Override
-    public void sectionStatusChanged(SectionPos sectionPos, @Nullable ChunkStatus newStatus) {
+    public void cubeStatusChanged(SectionPos sectionPos, @Nullable ChunkStatus newStatus) {
         if (this.tracking) {
-            ((ISectionStatusListener) this.loggingListener).sectionStatusChanged(sectionPos, newStatus);
+            ((ICubeStatusListener) this.loggingListener).cubeStatusChanged(sectionPos, newStatus);
             if (newStatus == null) {
-                this.sectionStatuses.remove(sectionPos.asLong());
+                this.cubeStatuses.remove(sectionPos.asLong());
             } else {
-                this.sectionStatuses.put(sectionPos.asLong(), newStatus);
+                this.cubeStatuses.put(sectionPos.asLong(), newStatus);
             }
         }
     }
 
     @Inject(method = "startTracking", at = @At("HEAD"))
     public void startTracking(CallbackInfo ci) {
-        this.sectionStatuses.clear();
+        this.cubeStatuses.clear();
     }
 
     @Nullable @Override
-    public ChunkStatus getSectionStatus(int x, int y, int z) {
+    public ChunkStatus getCubeStatus(int x, int y, int z) {
         if (centerSection == null) {
             return null; // vanilla race condition, made worse by forge moving IChunkStatusListener ichunkstatuslistener = this.chunkStatusListenerFactory.create(11); earlier
         }
-        return this.sectionStatuses.get(SectionPos.asLong(
+        return this.cubeStatuses.get(SectionPos.asLong(
                 x + this.centerSection.getX() - this.positionOffset,
                 y + this.centerSection.getY() - this.positionOffset,
                 z + this.centerSection.getZ() - this.positionOffset));

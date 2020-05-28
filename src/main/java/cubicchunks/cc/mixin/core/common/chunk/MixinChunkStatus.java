@@ -1,9 +1,8 @@
 package cubicchunks.cc.mixin.core.common.chunk;
 
 import com.mojang.datafixers.util.Either;
-import cubicchunks.cc.chunk.ISection;
-import cubicchunks.cc.chunk.section.SectionPrimer;
-import net.minecraft.world.chunk.ChunkPrimer;
+import cubicchunks.cc.chunk.ICube;
+import cubicchunks.cc.chunk.cube.CubePrimer;
 import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.chunk.IChunk;
 import net.minecraft.world.gen.ChunkGenerator;
@@ -34,8 +33,8 @@ public class MixinChunkStatus {
             Function<IChunk, CompletableFuture<Either<IChunk, ChunkHolder.IChunkLoadingError>>> func,
             IChunk chunk,
             CallbackInfoReturnable<CompletableFuture<Either<IChunk, ChunkHolder.IChunkLoadingError>>> ci) {
-        if (chunk instanceof SectionPrimer && !chunk.getStatus().isAtLeast(status)) {
-            ((SectionPrimer) chunk).setStatus(status);
+        if (chunk instanceof CubePrimer && !chunk.getStatus().isAtLeast(status)) {
+            ((CubePrimer) chunk).setStatus(status);
         }
     }
 
@@ -49,19 +48,19 @@ public class MixinChunkStatus {
             CallbackInfoReturnable<CompletableFuture<Either<IChunk, ChunkHolder.IChunkLoadingError>>> cir) {
 
         cir.setReturnValue(CompletableFuture.completedFuture(Either.left(chunk)));
-        if(!(chunk instanceof ISection))
+        if(!(chunk instanceof ICube))
         {
             //vanilla
             return;
         }
         //cc
-        if (!((ISection) chunk).getSectionStatus().isAtLeast(status)) {
+        if (!((ICube) chunk).getCubeStatus().isAtLeast(status)) {
             if (world.getWorldInfo().isMapFeaturesEnabled()) {
                 generator.generateStructures(world.getBiomeManager().copyWithProvider(generator.getBiomeProvider()), chunk, generator, templateManager);
             }
 
-            if (chunk instanceof SectionPrimer) {
-                ((SectionPrimer)chunk).setStatus(status);
+            if (chunk instanceof CubePrimer) {
+                ((CubePrimer)chunk).setStatus(status);
             }
         }
     }
@@ -75,10 +74,10 @@ public class MixinChunkStatus {
             List<IChunk> chunks, IChunk chunk,
             CallbackInfoReturnable<CompletableFuture<Either<IChunk, ChunkHolder.IChunkLoadingError>>> cir) {
 
-        if (!(chunk instanceof SectionPrimer)) {
+        if (!(chunk instanceof CubePrimer)) {
             return;
         }
-        SectionPrimer chunkprimer = (SectionPrimer) chunk;
+        CubePrimer chunkprimer = (CubePrimer) chunk;
         // chunkprimer.setLightManager(lightManager);
         if (!chunk.getStatus().isAtLeast(status)) {
             //Heightmap.updateChunkHeightmaps(chunk, EnumSet
@@ -94,11 +93,11 @@ public class MixinChunkStatus {
     @Inject(method = "lightChunk", at = @At("HEAD"), cancellable = true)
     private static void lightChunkCC(ChunkStatus status, ServerWorldLightManager lightManager, IChunk chunk,
             CallbackInfoReturnable<CompletableFuture<Either<IChunk, ChunkHolder.IChunkLoadingError>>> cir) {
-        if (!(chunk instanceof SectionPrimer)) {
+        if (!(chunk instanceof CubePrimer)) {
             return;
         }
         if (!chunk.getStatus().isAtLeast(status)) {
-            ((SectionPrimer) chunk).setStatus(status);
+            ((CubePrimer) chunk).setStatus(status);
         }
         cir.setReturnValue(CompletableFuture.completedFuture(Either.left(chunk)));
     }
