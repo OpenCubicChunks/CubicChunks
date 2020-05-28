@@ -22,7 +22,6 @@
         "common.chunk.MixinChunkManager",
         "common.chunk.MixinChunkPaletteFormat",
         "common.chunk.MixinChunkPrimer",
-        "common.chunk.MixinChunkSection",
         "common.chunk.MixinChunkSerializer",
         "common.chunk.MixinChunkStatus",
         "common.chunk.MixinISelectiveWorker",
