@@ -71,8 +71,8 @@ public class CubeWorldGenRegion implements IWorld {
     private final BiomeManager biomeManager;
 
     public CubeWorldGenRegion(ServerWorld worldIn, List<ICube> sectionsIn) {
-        int i = MathHelper.floor(Math.sqrt(sectionsIn.size()));
-        if (i * i != sectionsIn.size()) {
+        int i = MathHelper.floor(Math.cbrt(sectionsIn.size()));
+        if (i * i * i != sectionsIn.size()) {
             throw Util.pauseDevMode(new IllegalStateException("Cache size is not a square."));
         } else {
             SectionPos sectionPos = sectionsIn.get(sectionsIn.size() / 2).getSectionPos();
