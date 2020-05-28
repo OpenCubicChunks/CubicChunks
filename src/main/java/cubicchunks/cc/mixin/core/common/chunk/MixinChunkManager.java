@@ -338,11 +338,15 @@ public abstract class MixinChunkManager implements IChunkManager {
         int y = pos.getY();
         int z = pos.getZ();
 
+        // to index: x*d*d + y*d + z
+        // extract x: index/(d*d)
+        // extract y: (index/d) % d
+        // extract z: index % d
         for (int dx = -radius; dx <= radius; ++dx) {
             for (int dy = -radius; dy <= radius; ++dy) {
                 for (int dz = -radius; dz <= radius; ++dz) {
                     int distance = Math.max(Math.max(Math.abs(dz), Math.abs(dx)), Math.abs(dy));
-                    final SectionPos sectionPos = SectionPos.of(x + dz, y + dy, z + dx);
+                    final SectionPos sectionPos = SectionPos.of(x + dx, y + dy, z + dz);
                     long posLong = sectionPos.asLong();
                     ChunkHolder chunkholder = this.getLoadedSection(posLong);
                     if (chunkholder == null) {
