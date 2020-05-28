@@ -1,9 +1,8 @@
 package cubicchunks.cc.world;
 
-import static cubicchunks.cc.utils.Coords.*;
+import static cubicchunks.cc.utils.Coords.blockToCube;
 
 import cubicchunks.cc.chunk.ICube;
-import cubicchunks.cc.utils.Coords;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;

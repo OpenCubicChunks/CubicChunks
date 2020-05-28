@@ -1,6 +1,5 @@
 package cubicchunks.cc.chunk.ticket;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.mojang.datafixers.util.Either;
 import it.unimi.dsi.fastutil.longs.Long2ObjectLinkedOpenHashMap;
@@ -9,12 +8,13 @@ import it.unimi.dsi.fastutil.longs.LongSet;
 import net.minecraft.util.math.SectionPos;
 import net.minecraft.world.server.ChunkManager;
 
-import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
+
+import javax.annotation.Nullable;
 
 public class CubeTaskPriorityQueue<T> {
    public static final int levelCount = ChunkManager.MAX_LOADED_LEVEL + 2;
