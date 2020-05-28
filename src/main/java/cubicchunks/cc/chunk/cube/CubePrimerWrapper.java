@@ -1,248 +1,207 @@
 package cubicchunks.cc.chunk.cube;
 
-import cubicchunks.cc.chunk.ICube;
 import it.unimi.dsi.fastutil.longs.LongSet;
-import it.unimi.dsi.fastutil.shorts.ShortList;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.fluid.Fluid;
+import net.minecraft.fluid.Fluids;
 import net.minecraft.fluid.IFluidState;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.SectionPos;
-import net.minecraft.util.palette.UpgradeData;
-import net.minecraft.world.ITickList;
 import net.minecraft.world.biome.BiomeContainer;
 import net.minecraft.world.chunk.ChunkSection;
 import net.minecraft.world.chunk.ChunkStatus;
-import net.minecraft.world.chunk.IChunk;
+import net.minecraft.world.gen.GenerationStage;
 import net.minecraft.world.gen.Heightmap;
 import net.minecraft.world.gen.feature.structure.StructureStart;
+import net.minecraft.world.lighting.WorldLightManager;
 
-import javax.annotation.Nullable;
-import java.util.Collection;
+import java.util.BitSet;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Stream;
 
-public class CubePrimerWrapper extends CubePrimer implements ICube, IChunk {
+import javax.annotation.Nullable;
 
-    Cube worldSection;
-    public CubePrimerWrapper(SectionPos pos)
-    {
-        super(pos, null);
+public class CubePrimerWrapper extends CubePrimer {
+
+    Cube cube;
+
+    public CubePrimerWrapper(Cube cubeIn) {
+        super(cubeIn.getSectionPos(), cubeIn);
+        this.cube = cubeIn;
     }
 
-    public CubePrimerWrapper(Cube chunkSection) {
-        super(chunkSection.getSectionPos(), chunkSection);
-    }
 
-    @Override
-    public void addTileEntity(BlockPos pos, TileEntity tileEntityIn) {
-        this.addTileEntity(pos, tileEntityIn);
-    }
-
-    @Override
-    public void addEntity(Entity entityIn) {
-        this.addEntity(entityIn);
-    }
-
-    @Override
-    public Set<BlockPos> getTileEntitiesPos() {
-        return this.getTileEntitiesPos();
-    }
-
-    @Deprecated
-    @Override
-    public ChunkSection[] getSections() {
-        throw new UnsupportedOperationException("This should never be called! Excuse me, wtF?");
-    }
-
-    @Override
-    public Collection<Map.Entry<Heightmap.Type, Heightmap>> getHeightmaps() {
-        return this.getHeightmaps();
-    }
-
-    @Override
-    public void setHeightmap(Heightmap.Type type, long[] data) {
-        this.setHeightmap(type, data);
-    }
-
-    @Deprecated
-    @Override
-    public Heightmap getHeightmap(Heightmap.Type typeIn) {
-        throw new UnsupportedOperationException("Not implemented yet :(");
-    }
-
-    @Deprecated
-    @Override
-    public int getTopBlockY(Heightmap.Type heightmapType, int x, int z) {
-        throw new UnsupportedOperationException("Not implemented yet :(");
-    }
-
-    @Deprecated
-    @Override
-    public ChunkPos getPos() {
-        throw new UnsupportedOperationException("Not implemented yet :(");
-    }
-
-    @Deprecated
-    @Override
-    public void setLastSaveTime(long saveTime) {
-        throw new UnsupportedOperationException("Not implemented yet :(");
-    }
-
-    @Deprecated
-    @Override
-    public Map<String, StructureStart> getStructureStarts() {
-        throw new UnsupportedOperationException("Not implemented yet :(");
-    }
-
-    @Deprecated
-    @Override
-    public void setStructureStarts(Map<String, StructureStart> structureStartsIn) {
-        throw new UnsupportedOperationException("Not implemented yet :(");
+    @Nullable
+    public TileEntity getTileEntity(BlockPos pos) {
+        return this.cube.getTileEntity(pos);
     }
 
     @Nullable
-    @Override
-    public BiomeContainer getBiomes() {
+    public BlockState getBlockState(BlockPos pos) {
+        return this.cube.getBlockState(pos);
+    }
+
+    public IFluidState getFluidState(BlockPos pos) {
+        return this.cube.getFluidState(pos);
+    }
+
+    public int getMaxLightLevel() {
+        return this.cube.getMaxLightLevel();
+    }
+
+    @Nullable
+    public BlockState setBlockState(BlockPos pos, BlockState state, boolean isMoving) {
         return null;
     }
 
-    @Override
-    public void setModified(boolean modified) {
-
+    public void addTileEntity(BlockPos pos, TileEntity tileEntityIn) {
     }
 
-    @Override
+    /**
+     * Adds an entity to the cube.
+     */
+    public void addEntity(Entity entityIn) {
+    }
+
+    public void setStatus(ChunkStatus status) {
+    }
+
+    /**
+     * Returns the sections array for this Cube.
+     */
+    @Deprecated
+    public ChunkSection[] getSections() {
+        throw new UnsupportedOperationException("This should never be called!");
+    }
+
+    @Nullable
+    public WorldLightManager getWorldLightManager() {
+        throw new UnsupportedOperationException("Not implemented yet!");
+        //return this.cube.getWorldLightManager();
+    }
+
+    public void setHeightmap(Heightmap.Type type, long[] data) {
+    }
+
+    private Heightmap.Type func_209532_c(Heightmap.Type p_209532_1_) {
+        if (p_209532_1_ == Heightmap.Type.WORLD_SURFACE_WG) {
+            return Heightmap.Type.WORLD_SURFACE;
+        } else {
+            return p_209532_1_ == Heightmap.Type.OCEAN_FLOOR_WG ? Heightmap.Type.OCEAN_FLOOR : p_209532_1_;
+        }
+    }
+
+    public int getTopBlockY(Heightmap.Type heightmapType, int x, int z) {
+        return this.cube.getTopBlockY(this.func_209532_c(heightmapType), x, z);
+    }
+
+    /**
+     * Gets a {@link SectionPos } representing the x and z coordinates of this cube.
+     */
+    public ChunkPos getPos() {
+        throw new UnsupportedOperationException("This function shoult never be called!");
+    }
+
+    public void setLastSaveTime(long saveTime) {
+    }
+
+    @Nullable
+    public StructureStart getStructureStart(String stucture) {
+        return this.cube.getStructureStart(stucture);
+    }
+
+    public void putStructureStart(String structureIn, StructureStart structureStartIn) {
+    }
+
+    public Map<String, StructureStart> getStructureStarts() {
+        return this.cube.getStructureStarts();
+    }
+
+    public void setStructureStarts(Map<String, StructureStart> structureStartsIn) {
+    }
+
+    public LongSet getStructureReferences(String structureIn) {
+        return this.cube.getStructureReferences(structureIn);
+    }
+
+    public void addStructureReference(String strucutre, long reference) {
+    }
+
+    public Map<String, LongSet> getStructureReferences() {
+        return this.cube.getStructureReferences();
+    }
+
+    public void setStructureReferences(Map<String, LongSet> p_201606_1_) {
+    }
+
+    public BiomeContainer getBiomes() {
+        return this.cube.getBiomes();
+    }
+
+    public void setModified(boolean modified) {
+    }
+
     public boolean isModified() {
         return false;
     }
 
-    @Override
-    public ChunkStatus getCubeStatus() {
-        return this.worldSection.getCubeStatus();
-    }
-    @Override
-    public void setCubeStatus(ChunkStatus status)
-    {
-        this.worldSection.setCubeStatus(status);
+    public ChunkStatus getStatus() {
+        return this.cube.getCubeStatus();
     }
 
-    @Override public SectionPos getSectionPos() {
-        return this.worldSection.getSectionPos();
-    }
-
-    @Override
     public void removeTileEntity(BlockPos pos) {
-
     }
 
-    @Override
-    public ShortList[] getPackedPositions() {
-        return new ShortList[0];
+    public void markBlockForPostprocessing(BlockPos pos) {
+    }
+
+    public void addTileEntity(CompoundNBT nbt) {
     }
 
     @Nullable
-    @Override
     public CompoundNBT getDeferredTileEntity(BlockPos pos) {
-        return null;
+        return this.cube.getDeferredTileEntity(pos);
     }
 
     @Nullable
-    @Override
     public CompoundNBT getTileEntityNBT(BlockPos pos) {
-        return null;
+        return this.cube.getTileEntityNBT(pos);
     }
 
-    @Override
     public Stream<BlockPos> getLightSources() {
-        return null;
+        return this.cube.getLightSources();
+    }
+    /*
+    public CubePrimerTickList<Block> getBlocksToBeTicked() {
+        return new CubePrimerTickList<>((p_209219_0_) -> {
+            return p_209219_0_.getDefaultState().isAir();
+        }, this.getPos());
     }
 
-    @Override
-    public ITickList<Block> getBlocksToBeTicked() {
-        return null;
+    public CubePrimerTickList<Fluid> getFluidsToBeTicked() {
+        return new CubePrimerTickList<>((p_209218_0_) -> {
+            return p_209218_0_ == Fluids.EMPTY;
+        }, this.getPos());
+    }
+    */
+    public BitSet getCarvingMask(GenerationStage.Carving type) {
+        return this.cube.getCarvingMask(type);
     }
 
-    @Override
-    public ITickList<Fluid> getFluidsToBeTicked() {
-        return null;
+    public Cube func_217336_u() {
+        return this.cube;
     }
 
-    @Override
-    public UpgradeData getUpgradeData() {
-        return null;
-    }
-
-    @Override
-    public void setInhabitedTime(long newInhabitedTime) {
-
-    }
-
-    @Override
-    public long getInhabitedTime() {
-        return 0;
-    }
-
-    @Override
     public boolean hasLight() {
-        return false;
+        return this.cube.hasLight();
     }
 
-    @Override
     public void setLight(boolean lightCorrectIn) {
-
-    }
-
-    @Nullable
-    @Override
-    public TileEntity getTileEntity(BlockPos pos) {
-        return null;
-    }
-
-    @Override
-    public BlockState getBlockState(BlockPos pos) {
-        return null;
-    }
-
-    @Override
-    public IFluidState getFluidState(BlockPos pos) {
-        return null;
-    }
-
-    @Nullable
-    @Override
-    public StructureStart getStructureStart(String stucture) {
-        return null;
-    }
-
-    @Override
-    public void putStructureStart(String structureIn, StructureStart structureStartIn) {
-
-    }
-
-    @Override
-    public LongSet getStructureReferences(String structureIn) {
-        return null;
-    }
-
-    @Override
-    public void addStructureReference(String strucutre, long reference) {
-
-    }
-
-    @Override
-    public Map<String, LongSet> getStructureReferences() {
-        return null;
-    }
-
-    @Override
-    public void setStructureReferences(Map<String, LongSet> p_201606_1_) {
-
+        this.cube.setLight(lightCorrectIn);
     }
 }

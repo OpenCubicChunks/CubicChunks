@@ -20,6 +20,7 @@ import net.minecraft.util.palette.UpgradeData;
 import net.minecraft.world.ITickList;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.BiomeContainer;
+import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkSection;
 import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.chunk.IChunk;
@@ -48,6 +49,9 @@ public class Cube extends ChunkSection implements IChunk, ICube {
 
     private CubeBiomeContainer cubeBiomeContainer;
 
+    private boolean dirty = false;
+    private boolean loaded = false;
+
     public Cube(ServerWorld world, ChunkSection section, SectionPos pos) {
         super(pos.getWorldStartY(), ((ChunkSectionAccess) section).getBlockRefCount(),
                 ((ChunkSectionAccess) section).getBlockTickRefCount(),
@@ -70,8 +74,24 @@ public class Cube extends ChunkSection implements IChunk, ICube {
         return entities;
     }
 
-    public void removeEntity(Entity entity) {
-        // todo: implement
+    public void removeEntity(Entity entityIn) {
+        this.removeEntityAtIndex(entityIn, entityIn.chunkCoordY);
+    }
+
+    public void removeEntityAtIndex(Entity entityIn, int index) {
+        /*
+        if (index < 0) {
+            index = 0;
+        }
+
+        if (index >= this.entityLists.length) {
+            index = this.entityLists.length - 1;
+        }
+
+        this.entityLists[index].remove(entityIn);
+        this.markDirty(); // Forge - ensure chunks are marked to save after entity removals
+        */
+        throw new UnsupportedOperationException("Not implemented yet!");
     }
 
     @Override public ChunkStatus getCubeStatus() {
@@ -96,16 +116,107 @@ public class Cube extends ChunkSection implements IChunk, ICube {
     // vanilla stuff
 
 
-    @Nullable @Override public BlockState setBlockState(BlockPos pos, BlockState state, boolean isMoving) {
-        return null;
+    @Nullable
+    public BlockState setBlockState(BlockPos pos, BlockState state, boolean isMoving) {
+        int i = pos.getX() & 15;
+        int j = pos.getY() & 15;
+        int k = pos.getZ() & 15;
+        ChunkSection chunksection = this;
+
+        BlockState blockstate = chunksection.setBlockState(i, j, k, state);
+        if (blockstate == state) {
+            return null;
+        } else {
+            Block block = state.getBlock();
+            Block block1 = blockstate.getBlock();
+//            this.heightMap.get(Heightmap.Type.MOTION_BLOCKING).update(i, j, k, state);
+//            this.heightMap.get(Heightmap.Type.MOTION_BLOCKING_NO_LEAVES).update(i, j, k, state);
+//            this.heightMap.get(Heightmap.Type.OCEAN_FLOOR).update(i, j, k, state);
+//            this.heightMap.get(Heightmap.Type.WORLD_SURFACE).update(i, j, k, state);
+
+            if (!this.world.isRemote) {
+                blockstate.onReplaced(this.world, pos, state, isMoving);
+            } else if ((block1 != block || !state.hasTileEntity()) && blockstate.hasTileEntity()) {
+                this.world.removeTileEntity(pos);
+            }
+
+            if (chunksection.getBlockState(i, j & 15, k).getBlock() != block) {
+                return null;
+            } else {
+                if (blockstate.hasTileEntity()) {
+                    TileEntity tileentity = this.getTileEntity(pos, Chunk.CreateEntityType.CHECK);
+                    if (tileentity != null) {
+                        tileentity.updateContainingBlockInfo();
+                    }
+                }
+
+                if (!this.world.isRemote) {
+                    state.onBlockAdded(this.world, pos, blockstate, isMoving);
+                }
+
+                if (state.hasTileEntity()) {
+                    TileEntity tileentity1 = this.getTileEntity(pos, Chunk.CreateEntityType.CHECK);
+                    if (tileentity1 == null) {
+                        tileentity1 = state.createTileEntity(this.world);
+                        this.world.setTileEntity(pos, tileentity1);
+                    } else {
+                        tileentity1.updateContainingBlockInfo();
+                    }
+                }
+
+                this.dirty = true;
+                return blockstate;
+            }
+        }
     }
 
     @Override public void addTileEntity(BlockPos pos, TileEntity tileEntityIn) {
-
+        if (this.getBlockState(pos).hasTileEntity()) {
+            tileEntityIn.setWorldAndPos(this.world, pos);
+            tileEntityIn.validate();
+            TileEntity tileentity = this.tileEntities.put(pos.toImmutable(), tileEntityIn);
+            if (tileentity != null && tileentity != tileEntityIn) {
+                tileentity.remove();
+            }
+        }
     }
 
     @Override public void addEntity(Entity entityIn) {
 
+    }
+
+    public TileEntity getTileEntity(BlockPos pos, Chunk.CreateEntityType creationMode) {
+        TileEntity tileentity = this.tileEntities.get(pos);
+        if (tileentity != null && tileentity.isRemoved()) {
+            tileEntities.remove(pos);
+            tileentity = null;
+        }
+        //TODO: reimplement for NBT stuff
+//        if (tileentity == null) {
+//            CompoundNBT compoundnbt = this.deferredTileEntities.remove(pos);
+//            if (compoundnbt != null) {
+//                TileEntity tileentity1 = this.setDeferredTileEntity(pos, compoundnbt);
+//                if (tileentity1 != null) {
+//                    return tileentity1;
+//                }
+//            }
+//        }
+
+        if (tileentity == null) {
+            if (creationMode == Chunk.CreateEntityType.IMMEDIATE) {
+                tileentity = this.createNewTileEntity(pos);
+                this.world.setTileEntity(pos, tileentity);
+            }
+        }
+
+        return tileentity;
+    }
+
+    @Nullable
+    private TileEntity createNewTileEntity(BlockPos pos) {
+        BlockState blockstate = this.getBlockState(pos);
+        Block block = blockstate.getBlock();
+        return !blockstate.hasTileEntity() ? null : blockstate.createTileEntity(this.world);
     }
 
     @Override public Set<BlockPos> getTileEntitiesPos() {
@@ -160,12 +271,18 @@ public class Cube extends ChunkSection implements IChunk, ICube {
         return false;
     }
 
+    @Deprecated
     @Override public ChunkStatus getStatus() {
-        return null;
+        return this.cubeStatus;
     }
 
     @Override public void removeTileEntity(BlockPos pos) {
-
+        if (this.loaded || this.world.isRemote()) {
+            TileEntity tileentity = this.tileEntities.remove(pos);
+            if (tileentity != null) {
+                tileentity.remove();
+            }
+        }
     }
 
     @Override public ShortList[] getPackedPositions() {
@@ -246,5 +363,9 @@ public class Cube extends ChunkSection implements IChunk, ICube {
 
     @Override public void setStructureReferences(Map<String, LongSet> p_201606_1_) {
 
+    }
+
+    public void setLoaded(boolean loaded) {
+        this.loaded = loaded;
     }
 }

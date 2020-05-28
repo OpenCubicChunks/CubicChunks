@@ -107,7 +107,6 @@ public class CubeWorldGenRegion implements IWorld {
             int dx = x - sectionPos.getX();
             int dy = y - sectionPos.getY();
             int dz = z - sectionPos.getZ();
-            //TODO: index into flat 3dim array correctly
             icube = this.cubePrimers.get(dx*this.diameter*this.diameter + dy*this.diameter + dz);
             if (icube.getCubeStatus().isAtLeast(requiredStatus)) {
                 return icube;

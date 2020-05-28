@@ -1,5 +1,6 @@
 package cubicchunks.cc.chunk.cube;
 
+import com.google.common.collect.Maps;
 import cubicchunks.cc.chunk.ICube;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import it.unimi.dsi.fastutil.shorts.ShortList;
@@ -37,6 +38,7 @@ public class CubePrimer implements ICube, IChunk {
     private final ChunkSection section;
     private ChunkStatus status = ChunkStatus.EMPTY;
 
+    private final Map<BlockPos, TileEntity> tileEntities = Maps.newHashMap();
 
     //TODO: add TickList<Block> and TickList<Fluid>
     public CubePrimer(SectionPos pos, @Nullable ChunkSection sectionIn)
@@ -116,9 +118,14 @@ public class CubePrimer implements ICube, IChunk {
         }
     }
 
-    @Deprecated
     @Override public void addTileEntity(BlockPos pos, TileEntity tileEntityIn) {
-        throw new UnsupportedOperationException("For later implementation");
+        tileEntityIn.setPos(pos);
+        this.tileEntities.put(pos, tileEntityIn);
+    }
+    @Override public void removeTileEntity(BlockPos pos) {
+        this.tileEntities.remove(pos);
+        //TODO: reimplement deferredtileentities
+        //this.deferredTileEntities.remove(pos);
     }
 
     @Deprecated
@@ -209,10 +216,6 @@ public class CubePrimer implements ICube, IChunk {
 
     public void setStatus(ChunkStatus status) {
         this.status = status;
-    }
-
-    @Override public void removeTileEntity(BlockPos pos) {
-        throw new UnsupportedOperationException("For later implementation");
     }
 
     @Override public ShortList[] getPackedPositions() {
