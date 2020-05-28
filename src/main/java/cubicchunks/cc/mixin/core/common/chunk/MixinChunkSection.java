@@ -13,14 +13,14 @@ import net.minecraft.world.server.ServerWorld;
 import org.spongepowered.asm.mixin.Mixin;
 
 @Mixin(ChunkSection.class)
-public class MixinChunkSection implements IChunkSection {
+public abstract class MixinChunkSection implements IChunkSection {
 
     private ChunkStatus status = ChunkStatus.EMPTY;
 
     //private ITickList<Block> blocksToBeTicked;
 
 
-    @Override public ChunkStatus getSectionStatus() {
+    public ChunkStatus getSectionStatus() {
         return status;
     }
 }

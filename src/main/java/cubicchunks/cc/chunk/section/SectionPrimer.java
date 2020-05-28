@@ -199,6 +199,15 @@ public class SectionPrimer implements ISection, IChunk {
     @Override public ChunkStatus getSectionStatus() {
         return this.status;
     }
+    @Override
+    public void setSectionStatus(ChunkStatus status)
+    {
+        this.status = status;
+    }
+
+    @Override public SectionPos getSectionPos() {
+        return this.sectionPos;
+    }
 
     public void setStatus(ChunkStatus status) {
         this.status = status;

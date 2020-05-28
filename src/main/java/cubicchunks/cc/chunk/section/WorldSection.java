@@ -1,5 +1,6 @@
 package cubicchunks.cc.chunk.section;
 
+import cubicchunks.cc.chunk.ISection;
 import cubicchunks.cc.mixin.core.common.chunk.ChunkSectionAccess;
 import cubicchunks.cc.utils.Coords;
 import cubicchunks.cc.chunk.biome.SectionBiomeContainer;
@@ -37,12 +38,14 @@ import javax.annotation.Nullable;
 
 //ChunkSection is the simple section, with only basic information in it.
 //WorldSection is the complete section, with all entity, fluid, etc information in it.
-public class WorldSection extends ChunkSection implements IChunk {
+public class WorldSection extends ChunkSection implements IChunk, ISection {
     private final SectionPos sectionPos;
 
     private final HashMap<BlockPos, TileEntity> tileEntities = new HashMap<>();
     private final ClassInheritanceMultiMap<Entity> entities = new ClassInheritanceMultiMap<>(Entity.class);
     private final ServerWorld world;
+
+    private ChunkStatus sectionStatus;
 
     private SectionBiomeContainer sectionBiomeContainer;
 
@@ -70,6 +73,16 @@ public class WorldSection extends ChunkSection implements IChunk {
 
     public void removeEntity(Entity entity) {
         // todo: implement
+    }
+
+    @Override public ChunkStatus getSectionStatus() {
+        return this.sectionStatus;
+    }
+
+    @Override
+    public void setSectionStatus(ChunkStatus status)
+    {
+        this.sectionStatus = status;
     }
 
     public SectionPos getSectionPos() {

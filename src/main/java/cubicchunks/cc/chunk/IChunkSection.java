@@ -1,5 +1,9 @@
 package cubicchunks.cc.chunk;
 
-public interface IChunkSection extends ISection {
+import net.minecraft.world.chunk.ChunkStatus;
+
+public interface IChunkSection {
+
+    ChunkStatus getSectionStatus();
 
 }

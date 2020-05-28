@@ -125,7 +125,16 @@ public class SectionPrimerWrapper extends SectionPrimer implements ISection, ICh
 
     @Override
     public ChunkStatus getSectionStatus() {
-        return null;
+        return this.worldSection.getSectionStatus();
+    }
+    @Override
+    public void setSectionStatus(ChunkStatus status)
+    {
+        this.worldSection.setSectionStatus(status);
+    }
+
+    @Override public SectionPos getSectionPos() {
+        return this.worldSection.getSectionPos();
     }
 
     @Override
