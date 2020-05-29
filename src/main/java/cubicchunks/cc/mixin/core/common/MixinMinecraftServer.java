@@ -51,7 +51,7 @@ public abstract class MixinMinecraftServer {
         ServerChunkProvider serverchunkprovider = serverworld.getChunkProvider();
         serverchunkprovider.getLightManager().func_215598_a(500);
         this.serverTime = Util.milliTime();
-        int radius = 2;
+        int radius = 5;
         int d = radius*2+1;
         ((IServerChunkProvider)serverchunkprovider).registerTicket(TicketType.START, cubePos, radius + 1, Unit.INSTANCE);
 
