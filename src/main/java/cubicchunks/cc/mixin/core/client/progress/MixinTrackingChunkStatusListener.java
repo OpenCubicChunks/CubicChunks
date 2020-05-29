@@ -25,11 +25,11 @@ public abstract class MixinTrackingChunkStatusListener implements ICubeStatusLis
     @Shadow @Final private LoggingChunkStatusListener loggingListener;
 
     @Shadow @Final private int positionOffset;
-    private SectionPos centerSection;
+    private CubePos centerSection;
     private final Long2ObjectOpenHashMap<ChunkStatus> cubeStatuses = new Long2ObjectOpenHashMap<>();
 
     @Override
-    public void startSections(SectionPos center) {
+    public void startCubes(CubePos center) {
         if (this.tracking) {
             ((ICubeStatusListener) this.loggingListener).startCubes(center);
             this.centerSection = center;

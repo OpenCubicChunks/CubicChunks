@@ -1,8 +1,6 @@
 package cubicchunks.cc.network;
 
-import static net.minecraft.world.chunk.Chunk.EMPTY_SECTION;
-
-import cubicchunks.cc.chunk.IClientSectionProvider;
+import cubicchunks.cc.chunk.IClientCubeProvider;
 import cubicchunks.cc.chunk.cube.Cube;
 import cubicchunks.cc.chunk.util.CubePos;
 import cubicchunks.cc.utils.MathUtil;
@@ -13,15 +11,12 @@ import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.SectionPos;
 import net.minecraft.world.World;
-import net.minecraft.world.chunk.Chunk;
-import net.minecraft.world.chunk.ChunkSection;
 
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.List;
-import java.util.Map;
+import java.util.stream.Collectors;
 
 public class PacketCubes {
     // vanilla has max chunk size of 2MB, it works out to be 128kB per cube
@@ -33,33 +28,25 @@ public class PacketCubes {
     private final List<CompoundNBT> tileEntityTags;
 
     public PacketCubes(List<Cube> cubes) {
-        this.cubes = (Cube[])cubes.toArray();
+        this.cubes = cubes.toArray(new Cube[0]);
         this.cubeExists = new BitSet(cubes.size());
         this.packetData = new byte[calculateDataSize(cubes)];
         fillDataBuffer(wrapBuffer(this.packetData), cubes, cubeExists);
-        this.tileEntityTags = new ArrayList<>();
-        //this.tileEntityTags = cubes.values().stream()
-        //        .flatMap(cube -> cube.getTileEntities().values().stream())
-        //        .map(TileEntity::getUpdateTag)
-        //        .collect(Collectors.toList());
+        this.tileEntityTags = cubes.stream()
+                .flatMap(cube -> cube.getTileEntityMap().values().stream())
+                .map(TileEntity::getUpdateTag)
+                .collect(Collectors.toList());
     }
 
     PacketCubes(PacketBuffer buf) {
         this.cubes = new Cube[buf.readVarInt()];
-        for (int i = 0; i < this.cubes.length; i++) {
-            cubes[i] = new Cube(CubePos.of(
-                    buf.readInt(),
-                    buf.readInt(),
-                    buf.readInt())
-            );
-        }
         // one long stores information about 64 chunks
-        int length = MathUtil.ceilDiv(positions.length, 64);
+        int length = MathUtil.ceilDiv(cubes.length, 64);
         this.cubeExists = BitSet.valueOf(buf.readLongArray(new long[length]));
         int packetLength = buf.readVarInt();
-        if (packetLength > MAX_CUBE_SIZE * positions.length) {
+        if (packetLength > MAX_CUBE_SIZE * cubes.length) {
             throw new RuntimeException("Cubes Packet trying to allocate too much memory on read: " +
-                    packetLength + " bytes for " + positions.length + " cubes");
+                    packetLength + " bytes for " + cubes.length + " cubes");
         }
         this.packetData = new byte[packetLength];
         buf.readBytes(this.packetData);
@@ -71,11 +58,11 @@ public class PacketCubes {
     }
 
     void encode(PacketBuffer buf) {
-        buf.writeVarInt(positions.length);
-        for (SectionPos pos : positions) {
-            buf.writeInt(pos.getSectionX());
-            buf.writeInt(pos.getSectionY());
-            buf.writeInt(pos.getSectionZ());
+        buf.writeVarInt(cubes.length);
+        for (Cube cube : cubes) {
+            buf.writeInt(cube.getCubePos().getX());
+            buf.writeInt(cube.getCubePos().getY());
+            buf.writeInt(cube.getCubePos().getZ());
         }
 
         buf.writeLongArray(cubeExists.toLongArray());
@@ -96,22 +83,26 @@ public class PacketCubes {
 
             PacketBuffer dataReader = wrapBuffer(packet.packetData);
             BitSet cubeExists = packet.cubeExists;
-            for (int i = 0; i < packet.cu.length; i++) {
-                SectionPos pos = packet.positions[i];
+            for (int i = 0; i < packet.cubes.length; i++) {
+                CubePos pos = packet.cubes[i].getCubePos();
                 int x = pos.getX();
                 int y = pos.getY();
                 int z = pos.getZ();
-                //ClientCubeProvider cubeProvider = (ClientCubeProvider) world.getChunkProvider();
-                //            ICube cube = null;// cubeProvider.loadCube(x, y, z, null, dataReader, cubeExists.get(i));
 
-                ((IClientSectionProvider) world.getChunkProvider()).loadSection(
+                ((IClientCubeProvider) world.getChunkProvider()).loadCube(
                         x, y, z, null, dataReader, new CompoundNBT(), cubeExists.get(i));
 
                 // TODO: full cube info
                 //            if (cube != null /*&&fullCube*/) {
                 //                world.addEntitiesToChunk(cube.getColumn());
                 //            }
-                world.markSurroundingsForRerender(x, y, z);
+                for (int dx = 0; dx < 2; dx++) {
+                    for (int dy = 0; dy < 2; dy++) {
+                        for (int dz = 0; dz < 2; dz++) {
+                            world.markSurroundingsForRerender(x + dx, y + dy, z + dz);
+                        }
+                    }
+                }
 
                 for (CompoundNBT nbt : packet.tileEntityTags) {
                     BlockPos tePos = new BlockPos(nbt.getInt("x"), nbt.getInt("y"), nbt.getInt("z"));
@@ -124,11 +115,12 @@ public class PacketCubes {
         }
     }
     private static void fillDataBuffer(PacketBuffer buf, List<Cube> cubes, BitSet existingChunks) {
+        buf.writerIndex(0);
         int i = 0;
         for (Cube cube : cubes) {
-            if (!cube.hasEmptySection() && !cube.isEmpty()) {
+            if (!cube.isEmptyCube()) {
                 existingChunks.set(i);
-                !cube.write(buf);
+                cube.write(buf);
             }
             i++;
         }
@@ -136,11 +128,10 @@ public class PacketCubes {
 
     private static PacketBuffer wrapBuffer(byte[] packetData) {
         ByteBuf bytebuf = Unpooled.wrappedBuffer(packetData);
-        bytebuf.writerIndex(0);
         return new PacketBuffer(bytebuf);
     }
 
     private static int calculateDataSize(List<Cube> cubes) {
-        return cubes.stream().mapToInt(Cube::getSize).sum();
+        return cubes.stream().filter(c -> !c.isEmptyCube()).mapToInt(Cube::getSize).sum();
     }
 }

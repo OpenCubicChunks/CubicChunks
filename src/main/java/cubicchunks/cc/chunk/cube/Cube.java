@@ -18,6 +18,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.fluid.Fluid;
 import net.minecraft.fluid.IFluidState;
 import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.network.PacketBuffer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ClassInheritanceMultiMap;
 import net.minecraft.util.math.BlockPos;
@@ -90,39 +91,40 @@ public class Cube implements IChunk, ICube {
         }
     }
 
-    public boolean hasEmptySection()
+    public boolean isEmptyCube()
     {
-        for(ChunkSection section : this.sections)
-        {
-            if(section == EMPTY_SECTION)
-            {
-                return true;
+        for(ChunkSection section : this.sections) {
+            if(section != EMPTY_SECTION || !section.isEmpty()) {
+                return false;
             }
         }
-        return false;
-    }
-
-    public boolean isEmpty()
-    {
-        boolean isEmpty = false;
-        for(ChunkSection section : this.sections)
-        {
-            if(section.isEmpty())
-            {
-                isEmpty = true;
-            }
-        }
-        return isEmpty;
+        return true;
     }
 
     public int getSize()
     {
-        int size = 0;
+        int size = 1; // 1 extra byte for "section exists" flags
         for(ChunkSection section : this.sections)
         {
             size += section.getSize();
         }
         return size;
+    }
+
+    public boolean write(PacketBuffer buf) {
+        byte emptyFlags = 0;
+        for (int i = 0; i < sections.length; i++) {
+            if (sections[i] != null && !sections[i].isEmpty()) {
+                emptyFlags |= 1 << i;
+            }
+        }
+        buf.writeByte(emptyFlags);
+        for (int i = 0; i < sections.length; i++) {
+            if (sections[i] != null && !sections[i].isEmpty()) {
+                sections[i].write(buf);
+            }
+        }
+        return false;
     }
 
     public void setCubeBiomeContainer(CubeBiomeContainer biomes)
@@ -172,7 +174,6 @@ public class Cube implements IChunk, ICube {
     {
         return this.cubePos;
     }
-
     @Deprecated
     public SectionPos getSectionPosition(int index)
     {
@@ -182,6 +183,7 @@ public class Cube implements IChunk, ICube {
 
         return SectionPos.of(xPos, yPos, zPos);
     }
+
     @Deprecated
     @Override public SectionPos[] getSectionPositions() {
         SectionPos[] positions = new SectionPos[Cube.CUBESIZE];
@@ -196,7 +198,6 @@ public class Cube implements IChunk, ICube {
     public World getWorld() {
         return world;
     }
-
     public BlockState setBlockState(int sectionIndex, BlockPos pos, BlockState state, boolean isMoving)
     {
         int i = pos.getX() & 15;
@@ -250,6 +251,7 @@ public class Cube implements IChunk, ICube {
             }
         }
     }
+
     @Nullable
     public BlockState setBlockState(BlockPos pos, BlockState state, boolean isMoving) {
         return this.setBlockState(Coords.blockToIndex32(pos.getX(), pos.getY(), pos.getZ()), pos, state, isMoving);

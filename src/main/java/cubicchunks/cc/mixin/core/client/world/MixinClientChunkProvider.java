@@ -1,6 +1,6 @@
 package cubicchunks.cc.mixin.core.client.world;
 
-import cubicchunks.cc.chunk.IClientSectionProvider;
+import cubicchunks.cc.chunk.IClientCubeProvider;
 import cubicchunks.cc.chunk.IColumn;
 import cubicchunks.cc.mixin.core.client.interfaces.IClientChunkProviderChunkArray;
 import net.minecraft.client.multiplayer.ClientChunkProvider;
@@ -26,7 +26,7 @@ import java.util.Arrays;
 import javax.annotation.Nullable;
 
 @Mixin(ClientChunkProvider.class)
-public abstract class MixinClientChunkProvider implements IClientSectionProvider {
+public abstract class MixinClientChunkProvider implements IClientCubeProvider {
     private static final Biome[] BIOMES = Util.make(new Biome[BiomeContainer.BIOMES_SIZE], (array) ->
             Arrays.fill(array, Biomes.PLAINS));
 
@@ -43,7 +43,7 @@ public abstract class MixinClientChunkProvider implements IClientSectionProvider
     @Shadow public abstract WorldLightManager getLightManager();
 
     @SuppressWarnings("ConstantConditions") @Override
-    public Chunk loadSection(int sectionX, int sectionY, int sectionZ, @Nullable BiomeContainer biomes, PacketBuffer readBuffer, CompoundNBT nbtTagIn, boolean sectionExists) {
+    public Chunk loadCube(int sectionX, int sectionY, int sectionZ, @Nullable BiomeContainer biomes, PacketBuffer readBuffer, CompoundNBT nbtTagIn, boolean sectionExists) {
         if (!((IClientChunkProviderChunkArray) (Object) this.array).invokeInView(sectionX, sectionZ)) {
             LOGGER.warn("Ignoring chunk since it's not in the view range: {}, {}", sectionX, sectionZ);
             return null;

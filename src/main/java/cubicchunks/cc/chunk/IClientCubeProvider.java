@@ -7,8 +7,8 @@ import net.minecraft.world.chunk.Chunk;
 
 import javax.annotation.Nullable;
 
-public interface IClientSectionProvider {
+public interface IClientCubeProvider {
 
     //i, j, packetIn.getBiomes(), packetIn.getReadBuffer(), packetIn.getHeightmapTags(), packetIn.getAvailableSections()
-    Chunk loadSection(int cubeX, int cubeY, int cubeZ, @Nullable BiomeContainer biomes, PacketBuffer readBuffer, CompoundNBT nbtTagIn, boolean cubeExists);
+    Chunk loadCube(int cubeX, int cubeY, int cubeZ, @Nullable BiomeContainer biomes, PacketBuffer readBuffer, CompoundNBT nbtTagIn, boolean cubeExists);
 }
