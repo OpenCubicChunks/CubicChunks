@@ -34,7 +34,6 @@ import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.chunk.IChunk;
 import net.minecraft.world.gen.Heightmap;
 import net.minecraft.world.gen.feature.structure.StructureStart;
-import net.minecraft.world.server.ServerWorld;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -47,11 +46,9 @@ import javax.annotation.Nullable;
 //ChunkSection is the simple section, with only basic information in it.
 //WorldSection is the complete section, with all entity, fluid, etc information in it.
 public class Cube implements IChunk, ICube {
-    public static int CUBEDIAMETER = 2;
-    public static int CUBESIZE = CUBEDIAMETER * CUBEDIAMETER * CUBEDIAMETER;
 
     private final CubePos cubePos;
-    private ChunkSection[] sections = new ChunkSection[CUBESIZE];
+    private final ChunkSection[] sections = new ChunkSection[CUBESIZE];
 
     private final HashMap<BlockPos, TileEntity> tileEntities = new HashMap<>();
     private final ClassInheritanceMultiMap<Entity> entities = new ClassInheritanceMultiMap<>(Entity.class);
@@ -184,16 +181,6 @@ public class Cube implements IChunk, ICube {
         return SectionPos.of(xPos, yPos, zPos);
     }
 
-    @Deprecated
-    @Override public SectionPos[] getSectionPositions() {
-        SectionPos[] positions = new SectionPos[Cube.CUBESIZE];
-        for(int i = 0; i < Cube.CUBESIZE; i++)
-        {
-            positions[i] = this.getSectionPosition(i);
-        }
-        return positions;
-    }
-
 
     public World getWorld() {
         return world;
@@ -310,7 +297,12 @@ public class Cube implements IChunk, ICube {
         return null;
     }
 
+    @Deprecated
     @Override public ChunkSection[] getSections() {
+        return this.sections;
+    }
+
+    @Override public ChunkSection[] getCubeSections() {
         return this.sections;
     }
 

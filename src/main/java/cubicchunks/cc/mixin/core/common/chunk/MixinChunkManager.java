@@ -47,8 +47,6 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.SectionPos;
 import net.minecraft.village.PointOfInterestManager;
 import net.minecraft.world.chunk.Chunk;
-import net.minecraft.world.chunk.ChunkPrimerWrapper;
-import net.minecraft.world.chunk.ChunkSection;
 import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.chunk.IChunk;
 import net.minecraft.world.chunk.IChunkLightProvider;
@@ -571,7 +569,7 @@ public abstract class MixinChunkManager implements IChunkManager {
                 if (section instanceof CubePrimerWrapper) {
                         cube = ((CubePrimerWrapper)section).getCube();
                 } else {
-                    cube = new Cube(this.world, cubePos, ((CubePrimer) section).getChunkSections(), null);
+                    cube = new Cube(this.world, cubePos, section.getCubeSections(), null);
                     ((ICubeHolder) holder).onSectionWrapperCreated(new CubePrimerWrapper(cube));
                 }
 

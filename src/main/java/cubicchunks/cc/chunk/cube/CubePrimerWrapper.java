@@ -28,7 +28,7 @@ public class CubePrimerWrapper extends CubePrimer {
     Cube cube;
 
     public CubePrimerWrapper(Cube cubeIn) {
-        super(cubeIn.getCubePos(), cubeIn.getSections());
+        super(cubeIn.getCubePos(), cubeIn.getCubeSections());
         this.cube = cubeIn;
     }
 
@@ -37,6 +37,10 @@ public class CubePrimerWrapper extends CubePrimer {
         return this.cube;
     }
 
+    @Override
+    public ChunkSection[] getCubeSections() {
+        return cube.getCubeSections();
+    }
 
     @Nullable
     public TileEntity getTileEntity(BlockPos pos) {

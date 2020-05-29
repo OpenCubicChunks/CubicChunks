@@ -1,5 +1,6 @@
 package cubicchunks.cc.chunk.util;
 
+import cubicchunks.cc.chunk.ICube;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.SectionPos;
@@ -56,4 +57,15 @@ public class CubePos extends Vec3i {
         return (int)(packed << 21 >> 43);
     }
 
+    public int minCubeX() {
+        return getX() * ICube.CUBEDIAMETER;
+    }
+
+    public int minCubeY() {
+        return getY() * ICube.CUBEDIAMETER;
+    }
+
+    public int minCubeZ() {
+        return getZ() * ICube.CUBEDIAMETER;
+    }
 }

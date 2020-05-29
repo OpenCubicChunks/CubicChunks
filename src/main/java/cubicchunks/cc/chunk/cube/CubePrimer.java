@@ -1,9 +1,5 @@
 package cubicchunks.cc.chunk.cube;
 
-import static cubicchunks.cc.utils.Coords.indexTo32X;
-import static cubicchunks.cc.utils.Coords.indexTo32Y;
-import static cubicchunks.cc.utils.Coords.indexTo32Z;
-
 import com.google.common.collect.Maps;
 import cubicchunks.cc.chunk.ICube;
 import cubicchunks.cc.chunk.util.CubePos;
@@ -20,7 +16,6 @@ import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
-import net.minecraft.util.math.SectionPos;
 import net.minecraft.util.palette.UpgradeData;
 import net.minecraft.world.ITickList;
 import net.minecraft.world.biome.BiomeContainer;
@@ -52,13 +47,13 @@ public class CubePrimer implements ICube, IChunk {
     {
         this.cubePos = pos;
         if(sectionsIn == null) {
-            this.sections = new ChunkSection[Cube.CUBESIZE];
-            for(int i = 0; i < Cube.CUBESIZE; i++) {
+            this.sections = new ChunkSection[ICube.CUBESIZE];
+            for(int i = 0; i < ICube.CUBESIZE; i++) {
                 this.sections[i] = new ChunkSection(pos.getY(), (short) 0, (short) 0, (short) 0);
             }
         }
         else {
-            if(sectionsIn.length == Cube.CUBESIZE)
+            if(sectionsIn.length == ICube.CUBESIZE)
                 this.sections = sectionsIn;
             else
             {
@@ -67,7 +62,8 @@ public class CubePrimer implements ICube, IChunk {
         }
     }
 
-    public ChunkSection[] getChunkSections() {
+    @Override
+    public ChunkSection[] getCubeSections() {
         return this.sections;
     }
 
@@ -231,25 +227,6 @@ public class CubePrimer implements ICube, IChunk {
     public CubePos getCubePos()
     {
         return this.cubePos;
-    }
-
-    @Deprecated
-    public SectionPos getSectionPosition(int index)
-    {
-        int xPos = (indexTo32X(index) * 16) + this.cubePos.getX();
-        int yPos = (indexTo32Y(index) * 16) + this.cubePos.getY();
-        int zPos = (indexTo32Z(index) * 16) + this.cubePos.getY();
-
-        return SectionPos.of(xPos, yPos, zPos);
-    }
-    @Deprecated
-    @Override public SectionPos[] getSectionPositions() {
-        SectionPos[] positions = new SectionPos[Cube.CUBESIZE];
-        for(int i = 0; i < Cube.CUBESIZE; i++)
-        {
-            positions[i] = this.getSectionPosition(i);
-        }
-        return positions;
     }
 
     public void setStatus(ChunkStatus status) {
