@@ -106,9 +106,6 @@ public class CubePrimerWrapper extends CubePrimer {
         return this.cube.getTopBlockY(this.func_209532_c(heightmapType), x, z);
     }
 
-    /**
-     * Gets a {@link SectionPos } representing the x and z coordinates of this cube.
-     */
     @Override public ChunkPos getPos() {
         throw new UnsupportedOperationException("This function shoult never be called!");
     }

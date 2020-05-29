@@ -11,6 +11,7 @@ import cubicchunks.cc.chunk.ticket.ITicketManager;
 import cubicchunks.cc.chunk.util.CubePos;
 import cubicchunks.cc.mixin.core.common.chunk.interfaces.InvokeChunkManager;
 import cubicchunks.cc.server.IServerChunkProvider;
+import cubicchunks.cc.utils.Coords;
 import net.minecraft.profiler.IProfiler;
 import net.minecraft.util.Util;
 import net.minecraft.util.math.BlockPos;
@@ -72,7 +73,7 @@ public abstract class MixinServerChunkProvider implements IServerChunkProvider {
         } else {
             IProfiler iprofiler = this.world.getProfiler();
             iprofiler.func_230035_c_("getCube");
-            long i = SectionPos.asLong(cubeX, cubeY, cubeZ);
+            long i = CubePos.asLong(cubeX, cubeY, cubeZ);
 
             for(int j = 0; j < 4; ++j) {
                 if (i == this.recentPositions[j] && requiredStatus == this.recentStatuses[j]) {
@@ -108,7 +109,7 @@ public abstract class MixinServerChunkProvider implements IServerChunkProvider {
             return null;
         } else {
             this.world.getProfiler().func_230035_c_("getChunkNow");
-            long posAsLong = SectionPos.asLong(cubeX, cubeY, cubeZ);
+            long posAsLong = CubePos.asLong(cubeX, cubeY, cubeZ);
 
             for(int j = 0; j < 4; ++j) {
                 if (posAsLong == this.recentPositions[j] && this.recentStatuses[j] == ChunkStatus.FULL) {
@@ -206,12 +207,9 @@ public abstract class MixinServerChunkProvider implements IServerChunkProvider {
      */
     @Overwrite
     public void markBlockChanged(BlockPos pos) {
-        int x = pos.getX() >> 4;
-        int y = pos.getY() >> 4;
-        int z = pos.getZ() >> 4;
-        ChunkHolder chunkholder = ((IChunkManager) this.chunkManager).getCubeHolder(SectionPos.asLong(x, y, z));
+        ChunkHolder chunkholder = ((IChunkManager) this.chunkManager).getCubeHolder(CubePos.from(pos).asLong());
         if (chunkholder != null) {
-            chunkholder.markBlockChanged(pos.getX() & 15, pos.getY() & 15, pos.getZ() & 15);
+            chunkholder.markBlockChanged(Coords.localX(pos), Coords.localY(pos), Coords.localZ(pos));
         }
     }
 

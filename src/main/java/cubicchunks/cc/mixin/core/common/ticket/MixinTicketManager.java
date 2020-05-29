@@ -122,7 +122,7 @@ public abstract class MixinTicketManager implements ITicketManager {
                 while (longiterator.hasNext()) {
                     long j = longiterator.nextLong();
                     if (this.getSectionTicketSet(j).stream().anyMatch((p_219369_0_) -> p_219369_0_.getType() == CCTicketType.CCPLAYER)) {
-                        ChunkHolder chunkholder = ((InvokeChunkManager) chunkManager).chunkHold(SectionPos.from(j).asChunkPos().asLong());
+                        ChunkHolder chunkholder = ((InvokeChunkManager) chunkManager).chunkHold(CubePos.from(j).asChunkPos().asLong());
                         if (chunkholder == null) {
                             throw new IllegalStateException();
                         }

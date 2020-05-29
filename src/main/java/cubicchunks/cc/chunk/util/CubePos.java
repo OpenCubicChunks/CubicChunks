@@ -40,7 +40,9 @@ public class CubePos extends Vec3i {
     {
         return new CubePos(extractX(cubePosIn), extractY(cubePosIn), extractZ(cubePosIn));
     }
-    public static CubePos from(BlockPos blockPosIn) { return new CubePos(blockPosIn.getX(), blockPosIn.getY(), blockPosIn.getZ()); }
+    public static CubePos from(BlockPos blockPosIn) {
+        return new CubePos(Coords.blockToCube(blockPosIn.getX()), Coords.blockToCube(blockPosIn.getY()), Coords.blockToCube(blockPosIn.getZ()));
+    }
     public static CubePos from(SectionPos sectionPos) { return new CubePos(sectionPos.getX() >> 1, sectionPos.getY() >> 1, sectionPos.getZ() >> 1); }
 
     public static int extractX(long packed) {
