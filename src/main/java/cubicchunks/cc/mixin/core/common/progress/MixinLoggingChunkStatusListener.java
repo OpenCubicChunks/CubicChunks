@@ -1,6 +1,7 @@
 package cubicchunks.cc.mixin.core.common.progress;
 
 import cubicchunks.cc.chunk.ICubeStatusListener;
+import cubicchunks.cc.chunk.util.CubePos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.SectionPos;
 import net.minecraft.world.chunk.ChunkStatus;
@@ -15,7 +16,7 @@ public abstract class MixinLoggingChunkStatusListener implements ICubeStatusList
 
     @Shadow public abstract void statusChanged(ChunkPos chunkPosition, @Nullable ChunkStatus newStatus);
 
-    @Override public void cubeStatusChanged(SectionPos chunkPosition, @Nullable ChunkStatus newStatus) {
+    @Override public void cubeStatusChanged(CubePos cubePos, @Nullable ChunkStatus newStatus) {
         //this.statusChanged(chunkPosition.asChunkPos(), newStatus);
     }
 }

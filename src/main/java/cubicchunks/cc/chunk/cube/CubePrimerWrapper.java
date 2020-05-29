@@ -28,8 +28,13 @@ public class CubePrimerWrapper extends CubePrimer {
     Cube cube;
 
     public CubePrimerWrapper(Cube cubeIn) {
-        super(cubeIn.getSectionPos(), cubeIn);
+        super(cubeIn.getCubePos(), cubeIn.getSections());
         this.cube = cubeIn;
+    }
+
+    public Cube getCube()
+    {
+        return this.cube;
     }
 
 

@@ -1,6 +1,7 @@
 package cubicchunks.cc.mixin.core.client.progress;
 
 import cubicchunks.cc.chunk.ICubeStatusListener;
+import cubicchunks.cc.chunk.util.CubePos;
 import net.minecraft.util.concurrent.DelegatedTaskExecutor;
 import net.minecraft.util.math.SectionPos;
 import net.minecraft.world.chunk.ChunkStatus;
@@ -20,10 +21,10 @@ public abstract class MixinChainedChunkStatusListener implements ICubeStatusList
     @Shadow @Final private IChunkStatusListener delegate;
 
     @Override public void startSections(SectionPos center) {
-        this.executor.enqueue(() -> ((ICubeStatusListener) this.delegate).startSections(center));
+        this.executor.enqueue(() -> ((ICubeStatusListener) this.delegate).startCubes(center));
     }
 
-    @Override public void cubeStatusChanged(SectionPos chunkPosition, @Nullable ChunkStatus newStatus) {
-        this.executor.enqueue(() -> ((ICubeStatusListener) this.delegate).cubeStatusChanged(chunkPosition, newStatus));
+    @Override public void cubeStatusChanged(CubePos cubePos, @Nullable ChunkStatus newStatus) {
+        this.executor.enqueue(() -> ((ICubeStatusListener) this.delegate).cubeStatusChanged(cubePos, newStatus));
     }
 }

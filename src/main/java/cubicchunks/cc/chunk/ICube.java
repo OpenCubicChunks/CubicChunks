@@ -1,5 +1,6 @@
 package cubicchunks.cc.chunk;
 
+import cubicchunks.cc.chunk.util.CubePos;
 import net.minecraft.block.BlockState;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
@@ -8,7 +9,8 @@ import net.minecraft.world.IBlockReader;
 import net.minecraft.world.chunk.ChunkStatus;
 
 public interface ICube extends IBlockReader {
-    SectionPos getSectionPos();
+    SectionPos[] getSectionPositions();
+    CubePos getCubePos();
 
     void setCubeStatus(ChunkStatus status);
     ChunkStatus getCubeStatus();

@@ -2,6 +2,7 @@ package cubicchunks.cc.mixin.core.client.progress;
 
 import cubicchunks.cc.chunk.ICubeStatusListener;
 import cubicchunks.cc.chunk.ITrackingCubeStatusListener;
+import cubicchunks.cc.chunk.util.CubePos;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import net.minecraft.util.math.SectionPos;
 import net.minecraft.world.chunk.ChunkStatus;
@@ -30,19 +31,19 @@ public abstract class MixinTrackingChunkStatusListener implements ICubeStatusLis
     @Override
     public void startSections(SectionPos center) {
         if (this.tracking) {
-            ((ICubeStatusListener) this.loggingListener).startSections(center);
+            ((ICubeStatusListener) this.loggingListener).startCubes(center);
             this.centerSection = center;
         }
     }
 
     @Override
-    public void cubeStatusChanged(SectionPos sectionPos, @Nullable ChunkStatus newStatus) {
+    public void cubeStatusChanged(CubePos cubePos, @Nullable ChunkStatus newStatus) {
         if (this.tracking) {
-            ((ICubeStatusListener) this.loggingListener).cubeStatusChanged(sectionPos, newStatus);
+            ((ICubeStatusListener) this.loggingListener).cubeStatusChanged(cubePos, newStatus);
             if (newStatus == null) {
-                this.cubeStatuses.remove(sectionPos.asLong());
+                this.cubeStatuses.remove(cubePos.asLong());
             } else {
-                this.cubeStatuses.put(sectionPos.asLong(), newStatus);
+                this.cubeStatuses.put(cubePos.asLong(), newStatus);
             }
         }
     }

@@ -17,7 +17,7 @@ public class CubeTicketTracker extends SectionDistanceGraph  {
 
     @Override
     protected int getSourceLevel(long pos) {
-        SortedArraySet<Ticket<?>> sortedarrayset = iTicketManager.getSectionTickets().get(pos);
+        SortedArraySet<Ticket<?>> sortedarrayset = iTicketManager.getCubeTickets().get(pos);
         if (sortedarrayset == null) {
             return Integer.MAX_VALUE;
         } else {

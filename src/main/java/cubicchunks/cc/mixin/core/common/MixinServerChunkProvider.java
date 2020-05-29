@@ -8,6 +8,7 @@ import cubicchunks.cc.chunk.ICubeHolder;
 import cubicchunks.cc.chunk.cube.Cube;
 import cubicchunks.cc.chunk.graph.CCTicketType;
 import cubicchunks.cc.chunk.ticket.ITicketManager;
+import cubicchunks.cc.chunk.util.CubePos;
 import cubicchunks.cc.mixin.core.common.chunk.interfaces.InvokeChunkManager;
 import cubicchunks.cc.server.IServerChunkProvider;
 import net.minecraft.profiler.IProfiler;
@@ -54,7 +55,7 @@ public abstract class MixinServerChunkProvider implements IServerChunkProvider {
     private final ICube[] recentCubes = new ICube[4];
 
     @Override
-    public <T> void registerTicket(TicketType<T> type, SectionPos pos, int distance, T value) {
+    public <T> void registerTicket(TicketType<T> type, CubePos pos, int distance, T value) {
         ((ITicketManager) this.ticketManager).register(type, pos, distance, value);
     }
 
@@ -141,12 +142,12 @@ public abstract class MixinServerChunkProvider implements IServerChunkProvider {
     // func_217233_c
     private CompletableFuture<Either<ICube, ChunkHolder.IChunkLoadingError>> getCubeFuture(int cubeX, int cubeY, int cubeZ,
             ChunkStatus requiredStatus, boolean load) {
-        SectionPos sectionPos = SectionPos.of(cubeX, cubeY, cubeZ);
-        long i = sectionPos.asLong();
+        CubePos cubePos = CubePos.of(cubeX, cubeY, cubeZ);
+        long i = cubePos.asLong();
         int j = 33 + ChunkStatus.getDistance(requiredStatus);
         ChunkHolder chunkholder = this.getImmutableCubeHolder(i);
         if (load) {
-            ((ITicketManager)this.ticketManager).registerWithLevel(CCTicketType.CCUNKNOWN, sectionPos, j, sectionPos);
+            ((ITicketManager)this.ticketManager).registerWithLevel(CCTicketType.CCUNKNOWN, cubePos, j, cubePos);
             if (this.func_217224_a(chunkholder, j)) {
                 IProfiler iprofiler = this.world.getProfiler();
                 iprofiler.startSection("chunkLoad");
@@ -159,7 +160,7 @@ public abstract class MixinServerChunkProvider implements IServerChunkProvider {
             }
         }
 
-        return this.func_217224_a(chunkholder, j) ? ICubeHolder.MISSING_CHUNK_FUTURE : ((ICubeHolder)chunkholder).createFuture(requiredStatus,
+        return this.func_217224_a(chunkholder, j) ? ICubeHolder.MISSING_CUBE_FUTURE : ((ICubeHolder)chunkholder).createFuture(requiredStatus,
                 this.chunkManager);
     }
 
@@ -219,8 +220,8 @@ public abstract class MixinServerChunkProvider implements IServerChunkProvider {
     private void tickSections(CallbackInfo ci) {
 
         ((IChunkManager) this.chunkManager).getLoadedSectionsIterable().forEach((cubeHolder) -> {
-            Optional<ChunkSection> optional =
-                    ((ICubeHolder) cubeHolder).getSectionEntityTickingFuture().getNow(ICubeHolder.UNLOADED_SECTION).left();
+            Optional<Cube> optional =
+                    ((ICubeHolder) cubeHolder).getSectionEntityTickingFuture().getNow(ICubeHolder.UNLOADED_CUBE).left();
             if (optional.isPresent()) {
                 Cube section = (Cube) optional.get();
                 this.world.getProfiler().startSection("broadcast");

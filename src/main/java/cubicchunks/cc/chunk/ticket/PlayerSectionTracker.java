@@ -19,19 +19,19 @@ public class PlayerSectionTracker extends SectionDistanceGraph {
         this.iTicketManager = iTicketManager;
     }
 
-    protected int getLevel(long sectionPosIn) {
-        return this.sectionsInRange.get(sectionPosIn);
+    protected int getLevel(long cubePosIn) {
+        return this.sectionsInRange.get(cubePosIn);
     }
 
-    protected void setLevel(long sectionPosIn, int level) {
+    protected void setLevel(long cubePosIn, int level) {
         byte b0;
         if (level > this.range) {
-            b0 = this.sectionsInRange.remove(sectionPosIn);
+            b0 = this.sectionsInRange.remove(cubePosIn);
         } else {
-            b0 = this.sectionsInRange.put(sectionPosIn, (byte) level);
+            b0 = this.sectionsInRange.put(cubePosIn, (byte) level);
         }
 
-        this.chunkLevelChanged(sectionPosIn, b0, level);
+        this.chunkLevelChanged(cubePosIn, b0, level);
     }
 
     protected void chunkLevelChanged(long sectionPosIn, int oldLevel, int newLevel) {

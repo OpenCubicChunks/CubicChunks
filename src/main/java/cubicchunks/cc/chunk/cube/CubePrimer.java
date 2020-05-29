@@ -1,7 +1,13 @@
 package cubicchunks.cc.chunk.cube;
 
+import static cubicchunks.cc.utils.Coords.indexTo32X;
+import static cubicchunks.cc.utils.Coords.indexTo32Y;
+import static cubicchunks.cc.utils.Coords.indexTo32Z;
+
 import com.google.common.collect.Maps;
 import cubicchunks.cc.chunk.ICube;
+import cubicchunks.cc.chunk.util.CubePos;
+import cubicchunks.cc.utils.Coords;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import it.unimi.dsi.fastutil.shorts.ShortList;
 import net.minecraft.block.Block;
@@ -34,26 +40,34 @@ import java.util.stream.Stream;
 
 public class CubePrimer implements ICube, IChunk {
 
-    private final SectionPos sectionPos;
-    private final ChunkSection section;
+    private final CubePos cubePos;
+    private final ChunkSection[] sections;
     private ChunkStatus status = ChunkStatus.EMPTY;
 
     private final Map<BlockPos, TileEntity> tileEntities = Maps.newHashMap();
 
     //TODO: add TickList<Block> and TickList<Fluid>
-    public CubePrimer(SectionPos pos, @Nullable ChunkSection sectionIn)
+    public CubePrimer(CubePos pos, @Nullable ChunkSection[] sectionsIn)
     {
-        this.sectionPos = pos;
-        if(sectionIn == null) {
-            this.section = new ChunkSection(pos.getY(), (short)0, (short)0, (short)0);
+        this.cubePos = pos;
+        if(sectionsIn == null) {
+            this.sections = new ChunkSection[Cube.CUBESIZE];
+            for(int i = 0; i < Cube.CUBESIZE; i++) {
+                this.sections[i] = new ChunkSection(pos.getY(), (short) 0, (short) 0, (short) 0);
+            }
         }
         else {
-            this.section = sectionIn;
+            if(sectionsIn.length == Cube.CUBESIZE)
+                this.sections = sectionsIn;
+            else
+            {
+                throw new IllegalStateException("Number of Sections must equal Cube.CUBESIZE");
+            }
         }
     }
 
-    public ChunkSection getChunkSection() {
-        return this.section;
+    public ChunkSection[] getChunkSections() {
+        return this.sections;
     }
 
     @Nullable @Override public TileEntity getTileEntity(BlockPos pos) {
@@ -61,9 +75,10 @@ public class CubePrimer implements ICube, IChunk {
     }
 
     public BlockState getBlockState(BlockPos pos) {
-        return ChunkSection.isEmpty(this.section) ?
+        int index = Coords.blockToIndex32(pos.getX(), pos.getY(), pos.getZ());
+        return ChunkSection.isEmpty(this.sections[index]) ?
                 Blocks.AIR.getDefaultState() :
-                this.section.getBlockState(pos.getX() & 15, pos.getX() & 15, pos.getZ() & 15);
+                this.sections[index].getBlockState(pos.getX() & 15, pos.getX() & 15, pos.getZ() & 15);
     }
 
     @Override public IFluidState getFluidState(BlockPos pos) {
@@ -75,10 +90,12 @@ public class CubePrimer implements ICube, IChunk {
         int x = pos.getX();
         int y = pos.getY();
         int z = pos.getZ();
-        if (this.section == Chunk.EMPTY_SECTION && state.getBlock() == Blocks.AIR) {
+        int index = Coords.blockToIndex32(pos.getX(), pos.getY(), pos.getZ());
+
+        if (this.sections[index] == Chunk.EMPTY_SECTION && state.getBlock() == Blocks.AIR) {
             return state;
         } else {
-            return this.section.setBlockState(x, y, z, state);
+            return this.sections[index].setBlockState(x, y, z, state);
 
             //TODO: finish implementing
             /*if (state.getLightValue(this, pos) > 0) {
@@ -210,8 +227,28 @@ public class CubePrimer implements ICube, IChunk {
         this.status = status;
     }
 
-    @Override public SectionPos getSectionPos() {
-        return this.sectionPos;
+    public CubePos getCubePos()
+    {
+        return this.cubePos;
+    }
+
+    @Deprecated
+    public SectionPos getSectionPosition(int index)
+    {
+        int xPos = (indexTo32X(index) * 16) + this.cubePos.getX();
+        int yPos = (indexTo32Y(index) * 16) + this.cubePos.getY();
+        int zPos = (indexTo32Z(index) * 16) + this.cubePos.getY();
+
+        return SectionPos.of(xPos, yPos, zPos);
+    }
+    @Deprecated
+    @Override public SectionPos[] getSectionPositions() {
+        SectionPos[] positions = new SectionPos[Cube.CUBESIZE];
+        for(int i = 0; i < Cube.CUBESIZE; i++)
+        {
+            positions[i] = this.getSectionPosition(i);
+        }
+        return positions;
     }
 
     public void setStatus(ChunkStatus status) {

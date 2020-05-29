@@ -3,6 +3,7 @@ package cubicchunks.cc.network;
 import static net.minecraft.world.chunk.Chunk.EMPTY_SECTION;
 
 import cubicchunks.cc.chunk.IClientSectionProvider;
+import cubicchunks.cc.chunk.cube.Cube;
 import cubicchunks.cc.utils.MathUtil;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
@@ -30,7 +31,7 @@ public class PacketCubes {
     private final byte[] packetData;
     private final List<CompoundNBT> tileEntityTags;
 
-    public PacketCubes(Map<SectionPos, ChunkSection> cubes) {
+    public PacketCubes(List<Cube> cubes) {
         this.positions = cubes.keySet().toArray(new SectionPos[0]);
         this.cubeExists = new BitSet(cubes.size());
         this.packetData = new byte[calculateDataSize(cubes)];

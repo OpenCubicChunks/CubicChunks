@@ -8,7 +8,6 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.chunk.IChunk;
 import net.minecraft.world.gen.ChunkGenerator;
-import net.minecraft.world.gen.GenerationStage;
 import net.minecraft.world.gen.feature.template.TemplateManager;
 import net.minecraft.world.server.ChunkHolder;
 import net.minecraft.world.server.ServerWorld;
@@ -106,7 +105,7 @@ public class MixinChunkStatus {
         if (chunk instanceof ICube) {
             // generator.makeBase(new CubeWorldGenRegion(world, unsafeCast(neighbors)), chunk);
             ICube cube = (ICube) chunk;
-            int cubeY = cube.getSectionPos().getY();
+            int cubeY = cube.getCubePos().getY();
             if (cubeY < 5) {
                 for (int x = 0; x < 16; x++) {
                     for (int y = 0; y < 16; y++) {

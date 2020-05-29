@@ -1,6 +1,7 @@
 package cubicchunks.cc.mixin.core.common;
 
 import cubicchunks.cc.chunk.ICubeStatusListener;
+import cubicchunks.cc.chunk.util.CubePos;
 import cubicchunks.cc.server.IServerChunkProvider;
 import it.unimi.dsi.fastutil.longs.LongIterator;
 import net.minecraft.server.MinecraftServer;
@@ -8,7 +9,6 @@ import net.minecraft.util.Unit;
 import net.minecraft.util.Util;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
-import net.minecraft.util.math.SectionPos;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraft.world.ForcedChunksSaveData;
@@ -43,15 +43,15 @@ public abstract class MixinMinecraftServer {
         ServerWorld serverworld = ((IMinecraftServer)this).getServerWorld(DimensionType.OVERWORLD);
         LOGGER.info("Preparing start region for dimension " + DimensionType.getKey(serverworld.dimension.getType()));
         BlockPos blockpos = serverworld.getSpawnPoint();
-        SectionPos sectionPos = SectionPos.from(blockpos);
+        CubePos cubePos = CubePos.from(blockpos);
 
         statusListener.start(new ChunkPos(blockpos));
-        ((ICubeStatusListener) statusListener).startSections(sectionPos);
+        ((ICubeStatusListener) statusListener).startCubes(cubePos);
 
         ServerChunkProvider serverchunkprovider = serverworld.getChunkProvider();
         serverchunkprovider.getLightManager().func_215598_a(500);
         this.serverTime = Util.milliTime();
-        ((IServerChunkProvider)serverchunkprovider).registerTicket(TicketType.START, sectionPos, 11, Unit.INSTANCE);
+        ((IServerChunkProvider)serverchunkprovider).registerTicket(TicketType.START, cubePos, 11, Unit.INSTANCE);
 
         int i2 = 0;
         while(serverchunkprovider.getLoadedChunksCount() != 21*21 && ((IServerChunkProvider) serverchunkprovider).getLoadedSectionsCount() != 21*21*21) {

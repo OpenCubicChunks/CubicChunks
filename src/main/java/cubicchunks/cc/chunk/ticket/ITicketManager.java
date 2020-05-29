@@ -1,5 +1,6 @@
 package cubicchunks.cc.chunk.ticket;
 
+import cubicchunks.cc.chunk.util.CubePos;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.longs.LongSet;
@@ -23,27 +24,27 @@ public interface ITicketManager {
 
     boolean processUpdates(ChunkManager chunkManager);
 
-    <T> void registerWithLevel(TicketType<T> type, SectionPos pos, int level, T value);
+    <T> void registerWithLevel(TicketType<T> type, CubePos pos, int level, T value);
 
-    <T> void releaseWithLevel(TicketType<T> type, SectionPos pos, int level, T value);
+    <T> void releaseWithLevel(TicketType<T> type, CubePos pos, int level, T value);
 
-    <T> void register(TicketType<T> type, SectionPos pos, int distance, T value);
+    <T> void register(TicketType<T> type, CubePos pos, int distance, T value);
 
     void registerSection(long chunkPosIn, Ticket<?> ticketIn);
 
-    <T> void release(TicketType<T> type, SectionPos pos, int distance, T value);
+    <T> void release(TicketType<T> type, CubePos pos, int distance, T value);
 
-    void releaseSection(long chunkPosIn, Ticket<?> ticketIn);
+    void releaseCube(long chunkPosIn, Ticket<?> ticketIn);
 
-    void updatePlayerPosition(SectionPos sectionPosIn, ServerPlayerEntity player);
+    void updatePlayerPosition(CubePos sectionPosIn, ServerPlayerEntity player);
 
-    void removePlayer(SectionPos sectionPosIn, ServerPlayerEntity player);
+    void removePlayer(CubePos sectionPosIn, ServerPlayerEntity player);
 
     int getSpawningSectionsCount();
 
     boolean isSectionOutsideSpawningRadius(long sectionPosIn);
 
-    Long2ObjectOpenHashMap<SortedArraySet<Ticket<?>>> getSectionTickets();
+    Long2ObjectOpenHashMap<SortedArraySet<Ticket<?>>> getCubeTickets();
 
     Long2ObjectMap<ObjectSet<ServerPlayerEntity>> getPlayersBySectionPos();
 

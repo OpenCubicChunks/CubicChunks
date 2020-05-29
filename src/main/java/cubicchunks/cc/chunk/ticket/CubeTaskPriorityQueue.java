@@ -2,6 +2,7 @@ package cubicchunks.cc.chunk.ticket;
 
 import com.google.common.collect.Lists;
 import com.mojang.datafixers.util.Either;
+import cubicchunks.cc.chunk.util.CubePos;
 import it.unimi.dsi.fastutil.longs.Long2ObjectLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
@@ -29,7 +30,7 @@ public class CubeTaskPriorityQueue<T> {
       this.sizeMax = maxSize;
    }
 
-   protected void updateSectionLevel(int p_219407_1_, SectionPos pos, int p_219407_3_) {
+   protected void updateSectionLevel(int p_219407_1_, CubePos pos, int p_219407_3_) {
       if (p_219407_1_ < levelCount) {
          Long2ObjectLinkedOpenHashMap<List<Optional<T>>> long2objectlinkedopenhashmap = this.levelToPosToElements.get(p_219407_1_);
          List<Optional<T>> list = long2objectlinkedopenhashmap.remove(pos.asLong());

@@ -1,6 +1,8 @@
 package cubicchunks.cc.chunk;
 
 import com.mojang.datafixers.util.Either;
+import cubicchunks.cc.chunk.cube.Cube;
+import cubicchunks.cc.chunk.util.CubePos;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import net.minecraft.util.math.SectionPos;
 import net.minecraft.world.chunk.ChunkSection;
@@ -16,27 +18,27 @@ import javax.annotation.Nullable;
 public interface IChunkManager {
     int getLoadedSectionsCount();
 
-    ChunkHolder setSectionLevel(long sectionPosIn, int newLevel, @Nullable ChunkHolder holder, int oldLevel);
+    ChunkHolder setCubeLevel(long sectionPosIn, int newLevel, @Nullable ChunkHolder holder, int oldLevel);
 
-    LongSet getUnloadableSections();
+    LongSet getUnloadableCubes();
 
     ChunkHolder getCubeHolder(long sectionPosIn);
     ChunkHolder getImmutableCubeHolder(long sectionPosIn);
 
-    CompletableFuture<Either<ICube, ChunkHolder.IChunkLoadingError>> createSectionFuture(ChunkHolder chunkHolderIn,
+    CompletableFuture<Either<ICube, ChunkHolder.IChunkLoadingError>> createCubeFuture(ChunkHolder chunkHolderIn,
             ChunkStatus chunkStatusIn);
 
-    CompletableFuture<Either<ChunkSection, ChunkHolder.IChunkLoadingError>> createSectionBorderFuture(ChunkHolder chunkHolder);
+    CompletableFuture<Either<Cube, ChunkHolder.IChunkLoadingError>> createSectionBorderFuture(ChunkHolder chunkHolder);
 
 
-    CompletableFuture<Either<ChunkSection, ChunkHolder.IChunkLoadingError>> createSectionTickingFuture(ChunkHolder chunkHolder);
+    CompletableFuture<Either<Cube, ChunkHolder.IChunkLoadingError>> createSectionTickingFuture(ChunkHolder chunkHolder);
 
-    CompletableFuture<Either<List<ICube>, ChunkHolder.IChunkLoadingError>> createSectionRegionFuture(SectionPos pos, int p_219236_2_,
+    CompletableFuture<Either<List<ICube>, ChunkHolder.IChunkLoadingError>> createCubeRegionFuture(CubePos pos, int p_219236_2_,
             IntFunction<ChunkStatus> p_219236_3_);
 
-    CompletableFuture<Void> saveSectionScheduleTicks(ChunkSection sectionIn);
+    CompletableFuture<Void> saveCubeScheduleTicks(Cube sectionIn);
 
-    public CompletableFuture<Either<ChunkSection, ChunkHolder.IChunkLoadingError>> createSectionEntityTickingFuture(SectionPos pos);
+    CompletableFuture<Either<Cube, ChunkHolder.IChunkLoadingError>> createSectionEntityTickingFuture(CubePos pos);
 
     Iterable<ChunkHolder> getLoadedSectionsIterable();
 }

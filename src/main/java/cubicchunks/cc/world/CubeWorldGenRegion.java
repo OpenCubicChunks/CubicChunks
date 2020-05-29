@@ -3,6 +3,7 @@ package cubicchunks.cc.world;
 import static cubicchunks.cc.utils.Coords.blockToCube;
 
 import cubicchunks.cc.chunk.ICube;
+import cubicchunks.cc.chunk.util.CubePos;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
@@ -32,7 +33,6 @@ import net.minecraft.world.chunk.AbstractChunkProvider;
 import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.chunk.IChunk;
 import net.minecraft.world.dimension.Dimension;
-import net.minecraft.world.gen.GenerationSettings;
 import net.minecraft.world.gen.Heightmap;
 import net.minecraft.world.lighting.WorldLightManager;
 import net.minecraft.world.server.ServerWorld;
@@ -69,16 +69,16 @@ public class CubeWorldGenRegion implements IWorld {
     //    });
     private final BiomeManager biomeManager;
 
-    public CubeWorldGenRegion(ServerWorld worldIn, List<ICube> sectionsIn) {
-        int i = MathHelper.floor(Math.cbrt(sectionsIn.size()));
-        if (i * i * i != sectionsIn.size()) {
+    public CubeWorldGenRegion(ServerWorld worldIn, List<ICube> cubesIn) {
+        int i = MathHelper.floor(Math.cbrt(cubesIn.size()));
+        if (i * i * i != cubesIn.size()) {
             throw Util.pauseDevMode(new IllegalStateException("Cache size is not a square."));
         } else {
-            SectionPos sectionPos = sectionsIn.get(sectionsIn.size() / 2).getSectionPos();
-            this.cubePrimers = sectionsIn;
-            this.mainCubeX = sectionPos.getX();
-            this.mainCubeY = sectionPos.getY();
-            this.mainCubeZ = sectionPos.getZ();
+            CubePos cubePos = cubesIn.get(cubesIn.size() / 2).getCubePos();
+            this.cubePrimers = cubesIn;
+            this.mainCubeX = cubePos.getX();
+            this.mainCubeY = cubePos.getY();
+            this.mainCubeZ = cubePos.getZ();
             this.diameter = i;
             this.world = worldIn;
             this.seed = worldIn.getSeed();
@@ -110,10 +110,10 @@ public class CubeWorldGenRegion implements IWorld {
     public ICube getCube(int x, int y, int z, ChunkStatus requiredStatus, boolean nonnull) {
         ICube icube;
         if (this.cubeExists(x, y, z)) {
-            SectionPos sectionPos = this.cubePrimers.get(0).getSectionPos();
-            int dx = x - sectionPos.getX();
-            int dy = y - sectionPos.getY();
-            int dz = z - sectionPos.getZ();
+            CubePos cubePos = this.cubePrimers.get(0).getCubePos();
+            int dx = x - cubePos.getX();
+            int dy = y - cubePos.getY();
+            int dz = z - cubePos.getZ();
             icube = this.cubePrimers.get(dx * this.diameter * this.diameter + dy * this.diameter + dz);
             if (icube.getCubeStatus().isAtLeast(requiredStatus)) {
                 return icube;
@@ -129,8 +129,8 @@ public class CubeWorldGenRegion implements IWorld {
             ICube icube2 = this.cubePrimers.get(this.cubePrimers.size() - 1);
             LOGGER.error("Requested section : {} {} {}", x, y, z);
             LOGGER.error("Region bounds : {} {} {} | {} {} {}",
-                    icube1.getSectionPos().getX(), icube1.getSectionPos().getY(), icube1.getSectionPos().getZ(),
-                    icube2.getSectionPos().getX(), icube2.getSectionPos().getY(), icube2.getSectionPos().getZ());
+                    icube1.getCubePos().getX(), icube1.getCubePos().getY(), icube1.getCubePos().getZ(),
+                    icube2.getCubePos().getX(), icube2.getCubePos().getY(), icube2.getCubePos().getZ());
             if (icube != null) {
                 throw Util.pauseDevMode(new RuntimeException(String.format("Section is not of correct status. Expecting %s, got %s "
                         + "| %s %s %s", requiredStatus, icube.getCubeStatus(), x, y, z)));
@@ -144,9 +144,9 @@ public class CubeWorldGenRegion implements IWorld {
     public boolean cubeExists(int x, int y, int z) {
         ICube isection = this.cubePrimers.get(0);
         ICube isection2 = this.cubePrimers.get(this.cubePrimers.size() - 1);
-        return x >= isection.getSectionPos().getX() && x <= isection2.getSectionPos().getX() &&
-                y >= isection.getSectionPos().getY() && y <= isection2.getSectionPos().getY() &&
-                z >= isection.getSectionPos().getZ() && z <= isection2.getSectionPos().getZ();
+        return x >= isection.getCubePos().getX() && x <= isection2.getCubePos().getX() &&
+                y >= isection.getCubePos().getY() && y <= isection2.getCubePos().getY() &&
+                z >= isection.getCubePos().getZ() && z <= isection2.getCubePos().getZ();
     }
 
     @Override public long getSeed() {

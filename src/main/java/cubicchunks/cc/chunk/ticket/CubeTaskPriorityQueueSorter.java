@@ -5,6 +5,7 @@ import com.google.common.collect.Sets;
 import com.mojang.datafixers.util.Either;
 import cubicchunks.cc.chunk.ICubeHolder;
 import cubicchunks.cc.chunk.ICubeHolderListener;
+import cubicchunks.cc.chunk.util.CubePos;
 import net.minecraft.util.Unit;
 import net.minecraft.util.Util;
 import net.minecraft.util.concurrent.DelegatedTaskExecutor;
@@ -49,7 +50,7 @@ public class CubeTaskPriorityQueueSorter implements AutoCloseable, ChunkHolder.I
     }
 
     public static CubeTaskPriorityQueueSorter.FunctionEntry<Runnable> createMsg(ChunkHolder holder, Runnable p_219081_1_) {
-        return createMsg(p_219081_1_, ((ICubeHolder) holder).getSectionPos().asLong(), holder::func_219281_j);
+        return createMsg(p_219081_1_, ((ICubeHolder) holder).getCubePos().asLong(), holder::func_219281_j);
     }
 
     public static CubeTaskPriorityQueueSorter.RunnableEntry createSorterMsg(Runnable p_219073_0_, long p_219073_1_, boolean p_219073_3_) {
@@ -63,7 +64,8 @@ public class CubeTaskPriorityQueueSorter implements AutoCloseable, ChunkHolder.I
         })).join();
     }
 
-    public void onUpdateSectionLevel(SectionPos pos, IntSupplier getLevel, int level, IntConsumer setLevel) {
+    @Override
+    public void onUpdateSectionLevel(CubePos pos, IntSupplier getLevel, int level, IntConsumer setLevel) {
         this.sorter.enqueue(new ITaskQueue.RunnableWithPriority(0, () -> {
             int i = getLevel.getAsInt();
             this.queues.values().forEach((cubeTaskPriorityQueue) -> {

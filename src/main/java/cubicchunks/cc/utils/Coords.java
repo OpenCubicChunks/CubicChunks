@@ -109,6 +109,18 @@ public class Coords {
         final int mask = 0x10;
         return (x&mask) >> 4 | (y&mask)>>3 | (z&mask)>>2;
     }
+    public static int indexTo32X(int indexIn)
+    {
+        return indexIn & 1;
+    }
+    public static int indexTo32Y(int indexIn)
+    {
+        return (indexIn >> 1) & 1;
+    }
+    public static int indexTo32Z(int indexIn)
+    {
+        return (indexIn >> 2) & 1;
+    }
 
     /**
      * Return a seed for random number generation, based on initial seed and 3 coordinates.
