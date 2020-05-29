@@ -1,12 +1,12 @@
 package cubicchunks.cc.chunk.ticket;
 
+import cubicchunks.cc.chunk.graph.CubeDistanceGraph;
 import it.unimi.dsi.fastutil.longs.Long2ByteMap;
 import it.unimi.dsi.fastutil.longs.Long2ByteOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectSet;
 import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.util.SectionDistanceGraph;
 
-public class PlayerSectionTracker extends SectionDistanceGraph {
+public class PlayerSectionTracker extends CubeDistanceGraph {
     public final Long2ByteMap sectionsInRange = new Long2ByteOpenHashMap();
     protected final int range;
 

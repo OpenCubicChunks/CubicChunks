@@ -1,12 +1,12 @@
 package cubicchunks.cc.chunk.ticket;
 
-import net.minecraft.util.SectionDistanceGraph;
+import cubicchunks.cc.chunk.graph.CubeDistanceGraph;
 import net.minecraft.util.SortedArraySet;
 import net.minecraft.world.server.ChunkHolder;
 import net.minecraft.world.server.ChunkManager;
 import net.minecraft.world.server.Ticket;
 
-public class CubeTicketTracker extends SectionDistanceGraph  {
+public class CubeTicketTracker extends CubeDistanceGraph {
     private final ITicketManager iTicketManager;
 
     public CubeTicketTracker(ITicketManager iTicketManager) {

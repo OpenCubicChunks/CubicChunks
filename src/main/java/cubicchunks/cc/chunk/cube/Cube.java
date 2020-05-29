@@ -209,7 +209,7 @@ public class Cube implements IChunk, ICube {
                 this.world.removeTileEntity(pos);
             }
 
-            if (chunksection.getBlockState(i, j & 15, k).getBlock() != block) {
+            if (chunksection.getBlockState(i, j, k).getBlock() != block) {
                 return null;
             } else {
                 if (blockstate.hasTileEntity()) {
