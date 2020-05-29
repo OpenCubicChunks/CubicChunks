@@ -45,6 +45,7 @@ public class CubePrimer implements ICube, IChunk {
     private ChunkStatus status = ChunkStatus.EMPTY;
 
     private final Map<BlockPos, TileEntity> tileEntities = Maps.newHashMap();
+    private volatile boolean modified = true;
 
     //TODO: add TickList<Block> and TickList<Fluid>
     public CubePrimer(CubePos pos, @Nullable ChunkSection[] sectionsIn)
@@ -207,11 +208,11 @@ public class CubePrimer implements ICube, IChunk {
 
 
     @Override public void setModified(boolean modified) {
-        throw new UnsupportedOperationException("For later implementation");
+        this.modified = modified;
     }
 
     @Override public boolean isModified() {
-        throw new UnsupportedOperationException("For later implementation");
+        return modified;
     }
 
     @Override public ChunkStatus getStatus() {

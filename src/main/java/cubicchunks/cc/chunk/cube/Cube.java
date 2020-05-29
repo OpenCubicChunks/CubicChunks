@@ -57,11 +57,11 @@ public class Cube implements IChunk, ICube {
     private final ClassInheritanceMultiMap<Entity> entities = new ClassInheritanceMultiMap<>(Entity.class);
     private final World world;
 
-    private ChunkStatus cubeStatus;
+    private ChunkStatus cubeStatus = ChunkStatus.EMPTY;
 
     private CubeBiomeContainer cubeBiomeContainer;
 
-    private boolean dirty = false;
+    private boolean dirty = true; // todo: change back to false?
     private boolean loaded = false;
 
     public Cube(World worldIn, CubePos cubePosIn, CubeBiomeContainer biomeContainerIn)
@@ -351,11 +351,11 @@ public class Cube implements IChunk, ICube {
     }
 
     @Override public void setModified(boolean modified) {
-
+        this.dirty = modified;
     }
 
     @Override public boolean isModified() {
-        return false;
+        return dirty;
     }
 
     @Deprecated

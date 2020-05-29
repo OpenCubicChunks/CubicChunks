@@ -1,5 +1,6 @@
 package cubicchunks.cc.mixin.core.common.chunk;
 
+import cubicchunks.cc.chunk.ICube;
 import cubicchunks.cc.chunk.ICubeGenerator;
 import net.minecraft.world.IWorld;
 import net.minecraft.world.biome.BiomeManager;
@@ -29,7 +30,9 @@ public class MixinChunkGenerator implements ICubeGenerator {
 
     @Inject(method = "generateBiomes", at = @At("HEAD"), cancellable = true)
     public void generateBiomes(IChunk chunkIn, CallbackInfo ci) {
-        ci.cancel();
+        if (chunkIn instanceof ICube) {
+            ci.cancel();
+        }
     }
 
 }

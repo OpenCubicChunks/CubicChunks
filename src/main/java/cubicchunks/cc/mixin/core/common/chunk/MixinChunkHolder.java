@@ -277,6 +277,12 @@ public abstract class MixinChunkHolder implements ICubeHolder {
         return completablefuture == null ? MISSING_CUBE_FUTURE : completablefuture;
     }
 
+    // func_219302_f
+    @Override
+    public CompletableFuture<ICube> getCurrentCubeFuture() {
+        return sectionFuture;
+    }
+
     // func_219301_a
     public CompletableFuture<Either<ICube, ChunkHolder.IChunkLoadingError>> getFutureByCubeStatus(ChunkStatus chunkStatus) {
         CompletableFuture<Either<ICube, ChunkHolder.IChunkLoadingError>> completablefuture =
