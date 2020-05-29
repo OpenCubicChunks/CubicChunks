@@ -1,6 +1,9 @@
 package cubicchunks.cc.chunk;
 
+import static cubicchunks.cc.utils.Coords.*;
+
 import cubicchunks.cc.chunk.util.CubePos;
+import cubicchunks.cc.utils.Coords;
 import net.minecraft.block.BlockState;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
@@ -29,4 +32,10 @@ public interface ICube extends IBlockReader {
     boolean isModified();
 
     void setModified(boolean modified);
+
+    @Override default BlockState getBlockState(BlockPos pos) {
+        return getBlockState(localX(pos), localY(pos), localZ(pos));
+    }
+
+    BlockState getBlockState(int x, int y, int z);
 }

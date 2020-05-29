@@ -412,7 +412,7 @@ public class Cube implements IChunk, ICube {
         return null;
     }
 
-    @Override public BlockState getBlockState(BlockPos pos) {
+    @Override public BlockState getBlockState(int x, int y, int z) {
         return null;
     }
 

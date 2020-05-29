@@ -13,7 +13,7 @@ import cubicchunks.cc.chunk.cube.Cube;
 import cubicchunks.cc.chunk.util.CubePos;
 import cubicchunks.cc.network.PacketCubes;
 import cubicchunks.cc.network.PacketDispatcher;
-import cubicchunks.cc.network.PacketSectionBlockChanges;
+import cubicchunks.cc.network.PacketCubeBlockChanges;
 import cubicchunks.cc.utils.AddressTools;
 import cubicchunks.cc.utils.Coords;
 import it.unimi.dsi.fastutil.shorts.ShortArrayList;
@@ -22,10 +22,8 @@ import net.minecraft.network.IPacket;
 import net.minecraft.util.Util;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
-import net.minecraft.util.math.SectionPos;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
-import net.minecraft.world.chunk.ChunkSection;
 import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.chunk.IChunk;
 import net.minecraft.world.lighting.WorldLightManager;
@@ -375,14 +373,12 @@ public abstract class MixinChunkHolder implements ICubeHolder {
         if (changedBlocks >= net.minecraftforge.common.ForgeConfig.SERVER.clumpingThreshold.get()) {
             this.sendToTracking(new PacketCubes(Collections.singletonList(cube)), false);
         } else if (changedBlocks != 0) {
-            this.sendToTracking(new PacketSectionBlockChanges(cube.getSections()[cubePos.getY()],
-                    SectionPos.from(pos, cubePos.getY()), new ShortArrayList(changed)), false);
+            this.sendToTracking(new PacketCubeBlockChanges(cube, new ShortArrayList(changed)), false);
             for (short pos : changed) {
                 BlockPos blockpos1 = new BlockPos(
-                        Coords.localToBlock(this.cubePos.getX(), AddressTools.getLocalX(pos)),
-                        Coords.localToBlock(this.cubePos.getY(), AddressTools.getLocalY(pos)),
-                        Coords.localToBlock(this.cubePos.getZ(), AddressTools.getLocalZ(pos))
-                        );
+                        this.cubePos.blockX(AddressTools.getLocalX(pos)),
+                        this.cubePos.blockY(AddressTools.getLocalY(pos)),
+                        this.cubePos.blockY(AddressTools.getLocalZ(pos)));
                 if (world.getBlockState(blockpos1).hasTileEntity()) {
                     this.sendTileEntity(world, blockpos1);
                 }

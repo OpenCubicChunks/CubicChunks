@@ -27,8 +27,8 @@ public class PacketDispatcher {
         CHANNEL.registerMessage(0, PacketCubes.class, PacketCubes::encode,
                 PacketCubes::new, mainThreadHandler(PacketCubes.Handler::handle),
                 Optional.of(NetworkDirection.PLAY_TO_CLIENT));
-        CHANNEL.registerMessage(4, PacketSectionBlockChanges.class, PacketSectionBlockChanges::encode,
-                PacketSectionBlockChanges::new, mainThreadHandler(PacketSectionBlockChanges.Handler::handle),
+        CHANNEL.registerMessage(4, PacketCubeBlockChanges.class, PacketCubeBlockChanges::encode,
+                PacketCubeBlockChanges::new, mainThreadHandler(PacketCubeBlockChanges.Handler::handle),
                 Optional.of(NetworkDirection.PLAY_TO_CLIENT));
         //        CHANNEL.registerMessage(5, PacketCubicWorldInit.class, PacketCubicWorldInit::encode,
         //                PacketCubicWorldInit::new, mainThreadHandler(PacketCubicWorldInit::handle));

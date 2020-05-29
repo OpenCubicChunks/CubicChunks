@@ -34,14 +34,9 @@ import javax.annotation.ParametersAreNonnullByDefault;
 public class AddressTools {
 
     public static int getLocalAddress(int localX, int localY, int localZ) {
-        return (Bits.packUnsignedToInt(localX, 4, 0)
-                | Bits.packUnsignedToInt(localZ, 4, 4)
-                | Bits.packUnsignedToInt(localY, 4, 8));
-    }
-
-    public static int getLocalAddress(int localX, int localZ) {
-        return (Bits.packUnsignedToInt(localX, 4, 0)
-                | Bits.packUnsignedToInt(localZ, 4, 4));
+        return (Bits.packUnsignedToInt(localX, 5, 0)
+                | Bits.packUnsignedToInt(localZ, 5, 5)
+                | Bits.packUnsignedToInt(localY, 5, 10));
     }
 
     /**
@@ -51,7 +46,7 @@ public class AddressTools {
      * @return x coordinate from that local address
      */
     public static int getLocalX(int localAddress) {
-        return Bits.unpackUnsigned(localAddress, 4, 0);
+        return Bits.unpackUnsigned(localAddress, 5, 0);
     }
 
     /**
@@ -61,7 +56,7 @@ public class AddressTools {
      * @return y coordinate from that local address
      */
     public static int getLocalY(int localAddress) {
-        return Bits.unpackUnsigned(localAddress, 4, 8);
+        return Bits.unpackUnsigned(localAddress, 5, 10);
     }
 
     /**
@@ -71,7 +66,7 @@ public class AddressTools {
      * @return z coordinate from that local address
      */
     public static int getLocalZ(int localAddress) {
-        return Bits.unpackUnsigned(localAddress, 4, 4);
+        return Bits.unpackUnsigned(localAddress, 5, 5);
     }
 
     public static int getLocalAddress(BlockPos pos) {

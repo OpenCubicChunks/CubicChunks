@@ -71,11 +71,11 @@ public class CubePrimer implements ICube, IChunk {
         throw new UnsupportedOperationException("For later implementation");
     }
 
-    public BlockState getBlockState(BlockPos pos) {
-        int index = Coords.blockToIndex32(pos.getX(), pos.getY(), pos.getZ());
+    public BlockState getBlockState(int x, int y, int z) {
+        int index = Coords.blockToIndex32(x, y, z);
         return ChunkSection.isEmpty(this.sections[index]) ?
                 Blocks.AIR.getDefaultState() :
-                this.sections[index].getBlockState(pos.getX() & 15, pos.getX() & 15, pos.getZ() & 15);
+                this.sections[index].getBlockState(x & 15, y & 15, z & 15);
     }
 
     @Override public IFluidState getFluidState(BlockPos pos) {

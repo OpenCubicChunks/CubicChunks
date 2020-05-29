@@ -49,6 +49,18 @@ public class Coords {
         return val & 0x1f;
     }
 
+    public static int localX(BlockPos pos) {
+        return blockToLocal(pos.getX());
+    }
+
+    public static int localY(BlockPos pos) {
+        return blockToLocal(pos.getY());
+    }
+
+    public static int localZ(BlockPos pos) {
+        return blockToLocal(pos.getZ());
+    }
+
     public static int blockToCube(int val) {
         return val >> 5;
     }
