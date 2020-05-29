@@ -31,7 +31,6 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 
 import javax.annotation.ParametersAreNonnullByDefault;
-import java.util.Random;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
@@ -47,19 +46,15 @@ public class Coords {
     }
 
     public static int blockToLocal(int val) {
-        return val & 0xf;
+        return val & 0x1f;
     }
 
     public static int blockToCube(int val) {
-        return val >> 4;
+        return val >> 5;
     }
 
     public static int blockCeilToCube(int val) {
-        return -((-val) >> 4);
-    }
-
-    public static int blockToBiome(int val) {
-        return (val & 14) >> 1;
+        return -((-val) >> 5);
     }
 
     public static int localToBlock(int cubeVal, int localVal) {
@@ -67,11 +62,11 @@ public class Coords {
     }
 
     public static int cubeToMinBlock(int val) {
-        return val << 4;
+        return val << 5;
     }
 
     public static int cubeToMaxBlock(int val) {
-        return cubeToMinBlock(val) + 15;
+        return cubeToMinBlock(val) + 31;
     }
 
     public static int getCubeXForEntity(Entity entity) {
@@ -92,17 +87,7 @@ public class Coords {
     }
 
     public static int cubeToCenterBlock(int cubeVal) {
-        return localToBlock(cubeVal, 16 / 2);
-    }
-
-    /**
-     * Returns the minimum coordinate inside the population area this coordinate is in
-     *
-     * @param coord the coordinate
-     * @return the minimum coordinate for population area
-     */
-    public static int getMinCubePopulationPos(int coord) {
-        return localToBlock(blockToCube(coord - 16 / 2), 16 / 2);
+        return localToBlock(cubeVal, 32 / 2);
     }
 
     public static int blockToIndex32(int x, int y, int z) {
@@ -120,26 +105,5 @@ public class Coords {
     public static int indexTo32Z(int indexIn)
     {
         return (indexIn >> 2) & 1;
-    }
-
-    /**
-     * Return a seed for random number generation, based on initial seed and 3 coordinates.
-     *
-     * @param seed the world seed
-     * @param x the x coordinate
-     * @param y the y coordinate
-     * @param z the z coordinate
-     * @return A seed value based on world seed, x, y and z coordinates
-     */
-    public static long coordsSeedHash(long seed, int x, int y, int z) {
-        long hash = 3;
-        hash = 41 * hash + seed;
-        hash = 41 * hash + x;
-        hash = 41 * hash + y;
-        return 41 * hash + z;
-    }
-
-    public static Random coordsSeedRandom(long seed, int x, int y, int z) {
-        return new Random(coordsSeedHash(seed, x, y, z));
     }
 }

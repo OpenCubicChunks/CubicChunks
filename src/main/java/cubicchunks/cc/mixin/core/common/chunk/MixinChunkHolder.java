@@ -15,6 +15,7 @@ import cubicchunks.cc.network.PacketCubes;
 import cubicchunks.cc.network.PacketDispatcher;
 import cubicchunks.cc.network.PacketSectionBlockChanges;
 import cubicchunks.cc.utils.AddressTools;
+import cubicchunks.cc.utils.Coords;
 import it.unimi.dsi.fastutil.shorts.ShortArrayList;
 import it.unimi.dsi.fastutil.shorts.ShortArraySet;
 import net.minecraft.network.IPacket;
@@ -372,10 +373,10 @@ public abstract class MixinChunkHolder implements ICubeHolder {
                     SectionPos.from(pos, cubePos.getY()), new ShortArrayList(changed)), false);
             for (short pos : changed) {
                 BlockPos blockpos1 = new BlockPos(
-                        AddressTools.getLocalX(pos) + this.pos.x * 16,
-                        AddressTools.getLocalY(pos) + cubePos.getY()*16,
-                        AddressTools.getLocalZ(pos) + this.pos.z * 16
-                );
+                        Coords.localToBlock(this.cubePos.getX(), AddressTools.getLocalX(pos)),
+                        Coords.localToBlock(this.cubePos.getY(), AddressTools.getLocalY(pos)),
+                        Coords.localToBlock(this.cubePos.getZ(), AddressTools.getLocalZ(pos))
+                        );
                 if (world.getBlockState(blockpos1).hasTileEntity()) {
                     this.sendTileEntity(world, blockpos1);
                 }

@@ -680,7 +680,7 @@ public abstract class MixinChunkManager implements IChunkManager {
     // sendChunkData
     private void sendSectionData(ServerPlayerEntity player, Object[] packetCache, Cube cubeIn, CubePos pos) {
         if (packetCache[0] == null) {
-            packetCache[0] = new PacketCubes(Collections.singletonMap(pos, cubeIn));
+            packetCache[0] = new PacketCubes(Collections.singletonList(cubeIn));
             //packetCache[1] = new SUpdateLightPacket(pos, this.lightManager);
         }
 
