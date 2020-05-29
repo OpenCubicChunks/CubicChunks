@@ -2,6 +2,7 @@ package cubicchunks.cc.mixin.core.client.world;
 
 import cubicchunks.cc.chunk.IClientCubeProvider;
 import cubicchunks.cc.chunk.IColumn;
+import cubicchunks.cc.chunk.util.CubePos;
 import cubicchunks.cc.mixin.core.client.interfaces.IClientChunkProviderChunkArray;
 import net.minecraft.client.multiplayer.ClientChunkProvider;
 import net.minecraft.client.world.ClientWorld;
@@ -43,34 +44,34 @@ public abstract class MixinClientChunkProvider implements IClientCubeProvider {
     @Shadow public abstract WorldLightManager getLightManager();
 
     @SuppressWarnings("ConstantConditions") @Override
-    public Chunk loadCube(int sectionX, int sectionY, int sectionZ, @Nullable BiomeContainer biomes, PacketBuffer readBuffer, CompoundNBT nbtTagIn, boolean sectionExists) {
-        if (!((IClientChunkProviderChunkArray) (Object) this.array).invokeInView(sectionX, sectionZ)) {
-            LOGGER.warn("Ignoring chunk since it's not in the view range: {}, {}", sectionX, sectionZ);
+    public Chunk loadCube(int cubeX, int cubeY, int cubeZ, @Nullable BiomeContainer biomes, PacketBuffer readBuffer, CompoundNBT nbtTagIn, boolean sectionExists) {
+        if (!((IClientChunkProviderChunkArray) (Object) this.array).invokeInView(cubeX, cubeZ)) {
+            LOGGER.warn("Ignoring chunk since it's not in the view range: {}, {}", cubeX, cubeZ);
             return null;
         } else {
-            int idx = ((IClientChunkProviderChunkArray) (Object) this.array).invokeGetIndex(sectionX, sectionZ);
+            int idx = ((IClientChunkProviderChunkArray) (Object) this.array).invokeGetIndex(cubeX, cubeZ);
             Chunk chunk = ((IClientChunkProviderChunkArray) (Object) this.array).getChunks().get(idx);
-            if (!isValid(chunk, sectionX, sectionZ)) {
+            if (!isValid(chunk, cubeX, cubeZ)) {
                 //if (biomes == null) {
                 //    LOGGER.warn("Ignoring chunk since we don't have complete data: {}, {}", sectionZ, sectionZ);
                 //    return null;
                 //}
 
-                chunk = new Chunk(this.world, new ChunkPos(sectionZ, sectionZ), new BiomeContainer(BIOMES));
-                ((IColumn) chunk).readSection(sectionY, null, readBuffer, nbtTagIn, sectionExists);
+                chunk = new Chunk(this.world, new ChunkPos(cubeZ, cubeZ), new BiomeContainer(BIOMES));
+                ((IColumn) chunk).readSection(cubeY, null, readBuffer, nbtTagIn, sectionExists);
                 ((IClientChunkProviderChunkArray) (Object) this.array).invokeReplace(idx, chunk);
             } else {
-                ((IColumn) chunk).readSection(sectionY, null, readBuffer, nbtTagIn, sectionExists);
+                ((IColumn) chunk).readSection(cubeY, null, readBuffer, nbtTagIn, sectionExists);
             }
 
             ChunkSection[] allSections = chunk.getSections();
             WorldLightManager lightManager = this.getLightManager();
-            lightManager.enableLightSources(new ChunkPos(sectionZ, sectionZ), true);
+            lightManager.enableLightSources(new ChunkPos(cubeZ, cubeZ), true);
 
-            ChunkSection chunksection = allSections[sectionY];
-            lightManager.updateSectionStatus(SectionPos.of(sectionZ, sectionY, sectionZ), ChunkSection.isEmpty(chunksection));
+            ChunkSection chunksection = allSections[cubeY];
+            lightManager.updateSectionStatus(CubePos.of(cubeZ, cubeY, cubeZ).asSectionPos(), ChunkSection.isEmpty(chunksection));
 
-            this.world.onChunkLoaded(sectionZ, sectionZ);
+            this.world.onChunkLoaded(cubeZ, cubeZ);
             // net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.event.world.ChunkEvent.Load(chunk));
             return chunk;
         }

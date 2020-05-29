@@ -165,9 +165,9 @@ public abstract class MixinServerChunkProvider implements IServerChunkProvider {
     }
 
     //func_217213_a
-    private ChunkHolder getImmutableCubeHolder(long sectionPosIn)
+    private ChunkHolder getImmutableCubeHolder(long cubePosIn)
     {
-        return ((IChunkManager)this.chunkManager).getImmutableCubeHolder(sectionPosIn);
+        return ((IChunkManager)this.chunkManager).getImmutableCubeHolder(cubePosIn);
     }
 
     // func_225315_a

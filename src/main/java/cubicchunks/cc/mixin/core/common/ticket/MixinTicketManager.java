@@ -187,16 +187,16 @@ public abstract class MixinTicketManager implements ITicketManager {
     }
 
     @Override
-    public void updatePlayerPosition(CubePos sectionPosIn, ServerPlayerEntity player) {
-        long i = sectionPosIn.asLong();
+    public void updatePlayerPosition(CubePos cubePosIn, ServerPlayerEntity player) {
+        long i = cubePosIn.asLong();
         this.playersBySectionPos.computeIfAbsent(i, (x) -> new ObjectOpenHashSet<>()).add(player);
         this.playerSectionTracker.updateSourceLevel(i, 0, true);
         this.playerSectionTicketTracker.updateSourceLevel(i, 0, true);
     }
 
     @Override
-    public void removePlayer(CubePos sectionPosIn, ServerPlayerEntity player) {
-        long i = sectionPosIn.asLong();
+    public void removePlayer(CubePos cubePosIn, ServerPlayerEntity player) {
+        long i = cubePosIn.asLong();
         ObjectSet<ServerPlayerEntity> objectset = this.playersBySectionPos.get(i);
         objectset.remove(player);
         if (objectset.isEmpty()) {
@@ -216,9 +216,9 @@ public abstract class MixinTicketManager implements ITicketManager {
     }
 
     @Override
-    public boolean isSectionOutsideSpawningRadius(long sectionPosIn) {
+    public boolean isSectionOutsideSpawningRadius(long cubePosIn) {
         this.playerSectionTracker.processAllUpdates();
-        return this.playerSectionTracker.sectionsInRange.containsKey(sectionPosIn);
+        return this.playerSectionTracker.sectionsInRange.containsKey(cubePosIn);
     }
 
     @Override

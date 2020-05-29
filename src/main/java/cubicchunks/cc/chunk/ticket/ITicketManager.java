@@ -36,13 +36,13 @@ public interface ITicketManager {
 
     void releaseCube(long chunkPosIn, Ticket<?> ticketIn);
 
-    void updatePlayerPosition(CubePos sectionPosIn, ServerPlayerEntity player);
+    void updatePlayerPosition(CubePos cubePosIn, ServerPlayerEntity player);
 
-    void removePlayer(CubePos sectionPosIn, ServerPlayerEntity player);
+    void removePlayer(CubePos cubePosIn, ServerPlayerEntity player);
 
     int getSpawningSectionsCount();
 
-    boolean isSectionOutsideSpawningRadius(long sectionPosIn);
+    boolean isSectionOutsideSpawningRadius(long cubePosIn);
 
     Long2ObjectOpenHashMap<SortedArraySet<Ticket<?>>> getCubeTickets();
 
@@ -58,9 +58,9 @@ public interface ITicketManager {
 
     ChunkHolder getCubeHolder(long chunkPosIn);
 
-    ChunkHolder setSectionLevel(long chunkPosIn, int newLevel, @Nullable ChunkHolder holder, int oldLevel);
+    ChunkHolder setCubeLevel(long cubePosIn, int newLevel, @Nullable ChunkHolder holder, int oldLevel);
 
-    boolean containsSections(long sectionPos);
+    boolean containsCubes(long sectionPos);
 
     Executor executor();
 

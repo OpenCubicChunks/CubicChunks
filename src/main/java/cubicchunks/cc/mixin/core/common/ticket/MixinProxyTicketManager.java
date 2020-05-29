@@ -14,17 +14,17 @@ public abstract class MixinProxyTicketManager extends MixinTicketManager {
     @Shadow ChunkManager this$0;
 
     @Override
-    public ChunkHolder setSectionLevel(long sectionPosIn, int newLevel, @Nullable ChunkHolder holder, int oldLevel) {
-        return ((IChunkManager)this$0).setCubeLevel(sectionPosIn, newLevel, holder, oldLevel);
+    public ChunkHolder setCubeLevel(long cubePosIn, int newLevel, @Nullable ChunkHolder holder, int oldLevel) {
+        return ((IChunkManager)this$0).setCubeLevel(cubePosIn, newLevel, holder, oldLevel);
     }
 
     @Override
-    public boolean containsSections(long sectionPos) {
-        return ((IChunkManager)this$0).getUnloadableCubes().contains(sectionPos);
+    public boolean containsCubes(long cubePos) {
+        return ((IChunkManager)this$0).getUnloadableCubes().contains(cubePos);
     }
 
     @Override
-    public ChunkHolder getCubeHolder(long sectionPosIn) {
-        return ((IChunkManager)this$0).getCubeHolder(sectionPosIn);
+    public ChunkHolder getCubeHolder(long cubePosIn) {
+        return ((IChunkManager)this$0).getCubeHolder(cubePosIn);
     }
 }

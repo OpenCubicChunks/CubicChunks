@@ -34,15 +34,15 @@ public class PlayerSectionTracker extends SectionDistanceGraph {
         this.chunkLevelChanged(cubePosIn, b0, level);
     }
 
-    protected void chunkLevelChanged(long sectionPosIn, int oldLevel, int newLevel) {
+    protected void chunkLevelChanged(long cubePosIn, int oldLevel, int newLevel) {
     }
 
     protected int getSourceLevel(long pos) {
         return this.hasPlayerInChunk(pos) ? 0 : Integer.MAX_VALUE;
     }
 
-    private boolean hasPlayerInChunk(long sectionPosIn) {
-        ObjectSet<ServerPlayerEntity> objectset = iTicketManager.getPlayersBySectionPos().get(sectionPosIn);
+    private boolean hasPlayerInChunk(long cubePosIn) {
+        ObjectSet<ServerPlayerEntity> objectset = iTicketManager.getPlayersBySectionPos().get(cubePosIn);
         return objectset != null && !objectset.isEmpty();
     }
 

@@ -18,12 +18,12 @@ import javax.annotation.Nullable;
 public interface IChunkManager {
     int getLoadedSectionsCount();
 
-    ChunkHolder setCubeLevel(long sectionPosIn, int newLevel, @Nullable ChunkHolder holder, int oldLevel);
+    ChunkHolder setCubeLevel(long cubePosIn, int newLevel, @Nullable ChunkHolder holder, int oldLevel);
 
     LongSet getUnloadableCubes();
 
-    ChunkHolder getCubeHolder(long sectionPosIn);
-    ChunkHolder getImmutableCubeHolder(long sectionPosIn);
+    ChunkHolder getCubeHolder(long cubePosIn);
+    ChunkHolder getImmutableCubeHolder(long cubePosIn);
 
     CompletableFuture<Either<ICube, ChunkHolder.IChunkLoadingError>> createCubeFuture(ChunkHolder chunkHolderIn,
             ChunkStatus chunkStatusIn);

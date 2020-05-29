@@ -193,7 +193,6 @@ public abstract class MixinChunkManager implements IChunkManager {
                 this.loadedCubes.put(cubePosIn, holder);
                 this.immutableLoadedChunksDirty = true;
             }
-
             return holder;
         }
     }
@@ -317,7 +316,7 @@ public abstract class MixinChunkManager implements IChunkManager {
                         this.world.onChunkUnloading(chunk);
                     }
 
-                    //this.lightManager.updateChunkStatus(cube.getSectionPos());
+                    //this.lightManager.updateChunkStatus(cube.getCubeStatus());
                     //this.lightManager.func_215588_z_();
                     ((ICubeStatusListener) this.statusListener).cubeStatusChanged(cube.getCubePos(), (ChunkStatus)null);
                 }
@@ -752,8 +751,8 @@ public abstract class MixinChunkManager implements IChunkManager {
 
     // func_219220_a
     @Nullable
-    protected ChunkHolder getLoadedSection(long sectionPosIn) {
-        return this.loadedCubes.get(sectionPosIn);
+    protected ChunkHolder getLoadedSection(long cubePosIn) {
+        return this.loadedCubes.get(cubePosIn);
     }
 
     // getTrackingPlayers

@@ -5,10 +5,7 @@ import cubicchunks.cc.utils.Coords;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.SectionPos;
-import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.math.Vec3i;
-
-import java.util.Collection;
 
 public class CubePos extends Vec3i {
     private CubePos(int xIn, int yIn, int zIn) {
@@ -67,6 +64,10 @@ public class CubePos extends Vec3i {
 
     public int minCubeZ() {
         return getZ() * ICube.CUBEDIAMETER;
+    }
+
+    public SectionPos asSectionPos() {
+        return SectionPos.of(this.getX() << 1, this.getY() << 1, this.getZ() << 1);
     }
 
     public BlockPos asBlockPos() {
