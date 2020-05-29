@@ -338,14 +338,14 @@ public abstract class MixinChunkHolder implements ICubeHolder {
     }
 
     @Override
-    public void sendChanges(Cube section) {
+    public void sendChanges(Cube cube) {
         if (cubePos == null) {
             throw new IllegalStateException("sendChanges(WorldSection) called on column holder!");
         }
         if (this.changedLocalBlocks.isEmpty() && this.skyLightChangeMask == 0 && this.blockLightChangeMask == 0) {
             return;
         }
-        World world = section.getWorld();
+        World world = cube.getWorld();
         // if (this.skyLightChangeMask != 0 || this.blockLightChangeMask != 0) {
         //     this.sendToTracking(new SUpdateLightPacket(section.getPos(), this.lightManager, this.skyLightChangeMask & ~this.boundaryMask,
         //             this.blockLightChangeMask & ~this.boundaryMask), true);
@@ -366,10 +366,9 @@ public abstract class MixinChunkHolder implements ICubeHolder {
         }
 
         if (changedBlocks >= net.minecraftforge.common.ForgeConfig.SERVER.clumpingThreshold.get()) {
-            this.sendToTracking(new PacketCubes(Collections.singletonMap(SectionPos.from(pos, cubePos.getY()),
-                    section.getSections()[cubePos.getY()])), false);
+            this.sendToTracking(new PacketCubes(Collections.singletonList(cube)), false);
         } else if (changedBlocks != 0) {
-            this.sendToTracking(new PacketSectionBlockChanges(section.getSections()[cubePos.getY()],
+            this.sendToTracking(new PacketSectionBlockChanges(cube.getSections()[cubePos.getY()],
                     SectionPos.from(pos, cubePos.getY()), new ShortArrayList(changed)), false);
             for (short pos : changed) {
                 BlockPos blockpos1 = new BlockPos(

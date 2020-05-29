@@ -4,6 +4,7 @@ import static net.minecraft.world.chunk.Chunk.EMPTY_SECTION;
 
 import cubicchunks.cc.chunk.IClientSectionProvider;
 import cubicchunks.cc.chunk.cube.Cube;
+import cubicchunks.cc.chunk.util.CubePos;
 import cubicchunks.cc.utils.MathUtil;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
@@ -26,13 +27,13 @@ public class PacketCubes {
     // vanilla has max chunk size of 2MB, it works out to be 128kB per cube
     private static final int MAX_CUBE_SIZE = 128 * 1024;
 
-    private final SectionPos[] positions;
+    private final Cube[] cubes;
     private final BitSet cubeExists;
     private final byte[] packetData;
     private final List<CompoundNBT> tileEntityTags;
 
     public PacketCubes(List<Cube> cubes) {
-        this.positions = cubes.keySet().toArray(new SectionPos[0]);
+        this.cubes = (Cube[])cubes.toArray();
         this.cubeExists = new BitSet(cubes.size());
         this.packetData = new byte[calculateDataSize(cubes)];
         fillDataBuffer(wrapBuffer(this.packetData), cubes, cubeExists);
@@ -44,12 +45,12 @@ public class PacketCubes {
     }
 
     PacketCubes(PacketBuffer buf) {
-        this.positions = new SectionPos[buf.readVarInt()];
-        for (int i = 0; i < this.positions.length; i++) {
-            positions[i] = SectionPos.of(
+        this.cubes = new Cube[buf.readVarInt()];
+        for (int i = 0; i < this.cubes.length; i++) {
+            cubes[i] = new Cube(CubePos.of(
                     buf.readInt(),
                     buf.readInt(),
-                    buf.readInt()
+                    buf.readInt())
             );
         }
         // one long stores information about 64 chunks
@@ -95,7 +96,7 @@ public class PacketCubes {
 
             PacketBuffer dataReader = wrapBuffer(packet.packetData);
             BitSet cubeExists = packet.cubeExists;
-            for (int i = 0; i < packet.positions.length; i++) {
+            for (int i = 0; i < packet.cu.length; i++) {
                 SectionPos pos = packet.positions[i];
                 int x = pos.getX();
                 int y = pos.getY();
@@ -122,13 +123,12 @@ public class PacketCubes {
             }
         }
     }
-    private static void fillDataBuffer(PacketBuffer buf, Map<SectionPos, ChunkSection> cubes, BitSet existingChunks) {
+    private static void fillDataBuffer(PacketBuffer buf, List<Cube> cubes, BitSet existingChunks) {
         int i = 0;
-        for (SectionPos sectionPos : cubes.keySet()) {
-            ChunkSection section = cubes.get(sectionPos);
-            if (section != EMPTY_SECTION && !section.isEmpty()) {
+        for (Cube cube : cubes) {
+            if (!cube.hasEmptySection() && !cube.isEmpty()) {
                 existingChunks.set(i);
-                section.write(buf);
+                !cube.write(buf);
             }
             i++;
         }
@@ -140,9 +140,7 @@ public class PacketCubes {
         return new PacketBuffer(bytebuf);
     }
 
-    private static int calculateDataSize(Map<SectionPos, ChunkSection> cubes) {
-        return cubes.values().stream()
-                .filter(c -> c != EMPTY_SECTION && !c.isEmpty())
-                .mapToInt(ChunkSection::getSize).sum();
+    private static int calculateDataSize(List<Cube> cubes) {
+        return cubes.stream().mapToInt(Cube::getSize).sum();
     }
 }
