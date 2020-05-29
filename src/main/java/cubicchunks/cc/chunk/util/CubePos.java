@@ -36,18 +36,14 @@ public class CubePos extends Vec3i {
     }
 
     public ChunkPos asChunkPos() {
-        return new ChunkPos(this.getX(), this.getZ());
+        return new ChunkPos(this.getX() << 1, this.getZ() << 1);
     }
 
     public static CubePos from(long cubePosIn)
     {
         return new CubePos(extractX(cubePosIn), extractY(cubePosIn), extractZ(cubePosIn));
     }
-    public static CubePos from(BlockPos blockPosIn)
-    {
-        return new CubePos(blockPosIn.getX(), blockPosIn.getY(), blockPosIn.getZ());
-    }
-
+    public static CubePos from(BlockPos blockPosIn) { return new CubePos(blockPosIn.getX(), blockPosIn.getY(), blockPosIn.getZ()); }
 
     public static int extractX(long packed) {
         return (int)(packed << 0 >> 43);
