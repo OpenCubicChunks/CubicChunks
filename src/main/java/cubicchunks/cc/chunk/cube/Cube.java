@@ -3,6 +3,7 @@ package cubicchunks.cc.chunk.cube;
 import static cubicchunks.cc.utils.Coords.indexTo32X;
 import static cubicchunks.cc.utils.Coords.indexTo32Y;
 import static cubicchunks.cc.utils.Coords.indexTo32Z;
+import static net.minecraft.world.chunk.Chunk.EMPTY_SECTION;
 
 import cubicchunks.cc.chunk.ICube;
 import cubicchunks.cc.chunk.biome.CubeBiomeContainer;
@@ -87,6 +88,31 @@ public class Cube implements IChunk, ICube {
                 ((ChunkSectionAccess) sections[i]).setData(sectionsIn[i].getData());
             }
         }
+    }
+
+    public boolean hasEmptySection()
+    {
+        for(ChunkSection section : this.sections)
+        {
+            if(section == EMPTY_SECTION)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean isEmpty()
+    {
+        boolean isEmpty = false;
+        for(ChunkSection section : this.sections)
+        {
+            if(section.isEmpty())
+            {
+                isEmpty = true;
+            }
+        }
+        return isEmpty;
     }
 
     public int getSize()
