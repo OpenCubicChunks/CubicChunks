@@ -51,10 +51,12 @@ public abstract class MixinMinecraftServer {
         ServerChunkProvider serverchunkprovider = serverworld.getChunkProvider();
         serverchunkprovider.getLightManager().func_215598_a(500);
         this.serverTime = Util.milliTime();
-        ((IServerChunkProvider)serverchunkprovider).registerTicket(TicketType.START, sectionPos, 11, Unit.INSTANCE);
+        int radius = 2;
+        int d = radius*2+1;
+        ((IServerChunkProvider)serverchunkprovider).registerTicket(TicketType.START, sectionPos, radius + 1, Unit.INSTANCE);
 
         int i2 = 0;
-        while(serverchunkprovider.getLoadedChunksCount() != 21*21 && ((IServerChunkProvider) serverchunkprovider).getLoadedSectionsCount() != 21*21*21) {
+        while(serverchunkprovider.getLoadedChunksCount() != d*d || ((IServerChunkProvider) serverchunkprovider).getLoadedSectionsCount() != d*d*d) {
             // from CC
             this.serverTime = Util.milliTime() + 10L;
             ((IMinecraftServer)this).runSchedule();
@@ -66,7 +68,7 @@ public abstract class MixinMinecraftServer {
 
             i2++;
         }
-
+        LOGGER.info("Current loaded chunks: " + serverchunkprovider.getLoadedChunksCount() + " | " + ((IServerChunkProvider)serverchunkprovider).getLoadedSectionsCount());
         this.serverTime = Util.milliTime() + 10L;
         ((IMinecraftServer)this).runSchedule();
 

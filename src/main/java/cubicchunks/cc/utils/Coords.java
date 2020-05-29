@@ -106,8 +106,27 @@ public class Coords {
     }
 
     public static int blockToIndex32(int x, int y, int z) {
+        // 00000000 00000000 00000000 00010000
+
+        // xxxxxxxx xxxxxxxx xxxxxxxx xxxXxxxx
+        // 0000xxxxxxxx xxxxxxxx xxxxxxxx xxxX
+
+        // yyyyyyyy yyyyyyyy yyyyyyyy yyyYyyyy
+        // 000yyyyyyyy yyyyyyyy yyyyyyyy yyyYy
         final int mask = 0x10;
         return (x&mask) >> 4 | (y&mask)>>3 | (z&mask)>>2;
+    }
+
+    public static int index32toX(int idx) {
+        return idx & 1;
+    }
+
+    public static int index32toY(int idx) {
+        return idx >> 1 & 1;
+    }
+
+    public static int index32toZ(int idx) {
+        return idx >> 2 & 1;
     }
 
     /**

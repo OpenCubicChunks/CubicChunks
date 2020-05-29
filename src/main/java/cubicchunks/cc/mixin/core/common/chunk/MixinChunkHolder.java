@@ -274,6 +274,12 @@ public abstract class MixinChunkHolder implements ICubeHolder {
         return completablefuture == null ? MISSING_CHUNK_FUTURE : completablefuture;
     }
 
+    // func_219302_f
+    @Override
+    public CompletableFuture<ICube> getCurrentCubeFuture() {
+        return sectionFuture;
+    }
+
     // func_219301_a
     public CompletableFuture<Either<ICube, ChunkHolder.IChunkLoadingError>> getFutureByCubeStatus(ChunkStatus chunkStatus) {
         CompletableFuture<Either<ICube, ChunkHolder.IChunkLoadingError>> completablefuture =
@@ -365,9 +371,9 @@ public abstract class MixinChunkHolder implements ICubeHolder {
 
         if (changedBlocks >= net.minecraftforge.common.ForgeConfig.SERVER.clumpingThreshold.get()) {
             this.sendToTracking(new PacketCubes(Collections.singletonMap(SectionPos.from(pos, sectionPos.getY()),
-                    section.getSections()[sectionPos.getY()])), false);
+                    section)), false);
         } else if (changedBlocks != 0) {
-            this.sendToTracking(new PacketSectionBlockChanges(section.getSections()[sectionPos.getY()],
+            this.sendToTracking(new PacketSectionBlockChanges(section,
                     SectionPos.from(pos, sectionPos.getY()), new ShortArrayList(changed)), false);
             for (short pos : changed) {
                 BlockPos blockpos1 = new BlockPos(

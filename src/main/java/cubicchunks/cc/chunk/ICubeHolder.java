@@ -43,4 +43,6 @@ public interface ICubeHolder {
     CompletableFuture<Either<ICube, ChunkHolder.IChunkLoadingError>> createFuture(ChunkStatus p_219276_1_, ChunkManager p_219276_2_);
 
     void sendChanges(Cube cube);
+
+    CompletableFuture<ICube> getCurrentCubeFuture();
 }

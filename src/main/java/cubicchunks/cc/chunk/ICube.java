@@ -17,4 +17,9 @@ public interface ICube extends IBlockReader {
 
     void addTileEntity(BlockPos pos, TileEntity tileEntity);
     void removeTileEntity(BlockPos pos);
+
+    // TODO: isModified
+    boolean isModified();
+
+    void setModified(boolean modified);
 }

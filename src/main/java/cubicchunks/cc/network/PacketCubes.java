@@ -122,6 +122,7 @@ public class PacketCubes {
         }
     }
     private static void fillDataBuffer(PacketBuffer buf, Map<SectionPos, ChunkSection> cubes, BitSet existingChunks) {
+        buf.writerIndex(0);
         int i = 0;
         for (SectionPos sectionPos : cubes.keySet()) {
             ChunkSection section = cubes.get(sectionPos);
@@ -135,7 +136,6 @@ public class PacketCubes {
 
     private static PacketBuffer wrapBuffer(byte[] packetData) {
         ByteBuf bytebuf = Unpooled.wrappedBuffer(packetData);
-        bytebuf.writerIndex(0);
         return new PacketBuffer(bytebuf);
     }
 

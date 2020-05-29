@@ -141,10 +141,11 @@ public class CubePrimerWrapper extends CubePrimer {
     }
 
     public void setModified(boolean modified) {
+        this.cube.setModified(modified);
     }
 
     public boolean isModified() {
-        return false;
+        return this.cube.isModified();
     }
 
     public ChunkStatus getStatus() {
