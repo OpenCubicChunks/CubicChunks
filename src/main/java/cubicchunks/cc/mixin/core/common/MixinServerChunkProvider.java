@@ -121,12 +121,11 @@ public abstract class MixinServerChunkProvider implements IServerChunkProvider {
                 return null;
             } else {
                 Either<ICube, ChunkHolder.IChunkLoadingError> either =
-                        ((ICubeHolder)chunkholder).getFutureHigherThanCubeStatus(ChunkStatus.FULL).getNow((Either<ICube,
-                        ChunkHolder.IChunkLoadingError>)null);
+                        ((ICubeHolder)chunkholder).getFutureHigherThanCubeStatus(ChunkStatus.FULL).getNow(null);
                 if (either == null) {
                     return null;
                 } else {
-                    ICube icube1 = either.left().orElse((ICube)null);
+                    ICube icube1 = either.left().orElse(null);
                     if (icube1 != null) {
                         this.addRecents(posAsLong, icube1, ChunkStatus.FULL);
                         if (icube1 instanceof Cube) {
