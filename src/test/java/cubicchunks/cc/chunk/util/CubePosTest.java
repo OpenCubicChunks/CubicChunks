@@ -8,11 +8,11 @@ public class CubePosTest {
 
     @Test
     public void asLong() {
-        for(int x = Integer.MIN_VALUE; x < Integer.MAX_VALUE; x += Integer.MAX_VALUE/500)
+        for(int x = -(1<<20); x < (1<<20)-1; x += (1<<20)/500)
         {
-            for(int y = Integer.MIN_VALUE; y < Integer.MAX_VALUE; y += Integer.MAX_VALUE/500)
+            for(int y = -(1<<21); y < (1<<21)-1; y += (1<<21)/500)
             {
-                for(int z = Integer.MIN_VALUE; z < Integer.MAX_VALUE; z += Integer.MAX_VALUE/500)
+                for(int z = -(1<<20); z < (1<<20)-1; z += (1<<20)/500)
                 {
                     Test(x, y, z);
                 }
