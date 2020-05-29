@@ -105,6 +105,11 @@ public class Coords {
         return localToBlock(blockToCube(coord - 16 / 2), 16 / 2);
     }
 
+    public static int blockToIndex32(int x, int y, int z) {
+        final int mask = 0x10;
+        return (x&mask) >> 4 | (y&mask)>>3 | (z&mask)>>2;
+    }
+
     /**
      * Return a seed for random number generation, based on initial seed and 3 coordinates.
      *
