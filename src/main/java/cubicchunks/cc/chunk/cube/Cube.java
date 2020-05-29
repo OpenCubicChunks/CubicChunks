@@ -79,11 +79,14 @@ public class Cube implements IChunk, ICube {
 
             for (int i = 0; i < sectionsIn.length; i++) {
                 int sectionYPos = (indexTo32Y(i) * 16) + cubePosIn.getX();
-                sections[i] = new ChunkSection(sectionYPos,
-                        ((ChunkSectionAccess) sectionsIn[i]).getBlockRefCount(),
-                        ((ChunkSectionAccess) sectionsIn[i]).getBlockTickRefCount(),
-                        ((ChunkSectionAccess) sectionsIn[i]).getFluidRefCount());
-                ((ChunkSectionAccess) sections[i]).setData(sectionsIn[i].getData());
+
+                if(sectionsIn[i] != null) {
+                    sections[i] = new ChunkSection(sectionYPos,
+                            ((ChunkSectionAccess) sectionsIn[i]).getBlockRefCount(),
+                            ((ChunkSectionAccess) sectionsIn[i]).getBlockTickRefCount(),
+                            ((ChunkSectionAccess) sectionsIn[i]).getFluidRefCount());
+                    ((ChunkSectionAccess) sections[i]).setData(sectionsIn[i].getData());
+                }
             }
         }
     }
