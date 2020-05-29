@@ -10,4 +10,7 @@ public interface InvokeChunkManager {
 
     @Invoker("func_219220_a")
     ChunkHolder chunkHold(long chunkPosIn);
+
+    @Invoker("refreshOffThreadCache")
+    boolean refreshOffThreadCacheSection();
 }

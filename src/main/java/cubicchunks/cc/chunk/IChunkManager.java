@@ -21,6 +21,7 @@ public interface IChunkManager {
     LongSet getUnloadableSections();
 
     ChunkHolder getCubeHolder(long sectionPosIn);
+    ChunkHolder getImmutableCubeHolder(long sectionPosIn);
 
     CompletableFuture<Either<ICube, ChunkHolder.IChunkLoadingError>> createSectionFuture(ChunkHolder chunkHolderIn,
             ChunkStatus chunkStatusIn);

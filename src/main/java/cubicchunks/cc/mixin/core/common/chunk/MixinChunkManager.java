@@ -104,6 +104,7 @@ public abstract class MixinChunkManager implements IChunkManager {
 
     private final AtomicInteger sectionsLoaded = new AtomicInteger();
 
+
     @Shadow @Final private static Logger LOGGER;
 
     @Shadow @Final private ServerWorldLightManager lightManager;
@@ -136,6 +137,8 @@ public abstract class MixinChunkManager implements IChunkManager {
     @Shadow @Final private Int2ObjectMap<ChunkManager.EntityTracker> entities;
 
     @Shadow @Final private Long2ObjectLinkedOpenHashMap<ChunkHolder> loadedChunks;
+
+    @Shadow private volatile Long2ObjectLinkedOpenHashMap<ChunkHolder> immutableLoadedChunks;
 
     @Inject(method = "<init>", at = @At("RETURN"), locals = LocalCapture.CAPTURE_FAILHARD)
     private void onConstruct(ServerWorld worldIn, File worldDirectory, DataFixer p_i51538_3_, TemplateManager templateManagerIn,
@@ -191,9 +194,16 @@ public abstract class MixinChunkManager implements IChunkManager {
         return this.unloadableSections;
     }
 
+    // func_219220_a
     @Override
     public ChunkHolder getCubeHolder(long sectionPosIn) {
         return loadedSections.get(sectionPosIn);
+    }
+    // func_219219_b
+    @Override
+    public ChunkHolder getImmutableCubeHolder(long sectionPosIn)
+    {
+        return this.immutableLoadedChunks.get(sectionPosIn);
     }
 
     // TODO: remove when cubic chunks versions are done
@@ -611,10 +621,6 @@ public abstract class MixinChunkManager implements IChunkManager {
     }
 
     // getTrackingPlayers
-
-    /**
-     * Returns the players tracking the given chunk.
-     */
     public Stream<ServerPlayerEntity> getSectionTrackingPlayers(SectionPos pos, boolean boundaryOnly) {
         return this.playerSectionGenerationTracker.getGeneratingPlayers(pos.asLong()).filter((p_219192_3_) -> {
             int i = this.getSectionChebyshevDistance(pos, p_219192_3_, true);

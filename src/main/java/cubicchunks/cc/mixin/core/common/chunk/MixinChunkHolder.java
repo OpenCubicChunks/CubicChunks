@@ -25,6 +25,7 @@ import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkSection;
 import net.minecraft.world.chunk.ChunkStatus;
+import net.minecraft.world.chunk.IChunk;
 import net.minecraft.world.lighting.WorldLightManager;
 import net.minecraft.world.server.ChunkHolder;
 import net.minecraft.world.server.ChunkManager;
@@ -266,6 +267,38 @@ public abstract class MixinChunkHolder implements ICubeHolder {
         CompletableFuture<Either<ICube, ChunkHolder.IChunkLoadingError>> completablefuture =
                 this.sectionFutureByCubeStatus.get(chunkStatus.ordinal());
         return completablefuture == null ? MISSING_CHUNK_FUTURE : completablefuture;
+    }
+
+    // func_219301_a
+    public CompletableFuture<Either<ICube, ChunkHolder.IChunkLoadingError>> getFutureByCubeStatus(ChunkStatus chunkStatus) {
+        CompletableFuture<Either<ICube, ChunkHolder.IChunkLoadingError>> completablefuture =
+                this.sectionFutureByCubeStatus.get(chunkStatus.ordinal());
+        return completablefuture == null ? MISSING_CHUNK_FUTURE : completablefuture;
+    }
+    // func_225410_b
+    @Override public CompletableFuture<Either<ICube, ChunkHolder.IChunkLoadingError>> getFutureHigherThanCubeStatus(ChunkStatus chunkStatus) {
+        return getChunkStatusFromLevel(this.chunkLevel).isAtLeast(chunkStatus) ? this.getFutureByCubeStatus(chunkStatus) : MISSING_CHUNK_FUTURE;
+    }
+
+    public CompletableFuture<Either<ICube, ChunkHolder.IChunkLoadingError>> createFuture(ChunkStatus status, ChunkManager chunkManager) {
+        int statusOrdinal = status.ordinal();
+        CompletableFuture<Either<ICube, ChunkHolder.IChunkLoadingError>> completablefuture = this.sectionFutureByCubeStatus.get(statusOrdinal);
+        if (completablefuture != null) {
+            Either<ICube, ChunkHolder.IChunkLoadingError> either = completablefuture.getNow(null);
+            if (either == null || either.left().isPresent()) {
+                return completablefuture;
+            }
+        }
+
+        if (getChunkStatusFromLevel(this.chunkLevel).isAtLeast(status)) {
+            CompletableFuture<Either<ICube, ChunkHolder.IChunkLoadingError>> completablefuture1 =
+                    ((IChunkManager)chunkManager).createSectionFuture((ChunkHolder)(Object)this, status);
+            this.chainSection(completablefuture1);
+            this.sectionFutureByCubeStatus.set(statusOrdinal, completablefuture1);
+            return completablefuture1;
+        } else {
+            return completablefuture == null ? MISSING_CHUNK_FUTURE : completablefuture;
+        }
     }
 
     // TODO: this needs to be completely replaced for proper section handling

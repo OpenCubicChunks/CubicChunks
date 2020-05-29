@@ -6,6 +6,7 @@ import cubicchunks.cc.chunk.cube.Cube;
 import net.minecraft.util.math.SectionPos;
 import net.minecraft.world.chunk.ChunkSection;
 import net.minecraft.world.chunk.ChunkStatus;
+import net.minecraft.world.chunk.IChunk;
 import net.minecraft.world.server.ChunkHolder;
 import net.minecraft.world.server.ChunkManager;
 
@@ -35,6 +36,11 @@ public interface ICubeHolder {
 
     // func_219294_a
     void onSectionWrapperCreated(CubePrimerWrapper primer);
+
+    // func_225410_b
+    CompletableFuture<Either<ICube, ChunkHolder.IChunkLoadingError>> getFutureHigherThanCubeStatus(ChunkStatus chunkStatus);
+
+    CompletableFuture<Either<ICube, ChunkHolder.IChunkLoadingError>> createFuture(ChunkStatus p_219276_1_, ChunkManager p_219276_2_);
 
     void sendChanges(Cube cube);
 }

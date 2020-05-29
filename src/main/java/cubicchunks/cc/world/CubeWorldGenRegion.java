@@ -61,13 +61,12 @@ public class CubeWorldGenRegion implements IWorld {
     private final WorldInfo worldInfo;
     private final Random random;
     private final Dimension dimension;
-    private final GenerationSettings chunkGenSettings;
-//    private final ITickList<Block> pendingBlockTickList = new WorldGenTickList<>((blockPos) -> {
-//        return this.getCube(blockPos).getBlocksToBeTicked();
-//    });
-//    private final ITickList<Fluid> pendingFluidTickList = new WorldGenTickList<>((blockPos) -> {
-//        return this.getCube(blockPos).getFluidsToBeTicked();
-//    });
+    //    private final ITickList<Block> pendingBlockTickList = new WorldGenTickList<>((blockPos) -> {
+    //        return this.getCube(blockPos).getBlocksToBeTicked();
+    //    });
+    //    private final ITickList<Fluid> pendingFluidTickList = new WorldGenTickList<>((blockPos) -> {
+    //        return this.getCube(blockPos).getFluidsToBeTicked();
+    //    });
     private final BiomeManager biomeManager;
 
     public CubeWorldGenRegion(ServerWorld worldIn, List<ICube> sectionsIn) {
@@ -83,7 +82,6 @@ public class CubeWorldGenRegion implements IWorld {
             this.diameter = i;
             this.world = worldIn;
             this.seed = worldIn.getSeed();
-            this.chunkGenSettings = worldIn.getChunkProvider().getChunkGenerator().getSettings();
             this.seaLevel = worldIn.getSeaLevel();
             this.worldInfo = worldIn.getWorldInfo();
             this.random = worldIn.getRandom();
@@ -92,21 +90,31 @@ public class CubeWorldGenRegion implements IWorld {
         }
     }
 
-    public ICube getCube(BlockPos blockPos)
-    {
+    public int getMainCubeX() {
+        return this.mainCubeX;
+    }
+
+    public int getMainCubeY() {
+        return this.mainCubeY;
+    }
+
+    public int getMainCubeZ() {
+        return this.mainCubeZ;
+    }
+
+    public ICube getCube(BlockPos blockPos) {
         return this.getCube(blockToCube(blockPos.getX()), blockToCube(blockPos.getY()), blockToCube(blockPos.getZ()), ChunkStatus.FULL,
                 true);
     }
 
-    public ICube getCube(int x, int y, int z, ChunkStatus requiredStatus, boolean nonnull)
-    {
+    public ICube getCube(int x, int y, int z, ChunkStatus requiredStatus, boolean nonnull) {
         ICube icube;
         if (this.cubeExists(x, y, z)) {
             SectionPos sectionPos = this.cubePrimers.get(0).getSectionPos();
             int dx = x - sectionPos.getX();
             int dy = y - sectionPos.getY();
             int dz = z - sectionPos.getZ();
-            icube = this.cubePrimers.get(dx*this.diameter*this.diameter + dy*this.diameter + dz);
+            icube = this.cubePrimers.get(dx * this.diameter * this.diameter + dy * this.diameter + dz);
             if (icube.getCubeStatus().isAtLeast(requiredStatus)) {
                 return icube;
             }
@@ -124,17 +132,16 @@ public class CubeWorldGenRegion implements IWorld {
                     icube1.getSectionPos().getX(), icube1.getSectionPos().getY(), icube1.getSectionPos().getZ(),
                     icube2.getSectionPos().getX(), icube2.getSectionPos().getY(), icube2.getSectionPos().getZ());
             if (icube != null) {
-                throw (RuntimeException)Util.pauseDevMode(new RuntimeException(String.format("Section is not of correct status. Expecting %s, got %s "
+                throw Util.pauseDevMode(new RuntimeException(String.format("Section is not of correct status. Expecting %s, got %s "
                         + "| %s %s %s", requiredStatus, icube.getCubeStatus(), x, y, z)));
             } else {
-                throw (RuntimeException)Util.pauseDevMode(new RuntimeException(String.format("We are asking a region for a section out of bound | "
+                throw Util.pauseDevMode(new RuntimeException(String.format("We are asking a region for a section out of bound | "
                         + "%s %s %s", x, y, z)));
             }
         }
     }
 
-    public boolean cubeExists(int x, int y, int z)
-    {
+    public boolean cubeExists(int x, int y, int z) {
         ICube isection = this.cubePrimers.get(0);
         ICube isection2 = this.cubePrimers.get(this.cubePrimers.size() - 1);
         return x >= isection.getSectionPos().getX() && x <= isection2.getSectionPos().getX() &&
@@ -229,7 +236,7 @@ public class CubeWorldGenRegion implements IWorld {
             }
 
             if (icube.getBlockState(pos).hasTileEntity()) {
-                LOGGER.warn("Tried to access a block entity before it was created. {}", (Object)pos);
+                LOGGER.warn("Tried to access a block entity before it was created. {}", (Object) pos);
             }
 
             return null;
@@ -284,7 +291,7 @@ public class CubeWorldGenRegion implements IWorld {
     }
 
     @Override public int getSeaLevel() {
-        return world.getSeaLevel();
+        return this.seaLevel;
     }
 
     @Override public Dimension getDimension() {
