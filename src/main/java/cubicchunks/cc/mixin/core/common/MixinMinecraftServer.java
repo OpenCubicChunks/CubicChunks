@@ -54,7 +54,8 @@ public abstract class MixinMinecraftServer {
         ((IServerChunkProvider)serverchunkprovider).registerTicket(TicketType.START, sectionPos, 11, Unit.INSTANCE);
 
         int i2 = 0;
-        while(serverchunkprovider.getLoadedChunksCount() != 21*21*22) {//441 from columns and 21^3 from CC
+        while(serverchunkprovider.getLoadedChunksCount() != 21*21 && ((IServerChunkProvider) serverchunkprovider).getLoadedSectionsCount() != 21*21*21) {
+            // from CC
             this.serverTime = Util.milliTime() + 10L;
             ((IMinecraftServer)this).runSchedule();
 

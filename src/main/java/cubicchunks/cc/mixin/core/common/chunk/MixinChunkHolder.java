@@ -202,7 +202,7 @@ public abstract class MixinChunkHolder implements ICubeHolder {
         int i = chunkStatus.ordinal();
         CompletableFuture<Either<ICube, ChunkHolder.IChunkLoadingError>> completablefuture = this.sectionFutureByCubeStatus.get(i);
         if (completablefuture != null) {
-            Either<ICube, ChunkHolder.IChunkLoadingError> either = completablefuture.getNow((Either<ICube, ChunkHolder.IChunkLoadingError>)null);
+            Either<ICube, ChunkHolder.IChunkLoadingError> either = completablefuture.getNow(null);
             if (either == null || either.left().isPresent()) {
                 return completablefuture;
             }
@@ -249,14 +249,19 @@ public abstract class MixinChunkHolder implements ICubeHolder {
         return either == null ? null : either.left().orElse((ChunkSection)null);
     }
 
+    @Override
+    public CompletableFuture<Either<ChunkSection, ChunkHolder.IChunkLoadingError>> getSectionEntityTickingFuture() {
+        return this.entityTickingSectionFuture;
+    }
+
     // chain
     @Override
     public void chainSection(CompletableFuture<? extends Either<? extends ICube, ChunkHolder.IChunkLoadingError>> eitherChunk) {
-        this.sectionFuture = this.sectionFuture.thenCombine(eitherChunk, (p_219295_0_, p_219295_1_) -> {
-            return p_219295_1_.map((p_219283_0_) -> {
-                return p_219283_0_;
-            }, (p_219288_1_) -> {
-                return p_219295_0_;
+        this.sectionFuture = this.sectionFuture.thenCombine(eitherChunk, (cube, cubeOrError) -> {
+            return cubeOrError.map((existingCube) -> {
+                return existingCube;
+            }, (error) -> {
+                return cube;
             });
         });
     }

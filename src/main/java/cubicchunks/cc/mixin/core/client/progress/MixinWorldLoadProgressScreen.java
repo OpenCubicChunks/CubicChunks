@@ -46,7 +46,9 @@ public class MixinWorldLoadProgressScreen extends Screen {
     @Inject(method = "drawProgress", at = @At("RETURN"))
     private static void onDraw(TrackingChunkStatusListener trackerParam,
             int xBase, int yBase, int scale, int spacing, CallbackInfo ci) {
-        xBase += 200;
+        xBase += 150;
+        yBase -= 20;
+        scale++;
 
         int squareScale = scale + spacing;
         int loadDiameter = trackerParam.getDiameter();
