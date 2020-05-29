@@ -12,7 +12,6 @@ import net.minecraft.util.concurrent.DelegatedTaskExecutor;
 import net.minecraft.util.concurrent.ITaskExecutor;
 import net.minecraft.util.concurrent.ITaskQueue;
 import net.minecraft.util.math.ChunkPos;
-import net.minecraft.util.math.SectionPos;
 import net.minecraft.world.server.ChunkHolder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -60,7 +59,7 @@ public class CubeTaskPriorityQueueSorter implements AutoCloseable, ChunkHolder.I
     public <T> ITaskExecutor<CubeTaskPriorityQueueSorter.FunctionEntry<T>> createExecutor(ITaskExecutor<T> iTaskExecutor, boolean p_219087_2_) {
         return this.sorter.<ITaskExecutor<CubeTaskPriorityQueueSorter.FunctionEntry<T>>>func_213141_a((p_219086_3_) -> new ITaskQueue.RunnableWithPriority(0, () -> {
             this.getQueue(iTaskExecutor);
-            p_219086_3_.enqueue(ITaskExecutor.inline("chunk priority sorter around " + iTaskExecutor.getName(), (p_219071_3_) -> this.execute(iTaskExecutor, p_219071_3_.task, p_219071_3_.SectionPos, p_219071_3_.field_219430_c, p_219087_2_)));
+            p_219086_3_.enqueue(ITaskExecutor.inline("chunk priority sorter around " + iTaskExecutor.getName(), (p_219071_3_) -> this.execute(iTaskExecutor, p_219071_3_.task, p_219071_3_.cubePos, p_219071_3_.field_219430_c, p_219087_2_)));
         })).join();
     }
 
@@ -144,12 +143,12 @@ public class CubeTaskPriorityQueueSorter implements AutoCloseable, ChunkHolder.I
 
     public static final class FunctionEntry<T> {
         private final Function<ITaskExecutor<Unit>, T> task;
-        private final long SectionPos;
+        private final long cubePos;
         private final IntSupplier field_219430_c;
 
         private FunctionEntry(Function<ITaskExecutor<Unit>, T> p_i50028_1_, long p_i50028_2_, IntSupplier p_i50028_4_) {
             this.task = p_i50028_1_;
-            this.SectionPos = p_i50028_2_;
+            this.cubePos = p_i50028_2_;
             this.field_219430_c = p_i50028_4_;
         }
     }

@@ -2,6 +2,7 @@ package cubicchunks.cc.mixin.core.common.ticket;
 
 import com.google.common.collect.ImmutableList;
 import com.mojang.datafixers.util.Either;
+import cubicchunks.cc.chunk.IChunkManager;
 import cubicchunks.cc.chunk.ICubeHolder;
 import cubicchunks.cc.chunk.cube.Cube;
 import cubicchunks.cc.chunk.graph.CCTicketType;
@@ -77,7 +78,7 @@ public abstract class MixinTicketManager implements ITicketManager {
         if (ticketIn.getLevel() < i) {
             this.cubeTicketTracker.updateSourceLevel(cubePosIn, ticketIn.getLevel(), true);
         }
-        this.register(CubePos.from(cubePosIn).asChunkPos().asLong(), ticketIn); //TODO: WHY IS THIS CALLING THE SHADOW?!?!
+        this.register(CubePos.from(cubePosIn).asChunkPos().asLong(), ticketIn);
     }
 
     @Override
@@ -122,7 +123,7 @@ public abstract class MixinTicketManager implements ITicketManager {
                 while (longiterator.hasNext()) {
                     long j = longiterator.nextLong();
                     if (this.getSectionTicketSet(j).stream().anyMatch((p_219369_0_) -> p_219369_0_.getType() == CCTicketType.CCPLAYER)) {
-                        ChunkHolder chunkholder = ((InvokeChunkManager) chunkManager).chunkHold(CubePos.from(j).asChunkPos().asLong());
+                        ChunkHolder chunkholder = ((IChunkManager) chunkManager).getCubeHolder(j);
                         if (chunkholder == null) {
                             throw new IllegalStateException();
                         }
