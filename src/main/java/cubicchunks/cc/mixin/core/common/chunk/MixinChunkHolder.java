@@ -378,7 +378,7 @@ public abstract class MixinChunkHolder implements ICubeHolder {
                 BlockPos blockpos1 = new BlockPos(
                         this.cubePos.blockX(AddressTools.getLocalX(pos)),
                         this.cubePos.blockY(AddressTools.getLocalY(pos)),
-                        this.cubePos.blockY(AddressTools.getLocalZ(pos)));
+                        this.cubePos.blockZ(AddressTools.getLocalZ(pos)));
                 if (world.getBlockState(blockpos1).hasTileEntity()) {
                     this.sendTileEntity(world, blockpos1);
                 }

@@ -86,7 +86,7 @@ public class CubePos extends Vec3i {
         return Coords.localToBlock(getY(), localY);
     }
 
-    public int toBlockZ(int localZ) {
+    public int blockZ(int localZ) {
         return Coords.localToBlock(getZ(), localZ);
     }
 }
