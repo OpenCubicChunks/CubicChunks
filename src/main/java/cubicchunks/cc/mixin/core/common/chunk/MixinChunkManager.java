@@ -406,12 +406,12 @@ public abstract class MixinChunkManager implements IChunkManager {
         if (chunkStatusIn == ChunkStatus.EMPTY) {
             return this.cubeLoad(cubePos);
         } else {
-            CompletableFuture<Either<IChunk, ChunkHolder.IChunkLoadingError>> completablefuture = unsafeCast(
+            CompletableFuture<Either<ICube, ChunkHolder.IChunkLoadingError>> completablefuture = unsafeCast(
                     ((ICubeHolder) chunkHolderIn).createCubeFuture(chunkStatusIn.getParent(), (ChunkManager) (Object) this)
             );
             return unsafeCast(completablefuture.thenComposeAsync(
-                    (Either<IChunk, ChunkHolder.IChunkLoadingError> inputSection) -> {
-                        Optional<IChunk> optional = inputSection.left();
+                    (Either<ICube, ChunkHolder.IChunkLoadingError> inputSection) -> {
+                        Optional<ICube> optional = inputSection.left();
                         if (!optional.isPresent()) {
                             return CompletableFuture.completedFuture(inputSection);
                         } else {
@@ -420,16 +420,16 @@ public abstract class MixinChunkManager implements IChunkManager {
                                         33 + CubeStatus.getDistance(ChunkStatus.FEATURES), cubePos);
                             }
 
-                            IChunk iChunk = optional.get();
-                            if (iChunk.getStatus().isAtLeast(chunkStatusIn)) {
-                                CompletableFuture<Either<IChunk, ChunkHolder.IChunkLoadingError>> completablefuture1;
+                            ICube cube = optional.get();
+                            if (cube.getCubeStatus().isAtLeast(chunkStatusIn)) {
+                                CompletableFuture<Either<ICube, ChunkHolder.IChunkLoadingError>> completablefuture1;
                                 if (chunkStatusIn == ChunkStatus.LIGHT) {
-                                    completablefuture1 = this.chunkGenerate(chunkHolderIn, chunkStatusIn);
+                                    completablefuture1 = this.sectionGenerate(chunkHolderIn, chunkStatusIn);
                                 } else {
-                                    completablefuture1 =
+                                    completablefuture1 = unsafeCast(
                                             chunkStatusIn.doLoadingWork(this.world, this.templateManager, this.lightManager, (chunk) -> {
                                                 return unsafeCast(this.makeChunkInstance(chunkHolderIn));
-                                            }, iChunk);
+                                            }, (IChunk) cube));
                                 }
 
                                 ((ICubeStatusListener) this.statusListener).cubeStatusChanged(cubePos, chunkStatusIn);
