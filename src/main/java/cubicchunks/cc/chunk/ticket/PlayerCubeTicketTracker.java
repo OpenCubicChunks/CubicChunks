@@ -5,14 +5,14 @@ import cubicchunks.cc.chunk.util.CubePos;
 import it.unimi.dsi.fastutil.longs.*;
 import net.minecraft.world.server.Ticket;
 
-public class PlayerSectionTicketTracker extends PlayerSectionTracker {
+public class PlayerCubeTicketTracker extends PlayerCubeTracker {
     private int viewDistance;
     private final Long2IntMap distances = Long2IntMaps.synchronize(new Long2IntOpenHashMap());
     private final LongSet positionsAffected = new LongOpenHashSet();
     private final ITicketManager iTicketManager;
 
 
-    public PlayerSectionTicketTracker(ITicketManager iTicketManager, int i) {
+    public PlayerCubeTicketTracker(ITicketManager iTicketManager, int i) {
         super(iTicketManager, i);
         this.iTicketManager = iTicketManager;
         this.viewDistance = 0;
@@ -24,7 +24,7 @@ public class PlayerSectionTicketTracker extends PlayerSectionTracker {
     }
 
     public void setViewDistance(int viewDistanceIn) {
-        for (it.unimi.dsi.fastutil.longs.Long2ByteMap.Entry entry : this.sectionsInRange.long2ByteEntrySet()) {
+        for (it.unimi.dsi.fastutil.longs.Long2ByteMap.Entry entry : this.cubesInRange.long2ByteEntrySet()) {
             byte b0 = entry.getByteValue();
             long i = entry.getLongKey();
             this.updateTicket(i, b0, this.isWithinViewDistance(b0), b0 <= viewDistanceIn - 2);
@@ -43,14 +43,14 @@ public class PlayerSectionTicketTracker extends PlayerSectionTracker {
                             iTicketManager.registerSection(cubePosIn, ticket);
                             iTicketManager.getSectionPositions().add(cubePosIn);
                         } else {
-                            iTicketManager.getPlayerSectionTicketThrottlerSorter().enqueue(CubeTaskPriorityQueueSorter.createSorterMsg(() -> {
+                            iTicketManager.getPlayerCubeTicketThrottlerSorter().enqueue(CubeTaskPriorityQueueSorter.createSorterMsg(() -> {
                             }, cubePosIn, false));
                         }
 
                     });
                 }, cubePosIn, () -> distance));
             } else {
-                iTicketManager.getPlayerSectionTicketThrottlerSorter().enqueue(CubeTaskPriorityQueueSorter.createSorterMsg(() -> {
+                iTicketManager.getPlayerCubeTicketThrottlerSorter().enqueue(CubeTaskPriorityQueueSorter.createSorterMsg(() -> {
                     iTicketManager.executor().execute(() -> {
                         iTicketManager.releaseCube(cubePosIn, ticket);
                     });

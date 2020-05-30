@@ -23,6 +23,10 @@ import cubicchunks.cc.chunk.ticket.ITicketManager;
 import cubicchunks.cc.chunk.util.CubePos;
 import cubicchunks.cc.network.PacketCubes;
 import cubicchunks.cc.network.PacketDispatcher;
+import cubicchunks.cc.network.PacketUnloadCube;
+import cubicchunks.cc.network.PacketUpdateCubePosition;
+import cubicchunks.cc.utils.Coords;
+import cubicchunks.cc.utils.MathUtil;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.longs.LongIterator;
@@ -35,6 +39,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.network.IPacket;
 import net.minecraft.network.play.server.SMountEntityPacket;
 import net.minecraft.network.play.server.SSetPassengersPacket;
 import net.minecraft.util.ClassInheritanceMultiMap;
@@ -43,7 +48,6 @@ import net.minecraft.util.concurrent.DelegatedTaskExecutor;
 import net.minecraft.util.concurrent.ITaskExecutor;
 import net.minecraft.util.concurrent.ThreadTaskExecutor;
 import net.minecraft.util.math.ChunkPos;
-import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.SectionPos;
 import net.minecraft.village.PointOfInterestManager;
 import net.minecraft.world.chunk.Chunk;
@@ -100,7 +104,7 @@ public abstract class MixinChunkManager implements IChunkManager {
     private final LongSet loadedCubePositions = new LongOpenHashSet();
     private final Long2ObjectLinkedOpenHashMap<ChunkHolder> cubesToUnload = new Long2ObjectLinkedOpenHashMap<>();
 
-    private final PlayerGenerationTracker playerSectionGenerationTracker = new PlayerGenerationTracker();
+    private final PlayerGenerationTracker playerCubeGenerationTracker = new PlayerGenerationTracker();
 
     // field_219264_r
     private ITaskExecutor<CubeTaskPriorityQueueSorter.FunctionEntry<Runnable>> worldgenExecutor;
@@ -146,6 +150,8 @@ public abstract class MixinChunkManager implements IChunkManager {
     @Shadow private volatile Long2ObjectLinkedOpenHashMap<ChunkHolder> immutableLoadedChunks;
 
     @Shadow @Final private PlayerGenerationTracker playerGenerationTracker;
+
+    @Shadow protected abstract boolean cannotGenerateChunks(ServerPlayerEntity player);
 
     @Inject(method = "<init>", at = @At("RETURN"), locals = LocalCapture.CAPTURE_FAILHARD)
     private void onConstruct(ServerWorld worldIn, File worldDirectory, DataFixer p_i51538_3_, TemplateManager templateManagerIn,
@@ -428,7 +434,7 @@ public abstract class MixinChunkManager implements IChunkManager {
                                 } else {
                                     completablefuture1 = unsafeCast(
                                             chunkStatusIn.doLoadingWork(this.world, this.templateManager, this.lightManager, (chunk) -> {
-                                                return unsafeCast(this.makeChunkInstance(chunkHolderIn));
+                                                return unsafeCast(this.makeCubeInstance(chunkHolderIn));
                                             }, (IChunk) cube));
                                 }
 
@@ -469,7 +475,7 @@ public abstract class MixinChunkManager implements IChunkManager {
                 try {
                     CompletableFuture<Either<ICube, ChunkHolder.IChunkLoadingError>> finalFuture = unsafeCast(
                             chunkStatusIn.doGenerationWork(this.world, this.generator, this.templateManager, this.lightManager, (chunk) -> {
-                                return unsafeCast(this.makeChunkInstance(chunkHolderIn));
+                                return unsafeCast(this.makeCubeInstance(chunkHolderIn));
                             }, unsafeCast(neighborSections)));
                     ((ICubeStatusListener) this.statusListener).cubeStatusChanged(cubePos, chunkStatusIn);
                     return finalFuture;
@@ -567,7 +573,7 @@ public abstract class MixinChunkManager implements IChunkManager {
     }
 
     // func_219200_b
-    private CompletableFuture<Either<ICube, ChunkHolder.IChunkLoadingError>> makeChunkInstance(ChunkHolder holder) {
+    private CompletableFuture<Either<ICube, ChunkHolder.IChunkLoadingError>> makeCubeInstance(ChunkHolder holder) {
         CompletableFuture<Either<ICube, ChunkHolder.IChunkLoadingError>> fullFuture =
                 ((ICubeHolder) holder).getSectionFuture(ChunkStatus.FULL.getParent());
         return fullFuture.thenApplyAsync((sectionOrError) -> {
@@ -661,7 +667,7 @@ public abstract class MixinChunkManager implements IChunkManager {
                 this.cubesLoaded.getAndIncrement();
                 Object[] ipacket = new Object[2];
                 this.getSectionTrackingPlayers(cubePos, false).forEach((serverPlayerEntity) -> {
-                    this.sendSectionData(serverPlayerEntity, ipacket, cube, cubePos);
+                    this.sendCubeData(serverPlayerEntity, ipacket, cube, cubePos);
                 });
                 return Either.left(cube);
             });
@@ -769,7 +775,7 @@ public abstract class MixinChunkManager implements IChunkManager {
     // getTrackingPlayers
     public Stream<ServerPlayerEntity> getSectionTrackingPlayers(CubePos pos, boolean boundaryOnly) {
         return this.playerGenerationTracker.getGeneratingPlayers(pos.asLong()).filter((p_219192_3_) -> {
-            int i = this.getSectionChebyshevDistance(pos, p_219192_3_, true);
+            int i = IChunkManager.getCubeChebyshevDistance(pos, p_219192_3_, true);
             if (i > this.viewDistance) {
                 return false;
             } else {
@@ -778,33 +784,122 @@ public abstract class MixinChunkManager implements IChunkManager {
         });
     }
 
-    // func_219215_b
-    private static int getSectionChebyshevDistance(CubePos pos, ServerPlayerEntity player, boolean p_219215_2_) {
-        int x;
-        int y;
-        int z;
-        if (p_219215_2_) {
-            //THIS IS FINE AS SECTION POS, AS IT IS CONVERTED TO CUBE POS WITH THE >> 1
-            SectionPos sectionpos = player.getManagedSectionPos();
-            x = sectionpos.getSectionX() >> 1;
-            y = sectionpos.getSectionY() >> 1;
-            z = sectionpos.getSectionZ() >> 1;
-        } else {
-            x = MathHelper.floor(player.getPosX() / 16.0D) >> 1;
-            y = MathHelper.floor(player.getPosY() / 16.0D) >> 1;
-            z = MathHelper.floor(player.getPosZ() / 16.0D) >> 1;
+    @Inject(method = "updatePlayerPosition", at = @At("HEAD"))
+    public void updatePlayerPosition(ServerPlayerEntity player, CallbackInfo ci)
+    {
+        int xFloor = Coords.getCubeXForEntity(player);
+        int yFloor = Coords.getCubeYForEntity(player);
+        int zFloor = Coords.getCubeZForEntity(player);
+
+        CubePos cubePosManaged = CubePos.from(player.getManagedSectionPos());
+        CubePos cubePos = CubePos.from(player.getPosition());
+        long managedPosAsLong = cubePosManaged.asLong();
+        long posAsLong = cubePos.asLong();
+        boolean isPlayerTracking = this.playerCubeGenerationTracker.func_225419_d(player);
+        boolean cannotPlayerGenerateChunk = this.cannotGenerateChunks(player);
+        boolean positionsAreEqual = cubePosManaged.asLong() != cubePos.asLong();
+        if (positionsAreEqual || isPlayerTracking != cannotPlayerGenerateChunk) {
+            this.sendPlayerCubePositionPacket(player);
+            if (!isPlayerTracking) {
+                ((ITicketManager)this.ticketManager).removePlayer(cubePosManaged, player);
+            }
+
+            if (!cannotPlayerGenerateChunk) {
+                // we are mixin into this method, so it should work as this:
+                this.ticketManager.updatePlayerPosition(cubePos.asSectionPos(), player);
+            }
+
+            if (!isPlayerTracking && cannotPlayerGenerateChunk) {
+                this.playerCubeGenerationTracker.disableGeneration(player);
+            }
+
+            if (isPlayerTracking && !cannotPlayerGenerateChunk) {
+                this.playerCubeGenerationTracker.enableGeneration(player);
+            }
+
+            if (managedPosAsLong != posAsLong) {
+                this.playerCubeGenerationTracker.updatePlayerPosition(managedPosAsLong, posAsLong, player);
+            }
         }
+        int viewDistanceCubes = MathUtil.ceilDiv(this.viewDistance, 2);
 
-        return getCubeDistance(pos, x, y, z);
+        int managedX = cubePosManaged.getX();
+        int managedY = cubePosManaged.getY();
+        int managedZ = cubePosManaged.getZ();
+        if (Math.abs(managedX - xFloor) <= viewDistanceCubes * 2 &&
+                Math.abs(managedY - yFloor) <= viewDistanceCubes * 2 &&
+                Math.abs(managedZ - zFloor) <= viewDistanceCubes * 2) {
+            int minX = Math.min(xFloor, managedX) - viewDistanceCubes;
+            int minY = Math.min(yFloor, managedY) - viewDistanceCubes;
+            int minZ = Math.min(zFloor, managedZ) - viewDistanceCubes;
+            int maxX = Math.max(xFloor, managedX) + viewDistanceCubes;
+            int maxY = Math.max(yFloor, managedY) + viewDistanceCubes;
+            int maxZ = Math.max(zFloor, managedZ) + viewDistanceCubes;
+
+            for(int ix = minX; ix <= maxX; ++ix) {
+                for(int iy = minY; iy <= maxY; ++iy) {
+                    for (int iz = minZ; iz <= maxZ; ++iz) {
+                        CubePos cubePos1 = CubePos.of(ix, iy, iz);
+                        boolean flag5 = IChunkManager.getCubeDistance(cubePos1, managedX, managedY, managedZ) <= viewDistanceCubes;
+                        boolean flag6 = IChunkManager.getCubeDistance(cubePos1, xFloor, yFloor, zFloor) <= viewDistanceCubes;
+                        this.setCubeLoadedAtClient(player, cubePos1, new IPacket[2], flag5, flag6);
+                    }
+                }
+            }
+        } else {
+            for(int ix = managedX - viewDistanceCubes; ix <= managedX + viewDistanceCubes; ++ix) {
+                for(int iy = managedY - viewDistanceCubes; iy <= managedY + viewDistanceCubes; ++iy) {
+                    for (int iz = managedZ - viewDistanceCubes; iz <= managedZ + viewDistanceCubes; ++iz) {
+                        CubePos cubePos2 = CubePos.of(ix, iy, iz);
+                        this.setCubeLoadedAtClient(player, cubePos2, new IPacket[2], true, false);
+                    }
+                }
+            }
+
+            for(int ix = xFloor - viewDistanceCubes; ix <= xFloor + viewDistanceCubes; ++ix) {
+                for (int iy = yFloor - viewDistanceCubes; iy <= yFloor + viewDistanceCubes; ++iy) {
+                    for (int iz = zFloor - viewDistanceCubes; iz <= zFloor + viewDistanceCubes; ++iz) {
+                        CubePos cubePos3 = CubePos.of(ix, iy, iz);
+                        this.setCubeLoadedAtClient(player, cubePos3, new IPacket[2], false, true);
+                    }
+                }
+            }
+        }
     }
 
-    //getChunkDistance
-    private static int getCubeDistance(CubePos cubePosIn, int x, int y, int z) {
-        int dX = cubePosIn.getX() - x;
-        int dY = cubePosIn.getY() - y;
-        int dZ = cubePosIn.getZ() - z;
-        return Math.max(Math.max(Math.abs(dX), Math.abs(dZ)), Math.abs(dY));
+    // func_223489_c
+    private SectionPos sendPlayerCubePositionPacket(ServerPlayerEntity serverPlayerEntityIn) {
+        SectionPos sectionpos = SectionPos.from(serverPlayerEntityIn);
+        serverPlayerEntityIn.setManagedSectionPos(sectionpos);
+        PacketDispatcher.sendTo(new PacketUpdateCubePosition(sectionpos), serverPlayerEntityIn);
+        return sectionpos;
     }
+
+    protected void setCubeLoadedAtClient(ServerPlayerEntity player, CubePos cubePosIn, Object[] packetCache, boolean wasLoaded, boolean load) {
+        if (player.world == this.world) {
+            //TODO: reimplement forge event
+            //net.minecraftforge.event.ForgeEventFactory.fireChunkWatch(wasLoaded, load, player, cubePosIn, this.world);
+            if (load && !wasLoaded) {
+                ChunkHolder chunkholder = ((IChunkManager)this).getImmutableCubeHolder(cubePosIn.asLong());
+                if (chunkholder != null) {
+                    Cube cube = ((ICubeHolder)chunkholder).getCubeIfComplete();
+                    if (cube != null) {
+                        this.sendCubeData(player, packetCache, cube, cube.getCubePos());
+                    }
+                    //TODO: reimplement debugpacket
+                    //DebugPacketSender.sendChuckPos(this.world, cubePosIn);
+                }
+            }
+            if (!load && wasLoaded) {
+                //Vanilla: //player.sendChunkUnload(chunkPosIn)
+                //I moved to MixinChunkManager to be in the same place as sendCubeLoad
+                this.sendCubeUnload(player, cubePosIn);
+            }
+        }
+    }
+
+    // func_219215_b is in ICubeManager now
+    //getChunkDistance is in ICubeManager now
 
     // func_222973_a
     @Override
@@ -830,8 +925,16 @@ public abstract class MixinChunkManager implements IChunkManager {
         }, this.mainThread);
     }
 
+    private void sendCubeUnload(ServerPlayerEntity player, CubePos cubePosIn)
+    {
+        if (player.isAlive()) {
+            PacketDispatcher.sendTo(new PacketUnloadCube(cubePosIn), player);
+        }
+    }
+
+    //TODO: remove CubePos param, cube contains a cubepos
     // sendChunkData
-    private void sendSectionData(ServerPlayerEntity player, Object[] packetCache, Cube cubeIn, CubePos pos) {
+    private void sendCubeData(ServerPlayerEntity player, Object[] packetCache, Cube cubeIn, CubePos pos) {
         if (packetCache[0] == null) {
             packetCache[0] = new PacketCubes(Collections.singletonList(cubeIn));
             //packetCache[1] = new SUpdateLightPacket(pos, this.lightManager);

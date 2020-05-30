@@ -1,9 +1,13 @@
 package cubicchunks.cc.chunk.util;
 
+import static cubicchunks.cc.utils.Coords.blockToCube;
+
 import cubicchunks.cc.chunk.ICube;
 import cubicchunks.cc.utils.Coords;
+import net.minecraft.entity.Entity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.SectionPos;
 import net.minecraft.util.math.Vec3i;
 
@@ -41,9 +45,16 @@ public class CubePos extends Vec3i {
         return new CubePos(extractX(cubePosIn), extractY(cubePosIn), extractZ(cubePosIn));
     }
     public static CubePos from(BlockPos blockPosIn) {
-        return new CubePos(Coords.blockToCube(blockPosIn.getX()), Coords.blockToCube(blockPosIn.getY()), Coords.blockToCube(blockPosIn.getZ()));
+        return new CubePos(blockToCube(blockPosIn.getX()), blockToCube(blockPosIn.getY()), blockToCube(blockPosIn.getZ()));
     }
     public static CubePos from(SectionPos sectionPos) { return new CubePos(sectionPos.getX() >> 1, sectionPos.getY() >> 1, sectionPos.getZ() >> 1); }
+
+    public static CubePos from(Entity p_218157_0_) {
+        return new CubePos(blockToCube(MathHelper.floor(p_218157_0_.getPosX())),
+                blockToCube(MathHelper.floor(p_218157_0_.getPosY())),
+                blockToCube(MathHelper.floor(p_218157_0_.getPosZ())));
+    }
+
 
     public static int extractX(long packed) {
         return (int)(packed << 0 >> 43);

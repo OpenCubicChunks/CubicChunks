@@ -18,6 +18,7 @@ import cubicchunks.cc.utils.AddressTools;
 import cubicchunks.cc.utils.Coords;
 import it.unimi.dsi.fastutil.shorts.ShortArrayList;
 import it.unimi.dsi.fastutil.shorts.ShortArraySet;
+import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.network.IPacket;
 import net.minecraft.util.Util;
 import net.minecraft.util.math.BlockPos;
@@ -290,7 +291,7 @@ public abstract class MixinChunkHolder implements ICubeHolder {
 
     // TODO: this needs to be completely replaced for proper section handling
     /**
-     * @author Barteks2x
+     * @author Barteks2x**
      * @reason height limits
      */
     @Overwrite
@@ -366,7 +367,6 @@ public abstract class MixinChunkHolder implements ICubeHolder {
         this.playerProvider.getTrackingPlayers(this.pos, boundaryOnly)
                 .forEach(player -> PacketDispatcher.sendTo(packetIn, player));
     }
-
 
     // func_219294_a
     @Override

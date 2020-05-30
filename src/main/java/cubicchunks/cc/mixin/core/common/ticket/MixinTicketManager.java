@@ -9,7 +9,6 @@ import cubicchunks.cc.chunk.graph.CCTicketType;
 import cubicchunks.cc.chunk.ticket.*;
 import cubicchunks.cc.chunk.util.CubePos;
 import cubicchunks.cc.mixin.core.common.chunk.interfaces.InvokeChunkHolder;
-import cubicchunks.cc.mixin.core.common.chunk.interfaces.InvokeChunkManager;
 import cubicchunks.cc.mixin.core.common.ticket.interfaces.InvokeTicket;
 import it.unimi.dsi.fastutil.longs.*;
 import it.unimi.dsi.fastutil.objects.ObjectIterator;
@@ -53,11 +52,11 @@ public abstract class MixinTicketManager implements ITicketManager {
     @Shadow protected abstract void register(long chunkPosIn, Ticket<?> ticketIn);
 
     private final CubeTicketTracker cubeTicketTracker = new CubeTicketTracker(this);
-    private final PlayerSectionTracker playerSectionTracker = new PlayerSectionTracker(this, 8);
-    private final PlayerSectionTicketTracker playerSectionTicketTracker = new PlayerSectionTicketTracker(this, 33);
+    private final PlayerCubeTracker playerCubeTracker = new PlayerCubeTracker(this, 8);
+    private final PlayerCubeTicketTracker playerCubeTicketTracker = new PlayerCubeTicketTracker(this, 33);
     private CubeTaskPriorityQueueSorter cubeTaskPriorityQueueSorter;
-    private ITaskExecutor<CubeTaskPriorityQueueSorter.FunctionEntry<Runnable>> playerSectionTicketThrottler;
-    private ITaskExecutor<CubeTaskPriorityQueueSorter.RunnableEntry> playerSectionTicketThrottlerSorter;
+    private ITaskExecutor<CubeTaskPriorityQueueSorter.FunctionEntry<Runnable>> playerCubeTicketThrottler;
+    private ITaskExecutor<CubeTaskPriorityQueueSorter.RunnableEntry> playerCubeTicketThrottlerSorter;
 
     @Inject(method = "<init>", at = @At("RETURN"))
     public void init(Executor executor, Executor executor2, CallbackInfo ci) {
@@ -65,8 +64,8 @@ public abstract class MixinTicketManager implements ITicketManager {
         CubeTaskPriorityQueueSorter
                 cubeTaskPriorityQueueSorter = new CubeTaskPriorityQueueSorter(ImmutableList.of(itaskexecutor), executor, 4);
         this.cubeTaskPriorityQueueSorter = cubeTaskPriorityQueueSorter;
-        this.playerSectionTicketThrottler = cubeTaskPriorityQueueSorter.createExecutor(itaskexecutor, true);
-        this.playerSectionTicketThrottlerSorter = cubeTaskPriorityQueueSorter.createSorterExecutor(itaskexecutor);
+        this.playerCubeTicketThrottler = cubeTaskPriorityQueueSorter.createExecutor(itaskexecutor, true);
+        this.playerCubeTicketThrottlerSorter = cubeTaskPriorityQueueSorter.createSorterExecutor(itaskexecutor);
     }
 
     @Override
@@ -100,15 +99,15 @@ public abstract class MixinTicketManager implements ITicketManager {
     @Inject(method = "setViewDistance", at = @At("HEAD"))
     protected void setViewDistance(int viewDistance, CallbackInfo ci)
     {
-        this.playerSectionTicketTracker.setViewDistance(viewDistance);
+        this.playerCubeTicketTracker.setViewDistance(viewDistance);
     }
 
     //BEGIN INJECT
 
     @Inject(method = "processUpdates", at = @At("RETURN"), cancellable = true)
     public void processUpdates(ChunkManager chunkManager, CallbackInfoReturnable<Boolean> callbackInfoReturnable) {
-        this.playerSectionTracker.processAllUpdates();
-        this.playerSectionTicketTracker.processAllUpdates();
+        this.playerCubeTracker.processAllUpdates();
+        this.playerCubeTicketTracker.processAllUpdates();
         int i = Integer.MAX_VALUE - this.cubeTicketTracker.update(Integer.MAX_VALUE);
         boolean flag = i != 0;
         if (!this.cubeHolders.isEmpty()) {
@@ -131,7 +130,7 @@ public abstract class MixinTicketManager implements ITicketManager {
                         CompletableFuture<Either<Cube, ChunkHolder.IChunkLoadingError>> sectionEntityTickingFuture =
                                 ((ICubeHolder)chunkholder).getSectionEntityTickingFuture();
                         sectionEntityTickingFuture.thenAccept((p_219363_3_) -> this.field_219388_p.execute(() -> {
-                            this.playerSectionTicketThrottlerSorter.enqueue(CubeTaskPriorityQueueSorter.createSorterMsg(() -> {
+                            this.playerCubeTicketThrottlerSorter.enqueue(CubeTaskPriorityQueueSorter.createSorterMsg(() -> {
                             }, j, false));
                         }));
                     }
@@ -191,8 +190,8 @@ public abstract class MixinTicketManager implements ITicketManager {
     public void updatePlayerPosition(SectionPos sectionPos, ServerPlayerEntity player, CallbackInfo ci) {
         long i = CubePos.from(sectionPos).asLong();
         this.playersBySectionPos.computeIfAbsent(i, (x) -> new ObjectOpenHashSet<>()).add(player);
-        this.playerSectionTracker.updateSourceLevel(i, 0, true);
-        this.playerSectionTicketTracker.updateSourceLevel(i, 0, true);
+        this.playerCubeTracker.updateSourceLevel(i, 0, true);
+        this.playerCubeTicketTracker.updateSourceLevel(i, 0, true);
     }
 
     @Override
@@ -202,8 +201,8 @@ public abstract class MixinTicketManager implements ITicketManager {
         objectset.remove(player);
         if (objectset.isEmpty()) {
             this.playersBySectionPos.remove(i);
-            this.playerSectionTracker.updateSourceLevel(i, Integer.MAX_VALUE, false);
-            this.playerSectionTicketTracker.updateSourceLevel(i, Integer.MAX_VALUE, false);
+            this.playerCubeTracker.updateSourceLevel(i, Integer.MAX_VALUE, false);
+            this.playerCubeTicketTracker.updateSourceLevel(i, Integer.MAX_VALUE, false);
         }
     }
 
@@ -212,14 +211,14 @@ public abstract class MixinTicketManager implements ITicketManager {
      */
     @Override
     public int getSpawningSectionsCount() {
-        this.playerSectionTracker.processAllUpdates();
-        return this.playerSectionTracker.sectionsInRange.size();
+        this.playerCubeTracker.processAllUpdates();
+        return this.playerCubeTracker.cubesInRange.size();
     }
 
     @Override
     public boolean isSectionOutsideSpawningRadius(long cubePosIn) {
-        this.playerSectionTracker.processAllUpdates();
-        return this.playerSectionTracker.sectionsInRange.containsKey(cubePosIn);
+        this.playerCubeTracker.processAllUpdates();
+        return this.playerCubeTracker.cubesInRange.containsKey(cubePosIn);
     }
 
     @Override
@@ -229,11 +228,11 @@ public abstract class MixinTicketManager implements ITicketManager {
 
     @Override
     public ITaskExecutor<CubeTaskPriorityQueueSorter.FunctionEntry<Runnable>> getSectionPlayerTicketThrottler() {
-        return playerSectionTicketThrottler;
+        return playerCubeTicketThrottler;
     }
 
     @Override
-    public ITaskExecutor<CubeTaskPriorityQueueSorter.RunnableEntry> getPlayerSectionTicketThrottlerSorter() { return playerSectionTicketThrottlerSorter; }
+    public ITaskExecutor<CubeTaskPriorityQueueSorter.RunnableEntry> getPlayerCubeTicketThrottlerSorter() { return playerCubeTicketThrottlerSorter; }
 
     @Override
     public LongSet getSectionPositions() {

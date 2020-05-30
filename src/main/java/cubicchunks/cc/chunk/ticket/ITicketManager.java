@@ -51,7 +51,7 @@ public interface ITicketManager {
 
     ITaskExecutor<CubeTaskPriorityQueueSorter.FunctionEntry<Runnable>> getSectionPlayerTicketThrottler();
 
-    ITaskExecutor<CubeTaskPriorityQueueSorter.RunnableEntry> getPlayerSectionTicketThrottlerSorter();
+    ITaskExecutor<CubeTaskPriorityQueueSorter.RunnableEntry> getPlayerCubeTicketThrottlerSorter();
 
     LongSet getSectionPositions();
 
