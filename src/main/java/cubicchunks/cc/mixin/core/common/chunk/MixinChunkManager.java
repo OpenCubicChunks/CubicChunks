@@ -48,7 +48,6 @@ import net.minecraft.util.concurrent.DelegatedTaskExecutor;
 import net.minecraft.util.concurrent.ITaskExecutor;
 import net.minecraft.util.concurrent.ThreadTaskExecutor;
 import net.minecraft.util.math.ChunkPos;
-import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.SectionPos;
 import net.minecraft.village.PointOfInterestManager;
 import net.minecraft.world.chunk.Chunk;
@@ -667,7 +666,7 @@ public abstract class MixinChunkManager implements IChunkManager {
             cubeLoadingErrorEither.mapLeft((cube) -> {
                 this.cubesLoaded.getAndIncrement();
                 Object[] ipacket = new Object[2];
-                this.getSectionTrackingPlayers(cubePos, false).forEach((serverPlayerEntity) -> {
+                this.getCubeTrackingPlayers(cubePos, false).forEach((serverPlayerEntity) -> {
                     this.sendCubeData(serverPlayerEntity, ipacket, cube, cubePos);
                 });
                 return Either.left(cube);
@@ -774,13 +773,14 @@ public abstract class MixinChunkManager implements IChunkManager {
     }
 
     // getTrackingPlayers
-    public Stream<ServerPlayerEntity> getSectionTrackingPlayers(CubePos pos, boolean boundaryOnly) {
-        return this.playerGenerationTracker.getGeneratingPlayers(pos.asLong()).filter((p_219192_3_) -> {
-            int i = IChunkManager.getCubeChebyshevDistance(pos, p_219192_3_, true);
-            if (i > this.viewDistance) {
+    public Stream<ServerPlayerEntity> getCubeTrackingPlayers(CubePos pos, boolean boundaryOnly) {
+        return this.playerGenerationTracker.getGeneratingPlayers(pos.asLong()).filter((serverPlayerEntity) -> {
+            int i = IChunkManager.getCubeChebyshevDistance(pos, serverPlayerEntity, true);
+            int viewDistanceCubes = MathUtil.ceilDiv(this.viewDistance, 2);
+            if (i > viewDistanceCubes) {
                 return false;
             } else {
-                return !boundaryOnly || i == this.viewDistance;
+                return !boundaryOnly || i == viewDistanceCubes;
             }
         });
     }
