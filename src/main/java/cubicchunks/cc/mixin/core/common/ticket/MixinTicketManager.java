@@ -10,6 +10,7 @@ import cubicchunks.cc.chunk.ticket.*;
 import cubicchunks.cc.chunk.util.CubePos;
 import cubicchunks.cc.mixin.core.common.chunk.interfaces.ChunkHolderAccess;
 import cubicchunks.cc.mixin.core.common.ticket.interfaces.TicketAccess;
+import cubicchunks.cc.utils.MathUtil;
 import it.unimi.dsi.fastutil.longs.*;
 import it.unimi.dsi.fastutil.objects.ObjectIterator;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
@@ -99,7 +100,7 @@ public abstract class MixinTicketManager implements ITicketManager {
     @Inject(method = "setViewDistance", at = @At("HEAD"))
     protected void setViewDistance(int viewDistance, CallbackInfo ci)
     {
-        this.playerCubeTicketTracker.setViewDistance(viewDistance);
+        this.playerCubeTicketTracker.setViewDistance(MathUtil.ceilDiv(viewDistance, 2));
     }
 
     //BEGIN INJECT

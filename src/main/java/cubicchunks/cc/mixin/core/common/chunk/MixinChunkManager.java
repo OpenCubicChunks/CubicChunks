@@ -39,7 +39,6 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.network.IPacket;
 import net.minecraft.network.play.server.SMountEntityPacket;
 import net.minecraft.network.play.server.SSetPassengersPacket;
 import net.minecraft.util.ClassInheritanceMultiMap;
@@ -48,6 +47,7 @@ import net.minecraft.util.concurrent.DelegatedTaskExecutor;
 import net.minecraft.util.concurrent.ITaskExecutor;
 import net.minecraft.util.concurrent.ThreadTaskExecutor;
 import net.minecraft.util.math.ChunkPos;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.SectionPos;
 import net.minecraft.village.PointOfInterestManager;
 import net.minecraft.world.chunk.Chunk;
@@ -347,7 +347,7 @@ public abstract class MixinChunkManager implements IChunkManager {
     @Override
     public ChunkHolder getImmutableCubeHolder(long cubePosIn)
     {
-        return this.immutableLoadedChunks.get(cubePosIn);
+        return this.immutableLoadedCubes.get(cubePosIn);
     }
 
     // TODO: remove when cubic chunks versions are done
@@ -665,9 +665,9 @@ public abstract class MixinChunkManager implements IChunkManager {
         completablefuture1.thenAcceptAsync((cubeLoadingErrorEither) -> {
             cubeLoadingErrorEither.mapLeft((cube) -> {
                 this.cubesLoaded.getAndIncrement();
-                Object[] ipacket = new Object[2];
+                Object[] objects = new Object[2];
                 this.getCubeTrackingPlayers(cubePos, false).forEach((serverPlayerEntity) -> {
-                    this.sendCubeData(serverPlayerEntity, ipacket, cube, cubePos);
+                    this.sendCubeData(serverPlayerEntity, objects, cube, cubePos);
                 });
                 return Either.left(cube);
             });
@@ -812,7 +812,7 @@ public abstract class MixinChunkManager implements IChunkManager {
             for (int iy = yFloor - viewDistanceCubes; iy <= yFloor + viewDistanceCubes; ++iy) {
                 for (int iz = zFloor - viewDistanceCubes; iz <= zFloor + viewDistanceCubes; ++iz) {
                     CubePos cubePos = CubePos.of(ix, iy, iz);
-                    this.setCubeLoadedAtClient(player, cubePos, new IPacket[2], !track, track);
+                    this.setCubeLoadedAtClient(player, cubePos, new Object[2], !track, track);
                 }
             }
         }
@@ -876,7 +876,7 @@ public abstract class MixinChunkManager implements IChunkManager {
                         CubePos cubePos1 = CubePos.of(ix, iy, iz);
                         boolean flag5 = IChunkManager.getCubeDistance(cubePos1, managedX, managedY, managedZ) <= viewDistanceCubes;
                         boolean flag6 = IChunkManager.getCubeDistance(cubePos1, xFloor, yFloor, zFloor) <= viewDistanceCubes;
-                        this.setCubeLoadedAtClient(player, cubePos1, new IPacket[2], flag5, flag6);
+                        this.setCubeLoadedAtClient(player, cubePos1, new Object[2], flag5, flag6);
                     }
                 }
             }
@@ -885,7 +885,7 @@ public abstract class MixinChunkManager implements IChunkManager {
                 for(int iy = managedY - viewDistanceCubes; iy <= managedY + viewDistanceCubes; ++iy) {
                     for (int iz = managedZ - viewDistanceCubes; iz <= managedZ + viewDistanceCubes; ++iz) {
                         CubePos cubePos2 = CubePos.of(ix, iy, iz);
-                        this.setCubeLoadedAtClient(player, cubePos2, new IPacket[2], true, false);
+                        this.setCubeLoadedAtClient(player, cubePos2, new Object[2], true, false);
                     }
                 }
             }
@@ -894,11 +894,31 @@ public abstract class MixinChunkManager implements IChunkManager {
                 for (int iy = yFloor - viewDistanceCubes; iy <= yFloor + viewDistanceCubes; ++iy) {
                     for (int iz = zFloor - viewDistanceCubes; iz <= zFloor + viewDistanceCubes; ++iz) {
                         CubePos cubePos3 = CubePos.of(ix, iy, iz);
-                        this.setCubeLoadedAtClient(player, cubePos3, new IPacket[2], false, true);
+                        this.setCubeLoadedAtClient(player, cubePos3, new Object[2], false, true);
                     }
                 }
             }
         }
+    }
+
+    @Inject(method = "setViewDistance", at = @At("RETURN"))
+    protected void setViewDistance(int viewDistance, CallbackInfo ci) {
+        viewDistance = MathUtil.ceilDiv(viewDistance, 2);
+        int viewDistanceCubes = MathUtil.ceilDiv(this.viewDistance, 2);
+        int i = MathHelper.clamp(viewDistance + 1, 3, 33);
+        if (i != viewDistanceCubes) {
+            for(ChunkHolder chunkholder : this.loadedCubes.values()) {
+                CubePos cubePos = ((ICubeHolder)chunkholder).getCubePos();
+                Object[] objects = new Object[2];
+                this.getCubeTrackingPlayers(cubePos, false).forEach((serverPlayerEntity) -> {
+                    int k = getDistanceToPlayer(cubePos, serverPlayerEntity, true);
+                    boolean flag = k <= viewDistanceCubes;
+                    boolean flag1 = k <= viewDistanceCubes;
+                    this.setCubeLoadedAtClient(serverPlayerEntity, cubePos, objects, flag, flag1);
+                });
+            }
+        }
+
     }
 
     // func_223489_c
@@ -1008,5 +1028,23 @@ public abstract class MixinChunkManager implements IChunkManager {
     public int getLoadedSectionsCount()
     {
         return this.cubesLoaded.get();
+    }
+
+    //func_219215_b
+    private static int getDistanceToPlayer(CubePos pos, ServerPlayerEntity player, boolean useManagedPos) {
+        int x;
+        int y;
+        int z;
+        if (useManagedPos) {
+            CubePos cubePos = CubePos.from(player.getManagedSectionPos());
+            x = cubePos.getX();
+            y = cubePos.getY();
+            z = cubePos.getZ();
+        } else {
+            x = Coords.getCubeXForEntity(player);
+            y = Coords.getCubeYForEntity(player);
+            z = Coords.getCubeZForEntity(player);
+        }
+        return IChunkManager.getCubeDistance(pos, x, y, z);
     }
 }

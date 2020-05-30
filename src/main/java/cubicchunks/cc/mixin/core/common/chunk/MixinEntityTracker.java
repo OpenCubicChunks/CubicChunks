@@ -46,10 +46,10 @@ public abstract class MixinEntityTracker {
             if (flag) {
                 boolean flag1 = this.entity.forceSpawn;
                 if (!flag1) {
-                    CubePos chunkpos = CubePos.of(this.entity.chunkCoordX, this.entity.chunkCoordY, this.entity.chunkCoordZ);
-                    ChunkHolder chunkholder = ((IChunkManager)this$0).getImmutableCubeHolder(chunkpos.asLong());
+                    CubePos cubePos = CubePos.of(this.entity.chunkCoordX, this.entity.chunkCoordY, this.entity.chunkCoordZ);
+                    ChunkHolder chunkholder = ((IChunkManager)this$0).getImmutableCubeHolder(cubePos.asLong());
                     if (chunkholder != null && chunkholder.getChunkIfComplete() != null) {
-                        flag1 = IChunkManager.getCubeChebyshevDistance(chunkpos, player, false) <= ((ChunkManagerAccess)this$0).getViewDistance();
+                        flag1 = IChunkManager.getCubeChebyshevDistance(cubePos, player, false) <= ((ChunkManagerAccess)this$0).getViewDistance();
                     }
                 }
 
