@@ -48,6 +48,7 @@ import net.minecraft.util.concurrent.DelegatedTaskExecutor;
 import net.minecraft.util.concurrent.ITaskExecutor;
 import net.minecraft.util.concurrent.ThreadTaskExecutor;
 import net.minecraft.util.math.ChunkPos;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.SectionPos;
 import net.minecraft.village.PointOfInterestManager;
 import net.minecraft.world.chunk.Chunk;
@@ -784,7 +785,40 @@ public abstract class MixinChunkManager implements IChunkManager {
         });
     }
 
-    @Inject(method = "updatePlayerPosition", at = @At("HEAD"))
+    @Inject(method = "setPlayerTracking", at = @At("RETURN"))
+    void setPlayerTracking(ServerPlayerEntity player, boolean track, CallbackInfo ci) {
+        boolean cannotGenerateChunks = this.cannotGenerateChunks(player);
+        boolean cannotGenerateChunksTracker = this.playerCubeGenerationTracker.cannotGenerateChunks(player);
+        int xFloor = Coords.getCubeXForEntity(player);
+        int yFloor = Coords.getCubeYForEntity(player);
+        int zFloor = Coords.getCubeZForEntity(player);
+        if (track) {
+            this.playerCubeGenerationTracker.addPlayer(CubePos.asLong(xFloor, yFloor, zFloor), player, cannotGenerateChunks);
+            this.sendPlayerCubePositionPacket(player);
+            if (!cannotGenerateChunks) {
+                //This is ok, as we mixin into this method:
+                this.ticketManager.updatePlayerPosition(SectionPos.from(player), player);
+            }
+        } else {
+            CubePos cubePos = CubePos.from(player.getManagedSectionPos());
+            this.playerCubeGenerationTracker.removePlayer(cubePos.asLong(), player);
+            if (!cannotGenerateChunksTracker) {
+                ((ITicketManager)this.ticketManager).removePlayer(cubePos, player);
+            }
+        }
+
+        int viewDistanceCubes = MathUtil.ceilDiv(this.viewDistance, 2);
+        for(int ix = xFloor - viewDistanceCubes; ix <= xFloor + viewDistanceCubes; ++ix) {
+            for (int iy = yFloor - viewDistanceCubes; iy <= yFloor + viewDistanceCubes; ++iy) {
+                for (int iz = zFloor - viewDistanceCubes; iz <= zFloor + viewDistanceCubes; ++iz) {
+                    CubePos cubePos = CubePos.of(ix, iy, iz);
+                    this.setCubeLoadedAtClient(player, cubePos, new IPacket[2], !track, track);
+                }
+            }
+        }
+    }
+
+    @Inject(method = "updatePlayerPosition", at = @At("RETURN"))
     public void updatePlayerPosition(ServerPlayerEntity player, CallbackInfo ci)
     {
         int xFloor = Coords.getCubeXForEntity(player);
@@ -796,24 +830,24 @@ public abstract class MixinChunkManager implements IChunkManager {
         long managedPosAsLong = cubePosManaged.asLong();
         long posAsLong = cubePos.asLong();
         boolean isPlayerTracking = this.playerCubeGenerationTracker.func_225419_d(player);
-        boolean cannotPlayerGenerateChunk = this.cannotGenerateChunks(player);
+        boolean cannotGenerateChunks = this.cannotGenerateChunks(player);
         boolean positionsAreEqual = cubePosManaged.asLong() != cubePos.asLong();
-        if (positionsAreEqual || isPlayerTracking != cannotPlayerGenerateChunk) {
+        if (positionsAreEqual || isPlayerTracking != cannotGenerateChunks) {
             this.sendPlayerCubePositionPacket(player);
             if (!isPlayerTracking) {
                 ((ITicketManager)this.ticketManager).removePlayer(cubePosManaged, player);
             }
 
-            if (!cannotPlayerGenerateChunk) {
+            if (!cannotGenerateChunks) {
                 // we are mixin into this method, so it should work as this:
                 this.ticketManager.updatePlayerPosition(cubePos.asSectionPos(), player);
             }
 
-            if (!isPlayerTracking && cannotPlayerGenerateChunk) {
+            if (!isPlayerTracking && cannotGenerateChunks) {
                 this.playerCubeGenerationTracker.disableGeneration(player);
             }
 
-            if (isPlayerTracking && !cannotPlayerGenerateChunk) {
+            if (isPlayerTracking && !cannotGenerateChunks) {
                 this.playerCubeGenerationTracker.enableGeneration(player);
             }
 
