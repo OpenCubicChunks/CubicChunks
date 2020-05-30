@@ -1,5 +1,6 @@
 package cubicchunks.cc.chunk.ticket;
 
+import cubicchunks.cc.chunk.IChunkManager;
 import cubicchunks.cc.chunk.graph.CubeDistanceGraph;
 import net.minecraft.util.SortedArraySet;
 import net.minecraft.world.server.ChunkHolder;
@@ -11,7 +12,7 @@ public class CubeTicketTracker extends CubeDistanceGraph {
 
     public CubeTicketTracker(ITicketManager iTicketManager) {
         //TODO: change the arguments passed into super to CCCubeManager or CCColumnManager
-        super(ChunkManager.MAX_LOADED_LEVEL + 2, 16, 256);
+        super(IChunkManager.MAX_CUBE_LOADED_LEVEL + 2, 16, 256);
         this.iTicketManager = iTicketManager;
     }
 
@@ -34,13 +35,13 @@ public class CubeTicketTracker extends CubeDistanceGraph {
             }
         }
 
-        return ChunkManager.MAX_LOADED_LEVEL + 1;
+        return IChunkManager.MAX_CUBE_LOADED_LEVEL + 1;
     }
 
     @Override
     protected void setLevel(long cubePosIn, int level) {
         ChunkHolder chunkholder = iTicketManager.getCubeHolder(cubePosIn);
-        int i = chunkholder == null ? ChunkManager.MAX_LOADED_LEVEL + 1 : chunkholder.getChunkLevel();
+        int i = chunkholder == null ? IChunkManager.MAX_CUBE_LOADED_LEVEL + 1 : chunkholder.getChunkLevel();
         if (i != level) {
             chunkholder = iTicketManager.setCubeLevel(cubePosIn, level, chunkholder, i);
             if (chunkholder != null) {

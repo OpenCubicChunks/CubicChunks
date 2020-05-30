@@ -6,6 +6,7 @@ import cubicchunks.cc.chunk.IChunkManager;
 import cubicchunks.cc.chunk.ICube;
 import cubicchunks.cc.chunk.ICubeHolder;
 import cubicchunks.cc.chunk.cube.Cube;
+import cubicchunks.cc.chunk.cube.CubeStatus;
 import cubicchunks.cc.chunk.graph.CCTicketType;
 import cubicchunks.cc.chunk.ticket.ITicketManager;
 import cubicchunks.cc.chunk.util.CubePos;
@@ -15,8 +16,6 @@ import cubicchunks.cc.utils.Coords;
 import net.minecraft.profiler.IProfiler;
 import net.minecraft.util.Util;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.SectionPos;
-import net.minecraft.world.chunk.ChunkSection;
 import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.server.ChunkHolder;
 import net.minecraft.world.server.ChunkManager;
@@ -145,7 +144,7 @@ public abstract class MixinServerChunkProvider implements IServerChunkProvider {
             ChunkStatus requiredStatus, boolean load) {
         CubePos cubePos = CubePos.of(cubeX, cubeY, cubeZ);
         long i = cubePos.asLong();
-        int j = 33 + ChunkStatus.getDistance(requiredStatus);
+        int j = 33 + CubeStatus.getDistance(requiredStatus);
         ChunkHolder chunkholder = this.getImmutableCubeHolder(i);
         if (load) {
             ((ITicketManager)this.ticketManager).registerWithLevel(CCTicketType.CCUNKNOWN, cubePos, j, cubePos);
@@ -161,7 +160,7 @@ public abstract class MixinServerChunkProvider implements IServerChunkProvider {
             }
         }
 
-        return this.func_217224_a(chunkholder, j) ? ICubeHolder.MISSING_CUBE_FUTURE : ((ICubeHolder)chunkholder).createFuture(requiredStatus,
+        return this.func_217224_a(chunkholder, j) ? ICubeHolder.MISSING_CUBE_FUTURE : ((ICubeHolder)chunkholder).createCubeFuture(requiredStatus,
                 this.chunkManager);
     }
 

@@ -32,6 +32,10 @@ public class CubePrimerWrapper extends CubePrimer {
         this.cube = cubeIn;
     }
 
+    @Override public ChunkStatus getCubeStatus() {
+        return cube.getCubeStatus();
+    }
+
     public Cube getCube()
     {
         return this.cube;

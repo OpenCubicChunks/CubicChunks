@@ -1,7 +1,6 @@
 package cubicchunks.cc.mixin.core.common.chunk;
 
 import static cubicchunks.cc.chunk.util.Utils.unsafeCast;
-import static net.minecraft.world.server.ChunkManager.MAX_LOADED_LEVEL;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
@@ -14,6 +13,7 @@ import cubicchunks.cc.chunk.IChunkManager;
 import cubicchunks.cc.chunk.ICube;
 import cubicchunks.cc.chunk.ICubeHolder;
 import cubicchunks.cc.chunk.ICubeStatusListener;
+import cubicchunks.cc.chunk.cube.CubeStatus;
 import cubicchunks.cc.chunk.graph.CCTicketType;
 import cubicchunks.cc.chunk.cube.CubePrimer;
 import cubicchunks.cc.chunk.cube.CubePrimerWrapper;
@@ -130,8 +130,6 @@ public abstract class MixinChunkManager implements IChunkManager {
 
     @Shadow(aliases = "field_219266_t") @Final private IChunkStatusListener statusListener;
 
-    @Shadow(aliases = "func_219205_a") protected abstract ChunkStatus getParentStatus(ChunkStatus status, int upCount);
-
     @Shadow @Final private ChunkGenerator<?> generator;
 
     @Shadow protected abstract CompletableFuture<Either<IChunk, ChunkHolder.IChunkLoadingError>> chunkGenerate(ChunkHolder chunkHolderIn,
@@ -165,7 +163,7 @@ public abstract class MixinChunkManager implements IChunkManager {
     @Nullable
     @Override
     public ChunkHolder setCubeLevel(long cubePosIn, int newLevel, @Nullable ChunkHolder holder, int oldLevel) {
-        if (oldLevel > MAX_LOADED_LEVEL && newLevel > MAX_LOADED_LEVEL) {
+        if (oldLevel > MAX_CUBE_LOADED_LEVEL && newLevel > MAX_CUBE_LOADED_LEVEL) {
             return holder;
         } else {
             if (holder != null) {
@@ -173,14 +171,14 @@ public abstract class MixinChunkManager implements IChunkManager {
             }
 
             if (holder != null) {
-                if (newLevel > MAX_LOADED_LEVEL) {
+                if (newLevel > MAX_CUBE_LOADED_LEVEL) {
                     this.unloadableCubes.add(cubePosIn);
                 } else {
                     this.unloadableCubes.remove(cubePosIn);
                 }
             }
 
-            if (newLevel <= MAX_LOADED_LEVEL && holder == null) {
+            if (newLevel <= MAX_CUBE_LOADED_LEVEL && holder == null) {
                 holder = this.cubesToUnload.remove(cubePosIn);
                 if (holder != null) {
                     holder.setChunkLevel(newLevel);
@@ -419,7 +417,7 @@ public abstract class MixinChunkManager implements IChunkManager {
                         } else {
                             if (chunkStatusIn == ChunkStatus.LIGHT) {
                                 ((ITicketManager) this.ticketManager).registerWithLevel(CCTicketType.CCLIGHT, cubePos,
-                                        33 + ChunkStatus.getDistance(ChunkStatus.FEATURES), cubePos);
+                                        33 + CubeStatus.getDistance(ChunkStatus.FEATURES), cubePos);
                             }
 
                             IChunk iChunk = optional.get();
@@ -444,11 +442,23 @@ public abstract class MixinChunkManager implements IChunkManager {
         }
     }
 
+    // func_219205_a
+    private ChunkStatus getParentStatus(ChunkStatus status, int distance) {
+        ChunkStatus parent;
+        if (distance == 0) {
+            parent = status.getParent();
+        } else {
+            parent = CubeStatus.getStatus(CubeStatus.getDistance(status) + distance);
+        }
+
+        return parent;
+    }
+
     //chunkGenerate
     private CompletableFuture<Either<ICube, ChunkHolder.IChunkLoadingError>> sectionGenerate(ChunkHolder chunkHolderIn, ChunkStatus chunkStatusIn) {
         CubePos cubePos = ((ICubeHolder) chunkHolderIn).getCubePos();
         CompletableFuture<Either<List<ICube>, ChunkHolder.IChunkLoadingError>> future =
-                this.makeFutureForStatusNeighbors(cubePos, chunkStatusIn.getTaskRange(), (count) -> {
+                this.makeFutureForStatusNeighbors(cubePos, CubeStatus.getCubeTaskRange(chunkStatusIn), (count) -> {
                     return this.getParentStatus(chunkStatusIn, count);
                 });
         this.world.getProfiler().func_230036_c_(() -> {
@@ -550,7 +560,7 @@ public abstract class MixinChunkManager implements IChunkManager {
     protected void releaseLightTicket(CubePos cubePos) {
         this.mainThread.enqueue(Util.namedRunnable(() -> {
             ((ITicketManager) this.ticketManager).releaseWithLevel(CCTicketType.CCLIGHT,
-                    cubePos, 33 + ChunkStatus.getDistance(ChunkStatus.FEATURES), cubePos);
+                    cubePos, 33 + CubeStatus.getDistance(ChunkStatus.FEATURES), cubePos);
         }, () -> {
             return "release light ticket " + cubePos;
         }));
@@ -561,14 +571,15 @@ public abstract class MixinChunkManager implements IChunkManager {
         CompletableFuture<Either<ICube, ChunkHolder.IChunkLoadingError>> fullFuture =
                 ((ICubeHolder) holder).getSectionFuture(ChunkStatus.FULL.getParent());
         return fullFuture.thenApplyAsync((sectionOrError) -> {
-            ChunkStatus chunkstatus = ChunkHolder.getChunkStatusFromLevel(holder.getChunkLevel());
-            return !chunkstatus.isAtLeast(ChunkStatus.FULL) ? ICubeHolder.MISSING_CUBE : sectionOrError.mapLeft((section) -> {
+            ChunkStatus chunkstatus = ICubeHolder.getCubeStatusFromLevel(holder.getChunkLevel());
+            return !chunkstatus.isAtLeast(ChunkStatus.FULL) ? ICubeHolder.MISSING_CUBE : sectionOrError.mapLeft((prevCube) -> {
                 CubePos cubePos = ((ICubeHolder) holder).getCubePos();
                 Cube cube;
-                if (section instanceof CubePrimerWrapper) {
-                        cube = ((CubePrimerWrapper)section).getCube();
+                if (prevCube instanceof CubePrimerWrapper) {
+                        cube = ((CubePrimerWrapper)prevCube).getCube();
                 } else {
-                    cube = new Cube(this.world, cubePos, section.getCubeSections(), null);
+                    cube = new Cube(this.world, cubePos, prevCube.getCubeSections(), null);
+                    cube.setCubeStatus(prevCube.getCubeStatus());
                     ((ICubeHolder) holder).onSectionWrapperCreated(new CubePrimerWrapper(cube));
                 }
 

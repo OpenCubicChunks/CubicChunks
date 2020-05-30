@@ -2,6 +2,7 @@ package cubicchunks.cc.chunk;
 
 import com.mojang.datafixers.util.Either;
 import cubicchunks.cc.chunk.cube.Cube;
+import cubicchunks.cc.chunk.cube.CubeStatus;
 import cubicchunks.cc.chunk.util.CubePos;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import net.minecraft.util.math.SectionPos;
@@ -16,6 +17,8 @@ import java.util.function.IntFunction;
 import javax.annotation.Nullable;
 
 public interface IChunkManager {
+    int MAX_CUBE_LOADED_LEVEL = 33 + CubeStatus.maxDistance();
+
     int getLoadedSectionsCount();
 
     ChunkHolder setCubeLevel(long cubePosIn, int newLevel, @Nullable ChunkHolder holder, int oldLevel);

@@ -1,5 +1,6 @@
 package cubicchunks.cc.chunk.ticket;
 
+import cubicchunks.cc.chunk.cube.CubeStatus;
 import cubicchunks.cc.chunk.util.CubePos;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
@@ -20,7 +21,7 @@ import java.util.Set;
 import java.util.concurrent.Executor;
 
 public interface ITicketManager {
-    int PLAYER_TICKET_LEVEL = 33 + ChunkStatus.getDistance(ChunkStatus.FULL) - 2;
+    int PLAYER_CUBE_TICKET_LEVEL = 33 + CubeStatus.getDistance(ChunkStatus.FULL) - 2;
 
     boolean processUpdates(ChunkManager chunkManager);
 

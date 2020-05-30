@@ -2,6 +2,7 @@ package cubicchunks.cc.chunk.ticket;
 
 import com.google.common.collect.Lists;
 import com.mojang.datafixers.util.Either;
+import cubicchunks.cc.chunk.IChunkManager;
 import cubicchunks.cc.chunk.util.CubePos;
 import it.unimi.dsi.fastutil.longs.Long2ObjectLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
@@ -18,7 +19,7 @@ import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
 public class CubeTaskPriorityQueue<T> {
-   public static final int levelCount = ChunkManager.MAX_LOADED_LEVEL + 2;
+   public static final int levelCount = IChunkManager.MAX_CUBE_LOADED_LEVEL + 2;
    private final List<Long2ObjectLinkedOpenHashMap<List<Optional<T>>>> levelToPosToElements = IntStream.range(0, levelCount).mapToObj((p_219415_0_) -> new Long2ObjectLinkedOpenHashMap<List<Optional<T>>>()).collect(Collectors.toList());
    private volatile int firstNonEmptyLvl = levelCount;
    private final String name;

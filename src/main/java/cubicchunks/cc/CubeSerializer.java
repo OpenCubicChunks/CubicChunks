@@ -56,10 +56,12 @@ public class CubeSerializer {
             ICube cube;
             if (status.getType() == ChunkStatus.Type.PROTOCHUNK) {
                 cube = new CubePrimer(pos, sections);
+                cube.setCubeStatus(status);
             } else {
-                cube = new CubePrimerWrapper(new Cube(world, pos, sections, null));
+                Cube cubeIn = new Cube(world, pos, sections, null);
+                cubeIn.setCubeStatus(status);
+                cube = new CubePrimerWrapper(cubeIn);
             }
-            cube.setCubeStatus(status);
             return cube;
         }
     }

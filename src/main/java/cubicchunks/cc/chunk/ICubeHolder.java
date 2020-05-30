@@ -3,6 +3,7 @@ package cubicchunks.cc.chunk;
 import com.mojang.datafixers.util.Either;
 import cubicchunks.cc.chunk.cube.CubePrimerWrapper;
 import cubicchunks.cc.chunk.cube.Cube;
+import cubicchunks.cc.chunk.cube.CubeStatus;
 import cubicchunks.cc.chunk.util.CubePos;
 import net.minecraft.world.chunk.ChunkSection;
 import net.minecraft.world.chunk.ChunkStatus;
@@ -18,6 +19,9 @@ public interface ICubeHolder {
     CompletableFuture<Either<Cube, ChunkHolder.IChunkLoadingError>> UNLOADED_CUBE_FUTURE = CompletableFuture.completedFuture(UNLOADED_CUBE);
     CompletableFuture<Either<ICube, ChunkHolder.IChunkLoadingError>> MISSING_CUBE_FUTURE = CompletableFuture.completedFuture(MISSING_CUBE);
 
+    static ChunkStatus getCubeStatusFromLevel(int cubeLevel) {
+        return cubeLevel < 33 ? ChunkStatus.FULL : CubeStatus.getStatus(cubeLevel - 33);
+    }
 
     Cube getCubeIfComplete();
 
@@ -41,7 +45,6 @@ public interface ICubeHolder {
     // func_225410_b
     CompletableFuture<Either<ICube, ChunkHolder.IChunkLoadingError>> getFutureHigherThanCubeStatus(ChunkStatus chunkStatus);
 
-    CompletableFuture<Either<ICube, ChunkHolder.IChunkLoadingError>> createFuture(ChunkStatus p_219276_1_, ChunkManager p_219276_2_);
 
     void sendChanges(Cube cube);
 

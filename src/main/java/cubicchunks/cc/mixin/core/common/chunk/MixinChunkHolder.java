@@ -50,10 +50,6 @@ public abstract class MixinChunkHolder implements ICubeHolder {
 
     @Shadow public abstract ChunkPos getPosition();
 
-    @Shadow public static ChunkStatus getChunkStatusFromLevel(int level) {
-        throw new Error("Mixin failed to apply correctly!");
-    }
-
     @Shadow private int prevChunkLevel;
     @Shadow private int chunkLevel;
 
@@ -97,6 +93,7 @@ public abstract class MixinChunkHolder implements ICubeHolder {
     @Shadow @Final private ChunkHolder.IPlayerProvider playerProvider;
     @Shadow @Final private ChunkPos pos;
     @Shadow @Final public static CompletableFuture<Either<IChunk, ChunkHolder.IChunkLoadingError>> MISSING_CHUNK_FUTURE;
+    @Shadow private int field_219318_m;
     private CubePos cubePos;
 
     private final ShortArraySet changedLocalBlocks = new ShortArraySet();
@@ -124,10 +121,10 @@ public abstract class MixinChunkHolder implements ICubeHolder {
         }
         ci.cancel();
 
-        ChunkStatus chunkstatus = getChunkStatusFromLevel(this.prevChunkLevel);
-        ChunkStatus chunkstatus1 = getChunkStatusFromLevel(this.chunkLevel);
-        boolean wasFullyLoaded = this.prevChunkLevel <= ChunkManager.MAX_LOADED_LEVEL;
-        boolean isFullyLoaded = this.chunkLevel <= ChunkManager.MAX_LOADED_LEVEL;
+        ChunkStatus chunkstatus = ICubeHolder.getCubeStatusFromLevel(this.prevChunkLevel);
+        ChunkStatus chunkstatus1 = ICubeHolder.getCubeStatusFromLevel(this.chunkLevel);
+        boolean wasFullyLoaded = this.prevChunkLevel <= IChunkManager.MAX_CUBE_LOADED_LEVEL;
+        boolean isFullyLoaded = this.chunkLevel <= IChunkManager.MAX_CUBE_LOADED_LEVEL;
         ChunkHolder.LocationType previousLocationType = getLocationTypeFromLevel(this.prevChunkLevel);
         ChunkHolder.LocationType currentLocationType = getLocationTypeFromLevel(this.chunkLevel);
         if (wasFullyLoaded) {
@@ -196,37 +193,13 @@ public abstract class MixinChunkHolder implements ICubeHolder {
         this.prevChunkLevel = this.chunkLevel;
     }
 
-    // func_219276_a
-    @Override
-    public CompletableFuture<Either<ICube, ChunkHolder.IChunkLoadingError>> createCubeFuture(ChunkStatus chunkStatus, ChunkManager chunkManager)
-    {
-        int i = chunkStatus.ordinal();
-        CompletableFuture<Either<ICube, ChunkHolder.IChunkLoadingError>> completablefuture = this.cubeFutureByCubeStatus.get(i);
-        if (completablefuture != null) {
-            Either<ICube, ChunkHolder.IChunkLoadingError> either = completablefuture.getNow(null);
-            if (either == null || either.left().isPresent()) {
-                return completablefuture;
-            }
-        }
-
-        if (getChunkStatusFromLevel(this.chunkLevel).isAtLeast(chunkStatus)) {
-            CompletableFuture<Either<ICube, ChunkHolder.IChunkLoadingError>> completablefuture1 =
-                    ((IChunkManager)chunkManager).createCubeFuture((ChunkHolder)(Object)this, chunkStatus);
-            this.chainSection(completablefuture1);
-            this.cubeFutureByCubeStatus.set(i, completablefuture1);
-            return completablefuture1;
-        } else {
-            return completablefuture == null ? this.MISSING_CUBE_FUTURE : completablefuture;
-        }
-
-        //This is a CubeHolder, we set return value, preventing vanilla code, and running ours (below)
-    }
-
     //BEGIN OVERRIDES:
 
     @Override
     public void setYPos(int yPos) { //Whenever ChunkHolder is instantiated this should be called to finish the construction of the object
         this.cubePos = CubePos.of(getPosition().x, yPos, getPosition().z);
+        this.prevChunkLevel = IChunkManager.MAX_CUBE_LOADED_LEVEL + 1;
+        this.field_219318_m = this.prevChunkLevel;
     }
 
 
@@ -289,10 +262,12 @@ public abstract class MixinChunkHolder implements ICubeHolder {
     }
     // func_225410_b
     @Override public CompletableFuture<Either<ICube, ChunkHolder.IChunkLoadingError>> getFutureHigherThanCubeStatus(ChunkStatus chunkStatus) {
-        return getChunkStatusFromLevel(this.chunkLevel).isAtLeast(chunkStatus) ? this.getFutureByCubeStatus(chunkStatus) : MISSING_CUBE_FUTURE;
+        return ICubeHolder.getCubeStatusFromLevel(this.chunkLevel).isAtLeast(chunkStatus) ? this.getFutureByCubeStatus(chunkStatus) : MISSING_CUBE_FUTURE;
     }
 
-    public CompletableFuture<Either<ICube, ChunkHolder.IChunkLoadingError>> createFuture(ChunkStatus status, ChunkManager chunkManager) {
+    // func_219276_a
+    @Override
+    public CompletableFuture<Either<ICube, ChunkHolder.IChunkLoadingError>> createCubeFuture(ChunkStatus status, ChunkManager chunkManager) {
         int statusOrdinal = status.ordinal();
         CompletableFuture<Either<ICube, ChunkHolder.IChunkLoadingError>> completablefuture = this.cubeFutureByCubeStatus.get(statusOrdinal);
         if (completablefuture != null) {
@@ -302,7 +277,7 @@ public abstract class MixinChunkHolder implements ICubeHolder {
             }
         }
 
-        if (getChunkStatusFromLevel(this.chunkLevel).isAtLeast(status)) {
+        if (ICubeHolder.getCubeStatusFromLevel(this.chunkLevel).isAtLeast(status)) {
             CompletableFuture<Either<ICube, ChunkHolder.IChunkLoadingError>> completablefuture1 =
                     ((IChunkManager)chunkManager).createCubeFuture((ChunkHolder)(Object)this, status);
             this.chainSection(completablefuture1);
