@@ -36,7 +36,7 @@ public interface ITicketManager {
 
     void releaseCube(long chunkPosIn, Ticket<?> ticketIn);
 
-    void updatePlayerPosition(CubePos cubePosIn, ServerPlayerEntity player);
+
 
     void removePlayer(CubePos cubePosIn, ServerPlayerEntity player);
 

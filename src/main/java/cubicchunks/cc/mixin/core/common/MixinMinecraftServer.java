@@ -34,6 +34,8 @@ public abstract class MixinMinecraftServer {
 
     @Shadow protected abstract void setUserMessage(ITextComponent userMessageIn);
 
+    @Shadow public abstract boolean isServerRunning();
+
     /**
      * @author NotStirred
      */
@@ -56,7 +58,7 @@ public abstract class MixinMinecraftServer {
         ((IServerChunkProvider)serverchunkprovider).registerTicket(TicketType.START, cubePos, radius + 1, Unit.INSTANCE);
 
         int i2 = 0;
-        while(serverchunkprovider.getLoadedChunksCount() != d*d || ((IServerChunkProvider) serverchunkprovider).getLoadedSectionsCount() != d*d*d) {
+        while(isServerRunning() && (serverchunkprovider.getLoadedChunksCount() != d*d || ((IServerChunkProvider) serverchunkprovider).getLoadedSectionsCount() != d*d*d)) {
             // from CC
             this.serverTime = Util.milliTime() + 10L;
             ((IMinecraftServer)this).runSchedule();

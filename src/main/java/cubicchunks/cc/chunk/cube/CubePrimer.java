@@ -84,9 +84,9 @@ public class CubePrimer implements ICube, IChunk {
 
     @Nullable
     public BlockState setBlockState(BlockPos pos, BlockState state, boolean isMoving) {
-        int x = pos.getX();
-        int y = pos.getY();
-        int z = pos.getZ();
+        int x = pos.getX() & 0xF;
+        int y = pos.getY() & 0xF;
+        int z = pos.getZ() & 0xF;
         int index = Coords.blockToIndex32(pos.getX(), pos.getY(), pos.getZ());
 
         if (this.sections[index] == Chunk.EMPTY_SECTION && state.getBlock() == Blocks.AIR) {

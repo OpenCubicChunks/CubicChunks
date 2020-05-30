@@ -106,13 +106,13 @@ public class MixinChunkStatus {
             // generator.makeBase(new CubeWorldGenRegion(world, unsafeCast(neighbors)), chunk);
             ICube cube = (ICube) chunk;
             int cubeY = cube.getCubePos().getY();
-            if (cubeY < 5) {
-                for (int x = 0; x < 16; x++) {
-                    for (int y = 0; y < 16; y++) {
-                        for (int z = 0; z < 16; z++) {
+            if (cubeY < 3) {
+                for (int x = 0; x < ICube.BLOCK_SIZE; x++) {
+                    for (int y = 0; y < ICube.BLOCK_SIZE; y++) {
+                        for (int z = 0; z < ICube.BLOCK_SIZE; z++) {
                             BlockPos pos = new BlockPos(x, y, z);
-                            if (cubeY == 4 && y == 15) {
-                                cube.setBlockState(pos, Blocks.GRASS.getDefaultState(), false);
+                            if (cubeY == 2 && y == ICube.BLOCK_SIZE - 1) {
+                                cube.setBlockState(pos, Blocks.GRASS_BLOCK.getDefaultState(), false);
                             } else if (cubeY == 0 && y == 0) {
                                 cube.setBlockState(pos, Blocks.BEDROCK.getDefaultState(), false);
                             } else {

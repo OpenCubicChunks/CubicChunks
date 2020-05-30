@@ -22,6 +22,7 @@ public class PacketCubes {
     // vanilla has max chunk size of 2MB, it works out to be 128kB per cube
     private static final int MAX_CUBE_SIZE = 128 * 1024;
 
+    private final CubePos[] cubePositions;
     private final Cube[] cubes;
     private final BitSet cubeExists;
     private final byte[] packetData;
@@ -29,6 +30,7 @@ public class PacketCubes {
 
     public PacketCubes(List<Cube> cubes) {
         this.cubes = cubes.toArray(new Cube[0]);
+        this.cubePositions = new CubePos[this.cubes.length];
         this.cubeExists = new BitSet(cubes.size());
         this.packetData = new byte[calculateDataSize(cubes)];
         fillDataBuffer(wrapBuffer(this.packetData), cubes, cubeExists);
@@ -39,7 +41,13 @@ public class PacketCubes {
     }
 
     PacketCubes(PacketBuffer buf) {
-        this.cubes = new Cube[buf.readVarInt()];
+        int count = buf.readVarInt();
+        this.cubes = new Cube[count];
+        this.cubePositions = new CubePos[count];
+        for (int i = 0; i < count; i++) {
+            cubePositions[i] = CubePos.of(buf.readInt(), buf.readInt(), buf.readInt());
+        }
+
         // one long stores information about 64 chunks
         int length = MathUtil.ceilDiv(cubes.length, 64);
         this.cubeExists = BitSet.valueOf(buf.readLongArray(new long[length]));
@@ -84,7 +92,7 @@ public class PacketCubes {
             PacketBuffer dataReader = wrapBuffer(packet.packetData);
             BitSet cubeExists = packet.cubeExists;
             for (int i = 0; i < packet.cubes.length; i++) {
-                CubePos pos = packet.cubes[i].getCubePos();
+                CubePos pos = packet.cubePositions[i];
                 int x = pos.getX();
                 int y = pos.getY();
                 int z = pos.getZ();

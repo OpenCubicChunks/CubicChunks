@@ -30,7 +30,7 @@ public class CubeSerializer {
         if (!Files.exists(cubePath)) {
             return null;
         }
-        try (DataInputStream in = new DataInputStream(new GZIPInputStream(new BufferedInputStream(Files.newInputStream(cubePath))))) {
+        try (DataInputStream in = new DataInputStream(new BufferedInputStream(new GZIPInputStream(Files.newInputStream(cubePath))))) {
             ChunkStatus status = ChunkStatus.getStatus(in.readUnsignedByte());
             ChunkSection[] sections = new ChunkSection[ICube.CUBESIZE];
 
@@ -70,13 +70,13 @@ public class CubeSerializer {
         if (!Files.exists(cubePath.getParent())) {
             Files.createDirectories(cubePath.getParent());
         }
-        try (DataOutputStream out = new DataOutputStream(new GZIPOutputStream(new BufferedOutputStream(Files.newOutputStream(cubePath))))) {
+        try (DataOutputStream out = new DataOutputStream(new BufferedOutputStream(new GZIPOutputStream(Files.newOutputStream(cubePath))))) {
             out.writeByte(cube.getCubeStatus().ordinal());
 
             for (ChunkSection s : cube.getCubeSections()) {
-                boolean empty = s != Chunk.EMPTY_SECTION && !s.isEmpty();
-                out.writeBoolean(empty);
-                if (!empty) {
+                boolean exists = s != Chunk.EMPTY_SECTION && !s.isEmpty();
+                out.writeBoolean(!exists);
+                if (exists) {
                     for (int y = 0; y < 16; y++) {
                         for (int z = 0; z < 16; z++) {
                             for (int x = 0; x < 16; x++) {

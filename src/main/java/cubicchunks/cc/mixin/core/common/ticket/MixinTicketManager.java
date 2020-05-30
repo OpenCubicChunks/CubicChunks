@@ -187,9 +187,9 @@ public abstract class MixinTicketManager implements ITicketManager {
         this.releaseCube(pos.asLong(), ticket);
     }
 
-    @Override
-    public void updatePlayerPosition(CubePos cubePosIn, ServerPlayerEntity player) {
-        long i = cubePosIn.asLong();
+    @Inject(method = "updatePlayerPosition", at = @At("RETURN"))
+    public void updatePlayerPosition(SectionPos sectionPos, ServerPlayerEntity player, CallbackInfo ci) {
+        long i = CubePos.from(sectionPos).asLong();
         this.playersBySectionPos.computeIfAbsent(i, (x) -> new ObjectOpenHashSet<>()).add(player);
         this.playerSectionTracker.updateSourceLevel(i, 0, true);
         this.playerSectionTicketTracker.updateSourceLevel(i, 0, true);
