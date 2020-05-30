@@ -7,7 +7,7 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 import org.spongepowered.asm.mixin.gen.Invoker;
 
 @Mixin(ChunkManager.class)
-public interface InvokeChunkManager {
+public interface ChunkManagerAccess {
 
     @Invoker("func_219220_a")
     ChunkHolder chunkHold(long chunkPosIn);

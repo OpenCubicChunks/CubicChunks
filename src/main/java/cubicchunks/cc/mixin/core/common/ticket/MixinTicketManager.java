@@ -8,8 +8,8 @@ import cubicchunks.cc.chunk.cube.Cube;
 import cubicchunks.cc.chunk.graph.CCTicketType;
 import cubicchunks.cc.chunk.ticket.*;
 import cubicchunks.cc.chunk.util.CubePos;
-import cubicchunks.cc.mixin.core.common.chunk.interfaces.InvokeChunkHolder;
-import cubicchunks.cc.mixin.core.common.ticket.interfaces.InvokeTicket;
+import cubicchunks.cc.mixin.core.common.chunk.interfaces.ChunkHolderAccess;
+import cubicchunks.cc.mixin.core.common.ticket.interfaces.TicketAccess;
 import it.unimi.dsi.fastutil.longs.*;
 import it.unimi.dsi.fastutil.objects.ObjectIterator;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
@@ -73,7 +73,7 @@ public abstract class MixinTicketManager implements ITicketManager {
         SortedArraySet<Ticket<?>> sortedarrayset = this.getSectionTicketSet(cubePosIn);
         int i = getLevel(sortedarrayset);
         Ticket<?> ticket = sortedarrayset.func_226175_a_(ticketIn);
-        ((InvokeTicket) ticket).setTimestampCC(this.currentTime);
+        ((TicketAccess) ticket).setTimestampCC(this.currentTime);
         if (ticketIn.getLevel() < i) {
             this.cubeTicketTracker.updateSourceLevel(cubePosIn, ticketIn.getLevel(), true);
         }
@@ -111,7 +111,7 @@ public abstract class MixinTicketManager implements ITicketManager {
         int i = Integer.MAX_VALUE - this.cubeTicketTracker.update(Integer.MAX_VALUE);
         boolean flag = i != 0;
         if (!this.cubeHolders.isEmpty()) {
-            this.cubeHolders.forEach((cubeHolder) -> ((InvokeChunkHolder) cubeHolder).processUpdatesCC(chunkManager));
+            this.cubeHolders.forEach((cubeHolder) -> ((ChunkHolderAccess) cubeHolder).processUpdatesCC(chunkManager));
             this.cubeHolders.clear();
             callbackInfoReturnable.setReturnValue(true);
             return;
@@ -154,7 +154,7 @@ public abstract class MixinTicketManager implements ITicketManager {
         ObjectIterator<Long2ObjectMap.Entry<SortedArraySet<Ticket<?>>>> objectiterator = this.cubeTickets.long2ObjectEntrySet().fastIterator();
         while (objectiterator.hasNext()) {
             Long2ObjectMap.Entry<SortedArraySet<Ticket<?>>> entry = objectiterator.next();
-            if (entry.getValue().removeIf((ticket) -> ((InvokeTicket) ticket).cc$isexpired(this.currentTime))) {
+            if (entry.getValue().removeIf((ticket) -> ((TicketAccess) ticket).cc$isexpired(this.currentTime))) {
                 this.cubeTicketTracker.updateSourceLevel(entry.getLongKey(), getLevel(entry.getValue()), false);
             }
             if (entry.getValue().isEmpty()) {

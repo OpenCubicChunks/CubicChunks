@@ -10,7 +10,7 @@ import cubicchunks.cc.chunk.cube.CubeStatus;
 import cubicchunks.cc.chunk.graph.CCTicketType;
 import cubicchunks.cc.chunk.ticket.ITicketManager;
 import cubicchunks.cc.chunk.util.CubePos;
-import cubicchunks.cc.mixin.core.common.chunk.interfaces.InvokeChunkManager;
+import cubicchunks.cc.mixin.core.common.chunk.interfaces.ChunkManagerAccess;
 import cubicchunks.cc.server.IServerChunkProvider;
 import cubicchunks.cc.utils.Coords;
 import net.minecraft.profiler.IProfiler;
@@ -185,7 +185,7 @@ public abstract class MixinServerChunkProvider implements IServerChunkProvider {
 
     private boolean refreshAndInvalidate() {
         boolean flag = this.ticketManager.processUpdates(this.chunkManager);
-        boolean flag1 = ((InvokeChunkManager)this.chunkManager).refreshOffThreadCacheSection();
+        boolean flag1 = ((ChunkManagerAccess)this.chunkManager).refreshOffThreadCacheSection();
         if (!flag && !flag1) {
             return false;
         } else {

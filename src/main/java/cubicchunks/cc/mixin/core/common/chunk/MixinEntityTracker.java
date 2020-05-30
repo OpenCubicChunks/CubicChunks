@@ -2,10 +2,9 @@ package cubicchunks.cc.mixin.core.common.chunk;
 
 import cubicchunks.cc.chunk.IChunkManager;
 import cubicchunks.cc.chunk.util.CubePos;
-import cubicchunks.cc.mixin.core.common.chunk.interfaces.InvokeChunkManager;
+import cubicchunks.cc.mixin.core.common.chunk.interfaces.ChunkManagerAccess;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.TrackedEntity;
 import net.minecraft.world.server.ChunkHolder;
@@ -14,10 +13,7 @@ import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
 
-import java.util.List;
 import java.util.Set;
 
 @Mixin(ChunkManager.EntityTracker.class)
@@ -42,7 +38,7 @@ public abstract class MixinEntityTracker {
         if (player != this.entity) {
             Vec3d vec3d = player.getPositionVec().subtract(this.entry.func_219456_b());
                             //This function is fine
-            int i = Math.min(this.func_229843_b_(), (((InvokeChunkManager)this$0).getViewDistance() - 1) * 16);
+            int i = Math.min(this.func_229843_b_(), (((ChunkManagerAccess)this$0).getViewDistance() - 1) * 16);
             boolean flag = vec3d.x >= (double)(-i) && vec3d.x <= (double)i &&
                     vec3d.y >= (double)(-i) && vec3d.y <= (double)i && //Added y comparisons
                     vec3d.z >= (double)(-i) && vec3d.z <= (double)i &&
@@ -53,7 +49,7 @@ public abstract class MixinEntityTracker {
                     CubePos chunkpos = CubePos.of(this.entity.chunkCoordX, this.entity.chunkCoordY, this.entity.chunkCoordZ);
                     ChunkHolder chunkholder = ((IChunkManager)this$0).getImmutableCubeHolder(chunkpos.asLong());
                     if (chunkholder != null && chunkholder.getChunkIfComplete() != null) {
-                        flag1 = IChunkManager.getCubeChebyshevDistance(chunkpos, player, false) <= ((InvokeChunkManager)this$0).getViewDistance();
+                        flag1 = IChunkManager.getCubeChebyshevDistance(chunkpos, player, false) <= ((ChunkManagerAccess)this$0).getViewDistance();
                     }
                 }
 

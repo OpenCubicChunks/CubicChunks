@@ -1,6 +1,6 @@
 package cubicchunks.cc.mixin.core.common;
 
-import cubicchunks.cc.mixin.core.common.ticket.interfaces.InvokeLevelBasedGraph;
+import cubicchunks.cc.mixin.core.common.ticket.interfaces.LevelBasedGraphAccess;
 import net.minecraft.world.chunk.ChunkDistanceGraph;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -12,7 +12,7 @@ public class MixinChunkDistanceGraph {
 
     @Inject(method = "updateSourceLevel(JIZ)V", at = @At("HEAD"))
     private void removeSentinelInSourceLevel(long pos, int level, boolean isDecreasing, CallbackInfo ci) {
-        ((InvokeLevelBasedGraph)this).scheduleMixedUpdate(Long.MAX_VALUE, pos, level, isDecreasing);
+        ((LevelBasedGraphAccess)this).scheduleMixedUpdate(Long.MAX_VALUE, pos, level, isDecreasing);
 
     }
 }
