@@ -197,7 +197,7 @@ public abstract class MixinChunkManager implements IChunkManager {
                     holder.setChunkLevel(newLevel);
                 } else {
 
-                    holder = new ChunkHolder(new ChunkPos(CubePos.extractX(cubePosIn), CubePos.extractZ(cubePosIn)), newLevel, this.lightManager,
+                    holder = new ChunkHolder(CubePos.from(cubePosIn).asChunkPos(), newLevel, this.lightManager,
                             this.cubeTaskPriorityQueueSorter, (ChunkHolder.IPlayerProvider) this);
                     ((ICubeHolder) holder).setYPos(CubePos.extractY(cubePosIn));
                 }
@@ -335,7 +335,7 @@ public abstract class MixinChunkManager implements IChunkManager {
             }
         }, this.saveCubeTasks::add).whenComplete((p_223171_1_, p_223171_2_) -> {
             if (p_223171_2_ != null) {
-                LOGGER.error("Failed to save chunk " + chunkHolderIn.getPosition(), p_223171_2_);
+                LOGGER.error("Failed to save chunk " + ((ICubeHolder) chunkHolderIn).getCubePos(), p_223171_2_);
             }
         });
     }

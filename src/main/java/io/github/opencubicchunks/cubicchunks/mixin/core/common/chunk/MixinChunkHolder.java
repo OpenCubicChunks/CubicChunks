@@ -89,7 +89,6 @@ public abstract class MixinChunkHolder implements ICubeHolder {
 
     @Shadow @Final private WorldLightManager lightManager;
     @Shadow @Final private ChunkHolder.IPlayerProvider playerProvider;
-    @Shadow @Final private ChunkPos pos;
     @Shadow @Final public static CompletableFuture<Either<IChunk, ChunkHolder.IChunkLoadingError>> MISSING_CHUNK_FUTURE;
     @Shadow private int field_219318_m;
     private CubePos cubePos;
@@ -195,7 +194,7 @@ public abstract class MixinChunkHolder implements ICubeHolder {
 
     @Override
     public void setYPos(int yPos) { //Whenever ChunkHolder is instantiated this should be called to finish the construction of the object
-        this.cubePos = CubePos.of(getPosition().x, yPos, getPosition().z);
+        this.cubePos = CubePos.from(this.getPosition(), yPos);
         this.prevChunkLevel = IChunkManager.MAX_CUBE_LOADED_LEVEL + 1;
         this.field_219318_m = this.prevChunkLevel;
     }
@@ -361,7 +360,7 @@ public abstract class MixinChunkHolder implements ICubeHolder {
     }
 
     private void sendToTracking(Object packetIn, boolean boundaryOnly) {
-        this.playerProvider.getTrackingPlayers(this.pos, boundaryOnly)
+        this.playerProvider.getTrackingPlayers(this.cubePos.asChunkPos(), boundaryOnly)
                 .forEach(player -> PacketDispatcher.sendTo(packetIn, player));
     }
 
