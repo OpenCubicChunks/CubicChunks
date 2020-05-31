@@ -641,7 +641,7 @@ public abstract class MixinChunkManager implements IChunkManager {
         return ((ICubeHolder) chunkHolder).createCubeFuture(ChunkStatus.FULL, (ChunkManager) (Object) this).thenApplyAsync((p_222976_0_) -> {
             return p_222976_0_.mapLeft((icube) -> {
                 Cube cube = (Cube) icube;
-                //TODO: implement rescheduleTicks for chunkSection
+                //TODO: implement rescheduleTicks for cube
                 //cube.rescheduleTicks();
                 return cube;
             });
@@ -662,7 +662,7 @@ public abstract class MixinChunkManager implements IChunkManager {
                 completablefuture.thenApplyAsync((p_219239_0_) -> {
                     return p_219239_0_.flatMap((p_219208_0_) -> {
                         Cube cube = (Cube) p_219208_0_.get(p_219208_0_.size() / 2);
-                        //TODO: implement this later
+                        //TODO: implement cube#postProcess
                         //cube.postProcess();
                         return Either.left(cube);
                     });
@@ -674,7 +674,7 @@ public abstract class MixinChunkManager implements IChunkManager {
                 this.cubesLoaded.getAndIncrement();
                 Object[] objects = new Object[2];
                 this.getCubeTrackingPlayers(cubePos, false).forEach((serverPlayerEntity) -> {
-                    this.sendCubeData(serverPlayerEntity, objects, cube, cubePos);
+                    this.sendCubeData(serverPlayerEntity, objects, cube);
                 });
                 return Either.left(cube);
             });
@@ -1001,7 +1001,7 @@ public abstract class MixinChunkManager implements IChunkManager {
                 if (chunkholder != null) {
                     Cube cube = ((ICubeHolder)chunkholder).getCubeIfComplete();
                     if (cube != null) {
-                        this.sendCubeData(player, packetCache, cube, cube.getCubePos());
+                        this.sendCubeData(player, packetCache, cube);
                     }
                     //TODO: reimplement debugpacket
                     //DebugPacketSender.sendChuckPos(this.world, cubePosIn);
@@ -1049,13 +1049,14 @@ public abstract class MixinChunkManager implements IChunkManager {
         }
     }
 
-    //TODO: remove CubePos param, cube contains a cubepos
     // sendChunkData
-    private void sendCubeData(ServerPlayerEntity player, Object[] packetCache, Cube cubeIn, CubePos pos) {
+    private void sendCubeData(ServerPlayerEntity player, Object[] packetCache, Cube cubeIn) {
         if (packetCache[0] == null) {
             packetCache[0] = new PacketCubes(Collections.singletonList(cubeIn));
             //packetCache[1] = new SUpdateLightPacket(pos, this.lightManager);
         }
+
+        CubePos pos = cubeIn.getCubePos();
 
         PacketDispatcher.sendTo(packetCache[0], player);
         List<Entity> leashedEntities = Lists.newArrayList();
