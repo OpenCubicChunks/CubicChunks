@@ -12,6 +12,8 @@ import net.minecraft.world.IBlockReader;
 import net.minecraft.world.chunk.ChunkSection;
 import net.minecraft.world.chunk.ChunkStatus;
 
+import javax.annotation.Nullable;
+
 public interface ICube extends IBlockReader {
 
     int CUBEDIAMETER = 2;
@@ -24,7 +26,7 @@ public interface ICube extends IBlockReader {
     void setCubeStatus(ChunkStatus status);
     ChunkStatus getCubeStatus();
 
-    BlockState setBlockState(BlockPos pos, BlockState state, boolean isMoving);
+    @Nullable BlockState setBlockState(BlockPos pos, BlockState state, boolean isMoving);
 
     void addTileEntity(BlockPos pos, TileEntity tileEntity);
     void removeTileEntity(BlockPos pos);

@@ -1,6 +1,5 @@
 package cubicchunks.cc.chunk.cube;
 
-import static cubicchunks.cc.utils.Coords.blockToCube;
 import static cubicchunks.cc.utils.Coords.indexTo32X;
 import static cubicchunks.cc.utils.Coords.indexTo32Y;
 import static cubicchunks.cc.utils.Coords.indexTo32Z;
@@ -50,8 +49,6 @@ import java.util.stream.Stream;
 
 import javax.annotation.Nullable;
 
-//ChunkSection is the simple section, with only basic information in it.
-//WorldSection is the complete section, with all entity, fluid, etc information in it.
 public class Cube implements IChunk, ICube {
 
     private final CubePos cubePos;
@@ -73,7 +70,7 @@ public class Cube implements IChunk, ICube {
         this(worldIn, cubePosIn, null, biomeContainerIn);
     }
 
-    public Cube(World worldIn, CubePos cubePosIn, ChunkSection[] sectionsIn, CubeBiomeContainer biomeContainerIn)
+    public Cube(World worldIn, CubePos cubePosIn, @Nullable ChunkSection[] sectionsIn, CubeBiomeContainer biomeContainerIn)
     {
         this.cubePos = cubePosIn;
         this.world = worldIn;
@@ -92,14 +89,14 @@ public class Cube implements IChunk, ICube {
                             ((ChunkSectionAccess) sectionsIn[i]).getBlockRefCount(),
                             ((ChunkSectionAccess) sectionsIn[i]).getBlockTickRefCount(),
                             ((ChunkSectionAccess) sectionsIn[i]).getFluidRefCount());
+                    //noinspection ConstantConditions
                     ((ChunkSectionAccess) sections[i]).setData(sectionsIn[i].getData());
                 }
             }
         }
     }
 
-    public boolean isEmptyCube()
-    {
+    public boolean isEmptyCube() {
         for(ChunkSection section : this.sections) {
             if(section != EMPTY_SECTION && !section.isEmpty()) {
                 return false;
@@ -108,8 +105,7 @@ public class Cube implements IChunk, ICube {
         return true;
     }
 
-    public int getSize()
-    {
+    public int getSize() {
         int size = 1; // 1 extra byte for "section exists" flags
         for(ChunkSection section : this.sections)
         {
@@ -119,7 +115,7 @@ public class Cube implements IChunk, ICube {
         return size;
     }
 
-    public boolean write(PacketBuffer buf) {
+    public void write(PacketBuffer buf) {
         byte emptyFlags = 0;
         for (int i = 0; i < sections.length; i++) {
             if (sections[i] != null && !sections[i].isEmpty()) {
@@ -127,12 +123,11 @@ public class Cube implements IChunk, ICube {
             }
         }
         buf.writeByte(emptyFlags);
-        for (int i = 0; i < sections.length; i++) {
-            if (sections[i] != null && !sections[i].isEmpty()) {
-                sections[i].write(buf);
+        for (ChunkSection section : sections) {
+            if (section != null && !section.isEmpty()) {
+                section.write(buf);
             }
         }
-        return false;
     }
 
     public void read(@Nullable CubeBiomeContainer biomes, PacketBuffer readBuffer, CompoundNBT nbtTagIn, boolean cubeExists) {
@@ -184,7 +179,7 @@ public class Cube implements IChunk, ICube {
         }
     }
 
-    private void readSection(int sectionIdx, int sectionY, @Nullable BiomeContainer biomeContainerIn, PacketBuffer packetBufferIn, CompoundNBT nbtIn,
+    private void readSection(int sectionIdx, int sectionY, @Nullable CubeBiomeContainer biomeContainerIn, PacketBuffer packetBufferIn, CompoundNBT nbtIn,
             boolean sectionExists) {
 
         for (TileEntity tileEntity : tileEntities.values()) {
@@ -202,7 +197,7 @@ public class Cube implements IChunk, ICube {
         }
 
         if (biomeContainerIn != null) {
-            // this.blockBiomeArray = biomeContainerIn;
+            this.cubeBiomeContainer = biomeContainerIn;
         }
 
         for (Heightmap.Type type : Heightmap.Type.values()) {
@@ -217,8 +212,7 @@ public class Cube implements IChunk, ICube {
         }
     }
 
-    public void setCubeBiomeContainer(CubeBiomeContainer biomes)
-    {
+    public void setCubeBiomeContainer(CubeBiomeContainer biomes) {
         this.cubeBiomeContainer = biomes;
     }
 
@@ -278,6 +272,8 @@ public class Cube implements IChunk, ICube {
     public World getWorld() {
         return world;
     }
+
+    @Nullable
     public BlockState setBlockState(int sectionIndex, BlockPos pos, BlockState state, boolean isMoving)
     {
         int i = pos.getX() & 15;
@@ -288,50 +284,49 @@ public class Cube implements IChunk, ICube {
         BlockState blockstate = chunksection.setBlockState(i, j, k, state);
         if (blockstate == state) {
             return null;
-        } else {
-            Block block = state.getBlock();
-            Block block1 = blockstate.getBlock();
-            //            this.heightMap.get(Heightmap.Type.MOTION_BLOCKING).update(i, j, k, state);
-            //            this.heightMap.get(Heightmap.Type.MOTION_BLOCKING_NO_LEAVES).update(i, j, k, state);
-            //            this.heightMap.get(Heightmap.Type.OCEAN_FLOOR).update(i, j, k, state);
-            //            this.heightMap.get(Heightmap.Type.WORLD_SURFACE).update(i, j, k, state);
+        }
+        Block block = state.getBlock();
+        Block block1 = blockstate.getBlock();
+        //            this.heightMap.get(Heightmap.Type.MOTION_BLOCKING).update(i, j, k, state);
+        //            this.heightMap.get(Heightmap.Type.MOTION_BLOCKING_NO_LEAVES).update(i, j, k, state);
+        //            this.heightMap.get(Heightmap.Type.OCEAN_FLOOR).update(i, j, k, state);
+        //            this.heightMap.get(Heightmap.Type.WORLD_SURFACE).update(i, j, k, state);
 
-            if (!this.world.isRemote) {
-                blockstate.onReplaced(this.world, pos, state, isMoving);
-            } else if ((block1 != block || !state.hasTileEntity()) && blockstate.hasTileEntity()) {
-                this.world.removeTileEntity(pos);
-            }
+        if (!this.world.isRemote) {
+            blockstate.onReplaced(this.world, pos, state, isMoving);
+        } else if ((block1 != block || !state.hasTileEntity()) && blockstate.hasTileEntity()) {
+            this.world.removeTileEntity(pos);
+        }
 
-            if (chunksection.getBlockState(i, j, k).getBlock() != block) {
-                return null;
-            } else {
-                if (blockstate.hasTileEntity()) {
-                    TileEntity tileentity = this.getTileEntity(pos, Chunk.CreateEntityType.CHECK);
-                    if (tileentity != null) {
-                        tileentity.updateContainingBlockInfo();
-                    }
-                }
-
-                if (!this.world.isRemote) {
-                    state.onBlockAdded(this.world, pos, blockstate, isMoving);
-                }
-
-                if (state.hasTileEntity()) {
-                    TileEntity tileentity1 = this.getTileEntity(pos, Chunk.CreateEntityType.CHECK);
-                    if (tileentity1 == null) {
-                        tileentity1 = state.createTileEntity(this.world);
-                        this.world.setTileEntity(pos, tileentity1);
-                    } else {
-                        tileentity1.updateContainingBlockInfo();
-                    }
-                }
-
-                this.dirty = true;
-                return blockstate;
+        if (chunksection.getBlockState(i, j, k).getBlock() != block) {
+            return null;
+        }
+        if (blockstate.hasTileEntity()) {
+            TileEntity tileentity = this.getTileEntity(pos, Chunk.CreateEntityType.CHECK);
+            if (tileentity != null) {
+                tileentity.updateContainingBlockInfo();
             }
         }
+
+        if (!this.world.isRemote) {
+            state.onBlockAdded(this.world, pos, blockstate, isMoving);
+        }
+
+        if (state.hasTileEntity()) {
+            TileEntity tileentity1 = this.getTileEntity(pos, Chunk.CreateEntityType.CHECK);
+            if (tileentity1 == null) {
+                tileentity1 = state.createTileEntity(this.world);
+                this.world.setTileEntity(pos, tileentity1);
+            } else {
+                tileentity1.updateContainingBlockInfo();
+            }
+        }
+
+        this.dirty = true;
+        return blockstate;
     }
 
+    // TODO: obfuscation, this overrides both IChunk and ICube
     @Nullable
     public BlockState setBlockState(BlockPos pos, BlockState state, boolean isMoving) {
         return this.setBlockState(Coords.blockToIndex32(pos.getX(), pos.getY(), pos.getZ()), pos, state, isMoving);
@@ -352,6 +347,7 @@ public class Cube implements IChunk, ICube {
 
     }
 
+    @Nullable
     public TileEntity getTileEntity(BlockPos pos, Chunk.CreateEntityType creationMode) {
         TileEntity tileentity = this.tileEntities.get(pos);
         if (tileentity != null && tileentity.isRemoved()) {
@@ -382,12 +378,11 @@ public class Cube implements IChunk, ICube {
     @Nullable
     private TileEntity createNewTileEntity(BlockPos pos) {
         BlockState blockstate = this.getBlockState(pos);
-        Block block = blockstate.getBlock();
         return !blockstate.hasTileEntity() ? null : blockstate.createTileEntity(this.world);
     }
 
     @Override public Set<BlockPos> getTileEntitiesPos() {
-        return null;
+        throw new UnsupportedOperationException("Not implemented");
     }
 
     @Deprecated
@@ -400,7 +395,7 @@ public class Cube implements IChunk, ICube {
     }
 
     @Override public Collection<Map.Entry<Heightmap.Type, Heightmap>> getHeightmaps() {
-        return null;
+        throw new UnsupportedOperationException("Not implemented");
     }
 
     @Override public void setHeightmap(Heightmap.Type type, long[] data) {
@@ -408,7 +403,7 @@ public class Cube implements IChunk, ICube {
     }
 
     @Override public Heightmap getHeightmap(Heightmap.Type typeIn) {
-        return null;
+        throw new UnsupportedOperationException("Not implemented");
     }
 
     @Override public int getTopBlockY(Heightmap.Type heightmapType, int x, int z) {
@@ -416,7 +411,7 @@ public class Cube implements IChunk, ICube {
     }
 
     @Override public ChunkPos getPos() {
-        return null;
+        throw new UnsupportedOperationException("Not implemented");
     }
 
     @Override public void setLastSaveTime(long saveTime) {
@@ -424,7 +419,7 @@ public class Cube implements IChunk, ICube {
     }
 
     @Override public Map<String, StructureStart> getStructureStarts() {
-        return null;
+        throw new UnsupportedOperationException("Not implemented");
     }
 
     @Override public void setStructureStarts(Map<String, StructureStart> structureStartsIn) {
@@ -432,7 +427,7 @@ public class Cube implements IChunk, ICube {
     }
 
     @Nullable @Override public BiomeContainer getBiomes() {
-        return null;
+        throw new UnsupportedOperationException("Not implemented");
     }
 
     @Override public void setModified(boolean modified) {
@@ -458,31 +453,31 @@ public class Cube implements IChunk, ICube {
     }
 
     @Override public ShortList[] getPackedPositions() {
-        return new ShortList[0];
+        throw new UnsupportedOperationException("Not implemented");
     }
 
     @Nullable @Override public CompoundNBT getDeferredTileEntity(BlockPos pos) {
-        return null;
+        throw new UnsupportedOperationException("Not implemented");
     }
 
     @Nullable @Override public CompoundNBT getTileEntityNBT(BlockPos pos) {
-        return null;
+        throw new UnsupportedOperationException("Not implemented");
     }
 
     @Override public Stream<BlockPos> getLightSources() {
-        return null;
+        throw new UnsupportedOperationException("Not implemented");
     }
 
     @Override public ITickList<Block> getBlocksToBeTicked() {
-        return null;
+        throw new UnsupportedOperationException("Not implemented");
     }
 
     @Override public ITickList<Fluid> getFluidsToBeTicked() {
-        return null;
+        throw new UnsupportedOperationException("Not implemented");
     }
 
     @Override public UpgradeData getUpgradeData() {
-        return null;
+        throw new UnsupportedOperationException("Not implemented");
     }
 
     @Override public void setInhabitedTime(long newInhabitedTime) {
@@ -502,7 +497,7 @@ public class Cube implements IChunk, ICube {
     }
 
     @Nullable @Override public TileEntity getTileEntity(BlockPos pos) {
-        return null;
+        return getTileEntity(pos, Chunk.CreateEntityType.CHECK);
     }
 
     @Override public BlockState getBlockState(int x, int y, int z) {
@@ -513,11 +508,11 @@ public class Cube implements IChunk, ICube {
     }
 
     @Override public IFluidState getFluidState(BlockPos pos) {
-        return null;
+        throw new UnsupportedOperationException("Not implemented");
     }
 
     @Nullable @Override public StructureStart getStructureStart(String stucture) {
-        return null;
+        throw new UnsupportedOperationException("Not implemented");
     }
 
     @Override public void putStructureStart(String structureIn, StructureStart structureStartIn) {
@@ -525,7 +520,7 @@ public class Cube implements IChunk, ICube {
     }
 
     @Override public LongSet getStructureReferences(String structureIn) {
-        return null;
+        throw new UnsupportedOperationException("Not implemented");
     }
 
     @Override public void addStructureReference(String strucutre, long reference) {
@@ -533,14 +528,10 @@ public class Cube implements IChunk, ICube {
     }
 
     @Override public Map<String, LongSet> getStructureReferences() {
-        return null;
+        throw new UnsupportedOperationException("Not implemented");
     }
 
     @Override public void setStructureReferences(Map<String, LongSet> p_201606_1_) {
 
-    }
-
-    public void setLoaded(boolean loaded) {
-        this.loaded = loaded;
     }
 }
