@@ -65,7 +65,7 @@ public abstract class MixinClientChunkProvider implements IClientCubeProvider {
         int index = this.cubeArray.getIndex(x, y, z);
         Cube cube = this.cubeArray.get(index);
         if (isCubeValid(cube, x, y, z)) {
-            // TODO: cube unload event
+            // TODO: forge cube unload event
             // net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.event.world.ChunkEvent.Unload(chunk));
             this.cubeArray.unload(index, cube, null);
         }
@@ -108,7 +108,7 @@ public abstract class MixinClientChunkProvider implements IClientCubeProvider {
             cube.read(biomes, readBuffer, nbtTagIn, cubeExists);
         }
 
-        // TODO: lighting
+        // TODO: reimplement lighting
         // WorldLightManager worldlightmanager = this.getLightManager();
         // worldlightmanager.enableLightSources(new ChunkPos(chunkX, chunkZ), true);
 
@@ -119,7 +119,7 @@ public abstract class MixinClientChunkProvider implements IClientCubeProvider {
         // }
 
         // this.world.onChunkLoaded(chunkX, chunkZ);
-        // TODO: client cube load event
+        // TODO: forge client cube load event
         // net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.event.world.ChunkEvent.Load(cube));
         return cube;
     }

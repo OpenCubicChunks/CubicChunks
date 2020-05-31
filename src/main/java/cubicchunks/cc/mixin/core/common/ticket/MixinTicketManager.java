@@ -149,7 +149,7 @@ public abstract class MixinTicketManager implements ITicketManager {
     //TODO: check if there is another way to do this
     /**
      * @author NotStirred
-     * @reason idk & cba
+     * @reason CC must also update it's tracker&tickets
      */
     @Inject(method = "tick", at = @At("RETURN"))
     protected void tickSection(CallbackInfo ci) {
