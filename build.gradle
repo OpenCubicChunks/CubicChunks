@@ -15,8 +15,15 @@ apply plugin: 'net.minecraftforge.gradle'
 // Only edit below this line, the above code adds and enables the necessary things for Forge to be setup.
 apply plugin: 'eclipse'
 apply plugin: 'maven-publish'
+apply plugin: 'org.spongepowered.mixin'
+apply plugin: "io.github.opencubicchunks.gradle.mixingen"
+apply plugin: "io.github.opencubicchunks.gradle.mcGitVersion"
 
-version = "${mod_version}"
+mcGitVersion {
+    snapshot = true
+    forgeVersion = "${mc_version}-${forge_version}"
+    setCommitVersion '570c0cbf0cdc15b8348a862a519d3399a943af9', '0.0'
+}
 group = "io.github.opencubicchunks" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
 archivesBaseName = "CubicChunks"
 
@@ -33,7 +40,7 @@ minecraft {
     runs {
         client {
             workingDirectory project.file('run')
-            arg "-mixin.config="+archivesBaseName+".mixins.core.json"
+            arg "-mixin.config="+modid+".mixins.core.json"
             jvmArgs([
                     "-XX:+UseG1GC",
                     "-Xmx1G",
@@ -56,7 +63,7 @@ minecraft {
 
         server {
             workingDirectory project.file('run')
-            arg "-mixin.config="+archivesBaseName+".mixins.core.json"
+            arg "-mixin.config="+modid+".mixins.core.json"
             jvmArgs([
                     "-XX:+UseG1GC",
                     "-Xmx1G",
@@ -152,9 +159,6 @@ publishing {
         }
     }
 }
-
-apply plugin: 'org.spongepowered.mixin'
-apply plugin: "io.github.opencubicchunks.gradle.mixingen"
 
 mixin {
     add sourceSets.main, "${modid}.refmap.json"
