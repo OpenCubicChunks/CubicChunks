@@ -6,7 +6,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Queues;
 import com.mojang.datafixers.DataFixer;
 import com.mojang.datafixers.util.Either;
-import io.github.opencubicchunks.cubicchunks.CubeSerializer;
+import io.github.opencubicchunks.cubicchunks.world.storage.CubeSerializer;
 import io.github.opencubicchunks.cubicchunks.chunk.IChunkManager;
 import io.github.opencubicchunks.cubicchunks.chunk.ICube;
 import io.github.opencubicchunks.cubicchunks.chunk.ICubeHolder;

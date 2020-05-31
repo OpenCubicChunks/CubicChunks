@@ -1,4 +1,4 @@
-package io.github.opencubicchunks.cubicchunks;
+package io.github.opencubicchunks.cubicchunks.world.storage;
 
 import io.github.opencubicchunks.cubicchunks.chunk.ICube;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.Cube;
