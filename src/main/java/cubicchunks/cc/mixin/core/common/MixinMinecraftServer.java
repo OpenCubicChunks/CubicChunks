@@ -3,6 +3,7 @@ package cubicchunks.cc.mixin.core.common;
 import cubicchunks.cc.chunk.ICubeStatusListener;
 import cubicchunks.cc.chunk.util.CubePos;
 import cubicchunks.cc.server.IServerChunkProvider;
+import cubicchunks.cc.world.ForcedCubesSaveData;
 import it.unimi.dsi.fastutil.longs.LongIterator;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.Unit;
@@ -36,6 +37,10 @@ public abstract class MixinMinecraftServer {
 
     @Shadow public abstract boolean isServerRunning();
 
+    @Shadow public abstract ServerWorld getWorld(DimensionType dimension);
+
+    @Shadow protected abstract void runScheduledTasks();
+
     /**
      * @author NotStirred
      * @reason Additional CC functionality and logging.
@@ -43,7 +48,7 @@ public abstract class MixinMinecraftServer {
     @Overwrite
     protected void loadInitialChunks(IChunkStatusListener statusListener) {
         this.setUserMessage(new TranslationTextComponent("menu.generatingTerrain"));
-        ServerWorld serverworld = ((IMinecraftServer)this).getServerWorld(DimensionType.OVERWORLD);
+        ServerWorld serverworld = this.getWorld(DimensionType.OVERWORLD);
         LOGGER.info("Preparing start region for dimension " + DimensionType.getKey(serverworld.dimension.getType()));
         BlockPos spawnPos = serverworld.getSpawnPoint();
         CubePos spawnPosCube = CubePos.from(spawnPos);
@@ -62,7 +67,7 @@ public abstract class MixinMinecraftServer {
         while(isServerRunning() && (serverchunkprovider.getLoadedChunksCount() != d*d || ((IServerChunkProvider) serverchunkprovider).getLoadedCubesCount() != d*d*d)) {
             // from CC
             this.serverTime = Util.milliTime() + 10L;
-            ((IMinecraftServer)this).runSchedule();
+            this.runScheduledTasks();
 
             if (i2 == 100) {
                 LOGGER.info("Current loaded chunks: " + serverchunkprovider.getLoadedChunksCount() + " | " + ((IServerChunkProvider)serverchunkprovider).getLoadedCubesCount());
@@ -73,24 +78,30 @@ public abstract class MixinMinecraftServer {
         }
         LOGGER.info("Current loaded chunks: " + serverchunkprovider.getLoadedChunksCount() + " | " + ((IServerChunkProvider)serverchunkprovider).getLoadedCubesCount());
         this.serverTime = Util.milliTime() + 10L;
-        ((IMinecraftServer)this).runSchedule();
+        this.runScheduledTasks();
 
         for(DimensionType dimensiontype : DimensionType.getAll()) {
-            ForcedChunksSaveData forcedchunkssavedata = ((IMinecraftServer)this).getServerWorld(dimensiontype).getSavedData().get(ForcedChunksSaveData::new, "chunks");
+            ForcedChunksSaveData forcedchunkssavedata = this.getWorld(dimensiontype).getSavedData().get(ForcedChunksSaveData::new, "chunks");
+            ForcedCubesSaveData forcedcubessavedata = this.getWorld(dimensiontype).getSavedData().get(ForcedCubesSaveData::new, "cubes");
             if (forcedchunkssavedata != null) {
-                ServerWorld serverworld1 = ((IMinecraftServer)this).getServerWorld(dimensiontype);
-                LongIterator longiterator = forcedchunkssavedata.getChunks().iterator();
+                ServerWorld serverworld1 = this.getWorld(dimensiontype);
+                LongIterator longiteratorChunks = forcedchunkssavedata.getChunks().iterator();
+                LongIterator longiteratorCubes = forcedcubessavedata.getCubes().iterator();
 
-                while(longiterator.hasNext()) {
-                    long i = longiterator.nextLong();
-                    ChunkPos chunkpos = new ChunkPos(i);
-                    serverworld1.getChunkProvider().forceChunk(chunkpos, true);
+                while(longiteratorChunks.hasNext()) {
+                    long i = longiteratorChunks.nextLong();
+                    ChunkPos chunkPos = new ChunkPos(i);
+                    serverworld1.getChunkProvider().forceChunk(chunkPos, true);
+                }
+                while(longiteratorCubes.hasNext()) {
+                    long i = longiteratorCubes.nextLong();
+                    CubePos cubePos = CubePos.from(i);
+                    ((IServerChunkProvider)serverworld1).forceCube(cubePos, true);
                 }
             }
         }
-
         this.serverTime = Util.milliTime() + 10L;
-        ((IMinecraftServer)this).runSchedule();
+        this.runScheduledTasks();
         statusListener.stop();
         serverchunkprovider.getLightManager().func_215598_a(5);
     }

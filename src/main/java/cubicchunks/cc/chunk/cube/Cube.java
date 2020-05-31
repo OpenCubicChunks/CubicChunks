@@ -116,7 +116,8 @@ public class Cube implements IChunk, ICube {
         int size = 1; // 1 extra byte for "section exists" flags
         for(ChunkSection section : this.sections)
         {
-            size += section.getSize();
+            if(section != null)
+                size += section.getSize();
         }
         return size;
     }

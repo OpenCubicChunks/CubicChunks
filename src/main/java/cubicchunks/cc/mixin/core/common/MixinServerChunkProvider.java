@@ -16,6 +16,7 @@ import cubicchunks.cc.utils.Coords;
 import net.minecraft.profiler.IProfiler;
 import net.minecraft.util.Util;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.server.ChunkHolder;
 import net.minecraft.world.server.ChunkManager;
@@ -140,6 +141,12 @@ public abstract class MixinServerChunkProvider implements IServerChunkProvider {
                 }
             }
         }
+    }
+
+    // forceChunk
+    @Override
+    public void forceCube(CubePos pos, boolean add) {
+        ((ITicketManager)this.ticketManager).forceCube(pos, add);
     }
 
     // func_217233_c

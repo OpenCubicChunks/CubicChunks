@@ -18,6 +18,7 @@ import it.unimi.dsi.fastutil.objects.ObjectSet;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.util.SortedArraySet;
 import net.minecraft.util.concurrent.ITaskExecutor;
+import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.SectionPos;
 import net.minecraft.world.server.*;
 import org.spongepowered.asm.mixin.*;
@@ -185,6 +186,17 @@ public abstract class MixinTicketManager implements ITicketManager {
     public <T> void release(TicketType<T> type, CubePos pos, int distance, T value) {
         Ticket<T> ticket = new Ticket<>(type, 33 - distance, value);
         this.releaseCube(pos.asLong(), ticket);
+    }
+
+    // forceChunk
+    @Override
+    public void forceCube(CubePos pos, boolean add) {
+        Ticket<CubePos> ticket = new Ticket<>(CCTicketType.CCFORCED, 31, pos);
+        if (add) {
+            this.registerCube(pos.asLong(), ticket);
+        } else {
+            this.releaseCube(pos.asLong(), ticket);
+        }
     }
 
     @Inject(method = "updatePlayerPosition", at = @At("RETURN"))

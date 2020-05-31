@@ -37,7 +37,8 @@ public interface ITicketManager {
 
     void releaseCube(long chunkPosIn, Ticket<?> ticketIn);
 
-
+    // forceChunk
+    void forceCube(CubePos pos, boolean add);
 
     void removePlayer(CubePos cubePosIn, ServerPlayerEntity player);
 

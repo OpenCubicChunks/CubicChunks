@@ -33,6 +33,7 @@ public class PlayerCubeTicketTracker extends PlayerCubeTracker {
         this.viewDistance = viewDistanceIn;
     }
 
+    // func_215504_a
     private void updateTicket(long cubePosIn, int distance, boolean oldWithinViewDistance, boolean withinViewDistance) {
         if (oldWithinViewDistance != withinViewDistance) {
             Ticket<?> ticket = new Ticket<>(CCTicketType.CCPLAYER, ITicketManager.PLAYER_CUBE_TICKET_LEVEL, CubePos.from(cubePosIn));

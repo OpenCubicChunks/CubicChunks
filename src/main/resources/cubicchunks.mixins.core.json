@@ -27,7 +27,6 @@
         "common.chunk.MixinChunkStatus",
         "common.chunk.MixinEntityTracker",
         "common.chunk.MixinISelectiveWorker",
-        "common.IMinecraftServer",
         "common.MixinChunkDistanceGraph",
         "common.MixinIForgeDimension",
         "common.MixinIntegratedServer",
