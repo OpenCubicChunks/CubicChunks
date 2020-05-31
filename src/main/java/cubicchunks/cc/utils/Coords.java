@@ -130,8 +130,8 @@ public class Coords {
         return val >> 1;
     }
 
-    public static int chunkToIndex32(int chunkX, int chunkZ, int blockY) {
-        return blockToIndex32(chunkX << 4, blockY, chunkZ << 4);
+    public static int sectionToIndex32(int sectionX, int sectionY, int sectionZ) {
+        return blockToIndex32(sectionX << 4, sectionY << 4, sectionZ << 4);
     }
 
     public static int cubeToSection(int cube, int section) {

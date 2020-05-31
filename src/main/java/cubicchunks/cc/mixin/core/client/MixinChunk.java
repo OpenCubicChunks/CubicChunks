@@ -7,16 +7,12 @@ import cubicchunks.cc.chunk.ICube;
 import cubicchunks.cc.chunk.ICubeProvider;
 import cubicchunks.cc.chunk.cube.EmptyCube;
 import cubicchunks.cc.utils.Coords;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.World;
-import net.minecraft.world.biome.BiomeContainer;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkSection;
 import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.chunk.IChunk;
-import net.minecraft.world.gen.Heightmap;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -24,8 +20,6 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Constant;
 import org.spongepowered.asm.mixin.injection.ModifyConstant;
 import org.spongepowered.asm.mixin.injection.Redirect;
-
-import java.util.Map;
 
 @Mixin(Chunk.class)
 public abstract class MixinChunk implements IColumn, IChunk {
@@ -51,14 +45,14 @@ public abstract class MixinChunk implements IColumn, IChunk {
     private ChunkSection getStorage(ChunkSection[] array, int y) {
         ICube cube = ((ICubeProvider) world.getChunkProvider()).getCube(
                 Coords.sectionToCube(pos.x),
-                Coords.blockToCube(y),
+                Coords.sectionToCube(y),
                 Coords.sectionToCube(pos.z), getStatus(), true);
         if (cube instanceof EmptyCube) {
             return null;
         }
         assert cube != null : "cube was null when requested loading!";
         ChunkSection[] cubeSections = cube.getCubeSections();
-        return cubeSections[Coords.chunkToIndex32(pos.x, pos.z, y)];
+        return cubeSections[Coords.sectionToIndex32(pos.x, y, pos.z)];
     }
 
     @ModifyConstant(method = {"getBlockState", "getFluidState(III)Lnet/minecraft/fluid/IFluidState;"},
@@ -88,12 +82,12 @@ public abstract class MixinChunk implements IColumn, IChunk {
     private void setStorage(ChunkSection[] array, int y, ChunkSection newVal) {
         ICube cube = ((ICubeProvider) world.getChunkProvider()).getCube(
                 Coords.sectionToCube(pos.x),
-                Coords.blockToCube(y),
+                Coords.sectionToCube(y),
                 Coords.sectionToCube(pos.z), getStatus(), true);
         if (cube instanceof EmptyCube) {
             return;
         }
         assert cube != null : "cube was null when requested loading!";
-        cube.getCubeSections()[Coords.chunkToIndex32(pos.x, pos.z, y )] = newVal;
+        cube.getCubeSections()[Coords.sectionToIndex32(pos.x, y, pos.z)] = newVal;
     }
 }
