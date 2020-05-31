@@ -1,0 +1,11 @@
+modLoader="javafml"
+loaderVersion="[31,)"
+
+[[mods]] #mandatory
+modId="testrunner"
+version="${file.jarVersion}"
+displayName="Test runner mod"
+authors="Barteks2x"
+description='''
+Runs junit tests in fully initialized Minecraft environment using data generation runs
+'''
