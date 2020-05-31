@@ -347,6 +347,7 @@ public abstract class MixinChunkManager implements IChunkManager {
 
     // func_219220_a
     @Override
+    @Nullable
     public ChunkHolder getCubeHolder(long cubePosIn) {
         return loadedCubes.get(cubePosIn);
     }

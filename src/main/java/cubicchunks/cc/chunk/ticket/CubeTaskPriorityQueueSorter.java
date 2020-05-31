@@ -1,11 +1,11 @@
 package cubicchunks.cc.chunk.ticket;
 
-
 import com.google.common.collect.Sets;
 import com.mojang.datafixers.util.Either;
 import cubicchunks.cc.chunk.ICubeHolder;
 import cubicchunks.cc.chunk.ICubeHolderListener;
 import cubicchunks.cc.chunk.util.CubePos;
+import cubicchunks.cc.chunk.util.Utils;
 import net.minecraft.util.Unit;
 import net.minecraft.util.Util;
 import net.minecraft.util.concurrent.DelegatedTaskExecutor;
@@ -13,8 +13,6 @@ import net.minecraft.util.concurrent.ITaskExecutor;
 import net.minecraft.util.concurrent.ITaskQueue;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.server.ChunkHolder;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import java.util.List;
 import java.util.Map;
@@ -29,7 +27,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class CubeTaskPriorityQueueSorter implements AutoCloseable, ChunkHolder.IListener, ICubeHolderListener {
-    private static final Logger LOGGER = LogManager.getLogger();
+
     private final Map<ITaskExecutor<?>, CubeTaskPriorityQueue<? extends Function<ITaskExecutor<Unit>, ?>>> queues;
     private final Set<ITaskExecutor<?>> actors;
     private final DelegatedTaskExecutor<ITaskQueue.RunnableWithPriority> sorter;
@@ -67,9 +65,8 @@ public class CubeTaskPriorityQueueSorter implements AutoCloseable, ChunkHolder.I
     public void onUpdateCubeLevel(CubePos pos, IntSupplier getLevel, int level, IntConsumer setLevel) {
         this.sorter.enqueue(new ITaskQueue.RunnableWithPriority(0, () -> {
             int i = getLevel.getAsInt();
-            this.queues.values().forEach((cubeTaskPriorityQueue) -> {
-                cubeTaskPriorityQueue.updateCubeLevel(i, pos, level);
-            });
+            this.queues.values().forEach((cubeTaskPriorityQueue) ->
+                    cubeTaskPriorityQueue.updateCubeLevel(i, pos, level));
             setLevel.accept(level);
         }));
     }
@@ -115,20 +112,19 @@ public class CubeTaskPriorityQueueSorter implements AutoCloseable, ChunkHolder.I
                 Util.gather(stream.map((p_219092_1_) -> p_219092_1_.map(p_219078_2_::func_213141_a, (p_219077_0_) -> {
                     p_219077_0_.run();
                     return CompletableFuture.completedFuture(Unit.INSTANCE);
-                })).collect(Collectors.toList())).thenAccept((p_219088_3_) -> {
-                    this.func_219078_a(p_219078_1_, p_219078_2_);
-                });
+                })).collect(Collectors.toList())).thenAccept((p_219088_3_) ->
+                        this.func_219078_a(p_219078_1_, p_219078_2_));
             }
 
         }));
     }
 
     private <T> CubeTaskPriorityQueue<Function<ITaskExecutor<Unit>, T>> getQueue(ITaskExecutor<T> p_219068_1_) {
-        CubeTaskPriorityQueue<? extends Function<ITaskExecutor<Unit>, ?>> CubeTaskPriorityQueue = this.queues.get(p_219068_1_);
-        if (CubeTaskPriorityQueue == null) {
+        CubeTaskPriorityQueue<? extends Function<ITaskExecutor<Unit>, ?>> queue = this.queues.get(p_219068_1_);
+        if (queue == null) {
             throw Util.pauseDevMode((new IllegalArgumentException("No queue for: " + p_219068_1_)));
         } else {
-            return (CubeTaskPriorityQueue<Function<ITaskExecutor<Unit>, T>>) CubeTaskPriorityQueue;
+            return Utils.unsafeCast(queue);
         }
     }
 

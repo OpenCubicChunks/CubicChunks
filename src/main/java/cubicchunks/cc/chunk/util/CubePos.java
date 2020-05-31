@@ -19,7 +19,7 @@ public class CubePos extends Vec3i {
     public static long asLong(int x, int y, int z) {
         long i = 0L;
         i |= ((long)x & (1 << 21) - 1) << 43;
-        i |= ((long)y & (1 << 22) - 1) << 0;
+        i |= ((long)y & (1 << 22) - 1);
         i |= ((long)z & (1 << 21) - 1) << 22;
         return i;
     }
@@ -31,7 +31,7 @@ public class CubePos extends Vec3i {
     public long asLong() {
         long i = 0L;
         i |= ((long)this.getX() & (1 << 21) - 1) << 43;
-        i |= ((long)this.getY() & (1 << 22) - 1) << 0;
+        i |= ((long)this.getY() & (1 << 22) - 1);
         i |= ((long)this.getZ() & (1 << 21) - 1) << 22;
         return i;
     }
@@ -57,7 +57,7 @@ public class CubePos extends Vec3i {
 
 
     public static int extractX(long packed) {
-        return (int)(packed << 0 >> 43);
+        return (int)(packed >> 43);
     }
 
     public static int extractY(long packed) {

@@ -8,14 +8,12 @@ import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
-import net.minecraft.util.math.SectionPos;
 import net.minecraft.world.biome.BiomeContainer;
 import net.minecraft.world.chunk.ChunkSection;
 import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.gen.GenerationStage;
 import net.minecraft.world.gen.Heightmap;
 import net.minecraft.world.gen.feature.structure.StructureStart;
-import net.minecraft.world.lighting.WorldLightManager;
 
 import java.util.BitSet;
 import java.util.Map;
@@ -23,9 +21,10 @@ import java.util.stream.Stream;
 
 import javax.annotation.Nullable;
 
+@SuppressWarnings("deprecation")
 public class CubePrimerWrapper extends CubePrimer {
 
-    Cube cube;
+    private final Cube cube;
 
     public CubePrimerWrapper(Cube cubeIn) {
         super(cubeIn.getCubePos(), cubeIn.getCubeSections());
@@ -51,7 +50,7 @@ public class CubePrimerWrapper extends CubePrimer {
         return this.cube.getTileEntity(pos);
     }
 
-    @Override @Nullable
+    @Override
     public BlockState getBlockState(int x, int y, int z) {
         return this.cube.getBlockState(x, y, z);
     }
@@ -89,12 +88,6 @@ public class CubePrimerWrapper extends CubePrimer {
         throw new UnsupportedOperationException("This should never be called!");
     }
 
-    @Nullable
-    public WorldLightManager getWorldLightManager() {
-        throw new UnsupportedOperationException("Not implemented yet!");
-        //return this.cube.getWorldLightManager();
-    }
-
     @Override public void setHeightmap(Heightmap.Type type, long[] data) {
     }
 
@@ -111,7 +104,7 @@ public class CubePrimerWrapper extends CubePrimer {
     }
 
     @Override public ChunkPos getPos() {
-        throw new UnsupportedOperationException("This function shoult never be called!");
+        throw new UnsupportedOperationException("This function should never be called!");
     }
 
     @Override public void setLastSaveTime(long saveTime) {
@@ -199,10 +192,6 @@ public class CubePrimerWrapper extends CubePrimer {
     */
     @Override public BitSet getCarvingMask(GenerationStage.Carving type) {
         return this.cube.getCarvingMask(type);
-    }
-
-    public Cube func_217336_u() {
-        return this.cube;
     }
 
     @Override public boolean hasLight() {

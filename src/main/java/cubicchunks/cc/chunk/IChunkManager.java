@@ -8,7 +8,6 @@ import it.unimi.dsi.fastutil.longs.LongSet;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.SectionPos;
-import net.minecraft.world.chunk.ChunkSection;
 import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.server.ChunkHolder;
 
@@ -23,10 +22,12 @@ public interface IChunkManager {
 
     int getLoadedCubesCount();
 
+    @Nullable
     ChunkHolder setCubeLevel(long cubePosIn, int newLevel, @Nullable ChunkHolder holder, int oldLevel);
 
     LongSet getUnloadableCubes();
 
+    @Nullable
     ChunkHolder getCubeHolder(long cubePosIn);
     ChunkHolder getImmutableCubeHolder(long cubePosIn);
 

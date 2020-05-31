@@ -7,8 +7,6 @@ import cubicchunks.cc.chunk.util.CubePos;
 import it.unimi.dsi.fastutil.longs.Long2ObjectLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
-import net.minecraft.util.math.SectionPos;
-import net.minecraft.world.server.ChunkManager;
 
 import java.util.List;
 import java.util.Optional;
@@ -95,8 +93,9 @@ public class CubeTaskPriorityQueue<T> {
          long j = long2objectlinkedopenhashmap.firstLongKey();
 
          List<Optional<T>> list;
-         for (list = long2objectlinkedopenhashmap.removeFirst(); this.firstNonEmptyLvl < levelCount && this.levelToPosToElements.get(this.firstNonEmptyLvl).isEmpty(); ++this.firstNonEmptyLvl) {
-            ;
+         list = long2objectlinkedopenhashmap.removeFirst();
+         while (this.firstNonEmptyLvl < levelCount && this.levelToPosToElements.get(this.firstNonEmptyLvl).isEmpty()) {
+            ++this.firstNonEmptyLvl;
          }
 
          return list.stream().map((p_219408_3_) -> p_219408_3_.<Either<T, Runnable>>map(Either::left).orElseGet(() -> {

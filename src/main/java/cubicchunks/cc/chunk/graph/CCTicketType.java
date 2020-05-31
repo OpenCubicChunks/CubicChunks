@@ -1,8 +1,6 @@
 package cubicchunks.cc.chunk.graph;
 
 import cubicchunks.cc.chunk.util.CubePos;
-import net.minecraft.util.math.ChunkPos;
-import net.minecraft.util.math.SectionPos;
 import net.minecraft.world.server.TicketType;
 
 import java.util.Comparator;

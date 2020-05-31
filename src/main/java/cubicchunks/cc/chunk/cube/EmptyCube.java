@@ -1,5 +1,6 @@
 package cubicchunks.cc.chunk.cube;
 
+import cubicchunks.cc.chunk.biome.CubeBiomeContainer;
 import cubicchunks.cc.chunk.util.CubePos;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.ChunkSection;
@@ -11,6 +12,6 @@ public class EmptyCube extends Cube {
     }
 
     @Override public ChunkSection[] getCubeSections() {
-        return null;
+        throw new UnsupportedOperationException("This is empty cube!");
     }
 }

@@ -79,7 +79,7 @@ public class CubePrimer implements ICube, IChunk {
     }
 
     @Override public IFluidState getFluidState(BlockPos pos) {
-        return null;
+        throw new UnsupportedOperationException("Not implemented");
     }
 
     @Nullable

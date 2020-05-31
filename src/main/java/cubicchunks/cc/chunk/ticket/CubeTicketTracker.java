@@ -4,7 +4,6 @@ import cubicchunks.cc.chunk.IChunkManager;
 import cubicchunks.cc.chunk.graph.CubeDistanceGraph;
 import net.minecraft.util.SortedArraySet;
 import net.minecraft.world.server.ChunkHolder;
-import net.minecraft.world.server.ChunkManager;
 import net.minecraft.world.server.Ticket;
 
 public class CubeTicketTracker extends CubeDistanceGraph {

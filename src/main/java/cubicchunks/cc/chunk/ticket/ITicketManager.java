@@ -9,16 +9,16 @@ import it.unimi.dsi.fastutil.objects.ObjectSet;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.util.SortedArraySet;
 import net.minecraft.util.concurrent.ITaskExecutor;
-import net.minecraft.util.math.SectionPos;
 import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.server.ChunkHolder;
 import net.minecraft.world.server.ChunkManager;
 import net.minecraft.world.server.Ticket;
 import net.minecraft.world.server.TicketType;
 
-import javax.annotation.Nullable;
 import java.util.Set;
 import java.util.concurrent.Executor;
+
+import javax.annotation.Nullable;
 
 public interface ITicketManager {
     int PLAYER_CUBE_TICKET_LEVEL = 33 + CubeStatus.getDistance(ChunkStatus.FULL) - 2;
@@ -58,8 +58,10 @@ public interface ITicketManager {
 
     Set<ChunkHolder> getCubeHolders();
 
+    @Nullable
     ChunkHolder getCubeHolder(long chunkPosIn);
 
+    @Nullable
     ChunkHolder setCubeLevel(long cubePosIn, int newLevel, @Nullable ChunkHolder holder, int oldLevel);
 
     boolean containsCubes(long cubePosIn);

@@ -14,6 +14,7 @@ public abstract class MixinProxyTicketManager extends MixinTicketManager {
     @Shadow ChunkManager this$0;
 
     @Override
+    @Nullable
     public ChunkHolder setCubeLevel(long cubePosIn, int newLevel, @Nullable ChunkHolder holder, int oldLevel) {
         return ((IChunkManager)this$0).setCubeLevel(cubePosIn, newLevel, holder, oldLevel);
     }
@@ -24,6 +25,7 @@ public abstract class MixinProxyTicketManager extends MixinTicketManager {
     }
 
     @Override
+    @Nullable
     public ChunkHolder getCubeHolder(long cubePosIn) {
         return ((IChunkManager)this$0).getCubeHolder(cubePosIn);
     }

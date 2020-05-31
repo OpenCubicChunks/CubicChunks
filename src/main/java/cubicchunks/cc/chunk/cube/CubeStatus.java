@@ -6,22 +6,17 @@ import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import net.minecraft.util.Util;
-import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.chunk.ChunkStatus;
 
 import java.util.List;
 
 public class CubeStatus {
     private static final Object2IntOpenHashMap<ChunkStatus> CUBE_TASK_RANGE_XZ = new Object2IntOpenHashMap<>();
-    private static final Object2IntOpenHashMap<ChunkStatus> CUBE_TASK_RANGE_UP = new Object2IntOpenHashMap<>();
-    private static final Object2IntOpenHashMap<ChunkStatus> CUBE_TASK_RANGE_DOWN = new Object2IntOpenHashMap<>();
 
     static {
         for (ChunkStatus chunkStatus : ChunkStatus.getAll()) {
             int r = MathUtil.ceilDiv(chunkStatus.getTaskRange(), 2);
             CUBE_TASK_RANGE_XZ.put(chunkStatus, r);
-            CUBE_TASK_RANGE_UP.put(chunkStatus, r);
-            CUBE_TASK_RANGE_DOWN.put(chunkStatus, r);
         }
     }
 
