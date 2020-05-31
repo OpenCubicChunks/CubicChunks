@@ -1,4 +1,4 @@
-package io.github.opencubicchunks.cubicchunks.mixin.core.common.biome;
+package io.github.opencubicchunks.cubicchunks.mixin.access.common;
 
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.BiomeContainer;

@@ -1,6 +1,6 @@
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-package io.github.opencubicchunks.cubicchunks.mixin.core.common.ticket.access;
+package io.github.opencubicchunks.cubicchunks.mixin.core.common.world;
 
 import mcp.MethodsReturnNonnullByDefault;
 

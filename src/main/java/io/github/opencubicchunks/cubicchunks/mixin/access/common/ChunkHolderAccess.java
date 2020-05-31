@@ -1,4 +1,4 @@
-package io.github.opencubicchunks.cubicchunks.mixin.core.common.chunk.access;
+package io.github.opencubicchunks.cubicchunks.mixin.access.common;
 
 import net.minecraft.world.server.ChunkHolder;
 import net.minecraft.world.server.ChunkManager;

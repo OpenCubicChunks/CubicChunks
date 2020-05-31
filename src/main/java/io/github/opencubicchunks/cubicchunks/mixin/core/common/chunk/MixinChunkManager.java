@@ -19,7 +19,7 @@ import io.github.opencubicchunks.cubicchunks.chunk.graph.CCTicketType;
 import io.github.opencubicchunks.cubicchunks.chunk.ticket.CubeTaskPriorityQueueSorter;
 import io.github.opencubicchunks.cubicchunks.chunk.ticket.ITicketManager;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
-import io.github.opencubicchunks.cubicchunks.mixin.core.common.chunk.access.EntityTrackerAccess;
+import io.github.opencubicchunks.cubicchunks.mixin.access.common.EntityTrackerAccess;
 import io.github.opencubicchunks.cubicchunks.network.PacketCubes;
 import io.github.opencubicchunks.cubicchunks.network.PacketDispatcher;
 import io.github.opencubicchunks.cubicchunks.network.PacketUnloadCube;

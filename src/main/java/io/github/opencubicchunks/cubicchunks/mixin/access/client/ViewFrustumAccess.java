@@ -1,4 +1,4 @@
-package io.github.opencubicchunks.cubicchunks.mixin.core.client.access;
+package io.github.opencubicchunks.cubicchunks.mixin.access.client;
 
 import io.github.opencubicchunks.cubicchunks.mixin.core.client.MixinWorldRenderer;
 import net.minecraft.client.renderer.ViewFrustum;

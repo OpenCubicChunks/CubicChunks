@@ -1,0 +1,28 @@
+{
+    "required": true,
+    "package": "io.github.opencubicchunks.cubicchunks.mixin.access",
+    "refmap": "cubicchunks.refmap.json",
+    "compatibilityLevel": "JAVA_8",
+    "minVersion": "0.8",
+    "overwrites": {
+        "conformVisibility": true
+    },
+    "mixins": [
+        "common.BiomeContainerAccess",
+        "common.ChunkHolderAccess",
+        "common.ChunkManagerAccess",
+        "common.ChunkSectionAccess",
+        "common.ChunkTicketTrackerFactoryAccess",
+        "common.EntityTrackerAccess",
+        "common.LevelBasedGraphAccess",
+        "common.PlayerChunkTrackerFactoryAccess",
+        "common.PlayerTicketTrackerFactoryAccess",
+        "common.TicketAccess",
+        "common.TicketManagerAccess"
+    ],
+    "client": [
+        "client.ClientChunkProviderChunkArrayAccess",
+        "client.ViewFrustumAccess"
+    ],
+    "server": []
+}

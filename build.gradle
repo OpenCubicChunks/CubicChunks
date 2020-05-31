@@ -40,7 +40,6 @@ minecraft {
     runs {
         client {
             workingDirectory project.file('run')
-            arg "-mixin.config="+modid+".mixins.core.json"
             jvmArgs([
                     "-XX:+UseG1GC",
                     "-Xmx1G",
@@ -63,7 +62,6 @@ minecraft {
 
         server {
             workingDirectory project.file('run')
-            arg "-mixin.config="+modid+".mixins.core.json"
             jvmArgs([
                     "-XX:+UseG1GC",
                     "-Xmx1G",
@@ -174,5 +172,10 @@ mixinGen {
         it.required = true
         it.conformVisibility = true
         it.injectorsDefaultRequire = 1
+    }
+
+    config("access") {
+        it.required = true
+        it.conformVisibility = true
     }
 }

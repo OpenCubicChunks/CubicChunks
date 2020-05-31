@@ -1,4 +1,4 @@
-package io.github.opencubicchunks.cubicchunks.mixin.core.client;
+package io.github.opencubicchunks.cubicchunks.mixin.core.common.chunk;
 
 import static io.github.opencubicchunks.cubicchunks.utils.Coords.blockToCube;
 

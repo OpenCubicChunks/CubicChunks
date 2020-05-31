@@ -6,7 +6,7 @@ import com.google.common.collect.Sets;
 import io.github.opencubicchunks.cubicchunks.chunk.ICube;
 import io.github.opencubicchunks.cubicchunks.chunk.biome.CubeBiomeContainer;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
-import io.github.opencubicchunks.cubicchunks.mixin.core.common.chunk.access.ChunkSectionAccess;
+import io.github.opencubicchunks.cubicchunks.mixin.access.common.ChunkSectionAccess;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import it.unimi.dsi.fastutil.shorts.ShortList;
