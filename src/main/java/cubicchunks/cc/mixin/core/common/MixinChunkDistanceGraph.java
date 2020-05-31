@@ -1,6 +1,6 @@
 package cubicchunks.cc.mixin.core.common;
 
-import cubicchunks.cc.mixin.core.common.ticket.interfaces.LevelBasedGraphAccess;
+import cubicchunks.cc.mixin.core.common.ticket.access.LevelBasedGraphAccess;
 import net.minecraft.world.chunk.ChunkDistanceGraph;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;

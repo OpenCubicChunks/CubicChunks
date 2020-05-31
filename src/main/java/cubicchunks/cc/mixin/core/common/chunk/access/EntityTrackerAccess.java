@@ -1,4 +1,4 @@
-package cubicchunks.cc.mixin.core.common.chunk;
+package cubicchunks.cc.mixin.core.common.chunk.access;
 
 import net.minecraft.entity.Entity;
 import net.minecraft.world.server.ChunkManager;

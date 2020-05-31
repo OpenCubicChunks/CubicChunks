@@ -9,7 +9,7 @@ import com.google.common.collect.Sets;
 import cubicchunks.cc.chunk.ICube;
 import cubicchunks.cc.chunk.biome.CubeBiomeContainer;
 import cubicchunks.cc.chunk.util.CubePos;
-import cubicchunks.cc.mixin.core.common.chunk.ChunkSectionAccess;
+import cubicchunks.cc.mixin.core.common.chunk.access.ChunkSectionAccess;
 import cubicchunks.cc.utils.Coords;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import it.unimi.dsi.fastutil.shorts.ShortList;

@@ -1,4 +1,4 @@
-package cubicchunks.cc.mixin.core.common.ticket.interfaces;
+package cubicchunks.cc.mixin.core.common.ticket.access;
 
 import net.minecraft.world.server.Ticket;
 import org.spongepowered.asm.mixin.Mixin;

@@ -2,7 +2,7 @@ package cubicchunks.cc.mixin.core.common.chunk;
 
 import cubicchunks.cc.chunk.IChunkManager;
 import cubicchunks.cc.chunk.util.CubePos;
-import cubicchunks.cc.mixin.core.common.chunk.interfaces.ChunkManagerAccess;
+import cubicchunks.cc.mixin.core.common.chunk.access.ChunkManagerAccess;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.util.math.Vec3d;

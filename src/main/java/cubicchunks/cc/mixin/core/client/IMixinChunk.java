@@ -1,4 +1,4 @@
-package cubicchunks.cc.mixin.core.client.interfaces;
+package cubicchunks.cc.mixin.core.client;
 
 
 import cubicchunks.cc.CubicChunks;

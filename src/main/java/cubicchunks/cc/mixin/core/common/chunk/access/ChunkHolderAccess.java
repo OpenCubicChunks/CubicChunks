@@ -1,4 +1,4 @@
-package cubicchunks.cc.mixin.core.common.chunk.interfaces;
+package cubicchunks.cc.mixin.core.common.chunk.access;
 
 import net.minecraft.world.server.ChunkHolder;
 import net.minecraft.world.server.ChunkManager;

@@ -21,6 +21,7 @@ import cubicchunks.cc.chunk.graph.CCTicketType;
 import cubicchunks.cc.chunk.ticket.CubeTaskPriorityQueueSorter;
 import cubicchunks.cc.chunk.ticket.ITicketManager;
 import cubicchunks.cc.chunk.util.CubePos;
+import cubicchunks.cc.mixin.core.common.chunk.access.EntityTrackerAccess;
 import cubicchunks.cc.network.PacketCubes;
 import cubicchunks.cc.network.PacketDispatcher;
 import cubicchunks.cc.network.PacketUnloadCube;

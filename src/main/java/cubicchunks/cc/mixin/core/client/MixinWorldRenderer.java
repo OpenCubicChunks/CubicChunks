@@ -1,6 +1,6 @@
 package cubicchunks.cc.mixin.core.client;
 
-import cubicchunks.cc.mixin.core.client.interfaces.InvokeViewFrustum;
+import cubicchunks.cc.mixin.core.client.access.ViewFrustumAccess;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.ViewFrustum;
 import net.minecraft.client.renderer.WorldRenderer;
@@ -37,7 +37,7 @@ public class MixinWorldRenderer {
         if (MathHelper.abs(playerPos.getX() - blockpos.getX()) <= this.renderDistanceChunks * 16
                 && MathHelper.abs(playerPos.getY() - blockpos.getY()) <= this.renderDistanceChunks * 16
                 && MathHelper.abs(playerPos.getZ() - blockpos.getZ()) <= this.renderDistanceChunks * 16) {
-            return ((InvokeViewFrustum) this.viewFrustum).getRenderChunkAt(blockpos);
+            return ((ViewFrustumAccess) this.viewFrustum).getRenderChunkAt(blockpos);
         }
         return null;
     }

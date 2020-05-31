@@ -1,4 +1,4 @@
-package cubicchunks.cc.mixin.core.common.chunk;
+package cubicchunks.cc.mixin.core.common.chunk.access;
 
 import net.minecraft.block.BlockState;
 import net.minecraft.util.palette.PalettedContainer;

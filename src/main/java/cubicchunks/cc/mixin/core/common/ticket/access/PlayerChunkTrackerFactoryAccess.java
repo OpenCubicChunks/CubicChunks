@@ -1,11 +1,11 @@
-package cubicchunks.cc.mixin.core.common.ticket.interfaces;
+package cubicchunks.cc.mixin.core.common.ticket.access;
 
 import net.minecraft.world.server.TicketManager;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Invoker;
 
 @Mixin(TicketManager.PlayerChunkTracker.class)
-public interface PlayerChunkTrackerFactory {
+public interface PlayerChunkTrackerFactoryAccess {
 
     @Invoker("<init>")
     static TicketManager.PlayerChunkTracker construct(TicketManager ticketManager, int p_i50684_2_) {

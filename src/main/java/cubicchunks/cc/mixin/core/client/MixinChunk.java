@@ -2,7 +2,6 @@ package cubicchunks.cc.mixin.core.client;
 
 import static cubicchunks.cc.utils.Coords.blockToCube;
 
-import cubicchunks.cc.chunk.IColumn;
 import cubicchunks.cc.chunk.ICube;
 import cubicchunks.cc.chunk.ICubeProvider;
 import cubicchunks.cc.chunk.cube.EmptyCube;
@@ -22,7 +21,7 @@ import org.spongepowered.asm.mixin.injection.ModifyConstant;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
 @Mixin(Chunk.class)
-public abstract class MixinChunk implements IColumn, IChunk {
+public abstract class MixinChunk implements IChunk {
 
     @Shadow @Final private World world;
 

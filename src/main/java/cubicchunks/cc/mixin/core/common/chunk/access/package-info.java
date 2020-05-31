@@ -1,6 +1,6 @@
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-package cubicchunks.cc.mixin.core.client.interfaces;
+package cubicchunks.cc.mixin.core.common.chunk.access;
 
 import mcp.MethodsReturnNonnullByDefault;
 
