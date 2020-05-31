@@ -34,5 +34,4 @@ public class MixinChunkGenerator implements ICubeGenerator {
             ci.cancel();
         }
     }
-
 }

@@ -999,7 +999,7 @@ public abstract class MixinChunkManager implements IChunkManager {
         List<Entity> passengerEntities = Lists.newArrayList();
 
         for (ChunkManager.EntityTracker entityTracker : this.entities.values()) {
-            Entity entity = ((IEntityTracker) entityTracker).getEntity();
+            Entity entity = ((EntityTrackerAccess) entityTracker).getEntity();
             if (entity != player && entity.chunkCoordX == pos.getX() && entity.chunkCoordY == pos.getY() && entity.chunkCoordZ == pos.getZ()) {
                 entityTracker.updateTrackingState(player);
                 if (entity instanceof MobEntity && ((MobEntity) entity).getLeashHolder() != null) {

@@ -11,9 +11,9 @@
         "conformVisibility": true
     },
     "mixins": [
-        "common.biome.IBiomeContainer",
+        "common.biome.BiomeContainerAccess",
         "common.chunk.ChunkSectionAccess",
-        "common.chunk.IEntityTracker",
+        "common.chunk.EntityTrackerAccess",
         "common.chunk.interfaces.EntityTrackerAccess",
         "common.chunk.interfaces.ChunkHolderAccess",
         "common.chunk.interfaces.ChunkManagerAccess",
@@ -46,7 +46,7 @@
     ],
     "client": [
         "client.interfaces.IBlockReaderMixin",
-        "client.interfaces.IClientChunkProviderChunkArray",
+        "client.interfaces.ClientChunkProviderChunkArrayAccess",
         "client.interfaces.IMixinChunk",
         "client.interfaces.InvokeViewFrustum",
         "client.MixinChunk",

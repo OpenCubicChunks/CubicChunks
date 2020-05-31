@@ -6,7 +6,6 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 
 @Mixin(BiomeContainer.class)
-public interface IBiomeContainer {
-    @Accessor
-    Biome[] getBiomes();
+public interface BiomeContainerAccess {
+    @Accessor Biome[] getBiomes();
 }

@@ -8,7 +8,7 @@ import org.spongepowered.asm.mixin.gen.Invoker;
 import java.util.concurrent.atomic.AtomicReferenceArray;
 
 @Mixin(targets = "net.minecraft.client.multiplayer.ClientChunkProvider$ChunkArray")
-public interface IClientChunkProviderChunkArray {
+public interface ClientChunkProviderChunkArrayAccess {
 
     @Invoker
     boolean invokeInView(int x, int z);

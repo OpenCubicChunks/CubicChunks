@@ -1,6 +1,6 @@
 package cubicchunks.cc.chunk.biome;
 
-import cubicchunks.cc.mixin.core.common.biome.IBiomeContainer;
+import cubicchunks.cc.mixin.core.common.biome.BiomeContainerAccess;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.math.SectionPos;
 import net.minecraft.util.registry.Registry;
@@ -34,11 +34,11 @@ public class CubeBiomeContainer extends BiomeContainer {
         int y = sectionPosIn.getWorldStartY() >> 2;
         int z = sectionPosIn.getWorldStartZ() >> 2;
 
-        for(int k = 0; k < ((IBiomeContainer)this).getBiomes().length; ++k) {
+        for(int k = 0; k < ((BiomeContainerAccess)this).getBiomes().length; ++k) {
             int dx = k & HORIZONTAL_MASK;
             int dy = k >> SIZE_BITS + SIZE_BITS & HORIZONTAL_MASK;
             int dz = k >> SIZE_BITS & HORIZONTAL_MASK;
-            ((IBiomeContainer)this).getBiomes()[k] = biomeProviderIn.getNoiseBiome(x + dx, y + dy, z + dz);
+            ((BiomeContainerAccess)this).getBiomes()[k] = biomeProviderIn.getNoiseBiome(x + dx, y + dy, z + dz);
         }
 
     }
@@ -48,7 +48,7 @@ public class CubeBiomeContainer extends BiomeContainer {
         int x = sectionPosIn.getWorldStartX() >> 2;
         int y = sectionPosIn.getWorldStartY() >> 2;
         int z = sectionPosIn.getWorldStartZ() >> 2;
-        Biome[] biomes = ((IBiomeContainer) this).getBiomes();
+        Biome[] biomes = ((BiomeContainerAccess) this).getBiomes();
         if (biomeIds != null) {
             for(int k = 0; k < biomeIds.length; ++k) {
                 biomes[k] = Registry.BIOME.getByValue(biomeIds[k]);
@@ -74,6 +74,6 @@ public class CubeBiomeContainer extends BiomeContainer {
         int localX = x & HORIZONTAL_MASK;
         int localY = y & HORIZONTAL_MASK;
         int localZ = z & HORIZONTAL_MASK;
-        return ((IBiomeContainer)this).getBiomes()[localY << SIZE_BITS + SIZE_BITS | localZ << SIZE_BITS | localX];
+        return ((BiomeContainerAccess)this).getBiomes()[localY << SIZE_BITS + SIZE_BITS | localZ << SIZE_BITS | localX];
     }
 }

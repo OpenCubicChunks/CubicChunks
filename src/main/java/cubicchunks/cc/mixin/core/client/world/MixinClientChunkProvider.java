@@ -8,7 +8,7 @@ import cubicchunks.cc.chunk.biome.CubeBiomeContainer;
 import cubicchunks.cc.chunk.cube.Cube;
 import cubicchunks.cc.chunk.cube.EmptyCube;
 import cubicchunks.cc.chunk.util.CubePos;
-import cubicchunks.cc.mixin.core.client.interfaces.IClientChunkProviderChunkArray;
+import cubicchunks.cc.mixin.core.client.interfaces.ClientChunkProviderChunkArrayAccess;
 import cubicchunks.cc.utils.Coords;
 import net.minecraft.client.multiplayer.ClientChunkProvider;
 import net.minecraft.client.world.ClientWorld;
@@ -163,7 +163,7 @@ public abstract class MixinClientChunkProvider implements IClientCubeProvider {
     @Overwrite
     public String makeString() {
         //noinspection ConstantConditions
-        return "Client Chunk Cache: " + ((IClientChunkProviderChunkArray) (Object) this.array).getChunks().length() + ", " + this.getLoadedChunksCount() +
+        return "Client Chunk Cache: " + ((ClientChunkProviderChunkArrayAccess) (Object) this.array).getChunks().length() + ", " + this.getLoadedChunksCount() +
                 " | " + this.cubeArray.cubes.length() + ", " + getLoadedCubesCount();
     }
 

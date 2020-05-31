@@ -6,6 +6,6 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 
 @Mixin(ChunkManager.EntityTracker.class)
-public interface IEntityTracker {
+public interface EntityTrackerAccess {
     @Accessor Entity getEntity();
 }
