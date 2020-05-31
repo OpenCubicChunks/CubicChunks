@@ -31,7 +31,7 @@ public interface ITicketManager {
 
     <T> void register(TicketType<T> type, CubePos pos, int distance, T value);
 
-    void registerSection(long chunkPosIn, Ticket<?> ticketIn);
+    void registerCube(long chunkPosIn, Ticket<?> ticketIn);
 
     <T> void release(TicketType<T> type, CubePos pos, int distance, T value);
 
@@ -41,19 +41,19 @@ public interface ITicketManager {
 
     void removePlayer(CubePos cubePosIn, ServerPlayerEntity player);
 
-    int getSpawningSectionsCount();
+    int getSpawningCubeCount();
 
-    boolean isSectionOutsideSpawningRadius(long cubePosIn);
+    boolean isCubeOutsideSpawningRadius(long cubePosIn);
 
     Long2ObjectOpenHashMap<SortedArraySet<Ticket<?>>> getCubeTickets();
 
-    Long2ObjectMap<ObjectSet<ServerPlayerEntity>> getPlayersBySectionPos();
+    Long2ObjectMap<ObjectSet<ServerPlayerEntity>> getPlayersByCubePos();
 
-    ITaskExecutor<CubeTaskPriorityQueueSorter.FunctionEntry<Runnable>> getSectionPlayerTicketThrottler();
+    ITaskExecutor<CubeTaskPriorityQueueSorter.FunctionEntry<Runnable>> getCubePlayerTicketThrottler();
 
     ITaskExecutor<CubeTaskPriorityQueueSorter.RunnableEntry> getPlayerCubeTicketThrottlerSorter();
 
-    LongSet getSectionPositions();
+    LongSet getCubePositions();
 
     Set<ChunkHolder> getCubeHolders();
 
@@ -61,7 +61,7 @@ public interface ITicketManager {
 
     ChunkHolder setCubeLevel(long cubePosIn, int newLevel, @Nullable ChunkHolder holder, int oldLevel);
 
-    boolean containsCubes(long sectionPos);
+    boolean containsCubes(long cubePosIn);
 
     Executor executor();
 

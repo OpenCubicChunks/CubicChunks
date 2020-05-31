@@ -29,18 +29,18 @@ public interface ICubeHolder {
     CubePos getCubePos();
     int getYPos();
 
-    void chainSection(CompletableFuture<? extends Either<? extends ICube,
+    void chainCube(CompletableFuture<? extends Either<? extends ICube,
             ChunkHolder.IChunkLoadingError>> eitherChunk);
 
     // func_219276_a
     CompletableFuture<Either<ICube, ChunkHolder.IChunkLoadingError>> createCubeFuture(ChunkStatus chunkStatus, ChunkManager chunkManager);
 
-    CompletableFuture<Either<ICube, ChunkHolder.IChunkLoadingError>> getSectionFuture(ChunkStatus chunkStatus);
+    CompletableFuture<Either<ICube, ChunkHolder.IChunkLoadingError>> getCubeFuture(ChunkStatus chunkStatus);
 
-    CompletableFuture<Either<Cube, ChunkHolder.IChunkLoadingError>> getSectionEntityTickingFuture();
+    CompletableFuture<Either<Cube, ChunkHolder.IChunkLoadingError>> getCubeEntityTickingFuture();
 
     // func_219294_a
-    void onSectionWrapperCreated(CubePrimerWrapper primer);
+    void onCubeWrapperCreated(CubePrimerWrapper primer);
 
     // func_225410_b
     CompletableFuture<Either<ICube, ChunkHolder.IChunkLoadingError>> getFutureHigherThanCubeStatus(ChunkStatus chunkStatus);

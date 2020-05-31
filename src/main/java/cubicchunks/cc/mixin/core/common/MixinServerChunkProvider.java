@@ -62,7 +62,7 @@ public abstract class MixinServerChunkProvider implements IServerChunkProvider {
     }
 
     @Override public int getLoadedCubesCount() {
-        return ((IChunkManager) chunkManager).getLoadedSectionsCount();
+        return ((IChunkManager) chunkManager).getLoadedCubesCount();
     }
 
     @Nullable
@@ -219,9 +219,9 @@ public abstract class MixinServerChunkProvider implements IServerChunkProvider {
             at = @At(value = "INVOKE", target = "Lnet/minecraft/world/server/ChunkManager;getLoadedChunksIterable()Ljava/lang/Iterable;"))
     private void tickSections(CallbackInfo ci) {
 
-        ((IChunkManager) this.chunkManager).getLoadedSectionsIterable().forEach((cubeHolder) -> {
+        ((IChunkManager) this.chunkManager).getLoadedCubeIterable().forEach((cubeHolder) -> {
             Optional<Cube> optional =
-                    ((ICubeHolder) cubeHolder).getSectionEntityTickingFuture().getNow(ICubeHolder.UNLOADED_CUBE).left();
+                    ((ICubeHolder) cubeHolder).getCubeEntityTickingFuture().getNow(ICubeHolder.UNLOADED_CUBE).left();
             if (optional.isPresent()) {
                 Cube section = (Cube) optional.get();
                 this.world.getProfiler().startSection("broadcast");

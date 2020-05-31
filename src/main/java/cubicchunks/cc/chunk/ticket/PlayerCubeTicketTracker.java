@@ -37,11 +37,11 @@ public class PlayerCubeTicketTracker extends PlayerCubeTracker {
         if (oldWithinViewDistance != withinViewDistance) {
             Ticket<?> ticket = new Ticket<>(CCTicketType.CCPLAYER, ITicketManager.PLAYER_CUBE_TICKET_LEVEL, CubePos.from(cubePosIn));
             if (withinViewDistance) {
-                iTicketManager.getSectionPlayerTicketThrottler().enqueue(CubeTaskPriorityQueueSorter.createMsg(() -> {
+                iTicketManager.getCubePlayerTicketThrottler().enqueue(CubeTaskPriorityQueueSorter.createMsg(() -> {
                     iTicketManager.executor().execute(() -> {
                         if (this.isWithinViewDistance(this.getLevel(cubePosIn))) {
-                            iTicketManager.registerSection(cubePosIn, ticket);
-                            iTicketManager.getSectionPositions().add(cubePosIn);
+                            iTicketManager.registerCube(cubePosIn, ticket);
+                            iTicketManager.getCubePositions().add(cubePosIn);
                         } else {
                             iTicketManager.getPlayerCubeTicketThrottlerSorter().enqueue(CubeTaskPriorityQueueSorter.createSorterMsg(() -> {
                             }, cubePosIn, false));
@@ -71,7 +71,7 @@ public class PlayerCubeTicketTracker extends PlayerCubeTracker {
                 int k = this.getLevel(i);
                 if (j != k) {
                     //func_219066_a = update level
-                    iTicketManager.getCubeTaskPriorityQueueSorter().onUpdateSectionLevel(CubePos.from(i), () -> this.distances.get(i), k, (ix) -> {
+                    iTicketManager.getCubeTaskPriorityQueueSorter().onUpdateCubeLevel(CubePos.from(i), () -> this.distances.get(i), k, (ix) -> {
                         if (ix >= this.distances.defaultReturnValue()) {
                             this.distances.remove(i);
                         } else {

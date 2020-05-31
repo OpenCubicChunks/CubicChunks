@@ -399,7 +399,7 @@ public abstract class MixinChunkManager implements IChunkManager {
     }
 
     @Override
-    public Iterable<ChunkHolder> getLoadedSectionsIterable() {
+    public Iterable<ChunkHolder> getLoadedCubeIterable() {
         return Iterables.unmodifiableIterable(this.immutableLoadedCubes.values());
     }
 
@@ -575,7 +575,7 @@ public abstract class MixinChunkManager implements IChunkManager {
     // func_219200_b
     private CompletableFuture<Either<ICube, ChunkHolder.IChunkLoadingError>> makeCubeInstance(ChunkHolder holder) {
         CompletableFuture<Either<ICube, ChunkHolder.IChunkLoadingError>> fullFuture =
-                ((ICubeHolder) holder).getSectionFuture(ChunkStatus.FULL.getParent());
+                ((ICubeHolder) holder).getCubeFuture(ChunkStatus.FULL.getParent());
         return fullFuture.thenApplyAsync((sectionOrError) -> {
             ChunkStatus chunkstatus = ICubeHolder.getCubeStatusFromLevel(holder.getChunkLevel());
             return !chunkstatus.isAtLeast(ChunkStatus.FULL) ? ICubeHolder.MISSING_CUBE : sectionOrError.mapLeft((prevCube) -> {
@@ -586,7 +586,7 @@ public abstract class MixinChunkManager implements IChunkManager {
                 } else {
                     cube = new Cube(this.world, cubePos, prevCube.getCubeSections(), null);
                     cube.setCubeStatus(prevCube.getCubeStatus());
-                    ((ICubeHolder) holder).onSectionWrapperCreated(new CubePrimerWrapper(cube));
+                    ((ICubeHolder) holder).onCubeWrapperCreated(new CubePrimerWrapper(cube));
                 }
 
                 // TODO: reimplement
@@ -630,7 +630,7 @@ public abstract class MixinChunkManager implements IChunkManager {
 
     // func_222961_b
     @Override
-    public CompletableFuture<Either<Cube, ChunkHolder.IChunkLoadingError>> createSectionBorderFuture(ChunkHolder chunkHolder) {
+    public CompletableFuture<Either<Cube, ChunkHolder.IChunkLoadingError>> createCubeBorderFuture(ChunkHolder chunkHolder) {
         return ((ICubeHolder) chunkHolder).createCubeFuture(ChunkStatus.FULL, (ChunkManager) (Object) this).thenApplyAsync((p_222976_0_) -> {
             return p_222976_0_.mapLeft((icube) -> {
                 Cube cube = (Cube) icube;
@@ -645,7 +645,7 @@ public abstract class MixinChunkManager implements IChunkManager {
 
     // func_219179_a
     @Override
-    public CompletableFuture<Either<Cube, ChunkHolder.IChunkLoadingError>> createSectionTickingFuture(ChunkHolder chunkHolder) {
+    public CompletableFuture<Either<Cube, ChunkHolder.IChunkLoadingError>> createCubeTickingFuture(ChunkHolder chunkHolder) {
         CubePos cubePos = ((ICubeHolder) chunkHolder).getCubePos();
         CompletableFuture<Either<List<ICube>, ChunkHolder.IChunkLoadingError>> completablefuture = this.createCubeRegionFuture(cubePos, 1,
                 (p_219172_0_) -> {
@@ -957,7 +957,7 @@ public abstract class MixinChunkManager implements IChunkManager {
 
     // func_222973_a
     @Override
-    public CompletableFuture<Void> saveCubeScheduleTicks(Cube sectionIn) {
+    public CompletableFuture<Void> saveCubeScheduleTicks(Cube cubeIn) {
         return this.mainThread.runAsync(() -> {
             //TODO: implement saveCubeScheduleTicks
             /*
@@ -969,7 +969,7 @@ public abstract class MixinChunkManager implements IChunkManager {
     }
 
     // func_219188_b
-    public CompletableFuture<Either<Cube, ChunkHolder.IChunkLoadingError>> createSectionEntityTickingFuture(CubePos pos) {
+    public CompletableFuture<Either<Cube, ChunkHolder.IChunkLoadingError>> createCubeEntityTickingFuture(CubePos pos) {
         return this.createCubeRegionFuture(pos, 2, (index) -> {
             return ChunkStatus.FULL;
         }).thenApplyAsync((eitherSectionError) -> {
@@ -1025,7 +1025,7 @@ public abstract class MixinChunkManager implements IChunkManager {
         }
     }
 
-    public int getLoadedSectionsCount()
+    public int getLoadedCubesCount()
     {
         return this.cubesLoaded.get();
     }

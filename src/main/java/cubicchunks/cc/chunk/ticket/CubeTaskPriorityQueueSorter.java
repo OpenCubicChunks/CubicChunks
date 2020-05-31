@@ -64,11 +64,11 @@ public class CubeTaskPriorityQueueSorter implements AutoCloseable, ChunkHolder.I
     }
 
     @Override
-    public void onUpdateSectionLevel(CubePos pos, IntSupplier getLevel, int level, IntConsumer setLevel) {
+    public void onUpdateCubeLevel(CubePos pos, IntSupplier getLevel, int level, IntConsumer setLevel) {
         this.sorter.enqueue(new ITaskQueue.RunnableWithPriority(0, () -> {
             int i = getLevel.getAsInt();
             this.queues.values().forEach((cubeTaskPriorityQueue) -> {
-                cubeTaskPriorityQueue.updateSectionLevel(i, pos, level);
+                cubeTaskPriorityQueue.updateCubeLevel(i, pos, level);
             });
             setLevel.accept(level);
         }));

@@ -19,8 +19,8 @@ public abstract class MixinProxyTicketManager extends MixinTicketManager {
     }
 
     @Override
-    public boolean containsCubes(long cubePos) {
-        return ((IChunkManager)this$0).getUnloadableCubes().contains(cubePos);
+    public boolean containsCubes(long cubePosIn) {
+        return ((IChunkManager)this$0).getUnloadableCubes().contains(cubePosIn);
     }
 
     @Override

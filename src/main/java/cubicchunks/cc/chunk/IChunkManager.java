@@ -21,7 +21,7 @@ import javax.annotation.Nullable;
 public interface IChunkManager {
     int MAX_CUBE_LOADED_LEVEL = 33 + CubeStatus.maxDistance();
 
-    int getLoadedSectionsCount();
+    int getLoadedCubesCount();
 
     ChunkHolder setCubeLevel(long cubePosIn, int newLevel, @Nullable ChunkHolder holder, int oldLevel);
 
@@ -33,19 +33,19 @@ public interface IChunkManager {
     CompletableFuture<Either<ICube, ChunkHolder.IChunkLoadingError>> createCubeFuture(ChunkHolder chunkHolderIn,
             ChunkStatus chunkStatusIn);
 
-    CompletableFuture<Either<Cube, ChunkHolder.IChunkLoadingError>> createSectionBorderFuture(ChunkHolder chunkHolder);
+    CompletableFuture<Either<Cube, ChunkHolder.IChunkLoadingError>> createCubeBorderFuture(ChunkHolder chunkHolder);
 
 
-    CompletableFuture<Either<Cube, ChunkHolder.IChunkLoadingError>> createSectionTickingFuture(ChunkHolder chunkHolder);
+    CompletableFuture<Either<Cube, ChunkHolder.IChunkLoadingError>> createCubeTickingFuture(ChunkHolder chunkHolder);
 
     CompletableFuture<Either<List<ICube>, ChunkHolder.IChunkLoadingError>> createCubeRegionFuture(CubePos pos, int p_219236_2_,
             IntFunction<ChunkStatus> p_219236_3_);
 
-    CompletableFuture<Void> saveCubeScheduleTicks(Cube sectionIn);
+    CompletableFuture<Void> saveCubeScheduleTicks(Cube cubeIn);
 
-    CompletableFuture<Either<Cube, ChunkHolder.IChunkLoadingError>> createSectionEntityTickingFuture(CubePos pos);
+    CompletableFuture<Either<Cube, ChunkHolder.IChunkLoadingError>> createCubeEntityTickingFuture(CubePos pos);
 
-    Iterable<ChunkHolder> getLoadedSectionsIterable();
+    Iterable<ChunkHolder> getLoadedCubeIterable();
 
     //func_219215_b
     static int getCubeChebyshevDistance(CubePos pos, ServerPlayerEntity player, boolean p_219215_2_)  {
