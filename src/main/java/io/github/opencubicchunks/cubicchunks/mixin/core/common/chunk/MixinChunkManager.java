@@ -721,7 +721,7 @@ public abstract class MixinChunkManager implements IChunkManager {
 
 
         for (int dx = -r; dx <= r; ++dx) {
-            for (int dy = -r; dy < r; ++dy) {
+            for (int dy = -r; dy <= r; ++dy) {
                 for (int dz = -r; dz <= r; ++dz) {
                     int distance = Math.max(Math.max(Math.abs(dz), Math.abs(dx)), Math.abs(dy));
                     final CubePos cubePos = CubePos.of(x + dz, y + dy, z + dx);

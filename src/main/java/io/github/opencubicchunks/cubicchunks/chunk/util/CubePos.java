@@ -69,15 +69,15 @@ public class CubePos extends Vec3i {
     }
 
     public int minCubeX() {
-        return getX() * ICube.CUBEDIAMETER;
+        return Coords.cubeToMinBlock(getX());
     }
 
     public int minCubeY() {
-        return getY() * ICube.CUBEDIAMETER;
+        return Coords.cubeToMinBlock(getY());
     }
 
     public int minCubeZ() {
-        return getZ() * ICube.CUBEDIAMETER;
+        return Coords.cubeToMinBlock(getZ());
     }
 
     public SectionPos asSectionPos() {
