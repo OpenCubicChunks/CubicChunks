@@ -1,8 +1,11 @@
 package cubicchunks.cc.network;
 
+import static cubicchunks.cc.utils.Coords.cubeToSection;
+
 import cubicchunks.cc.chunk.IClientCubeProvider;
 import cubicchunks.cc.chunk.cube.Cube;
 import cubicchunks.cc.chunk.util.CubePos;
+import cubicchunks.cc.utils.Coords;
 import cubicchunks.cc.utils.MathUtil;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
@@ -107,7 +110,10 @@ public class PacketCubes {
                 for (int dx = 0; dx < 2; dx++) {
                     for (int dy = 0; dy < 2; dy++) {
                         for (int dz = 0; dz < 2; dz++) {
-                            world.markSurroundingsForRerender(x + dx, y + dy, z + dz);
+                            world.markSurroundingsForRerender(
+                                    cubeToSection(x, dx),
+                                    cubeToSection(y, dy),
+                                    cubeToSection(z, dz));
                         }
                     }
                 }

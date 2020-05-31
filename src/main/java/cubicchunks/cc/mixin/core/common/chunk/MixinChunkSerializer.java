@@ -1,67 +1,154 @@
 package cubicchunks.cc.mixin.core.common.chunk;
 
+import net.minecraft.block.Block;
+import net.minecraft.entity.Entity;
+import net.minecraft.fluid.Fluid;
+import net.minecraft.fluid.Fluids;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.ListNBT;
+import net.minecraft.nbt.LongArrayNBT;
+import net.minecraft.util.SharedConstants;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
+import net.minecraft.util.math.SectionPos;
 import net.minecraft.util.palette.UpgradeData;
+import net.minecraft.util.registry.Registry;
 import net.minecraft.village.PointOfInterestManager;
+import net.minecraft.world.ITickList;
+import net.minecraft.world.LightType;
+import net.minecraft.world.SerializableTickList;
+import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.BiomeContainer;
-import net.minecraft.world.biome.provider.BiomeProvider;
-import net.minecraft.world.chunk.*;
+import net.minecraft.world.biome.Biomes;
+import net.minecraft.world.chunk.Chunk;
+import net.minecraft.world.chunk.ChunkPrimer;
+import net.minecraft.world.chunk.ChunkPrimerTickList;
+import net.minecraft.world.chunk.ChunkPrimerWrapper;
+import net.minecraft.world.chunk.ChunkSection;
+import net.minecraft.world.chunk.ChunkStatus;
+import net.minecraft.world.chunk.IChunk;
+import net.minecraft.world.chunk.NibbleArray;
 import net.minecraft.world.chunk.storage.ChunkSerializer;
-import net.minecraft.world.gen.ChunkGenerator;
+import net.minecraft.world.gen.GenerationStage;
+import net.minecraft.world.gen.Heightmap;
 import net.minecraft.world.gen.feature.template.TemplateManager;
 import net.minecraft.world.lighting.WorldLightManager;
 import net.minecraft.world.server.ServerWorld;
+import net.minecraftforge.common.util.Constants;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.injection.*;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
+import org.spongepowered.asm.mixin.Overwrite;
+import org.spongepowered.asm.mixin.Shadow;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Map;
+import java.util.Objects;
+
+import javax.annotation.Nullable;
 
 @Mixin(ChunkSerializer.class)
-public class MixinChunkSerializer {
+public abstract class MixinChunkSerializer {
+    @Shadow @Final private static Logger LOGGER;
 
-    private static CompoundNBT compoundNBT;
-
-    @ModifyConstant(method = "read", constant = @Constant(intValue = 16),
-            slice = @Slice(
-                    from = @At(value = "CONSTANT", args = "stringValue=Sections"),
-                    to = @At(value = "INVOKE", target = "Lnet/minecraft/world/server/ServerWorld;getDimension()Lnet/minecraft/world/dimension/Dimension;")
-            ))
-    private static int getSectionCount(int _16) {
-        return 32;
+    @Shadow public static ChunkStatus.Type getChunkStatus(@Nullable CompoundNBT chunkNBT) {
+        throw new Error("Mixin didn't apply");
     }
 
-    @Inject(locals = LocalCapture.CAPTURE_FAILHARD, method = "read", at = @At(value = "INVOKE", target = "Lnet/minecraft/nbt/CompoundNBT;getByte(Ljava/lang/String;)B"))
-    private static void captureTagData(ServerWorld worldIn, TemplateManager templateManagerIn, PointOfInterestManager poiManager, ChunkPos pos,
-                                       CompoundNBT compound, CallbackInfoReturnable<ChunkPrimer> cir, ChunkGenerator chunkgenerator,
-                                       BiomeProvider biomeprovider, CompoundNBT compoundnbt, ChunkPos chunkpos, BiomeContainer biomecontainer,
-                                       UpgradeData upgradedata, ChunkPrimerTickList chunkprimerticklist, ChunkPrimerTickList chunkprimerticklist1,
-                                       boolean flag, ListNBT listnbt, int i, ChunkSection achunksection[], boolean flag1,
-                                       AbstractChunkProvider abstractchunkprovider, WorldLightManager worldlightmanager, int j,
-                                       CompoundNBT compoundnbt1) {
-        MixinChunkSerializer.compoundNBT = compoundnbt1;
+    /**
+     * @author Barteks2x
+     * @reason CubicChunks doesn't need much real data in columns
+     */
+    @Overwrite
+    public static ChunkPrimer read(ServerWorld worldIn, TemplateManager templateManagerIn, PointOfInterestManager poiManager, ChunkPos pos, CompoundNBT compound) {
+        CompoundNBT level = compound.getCompound("Level");
+        ChunkPos loadedPos = new ChunkPos(level.getInt("xPos"), level.getInt("zPos"));
+        if (!Objects.equals(pos, loadedPos)) {
+            LOGGER.error("Chunk file at {} is in the wrong location; relocating. (Expected {}, got {})", pos, pos, loadedPos);
+        }
+        long inhabitedTime = level.getLong("InhabitedTime");
+        ChunkStatus.Type statusType = getChunkStatus(compound);
+        IChunk newChunk;
+        Biome[] biomesIn = new Biome[BiomeContainer.BIOMES_SIZE];
+        Arrays.fill(biomesIn, Biomes.FOREST);
+        BiomeContainer biomeContainerIn = new BiomeContainer(biomesIn);
+        if (statusType == ChunkStatus.Type.LEVELCHUNK) {
+            newChunk = new Chunk(worldIn.getWorld(), pos, biomeContainerIn, UpgradeData.EMPTY,
+                    new SerializableTickList<>(Registry.BLOCK::getKey, new ArrayList<>()),
+                    new SerializableTickList<>(Registry.FLUID::getKey, new ArrayList<>()),
+                    inhabitedTime, new ChunkSection[16], (chunk) -> { });
+            if (level.contains("ForgeCaps")) ((Chunk)newChunk).readCapsFromNBT(level.getCompound("ForgeCaps"));
+        } else {
+            ChunkPrimer chunkprimer = new ChunkPrimer(pos, UpgradeData.EMPTY, new ChunkSection[16],
+                    new ChunkPrimerTickList<>((block) -> block == null || block.getDefaultState().isAir(), pos),
+                    new ChunkPrimerTickList<>((fluid) -> fluid == null || fluid == Fluids.EMPTY, pos));
+
+            chunkprimer.func_225548_a_(biomeContainerIn);
+            newChunk = chunkprimer;
+            chunkprimer.setInhabitedTime(inhabitedTime);
+            chunkprimer.setStatus(ChunkStatus.byName(level.getString("Status")));
+            if (chunkprimer.getStatus().isAtLeast(ChunkStatus.FEATURES)) {
+                chunkprimer.setLightManager(worldIn.getChunkProvider().getLightManager());
+            }
+        }
+        newChunk.setLight(true);
+        CompoundNBT heightmaps = level.getCompound("Heightmaps");
+
+        for(Heightmap.Type heightmapType : newChunk.getStatus().getHeightMaps()) {
+            String s = heightmapType.getId();
+            if (heightmaps.contains(s, Constants.NBT.TAG_LONG_ARRAY)) {
+                newChunk.setHeightmap(heightmapType, heightmaps.getLongArray(s));
+            }
+        }
+        if (level.getBoolean("shouldSave")) {
+            newChunk.setModified(true);
+        }
+        if (statusType == ChunkStatus.Type.LEVELCHUNK) {
+            net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.event.world.ChunkDataEvent.Load(newChunk, level, statusType));
+            return new ChunkPrimerWrapper((Chunk)newChunk);
+        } else {
+            ChunkPrimer primer = (ChunkPrimer)newChunk;
+            net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.event.world.ChunkDataEvent.Load(newChunk, level, statusType));
+            return primer;
+        }
     }
 
-    @ModifyVariable(method = "read", at = @At(value = "INVOKE_ASSIGN", target = "Lnet/minecraft/nbt/CompoundNBT;getByte(Ljava/lang/String;)B"), ordinal = 2)
-    private static int getY(int previousValue)
-    {
-        return compoundNBT.getInt("Y");
-    }
+    /**
+     * @author Barteks2x
+     * @reason Save only columns
+     */
+    @Overwrite
+    public static CompoundNBT write(ServerWorld worldIn, IChunk chunkIn) {
+        ChunkPos chunkpos = chunkIn.getPos();
+        CompoundNBT compoundnbt = new CompoundNBT();
+        CompoundNBT level = new CompoundNBT();
+        compoundnbt.putInt("DataVersion", SharedConstants.getVersion().getWorldVersion());
+        compoundnbt.put("Level", level);
+        level.putInt("xPos", chunkpos.x);
+        level.putInt("zPos", chunkpos.z);
+        level.putLong("InhabitedTime", chunkIn.getInhabitedTime());
+        level.putString("Status", chunkIn.getStatus().getName());
 
-    @ModifyConstant(method = "read", constant = @Constant(intValue = 255))
-    private static int getMaxY(int _255) {
-        return 512;
-    }
+        if (chunkIn.getStatus().getType() == ChunkStatus.Type.LEVELCHUNK) {
+            Chunk chunk = (Chunk)chunkIn;
+            chunk.setHasEntities(false);
+            try {
+                final CompoundNBT capTag = chunk.writeCapsToNBT();
+                if (capTag != null) level.put("ForgeCaps", capTag);
+            } catch (Exception exception) {
+                LogManager.getLogger().error("A capability provider has thrown an exception trying to write state. It will not persist. Report this to the mod author", exception);
+            }
+        }
 
-    @ModifyConstant(method = "write", constant = @Constant(intValue = 17))
-    private static int getMaxSectionY(int _17) {
-        return 33;
-    }
-
-    @Inject(locals = LocalCapture.CAPTURE_FAILHARD, method = "write", at = @At(value = "INVOKE", shift = At.Shift.AFTER, target = "Lnet/minecraft/nbt/CompoundNBT;putByte(Ljava/lang/String;B)V"))
-    private static void afterPutByte(ServerWorld worldIn, IChunk chunkIn, CallbackInfoReturnable<CompoundNBT> cir, ChunkPos chunkpos, CompoundNBT compoundnbt, CompoundNBT compoundnbt1, UpgradeData upgradedata, ChunkSection achunksection[], ListNBT listnbt, WorldLightManager worldlightmanager, boolean flag, int i, int j, ChunkSection chunksection, NibbleArray nibblearray, NibbleArray nibblearray1, CompoundNBT compoundnbt2) {
-        compoundnbt2.remove("Y");
-        compoundnbt2.putInt("Y", j);
+        CompoundNBT heightmaps = new CompoundNBT();
+        for(Map.Entry<Heightmap.Type, Heightmap> entry : chunkIn.getHeightmaps()) {
+            if (chunkIn.getStatus().getHeightMaps().contains(entry.getKey())) {
+                heightmaps.put(entry.getKey().getId(), new LongArrayNBT(entry.getValue().getDataArray()));
+            }
+        }
+        level.put("Heightmaps", heightmaps);
+        return compoundnbt;
     }
 }

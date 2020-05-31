@@ -2,75 +2,98 @@ package cubicchunks.cc.mixin.core.client;
 
 import static cubicchunks.cc.utils.Coords.blockToCube;
 
-import com.google.common.collect.Sets;
-import cubicchunks.cc.CubicChunks;
 import cubicchunks.cc.chunk.IColumn;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.network.PacketBuffer;
+import cubicchunks.cc.chunk.ICube;
+import cubicchunks.cc.chunk.ICubeProvider;
+import cubicchunks.cc.chunk.cube.EmptyCube;
+import cubicchunks.cc.utils.Coords;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.BiomeContainer;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkSection;
+import net.minecraft.world.chunk.ChunkStatus;
+import net.minecraft.world.chunk.IChunk;
 import net.minecraft.world.gen.Heightmap;
-import net.minecraftforge.common.util.Constants;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Constant;
+import org.spongepowered.asm.mixin.injection.ModifyConstant;
+import org.spongepowered.asm.mixin.injection.Redirect;
 
 import java.util.Map;
 
-import javax.annotation.Nullable;
-
 @Mixin(Chunk.class)
-public abstract class MixinChunk implements IColumn {
-
-    @Final @Shadow private final ChunkSection[] sections = new ChunkSection[Math.round((float) CubicChunks.worldMAXHeight / 16)];
-
-    @Shadow @Final private Map<BlockPos, TileEntity> tileEntities;
+public abstract class MixinChunk implements IColumn, IChunk {
 
     @Shadow @Final private World world;
 
-    @Shadow @Final public static ChunkSection EMPTY_SECTION;
+    @Shadow @Final private ChunkPos pos;
 
-    @Shadow private BiomeContainer blockBiomeArray;
+    @Shadow public abstract ChunkStatus getStatus();
 
-    @Shadow public abstract void setHeightmap(Heightmap.Type type, long[] data);
+    // getBlockState
 
-    @Override
-    public void readSection(int sectionY, @Nullable BiomeContainer biomeContainerIn, PacketBuffer packetBufferIn, CompoundNBT nbtIn,
-            boolean sectionExists) {
-        Sets.newHashSet(this.tileEntities.keySet()).stream().filter(p -> blockToCube(p.getY()) == sectionY)
-                .forEach(this.world::removeTileEntity);
+    @Override public boolean isEmptyBetween(int startY, int endY) {
+        return false;
+    }
 
-        for (TileEntity tileEntity : tileEntities.values()) {
-            tileEntity.updateContainingBlockInfo();
-            tileEntity.getBlockState();
+    @Redirect(method = {"getBlockState", "getFluidState(III)Lnet/minecraft/fluid/IFluidState;", "setBlockState"},
+            at = @At(
+                    value = "FIELD",
+                    target = "Lnet/minecraft/world/chunk/Chunk;sections:[Lnet/minecraft/world/chunk/ChunkSection;",
+                    args = "array=get"
+            ))
+    private ChunkSection getStorage(ChunkSection[] array, int y) {
+        ICube cube = ((ICubeProvider) world.getChunkProvider()).getCube(
+                Coords.sectionToCube(pos.x),
+                Coords.blockToCube(y),
+                Coords.sectionToCube(pos.z), getStatus(), true);
+        if (cube instanceof EmptyCube) {
+            return null;
         }
+        assert cube != null : "cube was null when requested loading!";
+        ChunkSection[] cubeSections = cube.getCubeSections();
+        return cubeSections[Coords.chunkToIndex32(pos.x, pos.z, y)];
+    }
 
-        ChunkSection section = this.sections[sectionY];
-        if (section == EMPTY_SECTION) {
-            section = new ChunkSection(sectionY << 4);
-            this.sections[sectionY] = section;
-        }
-        if (sectionExists) {
-            section.read(packetBufferIn);
-        }
+    @ModifyConstant(method = {"getBlockState", "getFluidState(III)Lnet/minecraft/fluid/IFluidState;"},
+            constant = @Constant(expandZeroConditions = Constant.Condition.GREATER_THAN_OR_EQUAL_TO_ZERO))
+    private int getMinHeight(int _0) {
+        return Integer.MIN_VALUE;
+    }
 
-        if (biomeContainerIn != null) {
-            this.blockBiomeArray = biomeContainerIn;
-        }
+    @Redirect(method = {"getBlockState", "getFluidState(III)Lnet/minecraft/fluid/IFluidState;"},
+            at = @At(
+                    value = "FIELD",
+                    target = "Lnet/minecraft/world/chunk/Chunk;sections:[Lnet/minecraft/world/chunk/ChunkSection;",
+                    args = "array=length"
+            ))
+    private int getStorage(ChunkSection[] array) {
+        return Integer.MAX_VALUE;
+    }
 
-        for (Heightmap.Type type : Heightmap.Type.values()) {
-            String typeId = type.getId();
-            if (nbtIn.contains(typeId, Constants.NBT.TAG_LONG_ARRAY)) {
-                this.setHeightmap(type, nbtIn.getLongArray(typeId));
-            }
-        }
+    // setBlockState
 
-        for (TileEntity tileentity : this.tileEntities.values()) {
-            tileentity.updateContainingBlockInfo();
+    @Redirect(method = "setBlockState",
+            at = @At(
+                    value = "FIELD",
+                    target = "Lnet/minecraft/world/chunk/Chunk;sections:[Lnet/minecraft/world/chunk/ChunkSection;",
+                    args = "array=set"
+            ))
+    private void setStorage(ChunkSection[] array, int y, ChunkSection newVal) {
+        ICube cube = ((ICubeProvider) world.getChunkProvider()).getCube(
+                Coords.sectionToCube(pos.x),
+                Coords.blockToCube(y),
+                Coords.sectionToCube(pos.z), getStatus(), true);
+        if (cube instanceof EmptyCube) {
+            return;
         }
+        assert cube != null : "cube was null when requested loading!";
+        cube.getCubeSections()[Coords.chunkToIndex32(pos.x, pos.z, y )] = newVal;
     }
 }

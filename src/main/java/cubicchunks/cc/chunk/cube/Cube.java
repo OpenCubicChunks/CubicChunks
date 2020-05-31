@@ -1,19 +1,24 @@
 package cubicchunks.cc.chunk.cube;
 
+import static cubicchunks.cc.utils.Coords.blockToCube;
 import static cubicchunks.cc.utils.Coords.indexTo32X;
 import static cubicchunks.cc.utils.Coords.indexTo32Y;
 import static cubicchunks.cc.utils.Coords.indexTo32Z;
 import static net.minecraft.world.chunk.Chunk.EMPTY_SECTION;
 
+import com.google.common.collect.Sets;
 import cubicchunks.cc.chunk.ICube;
 import cubicchunks.cc.chunk.biome.CubeBiomeContainer;
 import cubicchunks.cc.chunk.util.CubePos;
+import cubicchunks.cc.mixin.core.client.interfaces.IClientChunkProviderChunkArray;
 import cubicchunks.cc.mixin.core.common.chunk.ChunkSectionAccess;
 import cubicchunks.cc.utils.Coords;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import it.unimi.dsi.fastutil.shorts.ShortList;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
+import net.minecraft.block.Blocks;
+import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.Entity;
 import net.minecraft.fluid.Fluid;
 import net.minecraft.fluid.IFluidState;
@@ -34,9 +39,14 @@ import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.chunk.IChunk;
 import net.minecraft.world.gen.Heightmap;
 import net.minecraft.world.gen.feature.structure.StructureStart;
+import net.minecraft.world.lighting.WorldLightManager;
+import net.minecraftforge.common.util.Constants;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Stream;
@@ -125,6 +135,88 @@ public class Cube implements IChunk, ICube {
             }
         }
         return false;
+    }
+
+    public void read(@Nullable CubeBiomeContainer biomes, PacketBuffer readBuffer, CompoundNBT nbtTagIn, boolean cubeExists) {
+        if (!cubeExists) {
+            Arrays.fill(sections, null);
+            return;
+        }
+        int emptyFlags = readBuffer.readUnsignedByte();
+
+        this.cubeBiomeContainer = biomes;
+
+        Sets.newHashSet(this.tileEntities.keySet()).forEach(this.world::removeTileEntity);
+        for (int i = 0; i < ICube.CUBESIZE; i++) {
+            boolean exists = ((emptyFlags >>> i) & 1) != 0;
+
+            //        byte emptyFlags = 0;
+            //        for (int i = 0; i < sections.length; i++) {
+            //            if (sections[i] != null && !sections[i].isEmpty()) {
+            //                emptyFlags |= 1 << i;
+            //            }
+            //        }
+            //        buf.writeByte(emptyFlags);
+            //        for (int i = 0; i < sections.length; i++) {
+            //            if (sections[i] != null && !sections[i].isEmpty()) {
+            //                sections[i].write(buf);
+            //            }
+            //        }
+            //        return false;
+
+            int dx = Coords.indexTo32X(i);
+            int dy = Coords.indexTo32Y(i);
+            int dz = Coords.indexTo32Z(i);
+
+            SectionPos sectionPos = getCubePos().asSectionPos();
+            int x = sectionPos.getX() + dx;
+            int y = sectionPos.getY() + dy;
+            int z = sectionPos.getZ() + dz;
+
+            readSection(i, y, null, readBuffer, nbtTagIn, exists);
+
+            WorldLightManager lightManager = world.getLightManager();
+            //lightManager.enableLightSources(new ChunkPos(x, z), true);
+
+            ChunkSection chunksection = sections[i];
+            lightManager.updateSectionStatus(sectionPos, ChunkSection.isEmpty(chunksection));
+
+            ((ClientWorld) this.world).onChunkLoaded(x, z);
+            // net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.event.world.ChunkEvent.Load(chunk));
+        }
+    }
+
+    private void readSection(int sectionIdx, int sectionY, @Nullable BiomeContainer biomeContainerIn, PacketBuffer packetBufferIn, CompoundNBT nbtIn,
+            boolean sectionExists) {
+
+        for (TileEntity tileEntity : tileEntities.values()) {
+            tileEntity.updateContainingBlockInfo();
+            tileEntity.getBlockState();
+        }
+
+        ChunkSection section = this.sections[sectionIdx];
+        if (section == EMPTY_SECTION) {
+            section = new ChunkSection(sectionY << 4);
+            this.sections[sectionIdx] = section;
+        }
+        if (sectionExists) {
+            section.read(packetBufferIn);
+        }
+
+        if (biomeContainerIn != null) {
+            // this.blockBiomeArray = biomeContainerIn;
+        }
+
+        for (Heightmap.Type type : Heightmap.Type.values()) {
+            String typeId = type.getId();
+            if (nbtIn.contains(typeId, Constants.NBT.TAG_LONG_ARRAY)) {
+                this.setHeightmap(type, nbtIn.getLongArray(typeId));
+            }
+        }
+
+        for (TileEntity tileentity : this.tileEntities.values()) {
+            tileentity.updateContainingBlockInfo();
+        }
     }
 
     public void setCubeBiomeContainer(CubeBiomeContainer biomes)
@@ -416,7 +508,10 @@ public class Cube implements IChunk, ICube {
     }
 
     @Override public BlockState getBlockState(int x, int y, int z) {
-        return null;
+        int index = Coords.blockToIndex32(x, y, z);
+        return ChunkSection.isEmpty(this.sections[index]) ?
+                Blocks.AIR.getDefaultState() :
+                this.sections[index].getBlockState(x & 15, y & 15, z & 15);
     }
 
     @Override public IFluidState getFluidState(BlockPos pos) {

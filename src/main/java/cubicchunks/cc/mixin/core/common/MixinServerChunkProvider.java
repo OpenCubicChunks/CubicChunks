@@ -39,8 +39,8 @@ import javax.annotation.Nullable;
 
 @Mixin(ServerChunkProvider.class)
 public abstract class MixinServerChunkProvider implements IServerChunkProvider {
-    @Shadow TicketManager ticketManager;
-    @Shadow ChunkManager chunkManager;
+    @Final @Shadow private TicketManager ticketManager;
+    @Final @Shadow public ChunkManager chunkManager;
 
     @Shadow @Final public ServerWorld world;
 
@@ -50,8 +50,10 @@ public abstract class MixinServerChunkProvider implements IServerChunkProvider {
 
     @Shadow protected abstract boolean func_217224_a(@Nullable ChunkHolder chunkHolderIn, int p_217224_2_);
 
-    private final long[] recentPositions = new long[4];
-    private final ChunkStatus[] recentStatuses = new ChunkStatus[4];
+    @Shadow public abstract int getLoadedChunkCount();
+
+    private final long[] recentCubePositions = new long[4];
+    private final ChunkStatus[] recentCubeStatuses = new ChunkStatus[4];
     private final ICube[] recentCubes = new ICube[4];
 
     @Override
@@ -59,11 +61,12 @@ public abstract class MixinServerChunkProvider implements IServerChunkProvider {
         ((ITicketManager) this.ticketManager).register(type, pos, distance, value);
     }
 
-    @Override public int getLoadedSectionsCount() {
+    @Override public int getLoadedCubesCount() {
         return ((IChunkManager) chunkManager).getLoadedSectionsCount();
     }
 
     @Nullable
+    @Override
     public ICube getCube(int cubeX, int cubeY, int cubeZ, ChunkStatus requiredStatus, boolean load) {
         if (Thread.currentThread() != this.mainThread) {
             return CompletableFuture.supplyAsync(() -> {
@@ -75,7 +78,7 @@ public abstract class MixinServerChunkProvider implements IServerChunkProvider {
             long i = CubePos.asLong(cubeX, cubeY, cubeZ);
 
             for(int j = 0; j < 4; ++j) {
-                if (i == this.recentPositions[j] && requiredStatus == this.recentStatuses[j]) {
+                if (i == this.recentCubePositions[j] && requiredStatus == this.recentCubeStatuses[j]) {
                     ICube icube = this.recentCubes[j];
                     if (icube != null || !load) {
                         return icube;
@@ -111,7 +114,7 @@ public abstract class MixinServerChunkProvider implements IServerChunkProvider {
             long posAsLong = CubePos.asLong(cubeX, cubeY, cubeZ);
 
             for(int j = 0; j < 4; ++j) {
-                if (posAsLong == this.recentPositions[j] && this.recentStatuses[j] == ChunkStatus.FULL) {
+                if (posAsLong == this.recentCubePositions[j] && this.recentCubeStatuses[j] == ChunkStatus.FULL) {
                     ICube icube = this.recentCubes[j];
                     return icube instanceof Cube ? (Cube)icube : null;
                 }
@@ -173,13 +176,13 @@ public abstract class MixinServerChunkProvider implements IServerChunkProvider {
     // func_225315_a
     private void addRecents(long newPositionIn, ICube newCubeIn, ChunkStatus newStatusIn) {
         for(int i = 3; i > 0; --i) {
-            this.recentPositions[i] = this.recentPositions[i - 1];
-            this.recentStatuses[i] = this.recentStatuses[i - 1];
+            this.recentCubePositions[i] = this.recentCubePositions[i - 1];
+            this.recentCubeStatuses[i] = this.recentCubeStatuses[i - 1];
             this.recentCubes[i] = this.recentCubes[i - 1];
         }
 
-        this.recentPositions[0] = newPositionIn;
-        this.recentStatuses[0] = newStatusIn;
+        this.recentCubePositions[0] = newPositionIn;
+        this.recentCubeStatuses[0] = newStatusIn;
         this.recentCubes[0] = newCubeIn;
     }
 
@@ -195,8 +198,8 @@ public abstract class MixinServerChunkProvider implements IServerChunkProvider {
     }
 
     private void invalidateCaches() {
-        Arrays.fill(this.recentPositions, CubicChunks.SECTIONPOS_SENTINEL);
-        Arrays.fill(this.recentStatuses, (Object)null);
+        Arrays.fill(this.recentCubePositions, CubicChunks.SECTIONPOS_SENTINEL);
+        Arrays.fill(this.recentCubeStatuses, (Object)null);
         Arrays.fill(this.recentCubes, (Object)null);
     }
 
@@ -227,4 +230,14 @@ public abstract class MixinServerChunkProvider implements IServerChunkProvider {
             }
         });
     }
+
+    /**
+     * @author Barteks2x
+     * @reason debug string
+     */
+    @Overwrite
+    public String makeString() {
+        return "ServerChunkCache: " + this.getLoadedChunkCount() + " | " + this.getLoadedCubesCount();
+    }
+
 }

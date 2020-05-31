@@ -1,9 +1,12 @@
 package cubicchunks.cc.network;
 
+import cubicchunks.cc.chunk.IClientCubeProvider;
 import cubicchunks.cc.chunk.util.CubePos;
+import net.minecraft.client.multiplayer.ClientChunkProvider;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.math.SectionPos;
 import net.minecraft.world.World;
+import net.minecraft.world.chunk.AbstractChunkProvider;
 
 public class PacketUpdateCubePosition {
     private final SectionPos pos;
@@ -25,8 +28,9 @@ public class PacketUpdateCubePosition {
     }
 
     public static class Handler {
-        public static void handle(cubicchunks.cc.network.PacketUpdateCubePosition packet, World worldIn) {
-
+        public static void handle(PacketUpdateCubePosition packet, World worldIn) {
+            AbstractChunkProvider chunkProvider = worldIn.getChunkProvider();
+            ((IClientCubeProvider) chunkProvider).setCenter(packet.pos.getX(), packet.pos.getY(), packet.pos.getZ());
         }
     }
 }

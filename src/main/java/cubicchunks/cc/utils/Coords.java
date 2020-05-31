@@ -126,4 +126,19 @@ public class Coords {
         return idx >> 2 & 1;
     }
 
+    public static int sectionToCube(int val) {
+        return val >> 1;
+    }
+
+    public static int chunkToIndex32(int chunkX, int chunkZ, int blockY) {
+        return blockToIndex32(chunkX << 4, blockY, chunkZ << 4);
+    }
+
+    public static int cubeToSection(int cube, int section) {
+        return cube << 1 | section;
+    }
+
+    public static int sectionToCubeViewDistance(int viewDistance) {
+        return MathUtil.ceilDiv(viewDistance, 2);
+    }
 }
