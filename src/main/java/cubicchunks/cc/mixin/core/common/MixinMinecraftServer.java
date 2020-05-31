@@ -38,24 +38,25 @@ public abstract class MixinMinecraftServer {
 
     /**
      * @author NotStirred
+     * @reason Additional CC functionality and logging.
      */
     @Overwrite
     protected void loadInitialChunks(IChunkStatusListener statusListener) {
         this.setUserMessage(new TranslationTextComponent("menu.generatingTerrain"));
         ServerWorld serverworld = ((IMinecraftServer)this).getServerWorld(DimensionType.OVERWORLD);
         LOGGER.info("Preparing start region for dimension " + DimensionType.getKey(serverworld.dimension.getType()));
-        BlockPos blockpos = serverworld.getSpawnPoint();
-        CubePos cubePos = CubePos.from(blockpos);
+        BlockPos spawnPos = serverworld.getSpawnPoint();
+        CubePos spawnPosCube = CubePos.from(spawnPos);
 
-        statusListener.start(new ChunkPos(blockpos));
-        ((ICubeStatusListener) statusListener).startCubes(cubePos);
+        statusListener.start(new ChunkPos(spawnPos));
+        ((ICubeStatusListener) statusListener).startCubes(spawnPosCube);
 
         ServerChunkProvider serverchunkprovider = serverworld.getChunkProvider();
         serverchunkprovider.getLightManager().func_215598_a(500);
         this.serverTime = Util.milliTime();
         int radius = 5;
         int d = radius*2+1;
-        ((IServerChunkProvider)serverchunkprovider).registerTicket(TicketType.START, cubePos, radius + 1, Unit.INSTANCE);
+        ((IServerChunkProvider)serverchunkprovider).registerTicket(TicketType.START, spawnPosCube, radius + 1, Unit.INSTANCE);
 
         int i2 = 0;
         while(isServerRunning() && (serverchunkprovider.getLoadedChunksCount() != d*d || ((IServerChunkProvider) serverchunkprovider).getLoadedCubesCount() != d*d*d)) {
