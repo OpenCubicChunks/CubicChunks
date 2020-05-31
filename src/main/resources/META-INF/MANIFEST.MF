@@ -1,0 +1,1 @@
+MixinConnector: io.github.opencubicchunks.cubicchunks.mixin.CCMixinConnector

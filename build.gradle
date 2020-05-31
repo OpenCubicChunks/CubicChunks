@@ -17,8 +17,8 @@ apply plugin: 'eclipse'
 apply plugin: 'maven-publish'
 
 version = "${mod_version}"
-group = "io.github.${modid}" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
-archivesBaseName = "${modid}"
+group = "io.github.opencubicchunks" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
+archivesBaseName = "CubicChunks"
 
 sourceCompatibility = targetCompatibility = compileJava.sourceCompatibility = compileJava.targetCompatibility = '1.8' // Need this here so eclipse task generates correctly.
 
@@ -80,25 +80,8 @@ minecraft {
 }
 
 repositories{
-    maven {
-        // location of the maven that hosts JEI files
-        name = "Progwml6 maven"
-        url = "https://dvs1.progwml6.com/files/maven/"
-    }
-    maven {
-        // location of a maven mirror for JEI files, as a fallback
-        name = "ModMaven"
-        url = "https://modmaven.k-4u.nl"
-    }
-    maven {
-        url "https://maven.tterrag.com/"
-    }
-
-    maven {url='https://dist.creeper.host/Sponge/maven'}
-
     jcenter()
     mavenCentral()
-
 }
 
 dependencies {
@@ -110,6 +93,8 @@ dependencies {
     compile 'org.spongepowered:mixin:0.8'
 
     testCompile('junit:junit:4.11')
+    testCompile('org.hamcrest:hamcrest-junit:2.0.0.0')
+
     // You may put jars on which you depend on in ./libs or you may define them like so..
     // compile "some.group:artifact:version:classifier"
     // compile "some.group:artifact:version"
@@ -177,7 +162,7 @@ mixin {
 mixinGen {
     filePattern = "cubicchunks.mixins.%s.json"
     defaultRefmap = "cubicchunks.refmap.json"
-    defaultPackagePrefix = "cubicchunks.cc.mixin"
+    defaultPackagePrefix = "io.github.opencubicchunks.cubicchunks.mixin"
     defaultCompatibilityLevel = "JAVA_8"
     defaultMinVersion = "0.8"
 
