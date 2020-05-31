@@ -1,9 +1,8 @@
-package cubicchunks.cc.mixin.core.client.progress;
+package io.github.opencubicchunks.cubicchunks.mixin.core.client.progress;
 
-import cubicchunks.cc.chunk.ICubeStatusListener;
-import cubicchunks.cc.chunk.util.CubePos;
+import io.github.opencubicchunks.cubicchunks.chunk.ICubeStatusListener;
+import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import net.minecraft.util.concurrent.DelegatedTaskExecutor;
-import net.minecraft.util.math.SectionPos;
 import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.chunk.listener.ChainedChunkStatusListener;
 import net.minecraft.world.chunk.listener.IChunkStatusListener;

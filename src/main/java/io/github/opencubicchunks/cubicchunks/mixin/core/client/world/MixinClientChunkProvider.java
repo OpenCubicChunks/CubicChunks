@@ -1,15 +1,13 @@
-package cubicchunks.cc.mixin.core.client.world;
+package io.github.opencubicchunks.cubicchunks.mixin.core.client.world;
 
-import static cubicchunks.cc.utils.Coords.sectionToCube;
-
-import cubicchunks.cc.chunk.ClientChunkProviderCubeArray;
-import cubicchunks.cc.chunk.IClientCubeProvider;
-import cubicchunks.cc.chunk.biome.CubeBiomeContainer;
-import cubicchunks.cc.chunk.cube.Cube;
-import cubicchunks.cc.chunk.cube.EmptyCube;
-import cubicchunks.cc.chunk.util.CubePos;
-import cubicchunks.cc.mixin.core.client.access.ClientChunkProviderChunkArrayAccess;
-import cubicchunks.cc.utils.Coords;
+import io.github.opencubicchunks.cubicchunks.chunk.ClientChunkProviderCubeArray;
+import io.github.opencubicchunks.cubicchunks.chunk.IClientCubeProvider;
+import io.github.opencubicchunks.cubicchunks.chunk.biome.CubeBiomeContainer;
+import io.github.opencubicchunks.cubicchunks.chunk.cube.Cube;
+import io.github.opencubicchunks.cubicchunks.chunk.cube.EmptyCube;
+import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
+import io.github.opencubicchunks.cubicchunks.mixin.core.client.access.ClientChunkProviderChunkArrayAccess;
+import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import net.minecraft.client.multiplayer.ClientChunkProvider;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.nbt.CompoundNBT;
@@ -125,9 +123,9 @@ public abstract class MixinClientChunkProvider implements IClientCubeProvider {
     }
 
     @Override public void setCenter(int sectionX, int sectionY, int sectionZ) {
-        this.cubeArray.centerX = sectionToCube(sectionX);
-        this.cubeArray.centerY = sectionToCube(sectionY);
-        this.cubeArray.centerZ = sectionToCube(sectionZ);
+        this.cubeArray.centerX = Coords.sectionToCube(sectionX);
+        this.cubeArray.centerY = Coords.sectionToCube(sectionY);
+        this.cubeArray.centerZ = Coords.sectionToCube(sectionZ);
     }
 
     @Inject(method = "setViewDistance", at = @At("HEAD"))

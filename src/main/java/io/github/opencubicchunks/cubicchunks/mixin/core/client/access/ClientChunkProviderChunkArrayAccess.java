@@ -1,4 +1,4 @@
-package cubicchunks.cc.mixin.core.client.access;
+package io.github.opencubicchunks.cubicchunks.mixin.core.client.access;
 
 import net.minecraft.world.chunk.Chunk;
 import org.spongepowered.asm.mixin.Mixin;

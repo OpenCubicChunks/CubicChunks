@@ -1,13 +1,10 @@
-package cubicchunks.cc.network;
+package io.github.opencubicchunks.cubicchunks.network;
 
 
-import static cubicchunks.cc.utils.AddressTools.getLocalX;
-import static cubicchunks.cc.utils.AddressTools.getLocalY;
-import static cubicchunks.cc.utils.AddressTools.getLocalZ;
-
-import cubicchunks.cc.chunk.ICube;
-import cubicchunks.cc.chunk.util.CubePos;
-import cubicchunks.cc.utils.BufferUtils;
+import io.github.opencubicchunks.cubicchunks.chunk.ICube;
+import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
+import io.github.opencubicchunks.cubicchunks.utils.BufferUtils;
+import io.github.opencubicchunks.cubicchunks.utils.AddressTools;
 import it.unimi.dsi.fastutil.shorts.ShortList;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
@@ -15,7 +12,6 @@ import net.minecraft.client.world.ClientWorld;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
-import net.minecraft.world.chunk.ChunkSection;
 
 public class PacketCubeBlockChanges {
 
@@ -46,9 +42,9 @@ public class PacketCubeBlockChanges {
         this.blockStates = new BlockState[localAddresses.size()];
         for (int i = 0; i < localAddresses.size(); i++) {
             int localAddress = this.localAddresses[i];
-            int x = getLocalX(localAddress);
-            int y = getLocalY(localAddress);
-            int z = getLocalZ(localAddress);
+            int x = AddressTools.getLocalX(localAddress);
+            int y = AddressTools.getLocalY(localAddress);
+            int z = AddressTools.getLocalZ(localAddress);
             this.blockStates[i] = cube.getBlockState(x, y, z);
         }
     }
@@ -67,7 +63,7 @@ public class PacketCubeBlockChanges {
 
     BlockPos getPos(int i) {
         final short addr = this.localAddresses[i];
-        return cubePos.asBlockPos(getLocalX(addr), getLocalY(addr), getLocalZ(addr));
+        return cubePos.asBlockPos(AddressTools.getLocalX(addr), AddressTools.getLocalY(addr), AddressTools.getLocalZ(addr));
     }
 
     public static class Handler {

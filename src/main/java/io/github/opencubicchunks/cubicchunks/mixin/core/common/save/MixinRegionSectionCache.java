@@ -1,4 +1,4 @@
-package cubicchunks.cc.mixin.core.common.save;
+package io.github.opencubicchunks.cubicchunks.mixin.core.common.save;
 
 import net.minecraft.world.chunk.storage.RegionSectionCache;
 import org.spongepowered.asm.mixin.Mixin;

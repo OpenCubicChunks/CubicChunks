@@ -1,9 +1,9 @@
-package cubicchunks.cc.chunk.util;
+package io.github.opencubicchunks.cubicchunks.chunk.util;
 
-import static cubicchunks.cc.utils.Coords.blockToCube;
+import static io.github.opencubicchunks.cubicchunks.utils.Coords.blockToCube;
 
-import cubicchunks.cc.chunk.ICube;
-import cubicchunks.cc.utils.Coords;
+import io.github.opencubicchunks.cubicchunks.chunk.ICube;
+import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;

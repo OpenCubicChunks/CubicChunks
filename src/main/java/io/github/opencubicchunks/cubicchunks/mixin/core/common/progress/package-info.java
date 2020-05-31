@@ -1,6 +1,6 @@
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-package cubicchunks.cc.mixin.core.common.progress;
+package io.github.opencubicchunks.cubicchunks.mixin.core.common.progress;
 
 import mcp.MethodsReturnNonnullByDefault;
 

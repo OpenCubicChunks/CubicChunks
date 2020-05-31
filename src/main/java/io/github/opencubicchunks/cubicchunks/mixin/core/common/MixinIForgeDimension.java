@@ -1,6 +1,6 @@
-package cubicchunks.cc.mixin.core.common;
+package io.github.opencubicchunks.cubicchunks.mixin.core.common;
 
-import cubicchunks.cc.CubicChunks;
+import io.github.opencubicchunks.cubicchunks.CubicChunks;
 import net.minecraftforge.common.extensions.IForgeDimension;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;

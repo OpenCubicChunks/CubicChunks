@@ -1,8 +1,8 @@
-package cubicchunks.cc.mixin.core.common.chunk;
+package io.github.opencubicchunks.cubicchunks.mixin.core.common.chunk;
 
-import cubicchunks.cc.chunk.IChunkManager;
-import cubicchunks.cc.chunk.util.CubePos;
-import cubicchunks.cc.mixin.core.common.chunk.access.ChunkManagerAccess;
+import io.github.opencubicchunks.cubicchunks.chunk.IChunkManager;
+import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
+import io.github.opencubicchunks.cubicchunks.mixin.core.common.chunk.access.ChunkManagerAccess;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.util.math.Vec3d;

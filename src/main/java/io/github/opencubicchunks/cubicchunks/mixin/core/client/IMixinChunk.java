@@ -1,7 +1,7 @@
-package cubicchunks.cc.mixin.core.client;
+package io.github.opencubicchunks.cubicchunks.mixin.core.client;
 
 
-import cubicchunks.cc.CubicChunks;
+import io.github.opencubicchunks.cubicchunks.CubicChunks;
 import net.minecraft.world.IBlockReader;
 import net.minecraft.world.chunk.ChunkSection;
 import net.minecraft.world.chunk.IChunk;

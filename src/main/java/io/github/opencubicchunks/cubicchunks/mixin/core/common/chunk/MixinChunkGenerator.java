@@ -1,7 +1,7 @@
-package cubicchunks.cc.mixin.core.common.chunk;
+package io.github.opencubicchunks.cubicchunks.mixin.core.common.chunk;
 
-import cubicchunks.cc.chunk.ICube;
-import cubicchunks.cc.chunk.ICubeGenerator;
+import io.github.opencubicchunks.cubicchunks.chunk.ICube;
+import io.github.opencubicchunks.cubicchunks.chunk.ICubeGenerator;
 import net.minecraft.world.IWorld;
 import net.minecraft.world.biome.BiomeManager;
 import net.minecraft.world.chunk.IChunk;

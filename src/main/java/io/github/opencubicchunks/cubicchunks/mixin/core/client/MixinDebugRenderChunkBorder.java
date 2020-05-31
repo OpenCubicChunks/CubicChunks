@@ -1,4 +1,4 @@
-package cubicchunks.cc.mixin.core.client;
+package io.github.opencubicchunks.cubicchunks.mixin.core.client;
 
 import net.minecraft.client.renderer.debug.ChunkBorderDebugRenderer;
 import org.spongepowered.asm.mixin.Mixin;

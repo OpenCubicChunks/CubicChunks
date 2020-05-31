@@ -1,6 +1,6 @@
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-package cubicchunks.cc.mixin.core.client.world;
+package io.github.opencubicchunks.cubicchunks.mixin.core.client.world;
 
 import mcp.MethodsReturnNonnullByDefault;
 

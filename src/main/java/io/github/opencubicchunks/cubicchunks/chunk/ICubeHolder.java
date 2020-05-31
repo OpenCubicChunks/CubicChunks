@@ -1,13 +1,11 @@
-package cubicchunks.cc.chunk;
+package io.github.opencubicchunks.cubicchunks.chunk;
 
 import com.mojang.datafixers.util.Either;
-import cubicchunks.cc.chunk.cube.CubePrimerWrapper;
-import cubicchunks.cc.chunk.cube.Cube;
-import cubicchunks.cc.chunk.cube.CubeStatus;
-import cubicchunks.cc.chunk.util.CubePos;
-import net.minecraft.world.chunk.ChunkSection;
+import io.github.opencubicchunks.cubicchunks.chunk.cube.CubePrimerWrapper;
+import io.github.opencubicchunks.cubicchunks.chunk.cube.Cube;
+import io.github.opencubicchunks.cubicchunks.chunk.cube.CubeStatus;
+import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import net.minecraft.world.chunk.ChunkStatus;
-import net.minecraft.world.chunk.IChunk;
 import net.minecraft.world.server.ChunkHolder;
 import net.minecraft.world.server.ChunkManager;
 

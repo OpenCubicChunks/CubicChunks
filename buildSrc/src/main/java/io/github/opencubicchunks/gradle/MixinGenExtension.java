@@ -285,7 +285,8 @@ import static org.apache.tools.ant.util.StringUtils.removeSuffix;
             for (Path srcPath : srcPaths) {
                 if (javaClass.startsWith(srcPath)) {
                     Path relative = srcPath.relativize(javaClass);
-                    if (relative.toString().replace(File.separatorChar, '.').startsWith(config.packageName)) {
+                    if (relative.toString().replace(File.separatorChar, '.').startsWith(config.packageName)
+                            && !relative.toString().endsWith("package-info.java")) {
                         classes.add(relative);
                     }
                 }

@@ -1,8 +1,8 @@
-package cubicchunks.cc.mixin.core.common.chunk;
+package io.github.opencubicchunks.cubicchunks.mixin.core.common.chunk;
 
 import com.mojang.datafixers.util.Either;
-import cubicchunks.cc.chunk.ICube;
-import cubicchunks.cc.chunk.cube.CubePrimer;
+import io.github.opencubicchunks.cubicchunks.chunk.ICube;
+import io.github.opencubicchunks.cubicchunks.chunk.cube.CubePrimer;
 import net.minecraft.block.Blocks;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.chunk.ChunkStatus;

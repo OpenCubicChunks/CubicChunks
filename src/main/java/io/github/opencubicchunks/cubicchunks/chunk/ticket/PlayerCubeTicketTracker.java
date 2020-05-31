@@ -1,7 +1,7 @@
-package cubicchunks.cc.chunk.ticket;
+package io.github.opencubicchunks.cubicchunks.chunk.ticket;
 
-import cubicchunks.cc.chunk.graph.CCTicketType;
-import cubicchunks.cc.chunk.util.CubePos;
+import io.github.opencubicchunks.cubicchunks.chunk.graph.CCTicketType;
+import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import it.unimi.dsi.fastutil.longs.Long2IntMap;
 import it.unimi.dsi.fastutil.longs.Long2IntMaps;
 import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;

@@ -1,9 +1,9 @@
-package cubicchunks.cc.chunk.cube;
+package io.github.opencubicchunks.cubicchunks.chunk.cube;
 
 import com.google.common.collect.Maps;
-import cubicchunks.cc.chunk.ICube;
-import cubicchunks.cc.chunk.util.CubePos;
-import cubicchunks.cc.utils.Coords;
+import io.github.opencubicchunks.cubicchunks.chunk.ICube;
+import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
+import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import it.unimi.dsi.fastutil.shorts.ShortList;
 import net.minecraft.block.Block;

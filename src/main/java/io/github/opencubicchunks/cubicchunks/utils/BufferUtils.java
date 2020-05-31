@@ -1,4 +1,4 @@
-package cubicchunks.cc.utils;
+package io.github.opencubicchunks.cubicchunks.utils;
 
 import net.minecraft.network.PacketBuffer;
 

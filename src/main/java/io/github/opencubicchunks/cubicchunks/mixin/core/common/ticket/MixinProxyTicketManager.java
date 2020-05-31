@@ -1,6 +1,6 @@
-package cubicchunks.cc.mixin.core.common.ticket;
+package io.github.opencubicchunks.cubicchunks.mixin.core.common.ticket;
 
-import cubicchunks.cc.chunk.IChunkManager;
+import io.github.opencubicchunks.cubicchunks.chunk.IChunkManager;
 import net.minecraft.world.server.ChunkHolder;
 import net.minecraft.world.server.ChunkManager;
 import org.spongepowered.asm.mixin.Mixin;

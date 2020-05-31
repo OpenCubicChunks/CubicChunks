@@ -1,6 +1,6 @@
-package cubicchunks.cc.mixin.core.client;
+package io.github.opencubicchunks.cubicchunks.mixin.core.client;
 
-import cubicchunks.cc.CubicChunks;
+import io.github.opencubicchunks.cubicchunks.CubicChunks;
 import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;

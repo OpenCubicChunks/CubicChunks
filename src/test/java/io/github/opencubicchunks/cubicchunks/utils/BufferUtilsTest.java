@@ -1,12 +1,10 @@
-package cubicchunks.cc.utils;
+package io.github.opencubicchunks.cubicchunks.utils;
 
 import static org.junit.Assert.assertEquals;
 
 import io.netty.buffer.Unpooled;
 import net.minecraft.network.PacketBuffer;
 import org.junit.Test;
-
-import java.util.stream.IntStream;
 
 public class BufferUtilsTest {
     @Test

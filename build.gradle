@@ -17,8 +17,8 @@ apply plugin: 'eclipse'
 apply plugin: 'maven-publish'
 
 version = "${mod_version}"
-group = "io.github.${modid}" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
-archivesBaseName = "${modid}"
+group = "io.github.opencubicchunks" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
+archivesBaseName = "CubicChunks"
 
 sourceCompatibility = targetCompatibility = compileJava.sourceCompatibility = compileJava.targetCompatibility = '1.8' // Need this here so eclipse task generates correctly.
 
@@ -162,7 +162,7 @@ mixin {
 mixinGen {
     filePattern = "cubicchunks.mixins.%s.json"
     defaultRefmap = "cubicchunks.refmap.json"
-    defaultPackagePrefix = "cubicchunks.cc.mixin"
+    defaultPackagePrefix = "io.github.opencubicchunks.cubicchunks.mixin"
     defaultCompatibilityLevel = "JAVA_8"
     defaultMinVersion = "0.8"
 

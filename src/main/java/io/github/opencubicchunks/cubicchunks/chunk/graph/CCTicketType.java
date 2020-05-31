@@ -1,6 +1,6 @@
-package cubicchunks.cc.chunk.graph;
+package io.github.opencubicchunks.cubicchunks.chunk.graph;
 
-import cubicchunks.cc.chunk.util.CubePos;
+import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import net.minecraft.world.server.TicketType;
 
 import java.util.Comparator;

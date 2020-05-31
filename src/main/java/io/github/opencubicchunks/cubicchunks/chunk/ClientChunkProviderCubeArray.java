@@ -1,6 +1,6 @@
-package cubicchunks.cc.chunk;
+package io.github.opencubicchunks.cubicchunks.chunk;
 
-import cubicchunks.cc.chunk.cube.Cube;
+import io.github.opencubicchunks.cubicchunks.chunk.cube.Cube;
 
 import java.util.concurrent.atomic.AtomicReferenceArray;
 import java.util.function.Consumer;

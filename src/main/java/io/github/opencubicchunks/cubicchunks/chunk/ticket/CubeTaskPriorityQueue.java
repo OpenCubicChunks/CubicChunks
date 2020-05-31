@@ -1,9 +1,9 @@
-package cubicchunks.cc.chunk.ticket;
+package io.github.opencubicchunks.cubicchunks.chunk.ticket;
 
 import com.google.common.collect.Lists;
 import com.mojang.datafixers.util.Either;
-import cubicchunks.cc.chunk.IChunkManager;
-import cubicchunks.cc.chunk.util.CubePos;
+import io.github.opencubicchunks.cubicchunks.chunk.IChunkManager;
+import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import it.unimi.dsi.fastutil.longs.Long2ObjectLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;

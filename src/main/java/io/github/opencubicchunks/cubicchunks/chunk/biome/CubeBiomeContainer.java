@@ -1,6 +1,6 @@
-package cubicchunks.cc.chunk.biome;
+package io.github.opencubicchunks.cubicchunks.chunk.biome;
 
-import cubicchunks.cc.mixin.core.common.biome.BiomeContainerAccess;
+import io.github.opencubicchunks.cubicchunks.mixin.core.common.biome.BiomeContainerAccess;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.math.SectionPos;
 import net.minecraft.util.registry.Registry;

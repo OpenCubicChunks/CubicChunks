@@ -1,7 +1,7 @@
-package cubicchunks.cc.chunk.cube;
+package io.github.opencubicchunks.cubicchunks.chunk.cube;
 
 import com.google.common.collect.ImmutableList;
-import cubicchunks.cc.utils.MathUtil;
+import io.github.opencubicchunks.cubicchunks.utils.MathUtil;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;

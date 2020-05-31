@@ -1,8 +1,7 @@
-package cubicchunks.cc.server;
+package io.github.opencubicchunks.cubicchunks.server;
 
-import cubicchunks.cc.chunk.ICubeProvider;
-import cubicchunks.cc.chunk.util.CubePos;
-import net.minecraft.util.math.SectionPos;
+import io.github.opencubicchunks.cubicchunks.chunk.ICubeProvider;
+import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import net.minecraft.world.server.TicketType;
 
 public interface IServerChunkProvider extends ICubeProvider {

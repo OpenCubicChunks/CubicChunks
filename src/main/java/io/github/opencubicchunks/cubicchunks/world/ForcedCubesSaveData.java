@@ -1,4 +1,4 @@
-package cubicchunks.cc.world;
+package io.github.opencubicchunks.cubicchunks.world;
 
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;

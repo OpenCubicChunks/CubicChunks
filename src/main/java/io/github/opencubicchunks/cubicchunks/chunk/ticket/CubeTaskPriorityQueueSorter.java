@@ -1,11 +1,11 @@
-package cubicchunks.cc.chunk.ticket;
+package io.github.opencubicchunks.cubicchunks.chunk.ticket;
 
 import com.google.common.collect.Sets;
 import com.mojang.datafixers.util.Either;
-import cubicchunks.cc.chunk.ICubeHolder;
-import cubicchunks.cc.chunk.ICubeHolderListener;
-import cubicchunks.cc.chunk.util.CubePos;
-import cubicchunks.cc.chunk.util.Utils;
+import io.github.opencubicchunks.cubicchunks.chunk.ICubeHolder;
+import io.github.opencubicchunks.cubicchunks.chunk.ICubeHolderListener;
+import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
+import io.github.opencubicchunks.cubicchunks.chunk.util.Utils;
 import net.minecraft.util.Unit;
 import net.minecraft.util.Util;
 import net.minecraft.util.concurrent.DelegatedTaskExecutor;

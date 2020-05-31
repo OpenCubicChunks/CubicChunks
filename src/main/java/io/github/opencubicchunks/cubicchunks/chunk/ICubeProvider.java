@@ -1,8 +1,6 @@
-package cubicchunks.cc.chunk;
+package io.github.opencubicchunks.cubicchunks.chunk;
 
-import cubicchunks.cc.chunk.cube.Cube;
 import net.minecraft.world.chunk.ChunkStatus;
-import net.minecraft.world.chunk.IChunk;
 
 import javax.annotation.Nullable;
 

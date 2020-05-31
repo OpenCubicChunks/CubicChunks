@@ -1,6 +1,6 @@
-package cubicchunks.cc.network;
+package io.github.opencubicchunks.cubicchunks.network;
 
-import cubicchunks.cc.CubicChunks;
+import io.github.opencubicchunks.cubicchunks.CubicChunks;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.util.ResourceLocation;

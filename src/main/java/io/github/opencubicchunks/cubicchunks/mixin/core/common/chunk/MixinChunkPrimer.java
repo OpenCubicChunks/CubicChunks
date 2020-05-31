@@ -1,6 +1,6 @@
-package cubicchunks.cc.mixin.core.common.chunk;
+package io.github.opencubicchunks.cubicchunks.mixin.core.common.chunk;
 
-import cubicchunks.cc.CubicChunks;
+import io.github.opencubicchunks.cubicchunks.CubicChunks;
 import net.minecraft.world.chunk.ChunkPrimer;
 import net.minecraft.world.chunk.ChunkSection;
 import org.spongepowered.asm.mixin.Final;

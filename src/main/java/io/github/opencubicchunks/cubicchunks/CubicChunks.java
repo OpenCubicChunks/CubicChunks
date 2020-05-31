@@ -1,7 +1,7 @@
-package cubicchunks.cc;
+package io.github.opencubicchunks.cubicchunks;
 
-import cubicchunks.cc.misc.TestWorldType;
-import cubicchunks.cc.network.PacketDispatcher;
+import io.github.opencubicchunks.cubicchunks.misc.TestWorldType;
+import io.github.opencubicchunks.cubicchunks.network.PacketDispatcher;
 import net.minecraft.world.WorldType;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.gen.GenerationStage;

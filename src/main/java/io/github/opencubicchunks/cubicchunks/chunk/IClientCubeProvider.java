@@ -1,11 +1,9 @@
-package cubicchunks.cc.chunk;
+package io.github.opencubicchunks.cubicchunks.chunk;
 
-import cubicchunks.cc.chunk.biome.CubeBiomeContainer;
-import cubicchunks.cc.chunk.cube.Cube;
+import io.github.opencubicchunks.cubicchunks.chunk.biome.CubeBiomeContainer;
+import io.github.opencubicchunks.cubicchunks.chunk.cube.Cube;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.PacketBuffer;
-import net.minecraft.world.biome.BiomeContainer;
-import net.minecraft.world.chunk.Chunk;
 
 import javax.annotation.Nullable;
 

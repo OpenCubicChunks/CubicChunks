@@ -1,7 +1,7 @@
-package cubicchunks.cc.mixin.core.common.chunk;
+package io.github.opencubicchunks.cubicchunks.mixin.core.common.chunk;
 
 import com.mojang.datafixers.util.Either;
-import cubicchunks.cc.chunk.cube.CubePrimer;
+import io.github.opencubicchunks.cubicchunks.chunk.cube.CubePrimer;
 import net.minecraft.world.chunk.ChunkPrimer;
 import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.chunk.IChunk;

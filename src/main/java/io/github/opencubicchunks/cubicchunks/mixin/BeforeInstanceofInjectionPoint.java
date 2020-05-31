@@ -1,4 +1,4 @@
-package cubicchunks.cc.mixin;
+package io.github.opencubicchunks.cubicchunks.mixin;
 
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.AbstractInsnNode;

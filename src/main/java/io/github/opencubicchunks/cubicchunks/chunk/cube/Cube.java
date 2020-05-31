@@ -1,16 +1,13 @@
-package cubicchunks.cc.chunk.cube;
+package io.github.opencubicchunks.cubicchunks.chunk.cube;
 
-import static cubicchunks.cc.utils.Coords.indexTo32X;
-import static cubicchunks.cc.utils.Coords.indexTo32Y;
-import static cubicchunks.cc.utils.Coords.indexTo32Z;
 import static net.minecraft.world.chunk.Chunk.EMPTY_SECTION;
 
 import com.google.common.collect.Sets;
-import cubicchunks.cc.chunk.ICube;
-import cubicchunks.cc.chunk.biome.CubeBiomeContainer;
-import cubicchunks.cc.chunk.util.CubePos;
-import cubicchunks.cc.mixin.core.common.chunk.access.ChunkSectionAccess;
-import cubicchunks.cc.utils.Coords;
+import io.github.opencubicchunks.cubicchunks.chunk.ICube;
+import io.github.opencubicchunks.cubicchunks.chunk.biome.CubeBiomeContainer;
+import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
+import io.github.opencubicchunks.cubicchunks.mixin.core.common.chunk.access.ChunkSectionAccess;
+import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import it.unimi.dsi.fastutil.shorts.ShortList;
 import net.minecraft.block.Block;
@@ -82,7 +79,7 @@ public class Cube implements IChunk, ICube {
             }
 
             for (int i = 0; i < sectionsIn.length; i++) {
-                int sectionYPos = (indexTo32Y(i) * 16) + cubePosIn.getX();
+                int sectionYPos = (Coords.indexTo32Y(i) * 16) + cubePosIn.getX();
 
                 if(sectionsIn[i] != null) {
                     sections[i] = new ChunkSection(sectionYPos,
@@ -261,9 +258,9 @@ public class Cube implements IChunk, ICube {
     @Deprecated
     public SectionPos getSectionPosition(int index)
     {
-        int xPos = (indexTo32X(index) * 16) + this.cubePos.getX();
-        int yPos = (indexTo32Y(index) * 16) + this.cubePos.getY();
-        int zPos = (indexTo32Z(index) * 16) + this.cubePos.getY();
+        int xPos = (Coords.indexTo32X(index) * 16) + this.cubePos.getX();
+        int yPos = (Coords.indexTo32Y(index) * 16) + this.cubePos.getY();
+        int zPos = (Coords.indexTo32Z(index) * 16) + this.cubePos.getY();
 
         return SectionPos.of(xPos, yPos, zPos);
     }

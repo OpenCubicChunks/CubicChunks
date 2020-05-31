@@ -1,4 +1,4 @@
-package cubicchunks.cc.chunk;
+package io.github.opencubicchunks.cubicchunks.chunk;
 
 public interface ICubeGenerator {
 

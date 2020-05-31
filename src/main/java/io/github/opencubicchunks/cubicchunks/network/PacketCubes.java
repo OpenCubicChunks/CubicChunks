@@ -1,12 +1,11 @@
-package cubicchunks.cc.network;
+package io.github.opencubicchunks.cubicchunks.network;
 
-import static cubicchunks.cc.utils.Coords.cubeToSection;
+import static io.github.opencubicchunks.cubicchunks.utils.Coords.cubeToSection;
 
-import cubicchunks.cc.chunk.IClientCubeProvider;
-import cubicchunks.cc.chunk.cube.Cube;
-import cubicchunks.cc.chunk.util.CubePos;
-import cubicchunks.cc.utils.Coords;
-import cubicchunks.cc.utils.MathUtil;
+import io.github.opencubicchunks.cubicchunks.chunk.IClientCubeProvider;
+import io.github.opencubicchunks.cubicchunks.chunk.cube.Cube;
+import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
+import io.github.opencubicchunks.cubicchunks.utils.MathUtil;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import net.minecraft.client.world.ClientWorld;

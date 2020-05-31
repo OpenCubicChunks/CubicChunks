@@ -1,8 +1,8 @@
-package cubicchunks.cc.mixin.core.client.progress;
+package io.github.opencubicchunks.cubicchunks.mixin.core.client.progress;
 
-import cubicchunks.cc.chunk.ICubeStatusListener;
-import cubicchunks.cc.chunk.ITrackingCubeStatusListener;
-import cubicchunks.cc.chunk.util.CubePos;
+import io.github.opencubicchunks.cubicchunks.chunk.ICubeStatusListener;
+import io.github.opencubicchunks.cubicchunks.chunk.ITrackingCubeStatusListener;
+import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.chunk.listener.LoggingChunkStatusListener;

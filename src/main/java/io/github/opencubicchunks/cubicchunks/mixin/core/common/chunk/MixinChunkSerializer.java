@@ -1,4 +1,4 @@
-package cubicchunks.cc.mixin.core.common.chunk;
+package io.github.opencubicchunks.cubicchunks.mixin.core.common.chunk;
 
 import net.minecraft.block.Block;
 import net.minecraft.entity.Entity;

@@ -1,7 +1,6 @@
-package cubicchunks.cc.chunk.cube;
+package io.github.opencubicchunks.cubicchunks.chunk.cube;
 
-import cubicchunks.cc.chunk.biome.CubeBiomeContainer;
-import cubicchunks.cc.chunk.util.CubePos;
+import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.ChunkSection;
 

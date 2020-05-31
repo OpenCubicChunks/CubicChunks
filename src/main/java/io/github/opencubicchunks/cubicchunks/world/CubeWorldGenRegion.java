@@ -1,9 +1,9 @@
-package cubicchunks.cc.world;
+package io.github.opencubicchunks.cubicchunks.world;
 
-import static cubicchunks.cc.utils.Coords.blockToCube;
+import static io.github.opencubicchunks.cubicchunks.utils.Coords.blockToCube;
 
-import cubicchunks.cc.chunk.ICube;
-import cubicchunks.cc.chunk.util.CubePos;
+import io.github.opencubicchunks.cubicchunks.chunk.ICube;
+import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
@@ -21,7 +21,6 @@ import net.minecraft.util.Util;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.SectionPos;
 import net.minecraft.world.DifficultyInstance;
 import net.minecraft.world.ITickList;
 import net.minecraft.world.IWorld;

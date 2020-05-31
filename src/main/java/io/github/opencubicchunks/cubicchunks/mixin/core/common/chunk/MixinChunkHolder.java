@@ -1,20 +1,19 @@
-package cubicchunks.cc.mixin.core.common.chunk;
-
-import static cubicchunks.cc.chunk.util.Utils.unsafeCast;
+package io.github.opencubicchunks.cubicchunks.mixin.core.common.chunk;
 
 import com.mojang.datafixers.util.Either;
-import cubicchunks.cc.chunk.IChunkManager;
-import cubicchunks.cc.chunk.ICube;
-import cubicchunks.cc.chunk.ICubeHolder;
-import cubicchunks.cc.chunk.ICubeHolderListener;
-import cubicchunks.cc.chunk.cube.CubePrimer;
-import cubicchunks.cc.chunk.cube.CubePrimerWrapper;
-import cubicchunks.cc.chunk.cube.Cube;
-import cubicchunks.cc.chunk.util.CubePos;
-import cubicchunks.cc.network.PacketCubes;
-import cubicchunks.cc.network.PacketDispatcher;
-import cubicchunks.cc.network.PacketCubeBlockChanges;
-import cubicchunks.cc.utils.AddressTools;
+import io.github.opencubicchunks.cubicchunks.chunk.IChunkManager;
+import io.github.opencubicchunks.cubicchunks.chunk.ICube;
+import io.github.opencubicchunks.cubicchunks.chunk.ICubeHolder;
+import io.github.opencubicchunks.cubicchunks.chunk.ICubeHolderListener;
+import io.github.opencubicchunks.cubicchunks.chunk.cube.CubePrimer;
+import io.github.opencubicchunks.cubicchunks.chunk.cube.CubePrimerWrapper;
+import io.github.opencubicchunks.cubicchunks.chunk.cube.Cube;
+import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
+import io.github.opencubicchunks.cubicchunks.network.PacketCubes;
+import io.github.opencubicchunks.cubicchunks.network.PacketDispatcher;
+import io.github.opencubicchunks.cubicchunks.network.PacketCubeBlockChanges;
+import io.github.opencubicchunks.cubicchunks.utils.AddressTools;
+import io.github.opencubicchunks.cubicchunks.chunk.util.Utils;
 import it.unimi.dsi.fastutil.shorts.ShortArrayList;
 import it.unimi.dsi.fastutil.shorts.ShortArraySet;
 import net.minecraft.network.IPacket;
@@ -154,7 +153,7 @@ public abstract class MixinChunkHolder implements ICubeHolder {
         if (wasBorder && !isBorder) {
             CompletableFuture<Either<Cube, ChunkHolder.IChunkLoadingError>> completablefuture1 = this.borderCubeFuture;
             this.borderCubeFuture = UNLOADED_CUBE_FUTURE;
-            this.chainCube(unsafeCast(completablefuture1.thenApply((chunkLoadingErrorEither) -> {
+            this.chainCube(Utils.unsafeCast(completablefuture1.thenApply((chunkLoadingErrorEither) -> {
                 return chunkLoadingErrorEither.ifLeft(((IChunkManager)chunkManagerIn)::saveCubeScheduleTicks);
             })));
         }
@@ -163,7 +162,7 @@ public abstract class MixinChunkHolder implements ICubeHolder {
         boolean isTicking = currentLocationType.isAtLeast(ChunkHolder.LocationType.TICKING);
         if (!wasTicking && isTicking) {
             this.tickingCubeFuture = ((IChunkManager)chunkManagerIn).createCubeTickingFuture((ChunkHolder)(Object)this);
-            this.chainCube(unsafeCast(this.tickingCubeFuture));
+            this.chainCube(Utils.unsafeCast(this.tickingCubeFuture));
         }
 
         if (wasTicking && !isTicking) {
@@ -179,7 +178,7 @@ public abstract class MixinChunkHolder implements ICubeHolder {
             }
 
             this.entityTickingCubeFuture = ((IChunkManager)chunkManagerIn).createCubeEntityTickingFuture(this.cubePos);
-            this.chainCube(unsafeCast(this.entityTickingCubeFuture));
+            this.chainCube(Utils.unsafeCast(this.entityTickingCubeFuture));
         }
 
         if (wasEntityTicking && !isEntityTicking) {

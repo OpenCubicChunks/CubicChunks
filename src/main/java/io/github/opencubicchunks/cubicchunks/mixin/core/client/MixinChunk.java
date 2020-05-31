@@ -1,11 +1,11 @@
-package cubicchunks.cc.mixin.core.client;
+package io.github.opencubicchunks.cubicchunks.mixin.core.client;
 
-import static cubicchunks.cc.utils.Coords.blockToCube;
+import static io.github.opencubicchunks.cubicchunks.utils.Coords.blockToCube;
 
-import cubicchunks.cc.chunk.ICube;
-import cubicchunks.cc.chunk.ICubeProvider;
-import cubicchunks.cc.chunk.cube.EmptyCube;
-import cubicchunks.cc.utils.Coords;
+import io.github.opencubicchunks.cubicchunks.chunk.ICube;
+import io.github.opencubicchunks.cubicchunks.chunk.ICubeProvider;
+import io.github.opencubicchunks.cubicchunks.chunk.cube.EmptyCube;
+import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;

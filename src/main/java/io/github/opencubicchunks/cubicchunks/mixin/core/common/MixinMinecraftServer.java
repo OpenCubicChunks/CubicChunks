@@ -1,9 +1,9 @@
-package cubicchunks.cc.mixin.core.common;
+package io.github.opencubicchunks.cubicchunks.mixin.core.common;
 
-import cubicchunks.cc.chunk.ICubeStatusListener;
-import cubicchunks.cc.chunk.util.CubePos;
-import cubicchunks.cc.server.IServerChunkProvider;
-import cubicchunks.cc.world.ForcedCubesSaveData;
+import io.github.opencubicchunks.cubicchunks.chunk.ICubeStatusListener;
+import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
+import io.github.opencubicchunks.cubicchunks.server.IServerChunkProvider;
+import io.github.opencubicchunks.cubicchunks.world.ForcedCubesSaveData;
 import it.unimi.dsi.fastutil.longs.LongIterator;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.Unit;

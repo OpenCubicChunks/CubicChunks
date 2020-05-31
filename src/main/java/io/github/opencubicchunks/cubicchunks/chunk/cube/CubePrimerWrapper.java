@@ -1,4 +1,4 @@
-package cubicchunks.cc.chunk.cube;
+package io.github.opencubicchunks.cubicchunks.chunk.cube;
 
 import it.unimi.dsi.fastutil.longs.LongSet;
 import net.minecraft.block.BlockState;

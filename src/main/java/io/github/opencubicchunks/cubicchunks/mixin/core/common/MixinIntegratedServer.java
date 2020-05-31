@@ -1,4 +1,4 @@
-package cubicchunks.cc.mixin.core.common;
+package io.github.opencubicchunks.cubicchunks.mixin.core.common;
 
 import net.minecraft.server.integrated.IntegratedServer;
 import org.spongepowered.asm.mixin.Mixin;

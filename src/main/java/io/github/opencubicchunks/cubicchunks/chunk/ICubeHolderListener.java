@@ -1,7 +1,6 @@
-package cubicchunks.cc.chunk;
+package io.github.opencubicchunks.cubicchunks.chunk;
 
-import cubicchunks.cc.chunk.util.CubePos;
-import net.minecraft.util.math.SectionPos;
+import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 
 import java.util.function.IntConsumer;
 import java.util.function.IntSupplier;

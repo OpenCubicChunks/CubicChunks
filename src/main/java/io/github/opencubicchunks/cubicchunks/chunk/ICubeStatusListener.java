@@ -1,7 +1,6 @@
-package cubicchunks.cc.chunk;
+package io.github.opencubicchunks.cubicchunks.chunk;
 
-import cubicchunks.cc.chunk.util.CubePos;
-import net.minecraft.util.math.SectionPos;
+import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.chunk.listener.IChunkStatusListener;
 

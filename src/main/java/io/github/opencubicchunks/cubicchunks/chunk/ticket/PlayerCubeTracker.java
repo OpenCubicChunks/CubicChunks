@@ -1,6 +1,6 @@
-package cubicchunks.cc.chunk.ticket;
+package io.github.opencubicchunks.cubicchunks.chunk.ticket;
 
-import cubicchunks.cc.chunk.graph.CubeDistanceGraph;
+import io.github.opencubicchunks.cubicchunks.chunk.graph.CubeDistanceGraph;
 import it.unimi.dsi.fastutil.longs.Long2ByteMap;
 import it.unimi.dsi.fastutil.longs.Long2ByteOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectSet;

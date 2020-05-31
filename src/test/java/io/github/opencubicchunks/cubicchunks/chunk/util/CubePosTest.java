@@ -1,4 +1,4 @@
-package cubicchunks.cc.chunk.util;
+package io.github.opencubicchunks.cubicchunks.chunk.util;
 
 import static org.junit.Assert.*;
 

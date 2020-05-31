@@ -1,6 +1,6 @@
-package cubicchunks.cc.mixin.core.client;
+package io.github.opencubicchunks.cubicchunks.mixin.core.client;
 
-import cubicchunks.cc.mixin.core.client.access.ViewFrustumAccess;
+import io.github.opencubicchunks.cubicchunks.mixin.core.client.access.ViewFrustumAccess;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.ViewFrustum;
 import net.minecraft.client.renderer.WorldRenderer;

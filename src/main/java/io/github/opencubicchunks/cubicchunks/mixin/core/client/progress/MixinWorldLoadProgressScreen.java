@@ -1,7 +1,7 @@
-package cubicchunks.cc.mixin.core.client.progress;
+package io.github.opencubicchunks.cubicchunks.mixin.core.client.progress;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import cubicchunks.cc.chunk.ITrackingCubeStatusListener;
+import io.github.opencubicchunks.cubicchunks.chunk.ITrackingCubeStatusListener;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.WorldLoadProgressScreen;

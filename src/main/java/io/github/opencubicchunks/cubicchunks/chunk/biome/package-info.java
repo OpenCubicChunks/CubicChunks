@@ -1,6 +1,6 @@
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-package cubicchunks.cc.chunk.biome;
+package io.github.opencubicchunks.cubicchunks.chunk.biome;
 
 import mcp.MethodsReturnNonnullByDefault;
 

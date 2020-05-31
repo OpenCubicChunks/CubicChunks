@@ -1,6 +1,6 @@
-package cubicchunks.cc.chunk.graph;
+package io.github.opencubicchunks.cubicchunks.chunk.graph;
 
-import cubicchunks.cc.chunk.util.CubePos;
+import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import net.minecraft.world.lighting.LevelBasedGraph;
 
 public abstract class CubeDistanceGraph  extends LevelBasedGraph {

@@ -1,9 +1,9 @@
-package cubicchunks.cc.chunk;
+package io.github.opencubicchunks.cubicchunks.chunk;
 
 import com.mojang.datafixers.util.Either;
-import cubicchunks.cc.chunk.cube.Cube;
-import cubicchunks.cc.chunk.cube.CubeStatus;
-import cubicchunks.cc.chunk.util.CubePos;
+import io.github.opencubicchunks.cubicchunks.chunk.cube.Cube;
+import io.github.opencubicchunks.cubicchunks.chunk.cube.CubeStatus;
+import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.util.math.MathHelper;

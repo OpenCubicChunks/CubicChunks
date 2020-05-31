@@ -1,13 +1,13 @@
-package cubicchunks.cc;
+package io.github.opencubicchunks.cubicchunks;
 
-import cubicchunks.cc.chunk.ICube;
-import cubicchunks.cc.chunk.cube.Cube;
-import cubicchunks.cc.chunk.cube.CubePrimer;
-import cubicchunks.cc.chunk.cube.CubePrimerWrapper;
-import cubicchunks.cc.utils.Coords;
+import io.github.opencubicchunks.cubicchunks.chunk.ICube;
+import io.github.opencubicchunks.cubicchunks.chunk.cube.Cube;
+import io.github.opencubicchunks.cubicchunks.chunk.cube.CubePrimer;
+import io.github.opencubicchunks.cubicchunks.chunk.cube.CubePrimerWrapper;
+import io.github.opencubicchunks.cubicchunks.utils.Coords;
+import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
-import cubicchunks.cc.chunk.util.CubePos;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkSection;

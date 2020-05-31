@@ -1,4 +1,4 @@
-package cubicchunks.cc.misc;
+package io.github.opencubicchunks.cubicchunks.misc;
 
 import net.minecraft.world.World;
 import net.minecraft.world.WorldType;

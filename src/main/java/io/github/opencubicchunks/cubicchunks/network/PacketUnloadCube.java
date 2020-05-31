@@ -1,8 +1,7 @@
-package cubicchunks.cc.network;
+package io.github.opencubicchunks.cubicchunks.network;
 
-import cubicchunks.cc.chunk.IClientCubeProvider;
-import cubicchunks.cc.chunk.util.CubePos;
-import net.minecraft.client.multiplayer.ClientChunkProvider;
+import io.github.opencubicchunks.cubicchunks.chunk.IClientCubeProvider;
+import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.AbstractChunkProvider;

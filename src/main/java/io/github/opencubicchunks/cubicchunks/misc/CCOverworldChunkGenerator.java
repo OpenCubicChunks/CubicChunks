@@ -1,4 +1,4 @@
-package cubicchunks.cc.misc;
+package io.github.opencubicchunks.cubicchunks.misc;
 
 import net.minecraft.entity.EntityClassification;
 import net.minecraft.util.SharedSeedRandom;
