@@ -17,7 +17,6 @@
         "common.chunk.MixinChunkHolder",
         "common.chunk.MixinChunkManager",
         "common.chunk.MixinChunkPaletteFormat",
-        "common.chunk.MixinChunkPrimer",
         "common.chunk.MixinChunkSerializer",
         "common.chunk.MixinChunkStatus",
         "common.chunk.MixinEntityTracker",
