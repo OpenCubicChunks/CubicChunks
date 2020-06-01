@@ -1,5 +1,6 @@
 package io.github.opencubicchunks.cubicchunks.chunk.ticket;
 
+import io.github.opencubicchunks.cubicchunks.chunk.ICube;
 import io.github.opencubicchunks.cubicchunks.chunk.graph.CCTicketType;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import it.unimi.dsi.fastutil.longs.Long2IntMap;
@@ -18,7 +19,8 @@ public class PlayerCubeTicketTracker extends PlayerCubeTracker {
 
 
     public PlayerCubeTicketTracker(ITicketManager iTicketManager, int i) {
-        super(iTicketManager, 17);
+        //possibly make this a constant - there is only ever one playercubeticketracker at a time, so this should be fine.
+        super(iTicketManager, (32 / (ICube.BLOCK_SIZE / 16)) + 1);
         this.iTicketManager = iTicketManager;
         this.viewDistance = 0;
         this.distances.defaultReturnValue(i + 2);

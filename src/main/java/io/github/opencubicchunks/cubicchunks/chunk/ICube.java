@@ -15,7 +15,7 @@ public interface ICube extends IBlockReader {
 
     int CUBEDIAMETER = 2;
     int CUBESIZE = CUBEDIAMETER * CUBEDIAMETER * CUBEDIAMETER;
-    int BLOCK_SIZE = 32;
+    int BLOCK_SIZE = 16 * CUBEDIAMETER;
 
     ChunkSection[] getCubeSections();
     CubePos getCubePos();
