@@ -69,6 +69,7 @@ import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.apache.logging.log4j.Logger;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -115,7 +116,6 @@ public abstract class MixinChunkManager implements IChunkManager {
 
     private final Queue<Runnable> saveCubeTasks = Queues.newConcurrentLinkedQueue();
 
-
     @Shadow @Final private static Logger LOGGER;
 
     @Shadow @Final private ServerWorldLightManager lightManager;
@@ -146,8 +146,6 @@ public abstract class MixinChunkManager implements IChunkManager {
     @Shadow @Final private Int2ObjectMap<ChunkManager.EntityTracker> entities;
 
     @Shadow @Final private Long2ObjectLinkedOpenHashMap<ChunkHolder> loadedChunks;
-
-    @Shadow private volatile Long2ObjectLinkedOpenHashMap<ChunkHolder> immutableLoadedChunks;
 
     @Shadow @Final private PlayerGenerationTracker playerGenerationTracker;
 
@@ -793,28 +791,45 @@ public abstract class MixinChunkManager implements IChunkManager {
         });
     }
 
-    @Inject(method = "setPlayerTracking", at = @At("RETURN"))
-    void setPlayerTracking(ServerPlayerEntity player, boolean track, CallbackInfo ci) {
+    /**
+     * @author NotStirred
+     * @reason Due to vanilla calling ChunkManager#func_223489_c, which updates player#managedSectionPos, this is required.
+     */
+    @Overwrite
+    void setPlayerTracking(ServerPlayerEntity player, boolean track) {
         boolean cannotGenerateChunks = this.cannotGenerateChunks(player);
         boolean cannotGenerateChunksTracker = this.playerGenerationTracker.cannotGenerateChunks(player);
         int xFloor = Coords.getCubeXForEntity(player);
         int yFloor = Coords.getCubeYForEntity(player);
         int zFloor = Coords.getCubeZForEntity(player);
         if (track) {
-            this.playerGenerationTracker.addPlayer(CubePos.asLong(xFloor, yFloor, zFloor), player, cannotGenerateChunks);
-            this.sendPlayerCubePositionPacket(player);
+            this.playerGenerationTracker.addPlayer(CubePos.of(xFloor, yFloor, zFloor).asChunkPos().asLong(), player, cannotGenerateChunks);
+            this.sendPlayerCubePositionPacket(player); //This also sends the vanilla packet, as player#ManagedSectionPos is changed in this method.
             if (!cannotGenerateChunks) {
-                //This is ok, as we mixin into this method:
-                this.ticketManager.updatePlayerPosition(SectionPos.from(player), player);
+                this.ticketManager.updatePlayerPosition(SectionPos.from(player), player); //Vanilla
+                ((ITicketManager)this.ticketManager).updateCubePlayerPosition(CubePos.from(SectionPos.from(player)), player);
             }
         } else {
-            CubePos cubePos = CubePos.from(player.getManagedSectionPos());
-            this.playerGenerationTracker.removePlayer(cubePos.asLong(), player);
+            SectionPos managedSectionPos = player.getManagedSectionPos(); //Vanilla
+            CubePos cubePos = CubePos.from(managedSectionPos);
+            this.playerGenerationTracker.removePlayer(cubePos.asChunkPos().asLong(), player);
             if (!cannotGenerateChunksTracker) {
-                ((ITicketManager)this.ticketManager).removePlayer(cubePos, player);
+                this.ticketManager.removePlayer(managedSectionPos, player); //Vanilla
+                ((ITicketManager)this.ticketManager).removeCubePlayer(cubePos, player);
             }
         }
 
+        //Vanilla
+        int i = MathHelper.floor(player.getPosX()) >> 4;
+        int j = MathHelper.floor(player.getPosZ()) >> 4;
+
+        for(int l = i - this.viewDistance; l <= i + this.viewDistance; ++l) {
+            for(int k = j - this.viewDistance; k <= j + this.viewDistance; ++k) {
+                ChunkPos chunkpos = new ChunkPos(l, k);
+                this.setChunkLoadedAtClient(player, chunkpos, new IPacket[2], !track, track);
+            }
+        }
+        //CC
         int viewDistanceCubes = MathUtil.ceilDiv(this.viewDistance, 2);
         for (int ix = xFloor - viewDistanceCubes; ix <= xFloor + viewDistanceCubes; ++ix) {
             for (int iy = yFloor - viewDistanceCubes; iy <= yFloor + viewDistanceCubes; ++iy) {
@@ -826,14 +841,22 @@ public abstract class MixinChunkManager implements IChunkManager {
         }
     }
 
-    @Inject(method = "updatePlayerPosition", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/math/MathHelper;floor(D)I", ordinal = 0),
-            cancellable = true)
-    public void updatePlayerPosition(ServerPlayerEntity player, CallbackInfo ci) {
-        // This needs to be an inject right after the first loop:
-        //       for(ChunkManager.EntityTracker chunkmanager$entitytracker : this.entities.values()) {
-        // so that we get to handle the managed section position and update it
+    //@Inject(method = "updatePlayerPosition", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/math/MathHelper;floor(D)I", ordinal = 0),
+    // cancellable = true)
+    /**
+     * @author NotStirred
+     * @reason To fix crash when vanilla updated player#managedSectionPos
+     */
+    @Overwrite
+    public void updatePlayerPosition(ServerPlayerEntity player) {
 
-        ci.cancel();
+        for(ChunkManager.EntityTracker chunkmanager$entitytracker : this.entities.values()) {
+            if (((EntityTrackerAccess)chunkmanager$entitytracker).getEntity() == player) {
+                chunkmanager$entitytracker.updateTrackingState(this.world.getPlayers());
+            } else {
+                chunkmanager$entitytracker.updateTrackingState(player);
+            }
+        }
 
         SectionPos managedSectionPos = player.getManagedSectionPos();
         SectionPos newSectionPos = SectionPos.from(player);
@@ -850,19 +873,22 @@ public abstract class MixinChunkManager implements IChunkManager {
         boolean prevNoGenerate = this.playerGenerationTracker.func_225419_d(player);
         boolean nowNoGenerate = this.cannotGenerateChunks(player);
 
-        boolean sectionPosChanged = !managedSectionPos.equals(newSectionPos);
+        boolean sectionPosChanged = managedSectionPos.asLong() != newSectionPos.asLong();
 
         if (sectionPosChanged || prevNoGenerate != nowNoGenerate) {
             this.sendPlayerCubePositionPacket(player);
             // remove player is generation was allowed on last update
             if (!prevNoGenerate) {
-                ((ITicketManager) this.ticketManager).removePlayer(cubePosManaged, player);
+                this.ticketManager.removePlayer(managedSectionPos, player);
+                ((ITicketManager) this.ticketManager).removeCubePlayer(cubePosManaged, player);
+
             }
 
             // update the position if generation is allowed now
             if (!nowNoGenerate) {
                 // we are mixin into this method, so it should work as this:
-                this.ticketManager.updatePlayerPosition(newCubePos.asSectionPos(), player);
+                this.ticketManager.updatePlayerPosition(newSectionPos, player); //Vanilla
+                ((ITicketManager)this.ticketManager).updateCubePlayerPosition(newCubePos, player);
             }
 
             if (!prevNoGenerate && nowNoGenerate) {

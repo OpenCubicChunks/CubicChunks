@@ -40,7 +40,9 @@ public interface ITicketManager {
     // forceChunk
     void forceCube(CubePos pos, boolean add);
 
-    void removePlayer(CubePos cubePosIn, ServerPlayerEntity player);
+    void updateCubePlayerPosition(CubePos cubePos, ServerPlayerEntity player);
+
+    void removeCubePlayer(CubePos cubePosIn, ServerPlayerEntity player);
 
     int getSpawningCubeCount();
 

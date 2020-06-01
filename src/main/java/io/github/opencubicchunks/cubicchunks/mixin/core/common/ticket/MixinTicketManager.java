@@ -207,16 +207,16 @@ public abstract class MixinTicketManager implements ITicketManager {
         }
     }
 
-    @Inject(method = "updatePlayerPosition", at = @At("RETURN"))
-    public void updatePlayerPosition(SectionPos sectionPos, ServerPlayerEntity player, CallbackInfo ci) {
-        long i = CubePos.from(sectionPos).asLong();
+    @Override
+    public void updateCubePlayerPosition(CubePos cubePos, ServerPlayerEntity player) {
+        long i = cubePos.asLong();
         this.playersByCubePos.computeIfAbsent(i, (x) -> new ObjectOpenHashSet<>()).add(player);
         this.playerCubeTracker.updateSourceLevel(i, 0, true);
         this.playerCubeTicketTracker.updateSourceLevel(i, 0, true);
     }
 
     @Override
-    public void removePlayer(CubePos cubePosIn, ServerPlayerEntity player) {
+    public void removeCubePlayer(CubePos cubePosIn, ServerPlayerEntity player) {
         long i = cubePosIn.asLong();
         ObjectSet<ServerPlayerEntity> objectset = this.playersByCubePos.get(i);
         objectset.remove(player);
