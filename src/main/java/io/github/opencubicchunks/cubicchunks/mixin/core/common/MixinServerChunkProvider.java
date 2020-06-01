@@ -192,6 +192,7 @@ public abstract class MixinServerChunkProvider implements IServerChunkProvider {
         this.recentCubes[0] = newCubeIn;
     }
 
+    // func_217235_l
     private boolean refreshAndInvalidate() {
         boolean flag = this.ticketManager.processUpdates(this.chunkManager);
         boolean flag1 = ((ChunkManagerAccess)this.chunkManager).refreshOffThreadCacheSection();

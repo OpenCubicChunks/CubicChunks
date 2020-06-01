@@ -50,7 +50,7 @@ public abstract class MixinTicketManager implements ITicketManager {
     @Shadow private long currentTime;
     //@Final @Shadow private Set<ChunkHolder> chunkHolders;
 
-    @Shadow protected static int getLevel(SortedArraySet<Ticket<?>> p_229844_0_) {
+    @Shadow private static int getLevel(SortedArraySet<Ticket<?>> p_229844_0_) {
         throw new Error("Mixin did not apply correctly");
     }
 
@@ -111,14 +111,19 @@ public abstract class MixinTicketManager implements ITicketManager {
 
     @Inject(method = "processUpdates", at = @At("RETURN"), cancellable = true)
     public void processUpdates(ChunkManager chunkManager, CallbackInfoReturnable<Boolean> callbackInfoReturnable) {
+        // Minecraft.getInstance().getIntegratedServer().getProfiler().startSection("cubeTrackerUpdates");
         this.playerCubeTracker.processAllUpdates();
+        // Minecraft.getInstance().getIntegratedServer().getProfiler().endStartSection("cubeTicketTrackerUpdates");
         this.playerCubeTicketTracker.processAllUpdates();
+        // Minecraft.getInstance().getIntegratedServer().getProfiler().endStartSection("cubeTicketTracker");
         int i = Integer.MAX_VALUE - this.cubeTicketTracker.update(Integer.MAX_VALUE);
+        // Minecraft.getInstance().getIntegratedServer().getProfiler().endStartSection("cubeHolderTick");
         boolean flag = i != 0;
         if (!this.cubeHolders.isEmpty()) {
             this.cubeHolders.forEach((cubeHolder) -> ((ChunkHolderAccess) cubeHolder).processUpdatesCC(chunkManager));
             this.cubeHolders.clear();
             callbackInfoReturnable.setReturnValue(true);
+            //Minecraft.getInstance().getIntegratedServer().getProfiler().endSection();// cubeHolderTick
             return;
         } else {
             if (!this.cubePositions.isEmpty()) {
@@ -143,8 +148,8 @@ public abstract class MixinTicketManager implements ITicketManager {
                 this.cubePositions.clear();
             }
             callbackInfoReturnable.setReturnValue(flag | callbackInfoReturnable.getReturnValueZ());
-            return;
         }
+        //Minecraft.getInstance().getIntegratedServer().getProfiler().endSection();// cubeHolderTick
     }
 
     //BEGIN OVERWRITE

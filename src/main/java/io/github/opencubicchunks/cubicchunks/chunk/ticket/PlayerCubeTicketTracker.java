@@ -18,7 +18,7 @@ public class PlayerCubeTicketTracker extends PlayerCubeTracker {
 
 
     public PlayerCubeTicketTracker(ITicketManager iTicketManager, int i) {
-        super(iTicketManager, i);
+        super(iTicketManager, 17);
         this.iTicketManager = iTicketManager;
         this.viewDistance = 0;
         this.distances.defaultReturnValue(i + 2);
