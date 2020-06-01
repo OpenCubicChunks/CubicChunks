@@ -325,11 +325,19 @@ public class Cube implements IChunk, ICube {
 
     // TODO: obfuscation, this overrides both IChunk and ICube
     @Nullable
-    public BlockState setBlockState(BlockPos pos, BlockState state, boolean isMoving) {
+    public BlockState setBlock(BlockPos pos, BlockState state, boolean isMoving) {
         return this.setBlockState(Coords.blockToIndex32(pos.getX(), pos.getY(), pos.getZ()), pos, state, isMoving);
     }
 
+    @Nullable @Override public BlockState setBlockState(BlockPos pos, BlockState state, boolean isMoving) {
+        return setBlock(pos, state, isMoving);
+    }
+
     @Override public void addTileEntity(BlockPos pos, TileEntity tileEntityIn) {
+        addCubeTileEntity(pos, tileEntityIn);
+    }
+
+    @Override public void addCubeTileEntity(BlockPos pos, TileEntity tileEntityIn) {
         if (this.getBlockState(pos).hasTileEntity()) {
             tileEntityIn.setWorldAndPos(this.world, pos);
             tileEntityIn.validate();
@@ -428,10 +436,18 @@ public class Cube implements IChunk, ICube {
     }
 
     @Override public void setModified(boolean modified) {
-        this.dirty = modified;
+        setDirty(modified);
     }
 
     @Override public boolean isModified() {
+        return isDirty();
+    }
+
+    @Override public void setDirty(boolean modified) {
+        this.dirty = modified;
+    }
+
+    @Override public boolean isDirty() {
         return dirty;
     }
 
@@ -440,13 +456,17 @@ public class Cube implements IChunk, ICube {
         return this.cubeStatus;
     }
 
-    @Override public void removeTileEntity(BlockPos pos) {
+    @Override public void removeCubeTileEntity(BlockPos pos) {
         if (this.loaded || this.world.isRemote()) {
             TileEntity tileentity = this.tileEntities.remove(pos);
             if (tileentity != null) {
                 tileentity.remove();
             }
         }
+    }
+
+    @Override public void removeTileEntity(BlockPos pos) {
+        removeCubeTileEntity(pos);
     }
 
     @Override public ShortList[] getPackedPositions() {

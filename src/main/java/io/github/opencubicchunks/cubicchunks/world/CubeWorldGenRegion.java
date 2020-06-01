@@ -229,7 +229,7 @@ public class CubeWorldGenRegion implements IWorld {
                 }
 
                 if (tileentity != null) {
-                    icube.addTileEntity(pos, tileentity);
+                    icube.addCubeTileEntity(pos, tileentity);
                     return tileentity;
                 }
             }
@@ -303,13 +303,13 @@ public class CubeWorldGenRegion implements IWorld {
 
     @Override public boolean setBlockState(BlockPos pos, BlockState newState, int flags) {
         ICube icube = this.getCube(pos);
-        BlockState blockstate = icube.setBlockState(pos, newState, false);
+        BlockState blockstate = icube.setBlock(pos, newState, false);
         if (blockstate != null) {
             this.world.onBlockStateChange(pos, blockstate, newState);
         }
         if (newState.hasTileEntity()) {
             if (icube.getCubeStatus().getType() == ChunkStatus.Type.LEVELCHUNK) {
-                icube.addTileEntity(pos, newState.createTileEntity(this));
+                icube.addCubeTileEntity(pos, newState.createTileEntity(this));
             } else {
                 CompoundNBT compoundnbt = new CompoundNBT();
                 compoundnbt.putInt("x", pos.getX());
@@ -319,7 +319,7 @@ public class CubeWorldGenRegion implements IWorld {
                 //icube.addTileEntity(compoundnbt);
             }
         } else if (blockstate != null && blockstate.hasTileEntity()) {
-            icube.removeTileEntity(pos);
+            icube.removeCubeTileEntity(pos);
         }
 
         if (newState.blockNeedsPostProcessing(this, pos)) {

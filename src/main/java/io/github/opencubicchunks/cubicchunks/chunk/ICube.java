@@ -23,14 +23,17 @@ public interface ICube extends IBlockReader {
     void setCubeStatus(ChunkStatus status);
     ChunkStatus getCubeStatus();
 
-    @Nullable BlockState setBlockState(BlockPos pos, BlockState state, boolean isMoving);
+    // this can't be setBlockState because the implementations also implement IChunk which already has setBlockState and this breaks obfuscation
+    @Nullable BlockState setBlock(BlockPos pos, BlockState state, boolean isMoving);
 
-    void addTileEntity(BlockPos pos, TileEntity tileEntity);
-    void removeTileEntity(BlockPos pos);
+    // can't be add/removeTileEntity due to obfuscation issues with IChunk
+    void addCubeTileEntity(BlockPos pos, TileEntity tileEntity);
+    void removeCubeTileEntity(BlockPos pos);
 
-    boolean isModified();
+    // can't be isModified due to obfuscation issues with IChunk
+    boolean isDirty();
 
-    void setModified(boolean modified);
+    void setDirty(boolean modified);
 
     @Override default BlockState getBlockState(BlockPos pos) {
         return getBlockState(Coords.localX(pos), Coords.localY(pos), Coords.localZ(pos));

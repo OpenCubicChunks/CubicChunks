@@ -64,11 +64,11 @@ public class CubePrimerWrapper extends CubePrimer {
     }
 
     @Override @Nullable
-    public BlockState setBlockState(BlockPos pos, BlockState state, boolean isMoving) {
+    public BlockState setBlock(BlockPos pos, BlockState state, boolean isMoving) {
         return null;
     }
 
-    @Override public void addTileEntity(BlockPos pos, TileEntity tileEntityIn) {
+    @Override public void addCubeTileEntity(BlockPos pos, TileEntity tileEntityIn) {
     }
 
     /**
@@ -143,19 +143,19 @@ public class CubePrimerWrapper extends CubePrimer {
         return this.cube.getBiomes();
     }
 
-    @Override public void setModified(boolean modified) {
-        this.cube.setModified(modified);
+    @Override public void setDirty(boolean modified) {
+        this.cube.setDirty(modified);
     }
 
-    @Override public boolean isModified() {
-        return this.cube.isModified();
+    @Override public boolean isDirty() {
+        return this.cube.isDirty();
     }
 
     @Override public ChunkStatus getStatus() {
         return this.cube.getCubeStatus();
     }
 
-    @Override public void removeTileEntity(BlockPos pos) {
+    @Override public void removeCubeTileEntity(BlockPos pos) {
     }
 
     @Override public void markBlockForPostprocessing(BlockPos pos) {

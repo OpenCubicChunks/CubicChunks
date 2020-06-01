@@ -112,11 +112,11 @@ public class MixinChunkStatus {
                         for (int z = 0; z < ICube.BLOCK_SIZE; z++) {
                             BlockPos pos = new BlockPos(x, y, z);
                             if (cubeY == 2 && y == ICube.BLOCK_SIZE - 1) {
-                                cube.setBlockState(pos, Blocks.GRASS_BLOCK.getDefaultState(), false);
+                                cube.setBlock(pos, Blocks.GRASS_BLOCK.getDefaultState(), false);
                             } else if (cubeY == 0 && y == 0) {
-                                cube.setBlockState(pos, Blocks.BEDROCK.getDefaultState(), false);
+                                cube.setBlock(pos, Blocks.BEDROCK.getDefaultState(), false);
                             } else {
-                                cube.setBlockState(pos, Blocks.STONE.getDefaultState(), false);
+                                cube.setBlock(pos, Blocks.STONE.getDefaultState(), false);
                             }
                         }
                     }

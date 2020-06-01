@@ -248,7 +248,7 @@ public abstract class MixinChunkManager implements IChunkManager {
 
     // chunkSave
     private boolean cubeSave(ICube cube) {
-        if (!cube.isModified()) {
+        if (!cube.isDirty()) {
             return false;
         } else {
             try {
@@ -259,7 +259,7 @@ public abstract class MixinChunkManager implements IChunkManager {
             }
 
             // cube.setLastSaveTime(this.world.getGameTime());
-            cube.setModified(false);
+            cube.setDirty(false);
             CubePos chunkpos = cube.getCubePos();
 
             try {

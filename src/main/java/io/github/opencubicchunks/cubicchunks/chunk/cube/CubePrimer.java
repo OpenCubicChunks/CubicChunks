@@ -83,7 +83,7 @@ public class CubePrimer implements ICube, IChunk {
     }
 
     @Nullable
-    public BlockState setBlockState(BlockPos pos, BlockState state, boolean isMoving) {
+    public BlockState setBlock(BlockPos pos, BlockState state, boolean isMoving) {
         int x = pos.getX() & 0xF;
         int y = pos.getY() & 0xF;
         int z = pos.getZ() & 0xF;
@@ -132,11 +132,24 @@ public class CubePrimer implements ICube, IChunk {
         }
     }
 
+    @Nullable @Override public BlockState setBlockState(BlockPos pos, BlockState state, boolean isMoving) {
+        return setBlock(pos, state, isMoving);
+    }
+
     @Override public void addTileEntity(BlockPos pos, TileEntity tileEntityIn) {
+        addCubeTileEntity(pos, tileEntityIn);
+    }
+
+    @Override public void addCubeTileEntity(BlockPos pos, TileEntity tileEntityIn) {
         tileEntityIn.setPos(pos);
         this.tileEntities.put(pos, tileEntityIn);
     }
+
     @Override public void removeTileEntity(BlockPos pos) {
+        removeCubeTileEntity(pos);
+    }
+
+    @Override public void removeCubeTileEntity(BlockPos pos) {
         this.tileEntities.remove(pos);
         //TODO: reimplement deferredtileentities
         //this.deferredTileEntities.remove(pos);
@@ -202,12 +215,20 @@ public class CubePrimer implements ICube, IChunk {
         throw new UnsupportedOperationException("For later implementation");
     }
 
-
     @Override public void setModified(boolean modified) {
-        this.modified = modified;
+        setDirty(modified);
     }
 
     @Override public boolean isModified() {
+        return isDirty();
+    }
+
+
+    @Override public void setDirty(boolean modified) {
+        this.modified = modified;
+    }
+
+    @Override public boolean isDirty() {
         return modified;
     }
 
