@@ -2,7 +2,10 @@ package io.github.opencubicchunks.cubicchunks.mixin.core.common.chunk;
 
 import com.mojang.datafixers.util.Either;
 import io.github.opencubicchunks.cubicchunks.chunk.ICube;
+import io.github.opencubicchunks.cubicchunks.chunk.ICubeGenerator;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.CubePrimer;
+import io.github.opencubicchunks.cubicchunks.chunk.util.Utils;
+import io.github.opencubicchunks.cubicchunks.world.CubeWorldGenRegion;
 import net.minecraft.block.Blocks;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.chunk.ChunkStatus;
@@ -104,24 +107,7 @@ public class MixinChunkStatus {
         ci.cancel();
         if (chunk instanceof ICube) {
             // generator.makeBase(new CubeWorldGenRegion(world, unsafeCast(neighbors)), chunk);
-            ICube cube = (ICube) chunk;
-            int cubeY = cube.getCubePos().getY();
-            if (cubeY < 3) {
-                for (int x = 0; x < ICube.BLOCK_SIZE; x++) {
-                    for (int y = 0; y < ICube.BLOCK_SIZE; y++) {
-                        for (int z = 0; z < ICube.BLOCK_SIZE; z++) {
-                            BlockPos pos = new BlockPos(x, y, z);
-                            if (cubeY == 2 && y == ICube.BLOCK_SIZE - 1) {
-                                cube.setBlock(pos, Blocks.GRASS_BLOCK.getDefaultState(), false);
-                            } else if (cubeY == 0 && y == 0) {
-                                cube.setBlock(pos, Blocks.BEDROCK.getDefaultState(), false);
-                            } else {
-                                cube.setBlock(pos, Blocks.STONE.getDefaultState(), false);
-                            }
-                        }
-                    }
-                }
-            }
+            ((ICubeGenerator) generator).makeBase(new CubeWorldGenRegion(world, Utils.unsafeCast(neighbors)), (ICube) chunk);
         }
     }
 

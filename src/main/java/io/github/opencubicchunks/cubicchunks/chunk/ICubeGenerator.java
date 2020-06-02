@@ -1,5 +1,9 @@
 package io.github.opencubicchunks.cubicchunks.chunk;
 
-public interface ICubeGenerator {
+import net.minecraft.world.IWorld;
+import net.minecraft.world.chunk.IChunk;
 
+public interface ICubeGenerator {
+    default void makeBase(IWorld worldIn, ICube chunkIn) {
+    }
 }
