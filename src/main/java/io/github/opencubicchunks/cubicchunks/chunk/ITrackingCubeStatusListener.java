@@ -2,7 +2,9 @@ package io.github.opencubicchunks.cubicchunks.chunk;
 
 import net.minecraft.world.chunk.ChunkStatus;
 
+import javax.annotation.Nullable;
+
 public interface ITrackingCubeStatusListener {
 
-    ChunkStatus getCubeStatus(int x, int y, int z);
+    @Nullable ChunkStatus getCubeStatus(int x, int y, int z);
 }
