@@ -990,9 +990,10 @@ public abstract class MixinChunkManager implements IChunkManager {
         }
     }
 
-    @Inject(method = "setViewDistance", at = @At("RETURN"))
+    // this needs to be at HEAD, otherwise we are not going to see the view distance being different
+    @Inject(method = "setViewDistance", at = @At("HEAD"))
     protected void setViewDistance(int viewDistance, CallbackInfo ci) {
-        viewDistance = MathUtil.ceilDiv(viewDistance, 2);
+        viewDistance = Coords.sectionToCubeViewDistance(viewDistance);
         int viewDistanceCubes = MathUtil.ceilDiv(this.viewDistance, 2);
         int i = MathHelper.clamp(viewDistance + 1, 3, 33);
         if (i != viewDistanceCubes) {
