@@ -14,6 +14,7 @@ import net.minecraft.world.server.ChunkHolder;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.IntFunction;
+import java.util.function.IntSupplier;
 
 import javax.annotation.Nullable;
 
@@ -74,4 +75,8 @@ public interface IChunkManager {
         int dZ = cubePosIn.getZ() - z;
         return Math.max(Math.max(Math.abs(dX), Math.abs(dZ)), Math.abs(dY));
     }
+
+    IntSupplier getCompletedLevel(long cubePosIn);
+
+    void releaseLightTicket(CubePos cubePos);
 }

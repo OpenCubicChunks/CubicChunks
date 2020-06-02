@@ -154,7 +154,6 @@ public abstract class MixinTicketManager implements ITicketManager {
 
     //BEGIN OVERWRITE
 
-    //TODO: check if there is another way to do this
     /**
      * @author NotStirred
      * @reason CC must also update it's tracker&tickets

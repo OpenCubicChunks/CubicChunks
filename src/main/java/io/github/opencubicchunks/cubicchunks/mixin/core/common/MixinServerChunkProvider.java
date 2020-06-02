@@ -61,6 +61,11 @@ public abstract class MixinServerChunkProvider implements IServerChunkProvider {
         ((ITicketManager) this.ticketManager).register(type, pos, distance, value);
     }
 
+    public <T> void releaseTicket(TicketType<T> type, CubePos pos, int distance, T value)
+    {
+        ((ITicketManager) this.ticketManager).release(type, pos, distance, value);
+    }
+
     @Override public int getLoadedCubesCount() {
         return ((IChunkManager) chunkManager).getLoadedCubesCount();
     }
@@ -199,12 +204,12 @@ public abstract class MixinServerChunkProvider implements IServerChunkProvider {
         if (!flag && !flag1) {
             return false;
         } else {
-            this.invalidateCaches();
+            this.invalidateCubeCaches();
             return true;
         }
     }
 
-    private void invalidateCaches() {
+    private void invalidateCubeCaches() {
         Arrays.fill(this.recentCubePositions, CubicChunks.SECTIONPOS_SENTINEL);
         Arrays.fill(this.recentCubeStatuses, (Object)null);
         Arrays.fill(this.recentCubes, (Object)null);

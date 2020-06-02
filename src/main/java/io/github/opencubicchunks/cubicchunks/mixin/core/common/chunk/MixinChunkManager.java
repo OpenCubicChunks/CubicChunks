@@ -6,6 +6,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Queues;
 import com.mojang.datafixers.DataFixer;
 import com.mojang.datafixers.util.Either;
+import io.github.opencubicchunks.cubicchunks.chunk.ticket.CubeTaskPriorityQueue;
 import io.github.opencubicchunks.cubicchunks.world.storage.CubeSerializer;
 import io.github.opencubicchunks.cubicchunks.chunk.IChunkManager;
 import io.github.opencubicchunks.cubicchunks.chunk.ICube;
@@ -54,6 +55,7 @@ import net.minecraft.util.math.SectionPos;
 import net.minecraft.village.PointOfInterestManager;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkStatus;
+import net.minecraft.world.chunk.ChunkTaskPriorityQueue;
 import net.minecraft.world.chunk.IChunk;
 import net.minecraft.world.chunk.IChunkLightProvider;
 import net.minecraft.world.chunk.PlayerGenerationTracker;
@@ -89,6 +91,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BooleanSupplier;
 import java.util.function.IntFunction;
+import java.util.function.IntSupplier;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -436,7 +439,7 @@ public abstract class MixinChunkManager implements IChunkManager {
                             if (cube.getCubeStatus().isAtLeast(chunkStatusIn)) {
                                 CompletableFuture<Either<ICube, ChunkHolder.IChunkLoadingError>> completablefuture1;
                                 if (chunkStatusIn == ChunkStatus.LIGHT) {
-                                    completablefuture1 = this.sectionGenerate(chunkHolderIn, chunkStatusIn);
+                                    completablefuture1 = this.cubeGenerate(chunkHolderIn, chunkStatusIn);
                                 } else {
                                     completablefuture1 = Utils.unsafeCast(
                                             chunkStatusIn.doLoadingWork(this.world, this.templateManager, this.lightManager, (chunk) -> {
@@ -447,7 +450,7 @@ public abstract class MixinChunkManager implements IChunkManager {
                                 ((ICubeStatusListener) this.statusListener).cubeStatusChanged(cubePos, chunkStatusIn);
                                 return completablefuture1;
                             } else {
-                                return Utils.unsafeCast(this.sectionGenerate(chunkHolderIn, chunkStatusIn));
+                                return this.cubeGenerate(chunkHolderIn, chunkStatusIn);
                             }
                         }
                     }, this.mainThread));
@@ -569,7 +572,8 @@ public abstract class MixinChunkManager implements IChunkManager {
     }
 
     // func_219209_c
-    protected void releaseLightTicket(CubePos cubePos) {
+    @Override
+    public void releaseLightTicket(CubePos cubePos) {
         this.mainThread.enqueue(Util.namedRunnable(() -> {
             ((ITicketManager) this.ticketManager).releaseWithLevel(CCTicketType.CCLIGHT,
                     cubePos, 33 + CubeStatus.getDistance(ChunkStatus.FEATURES), cubePos);
@@ -1138,5 +1142,14 @@ public abstract class MixinChunkManager implements IChunkManager {
             z = Coords.getCubeZForEntity(player);
         }
         return IChunkManager.getCubeDistance(pos, x, y, z);
+    }
+
+    // func_219191_c
+    public IntSupplier getCompletedLevel(long cubePosIn) {
+        return () -> {
+            ChunkHolder chunkholder = this.getImmutableCubeHolder(cubePosIn);
+            return chunkholder == null ? CubeTaskPriorityQueue.levelCount - 1 : Math.min(chunkholder.func_219281_j(),
+                    CubeTaskPriorityQueue.levelCount - 1);
+        };
     }
 }

@@ -59,7 +59,8 @@ public class PlayerCubeTicketTracker extends PlayerCubeTracker {
             } else {
                 iTicketManager.getPlayerCubeTicketThrottlerSorter().enqueue(CubeTaskPriorityQueueSorter.createSorterMsg(() ->
                         iTicketManager.executor().execute(() ->
-                                iTicketManager.releaseCube(cubePosIn, ticket)), cubePosIn, true));
+                                iTicketManager.releaseCube(cubePosIn, ticket)),
+                        cubePosIn, true));
             }
         }
 

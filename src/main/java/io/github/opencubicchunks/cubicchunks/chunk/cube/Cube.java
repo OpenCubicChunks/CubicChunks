@@ -36,6 +36,7 @@ import net.minecraft.world.gen.Heightmap;
 import net.minecraft.world.gen.feature.structure.StructureStart;
 import net.minecraft.world.lighting.WorldLightManager;
 import net.minecraftforge.common.util.Constants;
+import org.spongepowered.asm.mixin.Overwrite;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -61,6 +62,8 @@ public class Cube implements IChunk, ICube {
 
     private boolean dirty = true; // todo: change back to false?
     private boolean loaded = false;
+
+    private volatile boolean lightCorrect;
 
     public Cube(World worldIn, CubePos cubePosIn, CubeBiomeContainer biomeContainerIn)
     {
@@ -451,6 +454,17 @@ public class Cube implements IChunk, ICube {
         return dirty;
     }
 
+    @Override
+    public boolean hasCubeLight() {
+        return this.lightCorrect;
+    }
+
+    @Override
+    public void setCubeLight(boolean lightCorrectIn) {
+        this.lightCorrect = lightCorrectIn;
+        this.setModified(true);
+    }
+
     @Deprecated
     @Override public ChunkStatus getStatus() {
         return this.cubeStatus;
@@ -506,11 +520,11 @@ public class Cube implements IChunk, ICube {
     }
 
     @Override public boolean hasLight() {
-        return false;
+        throw new UnsupportedOperationException("Chunk method called on a cube!");
     }
 
     @Override public void setLight(boolean lightCorrectIn) {
-
+        throw new UnsupportedOperationException("Chunk method called on a cube!");
     }
 
     @Nullable @Override public TileEntity getTileEntity(BlockPos pos) {

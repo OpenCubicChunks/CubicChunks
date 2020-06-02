@@ -196,10 +196,17 @@ public class CubePrimerWrapper extends CubePrimer {
     }
 
     @Override public boolean hasLight() {
-        return this.cube.hasLight();
+        throw new UnsupportedOperationException("Chunk method called on a cube!");
+    }
+    @Override public void setLight(boolean lightCorrectIn) {
+        throw new UnsupportedOperationException("Chunk method called on a cube!");
     }
 
-    @Override public void setLight(boolean lightCorrectIn) {
-        this.cube.setLight(lightCorrectIn);
+    @Override public boolean hasCubeLight() {
+        return this.cube.hasCubeLight();
+    }
+    @Override public void setCubeLight(boolean lightCorrectIn)
+    {
+        this.cube.setCubeLight(lightCorrectIn);
     }
 }

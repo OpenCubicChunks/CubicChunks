@@ -19,7 +19,6 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.palette.UpgradeData;
 import net.minecraft.world.ITickList;
-import net.minecraft.world.biome.BiomeContainer;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkSection;
 import net.minecraft.world.chunk.ChunkStatus;
@@ -45,6 +44,8 @@ public class CubePrimer implements ICube, IChunk {
 
     private final Map<BlockPos, TileEntity> tileEntities = Maps.newHashMap();
     private volatile boolean modified = true;
+
+    private volatile boolean hasLight;
 
     //TODO: add TickList<Block> and TickList<Fluid>
     public CubePrimer(CubePos pos, @Nullable ChunkSection[] sectionsIn)
@@ -298,11 +299,18 @@ public class CubePrimer implements ICube, IChunk {
     }
 
     @Override public boolean hasLight() {
-        throw new UnsupportedOperationException("For later implementation");
+        throw new UnsupportedOperationException("Chunk method called on a cube!");
+    }
+    @Override public void setLight(boolean lightCorrectIn) {
+        throw new UnsupportedOperationException("Chunk method called on a cube!");
     }
 
-    @Override public void setLight(boolean lightCorrectIn) {
-        throw new UnsupportedOperationException("For later implementation");
+    @Override public boolean hasCubeLight() {
+        return this.hasLight;
+    }
+    @Override public void setCubeLight(boolean lightCorrectIn) {
+        this.hasLight = lightCorrectIn;
+        this.setModified(true);
     }
 
     @Nullable @Override public StructureStart getStructureStart(String stucture) {

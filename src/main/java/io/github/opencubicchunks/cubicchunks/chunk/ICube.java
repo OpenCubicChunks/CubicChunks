@@ -35,6 +35,10 @@ public interface ICube extends IBlockReader {
 
     void setDirty(boolean modified);
 
+    //can't be set/hasLight due to obfuscation issues with IChunk
+    boolean hasCubeLight();
+    void setCubeLight(boolean lightCorrectIn);
+
     @Override default BlockState getBlockState(BlockPos pos) {
         return getBlockState(Coords.localX(pos), Coords.localY(pos), Coords.localZ(pos));
     }
