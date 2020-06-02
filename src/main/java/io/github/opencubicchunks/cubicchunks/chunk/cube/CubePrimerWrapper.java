@@ -1,5 +1,6 @@
 package io.github.opencubicchunks.cubicchunks.chunk.cube;
 
+import io.github.opencubicchunks.cubicchunks.chunk.biome.CubeBiomeContainer;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.Entity;
@@ -139,7 +140,7 @@ public class CubePrimerWrapper extends CubePrimer {
     @Override public void setStructureReferences(Map<String, LongSet> p_201606_1_) {
     }
 
-    @Override public BiomeContainer getBiomes() {
+    @Override public CubeBiomeContainer getBiomes() {
         return this.cube.getBiomes();
     }
 

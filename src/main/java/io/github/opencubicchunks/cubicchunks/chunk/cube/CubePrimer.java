@@ -2,6 +2,7 @@ package io.github.opencubicchunks.cubicchunks.chunk.cube;
 
 import com.google.common.collect.Maps;
 import io.github.opencubicchunks.cubicchunks.chunk.ICube;
+import io.github.opencubicchunks.cubicchunks.chunk.biome.CubeBiomeContainer;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import it.unimi.dsi.fastutil.longs.LongSet;
@@ -38,6 +39,9 @@ public class CubePrimer implements ICube, IChunk {
     private final CubePos cubePos;
     private final ChunkSection[] sections;
     private ChunkStatus status = ChunkStatus.EMPTY;
+
+    @Nullable
+    private CubeBiomeContainer biomes;
 
     private final Map<BlockPos, TileEntity> tileEntities = Maps.newHashMap();
     private volatile boolean modified = true;
@@ -210,10 +214,13 @@ public class CubePrimer implements ICube, IChunk {
         throw new UnsupportedOperationException("For later implementation");
     }
 
-    @Deprecated
-    @Nullable @Override public BiomeContainer getBiomes() {
-        throw new UnsupportedOperationException("For later implementation");
+    @Nullable @Override public CubeBiomeContainer getBiomes() {
+        return this.biomes;
     }
+    public void SetBiomes(CubeBiomeContainer biomes) {
+        this.biomes = biomes;
+    }
+
 
     @Override public void setModified(boolean modified) {
         setDirty(modified);

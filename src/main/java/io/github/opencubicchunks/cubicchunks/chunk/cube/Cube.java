@@ -431,8 +431,8 @@ public class Cube implements IChunk, ICube {
 
     }
 
-    @Nullable @Override public BiomeContainer getBiomes() {
-        throw new UnsupportedOperationException("Not implemented");
+    @Nullable @Override public CubeBiomeContainer getBiomes() {
+        return this.cubeBiomeContainer;
     }
 
     @Override public void setModified(boolean modified) {
