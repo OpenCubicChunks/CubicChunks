@@ -467,14 +467,14 @@ public abstract class MixinChunkManager implements IChunkManager {
     }
 
     //chunkGenerate
-    private CompletableFuture<Either<ICube, ChunkHolder.IChunkLoadingError>> sectionGenerate(ChunkHolder chunkHolderIn, ChunkStatus chunkStatusIn) {
+    private CompletableFuture<Either<ICube, ChunkHolder.IChunkLoadingError>> cubeGenerate(ChunkHolder chunkHolderIn, ChunkStatus chunkStatusIn) {
         CubePos cubePos = ((ICubeHolder) chunkHolderIn).getCubePos();
         CompletableFuture<Either<List<ICube>, ChunkHolder.IChunkLoadingError>> future =
                 this.makeFutureForStatusNeighbors(cubePos, CubeStatus.getCubeTaskRange(chunkStatusIn), (count) -> {
                     return this.getParentStatus(chunkStatusIn, count);
                 });
         this.world.getProfiler().func_230036_c_(() -> {
-            return "chunkGenerate " + chunkStatusIn.getName();
+            return "cubeGenerate " + chunkStatusIn.getName();
         });
         return future.thenComposeAsync((sectionOrError) -> {
             return sectionOrError.map((neighborSections) -> {
