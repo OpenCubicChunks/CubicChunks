@@ -110,6 +110,9 @@ public class Coords {
 
         // yyyyyyyy yyyyyyyy yyyyyyyy yyyYyyyy
         // 000yyyyyyyy yyyyyyyy yyyyyyyy yyyYy
+
+        // zzzzzzzz zzzzzzzz zzzzzzzz zzzZzzzz
+        // 000zzzzzzzz zzzzzzzz zzzzzzzz zzzZz
         final int mask = 0x10;
         return (x&mask) >> 4 | (y&mask)>>3 | (z&mask)>>2;
     }
