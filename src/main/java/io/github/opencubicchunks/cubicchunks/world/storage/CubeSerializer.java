@@ -32,9 +32,9 @@ public class CubeSerializer {
         }
         try (DataInputStream in = new DataInputStream(new BufferedInputStream(new GZIPInputStream(Files.newInputStream(cubePath))))) {
             ChunkStatus status = ChunkStatus.getAll().get(in.readUnsignedByte());
-            ChunkSection[] sections = new ChunkSection[ICube.CUBESIZE];
+            ChunkSection[] sections = new ChunkSection[ICube.CUBE_SIZE];
 
-            for (int i = 0; i < ICube.CUBESIZE; i++) {
+            for (int i = 0; i < ICube.CUBE_SIZE; i++) {
                 boolean isEmpty = in.readBoolean();
                 if (!isEmpty) {
                     ChunkSection chunkSection = new ChunkSection(pos.minCubeY() + Coords.indexTo32Y(i));

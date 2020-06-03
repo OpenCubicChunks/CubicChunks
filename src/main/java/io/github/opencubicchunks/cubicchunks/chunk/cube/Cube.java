@@ -48,7 +48,7 @@ import javax.annotation.Nullable;
 public class Cube implements IChunk, ICube {
 
     private final CubePos cubePos;
-    private final ChunkSection[] sections = new ChunkSection[CUBESIZE];
+    private final ChunkSection[] sections = new ChunkSection[CUBE_SIZE];
 
     private final HashMap<BlockPos, TileEntity> tileEntities = new HashMap<>();
     private final ClassInheritanceMultiMap<Entity> entities = new ClassInheritanceMultiMap<>(Entity.class);
@@ -75,7 +75,7 @@ public class Cube implements IChunk, ICube {
         this.cubeBiomeContainer = biomeContainerIn;
 
         if(sectionsIn != null) {
-            if (sectionsIn.length != CUBESIZE) {
+            if (sectionsIn.length != CUBE_SIZE) {
                 throw new IllegalStateException("Number of Sections must equal Cube.CUBESIZE");
             }
 
@@ -138,7 +138,7 @@ public class Cube implements IChunk, ICube {
         this.cubeBiomeContainer = biomes;
 
         Sets.newHashSet(this.tileEntities.keySet()).forEach(this.world::removeTileEntity);
-        for (int i = 0; i < ICube.CUBESIZE; i++) {
+        for (int i = 0; i < ICube.CUBE_SIZE; i++) {
             boolean exists = ((emptyFlags >>> i) & 1) != 0;
 
             //        byte emptyFlags = 0;

@@ -52,13 +52,13 @@ public class CubePrimer implements ICube, IChunk {
     {
         this.cubePos = pos;
         if(sectionsIn == null) {
-            this.sections = new ChunkSection[ICube.CUBESIZE];
-            for(int i = 0; i < ICube.CUBESIZE; i++) {
+            this.sections = new ChunkSection[ICube.CUBE_SIZE];
+            for(int i = 0; i < ICube.CUBE_SIZE; i++) {
                 this.sections[i] = new ChunkSection(pos.getY(), (short) 0, (short) 0, (short) 0);
             }
         }
         else {
-            if(sectionsIn.length == ICube.CUBESIZE)
+            if(sectionsIn.length == ICube.CUBE_SIZE)
                 this.sections = sectionsIn;
             else
             {

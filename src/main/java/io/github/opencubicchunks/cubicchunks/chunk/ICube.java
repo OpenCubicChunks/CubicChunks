@@ -14,9 +14,9 @@ import javax.annotation.Nullable;
 
 public interface ICube extends IBlockReader {
 
-    int CUBEDIAMETER = EarlyConfig.getCubeDiameter();
-    int CUBESIZE = CUBEDIAMETER * CUBEDIAMETER * CUBEDIAMETER;
-    int BLOCK_SIZE = 16 * CUBEDIAMETER;
+    int CUBE_DIAMETER = EarlyConfig.getCubeDiameter();
+    int CUBE_SIZE = CUBE_DIAMETER * CUBE_DIAMETER * CUBE_DIAMETER;
+    int BLOCK_SIZE = 16 * CUBE_DIAMETER;
 
     ChunkSection[] getCubeSections();
     CubePos getCubePos();
