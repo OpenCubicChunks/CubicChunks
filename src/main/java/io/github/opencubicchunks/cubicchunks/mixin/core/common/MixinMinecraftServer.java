@@ -1,5 +1,6 @@
 package io.github.opencubicchunks.cubicchunks.mixin.core.common;
 
+import io.github.opencubicchunks.cubicchunks.chunk.ICube;
 import io.github.opencubicchunks.cubicchunks.chunk.ICubeStatusListener;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.server.IServerChunkProvider;
@@ -59,7 +60,7 @@ public abstract class MixinMinecraftServer {
         ServerChunkProvider serverchunkprovider = serverworld.getChunkProvider();
         serverchunkprovider.getLightManager().func_215598_a(500);
         this.serverTime = Util.milliTime();
-        int radius = 5;
+        int radius = (int) Math.ceil(10 * (16 / (float)ICube.BLOCK_SIZE)); //vanilla is 10, 32: 5, 64: 3
         int d = radius*2+1;
         ((IServerChunkProvider)serverchunkprovider).registerTicket(TicketType.START, spawnPosCube, radius + 1, Unit.INSTANCE);
 
