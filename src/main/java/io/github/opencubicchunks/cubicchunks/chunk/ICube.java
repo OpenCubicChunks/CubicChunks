@@ -1,6 +1,7 @@
 package io.github.opencubicchunks.cubicchunks.chunk;
 
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
+import io.github.opencubicchunks.cubicchunks.meta.EarlyConfig;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import net.minecraft.block.BlockState;
 import net.minecraft.tileentity.TileEntity;
@@ -13,7 +14,7 @@ import javax.annotation.Nullable;
 
 public interface ICube extends IBlockReader {
 
-    int CUBEDIAMETER = 2;
+    int CUBEDIAMETER = EarlyConfig.getCubeDiameter();
     int CUBESIZE = CUBEDIAMETER * CUBEDIAMETER * CUBEDIAMETER;
     int BLOCK_SIZE = 16 * CUBEDIAMETER;
 
