@@ -10,7 +10,7 @@ import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 
 @Mixin(IChunk.class)
-public interface IMixinChunk extends IBlockReader {
+public interface MixinIChunk extends IBlockReader {
     @Shadow ChunkSection[] getSections();
 
     /**
@@ -19,8 +19,8 @@ public interface IMixinChunk extends IBlockReader {
      */
     @Overwrite
     default boolean isEmptyBetween(int startY, int endY) {
-        if (startY < 0) {
-            startY = 0;
+        if (startY < CubicChunks.worldMAXHeight) {
+            startY = -CubicChunks.worldMAXHeight;
         }
 
         if (endY >= CubicChunks.worldMAXHeight) {
