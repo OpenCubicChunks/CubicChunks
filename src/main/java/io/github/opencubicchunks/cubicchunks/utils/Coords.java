@@ -213,7 +213,7 @@ public class Coords {
     }
 
     public static int cubeToSection(int cube, int section) {
-        return cube << 1 | section;
+        return cube << (LOG2_BLOCK_SIZE - 4) | section;
     }
 
     public static int sectionToCubeViewDistance(int viewDistance) {

@@ -37,6 +37,7 @@ import net.minecraft.world.lighting.WorldLightManager;
 import net.minecraftforge.common.util.Constants;
 
 import java.util.Arrays;
+import java.util.BitSet;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -104,7 +105,7 @@ public class Cube implements IChunk, ICube {
     }
 
     public int getSize() {
-        int size = 1; // 1 extra byte for "section exists" flags
+        int size = this.sections.length / 8; // exists flags
         for(ChunkSection section : this.sections)
         {
             if(section != null)
@@ -114,13 +115,16 @@ public class Cube implements IChunk, ICube {
     }
 
     public void write(PacketBuffer buf) {
-        byte emptyFlags = 0;
+        BitSet emptyFlags = new BitSet(sections.length);
         for (int i = 0; i < sections.length; i++) {
             if (sections[i] != null && !sections[i].isEmpty()) {
-                emptyFlags |= 1 << i;
+                emptyFlags.set(i);
             }
         }
-        buf.writeByte(emptyFlags);
+        byte[] emptyFlagsBytes = emptyFlags.toByteArray();
+        byte[] actualFlagsBytes = new byte[sections.length / 8];
+        System.arraycopy(emptyFlagsBytes, 0, actualFlagsBytes, 0, emptyFlagsBytes.length);
+        buf.writeBytes(actualFlagsBytes);
         for (ChunkSection section : sections) {
             if (section != null && !section.isEmpty()) {
                 section.write(buf);
@@ -133,13 +137,15 @@ public class Cube implements IChunk, ICube {
             Arrays.fill(sections, null);
             return;
         }
-        int emptyFlags = readBuffer.readUnsignedByte();
+        byte[] emptyFlagsBytes = new byte[sections.length / 8];
+        readBuffer.readBytes(emptyFlagsBytes);
+        BitSet emptyFlags = BitSet.valueOf(emptyFlagsBytes);
 
         this.cubeBiomeContainer = biomes;
 
         Sets.newHashSet(this.tileEntities.keySet()).forEach(this.world::removeTileEntity);
         for (int i = 0; i < ICube.CUBE_SIZE; i++) {
-            boolean exists = ((emptyFlags >>> i) & 1) != 0;
+            boolean exists = emptyFlags.get(i);
 
             //        byte emptyFlags = 0;
             //        for (int i = 0; i < sections.length; i++) {
