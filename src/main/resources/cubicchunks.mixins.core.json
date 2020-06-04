@@ -35,8 +35,8 @@
         "common.world.MixinWorld"
     ],
     "client": [
-        "client.MixinIChunk",
         "client.MixinDebugRenderChunkBorder",
+        "client.MixinIChunk",
         "client.MixinViewFrustum",
         "client.MixinWorldRenderer",
         "client.progress.MixinChainedChunkStatusListener",

@@ -1,0 +1,13 @@
+{
+    "required": true,
+    "package": "io.github.opencubicchunks.cubicchunks.mixin.asm",
+    "refmap": "cubicchunks.refmap.json",
+    "plugin": "io.github.opencubicchunks.cubicchunks.mixin.ConfigPlugin",
+    "compatibilityLevel": "JAVA_8",
+    "minVersion": "0.8",
+    "mixins": [
+        "common.MixinAsmTarget"
+    ],
+    "client": [],
+    "server": []
+}
