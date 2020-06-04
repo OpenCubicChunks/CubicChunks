@@ -765,9 +765,9 @@ public abstract class MixinChunkManager implements IChunkManager {
 
     // getTrackingPlayers
     public Stream<ServerPlayerEntity> getCubeTrackingPlayers(CubePos pos, boolean boundaryOnly) {
+        int viewDistanceCubes = Coords.sectionToCubeRenderDistance(this.viewDistance);
         return this.playerGenerationTracker.getGeneratingPlayers(pos.asLong()).filter((serverPlayerEntity) -> {
             int i = IChunkManager.getCubeChebyshevDistance(pos, serverPlayerEntity, true);
-            int viewDistanceCubes = Coords.sectionToCubeRenderDistance(this.viewDistance);
             if (i > viewDistanceCubes) {
                 return false;
             } else {
@@ -1077,6 +1077,7 @@ public abstract class MixinChunkManager implements IChunkManager {
 
         for (ChunkManager.EntityTracker entityTracker : this.entities.values()) {
             Entity entity = ((EntityTrackerAccess) entityTracker).getEntity();
+            // TODO: entity chunk coords fix
             if (entity != player && entity.chunkCoordX == pos.getX() && entity.chunkCoordY == pos.getY() && entity.chunkCoordZ == pos.getZ()) {
                 entityTracker.updateTrackingState(player);
                 if (entity instanceof MobEntity && ((MobEntity) entity).getLeashHolder() != null) {

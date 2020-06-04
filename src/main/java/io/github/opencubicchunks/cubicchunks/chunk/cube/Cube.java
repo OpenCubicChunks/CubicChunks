@@ -81,7 +81,7 @@ public class Cube implements IChunk, ICube {
             }
 
             for (int i = 0; i < sectionsIn.length; i++) {
-                int sectionYPos = (Coords.indexToY(i) * 16) + cubePosIn.getX();
+                int sectionYPos = Coords.cubeToSection(cubePosIn.getY(), Coords.indexToY(i));
 
                 if(sectionsIn[i] != null) {
                     sections[i] = new ChunkSection(sectionYPos,
@@ -105,7 +105,7 @@ public class Cube implements IChunk, ICube {
     }
 
     public int getSize() {
-        int size = this.sections.length / 8; // exists flags
+        int size = this.sections.length / Byte.SIZE; // exists flags
         for(ChunkSection section : this.sections)
         {
             if(section != null)
@@ -122,7 +122,7 @@ public class Cube implements IChunk, ICube {
             }
         }
         byte[] emptyFlagsBytes = emptyFlags.toByteArray();
-        byte[] actualFlagsBytes = new byte[sections.length / 8];
+        byte[] actualFlagsBytes = new byte[sections.length / Byte.SIZE];
         System.arraycopy(emptyFlagsBytes, 0, actualFlagsBytes, 0, emptyFlagsBytes.length);
         buf.writeBytes(actualFlagsBytes);
         for (ChunkSection section : sections) {
@@ -137,7 +137,7 @@ public class Cube implements IChunk, ICube {
             Arrays.fill(sections, null);
             return;
         }
-        byte[] emptyFlagsBytes = new byte[sections.length / 8];
+        byte[] emptyFlagsBytes = new byte[sections.length / Byte.SIZE];
         readBuffer.readBytes(emptyFlagsBytes);
         BitSet emptyFlags = BitSet.valueOf(emptyFlagsBytes);
 
@@ -262,14 +262,16 @@ public class Cube implements IChunk, ICube {
     {
         return this.cubePos;
     }
+
     @Deprecated
     public SectionPos getSectionPosition(int index)
     {
-        int xPos = (Coords.indexToX(index) * 16) + this.cubePos.getX();
-        int yPos = (Coords.indexToY(index) * 16) + this.cubePos.getY();
-        int zPos = (Coords.indexToZ(index) * 16) + this.cubePos.getY();
+        int xPos = Coords.indexToX(index);
+        int yPos = Coords.indexToY(index);
+        int zPos = Coords.indexToZ(index);
 
-        return SectionPos.of(xPos, yPos, zPos);
+        SectionPos sectionPos = this.cubePos.asSectionPos();
+        return SectionPos.of(xPos + sectionPos.getX(), yPos + sectionPos.getY(), zPos + sectionPos.getZ());
     }
 
 

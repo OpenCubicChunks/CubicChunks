@@ -360,6 +360,7 @@ public abstract class MixinChunkHolder implements ICubeHolder {
     }
 
     private void sendToTracking(Object packetIn, boolean boundaryOnly) {
+        // TODO: fix block update tracking
         this.playerProvider.getTrackingPlayers(this.cubePos.asChunkPos(), boundaryOnly)
                 .forEach(player -> PacketDispatcher.sendTo(packetIn, player));
     }
