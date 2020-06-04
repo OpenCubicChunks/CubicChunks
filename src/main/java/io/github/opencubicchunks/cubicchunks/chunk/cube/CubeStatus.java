@@ -1,6 +1,8 @@
 package io.github.opencubicchunks.cubicchunks.chunk.cube;
 
 import com.google.common.collect.ImmutableList;
+import io.github.opencubicchunks.cubicchunks.meta.EarlyConfig;
+import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import io.github.opencubicchunks.cubicchunks.utils.MathUtil;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
@@ -15,12 +17,26 @@ public class CubeStatus {
 
     static {
         for (ChunkStatus chunkStatus : ChunkStatus.getAll()) {
-            int r = MathUtil.ceilDiv(chunkStatus.getTaskRange(), 2);
+            int r = Coords.sectionToCubeViewDistance(chunkStatus.getTaskRange());
             CUBE_TASK_RANGE_XZ.put(chunkStatus, r);
         }
     }
 
-    private static final List<ChunkStatus> STATUS_BY_RANGE = ImmutableList.of(
+    private static final List<ChunkStatus> STATUS_BY_RANGE_16 = ImmutableList.of(
+            ChunkStatus.FULL,
+            ChunkStatus.FEATURES,
+            ChunkStatus.LIQUID_CARVERS,
+            ChunkStatus.STRUCTURE_STARTS,
+            ChunkStatus.STRUCTURE_STARTS,
+            ChunkStatus.STRUCTURE_STARTS,
+            ChunkStatus.STRUCTURE_STARTS,
+            ChunkStatus.STRUCTURE_STARTS,
+            ChunkStatus.STRUCTURE_STARTS,
+            ChunkStatus.STRUCTURE_STARTS,
+            ChunkStatus.STRUCTURE_STARTS
+    );
+
+    private static final List<ChunkStatus> STATUS_BY_RANGE_32 = ImmutableList.of(
             ChunkStatus.FULL,
             ChunkStatus.FEATURES,
             ChunkStatus.LIQUID_CARVERS,
@@ -29,6 +45,34 @@ public class CubeStatus {
             ChunkStatus.STRUCTURE_STARTS,
             ChunkStatus.STRUCTURE_STARTS
     );
+
+    private static final List<ChunkStatus> STATUS_BY_RANGE_64 = ImmutableList.of(
+            ChunkStatus.FULL,
+            ChunkStatus.FEATURES,
+            ChunkStatus.LIQUID_CARVERS,
+            ChunkStatus.STRUCTURE_STARTS,
+            ChunkStatus.STRUCTURE_STARTS
+    );
+
+    private static final List<ChunkStatus> STATUS_BY_RANGE_128 = ImmutableList.of(
+            ChunkStatus.FULL,
+            ChunkStatus.FEATURES,
+            ChunkStatus.LIQUID_CARVERS,
+            ChunkStatus.STRUCTURE_STARTS
+    );
+
+    private static final List<ChunkStatus> STATUS_BY_RANGE = getStatusByRange();
+
+    private static List<ChunkStatus> getStatusByRange() {
+        int cubeDiameter = EarlyConfig.getCubeDiameter();
+        switch(cubeDiameter) {
+            case 1: return STATUS_BY_RANGE_16;
+            case 2: return STATUS_BY_RANGE_32;
+            case 4: return STATUS_BY_RANGE_64;
+            case 8: return STATUS_BY_RANGE_128;
+            default: throw new UnsupportedOperationException("Unsupported cube size " + cubeDiameter);
+        }
+    }
 
     private static final IntList RANGE_BY_STATUS = Util.make(new IntArrayList(ChunkStatus.getAll().size()), (rangeByStatus) -> {
         int range = 0;
