@@ -9,6 +9,7 @@ public class CCMixinConnector implements IMixinConnector {
     @Override public void connect() {
         Mixins.addConfiguration("cubicchunks.mixins.core.json");
         Mixins.addConfiguration("cubicchunks.mixins.access.json");
+        Mixins.addConfiguration("cubicchunks.mixins.asm.json");
         InjectionPoint.register(BeforeInstanceofInjectionPoint.class);
     }
 }

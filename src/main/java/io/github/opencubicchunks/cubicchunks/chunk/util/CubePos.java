@@ -16,6 +16,11 @@ public class CubePos extends Vec3i {
         super(xIn, yIn, zIn);
     }
 
+    // used from ASM, do not change
+    public CubePos(long cubePosIn) {
+        this(extractX(cubePosIn), extractY(cubePosIn), extractZ(cubePosIn));
+    }
+
     public static long asLong(int x, int y, int z) {
         long i = 0L;
         i |= ((long)x & (1 << 21) - 1) << 43;
@@ -42,7 +47,7 @@ public class CubePos extends Vec3i {
 
     public static CubePos from(long cubePosIn)
     {
-        return new CubePos(extractX(cubePosIn), extractY(cubePosIn), extractZ(cubePosIn));
+        return new CubePos(cubePosIn);
     }
     public static CubePos from(BlockPos blockPosIn) {
         return new CubePos(blockToCube(blockPosIn.getX()), blockToCube(blockPosIn.getY()), blockToCube(blockPosIn.getZ()));

@@ -62,6 +62,7 @@ import net.minecraft.world.chunk.PlayerGenerationTracker;
 import net.minecraft.world.chunk.listener.IChunkStatusListener;
 import net.minecraft.world.gen.ChunkGenerator;
 import net.minecraft.world.gen.feature.template.TemplateManager;
+import net.minecraft.world.lighting.WorldLightManager;
 import net.minecraft.world.server.ChunkHolder;
 import net.minecraft.world.server.ChunkManager;
 import net.minecraft.world.server.ServerWorld;
@@ -69,12 +70,14 @@ import net.minecraft.world.server.ServerWorldLightManager;
 import net.minecraft.world.storage.SessionLockException;
 import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.apache.logging.log4j.Logger;
+import org.spongepowered.asm.mixin.Dynamic;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
@@ -174,39 +177,18 @@ public abstract class MixinChunkManager implements IChunkManager {
         this.mainExecutor = this.cubeTaskPriorityQueueSorter.createExecutor(itaskexecutor, false);
     }
 
-    @Nullable
-    @Override
-    public ChunkHolder setCubeLevel(long cubePosIn, int newLevel, @Nullable ChunkHolder holder, int oldLevel) {
-        if (oldLevel > MAX_CUBE_LOADED_LEVEL && newLevel > MAX_CUBE_LOADED_LEVEL) {
-            return holder;
-        } else {
-            if (holder != null) {
-                holder.setChunkLevel(newLevel);
-            }
-
-            if (holder != null) {
-                if (newLevel > MAX_CUBE_LOADED_LEVEL) {
-                    this.unloadableCubes.add(cubePosIn);
-                } else {
-                    this.unloadableCubes.remove(cubePosIn);
-                }
-            }
-
-            if (newLevel <= MAX_CUBE_LOADED_LEVEL && holder == null) {
-                holder = this.cubesToUnload.remove(cubePosIn);
-                if (holder != null) {
-                    holder.setChunkLevel(newLevel);
-                } else {
-
-                    holder = new ChunkHolder(CubePos.from(cubePosIn).asChunkPos(), newLevel, this.lightManager,
-                            this.cubeTaskPriorityQueueSorter, (ChunkHolder.IPlayerProvider) this);
-                    ((ICubeHolder) holder).setYPos(CubePos.extractY(cubePosIn));
-                }
-                this.loadedCubes.put(cubePosIn, holder);
-                this.immutableLoadedChunksDirty = true;
-            }
-            return holder;
-        }
+    @Dynamic
+    @Redirect(method = "setCubeLevel", at = @At(
+            value = "NEW",
+            target = "net/minecraft/world/server/ChunkHolder")
+    )
+    private ChunkHolder onCubeHolderConstruct(ChunkPos chunkPosIn, int levelIn, WorldLightManager lightManagerIn, ChunkHolder.IListener listener,
+            ChunkHolder.IPlayerProvider playerProviderIn) {
+        long pos = chunkPosIn.asLong(); // this is actually a cube pos encodes as chunk pos
+        ChunkHolder holder = new ChunkHolder(CubePos.from(pos).asChunkPos(), levelIn, lightManagerIn, listener, playerProviderIn);
+        //noinspection ConstantConditions
+        ((ICubeHolder) holder).setYPos(CubePos.extractY(pos));
+        return holder;
     }
 
     @Inject(method = "save", at = @At("HEAD"))

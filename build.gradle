@@ -178,4 +178,9 @@ mixinGen {
         it.required = true
         it.conformVisibility = true
     }
+
+    config("asm") {
+        it.required = true
+        it.configurationPlugin = 'io.github.opencubicchunks.cubicchunks.mixin.ConfigPlugin'
+    }
 }
