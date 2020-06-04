@@ -3,7 +3,6 @@ package io.github.opencubicchunks.cubicchunks.chunk.cube;
 import com.google.common.collect.ImmutableList;
 import io.github.opencubicchunks.cubicchunks.meta.EarlyConfig;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
-import io.github.opencubicchunks.cubicchunks.utils.MathUtil;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
@@ -17,7 +16,7 @@ public class CubeStatus {
 
     static {
         for (ChunkStatus chunkStatus : ChunkStatus.getAll()) {
-            int r = Coords.sectionToCubeViewDistance(chunkStatus.getTaskRange());
+            int r = Coords.sectionToCubeCeil(chunkStatus.getTaskRange());
             CUBE_TASK_RANGE_XZ.put(chunkStatus, r);
         }
     }

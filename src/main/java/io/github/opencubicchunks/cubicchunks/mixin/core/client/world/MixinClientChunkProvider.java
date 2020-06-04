@@ -44,7 +44,7 @@ public abstract class MixinClientChunkProvider implements IClientCubeProvider {
     }
 
     private int adjustCubeViewDistance(int viewDistance) {
-        return Coords.sectionToCubeViewDistance(Math.max(2, viewDistance) + 3);
+        return Coords.sectionToCubeCeil(Math.max(2, viewDistance) + 3);
     }
 
     private static boolean isCubeValid(@Nullable Cube cube, int x, int y, int z) {

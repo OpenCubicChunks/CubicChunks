@@ -216,7 +216,11 @@ public class Coords {
         return cube << (LOG2_BLOCK_SIZE - 4) | section;
     }
 
-    public static int sectionToCubeViewDistance(int viewDistance) {
+    public static int sectionToCubeCeil(int viewDistance) {
         return MathUtil.ceilDiv(viewDistance, BLOCK_SIZE_DIV_16);
+    }
+
+    public static int sectionToCubeRenderDistance(int viewDistance) {
+        return Math.max(3, sectionToCubeCeil(viewDistance));
     }
 }

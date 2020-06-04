@@ -55,7 +55,6 @@ import net.minecraft.util.math.SectionPos;
 import net.minecraft.village.PointOfInterestManager;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkStatus;
-import net.minecraft.world.chunk.ChunkTaskPriorityQueue;
 import net.minecraft.world.chunk.IChunk;
 import net.minecraft.world.chunk.IChunkLightProvider;
 import net.minecraft.world.chunk.PlayerGenerationTracker;
@@ -768,7 +767,7 @@ public abstract class MixinChunkManager implements IChunkManager {
     public Stream<ServerPlayerEntity> getCubeTrackingPlayers(CubePos pos, boolean boundaryOnly) {
         return this.playerGenerationTracker.getGeneratingPlayers(pos.asLong()).filter((serverPlayerEntity) -> {
             int i = IChunkManager.getCubeChebyshevDistance(pos, serverPlayerEntity, true);
-            int viewDistanceCubes = MathUtil.ceilDiv(this.viewDistance, 2);
+            int viewDistanceCubes = Coords.sectionToCubeRenderDistance(this.viewDistance);
             if (i > viewDistanceCubes) {
                 return false;
             } else {
@@ -816,7 +815,7 @@ public abstract class MixinChunkManager implements IChunkManager {
             }
         }
         //CC
-        int viewDistanceCubes = MathUtil.ceilDiv(this.viewDistance, 2);
+        int viewDistanceCubes = Coords.sectionToCubeRenderDistance(this.viewDistance);
         for (int ix = xFloor - viewDistanceCubes; ix <= xFloor + viewDistanceCubes; ++ix) {
             for (int iy = yFloor - viewDistanceCubes; iy <= yFloor + viewDistanceCubes; ++iy) {
                 for (int iz = zFloor - viewDistanceCubes; iz <= zFloor + viewDistanceCubes; ++iz) {
@@ -891,7 +890,7 @@ public abstract class MixinChunkManager implements IChunkManager {
                 this.playerGenerationTracker.updatePlayerPosition(managedSectionPosLong, newSectionPosLong, player);
             }
         }
-        int viewDistanceCubes = Coords.sectionToCubeViewDistance(this.viewDistance);
+        int viewDistanceCubes = Coords.sectionToCubeRenderDistance(this.viewDistance);
 
         int newCubeX = Coords.getCubeXForEntity(player);
         int newCubeY = Coords.getCubeYForEntity(player);
@@ -979,17 +978,17 @@ public abstract class MixinChunkManager implements IChunkManager {
     // this needs to be at HEAD, otherwise we are not going to see the view distance being different
     @Inject(method = "setViewDistance", at = @At("HEAD"))
     protected void setViewDistance(int viewDistance, CallbackInfo ci) {
-        viewDistance = Coords.sectionToCubeViewDistance(viewDistance);
-        int viewDistanceCubes = MathUtil.ceilDiv(this.viewDistance, 2);
-        int i = MathHelper.clamp(viewDistance + 1, 3, 33);
-        if (i != viewDistanceCubes) {
+        int viewDistanceSections = MathHelper.clamp(viewDistance + 1, 3, 33);
+        int newViewDistanceCubes = Coords.sectionToCubeRenderDistance(viewDistanceSections);
+        int viewDistanceCubes = Coords.sectionToCubeRenderDistance(this.viewDistance);
+        if (newViewDistanceCubes != viewDistanceCubes) {
             for(ChunkHolder chunkholder : this.loadedCubes.values()) {
                 CubePos cubePos = ((ICubeHolder)chunkholder).getCubePos();
                 Object[] objects = new Object[2];
                 this.getCubeTrackingPlayers(cubePos, false).forEach((serverPlayerEntity) -> {
                     int k = getDistanceToPlayer(cubePos, serverPlayerEntity, true);
                     boolean flag = k <= viewDistanceCubes;
-                    boolean flag1 = k <= viewDistanceCubes;
+                    boolean flag1 = k <= newViewDistanceCubes;
                     this.setCubeLoadedAtClient(serverPlayerEntity, cubePos, objects, flag, flag1);
                 });
             }

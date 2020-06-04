@@ -3,6 +3,7 @@ package io.github.opencubicchunks.cubicchunks.network;
 import static io.github.opencubicchunks.cubicchunks.utils.Coords.cubeToSection;
 
 import io.github.opencubicchunks.cubicchunks.chunk.IClientCubeProvider;
+import io.github.opencubicchunks.cubicchunks.chunk.ICube;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.Cube;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.utils.MathUtil;
@@ -106,9 +107,9 @@ public class PacketCubes {
                 //            if (cube != null /*&&fullCube*/) {
                 //                world.addEntitiesToChunk(cube.getColumn());
                 //            }
-                for (int dx = 0; dx < 2; dx++) {
-                    for (int dy = 0; dy < 2; dy++) {
-                        for (int dz = 0; dz < 2; dz++) {
+                for (int dx = 0; dx < ICube.CUBE_DIAMETER; dx++) {
+                    for (int dy = 0; dy < ICube.CUBE_DIAMETER; dy++) {
+                        for (int dz = 0; dz < ICube.CUBE_DIAMETER; dz++) {
                             world.markSurroundingsForRerender(
                                     cubeToSection(x, dx),
                                     cubeToSection(y, dy),

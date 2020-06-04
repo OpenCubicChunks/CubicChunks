@@ -12,6 +12,7 @@ import io.github.opencubicchunks.cubicchunks.chunk.ticket.PlayerCubeTracker;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.ChunkHolderAccess;
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.TicketAccess;
+import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import io.github.opencubicchunks.cubicchunks.utils.MathUtil;
 import io.github.opencubicchunks.cubicchunks.chunk.ticket.CubeTaskPriorityQueueSorter;
 import io.github.opencubicchunks.cubicchunks.chunk.ticket.CubeTicketTracker;
@@ -104,7 +105,7 @@ public abstract class MixinTicketManager implements ITicketManager {
     @Inject(method = "setViewDistance", at = @At("HEAD"))
     protected void setViewDistance(int viewDistance, CallbackInfo ci)
     {
-        this.playerCubeTicketTracker.setViewDistance(MathUtil.ceilDiv(viewDistance, 2));
+        this.playerCubeTicketTracker.setViewDistance(Coords.sectionToCubeRenderDistance(viewDistance));
     }
 
     //BEGIN INJECT
