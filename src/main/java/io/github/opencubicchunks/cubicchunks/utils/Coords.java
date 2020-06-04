@@ -25,6 +25,7 @@
 
 package io.github.opencubicchunks.cubicchunks.utils;
 
+import io.github.opencubicchunks.cubicchunks.chunk.ICube;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.math.BlockPos;
@@ -38,6 +39,32 @@ public class Coords {
 
     public static final int NO_HEIGHT = Integer.MIN_VALUE + 32;
 
+    private static final int LOG2_BLOCK_SIZE = MathUtil.log2(ICube.BLOCK_SIZE);
+
+    private static final int BLOCK_SIZE_MINUS_1 = ICube.BLOCK_SIZE - 1;
+    private static final int BLOCK_SIZE_DIV_2 = ICube.BLOCK_SIZE / 2;
+    private static final int BLOCK_SIZE_DIV_16 = ICube.BLOCK_SIZE / 16;
+    private static final int BLOCK_SIZE_DIV_32 = ICube.BLOCK_SIZE / 32;
+
+    private static final int POS_TO_INDEX_MASK = getPosToIndexMask();
+    private static final int INDEX_TO_POS_MASK = POS_TO_INDEX_MASK >> 4;
+
+    private static final int INDEX_TO_N_X = 0;
+    private static final int INDEX_TO_N_Y = LOG2_BLOCK_SIZE - 4;
+    private static final int INDEX_TO_N_Z = INDEX_TO_N_Y * 2;
+
+
+
+    private static int getPosToIndexMask()
+    {
+        int mask = 0;
+        for(int i = ICube.BLOCK_SIZE/2; i >= 16; i /= 2)
+        {
+            mask += i;
+        }
+        return mask;
+    }
+
     public static BlockPos midPos(BlockPos p1, BlockPos p2) {
         //bitshifting each number and then adding the result - this rounds the number down and prevents overflow
         return new BlockPos((p1.getX() >> 1) + (p2.getX() >> 1) + (p1.getX() & p2.getX() & 1),
@@ -46,7 +73,7 @@ public class Coords {
     }
 
     public static int blockToLocal(int val) {
-        return val & 0x1f;
+        return val & (ICube.BLOCK_SIZE - 1);
     }
 
     public static int localX(BlockPos pos) {
@@ -62,11 +89,11 @@ public class Coords {
     }
 
     public static int blockToCube(int val) {
-        return val >> 5;
+        return val >> LOG2_BLOCK_SIZE;
     }
 
     public static int blockCeilToCube(int val) {
-        return -((-val) >> 5);
+        return -((-val) >> LOG2_BLOCK_SIZE);
     }
 
     public static int localToBlock(int cubeVal, int localVal) {
@@ -74,11 +101,11 @@ public class Coords {
     }
 
     public static int cubeToMinBlock(int val) {
-        return val << 5;
+        return val << LOG2_BLOCK_SIZE;
     }
 
     public static int cubeToMaxBlock(int val) {
-        return cubeToMinBlock(val) + 31;
+        return cubeToMinBlock(val) + BLOCK_SIZE_MINUS_1;
     }
 
     public static int getCubeXForEntity(Entity entity) {
@@ -99,38 +126,86 @@ public class Coords {
     }
 
     public static int cubeToCenterBlock(int cubeVal) {
-        return localToBlock(cubeVal, 32 / 2);
+        return localToBlock(cubeVal, BLOCK_SIZE_DIV_2);
     }
 
     public static int blockToIndex32(int x, int y, int z) {
-        // 00000000 00000000 00000000 00010000
+        //        Given x pos 33 = 0x21 = 0b0100001
+        //        1100000
+        //        0b0100001 & 0b1100000 = 0b0100000
+        //        0b0100000 >> 4 = 0b10 = 0x2 = 2
 
-        // xxxxxxxx xxxxxxxx xxxxxxxx xxxXxxxx
-        // 0000xxxxxxxx xxxxxxxx xxxxxxxx xxxX
+        //        Given y pos 532 = 0x214 = 0b1000010100
+        //        0b0001100000
+        //        0b0001100000
+        //        0b1000010100 & 0b0001100000 = 0b0
+        //        0b0 >> 4 = 0b0 = 0x0 = 0
 
-        // yyyyyyyy yyyyyyyy yyyyyyyy yyyYyyyy
-        // 000yyyyyyyy yyyyyyyy yyyyyyyy yyyYy
+        //        Given z pos -921 = -0x399 = 0b1110011001
+        //        0b0001100000
+        //        0b0001100000
+        //        0b1000010100 & 0b0001100000 = 0b0
+        //        0b0 >> 4 = 0b0 = 0x0 = 0
 
-        // zzzzzzzz zzzzzzzz zzzzzzzz zzzZzzzz
-        // 000zzzzzzzz zzzzzzzz zzzzzzzz zzzZz
-        final int mask = 0x10;
-        return (x&mask) >> 4 | (y&mask)>>3 | (z&mask)>>2;
+        //        mask needs to be every power of 2 below ICube.BLOCK_SIZE that's > 16
+
+        if(ICube.CUBE_DIAMETER == 1) {
+            return blockToIndex16(x, y, z);
+        }
+        else if(ICube.CUBE_DIAMETER == 2) {
+            return blockToIndex32_(x, y, z);
+        }
+        else if(ICube.CUBE_DIAMETER == 4) {
+            return blockToIndex64(x, y, z);
+        }
+        else if(ICube.CUBE_DIAMETER == 8) {
+            return blockToIndex128(x, y, z);
+        }
+        throw new UnsupportedOperationException("Unsupported cube size " + ICube.CUBE_DIAMETER);
+    }
+
+    private static int blockToIndex16(int x, int y, int z)
+    {
+        return 0;
+    }
+
+    private static int blockToIndex32_(int x, int y, int z)
+    {
+        //1 bit
+        final int mask = POS_TO_INDEX_MASK;
+        return (x&mask) >> 4 | (y&mask) >> 3 | (z&mask) >> 2;
+    }
+
+    private static int blockToIndex64(int x, int y, int z)
+    {
+        //2 bit
+        //1011101010001, 1010101011100, 1101011101010
+        final int mask = POS_TO_INDEX_MASK;
+        return (x&mask) >> 4 | (y&mask) >> 2 | (z&mask) >> 0;
+    }
+
+    private static int blockToIndex128(int x, int y, int z)
+    {
+        //3 bit
+        //1011101010001, 1010101011100, 1101011101010
+        final int mask = POS_TO_INDEX_MASK;
+        return (x&mask) >> 4 | (y&mask) >> 1 | (z&mask) << 2;
     }
 
     public static int indexTo32X(int idx) {
-        return idx & 1;
+        return idx >> INDEX_TO_N_X & INDEX_TO_POS_MASK;
     }
 
     public static int indexTo32Y(int idx) {
-        return idx >> 1 & 1;
+            return idx >> INDEX_TO_N_Y & INDEX_TO_POS_MASK;
     }
 
     public static int indexTo32Z(int idx) {
-        return idx >> 2 & 1;
+        return idx >> INDEX_TO_N_Z & INDEX_TO_POS_MASK;
     }
 
     public static int sectionToCube(int val) {
-        return val >> 1;
+        return val >> (LOG2_BLOCK_SIZE - 4);
     }
 
     public static int sectionToIndex32(int sectionX, int sectionY, int sectionZ) {
@@ -142,6 +217,6 @@ public class Coords {
     }
 
     public static int sectionToCubeViewDistance(int viewDistance) {
-        return MathUtil.ceilDiv(viewDistance, 2);
+        return MathUtil.ceilDiv(viewDistance, BLOCK_SIZE_DIV_16);
     }
 }
