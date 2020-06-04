@@ -1,6 +1,9 @@
 package io.github.opencubicchunks.cubicchunks.chunk.util;
 
 import static io.github.opencubicchunks.cubicchunks.utils.Coords.blockToCube;
+import static io.github.opencubicchunks.cubicchunks.utils.Coords.cubeToMinBlock;
+import static io.github.opencubicchunks.cubicchunks.utils.Coords.cubeToSection;
+import static io.github.opencubicchunks.cubicchunks.utils.Coords.sectionToCube;
 
 import io.github.opencubicchunks.cubicchunks.chunk.ICube;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
@@ -42,7 +45,7 @@ public class CubePos extends Vec3i {
     }
 
     public ChunkPos asChunkPos() {
-        return new ChunkPos(this.getX() << 1, this.getZ() << 1);
+        return new ChunkPos(cubeToSection(this.getX(), 0), cubeToSection(this.getZ(), 0));
     }
 
     public static CubePos from(long cubePosIn)
@@ -54,7 +57,7 @@ public class CubePos extends Vec3i {
     }
 
     public static CubePos from(ChunkPos position, int yPos) {
-        return new CubePos(position.x >> 1, yPos, position.z >> 1);
+        return new CubePos(sectionToCube(position.x), yPos, sectionToCube(position.z));
     }
 
     public static CubePos from(SectionPos sectionPos) { return new CubePos(
@@ -94,7 +97,7 @@ public class CubePos extends Vec3i {
     }
 
     public SectionPos asSectionPos() {
-        return SectionPos.of(this.getX() << 1, this.getY() << 1, this.getZ() << 1);
+        return SectionPos.of(cubeToSection(this.getX(), 0), cubeToSection(this.getY(), 0), cubeToSection(this.getZ(), 0));
     }
 
     public BlockPos asBlockPos() {
