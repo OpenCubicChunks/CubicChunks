@@ -57,7 +57,10 @@ public class CubePos extends Vec3i {
         return new CubePos(position.x >> 1, yPos, position.z >> 1);
     }
 
-    public static CubePos from(SectionPos sectionPos) { return new CubePos(sectionPos.getX() >> 1, sectionPos.getY() >> 1, sectionPos.getZ() >> 1); }
+    public static CubePos from(SectionPos sectionPos) { return new CubePos(
+            Coords.sectionToCube(sectionPos.getX()),
+            Coords.sectionToCube(sectionPos.getY()),
+            Coords.sectionToCube(sectionPos.getZ())); }
 
     public static CubePos from(Entity p_218157_0_) {
         return new CubePos(blockToCube(MathHelper.floor(p_218157_0_.getPosX())),
