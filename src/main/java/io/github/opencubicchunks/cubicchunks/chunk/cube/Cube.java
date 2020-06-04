@@ -80,7 +80,7 @@ public class Cube implements IChunk, ICube {
             }
 
             for (int i = 0; i < sectionsIn.length; i++) {
-                int sectionYPos = (Coords.indexTo32Y(i) * 16) + cubePosIn.getX();
+                int sectionYPos = (Coords.indexToY(i) * 16) + cubePosIn.getX();
 
                 if(sectionsIn[i] != null) {
                     sections[i] = new ChunkSection(sectionYPos,
@@ -155,9 +155,9 @@ public class Cube implements IChunk, ICube {
             //        }
             //        return false;
 
-            int dx = Coords.indexTo32X(i);
-            int dy = Coords.indexTo32Y(i);
-            int dz = Coords.indexTo32Z(i);
+            int dx = Coords.indexToX(i);
+            int dy = Coords.indexToY(i);
+            int dz = Coords.indexToZ(i);
 
             SectionPos sectionPos = getCubePos().asSectionPos();
             int x = sectionPos.getX() + dx;
@@ -259,9 +259,9 @@ public class Cube implements IChunk, ICube {
     @Deprecated
     public SectionPos getSectionPosition(int index)
     {
-        int xPos = (Coords.indexTo32X(index) * 16) + this.cubePos.getX();
-        int yPos = (Coords.indexTo32Y(index) * 16) + this.cubePos.getY();
-        int zPos = (Coords.indexTo32Z(index) * 16) + this.cubePos.getY();
+        int xPos = (Coords.indexToX(index) * 16) + this.cubePos.getX();
+        int yPos = (Coords.indexToY(index) * 16) + this.cubePos.getY();
+        int zPos = (Coords.indexToZ(index) * 16) + this.cubePos.getY();
 
         return SectionPos.of(xPos, yPos, zPos);
     }
@@ -327,7 +327,7 @@ public class Cube implements IChunk, ICube {
     // TODO: obfuscation, this overrides both IChunk and ICube
     @Nullable
     public BlockState setBlock(BlockPos pos, BlockState state, boolean isMoving) {
-        return this.setBlockState(Coords.blockToIndex32(pos.getX(), pos.getY(), pos.getZ()), pos, state, isMoving);
+        return this.setBlockState(Coords.blockToIndex(pos.getX(), pos.getY(), pos.getZ()), pos, state, isMoving);
     }
 
     @Nullable @Override public BlockState setBlockState(BlockPos pos, BlockState state, boolean isMoving) {
@@ -530,7 +530,7 @@ public class Cube implements IChunk, ICube {
     }
 
     @Override public BlockState getBlockState(int x, int y, int z) {
-        int index = Coords.blockToIndex32(x, y, z);
+        int index = Coords.blockToIndex(x, y, z);
         return ChunkSection.isEmpty(this.sections[index]) ?
                 Blocks.AIR.getDefaultState() :
                 this.sections[index].getBlockState(x & 15, y & 15, z & 15);

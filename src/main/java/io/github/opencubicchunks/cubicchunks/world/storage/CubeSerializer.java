@@ -37,7 +37,7 @@ public class CubeSerializer {
             for (int i = 0; i < ICube.CUBE_SIZE; i++) {
                 boolean isEmpty = in.readBoolean();
                 if (!isEmpty) {
-                    ChunkSection chunkSection = new ChunkSection(pos.minCubeY() + Coords.indexTo32Y(i));
+                    ChunkSection chunkSection = new ChunkSection(pos.minCubeY() + Coords.indexToY(i));
                     sections[i] = chunkSection;
 
                     for (int y = 0; y < 16; y++) {

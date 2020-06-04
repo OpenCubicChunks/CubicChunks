@@ -51,7 +51,7 @@ public abstract class MixinChunk implements IChunk {
         }
         assert cube != null : "cube was null when requested loading!";
         ChunkSection[] cubeSections = cube.getCubeSections();
-        return cubeSections[Coords.sectionToIndex32(pos.x, y, pos.z)];
+        return cubeSections[Coords.sectionToIndex(pos.x, y, pos.z)];
     }
 
     @ModifyConstant(method = {"getBlockState", "getFluidState(III)Lnet/minecraft/fluid/IFluidState;"},
@@ -87,6 +87,6 @@ public abstract class MixinChunk implements IChunk {
             return;
         }
         assert cube != null : "cube was null when requested loading!";
-        cube.getCubeSections()[Coords.sectionToIndex32(pos.x, y, pos.z)] = newVal;
+        cube.getCubeSections()[Coords.sectionToIndex(pos.x, y, pos.z)] = newVal;
     }
 }

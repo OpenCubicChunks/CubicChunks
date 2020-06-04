@@ -77,7 +77,7 @@ public class CubePrimer implements ICube, IChunk {
     }
 
     public BlockState getBlockState(int x, int y, int z) {
-        int index = Coords.blockToIndex32(x, y, z);
+        int index = Coords.blockToIndex(x, y, z);
         return ChunkSection.isEmpty(this.sections[index]) ?
                 Blocks.AIR.getDefaultState() :
                 this.sections[index].getBlockState(x & 15, y & 15, z & 15);
@@ -92,7 +92,7 @@ public class CubePrimer implements ICube, IChunk {
         int x = pos.getX() & 0xF;
         int y = pos.getY() & 0xF;
         int z = pos.getZ() & 0xF;
-        int index = Coords.blockToIndex32(pos.getX(), pos.getY(), pos.getZ());
+        int index = Coords.blockToIndex(pos.getX(), pos.getY(), pos.getZ());
 
         if (this.sections[index] == Chunk.EMPTY_SECTION && state.getBlock() == Blocks.AIR) {
             return state;

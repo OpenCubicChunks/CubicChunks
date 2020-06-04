@@ -129,7 +129,7 @@ public class Coords {
         return localToBlock(cubeVal, BLOCK_SIZE_DIV_2);
     }
 
-    public static int blockToIndex32(int x, int y, int z) {
+    public static int blockToIndex(int x, int y, int z) {
         //        Given x pos 33 = 0x21 = 0b0100001
         //        1100000
         //        0b0100001 & 0b1100000 = 0b0100000
@@ -153,7 +153,7 @@ public class Coords {
             return blockToIndex16(x, y, z);
         }
         else if(ICube.CUBE_DIAMETER == 2) {
-            return blockToIndex32_(x, y, z);
+            return blockToIndex32(x, y, z);
         }
         else if(ICube.CUBE_DIAMETER == 4) {
             return blockToIndex64(x, y, z);
@@ -169,7 +169,7 @@ public class Coords {
         return 0;
     }
 
-    private static int blockToIndex32_(int x, int y, int z)
+    private static int blockToIndex32(int x, int y, int z)
     {
         //1 bit
         final int mask = POS_TO_INDEX_MASK;
@@ -192,15 +192,15 @@ public class Coords {
         return (x&mask) >> 4 | (y&mask) >> 1 | (z&mask) << 2;
     }
 
-    public static int indexTo32X(int idx) {
+    public static int indexToX(int idx) {
         return idx >> INDEX_TO_N_X & INDEX_TO_POS_MASK;
     }
 
-    public static int indexTo32Y(int idx) {
+    public static int indexToY(int idx) {
             return idx >> INDEX_TO_N_Y & INDEX_TO_POS_MASK;
     }
 
-    public static int indexTo32Z(int idx) {
+    public static int indexToZ(int idx) {
         return idx >> INDEX_TO_N_Z & INDEX_TO_POS_MASK;
     }
 
@@ -208,8 +208,8 @@ public class Coords {
         return val >> (LOG2_BLOCK_SIZE - 4);
     }
 
-    public static int sectionToIndex32(int sectionX, int sectionY, int sectionZ) {
-        return blockToIndex32(sectionX << 4, sectionY << 4, sectionZ << 4);
+    public static int sectionToIndex(int sectionX, int sectionY, int sectionZ) {
+        return blockToIndex(sectionX << 4, sectionY << 4, sectionZ << 4);
     }
 
     public static int cubeToSection(int cube, int section) {

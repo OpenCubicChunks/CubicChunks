@@ -14,11 +14,11 @@ import java.util.Set;
 public class CoordsTest {
     @Test
     public void testBlockToIndex32() {
-        int idx = Coords.blockToIndex32(0, 0, 0);
+        int idx = Coords.blockToIndex(0, 0, 0);
         for (int x = 0; x < 16; x++) {
             for (int y = 0; y < 16; y++) {
                 for (int z = 0; z < 16; z++) {
-                    assertEquals(idx, Coords.blockToIndex32(x, y, z));
+                    assertEquals(idx, Coords.blockToIndex(x, y, z));
                 }
             }
         }
@@ -30,7 +30,7 @@ public class CoordsTest {
         for (int x = 0; x < ICube.CUBE_DIAMETER; x++) {
             for (int y = 0; y < ICube.CUBE_DIAMETER; y++) {
                 for (int z = 0; z < ICube.CUBE_DIAMETER; z++) {
-                    int v = Coords.blockToIndex32(x*16, y*16, z*16);
+                    int v = Coords.blockToIndex(x*16, y*16, z*16);
 
                     System.out.printf("%d %d %d\n", x, y, z);
                     assertThat(v, is(in(coords)));
@@ -46,10 +46,10 @@ public class CoordsTest {
         for (int x = 0; x < ICube.CUBE_DIAMETER; x++) {
             for (int y = 0; y < ICube.CUBE_DIAMETER; y++) {
                 for (int z = 0; z < ICube.CUBE_DIAMETER; z++) {
-                    int index = Coords.blockToIndex32(x*16, y*16, z*16);
-                    assertEquals(x, Coords.indexTo32X(index));
-                    assertEquals(y, Coords.indexTo32Y(index));
-                    assertEquals(z, Coords.indexTo32Z(index));
+                    int index = Coords.blockToIndex(x*16, y*16, z*16);
+                    assertEquals(x, Coords.indexToX(index));
+                    assertEquals(y, Coords.indexToY(index));
+                    assertEquals(z, Coords.indexToZ(index));
                 }
             }
         }
