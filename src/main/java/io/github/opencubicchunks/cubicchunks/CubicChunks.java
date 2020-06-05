@@ -1,5 +1,6 @@
 package io.github.opencubicchunks.cubicchunks;
 
+import io.github.opencubicchunks.cubicchunks.meta.EarlyConfig;
 import io.github.opencubicchunks.cubicchunks.misc.TestWorldType;
 import io.github.opencubicchunks.cubicchunks.network.PacketDispatcher;
 import net.minecraft.world.WorldType;
@@ -34,6 +35,7 @@ public class CubicChunks {
     public static final String PROTOCOL_VERSION = "0";
 
     public CubicChunks() {
+        EarlyConfig.getCubeDiameter();
         // Register the setup method for modloading
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::setup);
         // Register the doClientStuff method for modloading
