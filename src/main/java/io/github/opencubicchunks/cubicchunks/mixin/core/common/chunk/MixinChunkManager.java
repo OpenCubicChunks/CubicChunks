@@ -1,5 +1,7 @@
 package io.github.opencubicchunks.cubicchunks.mixin.core.common.chunk;
 
+import static io.github.opencubicchunks.cubicchunks.utils.Coords.sectionToCube;
+
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -1076,8 +1078,8 @@ public abstract class MixinChunkManager implements IChunkManager {
 
         for (ChunkManager.EntityTracker entityTracker : this.entities.values()) {
             Entity entity = ((EntityTrackerAccess) entityTracker).getEntity();
-            // TODO: entity chunk coords fix
-            if (entity != player && entity.chunkCoordX == pos.getX() && entity.chunkCoordY == pos.getY() && entity.chunkCoordZ == pos.getZ()) {
+            if ((entity != player) && (sectionToCube(entity.chunkCoordX) == pos.getX()) && (sectionToCube(entity.chunkCoordY) == pos.getY()) && (
+                    sectionToCube(entity.chunkCoordZ) == pos.getZ())) {
                 entityTracker.updateTrackingState(player);
                 if (entity instanceof MobEntity && ((MobEntity) entity).getLeashHolder() != null) {
                     leashedEntities.add(entity);
