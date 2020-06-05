@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
 
 public class PacketCubes {
     // vanilla has max chunk size of 2MB, it works out to be 128kB for a 32^3 cube
-    private static final int MAX_CUBE_SIZE = (4 * Cube.BLOCK_SIZE) * 1024;
+    private static final int MAX_CUBE_SIZE = (ICube.CUBE_DIAMETER * ICube.CUBE_DIAMETER * ICube.CUBE_DIAMETER) * 128 * 1024;
 
     private final CubePos[] cubePositions;
     private final Cube[] cubes;
