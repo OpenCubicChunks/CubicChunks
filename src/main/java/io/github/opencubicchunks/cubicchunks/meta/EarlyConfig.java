@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -24,26 +25,29 @@ public class EarlyConfig {
             Properties prop = new Properties();
             if (!Files.exists(Paths.get(FILE_NAME))) {
                 EarlyConfig.createDefaultEarlyConfigFile(FILE_NAME, prop);
-            } else {
-                try (InputStream inputStream = Files.newInputStream(Paths.get(FILE_NAME))) {
-                    //If there are any exceptions while loading, return default.
-                    prop.load(inputStream);
+            }
+            try (InputStream inputStream = Files.newInputStream(Paths.get(FILE_NAME))) {
+                //If there are any exceptions while loading, return default.
+                prop.load(inputStream);
 
-                    diameter = Integer.parseInt(EarlyConfig.getPropertyOrSetDefault(prop, PROPERTY_NAME_CUBE_DIAMETER, String.valueOf(diameter)));
+                diameter = Integer.parseInt(EarlyConfig.getPropertyOrSetDefault(prop, PROPERTY_NAME_CUBE_DIAMETER, String.valueOf(diameter)));
 
-                    boolean valid = false;
-                    for (int d : VALID_CUBE_DIAMETERS) {
-                        if (diameter == d) {
-                            valid = true;
-                            break;
-                        }
-
+                boolean valid = false;
+                for (int d : VALID_CUBE_DIAMETERS) {
+                    if (diameter == d) {
+                        valid = true;
+                        break;
                     }
-                    if(!valid) {
-                        throw new UnsupportedOperationException("CUBE_DIAMETER " + String.valueOf(diameter) + " is not supported. Please use one of"
-                                + " [1, 2, 4, 8].");
-                    }
+
                 }
+                if (!valid) {
+                    throw new UnsupportedOperationException("CUBE_DIAMETER " + diameter + " is not supported. Please use one of"
+                            + " [1, 2, 4, 8].");
+                }
+            }
+            prop.setProperty(PROPERTY_NAME_CUBE_DIAMETER, String.valueOf(diameter));
+            try (OutputStream out = Files.newOutputStream(Paths.get(FILE_NAME))) {
+                prop.store(out, "");
             }
         }catch(IOException e)
         {
