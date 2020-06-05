@@ -1,7 +1,5 @@
 package io.github.opencubicchunks.cubicchunks.meta;
 
-import io.github.opencubicchunks.cubicchunks.CubicChunks;
-
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -13,20 +11,38 @@ import java.util.Properties;
 
 public class EarlyConfig {
 
-    private static String fileName = "config/earlyconfig.properties";
+    private static final String FILE_NAME = "config/earlyconfig.properties";
+
+    private static final int[] VALID_CUBE_DIAMETERS = new int[] { 1, 2, 4, 8 };
+
+    private static final String PROPERTY_NAME_CUBE_DIAMETER = "CUBE_DIAMETER";
+    private static final int DEFAULT_DIAMETER = 2; //Default
 
     public static int getCubeDiameter() {
-        int diameter = 2; //Default
+        int diameter = EarlyConfig.DEFAULT_DIAMETER;
         try {
             Properties prop = new Properties();
-            if (!Files.exists(Paths.get(fileName))) {
-                EarlyConfig.createDefaultEarlyConfigFile(fileName, prop);
+            if (!Files.exists(Paths.get(FILE_NAME))) {
+                EarlyConfig.createDefaultEarlyConfigFile(FILE_NAME, prop);
             } else {
-                try (InputStream inputStream = Files.newInputStream(Paths.get(fileName))) {
+                try (InputStream inputStream = Files.newInputStream(Paths.get(FILE_NAME))) {
                     //If there are any exceptions while loading, return default.
                     prop.load(inputStream);
 
-                    diameter = Integer.parseInt(EarlyConfig.getPropertyOrSetDefault(prop, "CUBEDIAMETER", String.valueOf(diameter)));
+                    diameter = Integer.parseInt(EarlyConfig.getPropertyOrSetDefault(prop, PROPERTY_NAME_CUBE_DIAMETER, String.valueOf(diameter)));
+
+                    boolean valid = false;
+                    for (int d : VALID_CUBE_DIAMETERS) {
+                        if (diameter == d) {
+                            valid = true;
+                            break;
+                        }
+
+                    }
+                    if(!valid) {
+                        throw new UnsupportedOperationException("CUBE_DIAMETER " + String.valueOf(diameter) + " is not supported. Please use one of"
+                                + " [1, 2, 4, 8].");
+                    }
                 }
             }
         }catch(IOException e)
@@ -42,7 +58,7 @@ public class EarlyConfig {
 
         //noinspection ResultOfMethodCallIgnored
         file.createNewFile();
-        prop.setProperty("CUBEDIAMETER", "2");
+        prop.setProperty(PROPERTY_NAME_CUBE_DIAMETER, String.valueOf(EarlyConfig.DEFAULT_DIAMETER));
 
         prop.store(new FileOutputStream(file, false), null);
     }
