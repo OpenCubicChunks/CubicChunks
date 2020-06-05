@@ -4,6 +4,7 @@ import io.github.opencubicchunks.cubicchunks.chunk.ICube;
 import io.github.opencubicchunks.cubicchunks.chunk.ICubeStatusListener;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.server.IServerChunkProvider;
+import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import io.github.opencubicchunks.cubicchunks.world.ForcedCubesSaveData;
 import it.unimi.dsi.fastutil.longs.LongIterator;
 import net.minecraft.server.MinecraftServer;
@@ -61,11 +62,13 @@ public abstract class MixinMinecraftServer {
         serverchunkprovider.getLightManager().func_215598_a(500);
         this.serverTime = Util.milliTime();
         int radius = (int) Math.ceil(10 * (16 / (float)ICube.BLOCK_SIZE)); //vanilla is 10, 32: 5, 64: 3
+        int chunkDiameter = Coords.cubeToSection(radius, 0) * 2 + 1;
         int d = radius*2+1;
         ((IServerChunkProvider)serverchunkprovider).registerTicket(TicketType.START, spawnPosCube, radius + 1, Unit.INSTANCE);
+        serverchunkprovider.registerTicket(TicketType.START, spawnPosCube.asChunkPos(), Coords.cubeToSection(radius + 1, 0), Unit.INSTANCE);
 
         int i2 = 0;
-        while(isServerRunning() && (serverchunkprovider.getLoadedChunksCount() != d*d || ((IServerChunkProvider) serverchunkprovider).getLoadedCubesCount() != d*d*d)) {
+        while(isServerRunning() && (serverchunkprovider.getLoadedChunksCount() < chunkDiameter * chunkDiameter || ((IServerChunkProvider) serverchunkprovider).getLoadedCubesCount() < d*d*d)) {
             // from CC
             this.serverTime = Util.milliTime() + 10L;
             this.runScheduledTasks();

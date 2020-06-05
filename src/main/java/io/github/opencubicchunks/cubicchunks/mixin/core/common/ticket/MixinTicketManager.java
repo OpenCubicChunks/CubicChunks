@@ -83,7 +83,6 @@ public abstract class MixinTicketManager implements ITicketManager {
         if (ticketIn.getLevel() < i) {
             this.cubeTicketTracker.updateSourceLevel(cubePosIn, ticketIn.getLevel(), true);
         }
-        this.register(CubePos.from(cubePosIn).asChunkPos().asLong(), ticketIn);
     }
 
     @Override
