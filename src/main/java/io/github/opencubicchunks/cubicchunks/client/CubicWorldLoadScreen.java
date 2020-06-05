@@ -72,6 +72,7 @@ public class CubicWorldLoadScreen {
             Object2IntMap<ChunkStatus> colors) {
         RenderSystem.disableTexture();
         RenderSystem.enableBlend();
+        RenderSystem.enableAlphaTest();
 
         BufferBuilder buffer = Tessellator.getInstance().getBuffer();
 
@@ -152,43 +153,59 @@ public class CubicWorldLoadScreen {
             vertex(buffer, x1, y1, z0, 0, 1, 0, color);
         }
         if (renderFaces.contains(Direction.DOWN)) {
+            int c = darken(color, 40);
             // down face
-            vertex(buffer, x1, y0, z0, 0, -1, 0, color);
-            vertex(buffer, x1, y0, z1, 0, -1, 0, color);
-            vertex(buffer, x0, y0, z1, 0, -1, 0, color);
-            vertex(buffer, x0, y0, z0, 0, -1, 0, color);
+            vertex(buffer, x1, y0, z0, 0, -1, 0, c);
+            vertex(buffer, x1, y0, z1, 0, -1, 0, c);
+            vertex(buffer, x0, y0, z1, 0, -1, 0, c);
+            vertex(buffer, x0, y0, z0, 0, -1, 0, c);
         }
         if (renderFaces.contains(Direction.EAST)) {
+            int c = darken(color, 30);
             // right face
-            vertex(buffer, x1, y1, z0, 1, 0, 0, color);
-            vertex(buffer, x1, y1, z1, 1, 0, 0, color);
-            vertex(buffer, x1, y0, z1, 1, 0, 0, color);
-            vertex(buffer, x1, y0, z0, 1, 0, 0, color);
+            vertex(buffer, x1, y1, z0, 1, 0, 0, c);
+            vertex(buffer, x1, y1, z1, 1, 0, 0, c);
+            vertex(buffer, x1, y0, z1, 1, 0, 0, c);
+            vertex(buffer, x1, y0, z0, 1, 0, 0, c);
         }
         if (renderFaces.contains(Direction.WEST)) {
+            int c = darken(color, 30);
             // left face
-            vertex(buffer, x0, y0, z0, -1, 0, 0, color);
-            vertex(buffer, x0, y0, z1, -1, 0, 0, color);
-            vertex(buffer, x0, y1, z1, -1, 0, 0, color);
-            vertex(buffer, x0, y1, z0, -1, 0, 0, color);
+            vertex(buffer, x0, y0, z0, -1, 0, 0, c);
+            vertex(buffer, x0, y0, z1, -1, 0, 0, c);
+            vertex(buffer, x0, y1, z1, -1, 0, 0, c);
+            vertex(buffer, x0, y1, z0, -1, 0, 0, c);
         }
         if (renderFaces.contains(Direction.NORTH)) {
+            int c = darken(color, 20);
             // front face (facing camera)
-            vertex(buffer, x0, y1, z0, 0, 0, -1, color);
-            vertex(buffer, x1, y1, z0, 0, 0, -1, color);
-            vertex(buffer, x1, y0, z0, 0, 0, -1, color);
-            vertex(buffer, x0, y0, z0, 0, 0, -1, color);
+            vertex(buffer, x0, y1, z0, 0, 0, -1, c);
+            vertex(buffer, x1, y1, z0, 0, 0, -1, c);
+            vertex(buffer, x1, y0, z0, 0, 0, -1, c);
+            vertex(buffer, x0, y0, z0, 0, 0, -1, c);
         }
         if (renderFaces.contains(Direction.SOUTH)) {
+            int c = darken(color, 20);
             // back face
-            vertex(buffer, x0, y0, z1, 0, 0, 1, color);
-            vertex(buffer, x1, y0, z1, 0, 0, 1, color);
-            vertex(buffer, x1, y1, z1, 0, 0, 1, color);
-            vertex(buffer, x0, y1, z1, 0, 0, 1, color);
+            vertex(buffer, x0, y0, z1, 0, 0, 1, c);
+            vertex(buffer, x1, y0, z1, 0, 0, 1, c);
+            vertex(buffer, x1, y1, z1, 0, 0, 1, c);
+            vertex(buffer, x0, y1, z1, 0, 0, 1, c);
         }
     }
 
+    private static int darken(int color, int amount) {
+        int r = color >>> 16 & 0xFF;
+        r -= (r * amount) / 100;
+        int g = color >>> 8 & 0xFF;
+        g -= (g * amount) / 100;
+        int b = color & 0xFF;
+        b -= (b * amount) / 100;
+        return color & 0xFF000000 | r << 16 | g << 8 | b;
+    }
+
     private static void vertex(BufferBuilder buffer, float x, float y, float z, int nx, int ny, int nz, int color) {
+        // color = (color & 0xFF000000) | ((~color) & 0x00FFFFFF);
         float scale = 1f/255;
         float r = (color >>> 16 & 0xFF) * scale;
         float g = (color >>> 8 & 0xFF) * scale;
