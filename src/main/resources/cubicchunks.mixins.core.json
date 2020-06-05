@@ -33,6 +33,7 @@
         "common.save.MixinRegionSectionCache",
         "common.ticket.MixinProxyTicketManager",
         "common.ticket.MixinTicketManager",
+        "common.world.dimension.MixinOverworldDimension",
         "common.world.IBlockReaderMixin",
         "common.world.MixinWorld"
     ],
