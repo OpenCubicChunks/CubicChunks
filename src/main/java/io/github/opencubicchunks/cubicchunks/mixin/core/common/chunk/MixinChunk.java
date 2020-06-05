@@ -20,6 +20,10 @@ import org.spongepowered.asm.mixin.injection.Constant;
 import org.spongepowered.asm.mixin.injection.ModifyConstant;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
+import java.util.concurrent.CompletionException;
+
+import javax.annotation.Nullable;
+
 @Mixin(Chunk.class)
 public abstract class MixinChunk implements IChunk {
 
@@ -42,16 +46,30 @@ public abstract class MixinChunk implements IChunk {
                     args = "array=get"
             ))
     private ChunkSection getStorage(ChunkSection[] array, int y) {
-        ICube cube = ((ICubeProvider) world.getChunkProvider()).getCube(
-                Coords.sectionToCube(pos.x),
-                Coords.sectionToCube(y),
-                Coords.sectionToCube(pos.z), getStatus(), true);
+        ICube cube = getCube(y);
         if (cube instanceof EmptyCube) {
             return null;
         }
         assert cube != null : "cube was null when requested loading!";
         ChunkSection[] cubeSections = cube.getCubeSections();
         return cubeSections[Coords.sectionToIndex(pos.x, y, pos.z)];
+    }
+
+    @Nullable
+    private ICube getCube(int y) {
+        try {
+            return ((ICubeProvider) world.getChunkProvider()).getCube(
+                    Coords.sectionToCube(pos.x),
+                    Coords.sectionToCube(y),
+                    Coords.sectionToCube(pos.z), getStatus(), true);
+        } catch (CompletionException ex) {
+            // CompletionException here breaks vanilla crash report handler
+            // because CompletionException stacktrace doesn't have any part in common
+            // with the stacktrace at the moment of it being caught, as it's actually an exception
+            // coming from a different thread. To get around it, we re-throw that exception
+            // wrapped in an exception that actually comes from here
+            throw new RuntimeException("Exception getting cube", ex);
+        }
     }
 
     @ModifyConstant(method = {"getBlockState", "getFluidState(III)Lnet/minecraft/fluid/IFluidState;"},
@@ -79,10 +97,7 @@ public abstract class MixinChunk implements IChunk {
                     args = "array=set"
             ))
     private void setStorage(ChunkSection[] array, int y, ChunkSection newVal) {
-        ICube cube = ((ICubeProvider) world.getChunkProvider()).getCube(
-                Coords.sectionToCube(pos.x),
-                Coords.sectionToCube(y),
-                Coords.sectionToCube(pos.z), getStatus(), true);
+        ICube cube = getCube(y);
         if (cube instanceof EmptyCube) {
             return;
         }
