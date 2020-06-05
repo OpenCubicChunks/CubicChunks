@@ -34,7 +34,6 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.Collections;
-import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicReferenceArray;
@@ -53,20 +52,21 @@ public abstract class MixinChunkHolder implements ICubeHolder {
 
     @Shadow private boolean accessible;
 
-    @Shadow @Final private static List<ChunkStatus> CHUNK_STATUS_LIST;
-
     //This is either a ChunkTaskPriorityQueueSorter or a CubeTaskPriorityQueueSorter depending on if this is a chunkholder or sectionholder.
     @Shadow(aliases = "field_219327_v") @Final private ChunkHolder.IListener chunkHolderListener;
 
     @Shadow(aliases = "func_219281_j") public abstract int getCompletedLevel();
     @Shadow(aliases = "func_219275_d") protected abstract void setCompletedLevel(int p_219275_1_);
 
-    private CompletableFuture<ICube> cubeFuture = CompletableFuture.completedFuture(null);
+    // these are using java type erasure as a feature - because the generic type information
+    // doesn't exist at runtime, we can shadow those fields with different generic types
+    // and as long as we are consistent, we can use them with different types than the declaration in the original class
+    @Shadow(aliases = "field_219312_g") @Final private AtomicReferenceArray<CompletableFuture<Either<ICube, ChunkHolder.IChunkLoadingError>>> futureByStatus;
+    @Shadow private volatile CompletableFuture<Either<Cube, ChunkHolder.IChunkLoadingError>> borderFuture;
+    @Shadow private volatile CompletableFuture<Either<Cube, ChunkHolder.IChunkLoadingError>> tickingFuture;
+    @Shadow private volatile CompletableFuture<Either<Cube, ChunkHolder.IChunkLoadingError>> entityTickingFuture;
+    @Shadow(aliases = "field_219315_j") private CompletableFuture<ICube> chunkFuture;
 
-    private volatile CompletableFuture<Either<Cube, ChunkHolder.IChunkLoadingError>> tickingCubeFuture = UNLOADED_CUBE_FUTURE;
-    private volatile CompletableFuture<Either<Cube, ChunkHolder.IChunkLoadingError>> entityTickingCubeFuture = UNLOADED_CUBE_FUTURE;
-
-    private final AtomicReferenceArray<CompletableFuture<Either<ICube, ChunkHolder.IChunkLoadingError>>> cubeFutureByCubeStatus = new AtomicReferenceArray<>(CHUNK_STATUS_LIST.size());
 
     @Shadow private int skyLightChangeMask;
     @Shadow private int blockLightChangeMask;
@@ -82,12 +82,6 @@ public abstract class MixinChunkHolder implements ICubeHolder {
 
     private final ShortArraySet changedLocalBlocks = new ShortArraySet();
 
-    /**
-     * A future that returns the ChunkSection if it is a border chunk, {@link
-     * net.minecraft.world.server.ChunkHolder.IChunkLoadingError#UNLOADED} otherwise.
-     */
-    private volatile CompletableFuture<Either<Cube, ChunkHolder.IChunkLoadingError>> borderCubeFuture = UNLOADED_CUBE_FUTURE;
-
     //BEGIN INJECTS:
 
     @Dynamic
@@ -97,6 +91,10 @@ public abstract class MixinChunkHolder implements ICubeHolder {
     )
     public void onConstructCubeHolder(CubePos chunkPosIn, int levelIn, WorldLightManager lightManagerIn, ChunkHolder.IListener p_i50716_4_,
             ChunkHolder.IPlayerProvider playerProviderIn, CallbackInfo ci) {
+        this.borderFuture = UNLOADED_CUBE_FUTURE;
+        this.tickingFuture = UNLOADED_CUBE_FUTURE;
+        this.entityTickingFuture = UNLOADED_CUBE_FUTURE;
+        this.chunkFuture = CompletableFuture.completedFuture(null);
         this.prevChunkLevel = IChunkManager.MAX_CUBE_LOADED_LEVEL + 1;
         this.field_219318_m = this.prevChunkLevel;
     }
@@ -130,11 +128,11 @@ public abstract class MixinChunkHolder implements ICubeHolder {
                 }
             });
             for(int i = isFullyLoaded ? chunkstatus1.ordinal() + 1 : 0; i <= chunkstatus.ordinal(); ++i) {
-                CompletableFuture<Either<ICube, ChunkHolder.IChunkLoadingError>> completablefuture = this.cubeFutureByCubeStatus.get(i);
+                CompletableFuture<Either<ICube, ChunkHolder.IChunkLoadingError>> completablefuture = this.futureByStatus.get(i);
                 if (completablefuture != null) {
                     completablefuture.complete(either);
                 } else {
-                    this.cubeFutureByCubeStatus.set(i, CompletableFuture.completedFuture(either));
+                    this.futureByStatus.set(i, CompletableFuture.completedFuture(either));
                 }
             }
         }
@@ -143,13 +141,13 @@ public abstract class MixinChunkHolder implements ICubeHolder {
         boolean isBorder = currentLocationType.isAtLeast(ChunkHolder.LocationType.BORDER);
         this.accessible |= isBorder;
         if (!wasBorder && isBorder) {
-            this.borderCubeFuture = ((IChunkManager)chunkManagerIn).createCubeBorderFuture((ChunkHolder)(Object)this);
-            this.chainCube((CompletableFuture)this.borderCubeFuture);
+            this.borderFuture = ((IChunkManager)chunkManagerIn).createCubeBorderFuture((ChunkHolder)(Object)this);
+            this.chainCube(this.borderFuture);
         }
 
         if (wasBorder && !isBorder) {
-            CompletableFuture<Either<Cube, ChunkHolder.IChunkLoadingError>> completablefuture1 = this.borderCubeFuture;
-            this.borderCubeFuture = UNLOADED_CUBE_FUTURE;
+            CompletableFuture<Either<Cube, ChunkHolder.IChunkLoadingError>> completablefuture1 = this.borderFuture;
+            this.borderFuture = UNLOADED_CUBE_FUTURE;
             this.chainCube(Utils.unsafeCast(completablefuture1.thenApply((chunkLoadingErrorEither) -> {
                 return chunkLoadingErrorEither.ifLeft(((IChunkManager)chunkManagerIn)::saveCubeScheduleTicks);
             })));
@@ -158,29 +156,29 @@ public abstract class MixinChunkHolder implements ICubeHolder {
         boolean wasTicking = previousLocationType.isAtLeast(ChunkHolder.LocationType.TICKING);
         boolean isTicking = currentLocationType.isAtLeast(ChunkHolder.LocationType.TICKING);
         if (!wasTicking && isTicking) {
-            this.tickingCubeFuture = ((IChunkManager)chunkManagerIn).createCubeTickingFuture((ChunkHolder)(Object)this);
-            this.chainCube(Utils.unsafeCast(this.tickingCubeFuture));
+            this.tickingFuture = ((IChunkManager)chunkManagerIn).createCubeTickingFuture((ChunkHolder)(Object)this);
+            this.chainCube(Utils.unsafeCast(this.tickingFuture));
         }
 
         if (wasTicking && !isTicking) {
-            this.tickingCubeFuture.complete(UNLOADED_CUBE);
-            this.tickingCubeFuture = UNLOADED_CUBE_FUTURE;
+            this.tickingFuture.complete(UNLOADED_CUBE);
+            this.tickingFuture = UNLOADED_CUBE_FUTURE;
         }
 
         boolean wasEntityTicking = previousLocationType.isAtLeast(ChunkHolder.LocationType.ENTITY_TICKING);
         boolean isEntityTicking = currentLocationType.isAtLeast(ChunkHolder.LocationType.ENTITY_TICKING);
         if (!wasEntityTicking && isEntityTicking) {
-            if (this.entityTickingCubeFuture != UNLOADED_CUBE_FUTURE) {
+            if (this.entityTickingFuture != UNLOADED_CUBE_FUTURE) {
                 throw (IllegalStateException) Util.pauseDevMode(new IllegalStateException());
             }
 
-            this.entityTickingCubeFuture = ((IChunkManager)chunkManagerIn).createCubeEntityTickingFuture(this.cubePos);
-            this.chainCube(Utils.unsafeCast(this.entityTickingCubeFuture));
+            this.entityTickingFuture = ((IChunkManager)chunkManagerIn).createCubeEntityTickingFuture(this.cubePos);
+            this.chainCube(Utils.unsafeCast(this.entityTickingFuture));
         }
 
         if (wasEntityTicking && !isEntityTicking) {
-            this.entityTickingCubeFuture.complete(UNLOADED_CUBE);
-            this.entityTickingCubeFuture = UNLOADED_CUBE_FUTURE;
+            this.entityTickingFuture.complete(UNLOADED_CUBE);
+            this.entityTickingFuture = UNLOADED_CUBE_FUTURE;
         }
 
         ((ICubeHolderListener)this.chunkHolderListener).onUpdateCubeLevel(this.cubePos, () -> getCompletedLevel(), this.chunkLevel,
@@ -197,20 +195,20 @@ public abstract class MixinChunkHolder implements ICubeHolder {
     @Nullable
     @Override
     public Cube getCubeIfComplete() {
-        CompletableFuture<Either<Cube, ChunkHolder.IChunkLoadingError>> completablefuture = this.tickingCubeFuture;
+        CompletableFuture<Either<Cube, ChunkHolder.IChunkLoadingError>> completablefuture = this.tickingFuture;
         Either<Cube, ChunkHolder.IChunkLoadingError> either = completablefuture.getNow(null);
         return either == null ? null : either.left().orElse(null);
     }
 
     @Override
     public CompletableFuture<Either<Cube, ChunkHolder.IChunkLoadingError>> getCubeEntityTickingFuture() {
-        return this.entityTickingCubeFuture;
+        return this.entityTickingFuture;
     }
 
     // chain
     @Override
     public void chainCube(CompletableFuture<? extends Either<? extends ICube, ChunkHolder.IChunkLoadingError>> eitherChunk) {
-        this.cubeFuture = this.cubeFuture.thenCombine(eitherChunk, (cube, cubeOrError) -> {
+        this.chunkFuture = this.chunkFuture.thenCombine(eitherChunk, (cube, cubeOrError) -> {
             return cubeOrError.map((existingCube) -> {
                 return existingCube;
             }, (error) -> {
@@ -223,20 +221,20 @@ public abstract class MixinChunkHolder implements ICubeHolder {
     @Override
     public CompletableFuture<Either<ICube, ChunkHolder.IChunkLoadingError>> getCubeFuture(ChunkStatus chunkStatus) {
         CompletableFuture<Either<ICube, ChunkHolder.IChunkLoadingError>> completablefuture =
-                this.cubeFutureByCubeStatus.get(chunkStatus.ordinal());
+                this.futureByStatus.get(chunkStatus.ordinal());
         return completablefuture == null ? MISSING_CUBE_FUTURE : completablefuture;
     }
 
     // func_219302_f
     @Override
     public CompletableFuture<ICube> getCurrentCubeFuture() {
-        return cubeFuture;
+        return chunkFuture;
     }
 
     // func_219301_a
     public CompletableFuture<Either<ICube, ChunkHolder.IChunkLoadingError>> getFutureByCubeStatus(ChunkStatus chunkStatus) {
         CompletableFuture<Either<ICube, ChunkHolder.IChunkLoadingError>> completablefuture =
-                this.cubeFutureByCubeStatus.get(chunkStatus.ordinal());
+                this.futureByStatus.get(chunkStatus.ordinal());
         return completablefuture == null ? MISSING_CUBE_FUTURE : completablefuture;
     }
     // func_225410_b
@@ -248,7 +246,7 @@ public abstract class MixinChunkHolder implements ICubeHolder {
     @Override
     public CompletableFuture<Either<ICube, ChunkHolder.IChunkLoadingError>> createCubeFuture(ChunkStatus status, ChunkManager chunkManager) {
         int statusOrdinal = status.ordinal();
-        CompletableFuture<Either<ICube, ChunkHolder.IChunkLoadingError>> completablefuture = this.cubeFutureByCubeStatus.get(statusOrdinal);
+        CompletableFuture<Either<ICube, ChunkHolder.IChunkLoadingError>> completablefuture = this.futureByStatus.get(statusOrdinal);
         if (completablefuture != null) {
             Either<ICube, ChunkHolder.IChunkLoadingError> either = completablefuture.getNow(null);
             if (either == null || either.left().isPresent()) {
@@ -260,7 +258,7 @@ public abstract class MixinChunkHolder implements ICubeHolder {
             CompletableFuture<Either<ICube, ChunkHolder.IChunkLoadingError>> completablefuture1 =
                     ((IChunkManager)chunkManager).createCubeFuture((ChunkHolder)(Object)this, status);
             this.chainCube(completablefuture1);
-            this.cubeFutureByCubeStatus.set(statusOrdinal, completablefuture1);
+            this.futureByStatus.set(statusOrdinal, completablefuture1);
             return completablefuture1;
         } else {
             return completablefuture == null ? MISSING_CUBE_FUTURE : completablefuture;
@@ -350,12 +348,12 @@ public abstract class MixinChunkHolder implements ICubeHolder {
     // func_219294_a
     @Override
     public void onCubeWrapperCreated(CubePrimerWrapper primer) {
-        for(int i = 0; i < this.cubeFutureByCubeStatus.length(); ++i) {
-            CompletableFuture<Either<ICube, ChunkHolder.IChunkLoadingError>> future = this.cubeFutureByCubeStatus.get(i);
+        for(int i = 0; i < this.futureByStatus.length(); ++i) {
+            CompletableFuture<Either<ICube, ChunkHolder.IChunkLoadingError>> future = this.futureByStatus.get(i);
             if (future != null) {
                 Optional<ICube> optional = future.getNow(MISSING_CUBE).left();
                 if (optional.isPresent() && optional.get() instanceof CubePrimer) {
-                    this.cubeFutureByCubeStatus.set(i, CompletableFuture.completedFuture(Either.left(primer)));
+                    this.futureByStatus.set(i, CompletableFuture.completedFuture(Either.left(primer)));
                 }
             }
         }

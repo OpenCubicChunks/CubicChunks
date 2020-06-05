@@ -11,6 +11,8 @@ import net.minecraft.world.server.ChunkManager;
 
 import java.util.concurrent.CompletableFuture;
 
+import javax.annotation.Nullable;
+
 public interface ICubeHolder {
     Either<ICube, ChunkHolder.IChunkLoadingError> MISSING_CUBE = Either.right(ChunkHolder.IChunkLoadingError.UNLOADED);
     Either<Cube, ChunkHolder.IChunkLoadingError> UNLOADED_CUBE = Either.right(ChunkHolder.IChunkLoadingError.UNLOADED);
@@ -21,6 +23,7 @@ public interface ICubeHolder {
         return cubeLevel < 33 ? ChunkStatus.FULL : CubeStatus.getStatus(cubeLevel - 33);
     }
 
+    @Nullable
     Cube getCubeIfComplete();
 
     CubePos getCubePos();

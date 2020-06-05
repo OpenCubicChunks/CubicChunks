@@ -31,6 +31,7 @@ public interface IChunkManager {
 
     @Nullable
     ChunkHolder getCubeHolder(long cubePosIn);
+    @Nullable
     ChunkHolder getImmutableCubeHolder(long cubePosIn);
 
     CompletableFuture<Either<ICube, ChunkHolder.IChunkLoadingError>> createCubeFuture(ChunkHolder chunkHolderIn,
