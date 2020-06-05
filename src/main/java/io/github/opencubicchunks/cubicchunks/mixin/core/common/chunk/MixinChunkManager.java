@@ -273,26 +273,30 @@ public abstract class MixinChunkManager implements IChunkManager {
 
     private void scheduleCubeSave(long cubePos, ChunkHolder chunkHolderIn) {
         CompletableFuture<ICube> completablefuture = ((ICubeHolder) chunkHolderIn).getCurrentCubeFuture();
-        completablefuture.thenAcceptAsync((cube) -> {
+        completablefuture.thenAcceptAsync((icube) -> {
             CompletableFuture<ICube> completablefuture1 = ((ICubeHolder) chunkHolderIn).getCurrentCubeFuture();
             if (completablefuture1 != completablefuture) {
                 this.scheduleCubeSave(cubePos, chunkHolderIn);
             } else {
-                if (this.cubesToUnload.remove(cubePos, chunkHolderIn) && cube != null) {
-                    if (cube instanceof Chunk) {
-                        ((Chunk)cube).setLoaded(false);
-                        net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.event.world.ChunkEvent.Unload((Chunk)cube));
+                if (this.cubesToUnload.remove(cubePos, chunkHolderIn) && icube != null) {
+                    if (icube instanceof Cube) {
+                        //TODO: implement setLoaded
+                        //((Cube)cube).setLoaded(false);
+                        //TODO: reimplement forge event ChunkEvent#Unload.
+                        //net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.event.world.ChunkEvent.Unload((Chunk)cube));
                     }
 
-                    this.cubeSave(cube);
-                    if (this.loadedCubePositions.remove(cubePos) && cube instanceof Chunk) {
-                        Chunk chunk = (Chunk)cube;
-                        this.world.onChunkUnloading(chunk);
+                    this.cubeSave(icube);
+                    if (this.loadedCubePositions.remove(cubePos) && icube instanceof Cube) {
+                        Cube cube = (Cube)icube;
+                        //TODO: implement onCubeUnloading
+                        //this.world.onChunkUnloading(cube);
                     }
 
+                    //TODO: reimplement lightmanager stuff
                     //this.lightManager.updateChunkStatus(cube.getCubeStatus());
                     //this.lightManager.func_215588_z_();
-                    ((ICubeStatusListener) this.statusListener).cubeStatusChanged(cube.getCubePos(), (ChunkStatus)null);
+                    ((ICubeStatusListener) this.statusListener).cubeStatusChanged(icube.getCubePos(), (ChunkStatus)null);
                 }
 
             }
