@@ -26,7 +26,6 @@ import io.github.opencubicchunks.cubicchunks.network.PacketDispatcher;
 import io.github.opencubicchunks.cubicchunks.network.PacketUnloadCube;
 import io.github.opencubicchunks.cubicchunks.network.PacketUpdateCubePosition;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
-import io.github.opencubicchunks.cubicchunks.utils.MathUtil;
 import io.github.opencubicchunks.cubicchunks.chunk.util.Utils;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectLinkedOpenHashMap;
@@ -986,7 +985,7 @@ public abstract class MixinChunkManager implements IChunkManager {
                 CubePos cubePos = ((ICubeHolder)chunkholder).getCubePos();
                 Object[] objects = new Object[2];
                 this.getCubeTrackingPlayers(cubePos, false).forEach((serverPlayerEntity) -> {
-                    int k = getDistanceToPlayer(cubePos, serverPlayerEntity, true);
+                    int k = IChunkManager.getCubeChebyshevDistance(cubePos, serverPlayerEntity, true);
                     boolean flag = k <= viewDistanceCubes;
                     boolean flag1 = k <= newViewDistanceCubes;
                     this.setCubeLoadedAtClient(serverPlayerEntity, cubePos, objects, flag, flag1);
@@ -1106,24 +1105,6 @@ public abstract class MixinChunkManager implements IChunkManager {
     public int getLoadedCubesCount()
     {
         return this.cubesLoaded.get();
-    }
-
-    //func_219215_b
-    private static int getDistanceToPlayer(CubePos pos, ServerPlayerEntity player, boolean useManagedPos) {
-        int x;
-        int y;
-        int z;
-        if (useManagedPos) {
-            CubePos cubePos = CubePos.from(player.getManagedSectionPos());
-            x = cubePos.getX();
-            y = cubePos.getY();
-            z = cubePos.getZ();
-        } else {
-            x = Coords.getCubeXForEntity(player);
-            y = Coords.getCubeYForEntity(player);
-            z = Coords.getCubeZForEntity(player);
-        }
-        return IChunkManager.getCubeDistance(pos, x, y, z);
     }
 
     // func_219191_c

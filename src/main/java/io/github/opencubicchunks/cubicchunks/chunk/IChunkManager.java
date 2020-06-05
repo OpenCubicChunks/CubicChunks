@@ -4,6 +4,7 @@ import com.mojang.datafixers.util.Either;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.Cube;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.CubeStatus;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
+import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.util.math.MathHelper;
@@ -55,15 +56,14 @@ public interface IChunkManager {
         int y;
         int z;
         if (p_219215_2_) {
-            //THIS IS FINE AS SECTION POS, AS IT IS CONVERTED TO CUBE POS WITH THE >> 1
             SectionPos sectionpos = player.getManagedSectionPos();
-            x = sectionpos.getSectionX() >> 1;
-            y = sectionpos.getSectionY() >> 1;
-            z = sectionpos.getSectionZ() >> 1;
+            x = Coords.sectionToCube(sectionpos.getSectionX());
+            y = Coords.sectionToCube(sectionpos.getSectionY());
+            z = Coords.sectionToCube(sectionpos.getSectionZ());
         } else {
-            x = MathHelper.floor(player.getPosX() / 16.0D) >> 1;
-            y = MathHelper.floor(player.getPosY() / 16.0D) >> 1;
-            z = MathHelper.floor(player.getPosZ() / 16.0D) >> 1;
+            x = Coords.getCubeXForEntity(player);
+            y = Coords.getCubeYForEntity(player);
+            z = Coords.getCubeZForEntity(player);
         }
 
         return getCubeDistance(pos, x, y, z);
