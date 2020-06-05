@@ -1,10 +1,9 @@
 package io.github.opencubicchunks.cubicchunks.client;
 
-import static java.lang.Math.abs;
-
 import com.mojang.blaze3d.systems.RenderSystem;
+import io.github.opencubicchunks.cubicchunks.chunk.ICube;
 import io.github.opencubicchunks.cubicchunks.chunk.ITrackingCubeStatusListener;
-import io.github.opencubicchunks.cubicchunks.utils.MathUtil;
+import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.AbstractGui;
@@ -32,6 +31,7 @@ public class CubicWorldLoadScreen {
     public static void doRender(TrackingChunkStatusListener trackerParam, int xBase, int yBase, int scale, int spacing,
             Object2IntMap<ChunkStatus> colors) {
         render3d(trackerParam, xBase, yBase, scale, spacing, colors);
+        // TODO: config option
         // render2d(trackerParam, xBase, yBase, scale, spacing, colors);
     }
 
@@ -39,19 +39,27 @@ public class CubicWorldLoadScreen {
             Object2IntMap<ChunkStatus> colors) {
         float aspectRatio = Minecraft.getInstance().currentScreen.width / (float) Minecraft.getInstance().currentScreen.height;
 
+        float scaleWithCineSize = scale * ICube.CUBE_DIAMETER / 2.0f;
+
         RenderSystem.matrixMode(GL11.GL_PROJECTION);
         RenderSystem.pushMatrix();
         RenderSystem.loadIdentity();
         RenderSystem.multMatrix(Matrix4f.perspective(60, aspectRatio, 0.01f, -10));
+        // TODO: config option
+        //RenderSystem.multMatrix(Matrix4f.orthographic(10 * aspectRatio, 10, 0.01f, 1000));
+        //RenderSystem.translatef(10 * aspectRatio / 2, 10 / 2.f, 0);
         RenderSystem.matrixMode(GL11.GL_MODELVIEW);
 
         RenderSystem.pushMatrix();
         RenderSystem.loadIdentity();
-        RenderSystem.translatef(0, 0, -10);
+
+        RenderSystem.translatef(0, 0, -20);
+
         RenderSystem.rotatef(30, 1, 0, 0);
 
         RenderSystem.rotatef((float) ((System.currentTimeMillis() * 0.04) % 360), 0, 1, 0);
-        render3dDrawCubes(trackerParam, xBase, yBase, scale, spacing, colors);
+
+        render3dDrawCubes(trackerParam, xBase, yBase, scaleWithCineSize, spacing, colors);
 
         RenderSystem.popMatrix();
 
@@ -60,7 +68,7 @@ public class CubicWorldLoadScreen {
         RenderSystem.matrixMode(GL11.GL_MODELVIEW);
     }
 
-    private static void render3dDrawCubes(TrackingChunkStatusListener trackerParam, int xBase, int yBase, int scale, int spacing,
+    private static void render3dDrawCubes(TrackingChunkStatusListener trackerParam, int xBase, int yBase, float scale, int spacing,
             Object2IntMap<ChunkStatus> colors) {
         RenderSystem.disableTexture();
         RenderSystem.enableBlend();
@@ -69,18 +77,30 @@ public class CubicWorldLoadScreen {
 
         buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_COLOR);
 
-        final int renderRadius = MathUtil.ceilDiv(trackerParam.func_219523_d(), 2);
+        int sectionRenderRadius = trackerParam.func_219523_d();
 
         EnumSet<Direction> renderFaces = EnumSet.noneOf(Direction.class);
 
+        for (int cdx = 0; cdx < sectionRenderRadius; cdx++) {
+            for (int cdz = 0; cdz < sectionRenderRadius; cdz++) {
+                ChunkStatus columnStatus = trackerParam.getStatus(cdx, cdz);
+                if (columnStatus == null) {
+                    continue;
+                }
+                int alpha = 0xB0;
+                int c = colors.getOrDefault(columnStatus, 0xFFFF00FF) | (alpha << 24);
+                drawCube(buffer, cdx - sectionRenderRadius / 2, -30, cdz - sectionRenderRadius / 2,
+                        0.12f * scale / ICube.CUBE_DIAMETER, c, EnumSet.of(Direction.UP));
+            }
+        }
+
+        final int renderRadius = Coords.sectionToCubeCeil(sectionRenderRadius);
+
         ITrackingCubeStatusListener tracker = (ITrackingCubeStatusListener) trackerParam;
-        for (int dx = -renderRadius; dx <= renderRadius; dx++) {
-            for (int dy = -renderRadius; dy <= renderRadius; dy++) {
-                for (int dz = -renderRadius; dz <= renderRadius; dz++) {
-                    int x = dx + renderRadius;
-                    int y = dy + renderRadius;
-                    int z = dz + renderRadius;
-                    ChunkStatus status = tracker.getCubeStatus(x, y, z);
+        for (int dx = -1; dx <= renderRadius + 1; dx++) {
+            for (int dz = -1; dz <= renderRadius + 1; dz++) {
+                for (int dy = -1; dy <= renderRadius + 1; dy++) {
+                    ChunkStatus status = tracker.getCubeStatus(dx, dy, dz);
                     if (status == null) {
                         continue;
                     }
@@ -89,12 +109,13 @@ public class CubicWorldLoadScreen {
                     int alpha = (int) (0x20 + ratio * (0xFF - 0x20));
                     int c = colors.getOrDefault(status, 0xFFFF00FF) | (alpha << 24);
                     for (Direction value : Direction.values()) {
-                        ChunkStatus cubeStatus = tracker.getCubeStatus(x + value.getXOffset(), y + value.getYOffset(), z + value.getZOffset());
+                        ChunkStatus cubeStatus = tracker.getCubeStatus(dx + value.getXOffset(), dy + value.getYOffset(), dz + value.getZOffset());
                         if (cubeStatus == null || !cubeStatus.isAtLeast(status)) {
                             renderFaces.add(value);
                         }
                     }
-                    drawCube(buffer, dx, dy, dz, 0.12f * scale, c, renderFaces);
+                    drawCube(buffer, dx - renderRadius / 2, dy - renderRadius / 2, dz - renderRadius / 2,
+                            0.12f * scale, c, renderFaces);
                 }
             }
         }

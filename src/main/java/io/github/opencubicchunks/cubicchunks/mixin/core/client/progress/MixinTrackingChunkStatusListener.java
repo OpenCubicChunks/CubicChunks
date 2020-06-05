@@ -3,7 +3,9 @@ package io.github.opencubicchunks.cubicchunks.mixin.core.client.progress;
 import io.github.opencubicchunks.cubicchunks.chunk.ICubeStatusListener;
 import io.github.opencubicchunks.cubicchunks.chunk.ITrackingCubeStatusListener;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
+import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
+import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.chunk.listener.LoggingChunkStatusListener;
 import net.minecraft.world.chunk.listener.TrackingChunkStatusListener;
@@ -24,6 +26,7 @@ public abstract class MixinTrackingChunkStatusListener implements ICubeStatusLis
     @Shadow @Final private LoggingChunkStatusListener loggingListener;
 
     @Shadow @Final private int positionOffset;
+    @Shadow private ChunkPos center;
     private CubePos centerCube;
     private final Long2ObjectOpenHashMap<ChunkStatus> cubeStatuses = new Long2ObjectOpenHashMap<>();
 
@@ -32,6 +35,7 @@ public abstract class MixinTrackingChunkStatusListener implements ICubeStatusLis
         if (this.tracking) {
             ((ICubeStatusListener) this.loggingListener).startCubes(center);
             this.centerCube = center;
+            this.center = centerCube.asChunkPos();
         }
     }
 
@@ -57,9 +61,10 @@ public abstract class MixinTrackingChunkStatusListener implements ICubeStatusLis
         if (centerCube == null) {
             return null; // vanilla race condition, made worse by forge moving IChunkStatusListener ichunkstatuslistener = this.chunkStatusListenerFactory.create(11); earlier
         }
+        int offset = Coords.sectionToCubeCeil(this.positionOffset);
         return this.cubeStatuses.get(CubePos.asLong(
-                x + this.centerCube.getX() - this.positionOffset,
-                y + this.centerCube.getY() - this.positionOffset,
-                z + this.centerCube.getZ() - this.positionOffset));
+                x + this.centerCube.getX() - offset,
+                y + this.centerCube.getY() - offset,
+                z + this.centerCube.getZ() - offset));
     }
 }
