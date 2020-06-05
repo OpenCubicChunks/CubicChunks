@@ -38,6 +38,8 @@ public class ConfigPlugin implements IMixinConfigPlugin {
             MainTransformer.transformProxyTicketManager(targetClass);
         } else if (targetClassName.equals("net.minecraft.world.server.ChunkManager")) {
             MainTransformer.transformChunkManager(targetClass);
+        } else if (targetClassName.equals("net.minecraft.world.server.ChunkHolder")) {
+            MainTransformer.transformChunkHolder(targetClass);
         }
     }
 
