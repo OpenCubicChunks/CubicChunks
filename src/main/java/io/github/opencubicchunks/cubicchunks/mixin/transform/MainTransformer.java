@@ -30,24 +30,23 @@ public class MainTransformer {
     private static final boolean IS_DEV = !FMLEnvironment.production;
 
     public static void transformChunkHolder(ClassNode targetClass) {
-        final String setChunkLevel =
-                ASMAPI.mapMethod("func_219372_a") + "(JILnet/minecraft/world/server/ChunkHolder;I)Lnet/minecraft/world/server/ChunkHolder;";
-        final String setCubeLevel = "setCubeLevel";
+        final Method initOld =
+                Method.getMethod("void <init>(net.minecraft.util.math.ChunkPos, "
+                        + "int, net.minecraft.world.lighting.WorldLightManager, "
+                        + "net.minecraft.world.server.ChunkHolder$IListener, "
+                        + "net.minecraft.world.server.ChunkHolder$IPlayerProvider)");
+        final String initNew = "<init>";
 
-        Map<String, String> methodRedirects = new HashMap<>();
-        methodRedirects.put(// synthetic accessor for func_219213_a (setChunkLevel)
-                "net/minecraft/world/server/ChunkManager.access$700(Lnet/minecraft/world/server/ChunkManager;"
-                        + "JILnet/minecraft/world/server/ChunkHolder;I)Lnet/minecraft/world/server/ChunkHolder;",
-                "setCubeLevel");
+        Map<ClassMethod, String> methodRedirects = new HashMap<>();
 
-        Map<String, String> fieldRedirects = new HashMap<>();
-        fieldRedirects.put("net/minecraft/world/server/ChunkManager$ProxyTicketManager.this$0", "this$0");
+        Map<ClassField, String> fieldRedirects = new HashMap<>();
+        fieldRedirects.put(new ClassField("net/minecraft/world/server/ChunkHolder", "field_219319_n"), "cubePos");
 
-        Map<String, String> typeRedirects = new HashMap<>();
-        typeRedirects.put("net/minecraft/world/server/ChunkManager", "net/minecraft/world/server/ChunkManager");
-        typeRedirects.put("net/minecraft/world/server/ChunkHolder", "net/minecraft/world/server/ChunkHolder");
+        Map<Type, Type> typeRedirects = new HashMap<>();
+        typeRedirects.put(getObjectType("net/minecraft/util/math/ChunkPos"),
+                getObjectType("io/github/opencubicchunks/cubicchunks/chunk/util/CubePos"));
 
-        //cloneAndApplyRedirects(targetClass, setChunkLevel, setCubeLevel, methodRedirects, fieldRedirects, typeRedirects);
+        cloneAndApplyRedirects(targetClass, initOld, initNew, methodRedirects, fieldRedirects, typeRedirects);
     }
 
     public static void transformChunkManager(ClassNode targetClass) {
@@ -69,7 +68,8 @@ public class MainTransformer {
 
         Map<Type, Type> typeRedirects = new HashMap<>();
         // TODO: create target constructor in ChunkHolder with CubePos
-        // typeRedirects.put("net/minecraft/util/math/ChunkPos", "io/github/opencubicchunks/cubicchunks/chunk/util/CubePos");
+        typeRedirects.put(getObjectType("net/minecraft/util/math/ChunkPos"),
+                getObjectType("io/github/opencubicchunks/cubicchunks/chunk/util/CubePos"));
         // TODO: generate that class at runtime? transform and duplicate?
         typeRedirects.put(getObjectType("net/minecraft/world/chunk/ChunkTaskPriorityQueueSorter"),
                 getObjectType("io/github/opencubicchunks/cubicchunks/chunk/ticket/CubeTaskPriorityQueueSorter"));

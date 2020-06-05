@@ -5,28 +5,26 @@ import io.github.opencubicchunks.cubicchunks.chunk.IChunkManager;
 import io.github.opencubicchunks.cubicchunks.chunk.ICube;
 import io.github.opencubicchunks.cubicchunks.chunk.ICubeHolder;
 import io.github.opencubicchunks.cubicchunks.chunk.ICubeHolderListener;
+import io.github.opencubicchunks.cubicchunks.chunk.cube.Cube;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.CubePrimer;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.CubePrimerWrapper;
-import io.github.opencubicchunks.cubicchunks.chunk.cube.Cube;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
+import io.github.opencubicchunks.cubicchunks.chunk.util.Utils;
+import io.github.opencubicchunks.cubicchunks.network.PacketCubeBlockChanges;
 import io.github.opencubicchunks.cubicchunks.network.PacketCubes;
 import io.github.opencubicchunks.cubicchunks.network.PacketDispatcher;
-import io.github.opencubicchunks.cubicchunks.network.PacketCubeBlockChanges;
 import io.github.opencubicchunks.cubicchunks.utils.AddressTools;
-import io.github.opencubicchunks.cubicchunks.chunk.util.Utils;
 import it.unimi.dsi.fastutil.shorts.ShortArrayList;
 import it.unimi.dsi.fastutil.shorts.ShortArraySet;
-import net.minecraft.network.IPacket;
 import net.minecraft.util.Util;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkStatus;
-import net.minecraft.world.chunk.IChunk;
 import net.minecraft.world.lighting.WorldLightManager;
 import net.minecraft.world.server.ChunkHolder;
 import net.minecraft.world.server.ChunkManager;
+import org.spongepowered.asm.mixin.Dynamic;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
@@ -46,8 +44,6 @@ import javax.annotation.Nullable;
 @Mixin(ChunkHolder.class)
 public abstract class MixinChunkHolder implements ICubeHolder {
 
-    @Shadow public abstract ChunkPos getPosition();
-
     @Shadow private int prevChunkLevel;
     @Shadow private int chunkLevel;
 
@@ -57,22 +53,15 @@ public abstract class MixinChunkHolder implements ICubeHolder {
 
     @Shadow private boolean accessible;
 
-    //@Shadow protected abstract void chain(CompletableFuture<? extends Either<? extends IChunk, ChunkHolder.IChunkLoadingError>> eitherChunk);
-
-    //@Shadow @Final private static CompletableFuture<Either<Chunk, ChunkHolder.IChunkLoadingError>> UNLOADED_CHUNK_FUTURE;
-    //@Shadow @Final public static Either<Chunk, ChunkHolder.IChunkLoadingError> UNLOADED_CHUNK;
-    //@Shadow private volatile CompletableFuture<Either<Chunk, ChunkHolder.IChunkLoadingError>> entityTickingFuture;
-    //@Shadow @Final private ChunkPos pos;
-
     @Shadow @Final private static List<ChunkStatus> CHUNK_STATUS_LIST;
 
-    //This is either a ChunkTaskPriorityQueueSorter or a SectionTaskPriorityQueueSorter depending on if this is a chunkholder or sectionholder.
+    //This is either a ChunkTaskPriorityQueueSorter or a CubeTaskPriorityQueueSorter depending on if this is a chunkholder or sectionholder.
     @Shadow(aliases = "field_219327_v") @Final private ChunkHolder.IListener chunkHolderListener;
 
     @Shadow(aliases = "func_219281_j") public abstract int getCompletedLevel();
     @Shadow(aliases = "func_219275_d") protected abstract void setCompletedLevel(int p_219275_1_);
 
-    private CompletableFuture<ICube> cubeFuture = CompletableFuture.completedFuture((ICube) null);
+    private CompletableFuture<ICube> cubeFuture = CompletableFuture.completedFuture(null);
 
     private volatile CompletableFuture<Either<Cube, ChunkHolder.IChunkLoadingError>> tickingCubeFuture = UNLOADED_CUBE_FUTURE;
     private volatile CompletableFuture<Either<Cube, ChunkHolder.IChunkLoadingError>> entityTickingCubeFuture = UNLOADED_CUBE_FUTURE;
@@ -85,13 +74,11 @@ public abstract class MixinChunkHolder implements ICubeHolder {
 
     @Shadow protected abstract void sendTileEntity(World worldIn, BlockPos posIn);
 
-    @Shadow protected abstract void sendToTracking(IPacket<?> packetIn, boolean boundaryOnly);
-
-    @Shadow @Final private WorldLightManager lightManager;
     @Shadow @Final private ChunkHolder.IPlayerProvider playerProvider;
-    @Shadow @Final public static CompletableFuture<Either<IChunk, ChunkHolder.IChunkLoadingError>> MISSING_CHUNK_FUTURE;
     @Shadow private int field_219318_m;
-    private CubePos cubePos;
+
+    @SuppressWarnings("unused")
+    private CubePos cubePos; // set from ASM
 
     private final ShortArraySet changedLocalBlocks = new ShortArraySet();
 
@@ -102,6 +89,17 @@ public abstract class MixinChunkHolder implements ICubeHolder {
     private volatile CompletableFuture<Either<Cube, ChunkHolder.IChunkLoadingError>> borderCubeFuture = UNLOADED_CUBE_FUTURE;
 
     //BEGIN INJECTS:
+
+    @Dynamic
+    @Inject(method = "<init>(Lio/github/opencubicchunks/cubicchunks/chunk/util/CubePos;ILnet/minecraft/world/lighting/WorldLightManager;"
+            + "Lnet/minecraft/world/server/ChunkHolder$IListener;Lnet/minecraft/world/server/ChunkHolder$IPlayerProvider;)V",
+            at = @At("RETURN")
+    )
+    public void onConstructCubeHolder(CubePos chunkPosIn, int levelIn, WorldLightManager lightManagerIn, ChunkHolder.IListener p_i50716_4_,
+            ChunkHolder.IPlayerProvider playerProviderIn, CallbackInfo ci) {
+        this.prevChunkLevel = IChunkManager.MAX_CUBE_LOADED_LEVEL + 1;
+        this.field_219318_m = this.prevChunkLevel;
+    }
 
     @Inject(method = "processUpdates", at = @At("HEAD"), cancellable = true)
     void processUpdates(ChunkManager chunkManagerIn, CallbackInfo ci) {
@@ -188,22 +186,6 @@ public abstract class MixinChunkHolder implements ICubeHolder {
         ((ICubeHolderListener)this.chunkHolderListener).onUpdateCubeLevel(this.cubePos, () -> getCompletedLevel(), this.chunkLevel,
                 p_219275_1_ -> setCompletedLevel(p_219275_1_));
         this.prevChunkLevel = this.chunkLevel;
-    }
-
-    //BEGIN OVERRIDES:
-
-    @Override
-    public void setYPos(int yPos) { //Whenever ChunkHolder is instantiated this should be called to finish the construction of the object
-        this.cubePos = CubePos.from(this.getPosition(), yPos);
-        this.prevChunkLevel = IChunkManager.MAX_CUBE_LOADED_LEVEL + 1;
-        this.field_219318_m = this.prevChunkLevel;
-    }
-
-
-    @Override
-    public int getYPos()
-    {
-        return this.cubePos.getY();
     }
 
     @Override

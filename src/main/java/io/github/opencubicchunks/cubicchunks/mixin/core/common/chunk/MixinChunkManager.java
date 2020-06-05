@@ -8,8 +8,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Queues;
 import com.mojang.datafixers.DataFixer;
 import com.mojang.datafixers.util.Either;
-import io.github.opencubicchunks.cubicchunks.chunk.ticket.CubeTaskPriorityQueue;
-import io.github.opencubicchunks.cubicchunks.world.storage.CubeSerializer;
 import io.github.opencubicchunks.cubicchunks.chunk.IChunkManager;
 import io.github.opencubicchunks.cubicchunks.chunk.ICube;
 import io.github.opencubicchunks.cubicchunks.chunk.ICubeHolder;
@@ -19,16 +17,18 @@ import io.github.opencubicchunks.cubicchunks.chunk.cube.CubePrimer;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.CubePrimerWrapper;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.CubeStatus;
 import io.github.opencubicchunks.cubicchunks.chunk.graph.CCTicketType;
+import io.github.opencubicchunks.cubicchunks.chunk.ticket.CubeTaskPriorityQueue;
 import io.github.opencubicchunks.cubicchunks.chunk.ticket.CubeTaskPriorityQueueSorter;
 import io.github.opencubicchunks.cubicchunks.chunk.ticket.ITicketManager;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
+import io.github.opencubicchunks.cubicchunks.chunk.util.Utils;
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.EntityTrackerAccess;
 import io.github.opencubicchunks.cubicchunks.network.PacketCubes;
 import io.github.opencubicchunks.cubicchunks.network.PacketDispatcher;
 import io.github.opencubicchunks.cubicchunks.network.PacketUnloadCube;
 import io.github.opencubicchunks.cubicchunks.network.PacketUpdateCubePosition;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
-import io.github.opencubicchunks.cubicchunks.chunk.util.Utils;
+import io.github.opencubicchunks.cubicchunks.world.storage.CubeSerializer;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.longs.LongIterator;
@@ -53,7 +53,6 @@ import net.minecraft.util.concurrent.ThreadTaskExecutor;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.SectionPos;
-import net.minecraft.village.PointOfInterestManager;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.chunk.IChunk;
@@ -62,7 +61,6 @@ import net.minecraft.world.chunk.PlayerGenerationTracker;
 import net.minecraft.world.chunk.listener.IChunkStatusListener;
 import net.minecraft.world.gen.ChunkGenerator;
 import net.minecraft.world.gen.feature.template.TemplateManager;
-import net.minecraft.world.lighting.WorldLightManager;
 import net.minecraft.world.server.ChunkHolder;
 import net.minecraft.world.server.ChunkManager;
 import net.minecraft.world.server.ServerWorld;
@@ -70,14 +68,12 @@ import net.minecraft.world.server.ServerWorldLightManager;
 import net.minecraft.world.storage.SessionLockException;
 import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.apache.logging.log4j.Logger;
-import org.spongepowered.asm.mixin.Dynamic;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
@@ -136,8 +132,6 @@ public abstract class MixinChunkManager implements IChunkManager {
 
     @Shadow @Final private ThreadTaskExecutor<Runnable> mainThread;
 
-    @Shadow @Final private PointOfInterestManager pointOfInterestManager;
-
     @Shadow(aliases = "field_219266_t") @Final private IChunkStatusListener statusListener;
 
     @Shadow @Final private ChunkGenerator<?> generator;
@@ -175,20 +169,6 @@ public abstract class MixinChunkManager implements IChunkManager {
                 itaskexecutor, delegatedtaskexecutor1), p_i51538_5_, Integer.MAX_VALUE);
         this.worldgenExecutor = this.cubeTaskPriorityQueueSorter.createExecutor(delegatedtaskexecutor, false);
         this.mainExecutor = this.cubeTaskPriorityQueueSorter.createExecutor(itaskexecutor, false);
-    }
-
-    @Dynamic
-    @Redirect(method = "setCubeLevel", at = @At(
-            value = "NEW",
-            target = "net/minecraft/world/server/ChunkHolder")
-    )
-    private ChunkHolder onCubeHolderConstruct(ChunkPos chunkPosIn, int levelIn, WorldLightManager lightManagerIn, ChunkHolder.IListener listener,
-            ChunkHolder.IPlayerProvider playerProviderIn) {
-        long pos = chunkPosIn.asLong(); // this is actually a cube pos encodes as chunk pos
-        ChunkHolder holder = new ChunkHolder(CubePos.from(pos).asChunkPos(), levelIn, lightManagerIn, listener, playerProviderIn);
-        //noinspection ConstantConditions
-        ((ICubeHolder) holder).setYPos(CubePos.extractY(pos));
-        return holder;
     }
 
     @Inject(method = "save", at = @At("HEAD"))
@@ -988,9 +968,9 @@ public abstract class MixinChunkManager implements IChunkManager {
                 Object[] objects = new Object[2];
                 this.getCubeTrackingPlayers(cubePos, false).forEach((serverPlayerEntity) -> {
                     int k = IChunkManager.getCubeChebyshevDistance(cubePos, serverPlayerEntity, true);
-                    boolean flag = k <= viewDistanceCubes;
-                    boolean flag1 = k <= newViewDistanceCubes;
-                    this.setCubeLoadedAtClient(serverPlayerEntity, cubePos, objects, flag, flag1);
+                    boolean wasLoaded = k <= viewDistanceCubes;
+                    boolean isLoaded = k <= newViewDistanceCubes;
+                    this.setCubeLoadedAtClient(serverPlayerEntity, cubePos, objects, wasLoaded, isLoaded);
                 });
             }
         }

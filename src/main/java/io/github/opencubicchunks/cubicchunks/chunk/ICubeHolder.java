@@ -23,9 +23,7 @@ public interface ICubeHolder {
 
     Cube getCubeIfComplete();
 
-    void setYPos(int yPos);
     CubePos getCubePos();
-    int getYPos();
 
     void chainCube(CompletableFuture<? extends Either<? extends ICube,
             ChunkHolder.IChunkLoadingError>> eitherChunk);
