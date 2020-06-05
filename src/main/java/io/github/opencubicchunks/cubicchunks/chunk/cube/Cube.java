@@ -8,6 +8,7 @@ import io.github.opencubicchunks.cubicchunks.chunk.biome.CubeBiomeContainer;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.ChunkSectionAccess;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
+import io.github.opencubicchunks.cubicchunks.utils.MathUtil;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import it.unimi.dsi.fastutil.shorts.ShortList;
 import net.minecraft.block.Block;
@@ -23,6 +24,7 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ClassInheritanceMultiMap;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.SectionPos;
 import net.minecraft.util.palette.UpgradeData;
 import net.minecraft.world.ITickList;
@@ -105,7 +107,7 @@ public class Cube implements IChunk, ICube {
     }
 
     public int getSize() {
-        int size = this.sections.length / Byte.SIZE; // exists flags
+        int size = MathUtil.ceilDiv(sections.length, Byte.SIZE); // exists flags
         for(ChunkSection section : this.sections)
         {
             if(section != null)
@@ -122,7 +124,7 @@ public class Cube implements IChunk, ICube {
             }
         }
         byte[] emptyFlagsBytes = emptyFlags.toByteArray();
-        byte[] actualFlagsBytes = new byte[sections.length / Byte.SIZE];
+        byte[] actualFlagsBytes = new byte[MathUtil.ceilDiv(sections.length, Byte.SIZE)];
         System.arraycopy(emptyFlagsBytes, 0, actualFlagsBytes, 0, emptyFlagsBytes.length);
         buf.writeBytes(actualFlagsBytes);
         for (ChunkSection section : sections) {
@@ -137,7 +139,7 @@ public class Cube implements IChunk, ICube {
             Arrays.fill(sections, null);
             return;
         }
-        byte[] emptyFlagsBytes = new byte[sections.length / Byte.SIZE];
+        byte[] emptyFlagsBytes = new byte[MathUtil.ceilDiv(sections.length, Byte.SIZE)];
         readBuffer.readBytes(emptyFlagsBytes);
         BitSet emptyFlags = BitSet.valueOf(emptyFlagsBytes);
 
