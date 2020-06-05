@@ -3,6 +3,7 @@ package io.github.opencubicchunks.cubicchunks.mixin.core.common.chunk;
 import static io.github.opencubicchunks.cubicchunks.utils.Coords.sectionToCube;
 
 import io.github.opencubicchunks.cubicchunks.chunk.IChunkManager;
+import io.github.opencubicchunks.cubicchunks.chunk.ICubeHolder;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.ChunkManagerAccess;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
@@ -47,17 +48,17 @@ public abstract class MixinEntityTracker {
                     vec3d.z >= (double)(-i) && vec3d.z <= (double)i &&
                     this.entity.isSpectatedByPlayer(player);
             if (flag) {
-                boolean flag1 = this.entity.forceSpawn;
-                if (!flag1) {
+                boolean spawn = this.entity.forceSpawn;
+                if (!spawn) {
                     CubePos cubePos = CubePos.of(sectionToCube(this.entity.chunkCoordX), sectionToCube(this.entity.chunkCoordY),
                             sectionToCube(this.entity.chunkCoordZ));
                     ChunkHolder chunkholder = ((IChunkManager)this$0).getImmutableCubeHolder(cubePos.asLong());
-                    if (chunkholder != null && chunkholder.getChunkIfComplete() != null) {
-                        flag1 = IChunkManager.getCubeChebyshevDistance(cubePos, player, false) <= ((ChunkManagerAccess)this$0).getViewDistance();
+                    if (chunkholder != null && ((ICubeHolder) chunkholder).getCubeIfComplete() != null) {
+                        spawn = IChunkManager.getCubeChebyshevDistance(cubePos, player, false) <= ((ChunkManagerAccess)this$0).getViewDistance();
                     }
                 }
 
-                if (flag1 && this.trackingPlayers.add(player)) {
+                if (spawn && this.trackingPlayers.add(player)) {
                     this.entry.track(player);
                 }
             } else if (this.trackingPlayers.remove(player)) {
