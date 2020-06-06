@@ -1,11 +1,13 @@
 package io.github.opencubicchunks.cubicchunks;
 
+import io.github.opencubicchunks.cubicchunks.chunk.IChunkManager;
 import io.github.opencubicchunks.cubicchunks.meta.EarlyConfig;
 import io.github.opencubicchunks.cubicchunks.misc.TestWorldType;
 import io.github.opencubicchunks.cubicchunks.network.PacketDispatcher;
 import net.minecraft.world.WorldType;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.gen.GenerationStage;
+import net.minecraft.world.server.ChunkManager;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -35,6 +37,9 @@ public class CubicChunks {
     public static final String PROTOCOL_VERSION = "0";
 
     public CubicChunks() {
+        if (!(IChunkManager.class.isAssignableFrom(ChunkManager.class))) {
+            throw new IllegalStateException("Mixin not applied!");
+        }
         EarlyConfig.getCubeDiameter();
         // Register the setup method for modloading
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::setup);
