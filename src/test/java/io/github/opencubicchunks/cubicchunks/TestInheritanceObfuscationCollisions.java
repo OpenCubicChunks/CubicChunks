@@ -5,6 +5,7 @@ import static org.hamcrest.Matchers.empty;
 import static org.junit.Assert.assertThat;
 
 import io.github.opencubicchunks.cubicchunks.chunk.ICube;
+import net.minecraft.world.IBlockReader;
 import net.minecraft.world.chunk.IChunk;
 import org.junit.Test;
 import org.objectweb.asm.Type;
@@ -18,6 +19,7 @@ public class TestInheritanceObfuscationCollisions {
     @Test
     public void tesChunkCube() {
         verifyNoCollision(ICube.class, IChunk.class);
+        verifyNoCollision(ICube.class, IBlockReader.class);
     }
 
     private void verifyNoCollision(Class<?> ccClass, Class<?> mcClass) {
@@ -25,6 +27,7 @@ public class TestInheritanceObfuscationCollisions {
                 .map(this::methodString).collect(Collectors.toSet());
         Set<String> mcMethods = Arrays.stream(mcClass.getDeclaredMethods())
                 .map(this::methodString).collect(Collectors.toSet());
+
 
         ccMethods.retainAll(mcMethods);
         assertThat(ccMethods, is(empty()));

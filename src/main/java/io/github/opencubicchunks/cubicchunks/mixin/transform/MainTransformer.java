@@ -23,8 +23,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
-import javax.annotation.Nullable;
-
 public class MainTransformer {
     private static final Logger LOGGER = LogManager.getLogger();
     private static final boolean IS_DEV = !FMLEnvironment.production;
@@ -126,7 +124,6 @@ public class MainTransformer {
                         .findAny().orElseThrow(() -> new IllegalStateException("Target method " + existingMethod + " not found"));
 
         Set<String> defaultKnownClasses = Sets.newHashSet(
-                Type.getType(Nullable.class).getInternalName(),
                 Type.getType(Object.class).getInternalName(),
                 Type.getType(String.class).getInternalName(),
                 node.name
