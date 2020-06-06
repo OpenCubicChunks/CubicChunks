@@ -36,7 +36,6 @@ tasks.addRule("Pattern: buildNoIncremental<X>") { String taskName ->
     if (taskName.startsWith("buildNoIncremental")) {
         task(taskName) {
             tasks.withType(JavaCompile) {
-                println("!??????")
                 options.incremental = false
                 outputs.upToDateWhen { false }
             }
