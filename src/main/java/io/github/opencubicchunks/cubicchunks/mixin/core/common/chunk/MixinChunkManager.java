@@ -572,30 +572,31 @@ public abstract class MixinChunkManager implements IChunkManager {
                 //chunkSection.postLoad();
                 if (this.loadedCubePositions.add(cubePos.asLong())) {
                     // TODO: reimplement setLoaded
-                    // worldSection.setLoaded(true);
+                    // cube.setLoaded(true);
                     this.world.addTileEntities(cube.getTileEntityMap().values());
                     List<Entity> entities = null;
-                    ClassInheritanceMultiMap<Entity> entityLists = cube.getEntityList();
+                    ClassInheritanceMultiMap<Entity>[] entityLists = cube.getEntityLists();
 
-
-                    for (Entity entity : entityLists) {
-                        if (entity instanceof PlayerEntity || this.world.addEntityIfNotDuplicate(entity)) {
-                            continue;
-                        }
-                        if (entities == null) {
-                            entities = Lists.newArrayList(entity);
-                        } else {
-                            entities.add(entity);
+                    for(int idxList = 0; idxList < entityLists.length; ++idxList) {
+                        //TODO: reimplement forge ChunkEvent#Load
+                        //net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.event.world.ChunkEvent.Load(chunk));
+                        for (Entity entity : entityLists[idxList]) {
+                            if (entity instanceof PlayerEntity || this.world.addEntityIfNotDuplicate(entity)) {
+                                continue;
+                            }
+                            if (entities == null) {
+                                entities = Lists.newArrayList(entity);
+                            } else {
+                                entities.add(entity);
+                            }
                         }
                     }
-
                     if (entities != null) {
                         entities.forEach(cube::removeEntity);
                     }
                     // TODO: events
                     // net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.event.world.ChunkEvent.Load(chunkSection));
                 }
-
                 return (ICube) cube;
             });
         }, (runnable) -> {

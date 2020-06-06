@@ -42,8 +42,6 @@ public class MixinWorldRenderer {
         return null;
     }
 
-
-
     @Redirect(method = "setupTerrain", at = @At(value = "FIELD",
             target = "Lnet/minecraft/client/renderer/WorldRenderer;renderDistanceChunks:I"),
             slice = @Slice(from = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/WorldRenderer;loadRenderers()V")))

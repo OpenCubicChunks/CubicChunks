@@ -1,8 +1,11 @@
 package io.github.opencubicchunks.cubicchunks.chunk.cube;
 
+import static io.github.opencubicchunks.cubicchunks.utils.Coords.blockToCube;
+import static io.github.opencubicchunks.cubicchunks.utils.Coords.cubeToSection;
 import static net.minecraft.world.chunk.Chunk.EMPTY_SECTION;
 
 import com.google.common.collect.Sets;
+import io.github.opencubicchunks.cubicchunks.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.chunk.ICube;
 import io.github.opencubicchunks.cubicchunks.chunk.biome.CubeBiomeContainer;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
@@ -54,7 +57,7 @@ public class Cube implements IChunk, ICube {
     private final ChunkSection[] sections = new ChunkSection[CUBE_SIZE];
 
     private final HashMap<BlockPos, TileEntity> tileEntities = new HashMap<>();
-    private final ClassInheritanceMultiMap<Entity> entities = new ClassInheritanceMultiMap<>(Entity.class);
+    private final ClassInheritanceMultiMap<Entity>[] entityLists;
     private final World world;
 
     private ChunkStatus cubeStatus = ChunkStatus.EMPTY;
@@ -83,7 +86,7 @@ public class Cube implements IChunk, ICube {
             }
 
             for (int i = 0; i < sectionsIn.length; i++) {
-                int sectionYPos = Coords.cubeToSection(cubePosIn.getY(), Coords.indexToY(i));
+                int sectionYPos = cubeToSection(cubePosIn.getY(), Coords.indexToY(i));
 
                 if(sectionsIn[i] != null) {
                     sections[i] = new ChunkSection(sectionYPos,
@@ -94,6 +97,12 @@ public class Cube implements IChunk, ICube {
                     ((ChunkSectionAccess) sections[i]).setData(sectionsIn[i].getData());
                 }
             }
+        }
+
+        //noinspection unchecked
+        this.entityLists = new ClassInheritanceMultiMap[ICube.CUBE_SIZE];
+        for(int i = 0; i < this.entityLists.length; ++i) {
+            this.entityLists[i] = new ClassInheritanceMultiMap<>(Entity.class);
         }
     }
 
@@ -226,16 +235,21 @@ public class Cube implements IChunk, ICube {
         return tileEntities;
     }
 
-    public ClassInheritanceMultiMap<Entity> getEntityList() {
-        return entities;
+    public ClassInheritanceMultiMap<Entity>[] getEntityLists() {
+        return entityLists;
+    }
+
+    private int getIndexFromEntity(Entity entityIn) {
+        return (MathHelper.floor(entityIn.getPosX() / 16.0D) * ICube.CUBE_DIAMETER * ICube.CUBE_DIAMETER) +
+                (MathHelper.floor(entityIn.getPosY() / 16.0D) * ICube.CUBE_DIAMETER) +
+                MathHelper.floor(entityIn.getPosZ() / 16.0D);
     }
 
     public void removeEntity(Entity entityIn) {
-        this.removeEntityAtIndex(entityIn, entityIn.chunkCoordY);
+        this.removeEntityAtIndex(entityIn, this.getIndexFromEntity(entityIn));
     }
 
     public void removeEntityAtIndex(Entity entityIn, int index) {
-        /*
         if (index < 0) {
             index = 0;
         }
@@ -245,9 +259,7 @@ public class Cube implements IChunk, ICube {
         }
 
         this.entityLists[index].remove(entityIn);
-        this.markDirty(); // Forge - ensure chunks are marked to save after entity removals
-        */
-        throw new UnsupportedOperationException("Not implemented yet!");
+        this.setModified(true);
     }
 
     @Override public ChunkStatus getCubeStatus() {
@@ -360,7 +372,26 @@ public class Cube implements IChunk, ICube {
     }
 
     @Override public void addEntity(Entity entityIn) {
+        //This needs to be blockToCube instead of getCubeXForEntity because of the `/ 16`
+        int xFloor = blockToCube(MathHelper.floor(entityIn.getPosX() / 16.0D));
+        int yFloor = blockToCube(MathHelper.floor(entityIn.getPosY() / 16.0D));
+        int zFloor = blockToCube(MathHelper.floor(entityIn.getPosZ() / 16.0D));
+        if (xFloor != this.cubePos.getX() || yFloor != this.cubePos.getY() || zFloor != this.cubePos.getZ()) {
+            CubicChunks.LOGGER.warn("Wrong location! ({}, {}, {}) should be ({}, {}, {}), {}", xFloor, yFloor, zFloor, this.cubePos.getX(),
+                    this.cubePos.getY(), this.cubePos.getZ(), entityIn);
+            entityIn.removed = true;
+        }
 
+        int idx = this.getIndexFromEntity(entityIn);
+
+        //TODO: reimplement forge event
+        //net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.event.entity.EntityEvent.EnteringChunk(entityIn, this.pos.x, this.pos.z, entityIn.chunkCoordX, entityIn.chunkCoordZ));
+        entityIn.addedToChunk = true;
+        entityIn.chunkCoordX = cubeToSection(this.cubePos.getX(), 0);
+        entityIn.chunkCoordY = cubeToSection(this.cubePos.getY(), 0);
+        entityIn.chunkCoordZ = cubeToSection(this.cubePos.getZ(), 0);
+        this.entityLists[idx].add(entityIn);
+        this.setModified(true); // Forge - ensure chunks are marked to save after an entity add
     }
 
     @Nullable

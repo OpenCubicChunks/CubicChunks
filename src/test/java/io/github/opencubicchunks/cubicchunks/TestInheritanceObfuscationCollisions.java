@@ -19,7 +19,6 @@ public class TestInheritanceObfuscationCollisions {
     @Test
     public void tesChunkCube() {
         verifyNoCollision(ICube.class, IChunk.class);
-        verifyNoCollision(ICube.class, IBlockReader.class);
     }
 
     private void verifyNoCollision(Class<?> ccClass, Class<?> mcClass) {
