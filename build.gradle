@@ -29,6 +29,22 @@ archivesBaseName = "CubicChunks"
 
 sourceCompatibility = targetCompatibility = compileJava.sourceCompatibility = compileJava.targetCompatibility = '1.8' // Need this here so eclipse task generates correctly.
 
+// a hack to force gradle to run a full build to have the annotation proocessor working
+// when even the compile task is up to date
+// without this, refmap file isn't generated correctly
+tasks.addRule("Pattern: buildNoIncremental<X>") { String taskName ->
+    if (taskName.startsWith("buildNoIncremental")) {
+        task(taskName) {
+            tasks.withType(JavaCompile) {
+                println("!??????")
+                options.incremental = false
+                outputs.upToDateWhen { false }
+            }
+            dependsOn(build)
+        }
+    }
+}
+
 minecraft {
     mappings channel: "snapshot", version: "${mapping}-1.15.1"
     // makeObfSourceJar = false // an Srg named sources jar is made by default. uncomment this to disable.
@@ -89,13 +105,15 @@ repositories{
     mavenCentral()
 }
 
+configurations.getByName("annotationProcessor").extendsFrom(configurations.compileClasspath)
+
 dependencies {
     // Specify the version of Minecraft to use, If this is any group other then 'net.minecraft' it is assumed
     // that the dep is a ForgeGradle 'patcher' dependency. And it's patches will be applied.
     // The userdev artifact is a special name and will get all sorts of transformations applied to it.
     minecraft "net.minecraftforge:forge:${mc_version}-${forge_version}" //21
 
-    compile 'org.spongepowered:mixin:0.8'
+    implementation 'org.spongepowered:mixin:0.8'
 
     testCompile('junit:junit:4.11')
     testCompile('org.hamcrest:hamcrest-junit:2.0.0.0')
