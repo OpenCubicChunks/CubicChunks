@@ -18,6 +18,7 @@ import it.unimi.dsi.fastutil.shorts.ShortArrayList;
 import it.unimi.dsi.fastutil.shorts.ShortArraySet;
 import net.minecraft.util.Util;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkStatus;
@@ -45,6 +46,7 @@ public abstract class MixinChunkHolder implements ICubeHolder {
 
     @Shadow private int prevChunkLevel;
     @Shadow private int chunkLevel;
+    @Shadow private ChunkPos pos;
 
     @Shadow public static ChunkHolder.LocationType getLocationTypeFromLevel(int level) {
         throw new Error("Mixin failed to apply correctly!");
@@ -89,7 +91,7 @@ public abstract class MixinChunkHolder implements ICubeHolder {
             + "Lnet/minecraft/world/server/ChunkHolder$IListener;Lnet/minecraft/world/server/ChunkHolder$IPlayerProvider;)V",
             at = @At("RETURN")
     )
-    public void onConstructCubeHolder(CubePos chunkPosIn, int levelIn, WorldLightManager lightManagerIn, ChunkHolder.IListener p_i50716_4_,
+    public void onConstructCubeHolder(CubePos cubePosIn, int levelIn, WorldLightManager lightManagerIn, ChunkHolder.IListener p_i50716_4_,
             ChunkHolder.IPlayerProvider playerProviderIn, CallbackInfo ci) {
         this.borderFuture = UNLOADED_CUBE_FUTURE;
         this.tickingFuture = UNLOADED_CUBE_FUTURE;
@@ -97,6 +99,7 @@ public abstract class MixinChunkHolder implements ICubeHolder {
         this.chunkFuture = CompletableFuture.completedFuture(null);
         this.prevChunkLevel = IChunkManager.MAX_CUBE_LOADED_LEVEL + 1;
         this.field_219318_m = this.prevChunkLevel;
+        this.pos = cubePosIn.asChunkPos();
     }
 
     @Inject(method = "processUpdates", at = @At("HEAD"), cancellable = true)
