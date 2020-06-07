@@ -8,6 +8,9 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Queues;
 import com.mojang.datafixers.DataFixer;
 import com.mojang.datafixers.util.Either;
+import io.github.opencubicchunks.cubicchunks.chunk.CubeCollectorFuture;
+import io.github.opencubicchunks.cubicchunks.chunk.ticket.CubeTaskPriorityQueue;
+import io.github.opencubicchunks.cubicchunks.world.storage.CubeSerializer;
 import io.github.opencubicchunks.cubicchunks.chunk.IChunkManager;
 import io.github.opencubicchunks.cubicchunks.chunk.ICube;
 import io.github.opencubicchunks.cubicchunks.chunk.ICubeHolder;
@@ -82,10 +85,7 @@ import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-import java.util.Queue;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.Executor;
@@ -491,16 +491,25 @@ public abstract class MixinChunkManager implements IChunkManager {
         int y = pos.getY();
         int z = pos.getZ();
 
+        int requiredAreaLength = (2*radius + 1);
+        int requiredCubeCount = requiredAreaLength * requiredAreaLength * requiredAreaLength;
+        CubeCollectorFuture collectorFuture = new CubeCollectorFuture(requiredCubeCount);
+
         // to index: x*d*d + y*d + z
         // extract x: index/(d*d)
         // extract y: (index/d) % d
         // extract z: index % d
+        int cubeIdx = 0;
         for (int dx = -radius; dx <= radius; ++dx) {
             for (int dy = -radius; dy <= radius; ++dy) {
                 for (int dz = -radius; dz <= radius; ++dz) {
+
+                    // determine the required cube's position
                     int distance = Math.max(Math.max(Math.abs(dz), Math.abs(dx)), Math.abs(dy));
                     final CubePos cubePos = CubePos.of(x + dx, y + dy, z + dz);
                     long posLong = cubePos.asLong();
+
+                    // get the required cube's chunk holder
                     ChunkHolder chunkholder = this.getLoadedSection(posLong);
                     if (chunkholder == null) {
                         //noinspection MixinInnerClass
@@ -514,17 +523,22 @@ public abstract class MixinChunkManager implements IChunkManager {
                     ChunkStatus parentStatus = getParentStatus.apply(distance);
                     CompletableFuture<Either<ICube, ChunkHolder.IChunkLoadingError>> future =
                             ((ICubeHolder) chunkholder).createCubeFuture(parentStatus, Utils.unsafeCast(this));
-                    list.add(future);
+
+                    final int idx2 = cubeIdx;
+                    future.whenComplete((either, error) -> collectorFuture.add(idx2, either, error));
+//                    list.add(future);
+
+                    ++cubeIdx;
                 }
             }
         }
 
-        CompletableFuture<List<Either<ICube, ChunkHolder.IChunkLoadingError>>> futures = Util.gather(list);
-        return futures.thenApply((p_219227_4_) -> {
+//        CompletableFuture<List<Either<ICube, ChunkHolder.IChunkLoadingError>>> futures = Util.gather(list);
+        return collectorFuture.thenApply((cubeEithers) -> {
             List<ICube> returnFutures = Lists.newArrayList();
             int i = 0;
 
-            for (final Either<ICube, ChunkHolder.IChunkLoadingError> either : p_219227_4_) {
+            for (final Either<ICube, ChunkHolder.IChunkLoadingError> either : cubeEithers) {
                 Optional<ICube> optional = either.left();
                 if (!optional.isPresent()) {
                     final int d = radius * 2 + 1;
