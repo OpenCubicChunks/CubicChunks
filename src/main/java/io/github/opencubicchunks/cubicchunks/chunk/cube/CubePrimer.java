@@ -73,7 +73,8 @@ public class CubePrimer implements ICube, IChunk {
     }
 
     @Nullable @Override public TileEntity getTileEntity(BlockPos pos) {
-        throw new UnsupportedOperationException("For later implementation");
+        // throw new UnsupportedOperationException("For later implementation");
+        return null; // TODO: tile entities
     }
 
     public BlockState getBlockState(int x, int y, int z) {

@@ -165,6 +165,7 @@ public class MixinChunkStatus {
             //        Heightmap.Type.WORLD_SURFACE));
             // TODO: worldgen
             // generator.decorate(new WorldGenRegion(world, chunks));
+            ((ICubeGenerator) generator).decorate(new CubeWorldGenRegion(world, Utils.unsafeCast(chunks)));
             chunkprimer.setStatus(status);
         }
         cir.setReturnValue(CompletableFuture.completedFuture(Either.left(chunk)));

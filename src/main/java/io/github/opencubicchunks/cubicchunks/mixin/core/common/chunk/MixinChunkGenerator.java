@@ -2,20 +2,27 @@ package io.github.opencubicchunks.cubicchunks.mixin.core.common.chunk;
 
 import io.github.opencubicchunks.cubicchunks.chunk.ICube;
 import io.github.opencubicchunks.cubicchunks.chunk.ICubeGenerator;
+import io.github.opencubicchunks.cubicchunks.utils.Coords;
+import io.github.opencubicchunks.cubicchunks.world.CubeWorldGenRegion;
 import net.minecraft.block.Blocks;
 import net.minecraft.util.SharedSeedRandom;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.IWorld;
 import net.minecraft.world.biome.BiomeManager;
+import net.minecraft.world.biome.DefaultBiomeFeatures;
 import net.minecraft.world.chunk.IChunk;
 import net.minecraft.world.gen.ChunkGenerator;
 import net.minecraft.world.gen.OctavesNoiseGenerator;
+import net.minecraft.world.gen.feature.Feature;
+import net.minecraft.world.gen.feature.TreeFeatureConfig;
 import net.minecraft.world.gen.feature.template.TemplateManager;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+
+import java.util.Random;
 
 @Mixin(ChunkGenerator.class)
 public class MixinChunkGenerator implements ICubeGenerator {
@@ -68,6 +75,47 @@ public class MixinChunkGenerator implements ICubeGenerator {
                     } else if (blockY < 0) {
                         cube.setBlock(new BlockPos(dx, dy, dz), Blocks.WATER.getDefaultState(), false);
                     }
+                }
+            }
+        }
+    }
+
+    @Override public void decorate(CubeWorldGenRegion region) {
+        int mainCubeX = region.getMainCubeX();
+        int mainCubeY = region.getMainCubeY();
+        int mainCubeZ = region.getMainCubeZ();
+
+        int yStart = Coords.cubeToMinBlock(mainCubeY + 1);
+        int yEnd = Coords.cubeToMinBlock(mainCubeY);
+
+        Random r = new Random(mainCubeX * 678321 + mainCubeZ * 56392 + mainCubeY * 32894345);
+        int treeCount = Math.abs((int) (gen1.getValue(mainCubeX * 0.00354, 8765, mainCubeZ * 0.00354, 0, 0, false) * 12*50));
+        for (int i = 0; i < treeCount; i++) {
+            int x = Coords.cubeToMinBlock(mainCubeX) + r.nextInt(ICube.BLOCK_SIZE);
+            int z = Coords.cubeToMinBlock(mainCubeZ) + r.nextInt(ICube.BLOCK_SIZE);
+            BlockPos pos = new BlockPos(x, yStart, z);
+            if (!region.getBlockState(pos).isAir(region, pos)) {
+                continue;
+            }
+            for (int y = yStart - 1; y >= yEnd; y--) {
+                pos = new BlockPos(x, y, z);
+                if (!region.getBlockState(pos).isAir(region, pos)) {
+                    TreeFeatureConfig[] configs = {
+                            DefaultBiomeFeatures.OAK_TREE_CONFIG,
+                            DefaultBiomeFeatures.OAK_TREE_CONFIG,
+                            DefaultBiomeFeatures.OAK_TREE_CONFIG,
+                            DefaultBiomeFeatures.OAK_TREE_CONFIG,
+                            DefaultBiomeFeatures.OAK_TREE_CONFIG,
+                            DefaultBiomeFeatures.OAK_TREE_CONFIG,
+                            DefaultBiomeFeatures.field_230132_o_,
+                            DefaultBiomeFeatures.field_230133_p_,
+                            DefaultBiomeFeatures.BIRCH_TREE_CONFIG,
+                            DefaultBiomeFeatures.SWAMP_TREE_CONFIG,
+                            DefaultBiomeFeatures.SPRUCE_TREE_CONFIG,
+                            DefaultBiomeFeatures.FANCY_TREE_WITH_MORE_BEEHIVES_CONFIG,
+                    };
+                    Feature.NORMAL_TREE.withConfiguration(configs[r.nextInt(configs.length)]).place(region,
+                            (ChunkGenerator) (Object) this, r, pos.up());
                 }
             }
         }

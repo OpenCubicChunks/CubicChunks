@@ -4,6 +4,7 @@ import static io.github.opencubicchunks.cubicchunks.utils.Coords.blockToCube;
 
 import io.github.opencubicchunks.cubicchunks.chunk.ICube;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
+import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
@@ -13,6 +14,7 @@ import net.minecraft.fluid.Fluid;
 import net.minecraft.fluid.IFluidState;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.nbt.ListNBT;
 import net.minecraft.particles.IParticleData;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.SoundCategory;
@@ -25,10 +27,12 @@ import net.minecraft.world.DifficultyInstance;
 import net.minecraft.world.ITickList;
 import net.minecraft.world.IWorld;
 import net.minecraft.world.World;
+import net.minecraft.world.WorldGenTickList;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.BiomeManager;
 import net.minecraft.world.border.WorldBorder;
 import net.minecraft.world.chunk.AbstractChunkProvider;
+import net.minecraft.world.chunk.ChunkPrimerTickList;
 import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.chunk.IChunk;
 import net.minecraft.world.dimension.Dimension;
@@ -102,7 +106,7 @@ public class CubeWorldGenRegion implements IWorld {
     }
 
     public ICube getCube(BlockPos blockPos) {
-        return this.getCube(blockToCube(blockPos.getX()), blockToCube(blockPos.getY()), blockToCube(blockPos.getZ()), ChunkStatus.FULL,
+        return this.getCube(blockToCube(blockPos.getX()), blockToCube(blockPos.getY()), blockToCube(blockPos.getZ()), ChunkStatus.EMPTY,
                 true);
     }
 
@@ -153,11 +157,15 @@ public class CubeWorldGenRegion implements IWorld {
     }
 
     @Override public ITickList<Block> getPendingBlockTicks() {
-        throw new UnsupportedOperationException("Not implemented yet!");
+        return new ChunkPrimerTickList<>((p_222652_0_) -> {
+            return p_222652_0_ == null || p_222652_0_.getDefaultState().isAir();
+        }, CubePos.of(mainCubeX, mainCubeY, mainCubeZ).asChunkPos(), new ListNBT());
     }
 
     @Override public ITickList<Fluid> getPendingFluidTicks() {
-        throw new UnsupportedOperationException("Not implemented yet!");
+        return new ChunkPrimerTickList<>((p_222652_0_) -> {
+            return p_222652_0_ == null || p_222652_0_.getDefaultState().isEmpty();
+        }, CubePos.of(mainCubeX, mainCubeY, mainCubeZ).asChunkPos(), new ListNBT());
     }
 
     @Override public World getWorld() {
@@ -270,7 +278,20 @@ public class CubeWorldGenRegion implements IWorld {
     }
 
     @Override public int getHeight(Heightmap.Type heightmapType, int x, int z) {
-        throw new UnsupportedOperationException("Not implemented yet!");
+        int yStart = Coords.cubeToMinBlock(mainCubeY + 1);
+        int yEnd = Coords.cubeToMinBlock(mainCubeY);
+        BlockPos pos = new BlockPos(x, yStart, z);
+
+        if (heightmapType.getHeightLimitPredicate().test(getBlockState(pos))) {
+            return yStart + 2;
+        }
+        for (int y = yStart - 1; y >= yEnd; y--) {
+            pos = new BlockPos(x, y, z);
+            if (heightmapType.getHeightLimitPredicate().test(getBlockState(pos))) {
+                return y + 1;
+            }
+        }
+        return yEnd - 1;
     }
 
     @Override public int getSkylightSubtracted() {
