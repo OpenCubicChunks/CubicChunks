@@ -24,6 +24,7 @@ import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.DifficultyInstance;
+import net.minecraft.world.EmptyTickList;
 import net.minecraft.world.ITickList;
 import net.minecraft.world.IWorld;
 import net.minecraft.world.World;
@@ -157,15 +158,11 @@ public class CubeWorldGenRegion implements IWorld {
     }
 
     @Override public ITickList<Block> getPendingBlockTicks() {
-        return new ChunkPrimerTickList<>((p_222652_0_) -> {
-            return p_222652_0_ == null || p_222652_0_.getDefaultState().isAir();
-        }, CubePos.of(mainCubeX, mainCubeY, mainCubeZ).asChunkPos(), new ListNBT());
+        return new EmptyTickList<>();
     }
 
     @Override public ITickList<Fluid> getPendingFluidTicks() {
-        return new ChunkPrimerTickList<>((p_222652_0_) -> {
-            return p_222652_0_ == null || p_222652_0_.getDefaultState().isEmpty();
-        }, CubePos.of(mainCubeX, mainCubeY, mainCubeZ).asChunkPos(), new ListNBT());
+        return new EmptyTickList<>();
     }
 
     @Override public World getWorld() {
