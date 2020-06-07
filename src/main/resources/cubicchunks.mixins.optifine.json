@@ -1,0 +1,22 @@
+{
+    "required": true,
+    "package": "io.github.opencubicchunks.cubicchunks.mixin.optifine",
+    "refmap": "cubicchunks.refmap.json",
+    "plugin": "io.github.opencubicchunks.cubicchunks.mixin.OptiFineMixinConfig",
+    "compatibilityLevel": "JAVA_8",
+    "minVersion": "0.8",
+    "injectors": {
+        "defaultRequire": 1
+    },
+    "mixins": [],
+    "client": [
+        "client.common.MixinWorldRenderer_Common",
+        "client.optifine.ChunkRenderDispatcherAccess",
+        "client.optifine.MixinChunkRender",
+        "client.optifine.MixinChunkVisibility",
+        "client.optifine.MixinRenderChunkUtils",
+        "client.optifine.MixinWorldRenderer_Optifine",
+        "client.vanilla.MixinWorldRenderer_Vanilla"
+    ],
+    "server": []
+}

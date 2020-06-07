@@ -42,7 +42,6 @@
         "client.MixinDebugRenderChunkBorder",
         "client.MixinIChunk",
         "client.MixinViewFrustum",
-        "client.MixinWorldRenderer",
         "client.progress.MixinChainedChunkStatusListener",
         "client.progress.MixinTrackingChunkStatusListener",
         "client.progress.MixinWorldLoadProgressScreen",

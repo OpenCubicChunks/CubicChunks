@@ -10,7 +10,7 @@ import java.util.Set;
 
 import javax.annotation.Nullable;
 
-public class ConfigPlugin implements IMixinConfigPlugin {
+public class ASMConfigPlugin implements IMixinConfigPlugin {
 
     @Override public void onLoad(String mixinPackage) {
 
