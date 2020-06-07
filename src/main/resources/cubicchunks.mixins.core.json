@@ -36,7 +36,9 @@
         "common.world.dimension.MixinOverworldDimension",
         "common.world.IBlockReaderMixin",
         "common.world.MixinServerWorld",
-        "common.world.MixinWorld"
+        "common.world.MixinWorld",
+        "common.world.server.MixinServerWorldLightManager",
+        "common.world.MixinIWorld"
     ],
     "client": [
         "client.MixinDebugRenderChunkBorder",
