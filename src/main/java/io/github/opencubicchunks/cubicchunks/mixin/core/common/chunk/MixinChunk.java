@@ -53,7 +53,7 @@ public abstract class MixinChunk implements IChunk {
                     args = "array=get"
             ))
     private ChunkSection getStorage(ChunkSection[] array, int y) {
-        ICube cube = getCube(y);
+        ICube cube = this.getCube(y);
         if (cube instanceof EmptyCube) {
             return null;
         }
@@ -103,7 +103,7 @@ public abstract class MixinChunk implements IChunk {
                     args = "array=set"
             ))
     private void setStorage(ChunkSection[] array, int y, ChunkSection newVal) {
-        ICube cube = getCube(y);
+        ICube cube = this.getCube(y);
         if (cube instanceof EmptyCube) {
             return;
         }
