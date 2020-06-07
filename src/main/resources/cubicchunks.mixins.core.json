@@ -35,7 +35,8 @@
         "common.ticket.MixinTicketManager",
         "common.world.dimension.MixinOverworldDimension",
         "common.world.IBlockReaderMixin",
-        "common.world.MixinWorld"
+        "common.world.MixinWorld",
+        "common.world.MixinServerWorld"
     ],
     "client": [
         "client.MixinDebugRenderChunkBorder",
