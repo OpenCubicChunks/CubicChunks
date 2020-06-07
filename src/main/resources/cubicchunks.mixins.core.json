@@ -35,8 +35,8 @@
         "common.ticket.MixinTicketManager",
         "common.world.dimension.MixinOverworldDimension",
         "common.world.IBlockReaderMixin",
-        "common.world.MixinWorld",
-        "common.world.MixinServerWorld"
+        "common.world.MixinServerWorld",
+        "common.world.MixinWorld"
     ],
     "client": [
         "client.MixinDebugRenderChunkBorder",
@@ -46,7 +46,8 @@
         "client.progress.MixinChainedChunkStatusListener",
         "client.progress.MixinTrackingChunkStatusListener",
         "client.progress.MixinWorldLoadProgressScreen",
-        "client.world.MixinClientChunkProvider"
+        "client.world.MixinClientChunkProvider",
+        "client.world.MixinClientWorld"
     ],
     "server": []
 }

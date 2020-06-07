@@ -223,4 +223,9 @@ public class Coords {
     public static int sectionToCubeRenderDistance(int viewDistance) {
         return Math.max(3, sectionToCubeCeil(viewDistance));
     }
+
+    public static int blockToSection(int block)
+    {
+        return block >> 4;
+    }
 }

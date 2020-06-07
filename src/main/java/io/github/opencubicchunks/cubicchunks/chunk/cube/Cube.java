@@ -394,6 +394,10 @@ public class Cube implements IChunk, ICube {
         this.setModified(true); // Forge - ensure chunks are marked to save after an entity add
     }
 
+    @Nullable @Override public TileEntity getTileEntity(BlockPos pos) {
+        return getTileEntity(pos, Chunk.CreateEntityType.CHECK);
+    }
+
     @Nullable
     public TileEntity getTileEntity(BlockPos pos, Chunk.CreateEntityType creationMode) {
         TileEntity tileentity = this.tileEntities.get(pos);
@@ -566,10 +570,6 @@ public class Cube implements IChunk, ICube {
         throw new UnsupportedOperationException("Chunk method called on a cube!");
     }
 
-    @Nullable @Override public TileEntity getTileEntity(BlockPos pos) {
-        return getTileEntity(pos, Chunk.CreateEntityType.CHECK);
-    }
-
     @Override public BlockState getBlockState(int x, int y, int z) {
         int index = Coords.blockToIndex(x, y, z);
         return ChunkSection.isEmpty(this.sections[index]) ?
@@ -603,5 +603,13 @@ public class Cube implements IChunk, ICube {
 
     @Override public void setStructureReferences(Map<String, LongSet> p_201606_1_) {
 
+    }
+
+    public void setLoaded(boolean loaded) {
+        this.loaded = loaded;
+    }
+    public boolean getLoaded()
+    {
+        return this.loaded;
     }
 }

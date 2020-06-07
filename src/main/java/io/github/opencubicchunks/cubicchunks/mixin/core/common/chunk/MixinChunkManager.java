@@ -28,6 +28,7 @@ import io.github.opencubicchunks.cubicchunks.network.PacketDispatcher;
 import io.github.opencubicchunks.cubicchunks.network.PacketUnloadCube;
 import io.github.opencubicchunks.cubicchunks.network.PacketUpdateCubePosition;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
+import io.github.opencubicchunks.cubicchunks.world.IServerWorld;
 import io.github.opencubicchunks.cubicchunks.world.storage.CubeSerializer;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectLinkedOpenHashMap;
@@ -74,6 +75,7 @@ import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
@@ -171,6 +173,18 @@ public abstract class MixinChunkManager implements IChunkManager {
         this.mainExecutor = this.cubeTaskPriorityQueueSorter.createExecutor(itaskexecutor, false);
     }
 
+    @Inject(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/server/ChunkManager;scheduleUnloads(Ljava/util/function/BooleanSupplier;)V"))
+    protected void onTickScheduleUnloads(BooleanSupplier hasMoreTime, CallbackInfo ci)
+    {
+        this.scheduleCubeUnloads(hasMoreTime);
+    }
+
+    @Redirect(method = "tick", at = @At(value = "INVOKE", target = "Lit/unimi/dsi/fastutil/longs/Long2ObjectLinkedOpenHashMap;isEmpty()Z"))
+    private boolean canUnload(Long2ObjectLinkedOpenHashMap<ChunkHolder> loadedChunks)
+    {
+        return loadedChunks.isEmpty() && loadedCubes.isEmpty();
+    }
+
     @Inject(method = "save", at = @At("HEAD"))
     protected void save(boolean flush, CallbackInfo ci) {
         if (flush) {
@@ -250,6 +264,7 @@ public abstract class MixinChunkManager implements IChunkManager {
         }
     }
 
+    // scheduleUnloads
     private void scheduleCubeUnloads(BooleanSupplier hasMoreTime) {
         LongIterator longiterator = this.unloadableCubes.iterator();
 
@@ -280,17 +295,14 @@ public abstract class MixinChunkManager implements IChunkManager {
             } else {
                 if (this.cubesToUnload.remove(cubePos, chunkHolderIn) && icube != null) {
                     if (icube instanceof Cube) {
-                        //TODO: implement setLoaded
-                        //((Cube)cube).setLoaded(false);
+                        ((Cube)icube).setLoaded(false);
                         //TODO: reimplement forge event ChunkEvent#Unload.
                         //net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.event.world.ChunkEvent.Unload((Chunk)cube));
                     }
 
                     this.cubeSave(icube);
                     if (this.loadedCubePositions.remove(cubePos) && icube instanceof Cube) {
-                        Cube cube = (Cube)icube;
-                        //TODO: implement onCubeUnloading
-                        //this.world.onChunkUnloading(cube);
+                        ((IServerWorld)this.world).onCubeUnloading((Cube)icube);
                     }
 
                     //TODO: reimplement lightmanager stuff
