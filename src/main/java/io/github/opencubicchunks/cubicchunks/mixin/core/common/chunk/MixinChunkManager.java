@@ -306,7 +306,7 @@ public abstract class MixinChunkManager implements IChunkManager {
                     }
 
                     //TODO: reimplement lightmanager stuff
-                    //this.lightManager.updateChunkStatus(cube.getCubeStatus());
+                    //((IServerWorldLightManager)this.lightManager).updateChunkStatus(icube.getCubeStatus());
                     //this.lightManager.func_215588_z_();
                     ((ICubeStatusListener) this.statusListener).cubeStatusChanged(icube.getCubePos(), (ChunkStatus)null);
                 }

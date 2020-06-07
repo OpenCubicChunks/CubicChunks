@@ -228,4 +228,8 @@ public class Coords {
     {
         return block >> 4;
     }
+
+    public static int sectonToMinBlock(int section) {
+        return section << 4;
+    }
 }

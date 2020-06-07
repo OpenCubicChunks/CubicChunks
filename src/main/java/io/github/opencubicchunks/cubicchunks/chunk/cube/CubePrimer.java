@@ -98,6 +98,9 @@ public class CubePrimer implements ICube, IChunk {
         if (this.sections[index] == Chunk.EMPTY_SECTION && state.getBlock() == Blocks.AIR) {
             return state;
         } else {
+            if(this.sections[index] == Chunk.EMPTY_SECTION) {
+                this.sections[index] = new ChunkSection(Coords.cubeToMinBlock(this.cubePos.getY() + Coords.sectonToMinBlock(Coords.indexToY(index))));
+            }
             return this.sections[index].setBlockState(x, y, z, state);
 
             //TODO: finish implementing
