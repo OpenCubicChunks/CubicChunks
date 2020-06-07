@@ -102,6 +102,11 @@ public abstract class MixinChunkHolder implements ICubeHolder {
         this.pos = cubePosIn.asChunkPos();
     }
 
+    // used from ASM
+    @SuppressWarnings("unused") private static ChunkStatus getCubeStatusFromLevel(int cubeLevel) {
+        return ICubeHolder.getCubeStatusFromLevel(cubeLevel);
+    }
+
     @Inject(method = "processUpdates", at = @At("HEAD"), cancellable = true)
     void processUpdates(ChunkManager chunkManagerIn, CallbackInfo ci) {
         /*

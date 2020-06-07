@@ -48,4 +48,16 @@ public interface ICubeHolder {
     void sendChanges(Cube cube);
 
     CompletableFuture<ICube> getCurrentCubeFuture();
+
+    class CubeLoadingError implements ChunkHolder.IChunkLoadingError {
+        private final ChunkHolder holder;
+
+        public CubeLoadingError(ChunkHolder holder) {
+            this.holder = holder;
+        }
+
+        @Override public String toString() {
+            return "Unloaded ticket level " + ((ICubeHolder) holder).getCubePos().toString();
+        }
+    }
 }

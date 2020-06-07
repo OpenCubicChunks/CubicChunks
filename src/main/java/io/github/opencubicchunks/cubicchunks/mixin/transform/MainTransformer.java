@@ -1,24 +1,31 @@
 package io.github.opencubicchunks.cubicchunks.mixin.transform;
 
 import static org.objectweb.asm.Type.getObjectType;
+import static org.objectweb.asm.commons.Method.getMethod;
 
 import com.google.common.collect.Sets;
 import net.minecraftforge.coremod.api.ASMAPI;
 import net.minecraftforge.fml.loading.FMLEnvironment;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.objectweb.asm.Handle;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.Method;
 import org.objectweb.asm.commons.MethodRemapper;
 import org.objectweb.asm.commons.Remapper;
+import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.InsnNode;
+import org.objectweb.asm.tree.InvokeDynamicInsnNode;
 import org.objectweb.asm.tree.MethodInsnNode;
 import org.objectweb.asm.tree.MethodNode;
 import org.objectweb.asm.tree.VarInsnNode;
 
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -29,26 +36,51 @@ public class MainTransformer {
 
     public static void transformChunkHolder(ClassNode targetClass) {
         final Method initOld =
-                Method.getMethod("void <init>(net.minecraft.util.math.ChunkPos, "
+                getMethod("void <init>(net.minecraft.util.math.ChunkPos, "
                         + "int, net.minecraft.world.lighting.WorldLightManager, "
                         + "net.minecraft.world.server.ChunkHolder$IListener, "
                         + "net.minecraft.world.server.ChunkHolder$IPlayerProvider)");
         final String initNew = "<init>";
 
-        Map<ClassMethod, String> methodRedirects = new HashMap<>();
+        Map<ClassMethod, String> methods = new HashMap<>();
+        methods.put(new ClassMethod(
+                getObjectType("net/minecraft/world/server/ChunkHolder"),
+                getMethod("net/minecraft/world/chunk/ChunkStatus getChunkStatusFromLevel(int)")
+        ), "getCubeStatusFromLevel");
+        methods.put(new ClassMethod(
+                getObjectType("net/minecraft/world/server/ChunkManager"),
+                getMethod("java/util/concurrent/CompletableFuture func_222961_b(net/minecraft/util/math/ChunkPos)")
+        ), "createCubeBorderFuture");
+        methods.put(new ClassMethod(
+                getObjectType("net/minecraft/world/server/ChunkManager"),
+                getMethod("java/util/concurrent/CompletableFuture func_219179_a(net/minecraft/util/math/ChunkPos)")
+        ), "createCubeTickingFuture");
+        methods.put(new ClassMethod(
+                getObjectType("net/minecraft/world/server/ChunkManager"),
+                getMethod("java/util/concurrent/CompletableFuture func_219188_b(net/minecraft/util/math/ChunkPos)")
+        ), "createCubeEntityTickingFuture");
+        methods.put(new ClassMethod(
+                getObjectType("net/minecraft/world/server/ChunkHolder$IListener"),
+                getMethod("void func_219066_a(net/minecraft/util/math/ChunkPos, java/util/function/IntSupplier, int, java/util/function/IntConsumer)")
+        ), "onUpdateCubeLevel");
 
-        Map<ClassField, String> fieldRedirects = new HashMap<>();
-        fieldRedirects.put(new ClassField("net/minecraft/world/server/ChunkHolder", "field_219319_n"), "cubePos");
+        Map<ClassField, String> fields = new HashMap<>();
+        fields.put(new ClassField("net/minecraft/world/server/ChunkHolder", "field_219319_n"), "cubePos"); // pos
+        fields.put(new ClassField("net/minecraft/world/server/ChunkHolder", "field_219249_a"), "MAX_CUBE_LOADED_LEVEL"); //MAX_LOADED_LEVEL
+        fields.put(new ClassField("net/minecraft/world/server/ChunkHolder", " field_219309_d"), "UNLOADED_CUBE_FUTURE"); // UNLOADED_CHUNK_FUTURE
+        fields.put(new ClassField("net/minecraft/world/server/ChunkHolder", "field_219308_c"), "UNLOADED_CUBE"); // UNLOADED_CHUNK
 
-        Map<Type, Type> typeRedirects = new HashMap<>();
-        typeRedirects.put(getObjectType("net/minecraft/util/math/ChunkPos"),
+        Map<Type, Type> types = new HashMap<>();
+        types.put(getObjectType("net/minecraft/util/math/ChunkPos"),
                 getObjectType("io/github/opencubicchunks/cubicchunks/chunk/util/CubePos"));
+        types.put(getObjectType("net/minecraft/world/server/ChunkHolder$1"),
+                getObjectType("io/github/opencubicchunks/cubicchunks/chunk/ICubeHolder$CubeLoadingError"));
 
-        cloneAndApplyRedirects(targetClass, initOld, initNew, methodRedirects, fieldRedirects, typeRedirects);
+        cloneAndApplyRedirects(targetClass, initOld, initNew, methods, fields, types);
     }
 
     public static void transformChunkManager(ClassNode targetClass) {
-        final Method targetMethod = Method.getMethod(
+        final Method targetMethod = getMethod(
                 "net.minecraft.world.server.ChunkHolder func_219213_a(long, int, net.minecraft.world.server.ChunkHolder, int)");
         final String newTargetName = "setCubeLevel";
 
@@ -77,7 +109,7 @@ public class MainTransformer {
     }
 
     public static void transformProxyTicketManager(ClassNode targetClass) {
-        final Method setChunkLevel = Method.getMethod(
+        final Method setChunkLevel = getMethod(
                 "net.minecraft.world.server.ChunkHolder func_219372_a(long, int, net.minecraft.world.server.ChunkHolder, int)");
         final String setCubeLevel = "setCubeLevel";
 
@@ -85,7 +117,7 @@ public class MainTransformer {
         methodRedirects.put(// synthetic accessor for func_219213_a (setChunkLevel)
                 new ClassMethod(
                         getObjectType("net/minecraft/world/server/ChunkManager"),
-                        Method.getMethod("net.minecraft.world.server.ChunkHolder access$700("
+                        getMethod("net.minecraft.world.server.ChunkHolder access$700("
                                 + "net.minecraft.world.server.ChunkManager, long, int, net.minecraft.world.server.ChunkHolder, int)")
                 ), "setCubeLevel");
 
@@ -122,6 +154,8 @@ public class MainTransformer {
         MethodNode m = node.methods.stream()
                         .filter(x -> existingMethod.getName().equals(x.name) && existingMethod.getDescriptor().equals(x.desc))
                         .findAny().orElseThrow(() -> new IllegalStateException("Target method " + existingMethod + " not found"));
+
+        cloneAndApplyLambdaRedirects(node, m, methodRedirectsIn, fieldRedirectsIn, typeRedirectsIn);
 
         Set<String> defaultKnownClasses = Sets.newHashSet(
                 Type.getType(Object.class).getInternalName(),
@@ -229,6 +263,31 @@ public class MainTransformer {
         return output;
     }
 
+    private static Map<String, String> cloneAndApplyLambdaRedirects(ClassNode node, MethodNode method, Map<ClassMethod, String> methodRedirectsIn,
+            Map<ClassField, String> fieldRedirectsIn, Map<Type, Type> typeRedirectsIn) {
+        
+        for (AbstractInsnNode instruction : method.instructions) {
+            if (instruction.getOpcode() == Opcodes.INVOKEDYNAMIC) {
+                InvokeDynamicInsnNode invoke = (InvokeDynamicInsnNode) instruction;
+                String bootstrapMethodName = invoke.bsm.getName();
+                String bootstrapMethodOwner = invoke.bsm.getOwner();
+                if (bootstrapMethodName.equals("metafactory") && bootstrapMethodOwner.equals("java/lang/invoke/LambdaMetafactory")) {
+                    for (Object bsmArg : invoke.bsmArgs) {
+                        if (bsmArg instanceof Handle) {
+                            Handle handle = (Handle) bsmArg;
+                            String owner = handle.getOwner();
+                            if (owner.equals(node.name)) {
+
+                            }
+                        }
+                    }
+                }
+
+            }
+        }
+        return null;
+    }
+
     private static final class ClassMethod {
         final Type owner;
         final Method method;
@@ -272,7 +331,7 @@ public class MainTransformer {
         }
 
         ClassField(String owner, String name) {
-            this.owner = Type.getObjectType(owner);
+            this.owner = getObjectType(owner);
             this.name = name;
         }
 
