@@ -17,6 +17,7 @@
         "common.LevelBasedGraphAccess",
         "common.PlayerChunkTrackerFactoryAccess",
         "common.PlayerTicketTrackerFactoryAccess",
+        "common.SectionLightStorageAccess",
         "common.TicketAccess",
         "common.TicketManagerAccess"
     ],

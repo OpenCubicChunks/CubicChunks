@@ -1,7 +1,7 @@
 package io.github.opencubicchunks.cubicchunks.mixin.core.common.world;
 
 import io.github.opencubicchunks.cubicchunks.chunk.cube.Cube;
-import io.github.opencubicchunks.cubicchunks.world.IServerWorld;
+import io.github.opencubicchunks.cubicchunks.world.server.IServerWorld;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.ServerPlayerEntity;
@@ -10,7 +10,6 @@ import net.minecraft.util.ClassInheritanceMultiMap;
 import net.minecraft.util.Util;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.AbstractChunkProvider;
-import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.dimension.Dimension;
 import net.minecraft.world.dimension.DimensionType;
 import net.minecraft.world.server.ServerWorld;

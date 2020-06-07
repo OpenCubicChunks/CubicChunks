@@ -1,5 +1,6 @@
 package io.github.opencubicchunks.cubicchunks.mixin.core.client.world;
 
+import io.github.opencubicchunks.cubicchunks.world.client.IClientWorld;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.Entity;
 import net.minecraft.profiler.IProfiler;
@@ -15,7 +16,7 @@ import org.spongepowered.asm.mixin.Overwrite;
 import java.util.function.BiFunction;
 
 @Mixin(ClientWorld.class)
-public abstract class MixinClientWorld extends World {
+public abstract class MixinClientWorld extends World implements IClientWorld {
 
     protected MixinClientWorld(WorldInfo info, DimensionType dimType,
             BiFunction<World, Dimension, AbstractChunkProvider> provider,
@@ -48,4 +49,12 @@ public abstract class MixinClientWorld extends World {
         this.getProfiler().endSection();
     }
 
+    @Override
+    public void onCubeLoaded(int cubeX, int cubeY, int cubeZ)
+    {
+        //TODO: implement colorCaches in onCubeLoaded
+//        this.colorCaches.forEach((p_228316_2_, p_228316_3_) -> {
+//            p_228316_3_.invalidateChunk(chunkX, chunkZ);
+//        });
+    }
 }

@@ -26,10 +26,12 @@
 package io.github.opencubicchunks.cubicchunks.utils;
 
 import io.github.opencubicchunks.cubicchunks.chunk.ICube;
+import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.SectionPos;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -231,5 +233,10 @@ public class Coords {
 
     public static int sectonToMinBlock(int section) {
         return section << 4;
+    }
+
+    public static SectionPos sectionPosByIndex(CubePos cubePos, int i) {
+        return SectionPos.of(cubeToSection(cubePos.getX(), indexToX(i)), cubeToSection(cubePos.getY(), indexToY(i)), cubeToSection(cubePos.getZ(),
+                indexToZ(i)));
     }
 }

@@ -8,11 +8,15 @@ import io.github.opencubicchunks.cubicchunks.chunk.cube.EmptyCube;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.mixin.access.client.ClientChunkProviderChunkArrayAccess;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
+import io.github.opencubicchunks.cubicchunks.world.client.IClientWorld;
+import io.github.opencubicchunks.cubicchunks.world.lighting.IWorldLightManager;
 import net.minecraft.client.multiplayer.ClientChunkProvider;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.PacketBuffer;
+import net.minecraft.world.chunk.ChunkSection;
 import net.minecraft.world.chunk.ChunkStatus;
+import net.minecraft.world.lighting.WorldLightManager;
 import org.apache.logging.log4j.Logger;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -36,6 +40,8 @@ public abstract class MixinClientChunkProvider implements IClientCubeProvider {
     @Shadow private volatile ClientChunkProvider.ChunkArray array;
 
     @Shadow public abstract int getLoadedChunksCount();
+
+    @Shadow public abstract WorldLightManager getLightManager();
 
     @Inject(method = "<init>", at = @At("RETURN"))
     private void onConstruct(ClientWorld clientWorldIn, int viewDistance, CallbackInfo ci) {
@@ -106,17 +112,16 @@ public abstract class MixinClientChunkProvider implements IClientCubeProvider {
             cube.read(biomes, readBuffer, nbtTagIn, cubeExists);
         }
 
-        // TODO: reimplement lighting
-        // WorldLightManager worldlightmanager = this.getLightManager();
-        // worldlightmanager.enableLightSources(new ChunkPos(chunkX, chunkZ), true);
+        WorldLightManager worldlightmanager = this.getLightManager();
+        ((IWorldLightManager) worldlightmanager).enableLightSources(CubePos.of(cubeX, cubeY, cubeZ), true);
 
-        // ChunkSection[] sections = cube.getSections();
-        // for (int j = 0; j < sections.length; ++j) {
-        //     ChunkSection chunksection = sections[j];
-        //     worldlightmanager.updateSectionStatus(SectionPos.of(chunkX, j, chunkZ), ChunkSection.isEmpty(chunksection));
-        // }
+        ChunkSection[] sections = cube.getCubeSections();
+        for (int i = 0; i < sections.length; ++i) {
+            ChunkSection chunksection = sections[i];
+            worldlightmanager.updateSectionStatus(Coords.sectionPosByIndex(cube.getCubePos(), i), ChunkSection.isEmpty(chunksection));
+        }
 
-        // this.world.onChunkLoaded(chunkX, chunkZ);
+        ((IClientWorld)this.world).onCubeLoaded(cubeX, cubeY, cubeZ);
         // TODO: forge client cube load event
         // net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.event.world.ChunkEvent.Load(cube));
         return cube;

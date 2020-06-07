@@ -119,4 +119,9 @@ public class CubePos extends Vec3i {
     public int blockZ(int localZ) {
         return Coords.localToBlock(getZ(), localZ);
     }
+
+    public static long sectionToCubeSectionLong(long sectionPosIn)
+    {
+        return CubePos.from(SectionPos.from(sectionPosIn)).asSectionPos().asLong();
+    }
 }

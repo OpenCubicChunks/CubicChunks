@@ -10,6 +10,7 @@ import com.mojang.datafixers.DataFixer;
 import com.mojang.datafixers.util.Either;
 import io.github.opencubicchunks.cubicchunks.chunk.CubeCollectorFuture;
 import io.github.opencubicchunks.cubicchunks.chunk.ticket.CubeTaskPriorityQueue;
+import io.github.opencubicchunks.cubicchunks.world.server.IServerWorldLightManager;
 import io.github.opencubicchunks.cubicchunks.world.storage.CubeSerializer;
 import io.github.opencubicchunks.cubicchunks.chunk.IChunkManager;
 import io.github.opencubicchunks.cubicchunks.chunk.ICube;
@@ -20,7 +21,6 @@ import io.github.opencubicchunks.cubicchunks.chunk.cube.CubePrimer;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.CubePrimerWrapper;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.CubeStatus;
 import io.github.opencubicchunks.cubicchunks.chunk.graph.CCTicketType;
-import io.github.opencubicchunks.cubicchunks.chunk.ticket.CubeTaskPriorityQueue;
 import io.github.opencubicchunks.cubicchunks.chunk.ticket.CubeTaskPriorityQueueSorter;
 import io.github.opencubicchunks.cubicchunks.chunk.ticket.ITicketManager;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
@@ -31,8 +31,7 @@ import io.github.opencubicchunks.cubicchunks.network.PacketDispatcher;
 import io.github.opencubicchunks.cubicchunks.network.PacketUnloadCube;
 import io.github.opencubicchunks.cubicchunks.network.PacketUpdateCubePosition;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
-import io.github.opencubicchunks.cubicchunks.world.IServerWorld;
-import io.github.opencubicchunks.cubicchunks.world.storage.CubeSerializer;
+import io.github.opencubicchunks.cubicchunks.world.server.IServerWorld;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.longs.LongIterator;
@@ -57,7 +56,6 @@ import net.minecraft.util.concurrent.ThreadTaskExecutor;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.SectionPos;
-import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.chunk.IChunk;
 import net.minecraft.world.chunk.IChunkLightProvider;
@@ -169,6 +167,9 @@ public abstract class MixinChunkManager implements IChunkManager {
                 itaskexecutor, delegatedtaskexecutor1), p_i51538_5_, Integer.MAX_VALUE);
         this.worldgenExecutor = this.cubeTaskPriorityQueueSorter.createExecutor(delegatedtaskexecutor, false);
         this.mainExecutor = this.cubeTaskPriorityQueueSorter.createExecutor(itaskexecutor, false);
+
+        ((IServerWorldLightManager)this.lightManager).postConstructorSetup(this.cubeTaskPriorityQueueSorter,
+                this.cubeTaskPriorityQueueSorter.createExecutor(delegatedtaskexecutor1, false));
     }
 
     @Inject(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/server/ChunkManager;scheduleUnloads(Ljava/util/function/BooleanSupplier;)V"))
@@ -304,8 +305,8 @@ public abstract class MixinChunkManager implements IChunkManager {
                     }
 
                     //TODO: reimplement lightmanager stuff
-                    //((IServerWorldLightManager)this.lightManager).updateChunkStatus(icube.getCubeStatus());
-                    //this.lightManager.func_215588_z_();
+                    ((IServerWorldLightManager)this.lightManager).updateCubeStatus(icube.getCubePos());
+                    this.lightManager.func_215588_z_();
                     ((ICubeStatusListener) this.statusListener).cubeStatusChanged(icube.getCubePos(), (ChunkStatus)null);
                 }
 

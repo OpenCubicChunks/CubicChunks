@@ -12,7 +12,7 @@ public class MixinChunkDistanceGraph {
 
     @Inject(method = "updateSourceLevel(JIZ)V", at = @At("HEAD"))
     private void removeSentinelInSourceLevel(long pos, int level, boolean isDecreasing, CallbackInfo ci) {
-        ((LevelBasedGraphAccess)this).scheduleMixedUpdate(Long.MAX_VALUE, pos, level, isDecreasing);
+        ((LevelBasedGraphAccess)this).invokeScheduleUpdate(Long.MAX_VALUE, pos, level, isDecreasing);
 
     }
 }

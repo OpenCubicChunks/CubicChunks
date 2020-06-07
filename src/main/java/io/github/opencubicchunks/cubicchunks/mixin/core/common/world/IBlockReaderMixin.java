@@ -16,6 +16,6 @@ public interface IBlockReaderMixin {
         return CubicChunks.worldMAXHeight;
     }
 
-    default int getMinHeight() { return -CubicChunks.worldMAXHeight; }
-    default int getMaxHeight() { return this.getHeight(); }
+    default int minHeight() { return -CubicChunks.worldMAXHeight; }
+    default int maxHeight() { return this.getHeight(); }
 }

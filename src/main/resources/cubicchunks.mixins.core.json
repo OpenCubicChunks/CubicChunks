@@ -35,10 +35,13 @@
         "common.ticket.MixinTicketManager",
         "common.world.dimension.MixinOverworldDimension",
         "common.world.IBlockReaderMixin",
-        "common.world.MixinServerWorld",
-        "common.world.MixinWorld",
+        "common.world.lighting.MixinLightEngine",
+        "common.world.lighting.MixinSectionLightStorage",
         "common.world.server.MixinServerWorldLightManager",
-        "common.world.MixinIWorld"
+        "common.world.lighting.MixinWorldLightManager",
+        "common.world.MixinIWorld",
+        "common.world.MixinServerWorld",
+        "common.world.MixinWorld"
     ],
     "client": [
         "client.MixinDebugRenderChunkBorder",
