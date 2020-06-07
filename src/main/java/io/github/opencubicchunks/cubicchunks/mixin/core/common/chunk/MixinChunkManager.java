@@ -147,8 +147,6 @@ public abstract class MixinChunkManager implements IChunkManager {
 
     @Shadow @Final private Int2ObjectMap<ChunkManager.EntityTracker> entities;
 
-    @Shadow @Final private Long2ObjectLinkedOpenHashMap<ChunkHolder> loadedChunks;
-
     @Shadow @Final private PlayerGenerationTracker playerGenerationTracker;
 
     @Shadow protected abstract boolean cannotGenerateChunks(ServerPlayerEntity player);
@@ -270,7 +268,7 @@ public abstract class MixinChunkManager implements IChunkManager {
 
         for(int i = 0; longiterator.hasNext() && (hasMoreTime.getAsBoolean() || i < 200 || this.unloadableCubes.size() > 2000); longiterator.remove()) {
             long j = longiterator.nextLong();
-            ChunkHolder chunkholder = this.loadedChunks.remove(j);
+            ChunkHolder chunkholder = this.loadedCubes.remove(j);
             if (chunkholder != null) {
                 this.cubesToUnload.put(j, chunkholder);
                 this.immutableLoadedChunksDirty = true;
