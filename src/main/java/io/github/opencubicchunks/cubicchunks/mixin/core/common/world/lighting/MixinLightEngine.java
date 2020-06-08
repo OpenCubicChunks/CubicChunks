@@ -4,6 +4,7 @@ import io.github.opencubicchunks.cubicchunks.chunk.ICube;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.SectionLightStorageAccess;
 import io.github.opencubicchunks.cubicchunks.world.lighting.ILightEngine;
+import io.github.opencubicchunks.cubicchunks.world.lighting.ISectionLightStorage;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.SectionPos;
 import net.minecraft.world.lighting.LightDataMap;
@@ -21,7 +22,7 @@ public class MixinLightEngine <M extends LightDataMap<M>, S extends SectionLight
     @Override
     public void retainCubeData(CubePos pos, boolean retain) {
         long i = pos.asSectionPos().asLong();
-        this.storage.retainChunkData(i, retain);
+        ((ISectionLightStorage)this.storage).retainCubeData(i, retain);
     }
 
     @Override

@@ -16,10 +16,7 @@ import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.SectionPos;
 import net.minecraft.world.LightType;
 import net.minecraft.world.chunk.ChunkSection;
-import net.minecraft.world.chunk.IChunk;
-import net.minecraft.world.chunk.IChunkLightProvider;
 import net.minecraft.world.chunk.NibbleArray;
-import net.minecraft.world.lighting.WorldLightManager;
 import net.minecraft.world.server.ChunkManager;
 import net.minecraft.world.server.ServerWorldLightManager;
 import org.spongepowered.asm.mixin.Final;
@@ -30,10 +27,11 @@ import org.spongepowered.asm.mixin.Shadow;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.IntSupplier;
 
+import javax.annotation.Nullable;
+
 @Mixin(ServerWorldLightManager.class)
 public abstract class MixinServerWorldLightManager extends MixinWorldLightManager implements IServerWorldLightManager {
 
-    private CubeTaskPriorityQueueSorter cubeTaskPriorityQueueSorter;
     private ITaskExecutor<CubeTaskPriorityQueueSorter.FunctionEntry<Runnable>> taskExecutor;
 
     @Shadow @Final private ChunkManager chunkManager;
@@ -46,7 +44,6 @@ public abstract class MixinServerWorldLightManager extends MixinWorldLightManage
 
     @Override public void postConstructorSetup(CubeTaskPriorityQueueSorter sorter,
             ITaskExecutor<CubeTaskPriorityQueueSorter.FunctionEntry<Runnable>> taskExecutor) {
-        this.cubeTaskPriorityQueueSorter = sorter;
         this.taskExecutor = taskExecutor;
     }
 
@@ -69,8 +66,8 @@ public abstract class MixinServerWorldLightManager extends MixinWorldLightManage
 
     // func_215586_a
     private void schedulePhaseTask(int cubePosX, int cubePosY, int cubePosZ, ServerWorldLightManager.Phase phase, Runnable runnable) {
-        this.schedulePhaseTask(cubePosX, cubePosY, cubePosZ, ((IChunkManager)this.chunkManager).getCompletedLevel(ChunkPos.asLong(cubePosX, cubePosZ)),
-                phase, runnable);
+        this.schedulePhaseTask(cubePosX, cubePosY, cubePosZ, ((IChunkManager)this.chunkManager).getCompletedLevel(CubePos.of(cubePosX, cubePosY,
+                cubePosZ).asLong()), phase, runnable);
     }
 
     // func_215600_a
@@ -86,7 +83,7 @@ public abstract class MixinServerWorldLightManager extends MixinWorldLightManage
     }
 
     // updateChunkStatus
-    public void updateCubeStatus(CubePos cubePos) {
+    public void setCubeStatusEmpty(CubePos cubePos) {
         this.schedulePhaseTask(cubePos.getX(), cubePos.getY(), cubePos.getZ(), () -> {
             return 0;
         }, ServerWorldLightManager.Phase.PRE_UPDATE, Util.namedRunnable(() -> {
@@ -114,8 +111,12 @@ public abstract class MixinServerWorldLightManager extends MixinWorldLightManage
         CubePos cubePos = icube.getCubePos();
         icube.setCubeLight(false);
         this.schedulePhaseTask(cubePos.getX(), cubePos.getY(), cubePos.getZ(), ServerWorldLightManager.Phase.PRE_UPDATE, Util.namedRunnable(() -> {
-            if(!icube.isEmptyCube())
-                this.updateCubeStatus(cubePos);
+            for(int i = 0; i < ICube.CUBE_SIZE; ++i) {
+                ChunkSection chunksection = icube.getCubeSections()[i];
+                if (!ChunkSection.isEmpty(chunksection)) {
+                    super.updateSectionStatus(Coords.sectionPosByIndex(cubePos, i), false);
+                }
+            }
 
             super.enableLightSources(cubePos, true);
             if (!p_215593_2_) {
@@ -135,6 +136,35 @@ public abstract class MixinServerWorldLightManager extends MixinWorldLightManage
         }, (runnable) -> {
             this.schedulePhaseTask(cubePos.getX(), cubePos.getY(), cubePos.getZ(), ServerWorldLightManager.Phase.POST_UPDATE, runnable);
         });
+    }
+
+    /**
+     * @author
+     */
+    @Overwrite
+    public void updateSectionStatus(SectionPos pos, boolean isEmpty) {
+        this.schedulePhaseTask(pos.getSectionX(), pos.getSectionY(), pos.getSectionZ(), () -> {
+            return 0;
+        }, ServerWorldLightManager.Phase.PRE_UPDATE, Util.namedRunnable(() -> {
+            super.updateSectionStatus(pos, isEmpty);
+        }, () -> {
+            return "updateSectionStatus " + pos + " " + isEmpty;
+        }));
+    }
+
+    /**
+     * @author NotStirred
+     * @reason Vanilla lighting is gone
+     */
+    @Overwrite
+    public void setData(LightType type, SectionPos pos, @Nullable NibbleArray array) {
+        this.schedulePhaseTask(pos.getSectionX(), pos.getSectionY(), pos.getSectionZ(), () -> {
+            return 0;
+        }, ServerWorldLightManager.Phase.PRE_UPDATE, Util.namedRunnable(() -> {
+            super.setData(type, pos, array);
+        }, () -> {
+            return "queueData " + pos;
+        }));
     }
 
     //retainData(ChunkPos, bool)

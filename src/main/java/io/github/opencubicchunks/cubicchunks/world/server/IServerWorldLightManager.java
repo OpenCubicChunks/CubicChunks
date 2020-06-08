@@ -12,7 +12,7 @@ public interface IServerWorldLightManager {
     void postConstructorSetup(CubeTaskPriorityQueueSorter sorter,
             ITaskExecutor<CubeTaskPriorityQueueSorter.FunctionEntry<Runnable>> taskExecutor);
 
-    void updateCubeStatus(CubePos cubePos);
+    void setCubeStatusEmpty(CubePos cubePos);
 
     CompletableFuture<ICube> lightCube(ICube icube, boolean p_215593_2_);
 }
