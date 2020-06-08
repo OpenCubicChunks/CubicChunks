@@ -281,6 +281,7 @@ public abstract class MixinChunkHolder implements ICubeHolder {
                 for (BiConsumer<Either<ICube, ChunkHolder.IChunkLoadingError>, Throwable> listener : listeners) {
                     listener.accept(either, throwable);
                 }
+                listeners.clear();
             });
             this.listenerLists.set(statusOrdinal, listeners);
 
