@@ -40,14 +40,14 @@ public class PacketUpdateLight {
             NibbleArray skyNibbleArray = lightManager.getLightEngine(LightType.SKY).getData(Coords.sectionPosByIndex(pos, i));
             NibbleArray blockNibbleArray = lightManager.getLightEngine(LightType.BLOCK).getData(Coords.sectionPosByIndex(pos, i));
             if (skyNibbleArray != null) {
-                this.dataExists.set(i*2);
                 if (!skyNibbleArray.isEmpty()) {
+                    this.dataExists.set(i*2);
                     this.skyLightData.add(skyNibbleArray.getData().clone());
                 }
             }
             if (blockNibbleArray != null) {
-                this.dataExists.set(i*2 + 1);
                 if (!blockNibbleArray.isEmpty()) {
+                    this.dataExists.set(i*2 + 1);
                     this.blockLightData.add(blockNibbleArray.getData().clone());
                 }
             }
