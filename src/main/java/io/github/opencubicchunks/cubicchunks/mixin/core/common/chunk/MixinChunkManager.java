@@ -391,8 +391,7 @@ public abstract class MixinChunkManager implements IChunkManager {
     //func_219244_a
     @SuppressWarnings("unchecked")
     @Override
-    public CompletableFuture<Either<ICube, ChunkHolder.IChunkLoadingError>> createCubeFuture(ChunkHolder chunkHolderIn,
-            ChunkStatus chunkStatusIn) {
+    public CompletableFuture<Either<ICube, ChunkHolder.IChunkLoadingError>> createCubeFuture(ChunkHolder chunkHolderIn, ChunkStatus chunkStatusIn) {
         CubePos cubePos = ((ICubeHolder) chunkHolderIn).getCubePos();
         if (chunkStatusIn == ChunkStatus.EMPTY) {
             return this.cubeLoad(cubePos);
@@ -508,7 +507,7 @@ public abstract class MixinChunkManager implements IChunkManager {
                     long posLong = cubePos.asLong();
 
                     // get the required cube's chunk holder
-                    ChunkHolder chunkholder = this.getLoadedSection(posLong);
+                    ICubeHolder chunkholder = (ICubeHolder) this.getLoadedSection(posLong);
                     if (chunkholder == null) {
                         //noinspection MixinInnerClass
                         return CompletableFuture.completedFuture(Either.right(new ChunkHolder.IChunkLoadingError() {
@@ -518,13 +517,12 @@ public abstract class MixinChunkManager implements IChunkManager {
                         }));
                     }
 
-                    ChunkStatus parentStatus = getParentStatus.apply(distance);
-                    CompletableFuture<Either<ICube, ChunkHolder.IChunkLoadingError>> future =
-                            ((ICubeHolder) chunkholder).createCubeFuture(parentStatus, Utils.unsafeCast(this));
-
                     final int idx2 = cubeIdx;
-                    future.whenComplete((either, error) -> collectorFuture.add(idx2, either, error));
-//                    list.add(future);
+                    ChunkStatus parentStatus = getParentStatus.apply(distance);
+
+                    chunkholder.addCubeStageListener(parentStatus, (either, error) -> {
+                        collectorFuture.add(idx2, either, error);
+                    }, Utils.unsafeCast(this));
 
                     ++cubeIdx;
                 }
