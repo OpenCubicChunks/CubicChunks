@@ -55,13 +55,14 @@ public abstract class MixinServerWorldLightManager extends MixinWorldLightManage
     public void checkBlock(BlockPos blockPosIn)
     {
         BlockPos blockpos = blockPosIn.toImmutable();
-        this.schedulePhaseTask(Coords.blockToCube(blockPosIn.getX()), Coords.blockToCube(blockPosIn.getY()), Coords.blockToCube(blockPosIn.getZ()),
+        this.schedulePhaseTask(
+                Coords.blockToCube(blockPosIn.getX()),
+                Coords.blockToCube(blockPosIn.getY()),
+                Coords.blockToCube(blockPosIn.getZ()),
                 ServerWorldLightManager.Phase.POST_UPDATE,
-                Util.namedRunnable(() -> {
-            super.checkBlock(blockpos);
-        }, () -> {
-            return "checkBlock " + blockpos;
-        }));
+                Util.namedRunnable(() -> super.checkBlock(blockpos),
+                () -> "checkBlock " + blockpos)
+        );
     }
 
     // func_215586_a
@@ -71,10 +72,10 @@ public abstract class MixinServerWorldLightManager extends MixinWorldLightManage
     }
 
     // func_215600_a
-    private void schedulePhaseTask(int cubePosX, int cubePosY, int cubePosZ, IntSupplier getCompletedLevel, ServerWorldLightManager.Phase p_215600_4_,
-            Runnable p_215600_5_) {
+    private void schedulePhaseTask(int cubePosX, int cubePosY, int cubePosZ, IntSupplier getCompletedLevel, ServerWorldLightManager.Phase phase,
+            Runnable runnable) {
         this.taskExecutor.enqueue(CubeTaskPriorityQueueSorter.createMsg(() -> {
-            this.field_215606_c.add(Pair.of(p_215600_4_, p_215600_5_));
+            this.field_215606_c.add(Pair.of(phase, runnable));
             if (this.field_215606_c.size() >= this.field_215609_f) {
                 this.func_215603_b();
             }
@@ -100,14 +101,12 @@ public abstract class MixinServerWorldLightManager extends MixinWorldLightManage
                 super.updateSectionStatus(Coords.sectionPosByIndex(cubePos, j), true);
             }
 
-        }, () -> {
-            return "updateCubeStatus " + cubePos + " " + true;
-        }));
+        }, () -> "setCubeStatusEmpty " + cubePos + " " + true));
     }
 
     // lightChunk
     @Override
-    public CompletableFuture<ICube> lightCube(ICube icube, boolean p_215593_2_) {
+    public CompletableFuture<ICube> lightCube(ICube icube, boolean flagIn) {
         CubePos cubePos = icube.getCubePos();
         icube.setCubeLight(false);
         this.schedulePhaseTask(cubePos.getX(), cubePos.getY(), cubePos.getZ(), ServerWorldLightManager.Phase.PRE_UPDATE, Util.namedRunnable(() -> {
@@ -119,16 +118,14 @@ public abstract class MixinServerWorldLightManager extends MixinWorldLightManage
             }
 
             super.enableLightSources(cubePos, true);
-            if (!p_215593_2_) {
+            if (!flagIn) {
                 icube.getCubeLightSources().forEach((blockPos) -> {
                     super.onBlockEmissionIncrease(blockPos, icube.getLightValue(blockPos));
                 });
             }
 
             ((IChunkManager)this.chunkManager).releaseLightTicket(cubePos);
-        }, () -> {
-            return "lightCube " + cubePos + " " + p_215593_2_;
-        }));
+        }, () -> "lightCube " + cubePos + " " + flagIn));
         return CompletableFuture.supplyAsync(() -> {
             icube.setCubeLight(true);
             super.retainData(cubePos, false);
@@ -139,17 +136,22 @@ public abstract class MixinServerWorldLightManager extends MixinWorldLightManage
     }
 
     /**
-     * @author
+     * @author NotStirred
+     * @reason Vanilla lighting is gone
      */
     @Overwrite
     public void updateSectionStatus(SectionPos pos, boolean isEmpty) {
-        this.schedulePhaseTask(pos.getSectionX(), pos.getSectionY(), pos.getSectionZ(), () -> {
-            return 0;
-        }, ServerWorldLightManager.Phase.PRE_UPDATE, Util.namedRunnable(() -> {
+        CubePos cubePos = CubePos.from(pos);
+        this.schedulePhaseTask(cubePos.getX(), cubePos.getY(), cubePos.getZ(), () -> 0, ServerWorldLightManager.Phase.PRE_UPDATE, Util.namedRunnable(() -> {
             super.updateSectionStatus(pos, isEmpty);
-        }, () -> {
-            return "updateSectionStatus " + pos + " " + isEmpty;
-        }));
+        }, () -> "updateSectionStatus " + pos + " " + isEmpty));
+    }
+
+    @Override
+    public void enableLightSources(CubePos cubePos, boolean flag) {
+        this.schedulePhaseTask(cubePos.getX(), cubePos.getY(), cubePos.getZ(), ServerWorldLightManager.Phase.PRE_UPDATE, Util.namedRunnable(() -> {
+            super.enableLightSources(cubePos, flag);
+        }, () -> "enableLight " + cubePos + " " + flag));
     }
 
     /**
@@ -158,20 +160,17 @@ public abstract class MixinServerWorldLightManager extends MixinWorldLightManage
      */
     @Overwrite
     public void setData(LightType type, SectionPos pos, @Nullable NibbleArray array) {
-        this.schedulePhaseTask(pos.getSectionX(), pos.getSectionY(), pos.getSectionZ(), () -> {
-            return 0;
-        }, ServerWorldLightManager.Phase.PRE_UPDATE, Util.namedRunnable(() -> {
+        CubePos cubePos = CubePos.from(pos);
+        this.schedulePhaseTask(cubePos.getX(), cubePos.getY(), cubePos.getZ(), () -> 0, ServerWorldLightManager.Phase.PRE_UPDATE, Util.namedRunnable(() -> {
             super.setData(type, pos, array);
-        }, () -> {
-            return "queueData " + pos;
-        }));
+        }, () -> "queueData " + pos));
     }
 
     //retainData(ChunkPos, bool)
     @Override
-    public void retainData(CubePos pos, boolean retain) {
-        this.schedulePhaseTask(pos.getX(), pos.getY(), pos.getZ(), () -> 0, ServerWorldLightManager.Phase.PRE_UPDATE, Util.namedRunnable(() -> {
-            super.retainData(pos, retain);
-        }, () -> "retainData " + pos));
+    public void retainData(CubePos cubePos, boolean retain) {
+        this.schedulePhaseTask(cubePos.getX(), cubePos.getY(), cubePos.getZ(), () -> 0, ServerWorldLightManager.Phase.PRE_UPDATE, Util.namedRunnable(() -> {
+            super.retainData(cubePos, retain);
+        }, () -> "retainData " + cubePos));
     }
 }

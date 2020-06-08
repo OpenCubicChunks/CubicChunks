@@ -16,7 +16,11 @@ import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import net.minecraft.profiler.IProfiler;
 import net.minecraft.util.Util;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.ChunkPos;
+import net.minecraft.util.math.SectionPos;
+import net.minecraft.world.IBlockReader;
 import net.minecraft.world.chunk.ChunkStatus;
+import net.minecraft.world.chunk.IChunk;
 import net.minecraft.world.server.ChunkHolder;
 import net.minecraft.world.server.ChunkManager;
 import net.minecraft.world.server.ServerChunkProvider;
@@ -33,6 +37,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
@@ -53,6 +58,7 @@ public abstract class MixinServerChunkProvider implements IServerChunkProvider {
 
     @Shadow public abstract int getLoadedChunkCount();
 
+    @Shadow @Final private static List<ChunkStatus> field_217239_c;
     private final long[] recentCubePositions = new long[4];
     private final ChunkStatus[] recentCubeStatuses = new ChunkStatus[4];
     private final ICube[] recentCubes = new ICube[4];
@@ -220,6 +226,32 @@ public abstract class MixinServerChunkProvider implements IServerChunkProvider {
         Arrays.fill(this.recentCubePositions, CubicChunks.SECTIONPOS_SENTINEL);
         Arrays.fill(this.recentCubeStatuses, (Object)null);
         Arrays.fill(this.recentCubes, (Object)null);
+    }
+
+    @Override
+    @Nullable
+    public IBlockReader getCubeForLight(int sectionX, int sectionY, int sectionZ) {
+        long cubePosAsLong = CubePos.of(Coords.sectionToCube(sectionX), Coords.sectionToCube(sectionY), Coords.sectionToCube(sectionZ)).asLong();
+        ChunkHolder chunkholder = ((IChunkManager)this.chunkManager).getImmutableCubeHolder(cubePosAsLong);
+        if (chunkholder == null) {
+            return null;
+        } else {
+            int j = field_217239_c.size() - 1;
+
+            while(true) {
+                ChunkStatus chunkstatus = field_217239_c.get(j);
+                Optional<ICube> optional = ((ICubeHolder)chunkholder).getCubeFuture(chunkstatus).getNow(ICubeHolder.MISSING_CUBE).left();
+                if (optional.isPresent()) {
+                    return optional.get();
+                }
+
+                if (chunkstatus == ChunkStatus.LIGHT.getParent()) {
+                    return null;
+                }
+
+                --j;
+            }
+        }
     }
 
     /**
