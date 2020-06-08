@@ -3,7 +3,6 @@ package io.github.opencubicchunks.cubicchunks.chunk;
 import com.mojang.datafixers.util.Either;
 import net.minecraft.world.server.ChunkHolder;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;

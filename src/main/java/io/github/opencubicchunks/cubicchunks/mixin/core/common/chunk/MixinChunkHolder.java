@@ -8,6 +8,7 @@ import io.github.opencubicchunks.cubicchunks.chunk.ICubeHolderListener;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.Cube;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.CubePrimer;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.CubePrimerWrapper;
+import io.github.opencubicchunks.cubicchunks.chunk.cube.CubeStatus;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.chunk.util.Utils;
 import io.github.opencubicchunks.cubicchunks.network.PacketCubeBlockChanges;
@@ -34,10 +35,13 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicReferenceArray;
+import java.util.function.BiConsumer;
 
 import javax.annotation.Nullable;
 
@@ -250,6 +254,9 @@ public abstract class MixinChunkHolder implements ICubeHolder {
         return ICubeHolder.getCubeStatusFromLevel(this.chunkLevel).isAtLeast(chunkStatus) ? this.getFutureByCubeStatus(chunkStatus) : MISSING_CUBE_FUTURE;
     }
 
+
+    private AtomicReferenceArray<List<BiConsumer<Either<ICube, ChunkHolder.IChunkLoadingError>, Throwable>>> listenerLists = new AtomicReferenceArray<>(ChunkStatus.getAll().size());
+
     // func_219276_a
     @Override
     public CompletableFuture<Either<ICube, ChunkHolder.IChunkLoadingError>> createCubeFuture(ChunkStatus status, ChunkManager chunkManager) {
@@ -265,13 +272,35 @@ public abstract class MixinChunkHolder implements ICubeHolder {
         if (ICubeHolder.getCubeStatusFromLevel(this.chunkLevel).isAtLeast(status)) {
             CompletableFuture<Either<ICube, ChunkHolder.IChunkLoadingError>> completablefuture1 =
                     ((IChunkManager)chunkManager).createCubeFuture((ChunkHolder)(Object)this, status);
+
             this.chainCube(completablefuture1);
             this.futureByStatus.set(statusOrdinal, completablefuture1);
+
+            final List<BiConsumer<Either<ICube, ChunkHolder.IChunkLoadingError>, Throwable>> listeners = new ArrayList<>();
+            completablefuture1.whenComplete((either, throwable) -> {
+                for (BiConsumer<Either<ICube, ChunkHolder.IChunkLoadingError>, Throwable> listener : listeners) {
+                    listener.accept(either, throwable);
+                }
+            });
+            this.listenerLists.set(statusOrdinal, listeners);
+
             return completablefuture1;
         } else {
             return completablefuture == null ? MISSING_CUBE_FUTURE : completablefuture;
         }
     }
+
+    public void addCubeStageListener(ChunkStatus status, BiConsumer<Either<ICube, ChunkHolder.IChunkLoadingError>, Throwable> consumer, ChunkManager chunkManager) {
+        CompletableFuture<Either<ICube, ChunkHolder.IChunkLoadingError>> future = createCubeFuture(status, chunkManager);
+
+        if (future.isDone()) {
+            consumer.accept(future.getNow(null), null);
+        } else {
+            List<BiConsumer<Either<ICube, ChunkHolder.IChunkLoadingError>, Throwable>> listenerList = this.listenerLists.get(status.ordinal());
+            listenerList.add(consumer);
+        }
+    }
+
 
     // TODO: this needs to be completely replaced for proper section handling
     /**

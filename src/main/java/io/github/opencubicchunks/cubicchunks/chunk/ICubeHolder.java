@@ -10,6 +10,7 @@ import net.minecraft.world.server.ChunkHolder;
 import net.minecraft.world.server.ChunkManager;
 
 import java.util.concurrent.CompletableFuture;
+import java.util.function.BiConsumer;
 
 import javax.annotation.Nullable;
 
@@ -43,6 +44,8 @@ public interface ICubeHolder {
 
     // func_225410_b
     CompletableFuture<Either<ICube, ChunkHolder.IChunkLoadingError>> getFutureHigherThanCubeStatus(ChunkStatus chunkStatus);
+
+    void addCubeStageListener(ChunkStatus status, BiConsumer<Either<ICube, ChunkHolder.IChunkLoadingError>, Throwable> consumer, ChunkManager chunkManager);
 
 
     void sendChanges(Cube cube);
