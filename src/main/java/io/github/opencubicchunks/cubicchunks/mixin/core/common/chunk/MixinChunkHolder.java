@@ -255,7 +255,7 @@ public abstract class MixinChunkHolder implements ICubeHolder {
     }
 
 
-    private AtomicReferenceArray<List<BiConsumer<Either<ICube, ChunkHolder.IChunkLoadingError>, Throwable>>> listenerLists = new AtomicReferenceArray<>(ChunkStatus.getAll().size());
+    private AtomicReferenceArray<ArrayList<BiConsumer<Either<ICube, ChunkHolder.IChunkLoadingError>, Throwable>>> listenerLists = new AtomicReferenceArray<>(ChunkStatus.getAll().size());
 
     // func_219276_a
     @Override
@@ -276,15 +276,6 @@ public abstract class MixinChunkHolder implements ICubeHolder {
             this.chainCube(completablefuture1);
             this.futureByStatus.set(statusOrdinal, completablefuture1);
 
-            final List<BiConsumer<Either<ICube, ChunkHolder.IChunkLoadingError>, Throwable>> listeners = new ArrayList<>();
-            completablefuture1.whenComplete((either, throwable) -> {
-                for (BiConsumer<Either<ICube, ChunkHolder.IChunkLoadingError>, Throwable> listener : listeners) {
-                    listener.accept(either, throwable);
-                }
-                listeners.clear();
-            });
-            this.listenerLists.set(statusOrdinal, listeners);
-
             return completablefuture1;
         } else {
             return completablefuture == null ? MISSING_CUBE_FUTURE : completablefuture;
@@ -298,6 +289,20 @@ public abstract class MixinChunkHolder implements ICubeHolder {
             consumer.accept(future.getNow(null), null);
         } else {
             List<BiConsumer<Either<ICube, ChunkHolder.IChunkLoadingError>, Throwable>> listenerList = this.listenerLists.get(status.ordinal());
+            if (listenerList == null) {
+
+                final ArrayList<BiConsumer<Either<ICube, ChunkHolder.IChunkLoadingError>, Throwable>> listeners = new ArrayList<>();
+                future.whenComplete((either, throwable) -> {
+                    for (BiConsumer<Either<ICube, ChunkHolder.IChunkLoadingError>, Throwable> listener : listeners) {
+                        listener.accept(either, throwable);
+                    }
+                    listeners.clear();
+                    listeners.trimToSize();
+                });
+                this.listenerLists.set(status.ordinal(), listeners);
+                listenerList = listeners;
+            }
+
             listenerList.add(consumer);
         }
     }
