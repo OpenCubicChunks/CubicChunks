@@ -4,6 +4,7 @@ import com.google.common.collect.Lists;
 import io.github.opencubicchunks.cubicchunks.chunk.ICube;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
+import io.github.opencubicchunks.cubicchunks.utils.MathUtil;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import net.minecraft.client.world.ClientWorld;
@@ -15,6 +16,7 @@ import net.minecraft.world.chunk.NibbleArray;
 import net.minecraft.world.lighting.WorldLightManager;
 
 import java.util.ArrayList;
+import java.util.BitSet;
 import java.util.Iterator;
 import java.util.List;
 
@@ -23,6 +25,8 @@ public class PacketUpdateLight {
     private final List<byte[]> skyLightData;
     private final List<byte[]> blockLightData;
 
+    private final BitSet dataExists;
+
     private final CubePos cubePos;
 
     public PacketUpdateLight(CubePos pos, WorldLightManager lightManager) {
@@ -30,15 +34,19 @@ public class PacketUpdateLight {
         this.skyLightData = Lists.newArrayList();
         this.blockLightData = Lists.newArrayList();
 
+        this.dataExists = new BitSet(ICube.CUBE_SIZE*2);
+
         for(int i = 0; i < ICube.CUBE_SIZE; ++i) {
-            NibbleArray skyNibbleArray = lightManager.getLightEngine(LightType.SKY).getData(Coords.sectionPosByIndex(pos, i)); //vanilla has these offset by -1,
-            NibbleArray blockNibbleArray = lightManager.getLightEngine(LightType.BLOCK).getData(Coords.sectionPosByIndex(pos, i)); // should we too?
+            NibbleArray skyNibbleArray = lightManager.getLightEngine(LightType.SKY).getData(Coords.sectionPosByIndex(pos, i));
+            NibbleArray blockNibbleArray = lightManager.getLightEngine(LightType.BLOCK).getData(Coords.sectionPosByIndex(pos, i));
             if (skyNibbleArray != null) {
+                this.dataExists.set(i*2);
                 if (!skyNibbleArray.isEmpty()) {
                     this.skyLightData.add(skyNibbleArray.getData().clone());
                 }
             }
             if (blockNibbleArray != null) {
+                this.dataExists.set(i*2 + 1);
                 if (!blockNibbleArray.isEmpty()) {
                     this.blockLightData.add(blockNibbleArray.getData().clone());
                 }
@@ -50,18 +58,19 @@ public class PacketUpdateLight {
     {
         this.cubePos = CubePos.of(buf.readInt(), buf.readInt(), buf.readInt());
 
+        int dataByteCount = MathUtil.ceilDiv(ICube.CUBE_SIZE*2, 8);
+        this.dataExists = BitSet.valueOf(buf.readByteArray(dataByteCount));
+
         this.skyLightData = new ArrayList<>();
         int skyLightDataSize = buf.readInt();
         for(int i = 0; i < skyLightDataSize; i++) {
-            int arraySize = buf.readInt();
-            this.skyLightData.add(buf.readByteArray(arraySize));
+            this.skyLightData.add(buf.readByteArray(2048));
         }
 
         this.blockLightData = new ArrayList<>();
         int blockLightDataSize = buf.readInt();
         for(int i = 0; i < blockLightDataSize; i++) {
-            int arraySize = buf.readInt();
-            this.blockLightData.add(buf.readByteArray(arraySize));
+            this.blockLightData.add(buf.readByteArray(2048));
         }
     }
 
@@ -71,14 +80,19 @@ public class PacketUpdateLight {
         buf.writeInt(this.cubePos.getY());
         buf.writeInt(this.cubePos.getZ());
 
+        byte[] byteArray = new byte[MathUtil.ceilDiv(ICube.CUBE_SIZE*2, 8)];
+        byte[] byteArray2 = dataExists.toByteArray();
+
+        System.arraycopy(byteArray2, 0, byteArray, 0, Math.min(byteArray.length, byteArray2.length));
+
+        buf.writeByteArray(byteArray);
+
         buf.writeInt(this.skyLightData.size());
         for(byte[] array : this.skyLightData) {
-            buf.writeInt(array.length);
             buf.writeByteArray(array);
         }
         buf.writeInt(this.blockLightData.size());
         for(byte[] array : this.blockLightData) {
-            buf.writeInt(array.length);
             buf.writeByteArray(array);
         }
     }
@@ -91,27 +105,24 @@ public class PacketUpdateLight {
             WorldLightManager worldlightmanager = worldIn.getChunkProvider().getLightManager();
 
             Iterator<byte[]> skyIterator = packet.skyLightData.iterator();
-            if(skyIterator.hasNext())
-                Handler.setLightData((ClientWorld)worldIn, packet.cubePos, worldlightmanager, LightType.SKY, skyIterator);
-
             Iterator<byte[]> blockIterator = packet.blockLightData.iterator();
-            if(blockIterator.hasNext())
-                Handler.setLightData((ClientWorld)worldIn, packet.cubePos, worldlightmanager, LightType.BLOCK, blockIterator);
-        }
 
-        private static void setLightData(ClientWorld worldIn, CubePos cubePos, WorldLightManager lightManager, LightType type, Iterator<byte[]> dataIn) {
             for(int i = 0; i < ICube.CUBE_SIZE; ++i) {
                 SectionPos sectionPos = SectionPos.of(
-                        cubePos.getX() + Coords.indexToX(i),
-                        cubePos.getY() + Coords.indexToY(i),
-                        cubePos.getZ() + Coords.indexToZ(i)
+                        packet.cubePos.getX() + Coords.indexToX(i),
+                        packet.cubePos.getY() + Coords.indexToY(i),
+                        packet.cubePos.getZ() + Coords.indexToZ(i)
                 );
 
-                lightManager.setData(type, sectionPos,
-                        new NibbleArray(dataIn.next().clone()));
-                worldIn.markSurroundingsForRerender(sectionPos.getX(), sectionPos.getY(), sectionPos.getZ());
+                if(packet.dataExists.get(i * 2)) {
+                    worldlightmanager.setData(LightType.SKY, sectionPos, new NibbleArray(skyIterator.next()));
+                    ((ClientWorld)worldIn).markSurroundingsForRerender(sectionPos.getX(), sectionPos.getY(), sectionPos.getZ());
+                }
+                if(packet.dataExists.get(i * 2 + 1)) {
+                    worldlightmanager.setData(LightType.BLOCK, sectionPos, new NibbleArray(blockIterator.next()));
+                    ((ClientWorld)worldIn).markSurroundingsForRerender(sectionPos.getX(), sectionPos.getY(), sectionPos.getZ());
+                }
             }
-
         }
     }
 }
