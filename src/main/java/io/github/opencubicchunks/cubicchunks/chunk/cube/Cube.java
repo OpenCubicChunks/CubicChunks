@@ -384,7 +384,7 @@ public class Cube implements IChunk, ICube {
 
         int idx = this.getIndexFromEntity(entityIn);
 
-        //TODO: reimplement forge event
+        //TODO: reimplement forge EntityEvent#EnteringChunk
         //net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.event.entity.EntityEvent.EnteringChunk(entityIn, this.pos.x, this.pos.z, entityIn.chunkCoordX, entityIn.chunkCoordZ));
         entityIn.addedToChunk = true;
         entityIn.chunkCoordX = cubeToSection(this.cubePos.getX(), 0);

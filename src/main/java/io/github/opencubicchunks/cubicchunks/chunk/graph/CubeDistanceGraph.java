@@ -4,8 +4,8 @@ import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import net.minecraft.world.lighting.LevelBasedGraph;
 
 public abstract class CubeDistanceGraph  extends LevelBasedGraph {
-    protected CubeDistanceGraph(int x, int y, int z) {
-        super(x, y, z);
+    protected CubeDistanceGraph(int levelCount, int expectedUpdatesByLevel, int expectedPropagationLevels) {
+        super(levelCount, expectedUpdatesByLevel, expectedPropagationLevels);
     }
 
     @Override protected boolean isRoot(long pos) {

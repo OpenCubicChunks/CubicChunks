@@ -341,7 +341,7 @@ public class CubeWorldGenRegion implements IWorld {
         }
 
         if (newState.blockNeedsPostProcessing(this, pos)) {
-            //TODO: reimplement
+            //TODO: reimplement postprocessing
             //this.markBlockForPostprocessing(pos);
         }
 

@@ -617,7 +617,7 @@ public abstract class MixinChunkManager implements IChunkManager {
                     if (entities != null) {
                         entities.forEach(cube::removeEntity);
                     }
-                    // TODO: events
+                    // TODO: reimplement forge ChunkEvent#Load
                     // net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.event.world.ChunkEvent.Load(chunkSection));
                 }
                 return (ICube) cube;

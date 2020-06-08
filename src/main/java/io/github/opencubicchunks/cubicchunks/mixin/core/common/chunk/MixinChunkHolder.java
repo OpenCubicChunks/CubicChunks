@@ -273,6 +273,7 @@ public abstract class MixinChunkHolder implements ICubeHolder {
         }
     }
 
+    //TODO: check if this todo is still valid:
     // TODO: this needs to be completely replaced for proper section handling
     /**
      * @author Barteks2x**
