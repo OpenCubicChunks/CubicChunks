@@ -15,6 +15,8 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.SectionPos;
 import net.minecraft.world.LightType;
+import net.minecraft.world.chunk.ChunkSection;
+import net.minecraft.world.chunk.IChunk;
 import net.minecraft.world.chunk.IChunkLightProvider;
 import net.minecraft.world.chunk.NibbleArray;
 import net.minecraft.world.lighting.WorldLightManager;
@@ -25,6 +27,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 
+import java.util.concurrent.CompletableFuture;
 import java.util.function.IntSupplier;
 
 @Mixin(ServerWorldLightManager.class)
@@ -40,6 +43,12 @@ public abstract class MixinServerWorldLightManager extends MixinWorldLightManage
     @Shadow private volatile int field_215609_f;
 
     @Shadow protected abstract void func_215603_b();
+
+    @Override public void postConstructorSetup(CubeTaskPriorityQueueSorter sorter,
+            ITaskExecutor<CubeTaskPriorityQueueSorter.FunctionEntry<Runnable>> taskExecutor) {
+        this.cubeTaskPriorityQueueSorter = sorter;
+        this.taskExecutor = taskExecutor;
+    }
 
     /**
      * @author NotStirred
@@ -99,9 +108,48 @@ public abstract class MixinServerWorldLightManager extends MixinWorldLightManage
         }));
     }
 
-    @Override public void postConstructorSetup(CubeTaskPriorityQueueSorter sorter,
-            ITaskExecutor<CubeTaskPriorityQueueSorter.FunctionEntry<Runnable>> taskExecutor) {
-        this.cubeTaskPriorityQueueSorter = sorter;
-        this.taskExecutor = taskExecutor;
+    @Override
+    public CompletableFuture<ICube> lightCube(ICube icube, boolean p_215593_2_) {
+        CubePos cubePos = icube.getCubePos();
+        icube.setCubeLight(false);
+        this.schedulePhaseTask(cubePos.getX(), cubePos.getY(), cubePos.getZ(), ServerWorldLightManager.Phase.PRE_UPDATE, Util.namedRunnable(() -> {
+            ChunkSection[] achunksection = icube.getCubeSections();
+
+            for(int i = 0; i < ICube.CUBE_SIZE; ++i) {
+                ChunkSection chunksection = achunksection[i];
+                if (!ChunkSection.isEmpty(chunksection)) {
+                    super.updateSectionStatus(Coords.sectionPosByIndex(cubePos, i), false);
+                }
+            }
+
+            super.enableLightSources(cubePos, true);
+            if (!p_215593_2_) {
+                icube.getCubeLightSources().forEach((blockPos) -> {
+                    super.onBlockEmissionIncrease(blockPos, icube.getLightValue(blockPos));
+                });
+            }
+
+            ((IChunkManager)this.chunkManager).releaseLightTicket(cubePos);
+        }, () -> {
+            return "lightCube " + cubePos + " " + p_215593_2_;
+        }));
+        return CompletableFuture.supplyAsync(() -> {
+            icube.setCubeLight(true);
+            super.retainData(cubePos, false);
+            return icube;
+        }, (runnable) -> {
+            this.schedulePhaseTask(cubePos.getX(), cubePos.getY(), cubePos.getZ(), ServerWorldLightManager.Phase.POST_UPDATE, runnable);
+        });
+    }
+
+    @Override
+    public void retainData(CubePos pos, boolean retain) {
+        this.schedulePhaseTask(pos.getX(), pos.getY(), pos.getZ(), () -> {
+            return 0;
+        }, ServerWorldLightManager.Phase.PRE_UPDATE, Util.namedRunnable(() -> {
+            super.retainData(pos, retain);
+        }, () -> {
+            return "retainData " + pos;
+        }));
     }
 }

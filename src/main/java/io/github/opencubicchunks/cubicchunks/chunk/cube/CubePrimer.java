@@ -365,4 +365,9 @@ public class CubePrimer implements ICube, IChunk {
     public void setLightManager(WorldLightManager lightManager) {
         this.lightManager = lightManager;
     }
+
+    @Override
+    public Stream<BlockPos> getCubeLightSources() {
+        return this.lightPositions.stream();
+    }
 }

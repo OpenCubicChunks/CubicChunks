@@ -209,4 +209,9 @@ public class CubePrimerWrapper extends CubePrimer {
     {
         this.cube.setCubeLight(lightCorrectIn);
     }
+
+    @Override
+    public Stream<BlockPos> getCubeLightSources() {
+        return this.cube.getCubeLightSources();
+    }
 }

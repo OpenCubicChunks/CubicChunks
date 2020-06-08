@@ -48,6 +48,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 import javax.annotation.Nullable;
 
@@ -603,6 +604,14 @@ public class Cube implements IChunk, ICube {
 
     @Override public void setStructureReferences(Map<String, LongSet> p_201606_1_) {
 
+    }
+
+    @Override
+    public Stream<BlockPos> getCubeLightSources() {
+        return StreamSupport
+                .stream(BlockPos.getAllInBoxMutable(this.cubePos.minCubeX(), this.cubePos.minCubeY(), this.cubePos.minCubeZ(),
+                        this.cubePos.maxCubeX(), this.cubePos.maxCubeY(), this.cubePos.maxCubeZ())
+                        .spliterator(), false).filter((blockPos) -> this.getBlockState(blockPos).getLightValue(getWorld(), blockPos) != 0);
     }
 
     public void setLoaded(boolean loaded) {

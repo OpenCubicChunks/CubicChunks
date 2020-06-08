@@ -12,6 +12,8 @@ import net.minecraft.world.IBlockReader;
 import net.minecraft.world.chunk.ChunkSection;
 import net.minecraft.world.chunk.ChunkStatus;
 
+import java.util.stream.Stream;
+
 import javax.annotation.Nullable;
 
 public interface ICube extends IBlockReader {
@@ -47,4 +49,6 @@ public interface ICube extends IBlockReader {
     }
 
     BlockState getBlockState(int x, int y, int z);
+
+    Stream<BlockPos> getCubeLightSources();
 }

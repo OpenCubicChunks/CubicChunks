@@ -1,11 +1,14 @@
 package io.github.opencubicchunks.cubicchunks.mixin.core.common.chunk;
 
+import static io.github.opencubicchunks.cubicchunks.chunk.util.Utils.unsafeCast;
+
 import com.mojang.datafixers.util.Either;
 import io.github.opencubicchunks.cubicchunks.chunk.ICube;
 import io.github.opencubicchunks.cubicchunks.chunk.ICubeGenerator;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.CubePrimer;
 import io.github.opencubicchunks.cubicchunks.chunk.util.Utils;
 import io.github.opencubicchunks.cubicchunks.world.CubeWorldGenRegion;
+import io.github.opencubicchunks.cubicchunks.world.server.IServerWorldLightManager;
 import net.minecraft.block.Blocks;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.chunk.ChunkStatus;
@@ -107,7 +110,7 @@ public class MixinChunkStatus {
         ci.cancel();
         if (chunk instanceof ICube) {
             // generator.makeBase(new CubeWorldGenRegion(world, unsafeCast(neighbors)), chunk);
-            ((ICubeGenerator) generator).makeBase(new CubeWorldGenRegion(world, Utils.unsafeCast(neighbors)), (ICube) chunk);
+            ((ICubeGenerator) generator).makeBase(new CubeWorldGenRegion(world, unsafeCast(neighbors)), (ICube) chunk);
         }
     }
 
@@ -165,7 +168,7 @@ public class MixinChunkStatus {
             //        Heightmap.Type.WORLD_SURFACE));
             // TODO: reimplement worldgen
             // generator.decorate(new WorldGenRegion(world, chunks));
-            ((ICubeGenerator) generator).decorate(new CubeWorldGenRegion(world, Utils.unsafeCast(chunks)));
+            ((ICubeGenerator) generator).decorate(new CubeWorldGenRegion(world, unsafeCast(chunks)));
             cubePrimer.setCubeStatus(status);
         }
         cir.setReturnValue(CompletableFuture.completedFuture(Either.left(chunk)));
@@ -180,7 +183,9 @@ public class MixinChunkStatus {
         if (!chunk.getStatus().isAtLeast(status)) {
             ((CubePrimer) chunk).setStatus(status);
         }
-        cir.setReturnValue(CompletableFuture.completedFuture(Either.left(chunk)));
+
+        boolean flag = ((CubePrimer) chunk).getCubeStatus().isAtLeast(status) && ((CubePrimer) chunk).hasCubeLight();
+        cir.setReturnValue(unsafeCast(((IServerWorldLightManager)lightManager).lightCube((ICube)chunk, flag).thenApply(Either::left)));
     }
 
     //lambda$static$12

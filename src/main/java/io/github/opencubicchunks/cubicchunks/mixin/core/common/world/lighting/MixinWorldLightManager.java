@@ -29,6 +29,8 @@ public abstract class MixinWorldLightManager implements IWorldLightManager, ILig
 
     @Shadow public void updateSectionStatus(SectionPos pos, boolean isEmpty) { }
 
+    @Shadow public void onBlockEmissionIncrease(BlockPos blockPos, int lightValue) { }
+
     @Override
     public void retainData(CubePos cubePos, boolean retain) {
         if (this.blockLight != null) {
@@ -36,7 +38,7 @@ public abstract class MixinWorldLightManager implements IWorldLightManager, ILig
         }
 
         if (this.skyLight != null) {
-            ((ILightEngine)this.blockLight).retainCubeData(cubePos, retain);
+            ((ILightEngine)this.skyLight).retainCubeData(cubePos, retain);
         }
     }
 
@@ -50,4 +52,6 @@ public abstract class MixinWorldLightManager implements IWorldLightManager, ILig
             ((ILightEngine)this.skyLight).func_215620_a(cubePos, retain);
         }
     }
+
+
 }

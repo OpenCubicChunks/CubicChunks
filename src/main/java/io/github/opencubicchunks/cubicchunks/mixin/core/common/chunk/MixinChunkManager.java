@@ -10,6 +10,7 @@ import com.mojang.datafixers.DataFixer;
 import com.mojang.datafixers.util.Either;
 import io.github.opencubicchunks.cubicchunks.chunk.CubeCollectorFuture;
 import io.github.opencubicchunks.cubicchunks.chunk.ticket.CubeTaskPriorityQueue;
+import io.github.opencubicchunks.cubicchunks.network.PacketUpdateLight;
 import io.github.opencubicchunks.cubicchunks.world.server.IServerWorldLightManager;
 import io.github.opencubicchunks.cubicchunks.world.storage.CubeSerializer;
 import io.github.opencubicchunks.cubicchunks.chunk.IChunkManager;
@@ -1073,12 +1074,13 @@ public abstract class MixinChunkManager implements IChunkManager {
     private void sendCubeData(ServerPlayerEntity player, Object[] packetCache, Cube cubeIn) {
         if (packetCache[0] == null) {
             packetCache[0] = new PacketCubes(Collections.singletonList(cubeIn));
-            //packetCache[1] = new SUpdateLightPacket(pos, this.lightManager);
+            packetCache[1] = new PacketUpdateLight(cubeIn.getCubePos(), this.lightManager);
         }
 
         CubePos pos = cubeIn.getCubePos();
 
         PacketDispatcher.sendTo(packetCache[0], player);
+        PacketDispatcher.sendTo(packetCache[1], player);
         List<Entity> leashedEntities = Lists.newArrayList();
         List<Entity> passengerEntities = Lists.newArrayList();
 

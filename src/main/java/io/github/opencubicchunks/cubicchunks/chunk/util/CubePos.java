@@ -96,6 +96,19 @@ public class CubePos extends Vec3i {
         return Coords.cubeToMinBlock(getZ());
     }
 
+    public int maxCubeX() {
+        return Coords.cubeToMaxBlock(getX());
+    }
+
+    public int maxCubeY() {
+        return Coords.cubeToMaxBlock(getY());
+    }
+
+    public int maxCubeZ() {
+        return Coords.cubeToMaxBlock(getZ());
+    }
+
+
     public SectionPos asSectionPos() {
         return SectionPos.of(cubeToSection(this.getX(), 0), cubeToSection(this.getY(), 0), cubeToSection(this.getZ(), 0));
     }
