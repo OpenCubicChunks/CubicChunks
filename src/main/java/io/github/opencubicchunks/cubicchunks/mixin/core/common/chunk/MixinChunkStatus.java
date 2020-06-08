@@ -156,17 +156,17 @@ public class MixinChunkStatus {
         if (!(chunk instanceof CubePrimer)) {
             return;
         }
-        CubePrimer chunkprimer = (CubePrimer) chunk;
-        // chunkprimer.setLightManager(lightManager);
-        if (!chunk.getStatus().isAtLeast(status)) {
+        CubePrimer cubePrimer = (CubePrimer) chunk;
+        cubePrimer.setLightManager(lightManager);
+        if (!cubePrimer.getCubeStatus().isAtLeast(status)) {
             // TODO: reimplement heightmaps
             //Heightmap.updateChunkHeightmaps(chunk, EnumSet
             //        .of(Heightmap.Type.MOTION_BLOCKING, Heightmap.Type.MOTION_BLOCKING_NO_LEAVES, Heightmap.Type.OCEAN_FLOOR,
             //        Heightmap.Type.WORLD_SURFACE));
-            // TODO: worldgen
+            // TODO: reimplement worldgen
             // generator.decorate(new WorldGenRegion(world, chunks));
             ((ICubeGenerator) generator).decorate(new CubeWorldGenRegion(world, Utils.unsafeCast(chunks)));
-            chunkprimer.setStatus(status);
+            cubePrimer.setCubeStatus(status);
         }
         cir.setReturnValue(CompletableFuture.completedFuture(Either.left(chunk)));
     }
