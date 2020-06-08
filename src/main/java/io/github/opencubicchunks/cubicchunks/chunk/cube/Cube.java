@@ -107,6 +107,7 @@ public class Cube implements IChunk, ICube {
         }
     }
 
+    @Override
     public boolean isEmptyCube() {
         for(ChunkSection section : this.sections) {
             if(section != EMPTY_SECTION && !section.isEmpty()) {

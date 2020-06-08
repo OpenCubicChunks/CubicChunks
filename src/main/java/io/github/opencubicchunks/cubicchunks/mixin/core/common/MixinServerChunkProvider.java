@@ -30,6 +30,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.Arrays;
 import java.util.Optional;
@@ -195,6 +196,12 @@ public abstract class MixinServerChunkProvider implements IServerChunkProvider {
         this.recentCubePositions[0] = newPositionIn;
         this.recentCubeStatuses[0] = newStatusIn;
         this.recentCubes[0] = newCubeIn;
+    }
+
+    @Inject(method = "func_217235_l", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/server/ServerChunkProvider;invalidateCaches()V"))
+    private void onRefeshAndInvalidate(CallbackInfoReturnable<Boolean> cir)
+    {
+        this.invalidateCubeCaches();
     }
 
     // func_217235_l

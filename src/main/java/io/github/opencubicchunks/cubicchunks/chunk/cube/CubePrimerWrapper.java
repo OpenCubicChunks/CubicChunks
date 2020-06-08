@@ -1,5 +1,7 @@
 package io.github.opencubicchunks.cubicchunks.chunk.cube;
 
+import static net.minecraft.world.chunk.Chunk.EMPTY_SECTION;
+
 import io.github.opencubicchunks.cubicchunks.chunk.biome.CubeBiomeContainer;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import net.minecraft.block.BlockState;
@@ -191,6 +193,12 @@ public class CubePrimerWrapper extends CubePrimer {
         }, this.getPos());
     }
     */
+
+    @Override
+    public boolean isEmptyCube() {
+        return this.cube.isEmptyCube();
+    }
+
     @Override public BitSet getCarvingMask(GenerationStage.Carving type) {
         return this.cube.getCarvingMask(type);
     }

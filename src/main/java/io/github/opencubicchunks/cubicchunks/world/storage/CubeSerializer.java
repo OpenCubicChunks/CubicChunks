@@ -57,6 +57,11 @@ public class CubeSerializer {
             if (status.getType() == ChunkStatus.Type.PROTOCHUNK) {
                 cube = new CubePrimer(pos, sections);
                 cube.setCubeStatus(status);
+
+                if (cube.getCubeStatus().isAtLeast(ChunkStatus.FEATURES)) {
+                    ((CubePrimer)cube).setLightManager(world.getChunkProvider().getLightManager());
+                }
+
             } else {
                 Cube cubeIn = new Cube(world, pos, sections, null);
                 cubeIn.setCubeStatus(status);

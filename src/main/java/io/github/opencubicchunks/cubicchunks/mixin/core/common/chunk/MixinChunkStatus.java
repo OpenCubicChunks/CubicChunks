@@ -180,11 +180,10 @@ public class MixinChunkStatus {
         if (!(chunk instanceof CubePrimer)) {
             return;
         }
+        boolean flag = ((CubePrimer) chunk).getCubeStatus().isAtLeast(status) && ((CubePrimer) chunk).hasCubeLight();
         if (!chunk.getStatus().isAtLeast(status)) {
             ((CubePrimer) chunk).setStatus(status);
         }
-
-        boolean flag = ((CubePrimer) chunk).getCubeStatus().isAtLeast(status) && ((CubePrimer) chunk).hasCubeLight();
         cir.setReturnValue(unsafeCast(((IServerWorldLightManager)lightManager).lightCube((ICube)chunk, flag).thenApply(Either::left)));
     }
 

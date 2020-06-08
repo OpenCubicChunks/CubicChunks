@@ -115,9 +115,9 @@ public abstract class MixinClientChunkProvider implements IClientCubeProvider {
         WorldLightManager worldlightmanager = this.getLightManager();
         ((IWorldLightManager) worldlightmanager).enableLightSources(CubePos.of(cubeX, cubeY, cubeZ), true);
 
-        ChunkSection[] sections = cube.getCubeSections();
-        for (int i = 0; i < sections.length; ++i) {
-            ChunkSection chunksection = sections[i];
+        ChunkSection[] cubeSections = cube.getCubeSections();
+        for (int i = 0; i < cubeSections.length; ++i) {
+            ChunkSection chunksection = cubeSections[i];
             worldlightmanager.updateSectionStatus(Coords.sectionPosByIndex(cube.getCubePos(), i), ChunkSection.isEmpty(chunksection));
         }
 

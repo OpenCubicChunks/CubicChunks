@@ -1,5 +1,7 @@
 package io.github.opencubicchunks.cubicchunks.chunk.cube;
 
+import static net.minecraft.world.chunk.Chunk.EMPTY_SECTION;
+
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import io.github.opencubicchunks.cubicchunks.CubicChunks;
@@ -91,6 +93,16 @@ public class CubePrimer implements ICube, IChunk {
                 this.sections[index].getBlockState(x & 15, y & 15, z & 15);
     }
 
+    @Override
+    public boolean isEmptyCube() {
+        for(ChunkSection section : this.sections) {
+            if(section != EMPTY_SECTION && !section.isEmpty()) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     @Override public IFluidState getFluidState(BlockPos pos) {
         throw new UnsupportedOperationException("Not implemented");
     }
@@ -121,12 +133,7 @@ public class CubePrimer implements ICube, IChunk {
             ChunkSection chunksection = this.sections[index];
             BlockState blockstate = chunksection.setBlockState(x, y, z, state);
             if (this.status.isAtLeast(ChunkStatus.FEATURES) && state != blockstate && (state.getOpacity(this, pos) != blockstate.getOpacity(this, pos) || state.getLightValue(this, pos) != blockstate.getLightValue(this, pos) || state.isTransparent() || blockstate.isTransparent())) {
-                //TODO: find cause of lightmanager being null
-                //it's only set it one place, something is wrong with chunkstatus
-                if(lightManager != null)
-                    lightManager.checkBlock(pos);
-                else
-                    CubicChunks.LOGGER.error("CubePrimer lightManager is null");
+                lightManager.checkBlock(pos);
             }
 
             //TODO: implement heightmaps

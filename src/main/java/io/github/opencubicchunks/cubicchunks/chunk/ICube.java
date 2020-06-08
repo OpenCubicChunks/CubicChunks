@@ -40,6 +40,8 @@ public interface ICube extends IBlockReader {
 
     void setDirty(boolean modified);
 
+    boolean isEmptyCube();
+
     //can't be set/hasLight due to obfuscation issues with IChunk
     boolean hasCubeLight();
     void setCubeLight(boolean lightCorrectIn);

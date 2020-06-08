@@ -108,19 +108,14 @@ public abstract class MixinServerWorldLightManager extends MixinWorldLightManage
         }));
     }
 
+    // lightChunk
     @Override
     public CompletableFuture<ICube> lightCube(ICube icube, boolean p_215593_2_) {
         CubePos cubePos = icube.getCubePos();
         icube.setCubeLight(false);
         this.schedulePhaseTask(cubePos.getX(), cubePos.getY(), cubePos.getZ(), ServerWorldLightManager.Phase.PRE_UPDATE, Util.namedRunnable(() -> {
-            ChunkSection[] achunksection = icube.getCubeSections();
-
-            for(int i = 0; i < ICube.CUBE_SIZE; ++i) {
-                ChunkSection chunksection = achunksection[i];
-                if (!ChunkSection.isEmpty(chunksection)) {
-                    super.updateSectionStatus(Coords.sectionPosByIndex(cubePos, i), false);
-                }
-            }
+            if(!icube.isEmptyCube())
+                this.updateCubeStatus(cubePos);
 
             super.enableLightSources(cubePos, true);
             if (!p_215593_2_) {
@@ -142,14 +137,11 @@ public abstract class MixinServerWorldLightManager extends MixinWorldLightManage
         });
     }
 
+    //retainData(ChunkPos, bool)
     @Override
     public void retainData(CubePos pos, boolean retain) {
-        this.schedulePhaseTask(pos.getX(), pos.getY(), pos.getZ(), () -> {
-            return 0;
-        }, ServerWorldLightManager.Phase.PRE_UPDATE, Util.namedRunnable(() -> {
+        this.schedulePhaseTask(pos.getX(), pos.getY(), pos.getZ(), () -> 0, ServerWorldLightManager.Phase.PRE_UPDATE, Util.namedRunnable(() -> {
             super.retainData(pos, retain);
-        }, () -> {
-            return "retainData " + pos;
-        }));
+        }, () -> "retainData " + pos));
     }
 }

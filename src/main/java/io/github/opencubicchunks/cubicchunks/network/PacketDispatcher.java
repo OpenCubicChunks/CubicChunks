@@ -37,7 +37,7 @@ public class PacketDispatcher {
                 PacketUpdateCubePosition::new, mainThreadHandler(PacketUpdateCubePosition.Handler::handle),
                 Optional.of(NetworkDirection.PLAY_TO_CLIENT));
         //TODO: what index is this packet:
-        CHANNEL.registerMessage(1, PacketUpdateLight.class, PacketUpdateLight::encode,
+        CHANNEL.registerMessage(9, PacketUpdateLight.class, PacketUpdateLight::encode,
                 PacketUpdateLight::new, mainThreadHandler(PacketUpdateLight.Handler::handle),
                 Optional.of(NetworkDirection.PLAY_TO_CLIENT));
         //        CHANNEL.registerMessage(5, PacketCubicWorldInit.class, PacketCubicWorldInit::encode,
