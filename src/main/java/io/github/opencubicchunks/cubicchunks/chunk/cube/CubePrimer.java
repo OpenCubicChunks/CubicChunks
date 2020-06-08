@@ -1,6 +1,8 @@
 package io.github.opencubicchunks.cubicchunks.chunk.cube;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import io.github.opencubicchunks.cubicchunks.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.chunk.ICube;
 import io.github.opencubicchunks.cubicchunks.chunk.biome.CubeBiomeContainer;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
@@ -17,6 +19,7 @@ import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
+import net.minecraft.util.math.SectionPos;
 import net.minecraft.util.palette.UpgradeData;
 import net.minecraft.world.ITickList;
 import net.minecraft.world.chunk.Chunk;
@@ -25,10 +28,12 @@ import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.chunk.IChunk;
 import net.minecraft.world.gen.Heightmap;
 import net.minecraft.world.gen.feature.structure.StructureStart;
+import net.minecraft.world.lighting.WorldLightManager;
 
 import javax.annotation.Nullable;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Stream;
@@ -45,7 +50,9 @@ public class CubePrimer implements ICube, IChunk {
     private final Map<BlockPos, TileEntity> tileEntities = Maps.newHashMap();
     private volatile boolean modified = true;
 
+    private final List<BlockPos> lightPositions = Lists.newArrayList();
     private volatile boolean hasLight;
+    private WorldLightManager lightManager;
 
     //TODO: add TickList<Block> and TickList<Fluid>
     public CubePrimer(CubePos pos, @Nullable ChunkSection[] sectionsIn)
@@ -101,20 +108,29 @@ public class CubePrimer implements ICube, IChunk {
             if(this.sections[index] == Chunk.EMPTY_SECTION) {
                 this.sections[index] = new ChunkSection(Coords.cubeToMinBlock(this.cubePos.getY() + Coords.sectonToMinBlock(Coords.indexToY(index))));
             }
-            return this.sections[index].setBlockState(x, y, z, state);
 
-            //TODO: finish implementing
-            /*if (state.getLightValue(this, pos) > 0) {
-                this.lightPositions.add(new BlockPos((x & 15) + this.getPos().getXStart(), y, (z & 15) + this.getPos().getZStart()));
+            if (state.getLightValue(this, pos) > 0) {
+                SectionPos sectionPosAtIndex = Coords.sectionPosByIndex(this.cubePos, index);
+                this.lightPositions.add(new BlockPos(
+                        x + sectionPosAtIndex.getX(),
+                        y + sectionPosAtIndex.getY(),
+                        z + sectionPosAtIndex.getZ())
+                );
             }
 
-            ChunkSection chunksection = this.getSection(y >> 4);
-            BlockState blockstate = chunksection.setBlockState(x & 15, y & 15, z & 15, state);
+            ChunkSection chunksection = this.sections[index];
+            BlockState blockstate = chunksection.setBlockState(x, y, z, state);
             if (this.status.isAtLeast(ChunkStatus.FEATURES) && state != blockstate && (state.getOpacity(this, pos) != blockstate.getOpacity(this, pos) || state.getLightValue(this, pos) != blockstate.getLightValue(this, pos) || state.isTransparent() || blockstate.isTransparent())) {
-                WorldLightManager worldlightmanager = this.getWorldLightManager();
-                worldlightmanager.checkBlock(pos);
+                //TODO: find cause of lightmanager being null
+                //it's only set it one place, something is wrong with chunkstatus
+                if(lightManager != null)
+                    lightManager.checkBlock(pos);
+                else
+                    CubicChunks.LOGGER.error("CubePrimer lightManager is null");
             }
 
+            //TODO: implement heightmaps
+            /*
             EnumSet<Heightmap.Type> enumset1 = this.getStatus().getHeightMaps();
             EnumSet<Heightmap.Type> enumset = null;
 
@@ -134,11 +150,16 @@ public class CubePrimer implements ICube, IChunk {
             }
 
             for(Heightmap.Type heightmap$type1 : enumset1) {
-                this.heightmaps.get(heightmap$type1).update(x & 15, y, z & 15, state);
+                this.heightmaps.get(heightmap$type1).update(x, y, z, state);
             }
-
-            return blockstate;*/
+            */
+            return blockstate;
         }
+    }
+
+    @Nullable
+    private WorldLightManager getWorldLightManager() {
+        return this.lightManager;
     }
 
     @Nullable @Override public BlockState setBlockState(BlockPos pos, BlockState state, boolean isMoving) {
@@ -339,5 +360,9 @@ public class CubePrimer implements ICube, IChunk {
 
     @Override public void setStructureReferences(Map<String, LongSet> p_201606_1_) {
         throw new UnsupportedOperationException("For later implementation");
+    }
+
+    public void setLightManager(WorldLightManager lightManager) {
+        this.lightManager = lightManager;
     }
 }

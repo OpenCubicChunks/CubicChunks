@@ -304,7 +304,6 @@ public abstract class MixinChunkManager implements IChunkManager {
                         ((IServerWorld)this.world).onCubeUnloading((Cube)icube);
                     }
 
-                    //TODO: reimplement lightmanager stuff
                     ((IServerWorldLightManager)this.lightManager).updateCubeStatus(icube.getCubePos());
                     this.lightManager.func_215588_z_();
                     ((ICubeStatusListener) this.statusListener).cubeStatusChanged(icube.getCubePos(), (ChunkStatus)null);
@@ -596,8 +595,7 @@ public abstract class MixinChunkManager implements IChunkManager {
                 //});
                 //chunkSection.postLoad();
                 if (this.loadedCubePositions.add(cubePos.asLong())) {
-                    // TODO: reimplement setLoaded
-                    // cube.setLoaded(true);
+                    cube.setLoaded(true);
                     this.world.addTileEntities(cube.getTileEntityMap().values());
                     List<Entity> entities = null;
                     ClassInheritanceMultiMap<Entity>[] entityLists = cube.getEntityLists();

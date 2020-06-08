@@ -37,11 +37,11 @@
         "common.world.IBlockReaderMixin",
         "common.world.lighting.MixinLightEngine",
         "common.world.lighting.MixinSectionLightStorage",
-        "common.world.server.MixinServerWorldLightManager",
         "common.world.lighting.MixinWorldLightManager",
         "common.world.MixinIWorld",
         "common.world.MixinServerWorld",
-        "common.world.MixinWorld"
+        "common.world.MixinWorld",
+        "common.world.server.MixinServerWorldLightManager"
     ],
     "client": [
         "client.MixinDebugRenderChunkBorder",
