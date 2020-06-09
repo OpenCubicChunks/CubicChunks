@@ -174,6 +174,7 @@ public class MixinChunkStatus {
     @Inject(method = "lightChunk", at = @At("HEAD"), cancellable = true)
     private static void lightChunkCC(ChunkStatus status, ServerWorldLightManager lightManager, IChunk chunk,
             CallbackInfoReturnable<CompletableFuture<Either<IChunk, ChunkHolder.IChunkLoadingError>>> cir) {
+        cir.setReturnValue(CompletableFuture.completedFuture(Either.left(chunk)));
         if (!(chunk instanceof CubePrimer)) {
             return;
         }

@@ -174,25 +174,12 @@ public class Cube implements IChunk, ICube {
             //        }
             //        return false;
 
-            int dx = Coords.indexToX(i);
             int dy = Coords.indexToY(i);
-            int dz = Coords.indexToZ(i);
 
             SectionPos sectionPos = getCubePos().asSectionPos();
-            int x = sectionPos.getX() + dx;
             int y = sectionPos.getY() + dy;
-            int z = sectionPos.getZ() + dz;
 
             readSection(i, y, null, readBuffer, nbtTagIn, exists);
-
-            WorldLightManager lightManager = world.getLightManager();
-            //lightManager.enableLightSources(new ChunkPos(x, z), true);
-
-            ChunkSection chunksection = sections[i];
-            lightManager.updateSectionStatus(sectionPos, ChunkSection.isEmpty(chunksection));
-
-            ((ClientWorld) this.world).onChunkLoaded(x, z);
-            // net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.event.world.ChunkEvent.Load(chunk));
         }
     }
 
