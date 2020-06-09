@@ -22,6 +22,7 @@
         "common.chunk.MixinEntityTracker",
         "common.chunk.MixinISelectiveWorker",
         "common.entity.MixinEntity",
+        "common.entity.MixinServerPlayerEntity",
         "common.MixinChunkDistanceGraph",
         "common.MixinIForgeDimension",
         "common.MixinIntegratedServer",

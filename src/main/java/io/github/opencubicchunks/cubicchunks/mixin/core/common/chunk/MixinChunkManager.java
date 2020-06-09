@@ -49,6 +49,7 @@ import net.minecraft.network.IPacket;
 import net.minecraft.network.play.server.SMountEntityPacket;
 import net.minecraft.network.play.server.SSetPassengersPacket;
 import net.minecraft.network.play.server.SUpdateChunkPositionPacket;
+import net.minecraft.network.play.server.SUpdateLightPacket;
 import net.minecraft.util.ClassInheritanceMultiMap;
 import net.minecraft.util.Util;
 import net.minecraft.util.concurrent.DelegatedTaskExecutor;
@@ -64,6 +65,7 @@ import net.minecraft.world.chunk.PlayerGenerationTracker;
 import net.minecraft.world.chunk.listener.IChunkStatusListener;
 import net.minecraft.world.gen.ChunkGenerator;
 import net.minecraft.world.gen.feature.template.TemplateManager;
+import net.minecraft.world.lighting.WorldLightManager;
 import net.minecraft.world.server.ChunkHolder;
 import net.minecraft.world.server.ChunkManager;
 import net.minecraft.world.server.ServerWorld;
@@ -1068,6 +1070,13 @@ public abstract class MixinChunkManager implements IChunkManager {
         if (player.isAlive()) {
             PacketDispatcher.sendTo(new PacketUnloadCube(cubePosIn), player);
         }
+    }
+
+    @Nullable
+    @Redirect(method = "sendChunkData", at = @At(value = "NEW", target = "net/minecraft/network/play/server/SUpdateLightPacket"))
+    private SUpdateLightPacket onVanillaLightPacketConstruct(ChunkPos pos, WorldLightManager lightManager)
+    {
+        return new SUpdateLightPacket();
     }
 
     // sendChunkData
