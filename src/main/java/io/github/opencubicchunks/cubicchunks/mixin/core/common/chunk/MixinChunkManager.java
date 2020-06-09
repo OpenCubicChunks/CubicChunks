@@ -1091,8 +1091,8 @@ public abstract class MixinChunkManager implements IChunkManager {
 
         CubePos pos = cubeIn.getCubePos();
 
-        PacketDispatcher.sendTo(packetCache[0], player);
         PacketDispatcher.sendTo(packetCache[1], player);
+        PacketDispatcher.sendTo(packetCache[0], player);
         List<Entity> leashedEntities = Lists.newArrayList();
         List<Entity> passengerEntities = Lists.newArrayList();
 
