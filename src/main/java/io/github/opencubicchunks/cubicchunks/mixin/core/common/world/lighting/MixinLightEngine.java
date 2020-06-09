@@ -93,7 +93,7 @@ public class MixinLightEngine <M extends LightDataMap<M>, S extends SectionLight
 
     @Nullable
     private IBlockReader getCubeReader(int sectionX, int sectionY, int sectionZ) {
-        long i = ChunkPos.asLong(sectionX, sectionZ);
+        long i = SectionPos.asLong(sectionX, sectionY, sectionZ);
 
         for(int j = 0; j < 2; ++j) {
             if (i == this.recentPositions[j]) {
