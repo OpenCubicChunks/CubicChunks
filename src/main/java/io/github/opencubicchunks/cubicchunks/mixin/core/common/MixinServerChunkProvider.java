@@ -13,6 +13,7 @@ import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.ChunkManagerAccess;
 import io.github.opencubicchunks.cubicchunks.server.IServerChunkProvider;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
+import io.github.opencubicchunks.cubicchunks.world.lighting.ICubeLightProvider;
 import net.minecraft.profiler.IProfiler;
 import net.minecraft.util.Util;
 import net.minecraft.util.math.BlockPos;
@@ -44,7 +45,7 @@ import java.util.concurrent.CompletableFuture;
 import javax.annotation.Nullable;
 
 @Mixin(ServerChunkProvider.class)
-public abstract class MixinServerChunkProvider implements IServerChunkProvider {
+public abstract class MixinServerChunkProvider implements IServerChunkProvider, ICubeLightProvider {
     @Final @Shadow private TicketManager ticketManager;
     @Final @Shadow public ChunkManager chunkManager;
 

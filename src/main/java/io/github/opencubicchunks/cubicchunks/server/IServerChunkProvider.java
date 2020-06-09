@@ -13,7 +13,4 @@ public interface IServerChunkProvider extends ICubeProvider {
     int getLoadedCubesCount();
 
     void forceCube(CubePos pos, boolean add);
-
-    @Nullable
-    IBlockReader getCubeForLight(int sectionX, int sectionY, int sectionZ);
 }
