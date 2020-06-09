@@ -1,7 +1,5 @@
 package io.github.opencubicchunks.cubicchunks.chunk.cube;
 
-import static net.minecraft.world.chunk.Chunk.EMPTY_SECTION;
-
 import io.github.opencubicchunks.cubicchunks.chunk.biome.CubeBiomeContainer;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import net.minecraft.block.BlockState;
@@ -11,7 +9,6 @@ import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
-import net.minecraft.world.biome.BiomeContainer;
 import net.minecraft.world.chunk.ChunkSection;
 import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.gen.GenerationStage;

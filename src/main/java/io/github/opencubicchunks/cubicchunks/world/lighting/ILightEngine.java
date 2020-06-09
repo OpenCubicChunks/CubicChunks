@@ -1,8 +1,6 @@
 package io.github.opencubicchunks.cubicchunks.world.lighting;
 
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
-import net.minecraft.util.math.ChunkPos;
-import net.minecraft.util.math.SectionPos;
 
 public interface ILightEngine {
     void retainCubeData(CubePos pos, boolean retain);

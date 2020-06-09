@@ -4,7 +4,6 @@ import static net.minecraft.world.chunk.Chunk.EMPTY_SECTION;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import io.github.opencubicchunks.cubicchunks.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.chunk.ICube;
 import io.github.opencubicchunks.cubicchunks.chunk.biome.CubeBiomeContainer;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
@@ -32,13 +31,13 @@ import net.minecraft.world.gen.Heightmap;
 import net.minecraft.world.gen.feature.structure.StructureStart;
 import net.minecraft.world.lighting.WorldLightManager;
 
-import javax.annotation.Nullable;
-
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Stream;
+
+import javax.annotation.Nullable;
 
 public class CubePrimer implements ICube, IChunk {
 

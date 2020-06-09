@@ -3,7 +3,6 @@ package io.github.opencubicchunks.cubicchunks.mixin.core.common.world.lighting;
 import io.github.opencubicchunks.cubicchunks.chunk.ICube;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.SectionLightStorageAccess;
-import io.github.opencubicchunks.cubicchunks.server.IServerChunkProvider;
 import io.github.opencubicchunks.cubicchunks.world.lighting.ICubeLightProvider;
 import io.github.opencubicchunks.cubicchunks.world.lighting.ILightEngine;
 import io.github.opencubicchunks.cubicchunks.world.lighting.ISectionLightStorage;

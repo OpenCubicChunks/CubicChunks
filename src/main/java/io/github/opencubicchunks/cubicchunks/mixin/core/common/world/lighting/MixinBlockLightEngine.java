@@ -1,6 +1,5 @@
 package io.github.opencubicchunks.cubicchunks.mixin.core.common.world.lighting;
 
-import io.github.opencubicchunks.cubicchunks.server.IServerChunkProvider;
 import io.github.opencubicchunks.cubicchunks.world.lighting.ICubeLightProvider;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.SectionPos;

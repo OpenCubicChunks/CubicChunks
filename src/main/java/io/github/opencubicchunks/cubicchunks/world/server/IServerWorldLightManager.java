@@ -4,7 +4,6 @@ import io.github.opencubicchunks.cubicchunks.chunk.ICube;
 import io.github.opencubicchunks.cubicchunks.chunk.ticket.CubeTaskPriorityQueueSorter;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import net.minecraft.util.concurrent.ITaskExecutor;
-import net.minecraft.world.chunk.ChunkStatus;
 
 import java.util.concurrent.CompletableFuture;
 

@@ -12,7 +12,6 @@ import it.unimi.dsi.fastutil.objects.ObjectList;
 import net.minecraft.util.Util;
 import net.minecraft.util.concurrent.ITaskExecutor;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.SectionPos;
 import net.minecraft.world.LightType;
 import net.minecraft.world.chunk.ChunkSection;

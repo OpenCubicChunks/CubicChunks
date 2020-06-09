@@ -3,8 +3,8 @@ package io.github.opencubicchunks.cubicchunks.network;
 
 import io.github.opencubicchunks.cubicchunks.chunk.ICube;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
-import io.github.opencubicchunks.cubicchunks.utils.BufferUtils;
 import io.github.opencubicchunks.cubicchunks.utils.AddressTools;
+import io.github.opencubicchunks.cubicchunks.utils.BufferUtils;
 import it.unimi.dsi.fastutil.shorts.ShortList;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;

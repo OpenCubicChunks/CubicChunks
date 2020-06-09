@@ -3,7 +3,6 @@ package io.github.opencubicchunks.cubicchunks.mixin.core.common.progress;
 import io.github.opencubicchunks.cubicchunks.chunk.ICubeStatusListener;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.chunk.ChunkStatus;
-import net.minecraftforge.common.DimensionManager;
 import org.spongepowered.asm.mixin.Mixin;
 
 import javax.annotation.Nullable;

@@ -1,11 +1,9 @@
 package io.github.opencubicchunks.cubicchunks.chunk.util;
 
 import static io.github.opencubicchunks.cubicchunks.utils.Coords.blockToCube;
-import static io.github.opencubicchunks.cubicchunks.utils.Coords.cubeToMinBlock;
 import static io.github.opencubicchunks.cubicchunks.utils.Coords.cubeToSection;
 import static io.github.opencubicchunks.cubicchunks.utils.Coords.sectionToCube;
 
-import io.github.opencubicchunks.cubicchunks.chunk.ICube;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.math.BlockPos;
