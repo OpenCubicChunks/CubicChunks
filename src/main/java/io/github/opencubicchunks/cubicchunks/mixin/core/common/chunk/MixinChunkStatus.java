@@ -8,6 +8,7 @@ import io.github.opencubicchunks.cubicchunks.chunk.ICubeGenerator;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.CubePrimer;
 import io.github.opencubicchunks.cubicchunks.world.CubeWorldGenRegion;
 import io.github.opencubicchunks.cubicchunks.world.server.IServerWorldLightManager;
+import net.minecraft.world.chunk.ChunkPrimer;
 import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.chunk.IChunk;
 import net.minecraft.world.gen.ChunkGenerator;
@@ -174,8 +175,11 @@ public class MixinChunkStatus {
     @Inject(method = "lightChunk", at = @At("HEAD"), cancellable = true)
     private static void lightChunkCC(ChunkStatus status, ServerWorldLightManager lightManager, IChunk chunk,
             CallbackInfoReturnable<CompletableFuture<Either<IChunk, ChunkHolder.IChunkLoadingError>>> cir) {
-        cir.setReturnValue(CompletableFuture.completedFuture(Either.left(chunk)));
         if (!(chunk instanceof CubePrimer)) {
+            if (!chunk.getStatus().isAtLeast(status)) {
+                ((ChunkPrimer) chunk).setStatus(status);
+            }
+            cir.setReturnValue(CompletableFuture.completedFuture(Either.left(chunk)));
             return;
         }
         boolean flag = ((CubePrimer) chunk).getCubeStatus().isAtLeast(status) && ((CubePrimer) chunk).hasCubeLight();
