@@ -80,9 +80,9 @@ public class CubePrimer implements ICube, IChunk {
         return this.sections;
     }
 
-    @Nullable @Override public TileEntity getTileEntity(BlockPos pos) {
-        // throw new UnsupportedOperationException("For later implementation");
-        return null; // TODO: tile entities
+    @Nullable @Override
+    public TileEntity getTileEntity(BlockPos pos) {
+        return this.tileEntities.get(pos);
     }
 
     public BlockState getBlockState(int x, int y, int z) {

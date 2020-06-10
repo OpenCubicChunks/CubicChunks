@@ -42,6 +42,8 @@ public abstract class MixinSectionLightStorage <M extends LightDataMap<M>> exten
 
     @Shadow @Final private static Direction[] DIRECTIONS;
 
+    @Shadow protected abstract void processAllLevelUpdates();
+
     private final LongSet cubesToRetain = new LongOpenHashSet();
 
     protected MixinSectionLightStorage(int p_i50706_1_, int p_i50706_2_, int p_i50706_3_) {
@@ -79,9 +81,9 @@ public abstract class MixinSectionLightStorage <M extends LightDataMap<M>> exten
 
             this.cachedLightData.invalidateCaches();
 
-            for(long i2 : this.noLightSections) {
+            for(long section : this.noLightSections) {
                 //TODO: implement this for CC
-                this.func_215523_k(i2);
+                this.func_215523_k(section);
             }
 
             this.noLightSections.clear();
