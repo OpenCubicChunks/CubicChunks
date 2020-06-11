@@ -50,20 +50,26 @@ minecraft {
 
     accessTransformer = file('src/main/resources/META-INF/accesstransformer.cfg')
 
+    def args = [
+            "-XX:+UseG1GC",
+            "-Xmx1G",
+            "-XX:+UnlockExperimentalVMOptions",
+            "-XX:G1NewSizePercent=20",
+            "-XX:G1ReservePercent=20",
+            "-XX:MaxGCPauseMillis=50",
+            "-XX:G1HeapRegionSize=32M",
+            "-Dmixin.debug.verbose=true",
+            "-Dmixin.debug.export=true",
+            "-Dcubicchunks.debug=true",
+            "-XX:-OmitStackTraceInFastThrow",
+            "-Dmixin.checks.interfaces=true"
+    ]
     // Default run configurations.
     // These can be tweaked, removed, or duplicated as needed.
     runs {
         client {
             workingDirectory project.file('run')
-            jvmArgs([
-                    "-XX:+UseG1GC",
-                    "-Xmx1G",
-                    "-XX:+UnlockExperimentalVMOptions",
-                    "-XX:G1NewSizePercent=20",
-                    "-XX:G1ReservePercent=20",
-                    "-XX:MaxGCPauseMillis=50",
-                    "-XX:G1HeapRegionSize=32M"
-            ])
+            jvmArgs(args)
 
             // Recommended logging level for the console
             property 'forge.logging.console.level', 'debug'
@@ -77,15 +83,7 @@ minecraft {
 
         server {
             workingDirectory project.file('run')
-            jvmArgs([
-                    "-XX:+UseG1GC",
-                    "-Xmx1G",
-                    "-XX:+UnlockExperimentalVMOptions",
-                    "-XX:G1NewSizePercent=20",
-                    "-XX:G1ReservePercent=20",
-                    "-XX:MaxGCPauseMillis=50",
-                    "-XX:G1HeapRegionSize=32M"
-            ])
+            jvmArgs(args)
 
             // Recommended logging level for the console
             property 'forge.logging.console.level', 'debug'
