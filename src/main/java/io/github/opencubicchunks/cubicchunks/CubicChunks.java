@@ -25,6 +25,10 @@ import org.apache.logging.log4j.Logger;
 // The value here should match an entry in the META-INF/mods.toml file
 @Mod(CubicChunks.MODID)
 public class CubicChunks {
+
+    // TODO: debug and fix optimized cubeload
+    public static final boolean OPTIMIZED_CUBELOAD = false;
+
     public static long SECTIONPOS_SENTINEL = -1;
 
     // Directly reference a log4j logger.

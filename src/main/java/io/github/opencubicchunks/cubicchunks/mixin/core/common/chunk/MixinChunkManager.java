@@ -526,10 +526,17 @@ public abstract class MixinChunkManager implements IChunkManager {
                     final int idx2 = cubeIdx;
                     ChunkStatus parentStatus = getParentStatus.apply(distance);
 
-                    chunkholder.addCubeStageListener(parentStatus, (either, error) -> {
-                        collectorFuture.add(idx2, either, error);
-                    }, Utils.unsafeCast(this));
 
+
+                    if (CubicChunks.OPTIMIZED_CUBELOAD) {
+                        chunkholder.addCubeStageListener(parentStatus, (either, error) -> {
+                            collectorFuture.add(idx2, either, error);
+                        }, Utils.unsafeCast(this));
+                    } else {
+                        CompletableFuture<Either<ICube, ChunkHolder.IChunkLoadingError>> future =
+                                chunkholder.createCubeFuture(parentStatus, Utils.unsafeCast(this));
+                        future.whenComplete((either, error) -> collectorFuture.add(idx2, either, error));
+                    }
                     ++cubeIdx;
                 }
             }
