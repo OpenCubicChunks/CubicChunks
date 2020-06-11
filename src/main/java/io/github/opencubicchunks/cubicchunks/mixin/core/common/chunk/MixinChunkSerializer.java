@@ -74,7 +74,7 @@ public abstract class MixinChunkSerializer {
                     new ChunkPrimerTickList<>((block) -> block == null || block.getDefaultState().isAir(), pos),
                     new ChunkPrimerTickList<>((fluid) -> fluid == null || fluid == Fluids.EMPTY, pos));
 
-            chunkprimer.func_225548_a_(biomeContainerIn);
+            chunkprimer.setBiomes(biomeContainerIn);
             newChunk = chunkprimer;
             chunkprimer.setInhabitedTime(inhabitedTime);
             chunkprimer.setStatus(ChunkStatus.byName(level.getString("Status")));
