@@ -1,6 +1,7 @@
 package io.github.opencubicchunks.cubicchunks;
 
 import io.github.opencubicchunks.cubicchunks.chunk.IChunkManager;
+import io.github.opencubicchunks.cubicchunks.debug.DebugVisualization;
 import io.github.opencubicchunks.cubicchunks.meta.EarlyConfig;
 import io.github.opencubicchunks.cubicchunks.misc.TestWorldType;
 import io.github.opencubicchunks.cubicchunks.network.PacketDispatcher;
@@ -49,6 +50,11 @@ public class CubicChunks {
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::setup);
         // Register the doClientStuff method for modloading
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::doClientStuff);
+
+        if (System.getProperty("cubicchunks.debug", "false").equalsIgnoreCase("true")) {
+            MinecraftForge.EVENT_BUS.addListener(DebugVisualization::onWorldLoad);
+            MinecraftForge.EVENT_BUS.addListener(DebugVisualization::onWorldUnload);
+        }
 
         // Register ourselves for server and other game events we are interested in
         MinecraftForge.EVENT_BUS.register(this);
