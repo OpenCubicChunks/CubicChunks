@@ -253,7 +253,12 @@ public class MainTransformer {
         String mappedDesc = Type.getMethodDescriptor(ret, params);
 
         MethodNode output = new MethodNode(m.access, newName, mappedDesc, null, m.exceptions.toArray(new String[0]));
-        MethodRemapper methodRemapper = new MethodRemapper(output, remapper);
+        MethodVisitor mv = new MethodVisitor(Opcodes.ASM7, output) {
+            @Override public void visitLineNumber(int line, Label start) {
+                super.visitLineNumber(line + 10000, start);
+            }
+        };
+        MethodRemapper methodRemapper = new MethodRemapper(mv, remapper);
 
         m.accept(methodRemapper);
         output.name = newName;
