@@ -49,7 +49,7 @@ public class MixinLightEngine <M extends LightDataMap<M>, S extends SectionLight
         //TODO: implement invokeFunc_215526_b for CubePos in SkyLightStorage
         for (int x = 0; x < ICube.CUBE_DIAMETER; x++) {
             for (int z = 0; z < ICube.CUBE_DIAMETER; z++) {
-                ((SectionLightStorageAccess) this.storage).invokeFunc_215526_b(new ChunkPos(chunkPos.x + x, chunkPos.z + z).asLong(), enable);
+                ((SectionLightStorageAccess) this.storage).invokeSetColumnEnabled(new ChunkPos(chunkPos.x + x, chunkPos.z + z).asLong(), enable);
             }
         }
     }
@@ -60,7 +60,7 @@ public class MixinLightEngine <M extends LightDataMap<M>, S extends SectionLight
      */
     //TODO: make this into a redirect that calls getCubeReader taking arguments blockPosLong
     @Overwrite
-    protected BlockState func_227468_a_(long blockPosLong, @Nullable MutableInt opacity) {
+    protected BlockState getBlockAndOpacity(long blockPosLong, @Nullable MutableInt opacity) {
         if (blockPosLong == Long.MAX_VALUE) {
             if (opacity != null) {
                 opacity.setValue(0);

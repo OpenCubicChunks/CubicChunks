@@ -32,7 +32,7 @@ public abstract class MixinSectionLightStorage <M extends LightDataMap<M>> exten
 
     @Shadow @Final protected M cachedLightData;
 
-    @Shadow protected abstract void func_215523_k(long p_215523_1_);
+    @Shadow protected abstract void removeSection(long p_215523_1_);
 
     @Shadow protected volatile boolean hasSectionsToUpdate;
 
@@ -83,7 +83,7 @@ public abstract class MixinSectionLightStorage <M extends LightDataMap<M>> exten
 
             for(long section : this.noLightSections) {
                 //TODO: implement this for CC
-                this.func_215523_k(section);
+                this.removeSection(section);
             }
 
             this.noLightSections.clear();
