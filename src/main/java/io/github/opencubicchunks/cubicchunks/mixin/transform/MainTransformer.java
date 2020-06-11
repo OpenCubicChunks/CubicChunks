@@ -9,6 +9,8 @@ import net.minecraftforge.fml.loading.FMLEnvironment;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.objectweb.asm.Handle;
+import org.objectweb.asm.Label;
+import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.Method;
@@ -62,8 +64,8 @@ public class MainTransformer {
         ), "onUpdateCubeLevel");
 
         Map<ClassField, String> fields = new HashMap<>();
+        fields.put(new ClassField("net/minecraft/world/server/ChunkManager", "field_219249_a"), "MAX_CUBE_LOADED_LEVEL"); //MAX_LOADED_LEVEL
         fields.put(new ClassField("net/minecraft/world/server/ChunkHolder", "field_219319_n"), "cubePos"); // pos
-        fields.put(new ClassField("net/minecraft/world/server/ChunkHolder", "field_219249_a"), "MAX_CUBE_LOADED_LEVEL"); //MAX_LOADED_LEVEL
         fields.put(new ClassField("net/minecraft/world/server/ChunkHolder", " field_219309_d"), "UNLOADED_CUBE_FUTURE"); // UNLOADED_CHUNK_FUTURE
         fields.put(new ClassField("net/minecraft/world/server/ChunkHolder", "field_219308_c"), "UNLOADED_CUBE"); // UNLOADED_CHUNK
 
@@ -92,6 +94,9 @@ public class MainTransformer {
                 "cubeTaskPriorityQueueSorter");
         fieldRedirects.put(new ClassField("net/minecraft/world/server/ChunkManager", "field_219251_e"), // loadedChunks
                 "loadedCubes");
+        fieldRedirects.put(new ClassField("net/minecraft/world/server/ChunkManager", "field_219249_a"),
+                "MAX_CUBE_LOADED_LEVEL"); //MAX_LOADED_LEVEL
+
 
         Map<Type, Type> typeRedirects = new HashMap<>();
         // TODO: create target constructor in ChunkHolder with CubePos
