@@ -71,8 +71,8 @@ public abstract class MixinServerChunkProvider implements IServerChunkProvider, 
         ((ITicketManager) this.ticketManager).release(type, pos, distance, value);
     }
 
-    @Override public int getLoadedCubesCount() {
-        return ((IChunkManager) chunkManager).getLoadedCubesCount();
+    @Override public int getCubeLoadCounter() {
+        return ((IChunkManager) chunkManager).getCubeLoadCounter();
     }
 
     @Nullable
@@ -286,7 +286,7 @@ public abstract class MixinServerChunkProvider implements IServerChunkProvider, 
      */
     @Overwrite
     public String makeString() {
-        return "ServerChunkCache: " + this.getLoadedChunkCount() + " | " + this.getLoadedCubesCount();
+        return "ServerChunkCache: " + this.getLoadedChunkCount() + " | " + ((IChunkManager) chunkManager).getLoadedCubeCount();
     }
 
 }

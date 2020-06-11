@@ -8,6 +8,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Queues;
 import com.mojang.datafixers.DataFixer;
 import com.mojang.datafixers.util.Either;
+import io.github.opencubicchunks.cubicchunks.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.chunk.CubeCollectorFuture;
 import io.github.opencubicchunks.cubicchunks.chunk.IChunkManager;
 import io.github.opencubicchunks.cubicchunks.chunk.ICube;
@@ -1131,9 +1132,15 @@ public abstract class MixinChunkManager implements IChunkManager {
         }
     }
 
-    public int getLoadedCubesCount()
-    {
+    // func_219174_c
+    @Override
+    public int getCubeLoadCounter() {
         return this.cubesLoaded.get();
+    }
+
+    @Override
+    public int getLoadedCubeCount() {
+        return this.immutableLoadedCubes.size();
     }
 
     // func_219191_c

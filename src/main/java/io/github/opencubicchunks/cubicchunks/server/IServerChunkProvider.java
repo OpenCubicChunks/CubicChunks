@@ -7,7 +7,7 @@ import net.minecraft.world.server.TicketType;
 public interface IServerChunkProvider extends ICubeProvider {
     <T> void registerTicket(TicketType<T> type, CubePos pos, int distance, T value);
 
-    int getLoadedCubesCount();
+    int getCubeLoadCounter();
 
     void forceCube(CubePos pos, boolean add);
 }

@@ -21,7 +21,9 @@ import javax.annotation.Nullable;
 public interface IChunkManager {
     int MAX_CUBE_LOADED_LEVEL = 33 + CubeStatus.maxDistance();
 
-    int getLoadedCubesCount();
+    int getCubeLoadCounter();
+
+    int getLoadedCubeCount();
 
     @Nullable
     ChunkHolder setCubeLevel(long cubePosIn, int newLevel, @Nullable ChunkHolder holder, int oldLevel);

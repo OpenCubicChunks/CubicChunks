@@ -70,19 +70,19 @@ public abstract class MixinMinecraftServer {
         serverchunkprovider.registerTicket(TicketType.START, spawnPosCube.asChunkPos(), Coords.cubeToSection(radius + 1, 0), Unit.INSTANCE);
 
         int i2 = 0;
-        while(isServerRunning() && (serverchunkprovider.getLoadedChunksCount() < chunkDiameter * chunkDiameter || ((IServerChunkProvider) serverchunkprovider).getLoadedCubesCount() < d*d*d)) {
+        while(isServerRunning() && (serverchunkprovider.getLoadedChunksCount() < chunkDiameter * chunkDiameter || ((IServerChunkProvider) serverchunkprovider).getCubeLoadCounter() < d*d*d)) {
             // from CC
             this.serverTime = Util.milliTime() + 10L;
             this.runScheduledTasks();
 
             if (i2 == 100) {
-                LOGGER.info("Current loaded chunks: " + serverchunkprovider.getLoadedChunksCount() + " | " + ((IServerChunkProvider)serverchunkprovider).getLoadedCubesCount());
+                LOGGER.info("Current loaded chunks: " + serverchunkprovider.getLoadedChunksCount() + " | " + ((IServerChunkProvider)serverchunkprovider).getCubeLoadCounter());
                 i2 = 0;
             }
 
             i2++;
         }
-        LOGGER.info("Current loaded chunks: " + serverchunkprovider.getLoadedChunksCount() + " | " + ((IServerChunkProvider)serverchunkprovider).getLoadedCubesCount());
+        LOGGER.info("Current loaded chunks: " + serverchunkprovider.getLoadedChunksCount() + " | " + ((IServerChunkProvider)serverchunkprovider).getCubeLoadCounter());
         this.serverTime = Util.milliTime() + 10L;
         this.runScheduledTasks();
 
