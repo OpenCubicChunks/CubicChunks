@@ -5,6 +5,7 @@ import static org.lwjgl.glfw.GLFW.GLFW_CONTEXT_VERSION_MINOR;
 import static org.lwjgl.glfw.GLFW.GLFW_OPENGL_CORE_PROFILE;
 import static org.lwjgl.glfw.GLFW.GLFW_OPENGL_PROFILE;
 import static org.lwjgl.glfw.GLFW.glfwCreateWindow;
+import static org.lwjgl.glfw.GLFW.glfwGetCurrentContext;
 import static org.lwjgl.glfw.GLFW.glfwGetMonitorPos;
 import static org.lwjgl.glfw.GLFW.glfwGetPrimaryMonitor;
 import static org.lwjgl.glfw.GLFW.glfwGetVideoMode;
@@ -171,7 +172,10 @@ public class DebugVisualization {
             return;
         }
         try {
+            long ctx = glfwGetCurrentContext();
+            glfwMakeContextCurrent(window);
             render();
+            glfwMakeContextCurrent(ctx);
         } catch (Exception e) {
             e.printStackTrace();
             try {
