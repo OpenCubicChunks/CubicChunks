@@ -54,6 +54,7 @@ public class CubicChunks {
         if (System.getProperty("cubicchunks.debug", "false").equalsIgnoreCase("true")) {
             MinecraftForge.EVENT_BUS.addListener(DebugVisualization::onWorldLoad);
             MinecraftForge.EVENT_BUS.addListener(DebugVisualization::onWorldUnload);
+            MinecraftForge.EVENT_BUS.addListener(DebugVisualization::onRender);
         }
 
         // Register ourselves for server and other game events we are interested in

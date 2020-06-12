@@ -70,7 +70,6 @@ import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import it.unimi.dsi.fastutil.longs.Long2ByteLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.longs.Long2ByteMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectLinkedOpenHashMap;
-import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.player.ClientPlayerEntity;
@@ -82,6 +81,7 @@ import net.minecraft.client.renderer.Vector4f;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.util.Direction;
+import net.minecraft.util.Util;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.world.IWorld;
 import net.minecraft.world.World;
@@ -93,6 +93,7 @@ import net.minecraft.world.server.ChunkHolder;
 import net.minecraft.world.server.ChunkManager;
 import net.minecraft.world.server.ServerChunkProvider;
 import net.minecraft.world.server.ServerWorld;
+import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 import org.apache.logging.log4j.LogManager;
@@ -107,9 +108,7 @@ import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.util.EnumSet;
-import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -154,7 +153,8 @@ public class DebugVisualization {
     private static Matrix4f inverseMatrix = new Matrix4f();
     private static PerfTimer[] perfTimer = new PerfTimer[128];
     private static int perfTimerIdx = 0;
-    private static float screenWidth = 854.0f;;
+    private static float screenWidth = 854.0f;
+    ;
     private static float screenHeight = 480f;
 
     private static PerfTimer timer() {
@@ -162,6 +162,29 @@ public class DebugVisualization {
             return perfTimer[perfTimerIdx] = new PerfTimer();
         }
         return perfTimer[perfTimerIdx];
+    }
+
+
+    public static void onRender(RenderWorldLastEvent evt) {
+        if (Util.getOSType() == Util.OS.LINUX) {
+            initWindow();
+            return;
+        }
+        try {
+            render();
+        } catch (Exception e) {
+            e.printStackTrace();
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException interruptedException) {
+                return;
+            }
+            try {
+                bufferBuilder.finishDrawing();
+            } catch (Throwable t) {
+                t.printStackTrace();
+            }
+        }
     }
 
     public static void onWorldLoad(WorldEvent.Load t) {
@@ -204,14 +227,13 @@ public class DebugVisualization {
                     (vidmode.height() - pHeight.get(0)) / 2 + monPosTop.get(0));
         }
 
+        if (Util.getOSType() != Util.OS.LINUX) {
+            initWindow();
+            return;
+        }
 
         Thread thread = new Thread(() -> {
-            glfwShowWindow(window);
-            glfwMakeContextCurrent(window);
-            glfwPollEvents(); // Note: this WILL break on a mac
-            glfwSetErrorCallback(GLFWErrorCallback.createPrint());
-            GL.createCapabilities();
-            initialize();
+            initWindow();
             while (true) {
                 try {
                     render();
@@ -232,6 +254,16 @@ public class DebugVisualization {
         });
         thread.setDaemon(true);
         thread.start();
+    }
+
+    private static void initWindow() {
+        glfwShowWindow(window);
+        glfwMakeContextCurrent(window);
+        glfwPollEvents(); // Note: this WILL break on a mac
+        glfwSetErrorCallback(GLFWErrorCallback.createPrint());
+        GL.createCapabilities();
+        initialize();
+        glfwSwapBuffers(window);
     }
 
     private static void initialize() {
