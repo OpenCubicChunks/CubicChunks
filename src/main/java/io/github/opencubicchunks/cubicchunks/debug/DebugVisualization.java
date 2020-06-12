@@ -168,7 +168,6 @@ public class DebugVisualization {
 
     public static void onRender(RenderWorldLastEvent evt) {
         if (Util.getOSType() == Util.OS.LINUX) {
-            initWindow();
             return;
         }
         try {
