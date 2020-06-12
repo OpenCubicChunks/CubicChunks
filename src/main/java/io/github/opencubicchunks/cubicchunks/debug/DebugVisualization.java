@@ -174,10 +174,10 @@ public class DebugVisualization {
             return;
         }
         long ctx = glfwGetCurrentContext();
+        GLCapabilities capabilities = GL.getCapabilities();
         if (!initialized.getAndSet(true)) {
             initializeWindow();
         }
-        GLCapabilities capabilities = GL.getCapabilities();
         GL.setCapabilities(debugGlCapabilities);
         try {
             glfwMakeContextCurrent(window);
