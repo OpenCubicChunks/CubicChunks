@@ -169,11 +169,10 @@ public class DebugVisualization {
         if (Util.getOSType() == Util.OS.LINUX) {
             return;
         }
+        long ctx = glfwGetCurrentContext();
         try {
-            long ctx = glfwGetCurrentContext();
             glfwMakeContextCurrent(window);
             render();
-            glfwMakeContextCurrent(ctx);
         } catch (Exception e) {
             e.printStackTrace();
             try {
@@ -186,6 +185,8 @@ public class DebugVisualization {
             } catch (Throwable t) {
                 t.printStackTrace();
             }
+        } finally {
+            glfwMakeContextCurrent(ctx);
         }
     }
 
