@@ -193,7 +193,6 @@ public class DebugVisualization {
         } finally {
             glfwMakeContextCurrent(ctx);
             GL.setCapabilities(capabilities);
-            glfwPollEvents();
         }
     }
 
