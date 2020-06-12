@@ -173,7 +173,7 @@ public class DebugVisualization {
         if (IS_LINUX) {
             return;
         }
-        if (initialized.getAndSet(true)) {
+        if (!initialized.getAndSet(true)) {
             initializeWindow();
         }
         long ctx = glfwGetCurrentContext();
@@ -241,9 +241,7 @@ public class DebugVisualization {
         }
 
         if (!IS_LINUX) {
-            long oldCtx = glfwGetCurrentContext();
             initWindow();
-            glfwMakeContextCurrent(oldCtx);
             return;
         }
 
