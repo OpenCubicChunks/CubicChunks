@@ -99,6 +99,7 @@ import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.lwjgl.glfw.Callbacks;
 import org.lwjgl.glfw.GLFWErrorCallback;
 import org.lwjgl.glfw.GLFWVidMode;
 import org.lwjgl.opengl.GL;
@@ -172,6 +173,9 @@ public class DebugVisualization {
         if (IS_LINUX) {
             return;
         }
+        if (initialized.getAndSet(true)) {
+            initializeWindow();
+        }
         long ctx = glfwGetCurrentContext();
         GLCapabilities capabilities = GL.getCapabilities();
         GL.setCapabilities(debugGlCapabilities);
@@ -197,7 +201,7 @@ public class DebugVisualization {
     }
 
     public static void onWorldLoad(WorldEvent.Load t) {
-        if (!initialized.getAndSet(true)) {
+        if (IS_LINUX && !initialized.getAndSet(true)) {
             initializeWindow();
         }
         IWorld w = t.getWorld();
