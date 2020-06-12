@@ -102,6 +102,7 @@ import org.apache.logging.log4j.Logger;
 import org.lwjgl.glfw.GLFWErrorCallback;
 import org.lwjgl.glfw.GLFWVidMode;
 import org.lwjgl.opengl.GL;
+import org.lwjgl.opengl.GLCapabilities;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.system.MemoryUtil;
 
@@ -156,6 +157,8 @@ public class DebugVisualization {
     private static int perfTimerIdx = 0;
     private static float screenWidth = 854.0f;
     private static float screenHeight = 480f;
+    private static final boolean IS_LINUX = Util.getOSType() == Util.OS.LINUX && false;
+    private static GLCapabilities debugGlCapabilities;
 
     private static PerfTimer timer() {
         if (perfTimer[perfTimerIdx] == null) {
@@ -166,10 +169,12 @@ public class DebugVisualization {
 
 
     public static void onRender(RenderWorldLastEvent evt) {
-        if (Util.getOSType() == Util.OS.LINUX) {
+        if (IS_LINUX) {
             return;
         }
         long ctx = glfwGetCurrentContext();
+        GLCapabilities capabilities = GL.getCapabilities();
+        GL.setCapabilities(debugGlCapabilities);
         try {
             glfwMakeContextCurrent(window);
             render();
@@ -187,6 +192,7 @@ public class DebugVisualization {
             }
         } finally {
             glfwMakeContextCurrent(ctx);
+            GL.setCapabilities(capabilities);
         }
     }
 
@@ -230,7 +236,7 @@ public class DebugVisualization {
                     (vidmode.height() - pHeight.get(0)) / 2 + monPosTop.get(0));
         }
 
-        if (Util.getOSType() != Util.OS.LINUX) {
+        if (!IS_LINUX) {
             long oldCtx = glfwGetCurrentContext();
             initWindow();
             glfwMakeContextCurrent(oldCtx);
@@ -266,7 +272,7 @@ public class DebugVisualization {
         glfwMakeContextCurrent(window);
         glfwPollEvents(); // Note: this WILL break on a mac
         glfwSetErrorCallback(GLFWErrorCallback.createPrint());
-        GL.createCapabilities();
+        debugGlCapabilities = GL.createCapabilities();
         initialize();
         glfwSwapBuffers(window);
     }
