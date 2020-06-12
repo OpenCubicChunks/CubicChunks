@@ -271,8 +271,9 @@ public class DebugVisualization {
     private static void initWindow() {
         glfwShowWindow(window);
         glfwMakeContextCurrent(window);
-        glfwPollEvents(); // Note: this WILL break on a mac
-        glfwSetErrorCallback(GLFWErrorCallback.createPrint());
+        if (IS_LINUX) {
+            glfwSetErrorCallback(GLFWErrorCallback.createPrint());
+        }
         debugGlCapabilities = GL.createCapabilities();
         initialize();
         glfwSwapBuffers(window);
