@@ -11,6 +11,7 @@ import static org.lwjgl.glfw.GLFW.glfwGetVideoMode;
 import static org.lwjgl.glfw.GLFW.glfwGetWindowSize;
 import static org.lwjgl.glfw.GLFW.glfwMakeContextCurrent;
 import static org.lwjgl.glfw.GLFW.glfwPollEvents;
+import static org.lwjgl.glfw.GLFW.glfwSetErrorCallback;
 import static org.lwjgl.glfw.GLFW.glfwSetWindowPos;
 import static org.lwjgl.glfw.GLFW.glfwShowWindow;
 import static org.lwjgl.glfw.GLFW.glfwSwapBuffers;
@@ -66,7 +67,10 @@ import com.mojang.datafixers.util.Pair;
 import io.github.opencubicchunks.cubicchunks.chunk.ICubeHolder;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
+import it.unimi.dsi.fastutil.longs.Long2ByteLinkedOpenHashMap;
+import it.unimi.dsi.fastutil.longs.Long2ByteMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectLinkedOpenHashMap;
+import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.player.ClientPlayerEntity;
@@ -78,10 +82,12 @@ import net.minecraft.client.renderer.Vector4f;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.util.Direction;
+import net.minecraft.util.registry.Registry;
 import net.minecraft.world.IWorld;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.AbstractChunkProvider;
 import net.minecraft.world.chunk.ChunkStatus;
+import net.minecraft.world.chunk.IChunk;
 import net.minecraft.world.dimension.DimensionType;
 import net.minecraft.world.server.ChunkHolder;
 import net.minecraft.world.server.ChunkManager;
@@ -91,6 +97,7 @@ import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.lwjgl.glfw.GLFWErrorCallback;
 import org.lwjgl.glfw.GLFWVidMode;
 import org.lwjgl.opengl.GL;
 import org.lwjgl.system.MemoryStack;
@@ -102,9 +109,11 @@ import java.nio.IntBuffer;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class DebugVisualization {
 
@@ -145,6 +154,8 @@ public class DebugVisualization {
     private static Matrix4f inverseMatrix = new Matrix4f();
     private static PerfTimer[] perfTimer = new PerfTimer[128];
     private static int perfTimerIdx = 0;
+    private static float screenWidth = 854.0f;;
+    private static float screenHeight = 480f;
 
     private static PerfTimer timer() {
         if (perfTimer[perfTimerIdx] == null) {
@@ -198,6 +209,7 @@ public class DebugVisualization {
             glfwShowWindow(window);
             glfwMakeContextCurrent(window);
             glfwPollEvents(); // Note: this WILL break on a mac
+            glfwSetErrorCallback(GLFWErrorCallback.createPrint());
             GL.createCapabilities();
             initialize();
             while (true) {
@@ -287,7 +299,38 @@ public class DebugVisualization {
         perfTimerIdx %= perfTimer.length;
         timer().clear();
         timer().beginFrame = System.nanoTime();
+        glStateSetup();
+        timer().glStateSetup = System.nanoTime();
+        matrixSetup();
+        timer().matrixSetup = System.nanoTime();
+        resetBuffer();
+        timer().bufferReset = System.nanoTime();
 
+        drawSelectedWorld(bufferBuilder);
+
+        sortQuads();
+        timer().sortQuads = System.nanoTime();
+        Pair<Integer, FloatBuffer> renderBuffer = quadsToTriangles();
+        timer().toTriangles = System.nanoTime();
+        setBufferData(renderBuffer);
+        timer().setBufferData = System.nanoTime();
+        preDrawSetup();
+        timer().preDrawSetup = System.nanoTime();
+        drawBuffer(renderBuffer);
+        timer().draw = System.nanoTime();
+        postDraw();
+        timer().postDraw = System.nanoTime();
+        freeBuffer(renderBuffer);
+        timer().freeMem = System.nanoTime();
+        glFinish();
+        timer().glFinish = System.nanoTime();
+
+        drawPerfStats();
+        glfwSwapBuffers(window);
+        glfwPollEvents();
+    }
+
+    private static void glStateSetup() {
         glClearColor(0.1f, 0.1f, 0.9f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -296,25 +339,16 @@ public class DebugVisualization {
         glEnable(GL_DEPTH_TEST);
 
         glUseProgram(shaderProgram);
-
-        timer().glStateSetup = System.nanoTime();
-
-        setupMatrix();
-        timer().matrixSetup = System.nanoTime();
-        renderWorld();
-
-        glfwSwapBuffers(window);
-        glfwPollEvents();
     }
 
-
-    private static void setupMatrix() {
-        FloatBuffer fb = MemoryUtil.memAlignedAlloc(64, 64).asFloatBuffer();
+    private static void matrixSetup() {
+        ByteBuffer byteBuffer = MemoryUtil.memAlignedAlloc(64, 64);
+        FloatBuffer fb = byteBuffer.asFloatBuffer();
 
         mvpMatrix.setIdentity();
         // mvp = projection*view*model
         // projection
-        mvpMatrix.mul(Matrix4f.perspective(60, 854.0f / 480f, 0.01f, 1000));
+        mvpMatrix.mul(Matrix4f.perspective(60, screenWidth / screenHeight, 0.01f, 1000));
         Matrix4f modelView = inverseMatrix;
         modelView.setIdentity();
         // view
@@ -328,75 +362,113 @@ public class DebugVisualization {
         glUniformMatrix4fv(matrixLocation, false, fb);
 
         inverseMatrix.invert();
+
+        MemoryUtil.memFree(byteBuffer);
     }
 
-    private static void renderWorld() {
+    private static void resetBuffer() {
         if (bufferBuilder.isDrawing()) {
             bufferBuilder.finishDrawing();
         }
         bufferBuilder.reset();
         bufferBuilder.begin(GL_QUADS, DefaultVertexFormats.POSITION_COLOR);
-        timer().bufferReset = System.nanoTime();
-        fillBuffer(bufferBuilder);
+    }
+
+    private static void drawSelectedWorld(BufferBuilder bufferBuilder) {
+        World w = serverWorlds.get(DimensionType.OVERWORLD);
+        if (w == null) {
+            return;
+        }
+
+        drawWorld(bufferBuilder, w);
+    }
+
+    private static void drawWorld(BufferBuilder bufferBuilder, World world) {
+        ClientPlayerEntity player = Minecraft.getInstance().player;
+        int playerX = player == null ? 0 : Coords.getCubeXForEntity(player);
+        int playerY = player == null ? 0 : Coords.getCubeYForEntity(player);
+        int playerZ = player == null ? 0 : Coords.getCubeZForEntity(player);
+
+        AbstractChunkProvider chunkProvider = world.getChunkProvider();
+        if (chunkProvider instanceof ServerChunkProvider) {
+            Long2ByteLinkedOpenHashMap cubeMap = buildStatusMap((ServerChunkProvider) chunkProvider);
+            timer().buildStatusMap = System.nanoTime();
+            buildQuads(bufferBuilder, playerX, playerY, playerZ, cubeMap);
+            timer().buildQuads = System.nanoTime();
+        }
+
+    }
+
+    private static Long2ByteLinkedOpenHashMap buildStatusMap(ServerChunkProvider chunkProvider) {
+        ChunkManager chunkManager = chunkProvider.chunkManager;
+        Long2ObjectLinkedOpenHashMap<ChunkHolder> loadedCubes =
+                ObfuscationReflectionHelper.getPrivateValue(ChunkManager.class, chunkManager, "immutableLoadedCubes");
+        Object[] data = ObfuscationReflectionHelper.getPrivateValue(Long2ObjectLinkedOpenHashMap.class, loadedCubes, "value");
+        long[] keys = ObfuscationReflectionHelper.getPrivateValue(Long2ObjectLinkedOpenHashMap.class, loadedCubes, "key");
+        Long2ByteLinkedOpenHashMap cubeMap = new Long2ByteLinkedOpenHashMap(100000);
+        for (int i = 0, keysLength = keys.length; i < keysLength; i++) {
+            long pos = keys[i];
+            if (pos == 0) {
+                continue;
+            }
+            ChunkHolder holder = (ChunkHolder) data[i];
+            ChunkStatus status = holder == null ? null : ICubeHolder.getCubeStatusFromLevel(holder.getChunkLevel());
+            IChunk chunk = holder == null ? null : holder.func_219302_f().getNow(null);
+            ChunkStatus realStatus = chunk == null ? null : chunk.getStatus();
+            cubeMap.put(pos, realStatus == null ? (byte) 255 : (byte) Registry.CHUNK_STATUS.getId(realStatus));
+        }
+        return cubeMap;
+    }
+
+    private static void buildQuads(BufferBuilder bufferBuilder, int playerX, int playerY, int playerZ, Long2ByteLinkedOpenHashMap cubeMap) {
+        Object2IntMap<ChunkStatus> colors = ObfuscationReflectionHelper.getPrivateValue(
+                WorldLoadProgressScreen.class, null, "field_213042_c"
+        );
+        int[] colorsArray = new int[256];
+        ChunkStatus[] statusLookup = new ChunkStatus[256];
+        for (ChunkStatus chunkStatus : colors.keySet()) {
+            int id = Registry.CHUNK_STATUS.getId(chunkStatus);
+            colorsArray[id] = colors.get(chunkStatus);
+            statusLookup[id] = chunkStatus;
+        }
+        colorsArray[255] = 0x00FF00FF;
+        EnumSet<Direction> renderFaces = EnumSet.noneOf(Direction.class);
+        Direction[] directions = Direction.values();
+        float ratioFactor =  1/(float) ChunkStatus.FULL.ordinal();
+        for (Long2ByteMap.Entry e : cubeMap.long2ByteEntrySet()) {
+            long posLong = e.getLongKey();
+            int posX = CubePos.extractX(posLong);
+            int posY = CubePos.extractY(posLong);
+            int posZ = CubePos.extractZ(posLong);
+            int status = e.getByteValue() & 0xFF;
+            renderFaces.clear();
+            ChunkStatus statusObj = statusLookup[status];
+            float ratio = statusObj == null ? 1 : statusObj.ordinal() * ratioFactor;
+            int alpha = status == 255 ? 0x22 : (int) (0x20 + ratio * (0xFF - 0x20));
+            int c = colorsArray[status] | (alpha << 24);
+            for (Direction value : directions) {
+                long l = CubePos.asLong(posX + value.getXOffset(), posY + value.getYOffset(), posZ + value.getZOffset());
+                int cubeStatus = cubeMap.get(l) & 0xFF;
+                // this.ordinal() >= status.ordinal();
+                if (status == 255 || cubeStatus == 255 || cubeStatus < status) {
+                    renderFaces.add(value);
+                }
+            }
+            drawCube(bufferBuilder, posX - playerX, posY - playerY, posZ - playerZ, 7, c, renderFaces);
+        }
+    }
+
+    private static void sortQuads() {
         Vector4f vec = new Vector4f(0, 0, 0, 1);
         vec.transform(inverseMatrix);
         bufferBuilder.sortVertexData(vec.getX(), vec.getY(), vec.getZ());
-        timer().sortQuads = System.nanoTime();
+
         bufferBuilder.finishDrawing();
+    }
 
+    private static Pair<Integer, FloatBuffer> quadsToTriangles() {
         Pair<BufferBuilder.DrawState, ByteBuffer> stateBuffer = bufferBuilder.getNextBuffer();
-        Pair<Integer, FloatBuffer> renderBuffer = toTriangles(stateBuffer);
-        timer().toTriangles = System.nanoTime();
-
-        glBufferData(GL_ARRAY_BUFFER, renderBuffer.getSecond(), GL_STREAM_DRAW);
-
-        timer().setBufferData = System.nanoTime();
-
-        glEnableVertexAttribArray(posAttrib);
-        glEnableVertexAttribArray(colAttrib);
-
-        // 12 bytes per float pos + 4 bytes per color = 16 bytes
-        glVertexAttribPointer(posAttrib, 3, GL_FLOAT, false, 16, 0);
-        glVertexAttribPointer(colAttrib, 4, GL_UNSIGNED_BYTE, true, 16, 12);
-
-        timer().preDrawSetup = System.nanoTime();
-
-        glDrawArrays(GL_TRIANGLES, 0, renderBuffer.getFirst());
-        timer().draw = System.nanoTime();
-
-        glDisableVertexAttribArray(posAttrib);
-        glDisableVertexAttribArray(colAttrib);
-        timer().postDraw = System.nanoTime();
-        MemoryUtil.memFree(renderBuffer.getSecond());
-        timer().freeMem = System.nanoTime();
-        glFinish();
-        timer().glFinish = System.nanoTime();
-        drawPerfStats();
-    }
-
-    private static void drawPerfStats() {
-        if(true) return;
-        if (perfGraphBuilder.isDrawing()) {
-            perfGraphBuilder.finishDrawing();
-        }
-        perfGraphBuilder.reset();
-
-        for (int i = 0; i < perfTimer.length; i++) {
-            PerfTimer timer = perfTimer[(i + perfTimerIdx) % perfTimer.length];
-            timer.drawTimer((yStart, yEnd) -> {
-
-            });
-        }
-    }
-
-    private static void quad2d(BufferBuilder buf, int x1, int y1, int x2, int y2, int color) {
-        vertex(buf, x1, y1, 0, 0, 0, 0, color);
-        vertex(buf, x1, y2, 0, 0, 0, 0, color);
-        vertex(buf, x2, y1, 0, 0, 0, 0, color);
-
-        vertex(buf, x1, y2, 0, 0, 0, 0, color);
-        vertex(buf, x2, y1, 0, 0, 0, 0, color);
-        vertex(buf, x2, y2, 0, 0, 0, 0, color);
+        return toTriangles(stateBuffer);
     }
 
     private static Pair<Integer, FloatBuffer> toTriangles(Pair<BufferBuilder.DrawState, ByteBuffer> stateBuffer) {
@@ -429,65 +501,106 @@ public class DebugVisualization {
         return new Pair<>(triangleCount * 3, out);
     }
 
-    private static void fillBuffer(BufferBuilder bufferBuilder) {
-        World w = serverWorlds.get(DimensionType.OVERWORLD);
-        if (w == null) {
-            drawCube(bufferBuilder, 0, 0, 0, 50, 0xFF11DD22, EnumSet.allOf(Direction.class));
-            return;
-        }
-
-        drawWorld(bufferBuilder, w);
+    private static void setBufferData(Pair<Integer, FloatBuffer> renderBuffer) {
+        glBufferData(GL_ARRAY_BUFFER, renderBuffer.getSecond(), GL_STREAM_DRAW);
     }
 
-    private static void drawWorld(BufferBuilder bufferBuilder, World world) {
-        ClientPlayerEntity player = Minecraft.getInstance().player;
-        int playerX = player == null ? 0 : Coords.getCubeXForEntity(player);
-        int playerY = player == null ? 0 : Coords.getCubeYForEntity(player);
-        int playerZ = player == null ? 0 : Coords.getCubeZForEntity(player);
+    private static void preDrawSetup() {
+        glEnableVertexAttribArray(posAttrib);
+        glEnableVertexAttribArray(colAttrib);
 
-        AbstractChunkProvider chunkProvider = world.getChunkProvider();
-        if (chunkProvider instanceof ServerChunkProvider) {
-            ChunkManager chunkManager = ((ServerChunkProvider) chunkProvider).chunkManager;
-            Long2ObjectLinkedOpenHashMap<ChunkHolder> loadedCubes =
-                    ObfuscationReflectionHelper.getPrivateValue(ChunkManager.class, chunkManager, "immutableLoadedCubes");
-            Object[] data = ObfuscationReflectionHelper.getPrivateValue(Long2ObjectLinkedOpenHashMap.class, loadedCubes, "value");
-            long[] keys = ObfuscationReflectionHelper.getPrivateValue(Long2ObjectLinkedOpenHashMap.class, loadedCubes, "key");
-            Map<CubePos, ChunkStatus> cubeMap = new HashMap<>();
-            for (int i = 0, keysLength = keys.length; i < keysLength; i++) {
-                long pos = keys[i];
-                if (pos == 0) {
-                    continue;
-                }
-                ChunkHolder holder = (ChunkHolder) data[i];
-                CubePos cubePos = CubePos.from(pos);
-                ChunkStatus status = holder == null ? null : ICubeHolder.getCubeStatusFromLevel(holder.getChunkLevel());
-                ChunkStatus realStatus = holder == null ? null : holder.func_219285_d();
-                cubeMap.put(cubePos, status);
+        // 12 bytes per float pos + 4 bytes per color = 16 bytes
+        glVertexAttribPointer(posAttrib, 3, GL_FLOAT, false, 16, 0);
+        glVertexAttribPointer(colAttrib, 4, GL_UNSIGNED_BYTE, true, 16, 12);
+    }
+
+    private static void drawBuffer(Pair<Integer, FloatBuffer> renderBuffer) {
+        glDrawArrays(GL_TRIANGLES, 0, renderBuffer.getFirst());
+    }
+
+    private static void postDraw() {
+        glDisableVertexAttribArray(posAttrib);
+        glDisableVertexAttribArray(colAttrib);
+    }
+
+    private static void freeBuffer(Pair<Integer, FloatBuffer> renderBuffer) {
+        MemoryUtil.memFree(renderBuffer.getSecond());
+    }
+
+
+    private static void drawPerfStats() {
+        if (perfGraphBuilder.isDrawing()) {
+            perfGraphBuilder.finishDrawing();
+        }
+        perfGraphBuilder.reset();
+
+        int[] colors = {
+                0x000000, // glStateSetup
+                0xFFFFFF, // matrixSetup
+                0xFF0000, // bufferReset
+                0x00FF00, // buildStatusMap
+                0xFFFF00, // buildQuads
+                0xFF00FF, // sortQuads
+                0xC0C0C0, // toTriangles
+                0x808080, // setBufferData
+                0x800000, // preDrawSetup
+                0x808000, // draw
+                0x008000, // postDraw
+                0x800080, // freeMem
+                0x8B4513, // glFinish
+                0x708090, //
+                0x8FBC8F, //
+                0x808000, //
+                0xB8860B
+        };
+        perfGraphBuilder.reset();
+        perfGraphBuilder.begin(GL_QUADS, DefaultVertexFormats.POSITION_COLOR);
+        for (int i = 0; i < perfTimer.length; i++) {
+            int x = perfTimer.length - 1 - i;
+            PerfTimer timer = perfTimer[(i + perfTimerIdx) % perfTimer.length];
+            if(timer == null) {
+                continue;
             }
-            timer().buildStatusMap = System.nanoTime();
-            Object2IntMap<ChunkStatus> colors = ObfuscationReflectionHelper.getPrivateValue(
-                    WorldLoadProgressScreen.class, null, "field_213042_c"
-            );
-            EnumSet<Direction> renderFaces = EnumSet.noneOf(Direction.class);
-            for (Map.Entry<CubePos, ChunkStatus> e : cubeMap.entrySet()) {
-                CubePos pos = e.getKey();
-                ChunkStatus status = e.getValue();
-                renderFaces.clear();
-                float ratio = status == null ? 1 : status.ordinal() / (float) ChunkStatus.FULL.ordinal();
-                int alpha = status == null ? 0x22 : (int) (0x20 + ratio * (0xFF - 0x20));
-                int c = colors.getOrDefault(status, 0x00FF00FF) | (alpha << 24);
-                for (Direction value : Direction.values()) {
-                    CubePos of = CubePos.of(pos.getX() + value.getXOffset(), pos.getY() + value.getYOffset(), pos.getZ() + value.getZOffset());
-                    ChunkStatus cubeStatus = cubeMap.get(of);
-                    if (status == null || cubeStatus == null || !cubeStatus.isAtLeast(status)) {
-                        renderFaces.add(value);
-                    }
-                }
-                drawCube(bufferBuilder, pos.getX() - playerX, pos.getY() - playerY, pos.getZ() - playerZ, 7, c, renderFaces);
-            }
-            timer().buildQuads = System.nanoTime();
+            AtomicInteger ci = new AtomicInteger();
+            timer.drawTimer((yStart, yEnd) -> {
+                int cx = ci.getAndIncrement();
+                int col = (cx >= colors.length ? 0 : colors[cx]) | 0xFF000000;
+                quad2d(perfGraphBuilder, x * 3, yStart, x * 3 + 3, yEnd, col);
+            });
         }
 
+        perfGraphBuilder.finishDrawing();
+
+        glUseProgram(shaderProgram);
+
+        Matrix4f ortho = new Matrix4f(new float[]{
+                2f / 854f, 0, 0, -1f,
+                0, 2f / 480f, 0, -1f,
+                0, 0, -2f / 2000f, 0,
+                0, 0, 0, 1
+        });;
+        FloatBuffer buffer = MemoryUtil.memAllocFloat(16);
+        ortho.write(buffer);
+        buffer.clear();
+        glUniformMatrix4fv(matrixLocation, false, buffer);
+        MemoryUtil.memFree(buffer);
+
+
+        Pair<BufferBuilder.DrawState, ByteBuffer> nextBuffer = perfGraphBuilder.getNextBuffer();
+        nextBuffer.getSecond().clear();
+        Pair<Integer, FloatBuffer> buf = toTriangles(nextBuffer);
+        buf.getSecond().clear();
+        glBufferData(GL_ARRAY_BUFFER, buf.getSecond(), GL_STREAM_DRAW);
+        preDrawSetup();
+        glDrawArrays(GL_TRIANGLES, 0, buf.getFirst());
+        postDraw();
+    }
+
+    private static void quad2d(BufferBuilder buf, float x1, float y1, float x2, float y2, int color) {
+        vertex(buf, x1, y1, 1,  0, 0, 0, color);
+        vertex(buf, x1, y2, 1,  0, 0, 0, color);
+        vertex(buf, x2, y2, 1,  0, 0, 0, color);
+        vertex(buf, x2, y1, 1,  0, 0, 0, color);
     }
 
     private static void drawCube(BufferBuilder buffer, int x, int y, int z, float scale, int color, EnumSet<Direction> renderFaces) {
@@ -558,11 +671,10 @@ public class DebugVisualization {
 
     private static void vertex(BufferBuilder buffer, float x, float y, float z, int nx, int ny, int nz, int color) {
         // color = (color & 0xFF000000) | ((~color) & 0x00FFFFFF);
-        float scale = 1f / 255;
-        float r = (color >>> 16 & 0xFF) * scale;
-        float g = (color >>> 8 & 0xFF) * scale;
-        float b = (color & 0xFF) * scale;
-        float a = (color >>> 24) * scale;
+        int r = color >>> 16 & 0xFF;
+        int g = color >>> 8 & 0xFF;
+        int b = color & 0xFF;
+        int a = color >>> 24;
 
         buffer.pos(x, y, z);
         buffer.color(r, g, b, a);
@@ -604,7 +716,22 @@ public class DebugVisualization {
         }
 
         public void drawTimer(FloatBiConsumer line) {
-            float scale = 0.1f * TimeUnit.MILLISECONDS.toNanos(1);
+            double scale = 0.3f / TimeUnit.MILLISECONDS.toNanos(1);
+
+
+            double glFinish = this.glFinish;
+            double freeMem = this.freeMem;
+            double postDraw = this.postDraw;
+            double draw = this.draw;
+            double preDrawSetup = this.preDrawSetup;
+            double setBufferData = this.setBufferData;
+            double toTriangles = this.toTriangles;
+            double sortQuads = this.sortQuads;
+            double buildQuads = this.buildQuads;
+            double buildStatusMap = this.buildStatusMap;
+            double bufferReset = this.bufferReset;
+            double matrixSetup = this.matrixSetup;
+            double glStateSetup = this.glStateSetup;
 
             glFinish -= freeMem;
             freeMem -= postDraw;
