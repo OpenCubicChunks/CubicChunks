@@ -4,6 +4,7 @@ import static io.github.opencubicchunks.cubicchunks.utils.Coords.blockToCube;
 import static io.github.opencubicchunks.cubicchunks.utils.Coords.cubeToSection;
 import static net.minecraft.world.chunk.Chunk.EMPTY_SECTION;
 
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import io.github.opencubicchunks.cubicchunks.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.chunk.ICube;
@@ -30,6 +31,7 @@ import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.SectionPos;
 import net.minecraft.util.palette.UpgradeData;
+import net.minecraft.world.EmptyTickList;
 import net.minecraft.world.ITickList;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
@@ -47,6 +49,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -69,17 +72,35 @@ public class Cube implements IChunk, ICube {
     private boolean loaded = false;
 
     private volatile boolean lightCorrect;
+    private final Map<BlockPos, CompoundNBT> deferredTileEntities = Maps.newHashMap();
 
-    public Cube(World worldIn, CubePos cubePosIn, CubeBiomeContainer biomeContainerIn)
-    {
-        this(worldIn, cubePosIn, null, biomeContainerIn);
+    public Cube(World worldIn, CubePos cubePosIn, CubeBiomeContainer biomeContainerIn) {
+        this(worldIn, cubePosIn, biomeContainerIn, UpgradeData.EMPTY, EmptyTickList.get(), EmptyTickList.get(), 0L, (ChunkSection[])null, (Consumer<Chunk>)null);
     }
 
-    public Cube(World worldIn, CubePos cubePosIn, @Nullable ChunkSection[] sectionsIn, CubeBiomeContainer biomeContainerIn)
-    {
-        this.cubePos = cubePosIn;
+    public Cube(World worldIn, CubePos cubePosIn, CubeBiomeContainer biomeContainerIn, UpgradeData upgradeDataIn, ITickList<Block> tickBlocksIn,
+            ITickList<Fluid> tickFluidsIn, long inhabitedTimeIn, @Nullable ChunkSection[] sectionsIn, @Nullable Consumer<Chunk> postLoadConsumerIn) {
         this.world = worldIn;
-        this.cubeBiomeContainer = biomeContainerIn;
+        this.cubePos = cubePosIn;
+//        this.upgradeData = upgradeDataIn;
+//
+//        for(Heightmap.Type heightmap$type : Heightmap.Type.values()) {
+//            if (ChunkStatus.FULL.getHeightMaps().contains(heightmap$type)) {
+//                this.heightMap.put(heightmap$type, new Heightmap(this, heightmap$type));
+//            }
+//        }
+
+        //noinspection unchecked
+        this.entityLists = new ClassInheritanceMultiMap[ICube.CUBE_SIZE];
+        for(int i = 0; i < this.entityLists.length; ++i) {
+            this.entityLists[i] = new ClassInheritanceMultiMap<>(Entity.class);
+        }
+
+//        this.blockBiomeArray = biomeContainerIn;
+//        this.blocksToBeTicked = tickBlocksIn;
+//        this.fluidsToBeTicked = tickFluidsIn;
+//        this.inhabitedTime = inhabitedTimeIn;
+//        this.postLoadConsumer = postLoadConsumerIn;
 
         if(sectionsIn != null) {
             if (sectionsIn.length != CUBE_SIZE) {
@@ -100,11 +121,41 @@ public class Cube implements IChunk, ICube {
             }
         }
 
-        //noinspection unchecked
-        this.entityLists = new ClassInheritanceMultiMap[ICube.CUBE_SIZE];
-        for(int i = 0; i < this.entityLists.length; ++i) {
-            this.entityLists[i] = new ClassInheritanceMultiMap<>(Entity.class);
+//        this.gatherCapabilities();
+    }
+
+    public Cube(World worldIn, CubePrimer cubePrimerIn) {
+        this(worldIn, cubePrimerIn.getCubePos(), cubePrimerIn.getBiomes(), cubePrimerIn.getUpgradeData(), cubePrimerIn.getBlocksToBeTicked(),
+            cubePrimerIn.getFluidsToBeTicked(), cubePrimerIn.getInhabitedTime(), cubePrimerIn.getSections(), (Consumer<Chunk>)null);
+
+//        for(CompoundNBT compoundnbt : cubePrimerIn.getCubeEntities()) {
+//            EntityType.loadEntityAndExecute(compoundnbt, worldIn, (p_217325_1_) -> {
+//                this.addEntity(p_217325_1_);
+//                return p_217325_1_;
+//            });
+//        }
+
+//        for(TileEntity tileentity : cubePrimerIn.getCubeTileEntities().values()) {
+//            this.addCubeTileEntity(tileentity);
+//        }
+//
+//        this.deferredTileEntities.putAll(cubePrimerIn.getDeferredTileEntities());
+
+//        for(int i = 0; i < cubePrimerIn.getPackedPositions().length; ++i) {
+//            this.packedBlockPositions[i] = cubePrimerIn.getPackedPositions()[i];
+//        }
+
+        this.setStructureStarts(cubePrimerIn.getStructureStarts());
+        this.setStructureReferences(cubePrimerIn.getStructureReferences());
+
+        for(Map.Entry<Heightmap.Type, Heightmap> entry : cubePrimerIn.getHeightmaps()) {
+            if (ChunkStatus.FULL.getHeightMaps().contains(entry.getKey())) {
+                this.getHeightmap(entry.getKey()).setDataArray(entry.getValue().getDataArray());
+            }
         }
+
+        this.setLight(cubePrimerIn.hasLight());
+        this.dirty = true;
     }
 
     @Override

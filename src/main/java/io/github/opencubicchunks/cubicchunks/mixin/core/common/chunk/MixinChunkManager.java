@@ -59,6 +59,12 @@ import net.minecraft.util.concurrent.ThreadTaskExecutor;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.SectionPos;
+import net.minecraft.util.palette.UpgradeData;
+import net.minecraft.world.EmptyTickList;
+import net.minecraft.world.World;
+import net.minecraft.world.biome.BiomeContainer;
+import net.minecraft.world.chunk.Chunk;
+import net.minecraft.world.chunk.ChunkSection;
 import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.chunk.IChunk;
 import net.minecraft.world.chunk.IChunkLightProvider;
@@ -596,7 +602,9 @@ public abstract class MixinChunkManager implements IChunkManager {
                 if (prevCube instanceof CubePrimerWrapper) {
                         cube = ((CubePrimerWrapper)prevCube).getCube();
                 } else {
-                    cube = new Cube(this.world, cubePos, prevCube.getCubeSections(), null);
+                    cube = new Cube(this.world, cubePos, null, UpgradeData.EMPTY, EmptyTickList.get(), EmptyTickList.get(), 0L,
+                            prevCube.getCubeSections(), null);
+
                     cube.setCubeStatus(prevCube.getCubeStatus());
                     ((ICubeHolder) holder).onCubeWrapperCreated(new CubePrimerWrapper(cube));
                 }
