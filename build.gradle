@@ -52,7 +52,7 @@ minecraft {
 
     def args = [
             "-XX:+UseG1GC",
-            "-Xmx1G",
+            "-Xmx2G",
             "-XX:+UnlockExperimentalVMOptions",
             "-XX:G1NewSizePercent=20",
             "-XX:G1ReservePercent=20",
