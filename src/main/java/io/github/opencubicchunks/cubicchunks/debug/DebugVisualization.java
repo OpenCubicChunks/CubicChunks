@@ -173,10 +173,10 @@ public class DebugVisualization {
         if (IS_LINUX) {
             return;
         }
+        long ctx = glfwGetCurrentContext();
         if (!initialized.getAndSet(true)) {
             initializeWindow();
         }
-        long ctx = glfwGetCurrentContext();
         GLCapabilities capabilities = GL.getCapabilities();
         GL.setCapabilities(debugGlCapabilities);
         try {
