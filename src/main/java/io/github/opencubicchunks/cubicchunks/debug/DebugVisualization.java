@@ -193,6 +193,7 @@ public class DebugVisualization {
         } finally {
             glfwMakeContextCurrent(ctx);
             GL.setCapabilities(capabilities);
+            glfwPollEvents();
         }
     }
 
@@ -248,6 +249,7 @@ public class DebugVisualization {
             while (true) {
                 try {
                     render();
+                    glfwPollEvents();
                 } catch (Exception e) {
                     e.printStackTrace();
                     try {
@@ -370,7 +372,6 @@ public class DebugVisualization {
 
         drawPerfStats();
         glfwSwapBuffers(window);
-        glfwPollEvents();
     }
 
     private static void glStateSetup() {
