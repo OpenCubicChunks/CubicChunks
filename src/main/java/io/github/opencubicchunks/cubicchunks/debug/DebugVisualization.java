@@ -99,7 +99,6 @@ import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.lwjgl.glfw.Callbacks;
 import org.lwjgl.glfw.GLFWErrorCallback;
 import org.lwjgl.glfw.GLFWVidMode;
 import org.lwjgl.opengl.GL;
@@ -151,14 +150,13 @@ public class DebugVisualization {
     private static BufferBuilder bufferBuilder;
     private static BufferBuilder perfGraphBuilder;
 
-    private static Matrix4f projectionMatrix = new Matrix4f();
     private static Matrix4f mvpMatrix = new Matrix4f();
     private static Matrix4f inverseMatrix = new Matrix4f();
     private static PerfTimer[] perfTimer = new PerfTimer[128];
     private static int perfTimerIdx = 0;
     private static float screenWidth = 854.0f;
     private static float screenHeight = 480f;
-    private static final boolean IS_LINUX = Util.getOSType() == Util.OS.LINUX && false;
+    private static final boolean IS_LINUX = Util.getOSType() == Util.OS.LINUX;
     private static GLCapabilities debugGlCapabilities;
 
     private static PerfTimer timer() {
@@ -301,13 +299,6 @@ public class DebugVisualization {
 
         bufferBuilder = new BufferBuilder(4096);
         perfGraphBuilder = new BufferBuilder(4096);
-
-        projectionMatrix = new Matrix4f(new float[]{
-                2f / 854f, 0, 0, 0,
-                0, -2f / 480f, 0, 0,
-                0, 0, -2f / 2000f, 0,
-                0, 0, 0, 1
-        });
     }
 
     private static void compileShader(int id, String shader) {
@@ -362,6 +353,7 @@ public class DebugVisualization {
         setBufferData(renderBuffer);
         timer().setBufferData = System.nanoTime();
         preDrawSetup();
+        shaderUniforms();
         timer().preDrawSetup = System.nanoTime();
         drawBuffer(renderBuffer);
         timer().draw = System.nanoTime();
@@ -388,9 +380,6 @@ public class DebugVisualization {
     }
 
     private static void matrixSetup() {
-        ByteBuffer byteBuffer = MemoryUtil.memAlignedAlloc(64, 64);
-        FloatBuffer fb = byteBuffer.asFloatBuffer();
-
         mvpMatrix.setIdentity();
         // mvp = projection*view*model
         // projection
@@ -404,12 +393,8 @@ public class DebugVisualization {
         modelView.mul(Vector3f.YP.rotationDegrees((float) ((System.currentTimeMillis() * 0.04) % 360)));//
 
         mvpMatrix.mul(modelView);
-        mvpMatrix.write(fb);
-        glUniformMatrix4fv(matrixLocation, false, fb);
-
         inverseMatrix.invert();
 
-        MemoryUtil.memFree(byteBuffer);
     }
 
     private static void resetBuffer() {
@@ -437,7 +422,7 @@ public class DebugVisualization {
 
         AbstractChunkProvider chunkProvider = world.getChunkProvider();
         if (chunkProvider instanceof ServerChunkProvider) {
-            Long2ByteLinkedOpenHashMap cubeMap = buildStatusMap((ServerChunkProvider) chunkProvider);
+            Long2ByteLinkedOpenHashMap cubeMap = buildStatusMaps((ServerChunkProvider) chunkProvider);
             timer().buildStatusMap = System.nanoTime();
             buildQuads(bufferBuilder, playerX, playerY, playerZ, cubeMap);
             timer().buildQuads = System.nanoTime();
@@ -445,7 +430,7 @@ public class DebugVisualization {
 
     }
 
-    private static Long2ByteLinkedOpenHashMap buildStatusMap(ServerChunkProvider chunkProvider) {
+    private static Long2ByteLinkedOpenHashMap buildStatusMaps(ServerChunkProvider chunkProvider) {
         ChunkManager chunkManager = chunkProvider.chunkManager;
         Long2ObjectLinkedOpenHashMap<ChunkHolder> loadedCubes =
                 ObfuscationReflectionHelper.getPrivateValue(ChunkManager.class, chunkManager, "immutableLoadedCubes");
@@ -560,6 +545,14 @@ public class DebugVisualization {
         glVertexAttribPointer(colAttrib, 4, GL_UNSIGNED_BYTE, true, 16, 12);
     }
 
+    private static void shaderUniforms() {
+        ByteBuffer byteBuffer = MemoryUtil.memAlignedAlloc(64, 64);
+        FloatBuffer fb = byteBuffer.asFloatBuffer();
+        mvpMatrix.write(fb);
+        glUniformMatrix4fv(matrixLocation, false, fb);
+        MemoryUtil.memFree(byteBuffer);
+    }
+
     private static void drawBuffer(Pair<Integer, FloatBuffer> renderBuffer) {
         glDrawArrays(GL_TRIANGLES, 0, renderBuffer.getFirst());
     }
@@ -640,6 +633,7 @@ public class DebugVisualization {
         preDrawSetup();
         glDrawArrays(GL_TRIANGLES, 0, buf.getFirst());
         postDraw();
+        MemoryUtil.memFree(buf.getSecond());
     }
 
     private static void quad2d(BufferBuilder buf, float x1, float y1, float x2, float y2, int color) {
