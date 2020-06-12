@@ -155,7 +155,6 @@ public class DebugVisualization {
     private static PerfTimer[] perfTimer = new PerfTimer[128];
     private static int perfTimerIdx = 0;
     private static float screenWidth = 854.0f;
-    ;
     private static float screenHeight = 480f;
 
     private static PerfTimer timer() {
@@ -231,7 +230,9 @@ public class DebugVisualization {
         }
 
         if (Util.getOSType() != Util.OS.LINUX) {
+            long oldCtx = glfwGetCurrentContext();
             initWindow();
+            glfwMakeContextCurrent(oldCtx);
             return;
         }
 
