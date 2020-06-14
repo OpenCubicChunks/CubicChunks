@@ -1,7 +1,6 @@
 package io.github.opencubicchunks.cubicchunks;
 
 import io.github.opencubicchunks.cubicchunks.chunk.IChunkManager;
-import io.github.opencubicchunks.cubicchunks.debug.DebugVisualization;
 import io.github.opencubicchunks.cubicchunks.meta.EarlyConfig;
 import io.github.opencubicchunks.cubicchunks.misc.TestWorldType;
 import io.github.opencubicchunks.cubicchunks.network.PacketDispatcher;
@@ -19,6 +18,8 @@ import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.registries.ForgeRegistries;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
+import java.lang.reflect.InvocationTargetException;
 
 /**
  * Requires Mixin BootStrap in order to use in forge.
@@ -52,9 +53,11 @@ public class CubicChunks {
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::doClientStuff);
 
         if (System.getProperty("cubicchunks.debug", "false").equalsIgnoreCase("true")) {
-            MinecraftForge.EVENT_BUS.addListener(DebugVisualization::onWorldLoad);
-            MinecraftForge.EVENT_BUS.addListener(DebugVisualization::onWorldUnload);
-            MinecraftForge.EVENT_BUS.addListener(DebugVisualization::onRender);
+            try {
+                Class.forName("io.github.opencubicchunks.cubicchunks.debug.DebugVisualization").getMethod("init").invoke(null);
+            } catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException | ClassNotFoundException e) {
+                LOGGER.catching(e);
+            }
         }
 
         // Register ourselves for server and other game events we are interested in

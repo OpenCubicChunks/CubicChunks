@@ -79,6 +79,7 @@ import net.minecraft.world.server.ChunkManager;
 import net.minecraft.world.server.ServerChunkProvider;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
+import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 import org.apache.logging.log4j.LogManager;
@@ -89,6 +90,7 @@ import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.GLCapabilities;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.system.MemoryUtil;
+import org.lwjgl.vulkan.VK11;
 
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
@@ -142,6 +144,12 @@ public class DebugVisualization {
     private static float screenHeight = 480f;
     private static final boolean IS_LINUX = Util.getOSType() == Util.OS.LINUX;
     private static GLCapabilities debugGlCapabilities;
+
+    public static void init() {
+        MinecraftForge.EVENT_BUS.addListener(DebugVisualization::onWorldLoad);
+        MinecraftForge.EVENT_BUS.addListener(DebugVisualization::onWorldUnload);
+        MinecraftForge.EVENT_BUS.addListener(DebugVisualization::onRender);
+    }
 
     private static PerfTimer timer() {
         if (perfTimer[perfTimerIdx] == null) {
@@ -329,30 +337,20 @@ public class DebugVisualization {
         timer().clear();
         timer().beginFrame = System.nanoTime();
         glStateSetup();
-        timer().glStateSetup = System.nanoTime();
         matrixSetup();
-        timer().matrixSetup = System.nanoTime();
         resetBuffer();
-        timer().bufferReset = System.nanoTime();
 
         drawSelectedWorld(bufferBuilder);
 
         sortQuads();
-        timer().sortQuads = System.nanoTime();
         Pair<Integer, FloatBuffer> renderBuffer = quadsToTriangles();
-        timer().toTriangles = System.nanoTime();
         setBufferData(renderBuffer);
-        timer().setBufferData = System.nanoTime();
         preDrawSetup();
         shaderUniforms();
-        timer().preDrawSetup = System.nanoTime();
         drawBuffer(renderBuffer);
-        timer().draw = System.nanoTime();
-        postDraw();
-        timer().postDraw = System.nanoTime();
         freeBuffer(renderBuffer);
-        timer().freeMem = System.nanoTime();
         glFinish();
+
         timer().glFinish = System.nanoTime();
 
         drawPerfStats();
@@ -368,6 +366,8 @@ public class DebugVisualization {
         glEnable(GL_DEPTH_TEST);
 
         glUseProgram(shaderProgram);
+
+        timer().glStateSetup = System.nanoTime();
     }
 
     private static void matrixSetup() {
@@ -385,7 +385,7 @@ public class DebugVisualization {
 
         mvpMatrix.mul(modelView);
         inverseMatrix.invert();
-
+        timer().matrixSetup = System.nanoTime();
     }
 
     private static void resetBuffer() {
@@ -394,6 +394,7 @@ public class DebugVisualization {
         }
         bufferBuilder.reset();
         bufferBuilder.begin(GL_QUADS, DefaultVertexFormats.POSITION_COLOR);
+        timer().bufferReset = System.nanoTime();
     }
 
     private static void drawSelectedWorld(BufferBuilder bufferBuilder) {
@@ -457,12 +458,16 @@ public class DebugVisualization {
         EnumSet<Direction> renderFaces = EnumSet.noneOf(Direction.class);
         Direction[] directions = Direction.values();
         float ratioFactor =  1/(float) ChunkStatus.FULL.ordinal();
+        final boolean drawNull = false;
         for (Long2ByteMap.Entry e : cubeMap.long2ByteEntrySet()) {
             long posLong = e.getLongKey();
             int posX = CubePos.extractX(posLong);
             int posY = CubePos.extractY(posLong);
             int posZ = CubePos.extractZ(posLong);
             int status = e.getByteValue() & 0xFF;
+            if (!drawNull && status == 255) {
+                continue;
+            }
             renderFaces.clear();
             ChunkStatus statusObj = statusLookup[status];
             float ratio = statusObj == null ? 1 : statusObj.ordinal() * ratioFactor;
@@ -472,9 +477,16 @@ public class DebugVisualization {
                 long l = CubePos.asLong(posX + value.getXOffset(), posY + value.getYOffset(), posZ + value.getZOffset());
                 int cubeStatus = cubeMap.get(l) & 0xFF;
                 // this.ordinal() >= status.ordinal();
-                if (status == 255 || cubeStatus == 255 || cubeStatus < status) {
-                    renderFaces.add(value);
+                if (drawNull) {
+                    if (status == 255 || cubeStatus == 255 || cubeStatus < status) {
+                        renderFaces.add(value);
+                    }
+                } else {
+                    if (status != 255 && (cubeStatus == 255 || cubeStatus < status)) {
+                        renderFaces.add(value);
+                    }
                 }
+
             }
             drawCube(bufferBuilder, posX - playerX, posY - playerY, posZ - playerZ, 7, c, renderFaces);
         }
@@ -486,11 +498,14 @@ public class DebugVisualization {
         bufferBuilder.sortVertexData(vec.getX(), vec.getY(), vec.getZ());
 
         bufferBuilder.finishDrawing();
+        timer().sortQuads = System.nanoTime();
     }
 
     private static Pair<Integer, FloatBuffer> quadsToTriangles() {
         Pair<BufferBuilder.DrawState, ByteBuffer> stateBuffer = bufferBuilder.getNextBuffer();
-        return toTriangles(stateBuffer);
+        Pair<Integer, FloatBuffer> integerFloatBufferPair = toTriangles(stateBuffer);
+        timer().toTriangles = System.nanoTime();
+        return integerFloatBufferPair;
     }
 
     private static Pair<Integer, FloatBuffer> toTriangles(Pair<BufferBuilder.DrawState, ByteBuffer> stateBuffer) {
@@ -525,6 +540,7 @@ public class DebugVisualization {
 
     private static void setBufferData(Pair<Integer, FloatBuffer> renderBuffer) {
         glBufferData(GL_ARRAY_BUFFER, renderBuffer.getSecond(), GL_STREAM_DRAW);
+        timer().setBufferData = System.nanoTime();
     }
 
     private static void preDrawSetup() {
@@ -534,6 +550,8 @@ public class DebugVisualization {
         // 12 bytes per float pos + 4 bytes per color = 16 bytes
         glVertexAttribPointer(posAttrib, 3, GL_FLOAT, false, 16, 0);
         glVertexAttribPointer(colAttrib, 4, GL_UNSIGNED_BYTE, true, 16, 12);
+
+        timer().preDrawSetup = System.nanoTime();
     }
 
     private static void shaderUniforms() {
@@ -546,15 +564,12 @@ public class DebugVisualization {
 
     private static void drawBuffer(Pair<Integer, FloatBuffer> renderBuffer) {
         glDrawArrays(GL_TRIANGLES, 0, renderBuffer.getFirst());
-    }
-
-    private static void postDraw() {
-        glDisableVertexAttribArray(posAttrib);
-        glDisableVertexAttribArray(colAttrib);
+        timer().draw = System.nanoTime();
     }
 
     private static void freeBuffer(Pair<Integer, FloatBuffer> renderBuffer) {
         MemoryUtil.memFree(renderBuffer.getSecond());
+        timer().freeMem = System.nanoTime();
     }
 
 
@@ -575,9 +590,9 @@ public class DebugVisualization {
                 0x808080, // setBufferData
                 0x800000, // preDrawSetup
                 0x808000, // draw
-                0x008000, // postDraw
-                0x800080, // freeMem
-                0x8B4513, // glFinish
+                0x008000, // freeMem
+                0x800080, // glFinish
+                0x8B4513, //
                 0x708090, //
                 0x8FBC8F, //
                 0x808000, //
@@ -623,7 +638,6 @@ public class DebugVisualization {
         glBufferData(GL_ARRAY_BUFFER, buf.getSecond(), GL_STREAM_DRAW);
         preDrawSetup();
         glDrawArrays(GL_TRIANGLES, 0, buf.getFirst());
-        postDraw();
         MemoryUtil.memFree(buf.getSecond());
     }
 
@@ -725,7 +739,6 @@ public class DebugVisualization {
         private long setBufferData;
         private long preDrawSetup;
         private long draw;
-        private long postDraw;
         private long freeMem;
         private long glFinish;
 
@@ -741,7 +754,6 @@ public class DebugVisualization {
             setBufferData = 0;
             preDrawSetup = 0;
             draw = 0;
-            postDraw = 0;
             freeMem = 0;
             glFinish = 0;
         }
@@ -752,7 +764,6 @@ public class DebugVisualization {
 
             double glFinish = this.glFinish;
             double freeMem = this.freeMem;
-            double postDraw = this.postDraw;
             double draw = this.draw;
             double preDrawSetup = this.preDrawSetup;
             double setBufferData = this.setBufferData;
@@ -765,8 +776,7 @@ public class DebugVisualization {
             double glStateSetup = this.glStateSetup;
 
             glFinish -= freeMem;
-            freeMem -= postDraw;
-            postDraw -= draw;
+            freeMem -= draw;
             draw -= preDrawSetup;
             preDrawSetup -= setBufferData;
             setBufferData -= toTriangles;
@@ -789,14 +799,13 @@ public class DebugVisualization {
             line.accept(y, y += (setBufferData * scale));
             line.accept(y, y += (preDrawSetup * scale));
             line.accept(y, y += (draw * scale));
-            line.accept(y, y += (postDraw * scale));
             line.accept(y, y += (freeMem * scale));
             line.accept(y, y += (glFinish * scale));
         }
     }
 
     @FunctionalInterface
-    private interface FloatBiConsumer {
+    public interface FloatBiConsumer {
 
         void accept(float a, float b);
     }

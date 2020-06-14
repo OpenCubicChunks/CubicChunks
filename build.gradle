@@ -1,3 +1,5 @@
+import org.gradle.internal.os.OperatingSystem
+
 buildscript {
     repositories {
         maven { url = 'https://files.minecraftforge.net/maven' }
@@ -24,6 +26,7 @@ mcGitVersion {
     forgeVersion = "${mc_version}-${forge_version}"
     setCommitVersion '570c0cbf0cdc15b8348a862a519d3399a943af9', '0.0'
 }
+
 group = "io.github.opencubicchunks" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
 archivesBaseName = "CubicChunks"
 
@@ -41,6 +44,24 @@ tasks.addRule("Pattern: buildNoIncremental<X>") { String taskName ->
             }
             dependsOn(build)
         }
+    }
+}
+
+configurations {
+    debugCompile
+    debugRuntime {
+        extendsFrom(debugCompile)
+    }
+}
+
+sourceSets {
+    debug {
+        compileClasspath += configurations.debugCompile
+        compileClasspath += configurations.compileClasspath
+        compileClasspath += sourceSets.main.output
+        runtimeClasspath += configurations.debugRuntime
+        runtimeClasspath += configurations.runtimeClasspath
+        runtimeClasspath += sourceSets.main.output
     }
 }
 
@@ -74,9 +95,12 @@ minecraft {
             // Recommended logging level for the console
             property 'forge.logging.console.level', 'debug'
 
+            ideaModule = project.name + '.debug'
+
             mods {
                 cubicchunks {
                     source sourceSets.main
+                    source sourceSets.debug
                 }
             }
         }
@@ -100,9 +124,27 @@ minecraft {
 repositories{
     jcenter()
     mavenCentral()
+    maven {
+        url "https://oss.sonatype.org/content/repositories/snapshots/"
+    }
 }
 
 configurations.getByName("annotationProcessor").extendsFrom(configurations.compileClasspath)
+
+// for vulkan
+project.ext.lwjglVersion = "3.2.2"
+
+switch (OperatingSystem.current()) {
+    case OperatingSystem.LINUX:
+        def osArch = System.getProperty("os.arch")
+        project.ext.lwjglNatives = osArch.startsWith("arm") || osArch.startsWith("aarch64")
+                ? "natives-linux-${osArch.contains("64") || osArch.startsWith("armv8") ? "arm64" : "arm32"}"
+                : "natives-linux"
+        break
+    case OperatingSystem.WINDOWS:
+        project.ext.lwjglNatives = System.getProperty("os.arch").contains("64") ? "natives-windows" : "natives-windows-x86"
+        break
+}
 
 dependencies {
     // Specify the version of Minecraft to use, If this is any group other then 'net.minecraft' it is assumed
@@ -114,6 +156,9 @@ dependencies {
 
     testCompile('junit:junit:4.11')
     testCompile('org.hamcrest:hamcrest-junit:2.0.0.0')
+
+    debugCompile "org.lwjgl:lwjgl-vulkan:$lwjglVersion"
+    debugRuntime "org.lwjgl:lwjgl::$lwjglNatives"
 
     // You may put jars on which you depend on in ./libs or you may define them like so..
     // compile "some.group:artifact:version:classifier"
