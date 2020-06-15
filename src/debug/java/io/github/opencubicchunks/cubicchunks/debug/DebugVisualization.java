@@ -31,7 +31,6 @@ import static org.lwjgl.opengl.GL20.glCompileShader;
 import static org.lwjgl.opengl.GL20.glCreateProgram;
 import static org.lwjgl.opengl.GL20.glCreateShader;
 import static org.lwjgl.opengl.GL20.glDeleteShader;
-import static org.lwjgl.opengl.GL20.glDisableVertexAttribArray;
 import static org.lwjgl.opengl.GL20.glEnableVertexAttribArray;
 import static org.lwjgl.opengl.GL20.glGenBuffers;
 import static org.lwjgl.opengl.GL20.glGetAttribLocation;
@@ -90,7 +89,6 @@ import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.GLCapabilities;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.system.MemoryUtil;
-import org.lwjgl.vulkan.VK11;
 
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
@@ -126,6 +124,7 @@ public class DebugVisualization {
     private static volatile World clientWorld;
     private static volatile Map<DimensionType, World> serverWorlds = new ConcurrentHashMap<>();
     private static AtomicBoolean initialized = new AtomicBoolean();
+    private static boolean shutdown = false;
     private static long window;
     private static int shaderProgram;
     private static int matrixLocation;
@@ -145,6 +144,10 @@ public class DebugVisualization {
     private static final boolean IS_LINUX = Util.getOSType() == Util.OS.LINUX;
     private static GLCapabilities debugGlCapabilities;
 
+    private static final boolean IS_VULKAN = false;
+
+    private static final DebugVulkan debugVulkan = new DebugVulkan();
+
     public static void init() {
         MinecraftForge.EVENT_BUS.addListener(DebugVisualization::onWorldLoad);
         MinecraftForge.EVENT_BUS.addListener(DebugVisualization::onWorldUnload);
@@ -160,10 +163,37 @@ public class DebugVisualization {
 
 
     public static void onRender(RenderWorldLastEvent evt) {
+        if(shutdown)
+            return;
         if (IS_LINUX) {
             return;
         }
         long ctx = glfwGetCurrentContext();
+
+        if(IS_VULKAN) {
+            if(!initialized.getAndSet(true)) {
+                debugVulkan.initWindow();
+                debugVulkan.initVulkan();
+            }
+            try {
+                if(glfwWindowShouldClose(debugVulkan.window)) {
+                    debugVulkan.cleanup();
+                    shutdown = true;
+                }
+
+                debugVulkan.drawAndWait();
+
+            } catch (Exception e) {
+                e.printStackTrace();
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException interruptedException) {
+                    return;
+                }
+            }
+            return;
+        }
+
         GLCapabilities capabilities = GL.getCapabilities();
         if (!initialized.getAndSet(true)) {
             initializeWindow();
@@ -191,15 +221,22 @@ public class DebugVisualization {
     }
 
     public static void onWorldLoad(WorldEvent.Load t) {
-        if (IS_LINUX && !initialized.getAndSet(true)) {
-            initializeWindow();
+        if(IS_VULKAN) {
+
         }
+        else {
+            if (IS_LINUX && !initialized.getAndSet(true)) {
+                initializeWindow();
+            }
+        }
+
         IWorld w = t.getWorld();
         if (w instanceof ClientWorld) {
             clientWorld = (World) w;
         } else if (w instanceof ServerWorld) {
             serverWorlds.put(w.getDimension().getType(), (World) w);
         }
+
     }
 
     public static void onWorldUnload(WorldEvent.Unload t) {
