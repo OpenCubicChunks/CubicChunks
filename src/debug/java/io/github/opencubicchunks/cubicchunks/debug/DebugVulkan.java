@@ -137,7 +137,16 @@ public class DebugVulkan {
             new Vertex(new Vector3f(-1, -1, 1), 200, 50, 150, 128),
             new Vertex(new Vector3f(1, -1, 1),200, 50, 150, 128),
             new Vertex(new Vector3f(1, 1, 1), 200, 50, 150, 128),
-            new Vertex(new Vector3f(-1, 1, 1), 200, 50, 150, 128)
+            new Vertex(new Vector3f(-1, 1, 1), 200, 50, 150, 128),
+
+            new Vertex(new Vector3f(1, -1, -1), 50, 190, 60, 128),
+            new Vertex(new Vector3f(3, -1, -1), 50, 190, 60, 128),
+            new Vertex(new Vector3f(3, 1, -1), 50, 190, 60, 128),
+            new Vertex(new Vector3f(1, 1, -1), 50, 190, 60, 128),
+            new Vertex(new Vector3f(1, -1, 1), 50, 190, 60, 128),
+            new Vertex(new Vector3f(3, -1, 1),50, 190, 60, 128),
+            new Vertex(new Vector3f(3, 1, 1), 50, 190, 60, 128),
+            new Vertex(new Vector3f(1, 1, 1), 50, 190, 60, 128)
     };
 
     //FACE INDICES
@@ -149,7 +158,14 @@ public class DebugVulkan {
             5, 4, 6, 6, 4, 7,
             4, 0, 7, 7, 0, 3,
             3, 2, 7, 7, 2, 6,
-            4, 5, 0, 0, 5, 1
+            4, 5, 0, 0, 5, 1,
+
+            0+8, 1+8, 3+8, 3+8, 1+8, 2+8,
+            1+8, 5+8, 2+8, 2+8, 5+8, 6+8,
+            5+8, 4+8, 6+8, 6+8, 4+8, 7+8,
+            4+8, 0+8, 7+8, 7+8, 0+8, 3+8,
+            3+8, 2+8, 7+8, 7+8, 2+8, 6+8,
+            4+8, 5+8, 0+8, 0+8, 5+8, 1+8
     };
 
     //buffers for handle output-params
@@ -579,7 +595,7 @@ public class DebugVulkan {
                 .rasterizerDiscardEnable(false) //if this is true, geometry never passes through this stage, disabling output to framebuffer
                 .polygonMode(VK_POLYGON_MODE_FILL)
                 .lineWidth(1.f)
-                .cullMode(VK_CULL_MODE_BACK_BIT) // <-- backface culling
+                .cullMode(VK_CULL_MODE_NONE) // <-- backface culling
                 .frontFace(VK_FRONT_FACE_CLOCKWISE)
                 .depthBiasEnable(false);
 
@@ -596,14 +612,14 @@ public class DebugVulkan {
                 .srcColorBlendFactor(VK_BLEND_FACTOR_SRC_ALPHA)
                 .dstColorBlendFactor(VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA)
                 .colorBlendOp(VK_BLEND_OP_ADD)
-                .srcAlphaBlendFactor(VK_BLEND_FACTOR_ONE)
-                .dstAlphaBlendFactor(VK_BLEND_FACTOR_ZERO)
+                .srcAlphaBlendFactor(VK_BLEND_FACTOR_SRC_ALPHA)
+                .dstAlphaBlendFactor(VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA)
                 .alphaBlendOp(VK_BLEND_OP_ADD);
 
         VkPipelineColorBlendStateCreateInfo colorBlending = VkPipelineColorBlendStateCreateInfo.callocStack(stack)
                 .sType(VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO)
                 .logicOpEnable(false)
-                .logicOp(VK_LOGIC_OP_COPY) //TODO: find good operation to use here, needs some testing https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/VkLogicOp.html
+                .logicOp(VK_LOGIC_OP_NO_OP) //TODO: find good operation to use here, needs some testing https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/VkLogicOp.html
                 .pAttachments(colorBlendAttachment)
                 .blendConstants(0, 0.0f) // Optional
                 .blendConstants(1, 0.0f) // Optional
