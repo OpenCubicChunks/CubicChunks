@@ -411,7 +411,7 @@ public class DebugVulkan {
         // to render to a seperate image first, for post processing, you could use VK_IMAGE_USAGE_TRANSFER_DST_BIT, then transfer data to this swapchain
 
         QueueFamilyIndices indices = findQueueFamilies(physicalDevice);
-        IntBuffer queueFamilyIndices = memAllocInt(2);
+        IntBuffer queueFamilyIndices = stack.mallocInt(2);
         queueFamilyIndices.put(0, indices.graphicsFamily);
         queueFamilyIndices.put(0, indices.presentFamily);
 
@@ -538,8 +538,8 @@ public class DebugVulkan {
         byte[] vertShaderCode = readFile("shaders/vert.spv");
         byte[] fragShaderCode = readFile("shaders/frag.spv");
 
-        long vertShaderModule = createShaderModule(vertShaderCode);
-        long fragShaderModule = createShaderModule(fragShaderCode);
+        long vertShaderModule = createShaderModule(vertShaderCode, stack);
+        long fragShaderModule = createShaderModule(fragShaderCode, stack);
 
         ByteBuffer main = stack.UTF8("main");
 
@@ -882,7 +882,7 @@ public class DebugVulkan {
     }
 
     void createCommandBuffers(MemoryStack stack) {
-        PointerBuffer pCommandBuffers = memAllocPointer(swapChainImageViews.length);
+        PointerBuffer pCommandBuffers = stack.mallocPointer(swapChainImageViews.length);
         commandBuffers = new ArrayList<>(swapChainImageViews.length);
 
         VkCommandBufferAllocateInfo allocInfo = VkCommandBufferAllocateInfo.callocStack(stack)
@@ -976,23 +976,19 @@ public class DebugVulkan {
         }
     }
 
-    long createShaderModule(byte[] code) {
-        try (MemoryStack stack = stackPush()) {
-            ByteBuffer pCode = memAlloc(code.length).put(code);
-            pCode.flip();
+    long createShaderModule(byte[] code, MemoryStack stack) {
+        ByteBuffer pCode = stack.malloc(code.length).put(code);
+        pCode.flip();
 
-            VkShaderModuleCreateInfo moduleCreateInfo = VkShaderModuleCreateInfo.mallocStack(stack)
-                    .sType(VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO)
-                    .pNext(NULL)
-                    .flags(0)
-                    .pCode(pCode);
+        VkShaderModuleCreateInfo moduleCreateInfo = VkShaderModuleCreateInfo.mallocStack(stack)
+                .sType(VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO)
+                .pNext(NULL)
+                .flags(0)
+                .pCode(pCode);
 
-            checkError(vkCreateShaderModule(device, moduleCreateInfo, null, lp));
+        checkError(vkCreateShaderModule(device, moduleCreateInfo, null, lp));
 
-            memFree(pCode);
-
-            return lp.get(0);
-        }
+        return lp.get(0);
     }
 
     static byte[] readFile(String filename) {
@@ -1218,12 +1214,12 @@ public class DebugVulkan {
         vkUnmapMemory(device, uniformBuffersMemory[currentImage]);
     }
 
-    void cleanupSwapChain() {
+    void cleanupSwapChain(MemoryStack stack) {
         for (int i = 0; i < swapChainFramebuffers.limit(); i++) {
             vkDestroyFramebuffer(device, swapChainFramebuffers.get(i), null);
         }
 
-        PointerBuffer pp2 = memAllocPointer(commandBuffers.size());
+        PointerBuffer pp2 = stack.mallocPointer(commandBuffers.size());
         int i = 0;
         for (VkCommandBuffer buf : commandBuffers) {
             pp2.put(i, buf);
@@ -1251,7 +1247,7 @@ public class DebugVulkan {
     void recreateSwapChain(MemoryStack stack) {
         vkDeviceWaitIdle(device);
 
-        cleanupSwapChain();
+        cleanupSwapChain(stack);
 
         createSwapChain(stack);
         createImageViews(stack);
@@ -1266,7 +1262,9 @@ public class DebugVulkan {
     }
 
     void cleanup() {
-        cleanupSwapChain();
+        try(MemoryStack stack = stackPush()) {
+            cleanupSwapChain(stack);
+        }
 
         vkDestroyDescriptorSetLayout(device, descriptorSetLayout, null);
 
@@ -1293,6 +1291,10 @@ public class DebugVulkan {
 
         glfwDestroyWindow(window);
         glfwTerminate();
+
+        memFree(extensions);
+        memFree(swapChainFramebuffers);
+        memFree(descriptorSets);
 
         memFree(ip);
         memFree(lp);
