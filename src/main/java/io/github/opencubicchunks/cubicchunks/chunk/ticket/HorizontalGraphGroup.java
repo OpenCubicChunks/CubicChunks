@@ -18,7 +18,7 @@ public class HorizontalGraphGroup extends CubeDistanceGraph {
     public HorizontalGraphGroup(ITicketManager iTicketManager, int i, PlayerCubeTicketTracker ticketTracker) {
         super(i + 2, 16, 256, 1, 0, 1);
         this.ticketTracker = ticketTracker;
-        this.vertical = new Vertical(iTicketManager, i);
+        this.vertical = new Vertical(iTicketManager, i, this);
         this.range = i;
         this.cubesInRange.defaultReturnValue((byte) (i + 2));
         this.iTicketManager = iTicketManager;
@@ -52,17 +52,23 @@ public class HorizontalGraphGroup extends CubeDistanceGraph {
         this.processUpdates(Integer.MAX_VALUE);
     }
 
+    public void updateActualSourceLevel(long pos, int level, boolean isDecreasing) {
+        vertical.updateSourceLevel(pos, level, isDecreasing);
+    }
+
     private class Vertical extends CubeDistanceGraph {
         public final Long2ByteMap cubesInRange = new Long2ByteOpenHashMap();
         protected final int range;
 
         private final ITicketManager iTicketManager;
+        private final HorizontalGraphGroup superior;
 
-        public Vertical(ITicketManager iTicketManager, int i) {
+        public Vertical(ITicketManager iTicketManager, int i, HorizontalGraphGroup superior) {
             super(i + 2, 16, 256, 0, 1, 0);
             this.range = i;
             this.cubesInRange.defaultReturnValue((byte) (i + 2));
             this.iTicketManager = iTicketManager;
+            this.superior = superior;
         }
 
         protected int getLevel(long cubePosIn) {
@@ -80,7 +86,10 @@ public class HorizontalGraphGroup extends CubeDistanceGraph {
             this.chunkLevelChanged(cubePosIn, b0, level);
         }
 
-        protected void chunkLevelChanged(long cubePosIn, int oldLevel, int newLevel) {
+        protected void chunkLevelChanged(long pos, int oldLevel, int newLevel) {
+            int actualNewLevel = this.cubesInRange.containsKey(pos) ? 0 : Integer.MAX_VALUE;
+            int actualOldLevel = oldLevel <= this.range ? 0 : Integer.MAX_VALUE;
+            superior.updateSourceLevel(pos, actualNewLevel, actualNewLevel < actualOldLevel);
         }
 
         protected int getSourceLevel(long pos) {
