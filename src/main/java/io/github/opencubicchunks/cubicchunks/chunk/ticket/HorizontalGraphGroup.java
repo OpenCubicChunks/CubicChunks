@@ -18,7 +18,7 @@ public class HorizontalGraphGroup extends CubeDistanceGraph {
     public HorizontalGraphGroup(ITicketManager iTicketManager, int i, PlayerCubeTicketTracker ticketTracker) {
         super(i + 2, 16, 256, 1, 0, 1);
         this.ticketTracker = ticketTracker;
-        this.vertical = new Vertical(iTicketManager, i, this);
+        this.vertical = new Vertical(iTicketManager, i);
         this.range = i;
         this.cubesInRange.defaultReturnValue((byte) (i + 2));
         this.iTicketManager = iTicketManager;
@@ -40,7 +40,7 @@ public class HorizontalGraphGroup extends CubeDistanceGraph {
     }
 
     protected void chunkLevelChanged(long cubePosIn, int oldLevel, int newLevel) {
-        ticketTracker.chunkLevelChanged(cubePosIn, oldLevel, newLevel);
+        ticketTracker.cubeAffected(cubePosIn);
     }
 
     protected int getSourceLevel(long pos) {
@@ -63,12 +63,13 @@ public class HorizontalGraphGroup extends CubeDistanceGraph {
         private final ITicketManager iTicketManager;
         private final HorizontalGraphGroup superior;
 
-        public Vertical(ITicketManager iTicketManager, int i, HorizontalGraphGroup superior) {
+        public Vertical(ITicketManager iTicketManager, int i) {
             super(i + 2, 16, 256, 0, 1, 0);
             this.range = i;
             this.cubesInRange.defaultReturnValue((byte) (i + 2));
             this.iTicketManager = iTicketManager;
-            this.superior = superior;
+            this.superior = HorizontalGraphGroup.this;
+
         }
 
         protected int getLevel(long cubePosIn) {

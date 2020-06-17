@@ -12,16 +12,23 @@ import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import net.minecraft.world.server.Ticket;
 
+/**
+ * Keeps track of the cubes that should be loaded for players
+ */
 public class PlayerCubeTicketTracker {
     private int viewDistance;
     private int verticalViewDistance;
+
     private final Long2IntMap horizDistances = Long2IntMaps.synchronize(new Long2IntOpenHashMap());
     private final Long2IntMap vertDistances = Long2IntMaps.synchronize(new Long2IntOpenHashMap());
+
+    // Set of cubes whose level changed after the last update
     private final LongSet positionsAffected = new LongOpenHashSet();
+
     private final ITicketManager iTicketManager;
 
-    private HorizontalGraphGroup horizontalGraphGroup;
-    private VerticalGraphGroup verticalGraphGroup;
+    private final HorizontalGraphGroup horizontalGraphGroup;
+    private final VerticalGraphGroup verticalGraphGroup;
 
     public PlayerCubeTicketTracker(ITicketManager iTicketManager, int i) {
         //possibly make this a constant - there is only ever one playercubeticketracker at a time, so this should be fine.
@@ -34,50 +41,69 @@ public class PlayerCubeTicketTracker {
         this.vertDistances.defaultReturnValue(i + 2);
     }
 
-    void chunkLevelChanged(long cubePosIn, int oldLevel, int newLevel) {
-        this.positionsAffected.add(cubePosIn);
+    /**
+     * Called when the a cube was affected by an update
+     * @param pos the packed position of the affected cube
+     *
+     */
+    void cubeAffected(long pos) {
+        this.positionsAffected.add(pos);
     }
 
-    public void setViewDistance(int viewDistanceIn, int verticalViewDistanceIn) {
-        viewDistanceIn *= 2;
-        CubicChunks.LOGGER.warn("Horizontal dist: {}; Vertical dist: {}", viewDistanceIn, verticalViewDistanceIn);
+    /**
+     * Updates which cubes are to be loaded based on a new viewDistance or verticalViewDistance
+     * @param viewDistance
+     * @param verticalViewDistance
+     */
+    public void setViewDistance(int viewDistance, int verticalViewDistance) {
+        viewDistance *= 2;
+        CubicChunks.LOGGER.warn("Horizontal dist: {}; Vertical dist: {}", viewDistance, verticalViewDistance);
         for (it.unimi.dsi.fastutil.longs.Long2ByteMap.Entry entry : this.horizontalGraphGroup.cubesInRange.long2ByteEntrySet()) {
             long pos = entry.getLongKey();
             byte horizDistance = entry.getByteValue();
-            byte vertDistance = this.horizontalGraphGroup.cubesInRange.get(pos);
-            this.updateTicket(pos, horizDistance, vertDistance, this.isWithinViewDistance(horizDistance, vertDistance), horizDistance <= viewDistanceIn && vertDistance <= verticalViewDistanceIn);
+            byte vertDistance = this.verticalGraphGroup.cubesInRange.get(pos);
+            this.updateTicket(pos, horizDistance, this.isWithinViewDistance(horizDistance, vertDistance), horizDistance <= viewDistance && vertDistance <= verticalViewDistance);
         }
 
-        this.viewDistance = viewDistanceIn;
-        this.verticalViewDistance = verticalViewDistanceIn;
+        this.viewDistance = viewDistance;
+        this.verticalViewDistance = verticalViewDistance;
     }
 
-    // func_215504_a
-    private void updateTicket(long cubePosIn, int horizDistance, int vertDistance, boolean oldWithinViewDistance, boolean withinViewDistance) {
+    /**
+     * Updates a ticket for a cube based on whether it entered or exited the view distances
+     * @param pos the cube's position
+     * @param horizDistance the cube's horizontal distance
+     * @param oldWithinViewDistance whether it used to be in the view distance
+     * @param withinViewDistance whether it is now in the view distance
+     */
+    private void updateTicket(long pos, int horizDistance, boolean oldWithinViewDistance, boolean withinViewDistance) {
         if (oldWithinViewDistance != withinViewDistance) {
-            Ticket<?> ticket = new Ticket<>(CCTicketType.CCPLAYER, ITicketManager.PLAYER_CUBE_TICKET_LEVEL, CubePos.from(cubePosIn));
+            Ticket<?> ticket = new Ticket<>(CCTicketType.CCPLAYER, ITicketManager.PLAYER_CUBE_TICKET_LEVEL, CubePos.from(pos));
             if (withinViewDistance) {
                 iTicketManager.getCubePlayerTicketThrottler().enqueue(CubeTaskPriorityQueueSorter.createMsg(() ->
                         iTicketManager.executor().execute(() -> {
-                            if (this.isWithinViewDistance(horizontalGraphGroup.getLevel(cubePosIn), verticalGraphGroup.getLevel(cubePosIn))) {
-                                iTicketManager.registerCube(cubePosIn, ticket);
-                                iTicketManager.getCubePositions().add(cubePosIn);
+                            if (this.isWithinViewDistance(horizontalGraphGroup.getLevel(pos), verticalGraphGroup.getLevel(pos))) {
+                                iTicketManager.registerCube(pos, ticket);
+                                iTicketManager.getCubePositions().add(pos);
                             } else {
                                 iTicketManager.getPlayerCubeTicketThrottlerSorter().enqueue(CubeTaskPriorityQueueSorter.createSorterMsg(() -> {
-                                }, cubePosIn, false));
+                                }, pos, false));
                             }
 
-                        }), cubePosIn, () -> horizDistance));
+                        }), pos, () -> horizDistance));
             } else {
                 iTicketManager.getPlayerCubeTicketThrottlerSorter().enqueue(CubeTaskPriorityQueueSorter.createSorterMsg(() ->
                         iTicketManager.executor().execute(() ->
-                                iTicketManager.releaseCube(cubePosIn, ticket)),
-                        cubePosIn, true));
+                                iTicketManager.releaseCube(pos, ticket)),
+                        pos, true));
             }
         }
 
     }
 
+    /**
+     * Deal with all of the updates to the graphs
+     */
     public void processAllUpdates() {
         horizontalGraphGroup.processAllUpdates();
         verticalGraphGroup.processAllUpdates();
@@ -105,7 +131,7 @@ public class PlayerCubeTicketTracker {
                         }
 
                     });
-                    this.updateTicket(pos, horizCurrentDistance, vertCurrentDistance, this.isWithinViewDistance(oldHorizDistance, oldVertDistance), this.isWithinViewDistance(horizCurrentDistance, vertCurrentDistance));
+                    this.updateTicket(pos, horizCurrentDistance, this.isWithinViewDistance(oldHorizDistance, oldVertDistance), this.isWithinViewDistance(horizCurrentDistance, vertCurrentDistance));
                 }
             }
 
@@ -114,10 +140,22 @@ public class PlayerCubeTicketTracker {
 
     }
 
+    /**
+     * Determines whether a given set of distances are within the view distance bounds
+     * @param horizDistance the horizontal distance
+     * @param vertDistance the vertical distance
+     * @return Whether the distances are within the view distance bounds
+     */
     private boolean isWithinViewDistance(int horizDistance, int vertDistance) {
         return horizDistance <= this.viewDistance && vertDistance <= this.verticalViewDistance;
     }
 
+    /**
+     * Notify the graphs of a change of source level of a cube
+     * @param pos the cube's position
+     * @param level the cube's level
+     * @param isDecreasing whether the change is decreasing
+     */
     public void updateSourceLevel(long pos, int level, boolean isDecreasing) {
         horizontalGraphGroup.updateActualSourceLevel(pos, level, isDecreasing);
         verticalGraphGroup.updateActualSourceLevel(pos, level, isDecreasing);
