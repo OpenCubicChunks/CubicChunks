@@ -32,6 +32,7 @@ import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.ArrayList;
@@ -69,6 +70,12 @@ public abstract class MixinChunkHolder implements ICubeHolder {
 
     @Shadow protected abstract void chain(
             CompletableFuture<? extends Either<? extends IChunk, ChunkHolder.IChunkLoadingError>> eitherChunk);
+
+    @Shadow public static ChunkStatus getChunkStatusFromLevel(int level) {
+        throw new Error("Mixin failed to apply");
+    }
+
+    @Shadow public abstract CompletableFuture<Either<IChunk, ChunkHolder.IChunkLoadingError>> func_219301_a(ChunkStatus p_219301_1_);
 
     @SuppressWarnings("unused")
     private CubePos cubePos; // set from ASM
@@ -130,9 +137,7 @@ public abstract class MixinChunkHolder implements ICubeHolder {
     // func_219301_a
     @Override
     public CompletableFuture<Either<ICube, ChunkHolder.IChunkLoadingError>> getCubeFuture(ChunkStatus chunkStatus) {
-        CompletableFuture<Either<ICube, ChunkHolder.IChunkLoadingError>> completablefuture =
-                this.futureByStatus.get(chunkStatus.ordinal());
-        return completablefuture == null ? MISSING_CUBE_FUTURE : completablefuture;
+        return unsafeCast(func_219301_a(chunkStatus));
     }
 
     // func_219302_f
@@ -141,42 +146,38 @@ public abstract class MixinChunkHolder implements ICubeHolder {
         return chunkFuture;
     }
 
-    // func_219301_a
-    public CompletableFuture<Either<ICube, ChunkHolder.IChunkLoadingError>> getFutureByCubeStatus(ChunkStatus chunkStatus) {
-        CompletableFuture<Either<ICube, ChunkHolder.IChunkLoadingError>> completablefuture =
-                this.futureByStatus.get(chunkStatus.ordinal());
-        return completablefuture == null ? MISSING_CUBE_FUTURE : completablefuture;
-    }
     // func_225410_b
     @Override public CompletableFuture<Either<ICube, ChunkHolder.IChunkLoadingError>> getFutureHigherThanCubeStatus(ChunkStatus chunkStatus) {
-        return ICubeHolder.getCubeStatusFromLevel(this.chunkLevel).isAtLeast(chunkStatus) ? this.getFutureByCubeStatus(chunkStatus) : MISSING_CUBE_FUTURE;
+        return ICubeHolder.getCubeStatusFromLevel(this.chunkLevel).isAtLeast(chunkStatus) ?
+                unsafeCast(this.func_219301_a(chunkStatus)) : // func_219301_a = getFutureByCubeStatus
+                MISSING_CUBE_FUTURE;
     }
 
 
     private AtomicReferenceArray<ArrayList<BiConsumer<Either<ICube, ChunkHolder.IChunkLoadingError>, Throwable>>> listenerLists = new AtomicReferenceArray<>(ChunkStatus.getAll().size());
 
     // func_219276_a
-    @Override
-    public CompletableFuture<Either<ICube, ChunkHolder.IChunkLoadingError>> createCubeFuture(ChunkStatus status, ChunkManager chunkManager) {
-        int statusOrdinal = status.ordinal();
-        CompletableFuture<Either<ICube, ChunkHolder.IChunkLoadingError>> completablefuture = this.futureByStatus.get(statusOrdinal);
-        if (completablefuture != null) {
-            Either<ICube, ChunkHolder.IChunkLoadingError> either = completablefuture.getNow(null);
-            if (either == null || either.left().isPresent()) {
-                return completablefuture;
-            }
-        }
-
-        if (ICubeHolder.getCubeStatusFromLevel(this.chunkLevel).isAtLeast(status)) {
-            CompletableFuture<Either<ICube, ChunkHolder.IChunkLoadingError>> completablefuture1 =
-                    ((IChunkManager)chunkManager).createCubeFuture((ChunkHolder)(Object)this, status);
-
-            this.chain(unsafeCast(completablefuture1));
-            this.futureByStatus.set(statusOrdinal, completablefuture1);
-
-            return completablefuture1;
+    @Redirect(method = "func_219276_a", at = @At(
+            value = "INVOKE",
+            target = "Lnet/minecraft/world/server/ChunkHolder;getChunkStatusFromLevel(I)Lnet/minecraft/world/chunk/ChunkStatus;"
+    ))
+    private ChunkStatus getChunkStatusFromLevelRedirect(int level) {
+        if (cubePos == null) {
+            return getChunkStatusFromLevel(level);
         } else {
-            return completablefuture == null ? MISSING_CUBE_FUTURE : completablefuture;
+            return getCubeStatusFromLevel(level);
+        }
+    }
+
+    @Redirect(method = "func_219276_a", at = @At(
+            value = "INVOKE",
+            target = "Lnet/minecraft/world/server/ChunkManager;func_219244_a(Lnet/minecraft/world/server/ChunkHolder;Lnet/minecraft/world/chunk/ChunkStatus;)Ljava/util/concurrent/CompletableFuture;"
+    ))
+    private CompletableFuture<?> createChunkOrCubeFuture(ChunkManager chunkManager, ChunkHolder _this, ChunkStatus status) {
+        if (cubePos == null) {
+            return chunkManager.func_219244_a(_this, status);
+        } else {
+            return ((IChunkManager) chunkManager).createCubeFuture(_this, status);
         }
     }
 
