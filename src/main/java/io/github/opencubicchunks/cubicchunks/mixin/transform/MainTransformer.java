@@ -34,48 +34,55 @@ public class MainTransformer {
     private static final boolean IS_DEV = !FMLEnvironment.production;
 
     public static void transformChunkHolder(ClassNode targetClass) {
-        final Method initOld =
-                getMethod("void <init>(net.minecraft.util.math.ChunkPos, "
-                        + "int, net.minecraft.world.lighting.WorldLightManager, "
-                        + "net.minecraft.world.server.ChunkHolder$IListener, "
-                        + "net.minecraft.world.server.ChunkHolder$IPlayerProvider)");
-        final String initNew = "<init>";
+
+        Map<Method, String> vanillaToCubic = new HashMap<>();
+        vanillaToCubic.put(getMethod("void <init>(net.minecraft.util.math.ChunkPos, "
+                + "int, net.minecraft.world.lighting.WorldLightManager, "
+                + "net.minecraft.world.server.ChunkHolder$IListener, "
+                + "net.minecraft.world.server.ChunkHolder$IPlayerProvider)"),
+                "<init>");
+        vanillaToCubic.put(getMethod("void func_219291_a(net.minecraft.world.server.ChunkManager)"),
+                "processCubeUpdates");
 
         Map<ClassMethod, String> methods = new HashMap<>();
         methods.put(new ClassMethod(
                 getObjectType("net/minecraft/world/server/ChunkHolder"),
-                getMethod("net/minecraft/world/chunk/ChunkStatus getChunkStatusFromLevel(int)")
+                getMethod("net.minecraft.world.chunk.ChunkStatus getChunkStatusFromLevel(int)")
         ), "getCubeStatusFromLevel");
         methods.put(new ClassMethod(
                 getObjectType("net/minecraft/world/server/ChunkManager"),
-                getMethod("java/util/concurrent/CompletableFuture func_222961_b(net/minecraft/util/math/ChunkPos)")
+                getMethod("java.util.concurrent.CompletableFuture func_222961_b(net.minecraft.world.server.ChunkHolder)")
         ), "createCubeBorderFuture");
         methods.put(new ClassMethod(
                 getObjectType("net/minecraft/world/server/ChunkManager"),
-                getMethod("java/util/concurrent/CompletableFuture func_219179_a(net/minecraft/util/math/ChunkPos)")
+                getMethod("java.util.concurrent.CompletableFuture func_219179_a(net.minecraft.world.server.ChunkHolder)")
         ), "createCubeTickingFuture");
         methods.put(new ClassMethod(
                 getObjectType("net/minecraft/world/server/ChunkManager"),
-                getMethod("java/util/concurrent/CompletableFuture func_219188_b(net/minecraft/util/math/ChunkPos)")
+                getMethod("java.util.concurrent.CompletableFuture func_219188_b(net.minecraft.util.math.ChunkPos)")
         ), "createCubeEntityTickingFuture");
         methods.put(new ClassMethod(
+                getObjectType("net/minecraft/world/server/ChunkManager"),
+                getMethod("java.util.concurrent.CompletableFuture func_222973_a(net.minecraft.world.chunk.Chunk)")
+        ), "saveCubeScheduleTicks");
+        methods.put(new ClassMethod(
                 getObjectType("net/minecraft/world/server/ChunkHolder$IListener"),
-                getMethod("void func_219066_a(net/minecraft/util/math/ChunkPos, java/util/function/IntSupplier, int, java/util/function/IntConsumer)")
+                getMethod("void func_219066_a(net.minecraft.util.math.ChunkPos, java.util.function.IntSupplier, int, java.util.function.IntConsumer)")
         ), "onUpdateCubeLevel");
 
         Map<ClassField, String> fields = new HashMap<>();
         fields.put(new ClassField("net/minecraft/world/server/ChunkManager", "field_219249_a"), "MAX_CUBE_LOADED_LEVEL"); //MAX_LOADED_LEVEL
         fields.put(new ClassField("net/minecraft/world/server/ChunkHolder", "field_219319_n"), "cubePos"); // pos
-        fields.put(new ClassField("net/minecraft/world/server/ChunkHolder", " field_219309_d"), "UNLOADED_CUBE_FUTURE"); // UNLOADED_CHUNK_FUTURE
-        fields.put(new ClassField("net/minecraft/world/server/ChunkHolder", "field_219308_c"), "UNLOADED_CUBE"); // UNLOADED_CHUNK
 
         Map<Type, Type> types = new HashMap<>();
         types.put(getObjectType("net/minecraft/util/math/ChunkPos"),
                 getObjectType("io/github/opencubicchunks/cubicchunks/chunk/util/CubePos"));
+        types.put(getObjectType("net/minecraft/world/chunk/Chunk"),
+                getObjectType("io/github/opencubicchunks/cubicchunks/chunk/cube/Cube"));
         types.put(getObjectType("net/minecraft/world/server/ChunkHolder$1"),
                 getObjectType("io/github/opencubicchunks/cubicchunks/chunk/ICubeHolder$CubeLoadingError"));
 
-        cloneAndApplyRedirects(targetClass, initOld, initNew, methods, fields, types);
+        vanillaToCubic.forEach((old, newName) -> cloneAndApplyRedirects(targetClass, old, newName, methods, fields, types));
     }
 
     public static void transformChunkManager(ClassNode targetClass) {
@@ -151,13 +158,15 @@ public class MainTransformer {
 
     private static MethodNode cloneAndApplyRedirects(ClassNode node, Method existingMethodIn, String newName,
             Map<ClassMethod, String> methodRedirectsIn, Map<ClassField, String> fieldRedirectsIn, Map<Type, Type> typeRedirectsIn) {
+        LOGGER.debug("Transforming " + node.name + ": Cloning method " + existingMethodIn.getName() + " " + existingMethodIn.getDescriptor() + " "
+                + "into " + newName + " and applying remapping");
         Method existingMethod = new Method(ASMAPI.mapMethod(existingMethodIn.getName()), existingMethodIn.getDescriptor());
 
         MethodNode m = node.methods.stream()
                         .filter(x -> existingMethod.getName().equals(x.name) && existingMethod.getDescriptor().equals(x.desc))
                         .findAny().orElseThrow(() -> new IllegalStateException("Target method " + existingMethod + " not found"));
 
-        cloneAndApplyLambdaRedirects(node, m, methodRedirectsIn, fieldRedirectsIn, typeRedirectsIn);
+        Map<Handle, String> redirectedLambdas = cloneAndApplyLambdaRedirects(node, m, methodRedirectsIn, fieldRedirectsIn, typeRedirectsIn);
 
         Set<String> defaultKnownClasses = Sets.newHashSet(
                 Type.getType(Object.class).getInternalName(),
@@ -170,6 +179,12 @@ public class MainTransformer {
             methodRedirects.put(
                     classMethod.owner.getInternalName() + "." + ASMAPI.mapMethod(classMethod.method.getName()) + classMethod.method.getDescriptor(),
                     methodRedirectsIn.get(classMethod)
+            );
+        }
+        for (Handle handle : redirectedLambdas.keySet()) {
+            methodRedirects.put(
+                    handle.getOwner() + "." + handle.getName() + handle.getDesc(),
+                    redirectedLambdas.get(handle)
             );
         }
 
@@ -185,6 +200,10 @@ public class MainTransformer {
         for (Type type : typeRedirectsIn.keySet()) {
             typeRedirects.put(type.getInternalName(), typeRedirectsIn.get(type).getInternalName());
         }
+
+        methodRedirects.forEach((old, n) -> LOGGER.debug("Method mapping: " + old + " -> " + n));
+        fieldRedirects.forEach((old, n) -> LOGGER.debug("Field mapping: " + old + " -> " + n));
+        typeRedirects.forEach((old, n) -> LOGGER.debug("Type mapping: " + old + " -> " + n));
 
         Remapper remapper = new Remapper() {
             @Override
@@ -206,7 +225,10 @@ public class MainTransformer {
 
             @Override
             public String mapInvokeDynamicMethodName(final String name, final String descriptor) {
-                throw new UnsupportedOperationException("Not implemented yet");
+                if (IS_DEV) {
+                    LOGGER.warn("NOTE: remapping invokedynamic to self: " + name + "." + descriptor);
+                }
+                return name;
             }
 
             @Override
@@ -270,9 +292,10 @@ public class MainTransformer {
         return output;
     }
 
-    private static Map<String, String> cloneAndApplyLambdaRedirects(ClassNode node, MethodNode method, Map<ClassMethod, String> methodRedirectsIn,
+    private static Map<Handle, String> cloneAndApplyLambdaRedirects(ClassNode node, MethodNode method, Map<ClassMethod, String> methodRedirectsIn,
             Map<ClassField, String> fieldRedirectsIn, Map<Type, Type> typeRedirectsIn) {
-        
+
+        Map<Handle, String> lambdaRedirects = new HashMap<>();
         for (AbstractInsnNode instruction : method.instructions) {
             if (instruction.getOpcode() == Opcodes.INVOKEDYNAMIC) {
                 InvokeDynamicInsnNode invoke = (InvokeDynamicInsnNode) instruction;
@@ -284,15 +307,17 @@ public class MainTransformer {
                             Handle handle = (Handle) bsmArg;
                             String owner = handle.getOwner();
                             if (owner.equals(node.name)) {
-
+                                String newName = "cc$redirect$" + handle.getName();
+                                lambdaRedirects.put(handle, newName);
+                                cloneAndApplyRedirects(node, new Method(handle.getName(), handle.getDesc()), newName,
+                                        methodRedirectsIn, fieldRedirectsIn, typeRedirectsIn);
                             }
                         }
                     }
                 }
-
             }
         }
-        return null;
+        return lambdaRedirects;
     }
 
     private static final class ClassMethod {
@@ -331,11 +356,6 @@ public class MainTransformer {
     private static final class ClassField {
         final Type owner;
         final String name;
-
-        ClassField(Type owner, String name) {
-            this.owner = owner;
-            this.name = name;
-        }
 
         ClassField(String owner, String name) {
             this.owner = getObjectType(owner);
