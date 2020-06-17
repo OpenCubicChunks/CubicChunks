@@ -4,8 +4,19 @@ import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import net.minecraft.world.lighting.LevelBasedGraph;
 
 public abstract class CubeDistanceGraph  extends LevelBasedGraph {
-    protected CubeDistanceGraph(int levelCount, int expectedUpdatesByLevel, int expectedPropagationLevels) {
+    private int xR;
+    private int yR;
+    private int zR;
+
+    protected CubeDistanceGraph(int levelCount, int expectedUpdatesByLevel, int expectedPropagationLevels, int xR, int yR, int zR) {
         super(levelCount, expectedUpdatesByLevel, expectedPropagationLevels);
+        this.xR = xR;
+        this.yR = yR;
+        this.zR = zR;
+    }
+
+    protected CubeDistanceGraph(int levelCount, int expectedUpdatesByLevel, int expectedPropagationLevels) {
+        this(levelCount, expectedUpdatesByLevel, expectedPropagationLevels, 1, 1, 1);
     }
 
     @Override protected boolean isRoot(long pos) {
@@ -18,9 +29,9 @@ public abstract class CubeDistanceGraph  extends LevelBasedGraph {
         int y = cubePos.getY();
         int z = cubePos.getZ();
 
-        for(int x2 = -1; x2 <= 1; ++x2) {
-            for (int y2 = -1; y2 <= 1; ++y2) {
-                for (int z2 = -1; z2 <= 1; ++z2) {
+        for(int x2 = -xR; x2 <= xR; ++x2) {
+            for (int y2 = -yR; y2 <= yR; ++y2) {
+                for (int z2 = -zR; z2 <= zR; ++z2) {
                     long i1 = CubePos.asLong(x + x2, y + y2, z + z2);
                     if (i1 != pos) {
                         this.propagateLevel(pos, i1, level, isDecreasing);

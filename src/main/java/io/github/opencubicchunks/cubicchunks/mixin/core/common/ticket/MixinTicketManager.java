@@ -2,6 +2,7 @@ package io.github.opencubicchunks.cubicchunks.mixin.core.common.ticket;
 
 import com.google.common.collect.ImmutableList;
 import com.mojang.datafixers.util.Either;
+import io.github.opencubicchunks.cubicchunks.CubicChunksConfig;
 import io.github.opencubicchunks.cubicchunks.chunk.IChunkManager;
 import io.github.opencubicchunks.cubicchunks.chunk.ICubeHolder;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.Cube;
@@ -113,7 +114,7 @@ public abstract class MixinTicketManager implements ITicketManager {
     @Inject(method = "setViewDistance", at = @At("HEAD"))
     protected void setViewDistance(int viewDistance, CallbackInfo ci)
     {
-        this.playerCubeTicketTracker.setViewDistance(Coords.sectionToCubeRenderDistance(viewDistance));
+        this.playerCubeTicketTracker.setViewDistance(Coords.sectionToCubeRenderDistance(viewDistance), CubicChunksConfig.verticalViewDistance.get());
     }
 
     //BEGIN INJECT

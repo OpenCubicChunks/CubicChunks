@@ -36,7 +36,7 @@ public abstract class MixinViewFrustum {
     protected void setCountChunksXYZ(int renderDistanceChunks) {
         int d = renderDistanceChunks * 2 + 1;
         this.countChunksX = d;
-        this.countChunksY = CubicChunksConfig.verticalViewDistance.get();
+        this.countChunksY = CubicChunksConfig.verticalViewDistance.get() * 2 + 1;
         this.countChunksZ = d;
     }
 
