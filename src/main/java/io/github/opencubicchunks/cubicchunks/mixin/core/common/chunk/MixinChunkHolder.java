@@ -77,6 +77,10 @@ public abstract class MixinChunkHolder implements ICubeHolder {
 
     @Shadow public abstract CompletableFuture<Either<IChunk, ChunkHolder.IChunkLoadingError>> func_219301_a(ChunkStatus p_219301_1_);
 
+    @Shadow(aliases = "func_219276_a")
+    public abstract CompletableFuture<Either<ICube, ChunkHolder.IChunkLoadingError>> createChunkFuture(ChunkStatus chunkStatus,
+            ChunkManager chunkManager);
+
     @SuppressWarnings("unused")
     private CubePos cubePos; // set from ASM
 
@@ -154,7 +158,9 @@ public abstract class MixinChunkHolder implements ICubeHolder {
     }
 
 
-    private AtomicReferenceArray<ArrayList<BiConsumer<Either<ICube, ChunkHolder.IChunkLoadingError>, Throwable>>> listenerLists = new AtomicReferenceArray<>(ChunkStatus.getAll().size());
+    private AtomicReferenceArray<ArrayList<BiConsumer<Either<ICube, ChunkHolder.IChunkLoadingError>, Throwable>>> listenerLists =
+            new AtomicReferenceArray<>(ChunkStatus.getAll().size());
+
 
     // func_219276_a
     @Redirect(method = "func_219276_a", at = @At(
@@ -181,8 +187,13 @@ public abstract class MixinChunkHolder implements ICubeHolder {
         }
     }
 
+    // func_219276_a
+    @Override public CompletableFuture<Either<ICube, ChunkHolder.IChunkLoadingError>> createCubeFuture(ChunkStatus chunkStatus, ChunkManager chunkManager) {
+        return createChunkFuture(chunkStatus, chunkManager);
+    }
+
     public void addCubeStageListener(ChunkStatus status, BiConsumer<Either<ICube, ChunkHolder.IChunkLoadingError>, Throwable> consumer, ChunkManager chunkManager) {
-        CompletableFuture<Either<ICube, ChunkHolder.IChunkLoadingError>> future = createCubeFuture(status, chunkManager);
+        CompletableFuture<Either<ICube, ChunkHolder.IChunkLoadingError>> future = createChunkFuture(status, chunkManager);
 
         if (future.isDone()) {
             consumer.accept(future.getNow(null), null);
