@@ -39,12 +39,13 @@ public class PlayerCubeTicketTracker {
     }
 
     public void setViewDistance(int viewDistanceIn, int verticalViewDistanceIn) {
+        viewDistanceIn *= 2;
         CubicChunks.LOGGER.warn("Horizontal dist: {}; Vertical dist: {}", viewDistanceIn, verticalViewDistanceIn);
         for (it.unimi.dsi.fastutil.longs.Long2ByteMap.Entry entry : this.horizontalGraphGroup.cubesInRange.long2ByteEntrySet()) {
             long pos = entry.getLongKey();
             byte horizDistance = entry.getByteValue();
             byte vertDistance = this.horizontalGraphGroup.cubesInRange.get(pos);
-            this.updateTicket(pos, horizDistance, vertDistance, this.isWithinViewDistance(horizDistance, vertDistance), horizDistance <= viewDistanceIn - 2 && vertDistance <= verticalViewDistanceIn - 2);
+            this.updateTicket(pos, horizDistance, vertDistance, this.isWithinViewDistance(horizDistance, vertDistance), horizDistance <= viewDistanceIn && vertDistance <= verticalViewDistanceIn);
         }
 
         this.viewDistance = viewDistanceIn;
@@ -114,11 +115,11 @@ public class PlayerCubeTicketTracker {
     }
 
     private boolean isWithinViewDistance(int horizDistance, int vertDistance) {
-        return vertDistance <= this.viewDistance * 2 && horizDistance <= this.verticalViewDistance;
+        return horizDistance <= this.viewDistance && vertDistance <= this.verticalViewDistance;
     }
 
     public void updateSourceLevel(long pos, int level, boolean isDecreasing) {
-        horizontalGraphGroup.updateSourceLevel(pos, level, isDecreasing);
-        verticalGraphGroup.updateSourceLevel(pos, level, isDecreasing);
+        horizontalGraphGroup.updateActualSourceLevel(pos, level, isDecreasing);
+        verticalGraphGroup.updateActualSourceLevel(pos, level, isDecreasing);
     }
 }
