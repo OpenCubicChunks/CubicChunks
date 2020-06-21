@@ -158,8 +158,7 @@ public abstract class MixinChunkHolder implements ICubeHolder {
     }
 
 
-    private AtomicReferenceArray<ArrayList<BiConsumer<Either<ICube, ChunkHolder.IChunkLoadingError>, Throwable>>> listenerLists =
-            new AtomicReferenceArray<>(ChunkStatus.getAll().size());
+    private AtomicReferenceArray<ArrayList<BiConsumer<Either<ICube, ChunkHolder.IChunkLoadingError>, Throwable>>> listenerLists = new AtomicReferenceArray<>(ChunkStatus.getAll().size());
 
 
     // func_219276_a
