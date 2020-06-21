@@ -1,5 +1,6 @@
 package io.github.opencubicchunks.cubicchunks.mixin.core.client;
 
+import io.github.opencubicchunks.cubicchunks.CubicChunksConfig;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.ViewFrustum;
 import net.minecraft.client.renderer.chunk.ChunkRenderDispatcher;
@@ -35,7 +36,7 @@ public abstract class MixinViewFrustum {
     protected void setCountChunksXYZ(int renderDistanceChunks) {
         int d = renderDistanceChunks * 2 + 1;
         this.countChunksX = d;
-        this.countChunksY = d;
+        this.countChunksY = CubicChunksConfig.verticalViewDistance.get();
         this.countChunksZ = d;
     }
 
