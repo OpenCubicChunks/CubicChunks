@@ -55,7 +55,8 @@
         "client.progress.MixinTrackingChunkStatusListener",
         "client.progress.MixinWorldLoadProgressScreen",
         "client.world.MixinClientChunkProvider",
-        "client.world.MixinClientWorld"
+        "client.world.MixinClientWorld",
+        "client.MixinVideoSettingsScreen"
     ],
     "server": []
 }
