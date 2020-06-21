@@ -3,8 +3,8 @@ package io.github.opencubicchunks.cubicchunks.network;
 import static io.github.opencubicchunks.cubicchunks.utils.Coords.cubeToSection;
 
 import io.github.opencubicchunks.cubicchunks.chunk.IClientCubeProvider;
-import io.github.opencubicchunks.cubicchunks.chunk.ICube;
-import io.github.opencubicchunks.cubicchunks.chunk.cube.Cube;
+import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
+import io.github.opencubicchunks.cubicchunks.chunk.cube.BigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.utils.MathUtil;
 import io.netty.buffer.ByteBuf;
@@ -23,16 +23,16 @@ import java.util.stream.Collectors;
 
 public class PacketCubes {
     // vanilla has max chunk size of 2MB, it works out to be 128kB for a 32^3 cube
-    private static final int MAX_CUBE_SIZE = (ICube.CUBE_DIAMETER * ICube.CUBE_DIAMETER * ICube.CUBE_DIAMETER) * 128 * 1024;
+    private static final int MAX_CUBE_SIZE = (IBigCube.CUBE_DIAMETER * IBigCube.CUBE_DIAMETER * IBigCube.CUBE_DIAMETER) * 128 * 1024;
 
     private final CubePos[] cubePositions;
-    private final Cube[] cubes;
+    private final BigCube[] cubes;
     private final BitSet cubeExists;
     private final byte[] packetData;
     private final List<CompoundNBT> tileEntityTags;
 
-    public PacketCubes(List<Cube> cubes) {
-        this.cubes = cubes.toArray(new Cube[0]);
+    public PacketCubes(List<BigCube> cubes) {
+        this.cubes = cubes.toArray(new BigCube[0]);
         this.cubePositions = new CubePos[this.cubes.length];
         this.cubeExists = new BitSet(cubes.size());
         this.packetData = new byte[calculateDataSize(cubes)];
@@ -45,7 +45,7 @@ public class PacketCubes {
 
     PacketCubes(PacketBuffer buf) {
         int count = buf.readVarInt();
-        this.cubes = new Cube[count];
+        this.cubes = new BigCube[count];
         this.cubePositions = new CubePos[count];
         for (int i = 0; i < count; i++) {
             cubePositions[i] = CubePos.of(buf.readInt(), buf.readInt(), buf.readInt());
@@ -70,7 +70,7 @@ public class PacketCubes {
 
     void encode(PacketBuffer buf) {
         buf.writeVarInt(cubes.length);
-        for (Cube cube : cubes) {
+        for (BigCube cube : cubes) {
             buf.writeInt(cube.getCubePos().getX());
             buf.writeInt(cube.getCubePos().getY());
             buf.writeInt(cube.getCubePos().getZ());
@@ -107,9 +107,9 @@ public class PacketCubes {
                 //            if (cube != null /*&&fullCube*/) {
                 //                world.addEntitiesToChunk(cube.getColumn());
                 //            }
-                for (int dx = 0; dx < ICube.CUBE_DIAMETER; dx++) {
-                    for (int dy = 0; dy < ICube.CUBE_DIAMETER; dy++) {
-                        for (int dz = 0; dz < ICube.CUBE_DIAMETER; dz++) {
+                for (int dx = 0; dx < IBigCube.CUBE_DIAMETER; dx++) {
+                    for (int dy = 0; dy < IBigCube.CUBE_DIAMETER; dy++) {
+                        for (int dz = 0; dz < IBigCube.CUBE_DIAMETER; dz++) {
                             world.markSurroundingsForRerender(
                                     cubeToSection(x, dx),
                                     cubeToSection(y, dy),
@@ -128,10 +128,10 @@ public class PacketCubes {
             }
         }
     }
-    private static void fillDataBuffer(PacketBuffer buf, List<Cube> cubes, BitSet existingChunks) {
+    private static void fillDataBuffer(PacketBuffer buf, List<BigCube> cubes, BitSet existingChunks) {
         buf.writerIndex(0);
         int i = 0;
-        for (Cube cube : cubes) {
+        for (BigCube cube : cubes) {
             if (!cube.isEmptyCube()) {
                 existingChunks.set(i);
                 cube.write(buf);
@@ -145,7 +145,7 @@ public class PacketCubes {
         return new PacketBuffer(bytebuf);
     }
 
-    private static int calculateDataSize(List<Cube> cubes) {
-        return cubes.stream().filter(c -> !c.isEmptyCube()).mapToInt(Cube::getSize).sum();
+    private static int calculateDataSize(List<BigCube> cubes) {
+        return cubes.stream().filter(c -> !c.isEmptyCube()).mapToInt(BigCube::getSize).sum();
     }
 }

@@ -3,7 +3,7 @@ package io.github.opencubicchunks.cubicchunks.mixin.core.client.world;
 import io.github.opencubicchunks.cubicchunks.chunk.ClientChunkProviderCubeArray;
 import io.github.opencubicchunks.cubicchunks.chunk.IClientCubeProvider;
 import io.github.opencubicchunks.cubicchunks.chunk.biome.CubeBiomeContainer;
-import io.github.opencubicchunks.cubicchunks.chunk.cube.Cube;
+import io.github.opencubicchunks.cubicchunks.chunk.cube.BigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.EmptyCube;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.mixin.access.client.ClientChunkProviderChunkArrayAccess;
@@ -53,7 +53,7 @@ public abstract class MixinClientChunkProvider implements IClientCubeProvider {
         return Math.max(2, Coords.sectionToCubeCeil(viewDistance)) + 3;
     }
 
-    private static boolean isCubeValid(@Nullable Cube cube, int x, int y, int z) {
+    private static boolean isCubeValid(@Nullable BigCube cube, int x, int y, int z) {
         if (cube == null) {
             return false;
         }
@@ -67,7 +67,7 @@ public abstract class MixinClientChunkProvider implements IClientCubeProvider {
             return;
         }
         int index = this.cubeArray.getIndex(x, y, z);
-        Cube cube = this.cubeArray.get(index);
+        BigCube cube = this.cubeArray.get(index);
         if (isCubeValid(cube, x, y, z)) {
             // TODO: forge cube unload event
             // net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.event.world.ChunkEvent.Unload(chunk));
@@ -78,9 +78,9 @@ public abstract class MixinClientChunkProvider implements IClientCubeProvider {
 
     @Nullable
     @Override
-    public Cube getCube(int cubeX, int cubeY, int cubeZ, ChunkStatus requiredStatus, boolean load) {
+    public BigCube getCube(int cubeX, int cubeY, int cubeZ, ChunkStatus requiredStatus, boolean load) {
         if (this.cubeArray.inView(cubeX, cubeY, cubeZ)) {
-            Cube chunk = this.cubeArray.get(this.cubeArray.getIndex(cubeX, cubeY, cubeZ));
+            BigCube chunk = this.cubeArray.get(this.cubeArray.getIndex(cubeX, cubeY, cubeZ));
             if (isCubeValid(chunk, cubeX, cubeY, cubeZ)) {
                 return chunk;
             }
@@ -90,22 +90,22 @@ public abstract class MixinClientChunkProvider implements IClientCubeProvider {
     }
 
     @Override
-    public Cube loadCube(int cubeX, int cubeY, int cubeZ,
-            @Nullable CubeBiomeContainer biomes, PacketBuffer readBuffer, CompoundNBT nbtTagIn, boolean cubeExists) {
+    public BigCube loadCube(int cubeX, int cubeY, int cubeZ,
+                            @Nullable CubeBiomeContainer biomes, PacketBuffer readBuffer, CompoundNBT nbtTagIn, boolean cubeExists) {
 
         if (!this.cubeArray.inView(cubeX, cubeY, cubeZ)) {
             LOGGER.warn("Ignoring cube since it's not in the view range: {}, {}, {}", cubeX, cubeY, cubeZ);
             return null;
         }
         int index = this.cubeArray.getIndex(cubeX, cubeY, cubeZ);
-        Cube cube = this.cubeArray.cubes.get(index);
+        BigCube cube = this.cubeArray.cubes.get(index);
         if (!isCubeValid(cube, cubeX, cubeY, cubeZ)) {
             // if (biomeContainerIn == null) {
             //     LOGGER.warn("Ignoring chunk since we don't have complete data: {}, {}", chunkX, chunkZ);
             //     return null;
             // }
 
-            cube = new Cube(this.world, CubePos.of(cubeX, cubeY, cubeZ), biomes);
+            cube = new BigCube(this.world, CubePos.of(cubeX, cubeY, cubeZ), biomes);
             cube.read(biomes, readBuffer, nbtTagIn, cubeExists);
             this.cubeArray.replace(index, cube);
         } else {
@@ -146,7 +146,7 @@ public abstract class MixinClientChunkProvider implements IClientCubeProvider {
         array.centerZ = this.cubeArray.centerZ;
 
         for(int k = 0; k < this.cubeArray.cubes.length(); ++k) {
-            Cube chunk = this.cubeArray.cubes.get(k);
+            BigCube chunk = this.cubeArray.cubes.get(k);
             if (chunk == null) {
                 continue;
             }

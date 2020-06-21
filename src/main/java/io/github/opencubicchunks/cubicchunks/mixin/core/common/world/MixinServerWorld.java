@@ -1,6 +1,6 @@
 package io.github.opencubicchunks.cubicchunks.mixin.core.common.world;
 
-import io.github.opencubicchunks.cubicchunks.chunk.cube.Cube;
+import io.github.opencubicchunks.cubicchunks.chunk.cube.BigCube;
 import io.github.opencubicchunks.cubicchunks.world.server.IServerWorld;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import net.minecraft.entity.Entity;
@@ -36,7 +36,7 @@ public abstract class MixinServerWorld extends World implements IServerWorld {
     }
 
     @Override
-    public void onCubeUnloading(Cube cubeIn) {
+    public void onCubeUnloading(BigCube cubeIn) {
         this.tileEntitiesToBeRemoved.addAll(cubeIn.getTileEntityMap().values());
         ClassInheritanceMultiMap<Entity>[] aclassinheritancemultimap = cubeIn.getEntityLists();
         int i = aclassinheritancemultimap.length;

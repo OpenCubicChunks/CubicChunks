@@ -1,7 +1,7 @@
 package io.github.opencubicchunks.cubicchunks.network;
 
 
-import io.github.opencubicchunks.cubicchunks.chunk.ICube;
+import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.utils.AddressTools;
 import io.github.opencubicchunks.cubicchunks.utils.BufferUtils;
@@ -36,7 +36,7 @@ public class PacketCubeBlockChanges {
         }
     }
 
-    public PacketCubeBlockChanges(ICube cube, ShortList localAddresses) {
+    public PacketCubeBlockChanges(IBigCube cube, ShortList localAddresses) {
         this.cubePos = cube.getCubePos();
         this.localAddresses = localAddresses.toShortArray();
         this.blockStates = new BlockState[localAddresses.size()];

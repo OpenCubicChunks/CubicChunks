@@ -24,9 +24,9 @@ import javax.annotation.Nullable;
 @SuppressWarnings("deprecation")
 public class CubePrimerWrapper extends CubePrimer {
 
-    private final Cube cube;
+    private final BigCube cube;
 
-    public CubePrimerWrapper(Cube cubeIn) {
+    public CubePrimerWrapper(BigCube cubeIn) {
         super(cubeIn.getCubePos(), cubeIn.getCubeSections());
         this.cube = cubeIn;
     }
@@ -35,7 +35,7 @@ public class CubePrimerWrapper extends CubePrimer {
         return cube.getCubeStatus();
     }
 
-    public Cube getCube()
+    public BigCube getCube()
     {
         return this.cube;
     }

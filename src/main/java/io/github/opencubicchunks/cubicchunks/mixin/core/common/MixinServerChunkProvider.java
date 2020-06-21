@@ -3,9 +3,9 @@ package io.github.opencubicchunks.cubicchunks.mixin.core.common;
 import com.mojang.datafixers.util.Either;
 import io.github.opencubicchunks.cubicchunks.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.chunk.IChunkManager;
-import io.github.opencubicchunks.cubicchunks.chunk.ICube;
+import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.ICubeHolder;
-import io.github.opencubicchunks.cubicchunks.chunk.cube.Cube;
+import io.github.opencubicchunks.cubicchunks.chunk.cube.BigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.CubeStatus;
 import io.github.opencubicchunks.cubicchunks.chunk.graph.CCTicketType;
 import io.github.opencubicchunks.cubicchunks.chunk.ticket.ITicketManager;
@@ -59,7 +59,7 @@ public abstract class MixinServerChunkProvider implements IServerChunkProvider, 
     @Shadow @Final private static List<ChunkStatus> field_217239_c;
     private final long[] recentCubePositions = new long[4];
     private final ChunkStatus[] recentCubeStatuses = new ChunkStatus[4];
-    private final ICube[] recentCubes = new ICube[4];
+    private final IBigCube[] recentCubes = new IBigCube[4];
 
     @Override
     public <T> void registerTicket(TicketType<T> type, CubePos pos, int distance, T value) {
@@ -77,7 +77,7 @@ public abstract class MixinServerChunkProvider implements IServerChunkProvider, 
 
     @Nullable
     @Override
-    public ICube getCube(int cubeX, int cubeY, int cubeZ, ChunkStatus requiredStatus, boolean load) {
+    public IBigCube getCube(int cubeX, int cubeY, int cubeZ, ChunkStatus requiredStatus, boolean load) {
         if (Thread.currentThread() != this.mainThread) {
             return CompletableFuture.supplyAsync(() -> {
                 return this.getCube(cubeX, cubeY, cubeZ, requiredStatus, load);
@@ -89,7 +89,7 @@ public abstract class MixinServerChunkProvider implements IServerChunkProvider, 
 
             for(int j = 0; j < 4; ++j) {
                 if (i == this.recentCubePositions[j] && requiredStatus == this.recentCubeStatuses[j]) {
-                    ICube icube = this.recentCubes[j];
+                    IBigCube icube = this.recentCubes[j];
                     if (icube != null || !load) {
                         return icube;
                     }
@@ -97,11 +97,11 @@ public abstract class MixinServerChunkProvider implements IServerChunkProvider, 
             }
 
             iprofiler.func_230035_c_("getChunkCacheMiss");
-            CompletableFuture<Either<ICube, ChunkHolder.IChunkLoadingError>> completablefuture = this.getCubeFuture(cubeX, cubeY, cubeZ,
+            CompletableFuture<Either<IBigCube, ChunkHolder.IChunkLoadingError>> completablefuture = this.getCubeFuture(cubeX, cubeY, cubeZ,
                     requiredStatus,
                     load);
             this.executor.driveUntil(completablefuture::isDone);
-            ICube icube = completablefuture.join().map((p_222874_0_) -> {
+            IBigCube icube = completablefuture.join().map((p_222874_0_) -> {
                 return p_222874_0_;
             }, (p_222870_1_) -> {
                 if (load) {
@@ -116,7 +116,7 @@ public abstract class MixinServerChunkProvider implements IServerChunkProvider, 
     }
 
     @Nullable
-    public Cube getCubeNow(int cubeX, int cubeY, int cubeZ) {
+    public BigCube getCubeNow(int cubeX, int cubeY, int cubeZ) {
         if (Thread.currentThread() != this.mainThread) {
             return null;
         } else {
@@ -125,8 +125,8 @@ public abstract class MixinServerChunkProvider implements IServerChunkProvider, 
 
             for(int j = 0; j < 4; ++j) {
                 if (posAsLong == this.recentCubePositions[j] && this.recentCubeStatuses[j] == ChunkStatus.FULL) {
-                    ICube icube = this.recentCubes[j];
-                    return icube instanceof Cube ? (Cube)icube : null;
+                    IBigCube icube = this.recentCubes[j];
+                    return icube instanceof BigCube ? (BigCube)icube : null;
                 }
             }
 
@@ -134,16 +134,16 @@ public abstract class MixinServerChunkProvider implements IServerChunkProvider, 
             if (chunkholder == null) {
                 return null;
             } else {
-                Either<ICube, ChunkHolder.IChunkLoadingError> either =
+                Either<IBigCube, ChunkHolder.IChunkLoadingError> either =
                         ((ICubeHolder)chunkholder).getFutureHigherThanCubeStatus(ChunkStatus.FULL).getNow(null);
                 if (either == null) {
                     return null;
                 } else {
-                    ICube icube1 = either.left().orElse(null);
+                    IBigCube icube1 = either.left().orElse(null);
                     if (icube1 != null) {
                         this.addRecents(posAsLong, icube1, ChunkStatus.FULL);
-                        if (icube1 instanceof Cube) {
-                            return (Cube)icube1;
+                        if (icube1 instanceof BigCube) {
+                            return (BigCube)icube1;
                         }
                     }
                     return null;
@@ -159,8 +159,8 @@ public abstract class MixinServerChunkProvider implements IServerChunkProvider, 
     }
 
     // func_217233_c
-    private CompletableFuture<Either<ICube, ChunkHolder.IChunkLoadingError>> getCubeFuture(int cubeX, int cubeY, int cubeZ,
-            ChunkStatus requiredStatus, boolean load) {
+    private CompletableFuture<Either<IBigCube, ChunkHolder.IChunkLoadingError>> getCubeFuture(int cubeX, int cubeY, int cubeZ,
+                                                                                              ChunkStatus requiredStatus, boolean load) {
         CubePos cubePos = CubePos.of(cubeX, cubeY, cubeZ);
         long i = cubePos.asLong();
         int j = 33 + CubeStatus.getDistance(requiredStatus);
@@ -190,7 +190,7 @@ public abstract class MixinServerChunkProvider implements IServerChunkProvider, 
     }
 
     // func_225315_a
-    private void addRecents(long newPositionIn, ICube newCubeIn, ChunkStatus newStatusIn) {
+    private void addRecents(long newPositionIn, IBigCube newCubeIn, ChunkStatus newStatusIn) {
         for(int i = 3; i > 0; --i) {
             this.recentCubePositions[i] = this.recentCubePositions[i - 1];
             this.recentCubeStatuses[i] = this.recentCubeStatuses[i - 1];
@@ -238,7 +238,7 @@ public abstract class MixinServerChunkProvider implements IServerChunkProvider, 
 
             while(true) {
                 ChunkStatus chunkstatus = field_217239_c.get(j);
-                Optional<ICube> optional = ((ICubeHolder)chunkholder).getCubeFuture(chunkstatus).getNow(ICubeHolder.MISSING_CUBE).left();
+                Optional<IBigCube> optional = ((ICubeHolder)chunkholder).getCubeFuture(chunkstatus).getNow(ICubeHolder.MISSING_CUBE).left();
                 if (optional.isPresent()) {
                     return optional.get();
                 }
@@ -269,10 +269,10 @@ public abstract class MixinServerChunkProvider implements IServerChunkProvider, 
     private void tickSections(CallbackInfo ci) {
 
         ((IChunkManager) this.chunkManager).getLoadedCubeIterable().forEach((cubeHolder) -> {
-            Optional<Cube> optional =
+            Optional<BigCube> optional =
                     ((ICubeHolder) cubeHolder).getCubeEntityTickingFuture().getNow(ICubeHolder.UNLOADED_CUBE).left();
             if (optional.isPresent()) {
-                Cube section = (Cube) optional.get();
+                BigCube section = (BigCube) optional.get();
                 this.world.getProfiler().startSection("broadcast");
                 ((ICubeHolder) cubeHolder).sendChanges(section);
                 this.world.getProfiler().endSection();

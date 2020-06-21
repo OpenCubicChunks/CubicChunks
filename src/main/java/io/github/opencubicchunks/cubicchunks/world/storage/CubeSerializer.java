@@ -1,14 +1,13 @@
 package io.github.opencubicchunks.cubicchunks.world.storage;
 
-import io.github.opencubicchunks.cubicchunks.chunk.ICube;
-import io.github.opencubicchunks.cubicchunks.chunk.cube.Cube;
+import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
+import io.github.opencubicchunks.cubicchunks.chunk.cube.BigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.CubePrimer;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.CubePrimerWrapper;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
-import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.palette.UpgradeData;
 import net.minecraft.world.EmptyTickList;
 import net.minecraft.world.World;
@@ -30,16 +29,16 @@ import javax.annotation.Nullable;
 
 public class CubeSerializer {
 
-    public static ICube loadCube(World world, CubePos pos, Path worldDir) throws IOException {
+    public static IBigCube loadCube(World world, CubePos pos, Path worldDir) throws IOException {
         Path cubePath = worldDir.resolve("cubes32/" + pos.getX() + "_" + pos.getY() + "_" + pos.getZ() + ".bin");
         if (!Files.exists(cubePath)) {
             return null;
         }
         try (DataInputStream in = new DataInputStream(new BufferedInputStream(new GZIPInputStream(Files.newInputStream(cubePath))))) {
             ChunkStatus status = ChunkStatus.getAll().get(in.readUnsignedByte());
-            ChunkSection[] sections = new ChunkSection[ICube.CUBE_SIZE];
+            ChunkSection[] sections = new ChunkSection[IBigCube.CUBE_SIZE];
 
-            for (int i = 0; i < ICube.CUBE_SIZE; i++) {
+            for (int i = 0; i < IBigCube.CUBE_SIZE; i++) {
                 boolean isEmpty = in.readBoolean();
                 if (!isEmpty) {
                     ChunkSection chunkSection = new ChunkSection(pos.minCubeY() + Coords.indexToY(i));
@@ -58,7 +57,7 @@ public class CubeSerializer {
                 }
             }
 
-            ICube cube;
+            IBigCube cube;
             if (status.getType() == ChunkStatus.Type.PROTOCHUNK) {
                 cube = new CubePrimer(pos, sections);
                 cube.setCubeStatus(status);
@@ -68,7 +67,7 @@ public class CubeSerializer {
                 }
 
             } else {
-                Cube cubeIn = new Cube(world, pos, null, UpgradeData.EMPTY, EmptyTickList.get(), EmptyTickList.get(), 0L, sections, null);
+                BigCube cubeIn = new BigCube(world, pos, null, UpgradeData.EMPTY, EmptyTickList.get(), EmptyTickList.get(), 0L, sections, null);
                 cubeIn.setCubeStatus(status);
                 cube = new CubePrimerWrapper(cubeIn);
             }
@@ -80,16 +79,16 @@ public class CubeSerializer {
     }
 
     @Nullable
-    public static ICube loadCubeOld(World world, CubePos pos, Path worldDir) throws IOException {
+    public static IBigCube loadCubeOld(World world, CubePos pos, Path worldDir) throws IOException {
         Path cubePath = worldDir.resolve("cubes32/" + pos.getX() + "_" + pos.getY() + "_" + pos.getZ() + ".bin");
         if (!Files.exists(cubePath)) {
             return null;
         }
         try (DataInputStream in = new DataInputStream(new BufferedInputStream(new GZIPInputStream(Files.newInputStream(cubePath))))) {
             ChunkStatus status = ChunkStatus.getAll().get(in.readUnsignedByte());
-            ChunkSection[] sections = new ChunkSection[ICube.CUBE_SIZE];
+            ChunkSection[] sections = new ChunkSection[IBigCube.CUBE_SIZE];
 
-            for (int i = 0; i < ICube.CUBE_SIZE; i++) {
+            for (int i = 0; i < IBigCube.CUBE_SIZE; i++) {
                 boolean isEmpty = in.readBoolean();
                 if (!isEmpty) {
                     ChunkSection chunkSection = new ChunkSection(pos.minCubeY() + Coords.indexToY(i));
@@ -108,7 +107,7 @@ public class CubeSerializer {
                 }
             }
 
-            ICube cube;
+            IBigCube cube;
             if (status.getType() == ChunkStatus.Type.PROTOCHUNK) {
                 cube = new CubePrimer(pos, sections);
                 cube.setCubeStatus(status);
@@ -119,7 +118,7 @@ public class CubeSerializer {
 
             } else {
 
-                Cube cubeIn = new Cube(world, pos, null, UpgradeData.EMPTY, EmptyTickList.get(), EmptyTickList.get(), 0L, sections, null);
+                BigCube cubeIn = new BigCube(world, pos, null, UpgradeData.EMPTY, EmptyTickList.get(), EmptyTickList.get(), 0L, sections, null);
                 cubeIn.setCubeStatus(status);
                 cube = new CubePrimerWrapper(cubeIn);
             }
@@ -127,7 +126,7 @@ public class CubeSerializer {
         }
     }
 
-    public static void writeCube(World world, ICube cube, Path worldDir) throws IOException {
+    public static void writeCube(World world, IBigCube cube, Path worldDir) throws IOException {
         CubePos pos = cube.getCubePos();
         Path cubePath = worldDir.resolve("cubes32/" + pos.getX() + "_" + pos.getY() + "_" + pos.getZ() + ".bin");
         if (!Files.exists(cubePath.getParent())) {

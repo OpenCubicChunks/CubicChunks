@@ -1,7 +1,7 @@
 package io.github.opencubicchunks.cubicchunks.mixin.optifine.client.optifine;
 
 import io.github.opencubicchunks.cubicchunks.chunk.IClientCubeProvider;
-import io.github.opencubicchunks.cubicchunks.chunk.cube.Cube;
+import io.github.opencubicchunks.cubicchunks.chunk.cube.BigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.EmptyCube;
 import io.github.opencubicchunks.cubicchunks.optifine.IOptiFineChunkRender;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
@@ -31,15 +31,15 @@ public abstract class MixinChunkRender implements IOptiFineChunkRender {
 
     @Shadow public abstract BlockPos getPosition();
 
-    private Cube cube;
+    private BigCube cube;
 
     @Override public ChunkSection getCube() {
-        Cube cube = this.cube;
+        BigCube cube = this.cube;
         if (cube instanceof EmptyCube) {
             return null;
         }
         if (cube == null || !cube.getLoaded()) {
-            cube = (Cube) ((IClientCubeProvider) ((ChunkRenderDispatcherAccess) this$0).getWorld().getChunkProvider())
+            cube = (BigCube) ((IClientCubeProvider) ((ChunkRenderDispatcherAccess) this$0).getWorld().getChunkProvider())
                     .getCube(Coords.blockToCube(position.getX()), Coords.blockToCube(position.getY()), Coords.blockToCube(position.getZ()),
                             ChunkStatus.FULL, true);
             assert cube != null;

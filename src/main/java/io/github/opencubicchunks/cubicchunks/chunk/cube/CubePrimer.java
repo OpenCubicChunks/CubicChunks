@@ -4,7 +4,7 @@ import static net.minecraft.world.chunk.Chunk.EMPTY_SECTION;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import io.github.opencubicchunks.cubicchunks.chunk.ICube;
+import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.biome.CubeBiomeContainer;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
@@ -39,7 +39,7 @@ import java.util.stream.Stream;
 
 import javax.annotation.Nullable;
 
-public class CubePrimer implements ICube, IChunk {
+public class CubePrimer implements IBigCube, IChunk {
 
     private final CubePos cubePos;
     private final ChunkSection[] sections;
@@ -60,13 +60,13 @@ public class CubePrimer implements ICube, IChunk {
     {
         this.cubePos = pos;
         if(sectionsIn == null) {
-            this.sections = new ChunkSection[ICube.CUBE_SIZE];
-            for(int i = 0; i < ICube.CUBE_SIZE; i++) {
+            this.sections = new ChunkSection[IBigCube.CUBE_SIZE];
+            for(int i = 0; i < IBigCube.CUBE_SIZE; i++) {
                 this.sections[i] = new ChunkSection(pos.getY(), (short) 0, (short) 0, (short) 0);
             }
         }
         else {
-            if(sectionsIn.length == ICube.CUBE_SIZE)
+            if(sectionsIn.length == IBigCube.CUBE_SIZE)
                 this.sections = sectionsIn;
             else
             {

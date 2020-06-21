@@ -8,13 +8,13 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class CubeCollectorFuture extends CompletableFuture<List<Either<ICube, ChunkHolder.IChunkLoadingError>>> {
+public class CubeCollectorFuture extends CompletableFuture<List<Either<IBigCube, ChunkHolder.IChunkLoadingError>>> {
 
     private final int size;
 
     private AtomicInteger added = new AtomicInteger();
 
-    private final Either<ICube, ChunkHolder.IChunkLoadingError>[] results;
+    private final Either<IBigCube, ChunkHolder.IChunkLoadingError>[] results;
 
 
     public CubeCollectorFuture(int size) {
@@ -23,7 +23,7 @@ public class CubeCollectorFuture extends CompletableFuture<List<Either<ICube, Ch
     }
 
 
-    public void add(int idx, Either<ICube, ChunkHolder.IChunkLoadingError> either, Throwable error) {
+    public void add(int idx, Either<IBigCube, ChunkHolder.IChunkLoadingError> either, Throwable error) {
         if (error != null) {
             completeExceptionally(error);
         } else {

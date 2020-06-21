@@ -1,6 +1,6 @@
 package io.github.opencubicchunks.cubicchunks.world.server;
 
-import io.github.opencubicchunks.cubicchunks.chunk.ICube;
+import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.ticket.CubeTaskPriorityQueueSorter;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import net.minecraft.util.concurrent.ITaskExecutor;
@@ -13,5 +13,5 @@ public interface IServerWorldLightManager {
 
     void setCubeStatusEmpty(CubePos cubePos);
 
-    CompletableFuture<ICube> lightCube(ICube icube, boolean p_215593_2_);
+    CompletableFuture<IBigCube> lightCube(IBigCube icube, boolean p_215593_2_);
 }

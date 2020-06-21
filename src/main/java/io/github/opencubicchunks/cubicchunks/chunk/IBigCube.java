@@ -14,7 +14,7 @@ import java.util.stream.Stream;
 
 import javax.annotation.Nullable;
 
-public interface ICube extends IBlockReader {
+public interface IBigCube extends IBlockReader {
 
     int CUBE_DIAMETER = EarlyConfig.getCubeDiameter();
     int CUBE_SIZE = CUBE_DIAMETER * CUBE_DIAMETER * CUBE_DIAMETER;

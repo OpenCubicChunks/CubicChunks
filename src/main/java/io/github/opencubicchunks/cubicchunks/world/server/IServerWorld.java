@@ -1,7 +1,7 @@
 package io.github.opencubicchunks.cubicchunks.world.server;
 
-import io.github.opencubicchunks.cubicchunks.chunk.cube.Cube;
+import io.github.opencubicchunks.cubicchunks.chunk.cube.BigCube;
 
 public interface IServerWorld {
-    void onCubeUnloading(Cube cubeIn);
+    void onCubeUnloading(BigCube cubeIn);
 }

@@ -1,7 +1,7 @@
 package io.github.opencubicchunks.cubicchunks.chunk;
 
 import com.mojang.datafixers.util.Either;
-import io.github.opencubicchunks.cubicchunks.chunk.cube.Cube;
+import io.github.opencubicchunks.cubicchunks.chunk.cube.BigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.CubeStatus;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
@@ -35,20 +35,20 @@ public interface IChunkManager {
     @Nullable
     ChunkHolder getImmutableCubeHolder(long cubePosIn);
 
-    CompletableFuture<Either<ICube, ChunkHolder.IChunkLoadingError>> createCubeFuture(ChunkHolder chunkHolderIn,
-            ChunkStatus chunkStatusIn);
+    CompletableFuture<Either<IBigCube, ChunkHolder.IChunkLoadingError>> createCubeFuture(ChunkHolder chunkHolderIn,
+                                                                                         ChunkStatus chunkStatusIn);
 
-    CompletableFuture<Either<Cube, ChunkHolder.IChunkLoadingError>> createCubeBorderFuture(ChunkHolder chunkHolder);
+    CompletableFuture<Either<BigCube, ChunkHolder.IChunkLoadingError>> createCubeBorderFuture(ChunkHolder chunkHolder);
 
 
-    CompletableFuture<Either<Cube, ChunkHolder.IChunkLoadingError>> createCubeTickingFuture(ChunkHolder chunkHolder);
+    CompletableFuture<Either<BigCube, ChunkHolder.IChunkLoadingError>> createCubeTickingFuture(ChunkHolder chunkHolder);
 
-    CompletableFuture<Either<List<ICube>, ChunkHolder.IChunkLoadingError>> createCubeRegionFuture(CubePos pos, int p_219236_2_,
-            IntFunction<ChunkStatus> p_219236_3_);
+    CompletableFuture<Either<List<IBigCube>, ChunkHolder.IChunkLoadingError>> createCubeRegionFuture(CubePos pos, int p_219236_2_,
+                                                                                                     IntFunction<ChunkStatus> p_219236_3_);
 
-    CompletableFuture<Void> saveCubeScheduleTicks(Cube cubeIn);
+    CompletableFuture<Void> saveCubeScheduleTicks(BigCube cubeIn);
 
-    CompletableFuture<Either<Cube, ChunkHolder.IChunkLoadingError>> createCubeEntityTickingFuture(CubePos pos);
+    CompletableFuture<Either<BigCube, ChunkHolder.IChunkLoadingError>> createCubeEntityTickingFuture(CubePos pos);
 
     Iterable<ChunkHolder> getLoadedCubeIterable();
 

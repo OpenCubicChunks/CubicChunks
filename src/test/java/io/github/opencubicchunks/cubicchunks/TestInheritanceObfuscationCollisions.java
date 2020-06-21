@@ -4,8 +4,7 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.empty;
 import static org.junit.Assert.assertThat;
 
-import io.github.opencubicchunks.cubicchunks.chunk.ICube;
-import net.minecraft.world.IBlockReader;
+import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import net.minecraft.world.chunk.IChunk;
 import org.junit.Test;
 import org.objectweb.asm.Type;
@@ -18,7 +17,7 @@ import java.util.stream.Collectors;
 public class TestInheritanceObfuscationCollisions {
     @Test
     public void tesChunkCube() {
-        verifyNoCollision(ICube.class, IChunk.class);
+        verifyNoCollision(IBigCube.class, IChunk.class);
     }
 
     private void verifyNoCollision(Class<?> ccClass, Class<?> mcClass) {

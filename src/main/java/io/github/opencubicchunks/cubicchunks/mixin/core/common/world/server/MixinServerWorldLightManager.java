@@ -2,7 +2,7 @@ package io.github.opencubicchunks.cubicchunks.mixin.core.common.world.server;
 
 import com.mojang.datafixers.util.Pair;
 import io.github.opencubicchunks.cubicchunks.chunk.IChunkManager;
-import io.github.opencubicchunks.cubicchunks.chunk.ICube;
+import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.ticket.CubeTaskPriorityQueueSorter;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.mixin.core.common.world.lighting.MixinWorldLightManager;
@@ -91,12 +91,12 @@ public abstract class MixinServerWorldLightManager extends MixinWorldLightManage
             super.enableLightSources(cubePos, false);
 
 
-            for(int i = 0; i < ICube.CUBE_SIZE; ++i) {
+            for(int i = 0; i < IBigCube.CUBE_SIZE; ++i) {
                 super.setData(LightType.BLOCK, Coords.sectionPosByIndex(cubePos, i), (NibbleArray)null);
                 super.setData(LightType.SKY, Coords.sectionPosByIndex(cubePos, i), (NibbleArray)null);
             }
 
-            for(int j = 0; j < ICube.CUBE_SIZE; ++j) {
+            for(int j = 0; j < IBigCube.CUBE_SIZE; ++j) {
                 super.updateSectionStatus(Coords.sectionPosByIndex(cubePos, j), true);
             }
 
@@ -105,11 +105,11 @@ public abstract class MixinServerWorldLightManager extends MixinWorldLightManage
 
     // lightChunk
     @Override
-    public CompletableFuture<ICube> lightCube(ICube icube, boolean flagIn) {
+    public CompletableFuture<IBigCube> lightCube(IBigCube icube, boolean flagIn) {
         CubePos cubePos = icube.getCubePos();
         icube.setCubeLight(false);
         this.schedulePhaseTask(cubePos.getX(), cubePos.getY(), cubePos.getZ(), ServerWorldLightManager.Phase.PRE_UPDATE, Util.namedRunnable(() -> {
-            for(int i = 0; i < ICube.CUBE_SIZE; ++i) {
+            for(int i = 0; i < IBigCube.CUBE_SIZE; ++i) {
                 ChunkSection chunksection = icube.getCubeSections()[i];
                 if (!ChunkSection.isEmpty(chunksection)) {
                     super.updateSectionStatus(Coords.sectionPosByIndex(cubePos, i), false);

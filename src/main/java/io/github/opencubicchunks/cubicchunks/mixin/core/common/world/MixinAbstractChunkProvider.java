@@ -1,6 +1,6 @@
 package io.github.opencubicchunks.cubicchunks.mixin.core.common.world;
 
-import io.github.opencubicchunks.cubicchunks.chunk.ICube;
+import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.ICubeProvider;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import io.github.opencubicchunks.cubicchunks.world.lighting.ICubeLightProvider;
@@ -22,5 +22,5 @@ public abstract class MixinAbstractChunkProvider implements ICubeLightProvider, 
 
     @Override
     @Nullable
-    public abstract ICube getCube(int cubeX, int cubeY, int cubeZ, ChunkStatus requiredStatus, boolean load);
+    public abstract IBigCube getCube(int cubeX, int cubeY, int cubeZ, ChunkStatus requiredStatus, boolean load);
 }

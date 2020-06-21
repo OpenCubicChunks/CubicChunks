@@ -2,7 +2,7 @@ package io.github.opencubicchunks.cubicchunks.world;
 
 import static io.github.opencubicchunks.cubicchunks.utils.Coords.blockToCube;
 
-import io.github.opencubicchunks.cubicchunks.chunk.ICube;
+import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import net.minecraft.block.Block;
@@ -51,7 +51,7 @@ import javax.annotation.Nullable;
 public class CubeWorldGenRegion implements IWorld {
 
     private static final Logger LOGGER = LogManager.getLogger();
-    private final List<ICube> cubePrimers;
+    private final List<IBigCube> cubePrimers;
     private final int mainCubeX;
     private final int mainCubeY;
     private final int mainCubeZ;
@@ -70,7 +70,7 @@ public class CubeWorldGenRegion implements IWorld {
     //    });
     private final BiomeManager biomeManager;
 
-    public CubeWorldGenRegion(ServerWorld worldIn, List<ICube> cubesIn) {
+    public CubeWorldGenRegion(ServerWorld worldIn, List<IBigCube> cubesIn) {
         int i = MathHelper.floor(Math.cbrt(cubesIn.size()));
         if (i * i * i != cubesIn.size()) {
             throw Util.pauseDevMode(new IllegalStateException("Cache size is not a square."));
@@ -103,13 +103,13 @@ public class CubeWorldGenRegion implements IWorld {
         return this.mainCubeZ;
     }
 
-    public ICube getCube(BlockPos blockPos) {
+    public IBigCube getCube(BlockPos blockPos) {
         return this.getCube(blockToCube(blockPos.getX()), blockToCube(blockPos.getY()), blockToCube(blockPos.getZ()), ChunkStatus.EMPTY,
                 true);
     }
 
-    public ICube getCube(int x, int y, int z, ChunkStatus requiredStatus, boolean nonnull) {
-        ICube icube;
+    public IBigCube getCube(int x, int y, int z, ChunkStatus requiredStatus, boolean nonnull) {
+        IBigCube icube;
         if (this.cubeExists(x, y, z)) {
             CubePos cubePos = this.cubePrimers.get(0).getCubePos();
             int dx = x - cubePos.getX();
@@ -126,8 +126,8 @@ public class CubeWorldGenRegion implements IWorld {
         if (!nonnull) {
             return null;
         } else {
-            ICube icube1 = this.cubePrimers.get(0);
-            ICube icube2 = this.cubePrimers.get(this.cubePrimers.size() - 1);
+            IBigCube icube1 = this.cubePrimers.get(0);
+            IBigCube icube2 = this.cubePrimers.get(this.cubePrimers.size() - 1);
             LOGGER.error("Requested section : {} {} {}", x, y, z);
             LOGGER.error("Region bounds : {} {} {} | {} {} {}",
                     icube1.getCubePos().getX(), icube1.getCubePos().getY(), icube1.getCubePos().getZ(),
@@ -143,8 +143,8 @@ public class CubeWorldGenRegion implements IWorld {
     }
 
     public boolean cubeExists(int x, int y, int z) {
-        ICube isection = this.cubePrimers.get(0);
-        ICube isection2 = this.cubePrimers.get(this.cubePrimers.size() - 1);
+        IBigCube isection = this.cubePrimers.get(0);
+        IBigCube isection2 = this.cubePrimers.get(this.cubePrimers.size() - 1);
         return x >= isection.getCubePos().getX() && x <= isection2.getCubePos().getX() &&
                 y >= isection.getCubePos().getY() && y <= isection2.getCubePos().getY() &&
                 z >= isection.getCubePos().getZ() && z <= isection2.getCubePos().getZ();
@@ -212,7 +212,7 @@ public class CubeWorldGenRegion implements IWorld {
     }
 
     @Nullable @Override public TileEntity getTileEntity(BlockPos pos) {
-        ICube icube = this.getCube(pos);
+        IBigCube icube = this.getCube(pos);
         TileEntity tileentity = icube.getTileEntity(pos);
         if (tileentity != null) {
             return tileentity;
@@ -317,7 +317,7 @@ public class CubeWorldGenRegion implements IWorld {
     }
 
     @Override public boolean setBlockState(BlockPos pos, BlockState newState, int flags) {
-        ICube icube = this.getCube(pos);
+        IBigCube icube = this.getCube(pos);
         BlockState blockstate = icube.setBlock(pos, newState, false);
         if (blockstate != null) {
             this.world.onBlockStateChange(pos, blockstate, newState);
