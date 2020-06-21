@@ -132,7 +132,7 @@ repositories{
 configurations.getByName("annotationProcessor").extendsFrom(configurations.compileClasspath)
 
 // for vulkan
-project.ext.lwjglVersion = "3.2.2"
+project.ext.lwjglVersion = "3.2.1"
 
 switch (OperatingSystem.current()) {
     case OperatingSystem.LINUX:
@@ -143,6 +143,9 @@ switch (OperatingSystem.current()) {
         break
     case OperatingSystem.WINDOWS:
         project.ext.lwjglNatives = System.getProperty("os.arch").contains("64") ? "natives-windows" : "natives-windows-x86"
+        break
+    case OperatingSystem.MAC_OS:
+        project.ext.lwjglNatives = "natives-macos"
         break
 }
 
