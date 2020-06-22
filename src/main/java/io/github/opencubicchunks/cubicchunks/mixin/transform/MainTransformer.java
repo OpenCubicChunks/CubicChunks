@@ -78,7 +78,7 @@ public class MainTransformer {
         types.put(getObjectType("net/minecraft/util/math/ChunkPos"),
                 getObjectType("io/github/opencubicchunks/cubicchunks/chunk/util/CubePos"));
         types.put(getObjectType("net/minecraft/world/chunk/Chunk"),
-                getObjectType("io/github/opencubicchunks/cubicchunks/chunk/cube/Cube"));
+                getObjectType("io/github/opencubicchunks/cubicchunks/chunk/cube/BigCube"));
         types.put(getObjectType("net/minecraft/world/server/ChunkHolder$1"),
                 getObjectType("io/github/opencubicchunks/cubicchunks/chunk/ICubeHolder$CubeLoadingError"));
 
