@@ -149,7 +149,7 @@ public class Coords {
         //        0b1000010100 & 0b0001100000 = 0b0
         //        0b0 >> 4 = 0b0 = 0x0 = 0
 
-        //        mask needs to be every power of 2 below ICube.BLOCK_SIZE that's > 16
+        //        mask needs to be every power of 2 below IBigCube.BLOCK_SIZE that's > 16
 
         if(IBigCube.CUBE_DIAMETER == 1) {
             return blockToIndex16(x, y, z);

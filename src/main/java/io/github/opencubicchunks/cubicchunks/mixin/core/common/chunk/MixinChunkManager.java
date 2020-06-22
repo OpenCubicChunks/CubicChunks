@@ -545,7 +545,7 @@ public abstract class MixinChunkManager implements IChunkManager {
             }
         }
 
-//        CompletableFuture<List<Either<ICube, ChunkHolder.IChunkLoadingError>>> futures = Util.gather(list);
+//        CompletableFuture<List<Either<IBigCube, ChunkHolder.IChunkLoadingError>>> futures = Util.gather(list);
         return collectorFuture.thenApply((cubeEithers) -> {
             List<IBigCube> returnFutures = Lists.newArrayList();
             int i = 0;

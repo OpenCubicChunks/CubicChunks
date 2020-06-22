@@ -81,7 +81,7 @@ public class CubePrimerWrapper extends CubePrimer {
     }
 
     /**
-     * Returns the sections array for this Cube.
+     * Returns the sections array for this BigCube.
      */
     @Override @Deprecated
     public ChunkSection[] getSections() {

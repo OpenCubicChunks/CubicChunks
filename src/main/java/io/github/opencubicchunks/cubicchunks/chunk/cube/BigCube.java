@@ -102,7 +102,7 @@ public class BigCube implements IChunk, IBigCube {
 
         if(sectionsIn != null) {
             if (sectionsIn.length != CUBE_SIZE) {
-                throw new IllegalStateException("Number of Sections must equal Cube.CUBESIZE");
+                throw new IllegalStateException("Number of Sections must equal BigCube.CUBESIZE");
             }
 
             for (int i = 0; i < sectionsIn.length; i++) {
@@ -384,7 +384,7 @@ public class BigCube implements IChunk, IBigCube {
         return blockstate;
     }
 
-    // TODO: obfuscation, this overrides both IChunk and ICube
+    // TODO: obfuscation, this overrides both IChunk and IBigCube
     @Nullable
     public BlockState setBlock(BlockPos pos, BlockState state, boolean isMoving) {
         return this.setBlockState(Coords.blockToIndex(pos.getX(), pos.getY(), pos.getZ()), pos, state, isMoving);

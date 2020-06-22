@@ -249,7 +249,7 @@ public abstract class MixinChunkHolder implements ICubeHolder {
     @Override
     public void sendChanges(BigCube cube) {
         if (cubePos == null) {
-            throw new IllegalStateException("sendChanges(Cube) called on column holder!");
+            throw new IllegalStateException("sendChanges(BigCube) called on column holder!");
         }
         if (this.changedLocalBlocks.isEmpty() && this.skyLightChangeMask == 0 && this.blockLightChangeMask == 0) {
             return;

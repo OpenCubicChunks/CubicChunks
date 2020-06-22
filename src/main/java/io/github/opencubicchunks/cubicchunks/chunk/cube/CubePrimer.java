@@ -70,7 +70,7 @@ public class CubePrimer implements IBigCube, IChunk {
                 this.sections = sectionsIn;
             else
             {
-                throw new IllegalStateException("Number of Sections must equal Cube.CUBESIZE");
+                throw new IllegalStateException("Number of Sections must equal BigCube.CUBESIZE");
             }
         }
     }
