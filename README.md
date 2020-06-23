@@ -6,10 +6,10 @@
 
 [![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/CubicChunks-dev/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
-This MinecraftForge mod extends Minecraft height and depth. The only limitation is size of 32-bit integer.
+This MinecraftForge mod extends Minecraft height and depth. The only limitation is the maximum 32-bit integer.
 
 ### Cloning the repository
-Note: you need git installed to do that
+Note: you need git installed to do this
 ```
 git clone --recursive
 ```
@@ -19,23 +19,23 @@ If you don't yet have the submodule but already cloned the repository:
 git submodule update --init --recursive
 ```
 
-To get latest version of the submodule:
+To get the latest version of the submodule:
 ```
 git submodule update --recursive --remote
 ```
 
 ### Compiling the mod
-Note: on windows you need to run these commands without `./`
+Note: on Windows you need to run these commands without `./`
 
 This command:
 ```
 ./gradlew build
 ```
-Should be enough to build the mod, but if there are any issues, run `./gradlew setupDecompWorkspace` before `./gradlew build`.
+should be enough to build the mod, but if there are any issues, run `./gradlew setupDecompWorkspace` before `./gradlew build`.
 The mod uses information from git repository to generate version number. Make sure you have the git repository before compiling.
 
 ### Setting up development environment
-Note: on windows you need to run these commands without `./`
+Note: on Windows you need to run these commands without `./`
 
 ![IntelliJ IDEA](intellij-logo.png)
 
@@ -48,10 +48,10 @@ Then run:
 ```
 ./gradlew genIntellijRuns
 ```
-To be able to run the mod from within IDE. Then edit the generated run configurations and set `use classpath of module` to `CubicChunkc_main`
-Then refresh gradle project in IDEA.
+to be able to run the mod from within IDE. Then edit the generated run configurations and set `use classpath of module` to `CubicChunkc_main`
+then refresh gradle project in IDEA.
 
-For development in IntelliJ IDEA the [MinecraftDev plugin](https://plugins.jetbrains.com/idea/plugin/8327-minecraft-development) is recommended.
+For development in IntelliJ IDEA, the [MinecraftDev plugin](https://plugins.jetbrains.com/idea/plugin/8327-minecraft-development) is recommended.
 
 
 #### Other IDEs:
