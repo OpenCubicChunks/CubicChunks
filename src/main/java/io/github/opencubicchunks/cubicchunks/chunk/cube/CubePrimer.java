@@ -15,7 +15,7 @@ import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.Entity;
 import net.minecraft.fluid.Fluid;
-import net.minecraft.fluid.IFluidState;
+import net.minecraft.fluid.FluidState;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
@@ -27,10 +27,13 @@ import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkSection;
 import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.chunk.IChunk;
+import net.minecraft.world.gen.GenerationStage;
 import net.minecraft.world.gen.Heightmap;
+import net.minecraft.world.gen.feature.structure.Structure;
 import net.minecraft.world.gen.feature.structure.StructureStart;
 import net.minecraft.world.lighting.WorldLightManager;
 
+import java.util.BitSet;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -102,7 +105,7 @@ public class CubePrimer implements IBigCube, IChunk {
         return true;
     }
 
-    @Override public IFluidState getFluidState(BlockPos pos) {
+    @Override public FluidState getFluidState(BlockPos pos) {
         throw new UnsupportedOperationException("Not implemented");
     }
 
@@ -161,6 +164,19 @@ public class CubePrimer implements IBigCube, IChunk {
             */
             return blockstate;
         }
+    }
+
+    @Nullable
+    public BitSet getCarvingMask(GenerationStage.Carving type) {
+        throw new UnsupportedOperationException("Not implemented");
+    }
+
+    public BitSet setCarvingMask(GenerationStage.Carving type) {
+        throw new UnsupportedOperationException("Not implemented");
+    }
+
+    public void setCarvingMask(GenerationStage.Carving type, BitSet mask) {
+        throw new UnsupportedOperationException("Not implemented");
     }
 
     @Nullable
@@ -237,12 +253,12 @@ public class CubePrimer implements IBigCube, IChunk {
     }
 
     @Deprecated
-    @Override public Map<String, StructureStart> getStructureStarts() {
+    @Override public Map<Structure<?>, StructureStart<?>> getStructureStarts() {
         throw new UnsupportedOperationException("For later implementation");
     }
 
     @Deprecated
-    @Override public void setStructureStarts(Map<String, StructureStart> structureStartsIn) {
+    @Override public void setStructureStarts(Map<Structure<?>, StructureStart<?>> structureStartsIn) {
         throw new UnsupportedOperationException("For later implementation");
     }
 
@@ -344,27 +360,27 @@ public class CubePrimer implements IBigCube, IChunk {
         this.setModified(true);
     }
 
-    @Nullable @Override public StructureStart getStructureStart(String stucture) {
+    @Nullable @Override public StructureStart<?> func_230342_a_(Structure<?> var1) {
         throw new UnsupportedOperationException("For later implementation");
     }
 
-    @Override public void putStructureStart(String structureIn, StructureStart structureStartIn) {
+    @Override public void func_230344_a_(Structure<?> structureIn, StructureStart<?> structureStartIn) {
         throw new UnsupportedOperationException("For later implementation");
     }
 
-    @Override public LongSet getStructureReferences(String structureIn) {
+    @Override public LongSet func_230346_b_(Structure<?> structureIn) {
         throw new UnsupportedOperationException("For later implementation");
     }
 
-    @Override public void addStructureReference(String strucutre, long reference) {
+    @Override public void func_230343_a_(Structure<?> strucutre, long reference) {
         throw new UnsupportedOperationException("For later implementation");
     }
 
-    @Override public Map<String, LongSet> getStructureReferences() {
+    @Override public Map<Structure<?>, LongSet> getStructureReferences() {
         throw new UnsupportedOperationException("For later implementation");
     }
 
-    @Override public void setStructureReferences(Map<String, LongSet> p_201606_1_) {
+    @Override public void setStructureReferences(Map<Structure<?>, LongSet> p_201606_1_) {
         throw new UnsupportedOperationException("For later implementation");
     }
 

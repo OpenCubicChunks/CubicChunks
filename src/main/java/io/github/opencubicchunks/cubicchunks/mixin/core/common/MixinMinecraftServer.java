@@ -8,15 +8,14 @@ import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import io.github.opencubicchunks.cubicchunks.world.ForcedCubesSaveData;
 import it.unimi.dsi.fastutil.longs.LongIterator;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.util.RegistryKey;
 import net.minecraft.util.Unit;
 import net.minecraft.util.Util;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraft.world.ForcedChunksSaveData;
+import net.minecraft.world.World;
 import net.minecraft.world.chunk.listener.IChunkStatusListener;
-import net.minecraft.world.dimension.DimensionType;
 import net.minecraft.world.server.ServerChunkProvider;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraft.world.server.TicketType;
@@ -25,6 +24,8 @@ import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
+
+import java.util.Map;
 
 @Mixin(MinecraftServer.class)
 public abstract class MixinMinecraftServer {
@@ -37,13 +38,13 @@ public abstract class MixinMinecraftServer {
 
     @Shadow @Final private static Logger LOGGER;
 
-    @Shadow protected abstract void setUserMessage(ITextComponent userMessageIn);
-
     @Shadow public abstract boolean isServerRunning();
 
-    @Shadow public abstract ServerWorld getWorld(DimensionType dimension);
-
     @Shadow protected abstract void runScheduledTasks();
+
+    @Shadow public abstract ServerWorld func_241755_D_();
+
+    @Shadow @Final private Map<RegistryKey<World>, ServerWorld> worlds;
 
     /**
      * @author NotStirred
@@ -51,10 +52,9 @@ public abstract class MixinMinecraftServer {
      */
     @Overwrite
     protected void loadInitialChunks(IChunkStatusListener statusListener) {
-        this.setUserMessage(new TranslationTextComponent("menu.generatingTerrain"));
-        ServerWorld serverworld = this.getWorld(DimensionType.OVERWORLD);
-        LOGGER.info("Preparing start region for dimension " + DimensionType.getKey(serverworld.dimension.getType()));
-        BlockPos spawnPos = serverworld.getSpawnPoint();
+        ServerWorld serverworld = this.func_241755_D_();
+        LOGGER.info("Preparing start region for dimension {}", (Object)serverworld.func_234923_W_().func_240901_a_());
+        BlockPos spawnPos = serverworld.func_241135_u_(); // getSpawnPoint
         CubePos spawnPosCube = CubePos.from(spawnPos);
 
         statusListener.start(new ChunkPos(spawnPos));
@@ -70,27 +70,27 @@ public abstract class MixinMinecraftServer {
         serverchunkprovider.registerTicket(TicketType.START, spawnPosCube.asChunkPos(), Coords.cubeToSection(radius + 1, 0), Unit.INSTANCE);
 
         int i2 = 0;
-        while(isServerRunning() && (serverchunkprovider.getLoadedChunksCount() < chunkDiameter * chunkDiameter || ((IServerChunkProvider) serverchunkprovider).getCubeLoadCounter() < d*d*d)) {
+        // func_217229_b = getChunkLoadCounter
+        while(isServerRunning() && (serverchunkprovider.func_217229_b() < chunkDiameter * chunkDiameter || ((IServerChunkProvider) serverchunkprovider).getCubeLoadCounter() < d*d*d)) {
             // from CC
             this.serverTime = Util.milliTime() + 10L;
             this.runScheduledTasks();
 
             if (i2 == 100) {
-                LOGGER.info("Current loaded chunks: " + serverchunkprovider.getLoadedChunksCount() + " | " + ((IServerChunkProvider)serverchunkprovider).getCubeLoadCounter());
+                LOGGER.info("Current loaded chunks: " + serverchunkprovider.func_217229_b() + " | " + ((IServerChunkProvider)serverchunkprovider).getCubeLoadCounter());
                 i2 = 0;
             }
 
             i2++;
         }
-        LOGGER.info("Current loaded chunks: " + serverchunkprovider.getLoadedChunksCount() + " | " + ((IServerChunkProvider)serverchunkprovider).getCubeLoadCounter());
+        LOGGER.info("Current loaded chunks: " + serverchunkprovider.func_217229_b() + " | " + ((IServerChunkProvider)serverchunkprovider).getCubeLoadCounter());
         this.serverTime = Util.milliTime() + 10L;
         this.runScheduledTasks();
 
-        for(DimensionType dimensiontype : DimensionType.getAll()) {
-            ForcedChunksSaveData forcedchunkssavedata = this.getWorld(dimensiontype).getSavedData().get(ForcedChunksSaveData::new, "chunks");
-            ForcedCubesSaveData forcedcubessavedata = this.getWorld(dimensiontype).getSavedData().get(ForcedCubesSaveData::new, "cubes");
+        for(ServerWorld serverworld1 : this.worlds.values()) {
+            ForcedChunksSaveData forcedchunkssavedata = serverworld1.getSavedData().get(ForcedChunksSaveData::new, "chunks");
+            ForcedCubesSaveData forcedcubessavedata = serverworld1.getSavedData().get(ForcedCubesSaveData::new, "cubes");
             if (forcedchunkssavedata != null) {
-                ServerWorld serverworld1 = this.getWorld(dimensiontype);
                 LongIterator longiteratorChunks = forcedchunkssavedata.getChunks().iterator();
                 LongIterator longiteratorCubes = forcedcubessavedata.getCubes().iterator();
 

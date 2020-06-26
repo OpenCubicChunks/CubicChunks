@@ -260,7 +260,8 @@ public abstract class MixinServerChunkProvider implements IServerChunkProvider, 
     public void markBlockChanged(BlockPos pos) {
         ChunkHolder chunkholder = ((IChunkManager) this.chunkManager).getCubeHolder(CubePos.from(pos).asLong());
         if (chunkholder != null) {
-            chunkholder.markBlockChanged(Coords.localX(pos), Coords.localY(pos), Coords.localZ(pos));
+            // markBlockChanged
+            chunkholder.func_241819_a(Coords.localX(pos), Coords.localY(pos), Coords.localZ(pos));
         }
     }
 

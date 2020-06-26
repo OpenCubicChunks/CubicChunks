@@ -11,11 +11,12 @@ import net.minecraft.block.Blocks;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.fluid.Fluid;
-import net.minecraft.fluid.IFluidState;
+import net.minecraft.fluid.FluidState;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.particles.IParticleData;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.Direction;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.SoundEvent;
 import net.minecraft.util.Util;
@@ -23,7 +24,9 @@ import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.DifficultyInstance;
+import net.minecraft.world.DimensionType;
 import net.minecraft.world.EmptyTickList;
+import net.minecraft.world.ISeedReader;
 import net.minecraft.world.ITickList;
 import net.minecraft.world.IWorld;
 import net.minecraft.world.World;
@@ -33,11 +36,10 @@ import net.minecraft.world.border.WorldBorder;
 import net.minecraft.world.chunk.AbstractChunkProvider;
 import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.chunk.IChunk;
-import net.minecraft.world.dimension.Dimension;
 import net.minecraft.world.gen.Heightmap;
 import net.minecraft.world.lighting.WorldLightManager;
 import net.minecraft.world.server.ServerWorld;
-import net.minecraft.world.storage.WorldInfo;
+import net.minecraft.world.storage.IWorldInfo;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -48,7 +50,7 @@ import java.util.function.Predicate;
 
 import javax.annotation.Nullable;
 
-public class CubeWorldGenRegion implements IWorld {
+public class CubeWorldGenRegion implements ISeedReader {
 
     private static final Logger LOGGER = LogManager.getLogger();
     private final List<IBigCube> cubePrimers;
@@ -59,9 +61,9 @@ public class CubeWorldGenRegion implements IWorld {
     private final ServerWorld world;
     private final long seed;
     private final int seaLevel;
-    private final WorldInfo worldInfo;
+    private final IWorldInfo worldInfo;
     private final Random random;
-    private final Dimension dimension;
+    private final DimensionType dimension;
     //    private final ITickList<Block> pendingBlockTickList = new WorldGenTickList<>((blockPos) -> {
     //        return this.getCube(blockPos).getBlocksToBeTicked();
     //    });
@@ -86,8 +88,8 @@ public class CubeWorldGenRegion implements IWorld {
             this.seaLevel = worldIn.getSeaLevel();
             this.worldInfo = worldIn.getWorldInfo();
             this.random = worldIn.getRandom();
-            this.dimension = worldIn.getDimension();
-            this.biomeManager = new BiomeManager(this, WorldInfo.byHashing(this.seed), this.dimension.getType().getMagnifier());
+            this.dimension = worldIn.func_230315_m_();
+            this.biomeManager = new BiomeManager(this, BiomeManager.func_235200_a_(this.seed), worldIn.func_230315_m_().getMagnifier());
         }
     }
 
@@ -166,7 +168,7 @@ public class CubeWorldGenRegion implements IWorld {
         return this.world;
     }
 
-    @Override public WorldInfo getWorldInfo() {
+    @Override public IWorldInfo getWorldInfo() {
         return this.worldInfo;
     }
 
@@ -184,14 +186,6 @@ public class CubeWorldGenRegion implements IWorld {
 
     @Override public Random getRandom() {
         return this.random;
-    }
-
-    @Override public void notifyNeighbors(BlockPos pos, Block blockIn) {
-
-    }
-
-    @Override public BlockPos getSpawnPoint() {
-        return world.getSpawnPoint();
     }
 
     @Override
@@ -218,16 +212,15 @@ public class CubeWorldGenRegion implements IWorld {
             return tileentity;
         } else {
             CompoundNBT compoundnbt = null;// = icube.getDeferredTileEntity(pos);
+            BlockState state = this.getBlockState(pos);
             if (compoundnbt != null) {
                 if ("DUMMY".equals(compoundnbt.getString("id"))) {
-                    BlockState state = this.getBlockState(pos);
                     if (!state.hasTileEntity()) {
                         return null;
                     }
-
                     tileentity = state.createTileEntity(this.world);
                 } else {
-                    tileentity = TileEntity.create(compoundnbt);
+                    tileentity = TileEntity.func_235657_b_(state, compoundnbt);
                 }
 
                 if (tileentity != null) {
@@ -248,7 +241,7 @@ public class CubeWorldGenRegion implements IWorld {
         return this.getCube(pos).getBlockState(pos);
     }
 
-    @Override public IFluidState getFluidState(BlockPos pos) {
+    @Override public FluidState getFluidState(BlockPos pos) {
         return this.getCube(pos).getFluidState(pos);
     }
 
@@ -308,15 +301,20 @@ public class CubeWorldGenRegion implements IWorld {
         return this.seaLevel;
     }
 
-    @Override public Dimension getDimension() {
-        return world.dimension;
+    @Override public DimensionType func_230315_m_() {
+        return this.dimension;
+    }
+
+    @Override public float func_230487_a_(Direction direction, boolean b) {
+        return 1f;
     }
 
     @Override public WorldLightManager getLightManager() {
         return world.getLightManager();
     }
 
-    @Override public boolean setBlockState(BlockPos pos, BlockState newState, int flags) {
+    // setBlockState
+    @Override public boolean func_241211_a_(BlockPos pos, BlockState newState, int flags, int recursionLimit) {
         IBigCube icube = this.getCube(pos);
         BlockState blockstate = icube.setBlock(pos, newState, false);
         if (blockstate != null) {
@@ -349,7 +347,8 @@ public class CubeWorldGenRegion implements IWorld {
         return this.setBlockState(pos, Blocks.AIR.getDefaultState(), 3);
     }
 
-    @Override public boolean destroyBlock(BlockPos pos, boolean isPlayerInCreative, @Nullable Entity droppedEntities) {
+    // destroyBlock
+    @Override public boolean func_241212_a_(BlockPos pos, boolean isPlayerInCreative, @Nullable Entity droppedEntities, int recursionLimit) {
         BlockState blockstate = this.getBlockState(pos);
         if (blockstate.isAir(this, pos)) {
             return false;
@@ -359,7 +358,7 @@ public class CubeWorldGenRegion implements IWorld {
                 Block.spawnDrops(blockstate, this.world, pos, tileentity, droppedEntities, ItemStack.EMPTY);
             }
 
-            return this.setBlockState(pos, Blocks.AIR.getDefaultState(), 3);
+            return this.func_241211_a_(pos, Blocks.AIR.getDefaultState(), 3, recursionLimit);
         }
     }
 

@@ -21,7 +21,8 @@ public abstract class MixinWorldLightManager implements IWorldLightManager, ILig
 
     @Shadow public void checkBlock(BlockPos pos) { throw new Error("Mixin failed to apply correctly"); }
 
-    @Shadow public void setData(LightType type, SectionPos pos, @Nullable NibbleArray array) { throw new Error("Mixin failed to apply correctly"); }
+    @Shadow public void setData(LightType type, SectionPos pos, @Nullable NibbleArray array, boolean flag) { throw new Error("Mixin failed to apply "
+            + "correctly"); }
 
     @Shadow @Final @Nullable private LightEngine<?, ?> blockLight;
 

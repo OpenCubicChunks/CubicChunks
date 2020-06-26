@@ -10,9 +10,9 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.SectionPos;
-import net.minecraft.util.math.Vec3i;
+import net.minecraft.util.math.vector.Vector3i;
 
-public class CubePos extends Vec3i {
+public class CubePos extends Vector3i {
     private CubePos(int xIn, int yIn, int zIn) {
         super(xIn, yIn, zIn);
     }

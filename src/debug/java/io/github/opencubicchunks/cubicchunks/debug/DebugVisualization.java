@@ -59,20 +59,21 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.player.ClientPlayerEntity;
 import net.minecraft.client.gui.screen.WorldLoadProgressScreen;
 import net.minecraft.client.renderer.BufferBuilder;
-import net.minecraft.client.renderer.Matrix4f;
-import net.minecraft.client.renderer.Vector3f;
-import net.minecraft.client.renderer.Vector4f;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.util.Direction;
+import net.minecraft.util.RegistryKey;
 import net.minecraft.util.Util;
+import net.minecraft.util.math.vector.Matrix4f;
+import net.minecraft.util.math.vector.Vector3f;
+import net.minecraft.util.math.vector.Vector4f;
 import net.minecraft.util.registry.Registry;
+import net.minecraft.world.DimensionType;
 import net.minecraft.world.IWorld;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.AbstractChunkProvider;
 import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.chunk.IChunk;
-import net.minecraft.world.dimension.DimensionType;
 import net.minecraft.world.server.ChunkHolder;
 import net.minecraft.world.server.ChunkManager;
 import net.minecraft.world.server.ServerChunkProvider;
@@ -122,7 +123,7 @@ public class DebugVisualization {
     private static final Logger LOGGER = LogManager.getLogger();
 
     private static volatile World clientWorld;
-    private static volatile Map<DimensionType, World> serverWorlds = new ConcurrentHashMap<>();
+    private static volatile Map<RegistryKey<?>, World> serverWorlds = new ConcurrentHashMap<>();
     private static AtomicBoolean initialized = new AtomicBoolean();
     private static boolean shutdown = false;
     private static long window;
@@ -234,7 +235,7 @@ public class DebugVisualization {
         if (w instanceof ClientWorld) {
             clientWorld = (World) w;
         } else if (w instanceof ServerWorld) {
-            serverWorlds.put(w.getDimension().getType(), (World) w);
+            serverWorlds.put(((ServerWorld) w).func_234923_W_(), (World) w);
         }
 
     }
@@ -242,7 +243,7 @@ public class DebugVisualization {
     public static void onWorldUnload(WorldEvent.Unload t) {
         IWorld w = t.getWorld();
         if (w instanceof ServerWorld) {
-            serverWorlds.remove(w.getDimension());
+            serverWorlds.remove(((ServerWorld) w).func_234923_W_());
         }
     }
 
@@ -435,7 +436,7 @@ public class DebugVisualization {
     }
 
     private static void drawSelectedWorld(BufferBuilder bufferBuilder) {
-        World w = serverWorlds.get(DimensionType.OVERWORLD);
+        World w = serverWorlds.get(DimensionType.field_235999_c_); // OVERWORLD
         if (w == null) {
             return;
         }

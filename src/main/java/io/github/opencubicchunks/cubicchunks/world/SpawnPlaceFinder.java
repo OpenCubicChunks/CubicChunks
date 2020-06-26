@@ -2,6 +2,7 @@ package io.github.opencubicchunks.cubicchunks.world;
 
 import io.github.opencubicchunks.cubicchunks.CubicChunks;
 import mcp.MethodsReturnNonnullByDefault;
+import net.minecraft.tags.BlockTags;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
@@ -60,7 +61,7 @@ public final class SpawnPlaceFinder {
     }
 */
     @Nullable
-    public static BlockPos getTopBlockBisect(World world, BlockPos pos) {
+    public static BlockPos getTopBlockBisect(World world, BlockPos pos, boolean checkValid) {
         BlockPos minPos, maxPos;
         if (findNonEmpty(world, pos) == null) {
             CubicChunks.LOGGER.trace("Starting bisect with empty space at init {}", pos);
@@ -78,7 +79,11 @@ public final class SpawnPlaceFinder {
             return null;
         }
         assert findNonEmpty(world, maxPos) == null && findNonEmpty(world, minPos) != null;
-        return bisect(world, minPos.down(MIN_FREE_SPACE_SPAWN), maxPos.up(MIN_FREE_SPACE_SPAWN));
+        BlockPos foundPos = bisect(world, minPos.down(MIN_FREE_SPACE_SPAWN), maxPos.up(MIN_FREE_SPACE_SPAWN));
+        if (foundPos != null && checkValid && !world.getBlockState(foundPos).getBlock().isIn(BlockTags.VALID_SPAWN)) {
+            return null;
+        }
+        return foundPos;
     }
 
     @Nullable

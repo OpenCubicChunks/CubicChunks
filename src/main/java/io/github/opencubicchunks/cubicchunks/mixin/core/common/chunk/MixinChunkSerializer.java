@@ -65,8 +65,8 @@ public abstract class MixinChunkSerializer {
         BiomeContainer biomeContainerIn = new BiomeContainer(biomesIn);
         if (statusType == ChunkStatus.Type.LEVELCHUNK) {
             newChunk = new Chunk(worldIn.getWorld(), pos, biomeContainerIn, UpgradeData.EMPTY,
-                    new SerializableTickList<>(Registry.BLOCK::getKey, new ArrayList<>()),
-                    new SerializableTickList<>(Registry.FLUID::getKey, new ArrayList<>()),
+                    new SerializableTickList<>(Registry.BLOCK::getKey, new ArrayList<>(), 0), // TODO: supply game time
+                    new SerializableTickList<>(Registry.FLUID::getKey, new ArrayList<>(), 0),
                     inhabitedTime, new ChunkSection[16], (chunk) -> { });
             if (level.contains("ForgeCaps")) ((Chunk)newChunk).readCapsFromNBT(level.getCompound("ForgeCaps"));
         } else {
@@ -74,7 +74,7 @@ public abstract class MixinChunkSerializer {
                     new ChunkPrimerTickList<>((block) -> block == null || block.getDefaultState().isAir(), pos),
                     new ChunkPrimerTickList<>((fluid) -> fluid == null || fluid == Fluids.EMPTY, pos));
 
-            chunkprimer.setBiomes(biomeContainerIn);
+            chunkprimer.func_225548_a_(biomeContainerIn); // setBiomes
             newChunk = chunkprimer;
             chunkprimer.setInhabitedTime(inhabitedTime);
             chunkprimer.setStatus(ChunkStatus.byName(level.getString("Status")));

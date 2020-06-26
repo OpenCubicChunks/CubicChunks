@@ -1,5 +1,6 @@
 package io.github.opencubicchunks.cubicchunks.client;
 
+import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.ITrackingCubeStatusListener;
@@ -8,13 +9,13 @@ import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.AbstractGui;
 import net.minecraft.client.renderer.BufferBuilder;
-import net.minecraft.client.renderer.Matrix4f;
 import net.minecraft.client.renderer.Tessellator;
-import net.minecraft.client.renderer.TransformationMatrix;
-import net.minecraft.client.renderer.Vector4f;
 import net.minecraft.client.renderer.WorldVertexBufferUploader;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.util.Direction;
+import net.minecraft.util.math.vector.Matrix4f;
+import net.minecraft.util.math.vector.TransformationMatrix;
+import net.minecraft.util.math.vector.Vector4f;
 import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.chunk.listener.TrackingChunkStatusListener;
 import org.lwjgl.opengl.GL11;
@@ -28,16 +29,16 @@ import java.util.Map;
 
 public class CubicWorldLoadScreen {
 
-    public static void doRender(TrackingChunkStatusListener trackerParam, int xBase, int yBase, int scale, int spacing,
+    public static void doRender(MatrixStack mStack, TrackingChunkStatusListener trackerParam, int xBase, int yBase, int scale, int spacing,
             Object2IntMap<ChunkStatus> colors) {
         render3d(trackerParam, xBase, yBase, scale, spacing, colors);
         // TODO: config option
-        // render2d(trackerParam, xBase, yBase, scale, spacing, colors);
+        // render2d(mStack, trackerParam, xBase, yBase, scale, spacing, colors);
     }
 
     private static void render3d(TrackingChunkStatusListener trackerParam, int xBase, int yBase, int scale, int spacing,
             Object2IntMap<ChunkStatus> colors) {
-        float aspectRatio = Minecraft.getInstance().currentScreen.width / (float) Minecraft.getInstance().currentScreen.height;
+        float aspectRatio = Minecraft.getInstance().currentScreen.field_230708_k_ / (float) Minecraft.getInstance().currentScreen.field_230709_l_;
 
         float scaleWithCineSize = scale * IBigCube.CUBE_DIAMETER / 2.0f;
 
@@ -216,7 +217,7 @@ public class CubicWorldLoadScreen {
     }
 
 
-    private static void render2d(TrackingChunkStatusListener trackerParam, int xBase, int yBase, int scale, int spacing,
+    private static void render2d(MatrixStack mStack, TrackingChunkStatusListener trackerParam, int xBase, int yBase, int scale, int spacing,
             Object2IntMap<ChunkStatus> colors) {
         int squareScale = scale + spacing;
         int loadDiameter = trackerParam.getDiameter();
@@ -231,10 +232,10 @@ public class CubicWorldLoadScreen {
 
         int color = 0xff001ff;
         if (spacing != 0) {
-            AbstractGui.fill(xBase - radiusPixels, yBase - radiusPixels, xBase - radiusPixels + 1, yBase + radiusPixels, color);
-            AbstractGui.fill(xBase + radiusPixels - 1, yBase - radiusPixels, xBase + radiusPixels, yBase + radiusPixels, color);
-            AbstractGui.fill(xBase - radiusPixels, yBase - radiusPixels, xBase + radiusPixels, yBase - radiusPixels + 1, color);
-            AbstractGui.fill(xBase - radiusPixels, yBase + radiusPixels - 1, xBase + radiusPixels, yBase + radiusPixels, color);
+            AbstractGui.func_238467_a_(mStack, xBase - radiusPixels, yBase - radiusPixels, xBase - radiusPixels + 1, yBase + radiusPixels, color);
+            AbstractGui.func_238467_a_(mStack, xBase + radiusPixels - 1, yBase - radiusPixels, xBase + radiusPixels, yBase + radiusPixels, color);
+            AbstractGui.func_238467_a_(mStack, xBase - radiusPixels, yBase - radiusPixels, xBase + radiusPixels, yBase - radiusPixels + 1, color);
+            AbstractGui.func_238467_a_(mStack, xBase - radiusPixels, yBase + radiusPixels - 1, xBase + radiusPixels, yBase + radiusPixels, color);
         }
 
         final List<ChunkStatus> statuses = ChunkStatus.getAll();

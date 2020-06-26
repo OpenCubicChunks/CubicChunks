@@ -21,7 +21,7 @@ import java.util.function.Function;
 @Mixin(targets = "net.minecraft.world.chunk.ChunkStatus$ISelectiveWorker")
 public interface MixinISelectiveWorker {
 
-    @Shadow void doWork(ServerWorld p_doWork_1_, ChunkGenerator<?> p_doWork_2_, List<IChunk> p_doWork_3_, IChunk p_doWork_4_);
+    @Shadow void doWork(ServerWorld p_doWork_1_, ChunkGenerator p_doWork_2_, List<IChunk> p_doWork_3_, IChunk p_doWork_4_);
 
     /**
      * @author Batrteks2x
@@ -29,7 +29,7 @@ public interface MixinISelectiveWorker {
      */
     @Overwrite
     default CompletableFuture<Either<IChunk, ChunkHolder.IChunkLoadingError>> doWork(
-            ChunkStatus status, ServerWorld p_doWork_2_, ChunkGenerator<?> p_doWork_3_,
+            ChunkStatus status, ServerWorld p_doWork_2_, ChunkGenerator p_doWork_3_,
             TemplateManager p_doWork_4_, ServerWorldLightManager p_doWork_5_,
             Function<IChunk, CompletableFuture<Either<IChunk, ChunkHolder.IChunkLoadingError>>> p_doWork_6_,
             List<IChunk> p_doWork_7_, IChunk chunk) {

@@ -59,7 +59,8 @@ public abstract class MixinTicketManager implements ITicketManager {
     @Shadow private long currentTime;
     //@Final @Shadow private Set<ChunkHolder> chunkHolders;
 
-    @Shadow private static int getLevel(SortedArraySet<Ticket<?>> p_229844_0_) {
+    // getLevel
+    @Shadow private static int func_229844_a_(SortedArraySet<Ticket<?>> p_229844_0_) {
         throw new Error("Mixin did not apply correctly");
     }
 
@@ -85,7 +86,7 @@ public abstract class MixinTicketManager implements ITicketManager {
     @Override
     public void registerCube(long cubePosIn, Ticket<?> ticketIn) {
         SortedArraySet<Ticket<?>> sortedarrayset = this.getCubeTicketSet(cubePosIn);
-        int i = getLevel(sortedarrayset);
+        int i = func_229844_a_(sortedarrayset);
         Ticket<?> ticket = sortedarrayset.func_226175_a_(ticketIn);
         ((TicketAccess) ticket).setTimestampCC(this.currentTime);
         if (ticketIn.getLevel() < i) {
@@ -102,7 +103,7 @@ public abstract class MixinTicketManager implements ITicketManager {
             this.cubeTickets.remove(cubePosIn);
         }
 
-        this.cubeTicketTracker.updateSourceLevel(cubePosIn, getLevel(sortedarrayset), false);
+        this.cubeTicketTracker.updateSourceLevel(cubePosIn, func_229844_a_(sortedarrayset), false);
         // TODO: release chunk tickets when releasing cube tickets
     }
 
@@ -173,7 +174,7 @@ public abstract class MixinTicketManager implements ITicketManager {
         while (objectiterator.hasNext()) {
             Long2ObjectMap.Entry<SortedArraySet<Ticket<?>>> entry = objectiterator.next();
             if (entry.getValue().removeIf((ticket) -> ((TicketAccess) ticket).cc$isexpired(this.currentTime))) {
-                this.cubeTicketTracker.updateSourceLevel(entry.getLongKey(), getLevel(entry.getValue()), false);
+                this.cubeTicketTracker.updateSourceLevel(entry.getLongKey(), func_229844_a_(entry.getValue()), false);
             }
             if (entry.getValue().isEmpty()) {
                 objectiterator.remove();

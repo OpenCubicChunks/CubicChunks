@@ -4,15 +4,17 @@ import io.github.opencubicchunks.cubicchunks.chunk.biome.CubeBiomeContainer;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.Entity;
-import net.minecraft.fluid.IFluidState;
+import net.minecraft.fluid.FluidState;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.Util;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.chunk.ChunkSection;
 import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.gen.GenerationStage;
 import net.minecraft.world.gen.Heightmap;
+import net.minecraft.world.gen.feature.structure.Structure;
 import net.minecraft.world.gen.feature.structure.StructureStart;
 
 import java.util.BitSet;
@@ -55,7 +57,7 @@ public class CubePrimerWrapper extends CubePrimer {
         return this.cube.getBlockState(x, y, z);
     }
 
-    @Override public IFluidState getFluidState(BlockPos pos) {
+    @Override public FluidState getFluidState(BlockPos pos) {
         return this.cube.getFluidState(pos);
     }
 
@@ -110,33 +112,32 @@ public class CubePrimerWrapper extends CubePrimer {
     @Override public void setLastSaveTime(long saveTime) {
     }
 
-    @Override @Nullable
-    public StructureStart getStructureStart(String stucture) {
-        return this.cube.getStructureStart(stucture);
+    @Nullable @Override public StructureStart<?> func_230342_a_(Structure<?> var1) {
+        return this.cube.func_230342_a_(var1);
     }
 
-    @Override public void putStructureStart(String structureIn, StructureStart structureStartIn) {
+    @Override public void func_230344_a_(Structure<?> structureIn, StructureStart<?> structureStartIn) {
     }
 
-    @Override public Map<String, StructureStart> getStructureStarts() {
+    @Override public Map<Structure<?>, StructureStart<?>> getStructureStarts() {
         return this.cube.getStructureStarts();
     }
 
-    @Override public void setStructureStarts(Map<String, StructureStart> structureStartsIn) {
+    @Override public void setStructureStarts(Map<Structure<?>, StructureStart<?>> structureStartsIn) {
     }
 
-    @Override public LongSet getStructureReferences(String structureIn) {
-        return this.cube.getStructureReferences(structureIn);
+    @Override public LongSet func_230346_b_(Structure<?> structureIn) {
+        return this.cube.func_230346_b_(structureIn);
     }
 
-    @Override public void addStructureReference(String strucutre, long reference) {
+    @Override public void func_230343_a_(Structure<?> strucutre, long reference) {
     }
 
-    @Override public Map<String, LongSet> getStructureReferences() {
+    @Override public Map<Structure<?>, LongSet> getStructureReferences() {
         return this.cube.getStructureReferences();
     }
 
-    @Override public void setStructureReferences(Map<String, LongSet> p_201606_1_) {
+    @Override public void setStructureReferences(Map<Structure<?>, LongSet> p_201606_1_) {
     }
 
     @Override public CubeBiomeContainer getBiomes() {
@@ -196,8 +197,14 @@ public class CubePrimerWrapper extends CubePrimer {
         return this.cube.isEmptyCube();
     }
 
-    @Override public BitSet getCarvingMask(GenerationStage.Carving type) {
-        return this.cube.getCarvingMask(type);
+    @Override
+    public BitSet getCarvingMask(GenerationStage.Carving type) {
+        throw (UnsupportedOperationException) Util.pauseDevMode(new UnsupportedOperationException("Meaningless in this context"));
+    }
+
+    @Override
+    public BitSet setCarvingMask(GenerationStage.Carving type) {
+        throw (UnsupportedOperationException) Util.pauseDevMode(new UnsupportedOperationException("Meaningless in this context"));
     }
 
     @Override public boolean hasLight() {

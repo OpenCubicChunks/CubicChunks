@@ -2,9 +2,7 @@ package io.github.opencubicchunks.cubicchunks;
 
 import io.github.opencubicchunks.cubicchunks.chunk.IChunkManager;
 import io.github.opencubicchunks.cubicchunks.meta.EarlyConfig;
-import io.github.opencubicchunks.cubicchunks.misc.TestWorldType;
 import io.github.opencubicchunks.cubicchunks.network.PacketDispatcher;
-import net.minecraft.world.WorldType;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.gen.GenerationStage;
 import net.minecraft.world.server.ChunkManager;
@@ -38,7 +36,6 @@ public class CubicChunks {
 
     public static final String MODID = "cubicchunks";
     public static final Logger LOGGER = LogManager.getLogger();
-    public static WorldType CUBIC = new TestWorldType();
 
     public static final String PROTOCOL_VERSION = "0";
 

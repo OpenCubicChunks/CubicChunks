@@ -8,7 +8,7 @@ import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.ChunkManagerAccess;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.world.TrackedEntity;
 import net.minecraft.world.server.ChunkHolder;
 import net.minecraft.world.server.ChunkManager;
@@ -39,7 +39,7 @@ public abstract class MixinEntityTracker {
     @Overwrite
     public void updateTrackingState(ServerPlayerEntity player) {
         if (player != this.entity) {
-            Vec3d vec3d = player.getPositionVec().subtract(this.entry.func_219456_b());
+            Vector3d vec3d = player.getPositionVec().subtract(this.entry.func_219456_b());
                             //This function is fine
             int i = Math.min(this.func_229843_b_(), (((ChunkManagerAccess)this$0).getViewDistance() - 1) * 16);
             boolean flag = vec3d.x >= (double)(-i) && vec3d.x <= (double)i &&

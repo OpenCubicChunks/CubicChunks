@@ -59,8 +59,8 @@ public class MixinLightEngine <M extends LightDataMap<M>, S extends SectionLight
      * @reason Vanilla lighting is gone
      */
     //TODO: make this into a redirect that calls getCubeReader taking arguments blockPosLong
-    @Overwrite
-    protected BlockState getBlockAndOpacity(long blockPosLong, @Nullable MutableInt opacity) {
+    @Overwrite // getBlockAndOpacity
+    protected BlockState func_227468_a_(long blockPosLong, @Nullable MutableInt opacity) {
         if (blockPosLong == Long.MAX_VALUE) {
             if (opacity != null) {
                 opacity.setValue(0);

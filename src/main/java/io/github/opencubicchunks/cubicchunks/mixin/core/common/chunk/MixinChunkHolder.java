@@ -62,7 +62,7 @@ public abstract class MixinChunkHolder implements ICubeHolder {
 
     @Shadow private int skyLightChangeMask;
     @Shadow private int blockLightChangeMask;
-    @Shadow private int boundaryMask;
+    @Shadow private int field_219318_m; // boundaryMask
 
     @Shadow protected abstract void sendTileEntity(World worldIn, BlockPos posIn);
 
@@ -223,7 +223,7 @@ public abstract class MixinChunkHolder implements ICubeHolder {
      * @reason height limits
      */
     @Overwrite
-    public void markBlockChanged(int x, int y, int z) {
+    public void func_241819_a(int x, int y, int z) { // markBlockChanged
         if (cubePos == null) {
             throw new IllegalStateException("Why is this getting called?");
         }
@@ -271,7 +271,7 @@ public abstract class MixinChunkHolder implements ICubeHolder {
         ShortArraySet changed = changedLocalBlocks;
         int changedBlocks = changed.size();
         if (changed.size() >= net.minecraftforge.common.ForgeConfig.SERVER.clumpingThreshold.get()) {
-            this.boundaryMask = -1;
+            this.field_219318_m = -1;
         }
 
         if (changedBlocks >= net.minecraftforge.common.ForgeConfig.SERVER.clumpingThreshold.get()) {

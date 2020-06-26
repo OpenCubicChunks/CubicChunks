@@ -65,7 +65,7 @@ public class MixinChunkStatus {
     @SuppressWarnings("UnresolvedMixinReference")
     @Inject(method = "lambda$static$2", at = @At("HEAD"), cancellable = true)
     private static void generateStructureStatus(
-            ChunkStatus status, ServerWorld world, ChunkGenerator<?> generator,
+            ChunkStatus status, ServerWorld world, ChunkGenerator generator,
             TemplateManager templateManager, ServerWorldLightManager lightManager,
             Function<IChunk, CompletableFuture<Either<IChunk, ChunkHolder.IChunkLoadingError>>> func,
             List<IChunk> chunks, IChunk chunk,
@@ -78,9 +78,9 @@ public class MixinChunkStatus {
         }
         //cc
         if (!((IBigCube) chunk).getCubeStatus().isAtLeast(status)) {
-            if (world.getWorldInfo().isMapFeaturesEnabled()) {
-                generator.generateStructures(world.getBiomeManager().copyWithProvider(generator.getBiomeProvider()), chunk, generator,
-                        templateManager);
+            if (world.getServer().func_240793_aU_().func_230418_z_().func_236222_c_()) { // check if structures are enabled
+                // func_241112_a_ ==  getStructureManager?
+                generator.func_235954_a_(world.func_241112_a_(), chunk, templateManager, world.getSeed());
             }
 
             if (chunk instanceof CubePrimer) {
@@ -91,7 +91,7 @@ public class MixinChunkStatus {
 
     @SuppressWarnings("UnresolvedMixinReference")
     @Inject(method = "lambda$static$3", at = @At("HEAD"), cancellable = true)
-    private static void cubicChunksStructureReferences(ServerWorld world, ChunkGenerator<?> generator, List<IChunk> neighbors, IChunk chunk,
+    private static void cubicChunksStructureReferences(ServerWorld world, ChunkGenerator generator, List<IChunk> neighbors, IChunk chunk,
             CallbackInfo ci) {
 
         ci.cancel();
@@ -102,19 +102,20 @@ public class MixinChunkStatus {
     // biomes -> handled by MixinChunkGenerator
     @SuppressWarnings("UnresolvedMixinReference")
     @Inject(method = "lambda$static$5", at = @At("HEAD"), cancellable = true)
-    private static void cubicChunksNoise(ServerWorld world, ChunkGenerator<?> generator, List<IChunk> neighbors, IChunk chunk,
+    private static void cubicChunksNoise(ServerWorld world, ChunkGenerator generator, List<IChunk> neighbors, IChunk chunk,
             CallbackInfo ci) {
 
         ci.cancel();
         if (chunk instanceof IBigCube) {
             // generator.makeBase(new CubeWorldGenRegion(world, unsafeCast(neighbors)), chunk);
-            ((ICubeGenerator) generator).makeBase(new CubeWorldGenRegion(world, unsafeCast(neighbors)), (IBigCube) chunk);
+            // func_241112_a_ == getStructureManager
+            ((ICubeGenerator) generator).makeBase(new CubeWorldGenRegion(world, unsafeCast(neighbors)), world.func_241112_a_(), (IBigCube) chunk);
         }
     }
 
     @SuppressWarnings("UnresolvedMixinReference")
     @Inject(method = "lambda$static$6", at = @At("HEAD"), cancellable = true)
-    private static void cubicChunksSurface(ServerWorld world, ChunkGenerator<?> generator, List<IChunk> neighbors, IChunk chunk,
+    private static void cubicChunksSurface(ServerWorld world, ChunkGenerator generator, List<IChunk> neighbors, IChunk chunk,
             CallbackInfo ci) {
 
         ci.cancel();
@@ -125,7 +126,7 @@ public class MixinChunkStatus {
 
     @SuppressWarnings("UnresolvedMixinReference")
     @Inject(method = "lambda$static$7", at = @At("HEAD"), cancellable = true)
-    private static void cubicChunksCarvers(ServerWorld world, ChunkGenerator<?> generator, List<IChunk> neighbors, IChunk chunk,
+    private static void cubicChunksCarvers(ServerWorld world, ChunkGenerator generator, List<IChunk> neighbors, IChunk chunk,
             CallbackInfo ci) {
 
         ci.cancel();
@@ -136,7 +137,7 @@ public class MixinChunkStatus {
 
     @SuppressWarnings("UnresolvedMixinReference")
     @Inject(method = "lambda$static$8", at = @At("HEAD"), cancellable = true)
-    private static void cubicChunksLiquidCarvers(ServerWorld world, ChunkGenerator<?> generator, List<IChunk> neighbors, IChunk chunk,
+    private static void cubicChunksLiquidCarvers(ServerWorld world, ChunkGenerator generator, List<IChunk> neighbors, IChunk chunk,
             CallbackInfo ci) {
 
         ci.cancel();
@@ -148,7 +149,7 @@ public class MixinChunkStatus {
     @SuppressWarnings("UnresolvedMixinReference")
     @Inject(method = "lambda$static$9", at = @At(value = "HEAD"), cancellable = true)
     private static void featuresSetStatus(
-            ChunkStatus status, ServerWorld world, ChunkGenerator<?> generator,
+            ChunkStatus status, ServerWorld world, ChunkGenerator generator,
             TemplateManager templateManager, ServerWorldLightManager lightManager,
             Function<IChunk, CompletableFuture<Either<IChunk, ChunkHolder.IChunkLoadingError>>> func,
             List<IChunk> chunks, IChunk chunk,
@@ -166,7 +167,7 @@ public class MixinChunkStatus {
             //        Heightmap.Type.WORLD_SURFACE));
             // TODO: reimplement worldgen
             // generator.decorate(new WorldGenRegion(world, chunks));
-            ((ICubeGenerator) generator).decorate(new CubeWorldGenRegion(world, unsafeCast(chunks)));
+            ((ICubeGenerator) generator).decorate(new CubeWorldGenRegion(world, unsafeCast(chunks)), world.func_241112_a_());
             cubePrimer.setCubeStatus(status);
         }
         cir.setReturnValue(CompletableFuture.completedFuture(Either.left(chunk)));
@@ -192,7 +193,7 @@ public class MixinChunkStatus {
     //lambda$static$12
     @SuppressWarnings("UnresolvedMixinReference")
     @Inject(method = "lambda$static$12", at = @At("HEAD"), cancellable = true)
-    private static void cubicChunksSpawnMobs(ServerWorld world, ChunkGenerator<?> generator, List<IChunk> neighbors, IChunk chunk,
+    private static void cubicChunksSpawnMobs(ServerWorld world, ChunkGenerator generator, List<IChunk> neighbors, IChunk chunk,
             CallbackInfo ci) {
 
         ci.cancel();

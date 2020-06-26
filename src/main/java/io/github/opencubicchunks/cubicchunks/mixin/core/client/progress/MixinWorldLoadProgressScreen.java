@@ -1,5 +1,6 @@
 package io.github.opencubicchunks.cubicchunks.mixin.core.client.progress;
 
+import com.mojang.blaze3d.matrix.MatrixStack;
 import io.github.opencubicchunks.cubicchunks.client.CubicWorldLoadScreen;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import net.minecraft.client.gui.screen.Screen;
@@ -28,12 +29,12 @@ public class MixinWorldLoadProgressScreen extends Screen {
     //    return xBase - 100;
     //}
 
-    @Inject(method = "drawProgress", at = @At("HEAD"), cancellable = true)
-    private static void onDraw(TrackingChunkStatusListener trackerParam,
+    @Inject(method = "func_238625_a_", at = @At("HEAD"), cancellable = true)
+    private static void onDraw(MatrixStack mStack, TrackingChunkStatusListener trackerParam,
             int xBase, int yBase, int scale, int spacing, CallbackInfo ci) {
         ci.cancel();
 
-        CubicWorldLoadScreen.doRender(trackerParam, xBase, yBase, scale, spacing, COLORS);
+        CubicWorldLoadScreen.doRender(mStack, trackerParam, xBase, yBase, scale, spacing, COLORS);
 
     }
 

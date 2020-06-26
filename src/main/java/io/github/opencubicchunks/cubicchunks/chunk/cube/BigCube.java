@@ -20,7 +20,7 @@ import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.Entity;
 import net.minecraft.fluid.Fluid;
-import net.minecraft.fluid.IFluidState;
+import net.minecraft.fluid.FluidState;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.tileentity.TileEntity;
@@ -38,6 +38,7 @@ import net.minecraft.world.chunk.ChunkSection;
 import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.chunk.IChunk;
 import net.minecraft.world.gen.Heightmap;
+import net.minecraft.world.gen.feature.structure.Structure;
 import net.minecraft.world.gen.feature.structure.StructureStart;
 import net.minecraftforge.common.util.Constants;
 
@@ -507,11 +508,11 @@ public class BigCube implements IChunk, IBigCube {
 
     }
 
-    @Override public Map<String, StructureStart> getStructureStarts() {
+    @Override public Map<Structure<?>, StructureStart<?>> getStructureStarts() {
         throw new UnsupportedOperationException("Not implemented");
     }
 
-    @Override public void setStructureStarts(Map<String, StructureStart> structureStartsIn) {
+    @Override public void setStructureStarts(Map<Structure<?>, StructureStart<?>> structureStartsIn) {
 
     }
 
@@ -615,31 +616,34 @@ public class BigCube implements IChunk, IBigCube {
                 this.sections[index].getBlockState(x & 15, y & 15, z & 15);
     }
 
-    @Override public IFluidState getFluidState(BlockPos pos) {
+    @Override public FluidState getFluidState(BlockPos pos) {
         throw new UnsupportedOperationException("Not implemented");
     }
 
-    @Nullable @Override public StructureStart getStructureStart(String stucture) {
+    // getStructureStart
+    @Nullable @Override public StructureStart<?> func_230342_a_(Structure<?> var1) {
         throw new UnsupportedOperationException("Not implemented");
     }
 
-    @Override public void putStructureStart(String structureIn, StructureStart structureStartIn) {
+    // putStructureStart
+    @Override public void func_230344_a_(Structure<?> structureIn, StructureStart<?> structureStartIn) {
 
     }
 
-    @Override public LongSet getStructureReferences(String structureIn) {
+    // getStructureReferences
+    @Override public LongSet func_230346_b_(Structure<?> structureIn) {
         throw new UnsupportedOperationException("Not implemented");
     }
 
-    @Override public void addStructureReference(String strucutre, long reference) {
+    // addStructureReference
+    @Override public void func_230343_a_(Structure<?> strucutre, long reference) {
 
     }
-
-    @Override public Map<String, LongSet> getStructureReferences() {
+    @Override public Map<Structure<?>, LongSet> getStructureReferences() {
         throw new UnsupportedOperationException("Not implemented");
     }
 
-    @Override public void setStructureReferences(Map<String, LongSet> p_201606_1_) {
+    @Override public void setStructureReferences(Map<Structure<?>, LongSet> p_201606_1_) {
 
     }
 

@@ -61,6 +61,7 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.SectionPos;
 import net.minecraft.util.palette.UpgradeData;
 import net.minecraft.world.EmptyTickList;
+import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.chunk.IChunk;
 import net.minecraft.world.chunk.IChunkLightProvider;
@@ -73,7 +74,8 @@ import net.minecraft.world.server.ChunkHolder;
 import net.minecraft.world.server.ChunkManager;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraft.world.server.ServerWorldLightManager;
-import net.minecraft.world.storage.SessionLockException;
+import net.minecraft.world.storage.DimensionSavedDataManager;
+import net.minecraft.world.storage.SaveFormat;
 import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.apache.logging.log4j.Logger;
 import org.spongepowered.asm.mixin.Final;
@@ -143,10 +145,7 @@ public abstract class MixinChunkManager implements IChunkManager {
 
     @Shadow(aliases = "field_219266_t") @Final private IChunkStatusListener statusListener;
 
-    @Shadow @Final private ChunkGenerator<?> generator;
-
-    @Shadow protected abstract CompletableFuture<Either<IChunk, ChunkHolder.IChunkLoadingError>> chunkGenerate(ChunkHolder chunkHolderIn,
-            ChunkStatus chunkStatusIn);
+    @Shadow @Final private ChunkGenerator generator;
 
     @Shadow @Final private File dimensionDirectory;
 
@@ -166,10 +165,19 @@ public abstract class MixinChunkManager implements IChunkManager {
     }
 
     @Inject(method = "<init>", at = @At("RETURN"), locals = LocalCapture.CAPTURE_FAILHARD)
-    private void onConstruct(ServerWorld worldIn, File worldDirectory, DataFixer p_i51538_3_, TemplateManager templateManagerIn,
-            Executor p_i51538_5_, ThreadTaskExecutor mainThreadIn, IChunkLightProvider p_i51538_7_,
-            ChunkGenerator generatorIn, IChunkStatusListener p_i51538_9_, Supplier p_i51538_10_,
-            int p_i51538_11_, CallbackInfo ci, DelegatedTaskExecutor delegatedtaskexecutor,
+    private void onConstruct(ServerWorld worldIn,
+            SaveFormat.LevelSave levelSave,
+            DataFixer p_i51538_3_,
+            TemplateManager templateManagerIn,
+            Executor p_i51538_5_,
+            ThreadTaskExecutor<Runnable> mainThreadIn,
+            IChunkLightProvider p_i51538_7_,
+            ChunkGenerator generatorIn,
+            IChunkStatusListener p_i51538_9_,
+            Supplier<DimensionSavedDataManager> p_i51538_10_,
+            int p_i51538_11_,
+            boolean p_i232602_12_,
+            CallbackInfo ci, DelegatedTaskExecutor delegatedtaskexecutor,
             ITaskExecutor itaskexecutor, DelegatedTaskExecutor delegatedtaskexecutor1) {
 
         this.cubeTaskPriorityQueueSorter = new CubeTaskPriorityQueueSorter(ImmutableList.of(delegatedtaskexecutor,
@@ -187,11 +195,12 @@ public abstract class MixinChunkManager implements IChunkManager {
         this.scheduleCubeUnloads(hasMoreTime);
     }
 
-    @Redirect(method = "tick", at = @At(value = "INVOKE", target = "Lit/unimi/dsi/fastutil/longs/Long2ObjectLinkedOpenHashMap;isEmpty()Z"))
-    private boolean canUnload(Long2ObjectLinkedOpenHashMap<ChunkHolder> loadedChunks)
-    {
-        return loadedChunks.isEmpty() && loadedCubes.isEmpty();
-    }
+    // Forge dimension stuff gone in 1.16, TODO when forge readds dimension code
+    // @Redirect(method = "tick", at = @At(value = "INVOKE", target = "Lit/unimi/dsi/fastutil/longs/Long2ObjectLinkedOpenHashMap;isEmpty()Z"))
+    // private boolean canUnload(Long2ObjectLinkedOpenHashMap<ChunkHolder> loadedChunks)
+    // {
+    //     return loadedChunks.isEmpty() && loadedCubes.isEmpty();
+    // }
 
     @Inject(method = "save", at = @At("HEAD"))
     protected void save(boolean flush, CallbackInfo ci) {
@@ -238,12 +247,6 @@ public abstract class MixinChunkManager implements IChunkManager {
         if (!cube.isDirty()) {
             return false;
         } else {
-            try {
-                this.world.checkSessionLock();
-            } catch (SessionLockException sessionlockexception) {
-                LOGGER.error("Couldn't save chunk; already in use by another instance of Minecraft?", (Throwable)sessionlockexception);
-                return false;
-            }
 
             // cube.setLastSaveTime(this.world.getGameTime());
             cube.setDirty(false);
@@ -872,7 +875,7 @@ public abstract class MixinChunkManager implements IChunkManager {
         SectionPos newSectionPos = SectionPos.from(player);
 
         CubePos cubePosManaged = CubePos.from(managedSectionPos);
-        CubePos newCubePos = CubePos.from(player.getPosition());
+        CubePos newCubePos = CubePos.from(player);
 
         long managedPosAsLong = cubePosManaged.asLong();
         long posAsLong = newCubePos.asLong();
@@ -1089,7 +1092,7 @@ public abstract class MixinChunkManager implements IChunkManager {
 
     @Nullable
     @Redirect(method = "sendChunkData", at = @At(value = "NEW", target = "net/minecraft/network/play/server/SUpdateLightPacket"))
-    private SUpdateLightPacket onVanillaLightPacketConstruct(ChunkPos pos, WorldLightManager lightManager)
+    private SUpdateLightPacket onVanillaLightPacketConstruct(ChunkPos pos, WorldLightManager lightManager, boolean bool)
     {
         return new SUpdateLightPacket();
     }
@@ -1098,7 +1101,7 @@ public abstract class MixinChunkManager implements IChunkManager {
     private void sendCubeData(ServerPlayerEntity player, Object[] packetCache, BigCube cubeIn) {
         if (packetCache[0] == null) {
             packetCache[0] = new PacketCubes(Collections.singletonList(cubeIn));
-            packetCache[1] = new PacketUpdateLight(cubeIn.getCubePos(), this.lightManager);
+            packetCache[1] = new PacketUpdateLight(cubeIn.getCubePos(), this.lightManager, true);
         }
 
         CubePos pos = cubeIn.getCubePos();

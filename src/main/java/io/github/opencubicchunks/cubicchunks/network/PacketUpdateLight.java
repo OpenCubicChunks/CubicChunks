@@ -26,9 +26,32 @@ public class PacketUpdateLight {
     private final BitSet dataExists;
 
     private final CubePos cubePos;
+    private final boolean lightFlag;
 
-    public PacketUpdateLight(CubePos pos, WorldLightManager lightManager) {
+    PacketUpdateLight(PacketBuffer buf)
+    {
+        this.lightFlag = buf.readBoolean();
+        this.cubePos = CubePos.of(buf.readInt(), buf.readInt(), buf.readInt());
+
+        int dataByteCount = MathUtil.ceilDiv(IBigCube.CUBE_SIZE*2, 8);
+        this.dataExists = BitSet.valueOf(buf.readByteArray(dataByteCount));
+
+        this.skyLightData = new ArrayList<>();
+        int skyLightDataSize = buf.readInt();
+        for(int i = 0; i < skyLightDataSize; i++) {
+            this.skyLightData.add(buf.readByteArray(2048));
+        }
+
+        this.blockLightData = new ArrayList<>();
+        int blockLightDataSize = buf.readInt();
+        for(int i = 0; i < blockLightDataSize; i++) {
+            this.blockLightData.add(buf.readByteArray(2048));
+        }
+    }
+
+    public PacketUpdateLight(CubePos pos, WorldLightManager lightManager, boolean lightFlag) {
         this.cubePos = pos;
+        this.lightFlag = lightFlag;
         this.skyLightData = Lists.newArrayList();
         this.blockLightData = Lists.newArrayList();
 
@@ -52,28 +75,9 @@ public class PacketUpdateLight {
         }
     }
 
-    PacketUpdateLight(PacketBuffer buf)
-    {
-        this.cubePos = CubePos.of(buf.readInt(), buf.readInt(), buf.readInt());
-
-        int dataByteCount = MathUtil.ceilDiv(IBigCube.CUBE_SIZE*2, 8);
-        this.dataExists = BitSet.valueOf(buf.readByteArray(dataByteCount));
-
-        this.skyLightData = new ArrayList<>();
-        int skyLightDataSize = buf.readInt();
-        for(int i = 0; i < skyLightDataSize; i++) {
-            this.skyLightData.add(buf.readByteArray(2048));
-        }
-
-        this.blockLightData = new ArrayList<>();
-        int blockLightDataSize = buf.readInt();
-        for(int i = 0; i < blockLightDataSize; i++) {
-            this.blockLightData.add(buf.readByteArray(2048));
-        }
-    }
-
 
     void encode(PacketBuffer buf) {
+        buf.writeBoolean(lightFlag);
         buf.writeInt(this.cubePos.getX());
         buf.writeInt(this.cubePos.getY());
         buf.writeInt(this.cubePos.getZ());
@@ -113,11 +117,11 @@ public class PacketUpdateLight {
                 );
 
                 if(packet.dataExists.get(i * 2)) {
-                    worldlightmanager.setData(LightType.SKY, sectionPos, new NibbleArray(skyIterator.next()));
+                    worldlightmanager.setData(LightType.SKY, sectionPos, new NibbleArray(skyIterator.next()), packet.lightFlag);
                     ((ClientWorld)worldIn).markSurroundingsForRerender(sectionPos.getX(), sectionPos.getY(), sectionPos.getZ());
                 }
                 if(packet.dataExists.get(i * 2 + 1)) {
-                    worldlightmanager.setData(LightType.BLOCK, sectionPos, new NibbleArray(blockIterator.next()));
+                    worldlightmanager.setData(LightType.BLOCK, sectionPos, new NibbleArray(blockIterator.next()), packet.lightFlag);
                     ((ClientWorld)worldIn).markSurroundingsForRerender(sectionPos.getX(), sectionPos.getY(), sectionPos.getZ());
                 }
             }

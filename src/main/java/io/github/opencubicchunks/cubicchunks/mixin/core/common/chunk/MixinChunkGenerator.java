@@ -9,38 +9,43 @@ import net.minecraft.util.SharedSeedRandom;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.IWorld;
-import net.minecraft.world.biome.BiomeManager;
 import net.minecraft.world.biome.DefaultBiomeFeatures;
 import net.minecraft.world.chunk.IChunk;
 import net.minecraft.world.gen.ChunkGenerator;
 import net.minecraft.world.gen.OctavesNoiseGenerator;
+import net.minecraft.world.gen.feature.BaseTreeFeatureConfig;
 import net.minecraft.world.gen.feature.Feature;
-import net.minecraft.world.gen.feature.TreeFeatureConfig;
+import net.minecraft.world.gen.feature.structure.StructureManager;
 import net.minecraft.world.gen.feature.template.TemplateManager;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Random;
 
 @Mixin(ChunkGenerator.class)
 public class MixinChunkGenerator implements ICubeGenerator {
 
-    private OctavesNoiseGenerator gen1 = new OctavesNoiseGenerator(new SharedSeedRandom(42), 3, 0);
-    private OctavesNoiseGenerator gen2 = new OctavesNoiseGenerator(new SharedSeedRandom(4242), 3, 0);
-    private OctavesNoiseGenerator gen3 = new OctavesNoiseGenerator(new SharedSeedRandom(424242), 3, 0);
+    private final OctavesNoiseGenerator gen1 = new OctavesNoiseGenerator(new SharedSeedRandom(42), createOctaveList());
+    private final OctavesNoiseGenerator gen2 = new OctavesNoiseGenerator(new SharedSeedRandom(4242), createOctaveList());
+    private final OctavesNoiseGenerator gen3 = new OctavesNoiseGenerator(new SharedSeedRandom(424242), createOctaveList());
 
-    @Inject(method = "generateStructures", at = @At("HEAD"), cancellable = true)
-    public void onGenerateStructures(BiomeManager p_227058_1_, IChunk p_227058_2_, ChunkGenerator<?> p_227058_3_, TemplateManager p_227058_4_,
-            CallbackInfo ci) {
+    private static List<Integer> createOctaveList() {
+        return Arrays.asList(3, 2, 1, 0);
+    }
+    // TODO: check which one is which
+    @Inject(method = "func_235954_a_", at = @At("HEAD"), cancellable = true)
+    public void onGenerateStructures(StructureManager p_235954_1_, IChunk p_235954_2_, TemplateManager p_235954_3_, long p_235954_4_, CallbackInfo ci) {
 
         ci.cancel();
     }
 
 
-    @Inject(method = "generateStructureStarts", at = @At("HEAD"), cancellable = true)
-    public void generateStructureStarts(IWorld worldIn, IChunk chunkIn, CallbackInfo ci) {
+    @Inject(method = "func_235953_a_", at = @At("HEAD"), cancellable = true)
+    public void generateStructureStarts(IWorld p_235953_1_, StructureManager p_235953_2_, IChunk p_235953_3_, CallbackInfo ci) {
         ci.cancel();
     }
 
@@ -52,9 +57,9 @@ public class MixinChunkGenerator implements ICubeGenerator {
     }
 
     @Override
-    public void makeBase(IWorld worldIn, IBigCube cube) {
+    public void makeBase(IWorld worldIn, StructureManager var2, IBigCube cube) {
         // noiseAt = getValue2D(x, z, yDiscontinuityDistance, maxYDiscontinuityFactor)
-        // getValue = getValue3D(x, y, z, yDiscontinuityDistance, maxYDiscontinuityFactor, allowYFarlands)
+        // getValue = getValue3D(x, y, z, yDiscontinuityDistance, maxYDiscontinuityFactor, is2dNoise)
         for (int dx = 0; dx < IBigCube.BLOCK_SIZE; dx++) {
             int blockX = cube.getCubePos().minCubeX() + dx;
             for (int dz = 0; dz < IBigCube.BLOCK_SIZE; dz++) {
@@ -80,7 +85,7 @@ public class MixinChunkGenerator implements ICubeGenerator {
         }
     }
 
-    @Override public void decorate(CubeWorldGenRegion region) {
+    @Override public void decorate(CubeWorldGenRegion region, StructureManager structureManager) {
         int mainCubeX = region.getMainCubeX();
         int mainCubeY = region.getMainCubeY();
         int mainCubeZ = region.getMainCubeZ();
@@ -100,7 +105,7 @@ public class MixinChunkGenerator implements ICubeGenerator {
             for (int y = yStart - 1; y >= yEnd; y--) {
                 pos = new BlockPos(x, y, z);
                 if (!region.getBlockState(pos).isAir(region, pos)) {
-                    TreeFeatureConfig[] configs = {
+                    BaseTreeFeatureConfig[] configs = {
                             DefaultBiomeFeatures.OAK_TREE_CONFIG,
                             DefaultBiomeFeatures.OAK_TREE_CONFIG,
                             DefaultBiomeFeatures.OAK_TREE_CONFIG,
@@ -114,7 +119,7 @@ public class MixinChunkGenerator implements ICubeGenerator {
                             DefaultBiomeFeatures.SPRUCE_TREE_CONFIG,
                             DefaultBiomeFeatures.FANCY_TREE_WITH_MORE_BEEHIVES_CONFIG,
                     };
-                    Feature.NORMAL_TREE.withConfiguration(configs[r.nextInt(configs.length)]).place(region,
+                    Feature.field_236291_c_.withConfiguration(configs[r.nextInt(configs.length)]).func_236265_a_(region, structureManager,
                             (ChunkGenerator) (Object) this, r, pos.up());
                 }
             }

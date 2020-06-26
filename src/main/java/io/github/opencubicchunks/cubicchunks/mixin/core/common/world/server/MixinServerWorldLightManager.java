@@ -92,8 +92,8 @@ public abstract class MixinServerWorldLightManager extends MixinWorldLightManage
 
 
             for(int i = 0; i < IBigCube.CUBE_SIZE; ++i) {
-                super.setData(LightType.BLOCK, Coords.sectionPosByIndex(cubePos, i), (NibbleArray)null);
-                super.setData(LightType.SKY, Coords.sectionPosByIndex(cubePos, i), (NibbleArray)null);
+                super.setData(LightType.BLOCK, Coords.sectionPosByIndex(cubePos, i), (NibbleArray)null, true);
+                super.setData(LightType.SKY, Coords.sectionPosByIndex(cubePos, i), (NibbleArray)null, true);
             }
 
             for(int j = 0; j < IBigCube.CUBE_SIZE; ++j) {
@@ -158,10 +158,10 @@ public abstract class MixinServerWorldLightManager extends MixinWorldLightManage
      * @reason Vanilla lighting is gone
      */
     @Overwrite
-    public void setData(LightType type, SectionPos pos, @Nullable NibbleArray array) {
+    public void setData(LightType type, SectionPos pos, @Nullable NibbleArray array, boolean flag) {
         CubePos cubePos = CubePos.from(pos);
         this.schedulePhaseTask(cubePos.getX(), cubePos.getY(), cubePos.getZ(), () -> 0, ServerWorldLightManager.Phase.PRE_UPDATE, Util.namedRunnable(() -> {
-            super.setData(type, pos, array);
+            super.setData(type, pos, array, flag);
         }, () -> "queueData " + pos));
     }
 

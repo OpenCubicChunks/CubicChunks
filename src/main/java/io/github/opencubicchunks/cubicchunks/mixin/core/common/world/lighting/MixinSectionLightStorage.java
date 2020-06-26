@@ -32,7 +32,7 @@ public abstract class MixinSectionLightStorage <M extends LightDataMap<M>> exten
 
     @Shadow @Final protected M cachedLightData;
 
-    @Shadow protected abstract void removeSection(long p_215523_1_);
+    @Shadow(aliases = "func_215523_k") protected abstract void removeSection(long p_215523_1_);
 
     @Shadow protected volatile boolean hasSectionsToUpdate;
 

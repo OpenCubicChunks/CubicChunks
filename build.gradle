@@ -20,6 +20,7 @@ apply plugin: 'maven-publish'
 apply plugin: 'org.spongepowered.mixin'
 apply plugin: "io.github.opencubicchunks.gradle.mixingen"
 apply plugin: "io.github.opencubicchunks.gradle.mcGitVersion"
+apply plugin: "io.github.opencubicchunks.gradle.asmstubs"
 
 mcGitVersion {
     snapshot = true
@@ -66,7 +67,7 @@ sourceSets {
 }
 
 minecraft {
-    mappings channel: "snapshot", version: "${mapping}-1.15.1"
+    mappings channel: "snapshot", version: "${mapping}-1.16"
     // makeObfSourceJar = false // an Srg named sources jar is made by default. uncomment this to disable.
 
     accessTransformer = file('src/main/resources/META-INF/accesstransformer.cfg')

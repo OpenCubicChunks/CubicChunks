@@ -46,7 +46,7 @@ public abstract class MixinChunk implements IChunk {
         return false;
     }
 
-    @Redirect(method = {"getBlockState", "getFluidState(III)Lnet/minecraft/fluid/IFluidState;", "setBlockState"},
+    @Redirect(method = {"getBlockState", "getFluidState(III)Lnet/minecraft/fluid/FluidState;", "setBlockState"},
             at = @At(
                     value = "FIELD",
                     target = "Lnet/minecraft/world/chunk/Chunk;sections:[Lnet/minecraft/world/chunk/ChunkSection;",
@@ -78,13 +78,13 @@ public abstract class MixinChunk implements IChunk {
         }
     }
 
-    @ModifyConstant(method = {"getBlockState", "getFluidState(III)Lnet/minecraft/fluid/IFluidState;"},
+    @ModifyConstant(method = {"getBlockState", "getFluidState(III)Lnet/minecraft/fluid/FluidState;"},
             constant = @Constant(expandZeroConditions = Constant.Condition.GREATER_THAN_OR_EQUAL_TO_ZERO))
     private int getMinHeight(int _0) {
         return Integer.MIN_VALUE;
     }
 
-    @Redirect(method = {"getBlockState", "getFluidState(III)Lnet/minecraft/fluid/IFluidState;"},
+    @Redirect(method = {"getBlockState", "getFluidState(III)Lnet/minecraft/fluid/FluidState;"},
             at = @At(
                     value = "FIELD",
                     target = "Lnet/minecraft/world/chunk/Chunk;sections:[Lnet/minecraft/world/chunk/ChunkSection;",

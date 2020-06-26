@@ -122,7 +122,7 @@ public class PacketCubes {
                     BlockPos tePos = new BlockPos(nbt.getInt("x"), nbt.getInt("y"), nbt.getInt("z"));
                     TileEntity te = world.getTileEntity(tePos);
                     if (te != null) {
-                        te.handleUpdateTag(nbt);
+                        te.handleUpdateTag(world.getBlockState(tePos), nbt);
                     }
                 }
             }
