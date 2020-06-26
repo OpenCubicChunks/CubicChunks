@@ -40,6 +40,7 @@ import net.minecraft.world.chunk.IChunk;
 import net.minecraft.world.gen.Heightmap;
 import net.minecraft.world.gen.feature.structure.StructureStart;
 import net.minecraftforge.common.util.Constants;
+import org.apache.logging.log4j.LogManager;
 
 import java.util.Arrays;
 import java.util.BitSet;
@@ -137,7 +138,7 @@ public class BigCube implements IChunk, IBigCube {
 //            this.addCubeTileEntity(tileentity);
 //        }
 //
-//        this.deferredTileEntities.putAll(cubePrimerIn.getDeferredTileEntities());
+        this.deferredTileEntities.putAll(cubePrimerIn.getDeferredTileEntities());
 
 //        for(int i = 0; i < cubePrimerIn.getPackedPositions().length; ++i) {
 //            this.packedBlockPositions[i] = cubePrimerIn.getPackedPositions()[i];
@@ -409,6 +410,19 @@ public class BigCube implements IChunk, IBigCube {
         }
     }
 
+    @Override
+    public void addTileEntity(CompoundNBT nbt) {
+        this.deferredTileEntities.put(new BlockPos(nbt.getInt("x"), nbt.getInt("y"), nbt.getInt("z")), nbt);
+    }
+
+    public void addTileEntity(TileEntity tileEntityIn) {
+        this.addTileEntity(tileEntityIn.getPos(), tileEntityIn);
+        if (this.loaded || this.world.isRemote()) {
+            this.world.setTileEntity(tileEntityIn.getPos(), tileEntityIn);
+        }
+
+    }
+
     @Override public void addEntity(Entity entityIn) {
         //This needs to be blockToCube instead of getCubeXForEntity because of the `/ 16`
         int xFloor = blockToCube(MathHelper.floor(entityIn.getPosX() / 16.0D));
@@ -443,16 +457,15 @@ public class BigCube implements IChunk, IBigCube {
             tileEntities.remove(pos);
             tileentity = null;
         }
-        //TODO: reimplement for NBT stuff
-//        if (tileentity == null) {
-//            CompoundNBT compoundnbt = this.deferredTileEntities.remove(pos);
-//            if (compoundnbt != null) {
-//                TileEntity tileentity1 = this.setDeferredTileEntity(pos, compoundnbt);
-//                if (tileentity1 != null) {
-//                    return tileentity1;
-//                }
-//            }
-//        }
+        if (tileentity == null) {
+            CompoundNBT compoundnbt = this.deferredTileEntities.remove(pos);
+            if (compoundnbt != null) {
+                TileEntity tileentity1 = this.setDeferredTileEntity(pos, compoundnbt);
+                if (tileentity1 != null) {
+                    return tileentity1;
+                }
+            }
+        }
 
         if (tileentity == null) {
             if (creationMode == Chunk.CreateEntityType.IMMEDIATE) {
@@ -465,13 +478,40 @@ public class BigCube implements IChunk, IBigCube {
     }
 
     @Nullable
+    private TileEntity setDeferredTileEntity(BlockPos pos, CompoundNBT compound) {
+        TileEntity tileentity;
+        if ("DUMMY".equals(compound.getString("id"))) {
+            BlockState state = this.getBlockState(pos);
+            if (state.hasTileEntity()) {
+                tileentity = state.createTileEntity(this.world);
+            } else {
+                tileentity = null;
+                CubicChunks.LOGGER.warn("Tried to load a DUMMY block entity @ {} but found not block entity block {} at location", pos, this.getBlockState(pos));
+            }
+        } else {
+            tileentity = TileEntity.create(compound);
+        }
+
+        if (tileentity != null) {
+            tileentity.setWorldAndPos(this.world, pos);
+            this.addTileEntity(tileentity);
+        } else {
+            CubicChunks.LOGGER.warn("Tried to load a block entity for block {} but failed at location {}", this.getBlockState(pos), pos);
+        }
+
+        return tileentity;
+    }
+
+    @Nullable
     private TileEntity createNewTileEntity(BlockPos pos) {
         BlockState blockstate = this.getBlockState(pos);
         return !blockstate.hasTileEntity() ? null : blockstate.createTileEntity(this.world);
     }
 
     @Override public Set<BlockPos> getTileEntitiesPos() {
-        throw new UnsupportedOperationException("Not implemented");
+        Set<BlockPos> set = Sets.newHashSet(this.deferredTileEntities.keySet());
+        set.addAll(this.tileEntities.keySet());
+        return set;
     }
 
     @Deprecated
@@ -569,11 +609,29 @@ public class BigCube implements IChunk, IBigCube {
     }
 
     @Nullable @Override public CompoundNBT getDeferredTileEntity(BlockPos pos) {
-        throw new UnsupportedOperationException("Not implemented");
+        return this.deferredTileEntities.get(pos);
     }
 
     @Nullable @Override public CompoundNBT getTileEntityNBT(BlockPos pos) {
-        throw new UnsupportedOperationException("Not implemented");
+        TileEntity tileentity = this.getTileEntity(pos);
+        if (tileentity != null && !tileentity.isRemoved()) {
+            try {
+                CompoundNBT compoundnbt1 = tileentity.write(new CompoundNBT());
+                compoundnbt1.putBoolean("keepPacked", false);
+                return compoundnbt1;
+            } catch (Exception e) {
+                LogManager.getLogger().error("A TileEntity type {} has thrown an exception trying to write state. It will not persist, Report this to the mod author", tileentity.getClass().getName(), e);
+                return null;
+            }
+        } else {
+            CompoundNBT compoundnbt = this.deferredTileEntities.get(pos);
+            if (compoundnbt != null) {
+                compoundnbt = compoundnbt.copy();
+                compoundnbt.putBoolean("keepPacked", true);
+            }
+
+            return compoundnbt;
+        }
     }
 
     @Override public Stream<BlockPos> getLightSources() {
