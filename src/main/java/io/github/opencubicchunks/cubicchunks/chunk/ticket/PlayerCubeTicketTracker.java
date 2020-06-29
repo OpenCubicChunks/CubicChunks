@@ -56,13 +56,14 @@ public class PlayerCubeTicketTracker {
      * @param verticalViewDistance
      */
     public void setViewDistance(int viewDistance, int verticalViewDistance) {
-        viewDistance *= 2;
+        verticalViewDistance = verticalViewDistance / 2 + 1;
+
         CubicChunks.LOGGER.warn("Horizontal dist: {}; Vertical dist: {}", viewDistance, verticalViewDistance);
         for (it.unimi.dsi.fastutil.longs.Long2ByteMap.Entry entry : this.horizontalGraphGroup.cubesInRange.long2ByteEntrySet()) {
             long pos = entry.getLongKey();
             byte horizDistance = entry.getByteValue();
             byte vertDistance = this.verticalGraphGroup.cubesInRange.get(pos);
-            this.updateTicket(pos, horizDistance, this.isWithinViewDistance(horizDistance, vertDistance), horizDistance <= viewDistance && vertDistance <= verticalViewDistance);
+            this.updateTicket(pos, horizDistance, this.isWithinViewDistance(horizDistance, vertDistance), horizDistance <= viewDistance - 2 && vertDistance <= verticalViewDistance - 2);
         }
 
         this.viewDistance = viewDistance;
@@ -147,7 +148,7 @@ public class PlayerCubeTicketTracker {
      * @return Whether the distances are within the view distance bounds
      */
     private boolean isWithinViewDistance(int horizDistance, int vertDistance) {
-        return horizDistance <= this.viewDistance && vertDistance <= this.verticalViewDistance;
+        return horizDistance <= this.viewDistance - 2 && vertDistance <= this.verticalViewDistance - 2;
     }
 
     /**

@@ -52,9 +52,9 @@ public abstract class CubeDistanceGraph  extends LevelBasedGraph {
         int y = cubePos.getY();
         int z = cubePos.getZ();
 
-        for(int x2 = -1; x2 <= 1; ++x2) {
-            for (int y2 = -1; y2 <= 1; ++y2) {
-                for (int z2 = -1; z2 <= 1; ++z2) {
+        for(int x2 = -xR; x2 <= xR; ++x2) {
+            for (int y2 = -yR; y2 <= yR; ++y2) {
+                for (int z2 = -zR; z2 <= zR; ++z2) {
                     long j1 = CubePos.asLong(x + x2,y + y2 , z + z2);
                     if (j1 == pos) {
                         j1 = Long.MAX_VALUE;

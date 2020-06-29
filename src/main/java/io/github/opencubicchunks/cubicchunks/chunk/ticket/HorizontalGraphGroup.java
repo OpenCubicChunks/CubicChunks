@@ -88,9 +88,9 @@ public class HorizontalGraphGroup extends CubeDistanceGraph {
         }
 
         protected void chunkLevelChanged(long pos, int oldLevel, int newLevel) {
-            int actualNewLevel = this.cubesInRange.containsKey(pos) ? 0 : Integer.MAX_VALUE;
-            int actualOldLevel = oldLevel <= this.range ? 0 : Integer.MAX_VALUE;
-            superior.updateSourceLevel(pos, actualNewLevel, actualNewLevel < actualOldLevel);
+            boolean contained = this.cubesInRange.containsKey(pos);
+            int actualNewLevel = contained ? 0 : Integer.MAX_VALUE;
+            superior.updateSourceLevel(pos, actualNewLevel, contained);
         }
 
         protected int getSourceLevel(long pos) {
