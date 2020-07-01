@@ -17,7 +17,7 @@ public class CubicChunksConfig {
     static {
         verticalViewDistance = builder
                 .comment("Vertical radius of cubes to load")
-                .defineInRange("verticalViewDistance", 4, 2, 16);
+                .defineInRange("verticalViewDistance", 4, 2, 32);
 
         config = builder.build();
     }
