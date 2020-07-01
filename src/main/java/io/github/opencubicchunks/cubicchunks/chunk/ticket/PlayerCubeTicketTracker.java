@@ -121,7 +121,7 @@ public class PlayerCubeTicketTracker {
 
                 if (oldHorizDistance != horizCurrentDistance || oldVertDistance != vertCurrentDistance) {
                     //func_219066_a = update level
-                    iTicketManager.getCubeTaskPriorityQueueSorter().onUpdateCubeLevel(CubePos.from(pos), () -> this.horizDistances.get(pos), horizCurrentDistance, (horizDistance) -> {
+                    iTicketManager.getCubeTaskPriorityQueueSorter().onUpdateCubeLevel(CubePos.from(pos), () -> this.horizDistances.get(pos), horizCurrentDistance+verticalViewDistance, (horizDistance) -> {
                         // They have the same return value and
                         if (horizCurrentDistance >= this.horizDistances.defaultReturnValue() || vertCurrentDistance >= this.vertDistances.defaultReturnValue()) {
                             this.horizDistances.remove(pos);
