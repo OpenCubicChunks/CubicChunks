@@ -25,7 +25,7 @@
 
 package io.github.opencubicchunks.cubicchunks.utils;
 
-import io.github.opencubicchunks.cubicchunks.chunk.ICube;
+import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.entity.Entity;
@@ -41,12 +41,12 @@ public class Coords {
 
     public static final int NO_HEIGHT = Integer.MIN_VALUE + 32;
 
-    private static final int LOG2_BLOCK_SIZE = MathUtil.log2(ICube.BLOCK_SIZE);
+    private static final int LOG2_BLOCK_SIZE = MathUtil.log2(IBigCube.BLOCK_SIZE);
 
-    private static final int BLOCK_SIZE_MINUS_1 = ICube.BLOCK_SIZE - 1;
-    private static final int BLOCK_SIZE_DIV_2 = ICube.BLOCK_SIZE / 2;
-    private static final int BLOCK_SIZE_DIV_16 = ICube.BLOCK_SIZE / 16;
-    private static final int BLOCK_SIZE_DIV_32 = ICube.BLOCK_SIZE / 32;
+    private static final int BLOCK_SIZE_MINUS_1 = IBigCube.BLOCK_SIZE - 1;
+    private static final int BLOCK_SIZE_DIV_2 = IBigCube.BLOCK_SIZE / 2;
+    private static final int BLOCK_SIZE_DIV_16 = IBigCube.BLOCK_SIZE / 16;
+    private static final int BLOCK_SIZE_DIV_32 = IBigCube.BLOCK_SIZE / 32;
 
     private static final int POS_TO_INDEX_MASK = getPosToIndexMask();
     private static final int INDEX_TO_POS_MASK = POS_TO_INDEX_MASK >> 4;
@@ -60,7 +60,7 @@ public class Coords {
     private static int getPosToIndexMask()
     {
         int mask = 0;
-        for(int i = ICube.BLOCK_SIZE/2; i >= 16; i /= 2)
+        for(int i = IBigCube.BLOCK_SIZE/2; i >= 16; i /= 2)
         {
             mask += i;
         }
@@ -75,7 +75,7 @@ public class Coords {
     }
 
     public static int blockToLocal(int val) {
-        return val & (ICube.BLOCK_SIZE - 1);
+        return val & (IBigCube.BLOCK_SIZE - 1);
     }
 
     public static int localX(BlockPos pos) {
@@ -149,21 +149,21 @@ public class Coords {
         //        0b1000010100 & 0b0001100000 = 0b0
         //        0b0 >> 4 = 0b0 = 0x0 = 0
 
-        //        mask needs to be every power of 2 below ICube.BLOCK_SIZE that's > 16
+        //        mask needs to be every power of 2 below IBigCube.BLOCK_SIZE that's > 16
 
-        if(ICube.CUBE_DIAMETER == 1) {
+        if(IBigCube.CUBE_DIAMETER == 1) {
             return blockToIndex16(x, y, z);
         }
-        else if(ICube.CUBE_DIAMETER == 2) {
+        else if(IBigCube.CUBE_DIAMETER == 2) {
             return blockToIndex32(x, y, z);
         }
-        else if(ICube.CUBE_DIAMETER == 4) {
+        else if(IBigCube.CUBE_DIAMETER == 4) {
             return blockToIndex64(x, y, z);
         }
-        else if(ICube.CUBE_DIAMETER == 8) {
+        else if(IBigCube.CUBE_DIAMETER == 8) {
             return blockToIndex128(x, y, z);
         }
-        throw new UnsupportedOperationException("Unsupported cube size " + ICube.CUBE_DIAMETER);
+        throw new UnsupportedOperationException("Unsupported cube size " + IBigCube.CUBE_DIAMETER);
     }
 
     private static int blockToIndex16(int x, int y, int z)

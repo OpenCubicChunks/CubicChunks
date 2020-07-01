@@ -6,7 +6,6 @@ import org.lwjgl.PointerBuffer;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.vulkan.*;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.net.URISyntaxException;
@@ -14,6 +13,7 @@ import java.nio.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Objects;
 
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.glfw.GLFWVulkan.*;
@@ -48,7 +48,7 @@ public class DebugVulkan {
     private static final long UINT32_MAX = Integer.MIN_VALUE;
     private static final long UINT64_MAX = Long.MIN_VALUE;
 
-    private static int MAX_FRAMES_IN_FLIGHT = 2;
+    private static final int MAX_FRAMES_IN_FLIGHT = 2;
 
     private static final ByteBuffer EXT_debug_report = org.lwjgl.system.MemoryUtil.memASCII(VK_EXT_DEBUG_REPORT_EXTENSION_NAME);
 
@@ -152,7 +152,7 @@ public class DebugVulkan {
     //FACE INDICES
     //private final int[] indices = { 0, 1, 2, 2, 3, 0 };
     //CUBE INDICES
-    private final int[] indices = {
+    @SuppressWarnings("PointlessArithmeticExpression") private final int[] indices = {
             0, 1, 3, 3, 1, 2,
             1, 5, 2, 2, 5, 6,
             5, 4, 6, 6, 4, 7,
@@ -390,8 +390,8 @@ public class DebugVulkan {
     void createSwapChain(MemoryStack stack) {
         SwapChainSupportDetails swapChainSupport = querySwapChainSupport(physicalDevice, stack);
 
-        VkSurfaceFormatKHR surfaceFormat = chooseSwapSurfaceFormat(swapChainSupport.formats, swapChainSupport.formatsSize);
-        int presentMode = chooseSwapPresentMode(swapChainSupport.presentModes, swapChainSupport.presentModesSize);
+        VkSurfaceFormatKHR surfaceFormat = chooseSwapSurfaceFormat(swapChainSupport.formats);
+        int presentMode = chooseSwapPresentMode(swapChainSupport.presentModes);
         VkExtent2D extent = chooseSwapExtent(swapChainSupport.capabilities, stack);
 
         //Request 1 more than min, so we dont have to wait for the driver to complete internal ops before we acquire another image
@@ -619,7 +619,7 @@ public class DebugVulkan {
         VkPipelineColorBlendStateCreateInfo colorBlending = VkPipelineColorBlendStateCreateInfo.callocStack(stack)
                 .sType(VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO)
                 .logicOpEnable(false)
-                .logicOp(VK_LOGIC_OP_NO_OP) //TODO: find good operation to use here, needs some testing https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/VkLogicOp.html
+                .logicOp(VK_LOGIC_OP_NO_OP) // find good operation to use here, needs some testing https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/VkLogicOp.html
                 .pAttachments(colorBlendAttachment)
                 .blendConstants(0, 0.0f) // Optional
                 .blendConstants(1, 0.0f) // Optional
@@ -859,7 +859,7 @@ public class DebugVulkan {
                 .pSetLayouts(layoutsBuf);
 
         descriptorSets = memAllocLong(swapChainImages.length);
-        if(vkAllocateDescriptorSets(device, allocInfo, descriptorSets) != VK_SUCCESS) //TODO: check this works, not sure if desciprtorsets needs to be longbuffer
+        if(vkAllocateDescriptorSets(device, allocInfo, descriptorSets) != VK_SUCCESS)
             throw new RuntimeException("failed to allocate descriptor sets!");
 
         for (int i = 0; i < swapChainImages.length; i++) {
@@ -893,7 +893,7 @@ public class DebugVulkan {
 
         if(vkAllocateCommandBuffers(device, allocInfo, pCommandBuffers) != VK_SUCCESS)
             throw new RuntimeException("failed to allocate command buffers!");
-        for (int i = 0; i < pCommandBuffers.limit(); i++) { //TODO: check if .limit is actually what i think it is (number of things in pointer)
+        for (int i = 0; i < pCommandBuffers.limit(); i++) {
             commandBuffers.add(i, new VkCommandBuffer(pCommandBuffers.get(i), device));
         }
 
@@ -937,7 +937,6 @@ public class DebugVulkan {
 
                 vkCmdBindDescriptorSets(commandBuffers.get(i), VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, lp.put(0, descriptorSets.get(i)),
                         null);
-                //TODO: check this is right ^
 
                 vkCmdDrawIndexed(commandBuffers.get(i), indices.length, 1, 0, 0, 0);
             }
@@ -994,10 +993,7 @@ public class DebugVulkan {
     static byte[] readFile(String filename) {
         try {
             ClassLoader classloader = Thread.currentThread().getContextClassLoader();
-
-            File file = new File(classloader.getResource(filename).toString());
-
-            return Files.readAllBytes(Paths.get(classloader.getResource(filename).toURI()));
+            return Files.readAllBytes(Paths.get(Objects.requireNonNull(classloader.getResource(filename)).toURI()));
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         } catch (URISyntaxException e) {
@@ -1013,7 +1009,7 @@ public class DebugVulkan {
         boolean swapChainAdequate = false;
         if (extensionsSupported) {
             SwapChainSupportDetails swapChainSupport = querySwapChainSupport(device, stack);
-            swapChainAdequate = !(swapChainSupport.formatsSize == 0) && !(swapChainSupport.presentModesSize == 0);
+            swapChainAdequate = !(swapChainSupport.formats.limit() == 0) && !(swapChainSupport.presentModes.limit() == 0);
         }
 
         return indices.isComplete() && extensionsSupported && swapChainAdequate;
@@ -1327,7 +1323,7 @@ public class DebugVulkan {
         return indices;
     }
 
-    VkSurfaceFormatKHR chooseSwapSurfaceFormat(VkSurfaceFormatKHR.Buffer availableFormats, int availableFormatsSize) {
+    VkSurfaceFormatKHR chooseSwapSurfaceFormat(VkSurfaceFormatKHR.Buffer availableFormats) {
         for(VkSurfaceFormatKHR availableFormat : availableFormats) {
             if(availableFormat.format() == VK_FORMAT_B8G8R8A8_SRGB && availableFormat.colorSpace() == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR)
                 return availableFormat;
@@ -1335,8 +1331,8 @@ public class DebugVulkan {
         return availableFormats.get(0);
     }
 
-    int chooseSwapPresentMode(IntBuffer availablePresentModes, int availablePresentModesSize) {
-        for(int i = 0; i < availablePresentModesSize; i++) {
+    int chooseSwapPresentMode(IntBuffer availablePresentModes) {
+        for(int i = 0; i < availablePresentModes.limit(); i++) {
             if(availablePresentModes.get(i) == VK_PRESENT_MODE_MAILBOX_KHR)
                 return availablePresentModes.get(i);
         }
@@ -1370,22 +1366,18 @@ public class DebugVulkan {
 
         //Capabilities
         details.capabilities = VkSurfaceCapabilitiesKHR.mallocStack(stack);
-        checkError(vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice, surface, details.capabilities));
+        checkError(vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, surface, details.capabilities));
 
         //Surface Formats
-        checkError(vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface, ip, null));
-        details.formatsSize = ip.get(0);
-        details.formats = VkSurfaceFormatKHR.mallocStack(details.formatsSize, stack);
-        checkError(vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface, ip, details.formats));
+        checkError(vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface, ip, null));
+        details.formats = VkSurfaceFormatKHR.mallocStack(ip.get(0), stack);
+        checkError(vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface, ip, details.formats));
 
         //Present Modes
-        checkError(vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, surface, ip, null));
-        details.presentModesSize = ip.get(0);
-        details.presentModes = stack.mallocInt(details.presentModesSize);
-        checkError(vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, surface, ip, details.presentModes));
+        checkError(vkGetPhysicalDeviceSurfacePresentModesKHR(device, surface, ip, null));
+        details.presentModes = stack.mallocInt(ip.get(0));
+        checkError(vkGetPhysicalDeviceSurfacePresentModesKHR(device, surface, ip, details.presentModes));
 
-
-        VkExtent2D swapchainExtent = VkExtent2D.mallocStack(stack);
         return details;
     }
 
@@ -1422,10 +1414,7 @@ public class DebugVulkan {
     private static class SwapChainSupportDetails {
         VkSurfaceCapabilitiesKHR capabilities;
         VkSurfaceFormatKHR.Buffer formats;
-        int formatsSize;
-        /** This is a VkPresentModeKHR, but this enum doesnt exist in java, so I'm just using int. **/
         IntBuffer presentModes;
-        int presentModesSize;
     }
 
     private static class Vertex {
@@ -1433,22 +1422,21 @@ public class DebugVulkan {
         int color;
 
         static int getsize() {
+            //noinspection PointlessArithmeticExpression
             return (Integer.BYTES * 3) + (Integer.BYTES * 1);
         }
 
         static VkVertexInputBindingDescription.Buffer getBindingDescription() {
-            VkVertexInputBindingDescription.Buffer bindingDescription = VkVertexInputBindingDescription.calloc(1)
+            return VkVertexInputBindingDescription.calloc(1)
                     .binding(0)
                     .stride(Vertex.getsize())
-                    .inputRate(VK_VERTEX_INPUT_RATE_VERTEX); //This can also be VK_VERTEX_INPUT_RATE_INSTANCE for instanced rendering
-
-
-            return bindingDescription;
+                    .inputRate(VK_VERTEX_INPUT_RATE_VERTEX);
         }
 
         static VkVertexInputAttributeDescription.Buffer getAttributeDescriptions() { //ASDASDASD
             VkVertexInputAttributeDescription.Buffer attributeDescriptions = VkVertexInputAttributeDescription.calloc(2);
 
+            //noinspection PointlessArithmeticExpression
             attributeDescriptions.get(0).binding(0)
                     .location(0)
                     .format(VK_FORMAT_R32G32B32_SFLOAT)

@@ -4,7 +4,7 @@ import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.ChunkSection;
 
-public class EmptyCube extends Cube {
+public class EmptyCube extends BigCube {
 
     public EmptyCube(World worldIn) {
         super(worldIn, CubePos.of(0, 0, 0), null);

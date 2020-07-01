@@ -3,11 +3,10 @@ package io.github.opencubicchunks.cubicchunks.chunk;
 import static io.github.opencubicchunks.cubicchunks.chunk.util.Utils.unsafeCast;
 
 import com.mojang.datafixers.util.Either;
-import io.github.opencubicchunks.cubicchunks.chunk.cube.Cube;
+import io.github.opencubicchunks.cubicchunks.chunk.cube.BigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.CubePrimerWrapper;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.CubeStatus;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
-import io.github.opencubicchunks.cubicchunks.chunk.util.Utils;
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.ChunkHolderAccess;
 import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.server.ChunkHolder;
@@ -21,42 +20,42 @@ import javax.annotation.Nullable;
 public interface ICubeHolder {
     // TODO: all of their usages should be replaced with ASM
     @Deprecated
-    Either<ICube, ChunkHolder.IChunkLoadingError> MISSING_CUBE = unsafeCast(ChunkHolder.MISSING_CHUNK);
+    Either<IBigCube, ChunkHolder.IChunkLoadingError> MISSING_CUBE = unsafeCast(ChunkHolder.MISSING_CHUNK);
     @Deprecated
-    Either<Cube, ChunkHolder.IChunkLoadingError> UNLOADED_CUBE = unsafeCast(ChunkHolder.UNLOADED_CHUNK);
+    Either<BigCube, ChunkHolder.IChunkLoadingError> UNLOADED_CUBE = unsafeCast(ChunkHolder.UNLOADED_CHUNK);
     @Deprecated
-    CompletableFuture<Either<Cube, ChunkHolder.IChunkLoadingError>> UNLOADED_CUBE_FUTURE = unsafeCast(ChunkHolderAccess.getUnloadedChunkFuture());
+    CompletableFuture<Either<BigCube, ChunkHolder.IChunkLoadingError>> UNLOADED_CUBE_FUTURE = unsafeCast(ChunkHolderAccess.getUnloadedChunkFuture());
     @Deprecated
-    CompletableFuture<Either<ICube, ChunkHolder.IChunkLoadingError>> MISSING_CUBE_FUTURE = unsafeCast(ChunkHolder.MISSING_CHUNK_FUTURE);
+    CompletableFuture<Either<IBigCube, ChunkHolder.IChunkLoadingError>> MISSING_CUBE_FUTURE = unsafeCast(ChunkHolder.MISSING_CHUNK_FUTURE);
 
     static ChunkStatus getCubeStatusFromLevel(int cubeLevel) {
         return cubeLevel < 33 ? ChunkStatus.FULL : CubeStatus.getStatus(cubeLevel - 33);
     }
 
     @Nullable
-    Cube getCubeIfComplete();
+    BigCube getCubeIfComplete();
 
     CubePos getCubePos();
 
     // func_219276_a
-    CompletableFuture<Either<ICube, ChunkHolder.IChunkLoadingError>> createCubeFuture(ChunkStatus chunkStatus, ChunkManager chunkManager);
+    CompletableFuture<Either<IBigCube, ChunkHolder.IChunkLoadingError>> createCubeFuture(ChunkStatus chunkStatus, ChunkManager chunkManager);
 
-    CompletableFuture<Either<ICube, ChunkHolder.IChunkLoadingError>> getCubeFuture(ChunkStatus chunkStatus);
+    CompletableFuture<Either<IBigCube, ChunkHolder.IChunkLoadingError>> getCubeFuture(ChunkStatus chunkStatus);
 
-    CompletableFuture<Either<Cube, ChunkHolder.IChunkLoadingError>> getCubeEntityTickingFuture();
+    CompletableFuture<Either<BigCube, ChunkHolder.IChunkLoadingError>> getCubeEntityTickingFuture();
 
     // func_219294_a
     void onCubeWrapperCreated(CubePrimerWrapper primer);
 
     // func_225410_b
-    CompletableFuture<Either<ICube, ChunkHolder.IChunkLoadingError>> getFutureHigherThanCubeStatus(ChunkStatus chunkStatus);
+    CompletableFuture<Either<IBigCube, ChunkHolder.IChunkLoadingError>> getFutureHigherThanCubeStatus(ChunkStatus chunkStatus);
 
-    void addCubeStageListener(ChunkStatus status, BiConsumer<Either<ICube, ChunkHolder.IChunkLoadingError>, Throwable> consumer, ChunkManager chunkManager);
+    void addCubeStageListener(ChunkStatus status, BiConsumer<Either<IBigCube, ChunkHolder.IChunkLoadingError>, Throwable> consumer, ChunkManager chunkManager);
 
 
-    void sendChanges(Cube cube);
+    void sendChanges(BigCube cube);
 
-    CompletableFuture<ICube> getCurrentCubeFuture();
+    CompletableFuture<IBigCube> getCurrentCubeFuture();
 
     // added with ASM, can't be shadow because mixin validates shadows before preApply runs
     void processCubeUpdates(ChunkManager chunkManagerIn);

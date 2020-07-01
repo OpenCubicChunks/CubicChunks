@@ -5,7 +5,7 @@ import com.mojang.datafixers.util.Either;
 import io.github.opencubicchunks.cubicchunks.CubicChunksConfig;
 import io.github.opencubicchunks.cubicchunks.chunk.IChunkManager;
 import io.github.opencubicchunks.cubicchunks.chunk.ICubeHolder;
-import io.github.opencubicchunks.cubicchunks.chunk.cube.Cube;
+import io.github.opencubicchunks.cubicchunks.chunk.cube.BigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.graph.CCTicketType;
 import io.github.opencubicchunks.cubicchunks.chunk.ticket.CubeTaskPriorityQueueSorter;
 import io.github.opencubicchunks.cubicchunks.chunk.ticket.CubeTicketTracker;
@@ -147,7 +147,7 @@ public abstract class MixinTicketManager implements ITicketManager {
                             throw new IllegalStateException();
                         }
 
-                        CompletableFuture<Either<Cube, ChunkHolder.IChunkLoadingError>> sectionEntityTickingFuture =
+                        CompletableFuture<Either<BigCube, ChunkHolder.IChunkLoadingError>> sectionEntityTickingFuture =
                                 ((ICubeHolder)chunkholder).getCubeEntityTickingFuture();
                         sectionEntityTickingFuture.thenAccept((p_219363_3_) -> this.field_219388_p.execute(() -> {
                             this.playerCubeTicketThrottlerSorter.enqueue(CubeTaskPriorityQueueSorter.createSorterMsg(() -> {

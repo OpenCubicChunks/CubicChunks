@@ -7,7 +7,7 @@ import static net.minecraft.world.chunk.Chunk.EMPTY_SECTION;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import io.github.opencubicchunks.cubicchunks.CubicChunks;
-import io.github.opencubicchunks.cubicchunks.chunk.ICube;
+import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.biome.CubeBiomeContainer;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.ChunkSectionAccess;
@@ -18,7 +18,6 @@ import it.unimi.dsi.fastutil.shorts.ShortList;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
-import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.Entity;
 import net.minecraft.fluid.Fluid;
 import net.minecraft.fluid.IFluidState;
@@ -40,7 +39,6 @@ import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.chunk.IChunk;
 import net.minecraft.world.gen.Heightmap;
 import net.minecraft.world.gen.feature.structure.StructureStart;
-import net.minecraft.world.lighting.WorldLightManager;
 import net.minecraftforge.common.util.Constants;
 
 import java.util.Arrays;
@@ -55,7 +53,7 @@ import java.util.stream.StreamSupport;
 
 import javax.annotation.Nullable;
 
-public class Cube implements IChunk, ICube {
+public class BigCube implements IChunk, IBigCube {
 
     private final CubePos cubePos;
     private final ChunkSection[] sections = new ChunkSection[CUBE_SIZE];
@@ -74,12 +72,12 @@ public class Cube implements IChunk, ICube {
     private volatile boolean lightCorrect;
     private final Map<BlockPos, CompoundNBT> deferredTileEntities = Maps.newHashMap();
 
-    public Cube(World worldIn, CubePos cubePosIn, CubeBiomeContainer biomeContainerIn) {
+    public BigCube(World worldIn, CubePos cubePosIn, CubeBiomeContainer biomeContainerIn) {
         this(worldIn, cubePosIn, biomeContainerIn, UpgradeData.EMPTY, EmptyTickList.get(), EmptyTickList.get(), 0L, (ChunkSection[])null, (Consumer<Chunk>)null);
     }
 
-    public Cube(World worldIn, CubePos cubePosIn, CubeBiomeContainer biomeContainerIn, UpgradeData upgradeDataIn, ITickList<Block> tickBlocksIn,
-            ITickList<Fluid> tickFluidsIn, long inhabitedTimeIn, @Nullable ChunkSection[] sectionsIn, @Nullable Consumer<Chunk> postLoadConsumerIn) {
+    public BigCube(World worldIn, CubePos cubePosIn, CubeBiomeContainer biomeContainerIn, UpgradeData upgradeDataIn, ITickList<Block> tickBlocksIn,
+                   ITickList<Fluid> tickFluidsIn, long inhabitedTimeIn, @Nullable ChunkSection[] sectionsIn, @Nullable Consumer<Chunk> postLoadConsumerIn) {
         this.world = worldIn;
         this.cubePos = cubePosIn;
 //        this.upgradeData = upgradeDataIn;
@@ -91,7 +89,7 @@ public class Cube implements IChunk, ICube {
 //        }
 
         //noinspection unchecked
-        this.entityLists = new ClassInheritanceMultiMap[ICube.CUBE_SIZE];
+        this.entityLists = new ClassInheritanceMultiMap[IBigCube.CUBE_SIZE];
         for(int i = 0; i < this.entityLists.length; ++i) {
             this.entityLists[i] = new ClassInheritanceMultiMap<>(Entity.class);
         }
@@ -104,7 +102,7 @@ public class Cube implements IChunk, ICube {
 
         if(sectionsIn != null) {
             if (sectionsIn.length != CUBE_SIZE) {
-                throw new IllegalStateException("Number of Sections must equal Cube.CUBESIZE");
+                throw new IllegalStateException("Number of Sections must equal BigCube.CUBESIZE");
             }
 
             for (int i = 0; i < sectionsIn.length; i++) {
@@ -124,7 +122,7 @@ public class Cube implements IChunk, ICube {
 //        this.gatherCapabilities();
     }
 
-    public Cube(World worldIn, CubePrimer cubePrimerIn) {
+    public BigCube(World worldIn, CubePrimer cubePrimerIn) {
         this(worldIn, cubePrimerIn.getCubePos(), cubePrimerIn.getBiomes(), cubePrimerIn.getUpgradeData(), cubePrimerIn.getBlocksToBeTicked(),
             cubePrimerIn.getFluidsToBeTicked(), cubePrimerIn.getInhabitedTime(), cubePrimerIn.getSections(), (Consumer<Chunk>)null);
 
@@ -208,7 +206,7 @@ public class Cube implements IChunk, ICube {
         this.cubeBiomeContainer = biomes;
 
         Sets.newHashSet(this.tileEntities.keySet()).forEach(this.world::removeTileEntity);
-        for (int i = 0; i < ICube.CUBE_SIZE; i++) {
+        for (int i = 0; i < IBigCube.CUBE_SIZE; i++) {
             boolean exists = emptyFlags.get(i);
 
             //        byte emptyFlags = 0;
@@ -280,8 +278,8 @@ public class Cube implements IChunk, ICube {
     }
 
     private int getIndexFromEntity(Entity entityIn) {
-        return (MathHelper.floor(entityIn.getPosX() / 16.0D) * ICube.CUBE_DIAMETER * ICube.CUBE_DIAMETER) +
-                (MathHelper.floor(entityIn.getPosY() / 16.0D) * ICube.CUBE_DIAMETER) +
+        return (MathHelper.floor(entityIn.getPosX() / 16.0D) * IBigCube.CUBE_DIAMETER * IBigCube.CUBE_DIAMETER) +
+                (MathHelper.floor(entityIn.getPosY() / 16.0D) * IBigCube.CUBE_DIAMETER) +
                 MathHelper.floor(entityIn.getPosZ() / 16.0D);
     }
 
@@ -386,7 +384,7 @@ public class Cube implements IChunk, ICube {
         return blockstate;
     }
 
-    // TODO: obfuscation, this overrides both IChunk and ICube
+    // TODO: obfuscation, this overrides both IChunk and IBigCube
     @Nullable
     public BlockState setBlock(BlockPos pos, BlockState state, boolean isMoving) {
         return this.setBlockState(Coords.blockToIndex(pos.getX(), pos.getY(), pos.getZ()), pos, state, isMoving);

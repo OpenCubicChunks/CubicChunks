@@ -1,7 +1,7 @@
 package io.github.opencubicchunks.cubicchunks.chunk;
 
 import io.github.opencubicchunks.cubicchunks.chunk.biome.CubeBiomeContainer;
-import io.github.opencubicchunks.cubicchunks.chunk.cube.Cube;
+import io.github.opencubicchunks.cubicchunks.chunk.cube.BigCube;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.PacketBuffer;
 
@@ -13,6 +13,6 @@ public interface IClientCubeProvider extends ICubeProvider {
 
     void setCenter(int x, int y, int z);
 
-    Cube loadCube(int cubeX, int cubeY, int cubeZ, @Nullable CubeBiomeContainer biomes, PacketBuffer readBuffer, CompoundNBT nbtTagIn,
-            boolean cubeExists);
+    BigCube loadCube(int cubeX, int cubeY, int cubeZ, @Nullable CubeBiomeContainer biomes, PacketBuffer readBuffer, CompoundNBT nbtTagIn,
+                     boolean cubeExists);
 }

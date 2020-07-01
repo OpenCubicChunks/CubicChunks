@@ -3,7 +3,7 @@ package io.github.opencubicchunks.cubicchunks.mixin.core.common.chunk;
 import static io.github.opencubicchunks.cubicchunks.chunk.util.Utils.unsafeCast;
 
 import com.mojang.datafixers.util.Either;
-import io.github.opencubicchunks.cubicchunks.chunk.ICube;
+import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.ICubeGenerator;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.CubePrimer;
 import io.github.opencubicchunks.cubicchunks.world.CubeWorldGenRegion;
@@ -72,12 +72,12 @@ public class MixinChunkStatus {
             CallbackInfoReturnable<CompletableFuture<Either<IChunk, ChunkHolder.IChunkLoadingError>>> cir) {
 
         cir.setReturnValue(CompletableFuture.completedFuture(Either.left(chunk)));
-        if (!(chunk instanceof ICube)) {
+        if (!(chunk instanceof IBigCube)) {
             //vanilla
             return;
         }
         //cc
-        if (!((ICube) chunk).getCubeStatus().isAtLeast(status)) {
+        if (!((IBigCube) chunk).getCubeStatus().isAtLeast(status)) {
             if (world.getWorldInfo().isMapFeaturesEnabled()) {
                 generator.generateStructures(world.getBiomeManager().copyWithProvider(generator.getBiomeProvider()), chunk, generator,
                         templateManager);
@@ -95,7 +95,7 @@ public class MixinChunkStatus {
             CallbackInfo ci) {
 
         ci.cancel();
-        if (chunk instanceof ICube) {
+        if (chunk instanceof IBigCube) {
             // generator.generateStructureStarts(new CubeWorldGenRegion(world, unsafeCast(neighbors)), chunk);
         }
     }
@@ -106,9 +106,9 @@ public class MixinChunkStatus {
             CallbackInfo ci) {
 
         ci.cancel();
-        if (chunk instanceof ICube) {
+        if (chunk instanceof IBigCube) {
             // generator.makeBase(new CubeWorldGenRegion(world, unsafeCast(neighbors)), chunk);
-            ((ICubeGenerator) generator).makeBase(new CubeWorldGenRegion(world, unsafeCast(neighbors)), (ICube) chunk);
+            ((ICubeGenerator) generator).makeBase(new CubeWorldGenRegion(world, unsafeCast(neighbors)), (IBigCube) chunk);
         }
     }
 
@@ -118,7 +118,7 @@ public class MixinChunkStatus {
             CallbackInfo ci) {
 
         ci.cancel();
-        if (chunk instanceof ICube) {
+        if (chunk instanceof IBigCube) {
             // generator.generateSurface(new CubeWorldGenRegion(world, unsafeCast(neighbors)), chunk);
         }
     }
@@ -129,7 +129,7 @@ public class MixinChunkStatus {
             CallbackInfo ci) {
 
         ci.cancel();
-        if (chunk instanceof ICube) {
+        if (chunk instanceof IBigCube) {
             // generator.func_225550_a_(world.getBiomeManager().copyWithProvider(generator.getBiomeProvider()), chunk, GenerationStage.Carving.AIR);
         }
     }
@@ -140,7 +140,7 @@ public class MixinChunkStatus {
             CallbackInfo ci) {
 
         ci.cancel();
-        if (chunk instanceof ICube) {
+        if (chunk instanceof IBigCube) {
             // generator.func_225550_a_(world.getBiomeManager().copyWithProvider(generator.getBiomeProvider()), chunk, GenerationStage.Carving.LIQUID);
         }
     }
@@ -186,7 +186,7 @@ public class MixinChunkStatus {
         if (!chunk.getStatus().isAtLeast(status)) {
             ((CubePrimer) chunk).setStatus(status);
         }
-        cir.setReturnValue(unsafeCast(((IServerWorldLightManager)lightManager).lightCube((ICube)chunk, flag).thenApply(Either::left)));
+        cir.setReturnValue(unsafeCast(((IServerWorldLightManager)lightManager).lightCube((IBigCube)chunk, flag).thenApply(Either::left)));
     }
 
     //lambda$static$12
@@ -196,7 +196,7 @@ public class MixinChunkStatus {
             CallbackInfo ci) {
 
         ci.cancel();
-        if (chunk instanceof ICube) {
+        if (chunk instanceof IBigCube) {
             // generator.spawnMobs(new CubeWorldGenRegion(world, unsafeCast(neighbors)));
         }
     }

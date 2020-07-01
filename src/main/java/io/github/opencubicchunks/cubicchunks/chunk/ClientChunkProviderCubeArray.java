@@ -1,6 +1,6 @@
 package io.github.opencubicchunks.cubicchunks.chunk;
 
-import io.github.opencubicchunks.cubicchunks.chunk.cube.Cube;
+import io.github.opencubicchunks.cubicchunks.chunk.cube.BigCube;
 
 import java.util.concurrent.atomic.AtomicReferenceArray;
 import java.util.function.Consumer;
@@ -9,17 +9,17 @@ import javax.annotation.Nullable;
 
 public class ClientChunkProviderCubeArray {
 
-    public final AtomicReferenceArray<Cube> cubes;
+    public final AtomicReferenceArray<BigCube> cubes;
     public final int viewDistance;
     private final int sideLength;
     private final int sideArea;
-    private final Consumer<Cube> onUnload;
+    private final Consumer<BigCube> onUnload;
     public volatile int centerX;
     public volatile int centerY;
     public volatile int centerZ;
     public int loaded;
 
-    public ClientChunkProviderCubeArray(int viewDistanceIn, Consumer<Cube> onUnload) {
+    public ClientChunkProviderCubeArray(int viewDistanceIn, Consumer<BigCube> onUnload) {
         this.viewDistance = viewDistanceIn;
         this.sideLength = viewDistanceIn * 2 + 1;
         this.sideArea = this.sideLength * this.sideLength;
@@ -33,8 +33,8 @@ public class ClientChunkProviderCubeArray {
                 + Math.floorMod(x, this.sideLength);
     }
 
-    public void replace(int chunkIndex, @Nullable Cube chunkIn) {
-        Cube chunk = this.cubes.getAndSet(chunkIndex, chunkIn);
+    public void replace(int chunkIndex, @Nullable BigCube chunkIn) {
+        BigCube chunk = this.cubes.getAndSet(chunkIndex, chunkIn);
         if (chunk != null) {
             --this.loaded;
             onUnload.accept(chunk);
@@ -46,7 +46,7 @@ public class ClientChunkProviderCubeArray {
 
     }
 
-    public Cube unload(int chunkIndex, Cube chunkIn, @Nullable Cube replaceWith) {
+    public BigCube unload(int chunkIndex, BigCube chunkIn, @Nullable BigCube replaceWith) {
         if (this.cubes.compareAndSet(chunkIndex, chunkIn, replaceWith) && replaceWith == null) {
             --this.loaded;
         }
@@ -62,7 +62,7 @@ public class ClientChunkProviderCubeArray {
     }
 
     @Nullable
-    public Cube get(int chunkIndex) {
+    public BigCube get(int chunkIndex) {
         return this.cubes.get(chunkIndex);
     }
 }

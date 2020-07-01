@@ -1,7 +1,7 @@
 package io.github.opencubicchunks.cubicchunks.client;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import io.github.opencubicchunks.cubicchunks.chunk.ICube;
+import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.ITrackingCubeStatusListener;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
@@ -39,7 +39,7 @@ public class CubicWorldLoadScreen {
             Object2IntMap<ChunkStatus> colors) {
         float aspectRatio = Minecraft.getInstance().currentScreen.width / (float) Minecraft.getInstance().currentScreen.height;
 
-        float scaleWithCineSize = scale * ICube.CUBE_DIAMETER / 2.0f;
+        float scaleWithCineSize = scale * IBigCube.CUBE_DIAMETER / 2.0f;
 
         RenderSystem.matrixMode(GL11.GL_PROJECTION);
         RenderSystem.pushMatrix();
@@ -91,7 +91,7 @@ public class CubicWorldLoadScreen {
                 int alpha = 0xB0;
                 int c = colors.getOrDefault(columnStatus, 0xFFFF00FF) | (alpha << 24);
                 drawCube(buffer, cdx - sectionRenderRadius / 2, -30, cdz - sectionRenderRadius / 2,
-                        0.12f * scale / ICube.CUBE_DIAMETER, c, EnumSet.of(Direction.UP));
+                        0.12f * scale / IBigCube.CUBE_DIAMETER, c, EnumSet.of(Direction.UP));
             }
         }
 

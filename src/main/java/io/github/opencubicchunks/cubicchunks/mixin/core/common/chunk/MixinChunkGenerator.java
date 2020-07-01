@@ -1,6 +1,6 @@
 package io.github.opencubicchunks.cubicchunks.mixin.core.common.chunk;
 
-import io.github.opencubicchunks.cubicchunks.chunk.ICube;
+import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.ICubeGenerator;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import io.github.opencubicchunks.cubicchunks.world.CubeWorldGenRegion;
@@ -46,25 +46,25 @@ public class MixinChunkGenerator implements ICubeGenerator {
 
     @Inject(method = "generateBiomes", at = @At("HEAD"), cancellable = true)
     public void generateBiomes(IChunk chunkIn, CallbackInfo ci) {
-        if (chunkIn instanceof ICube) {
+        if (chunkIn instanceof IBigCube) {
             ci.cancel();
         }
     }
 
     @Override
-    public void makeBase(IWorld worldIn, ICube cube) {
+    public void makeBase(IWorld worldIn, IBigCube cube) {
         // noiseAt = getValue2D(x, z, yDiscontinuityDistance, maxYDiscontinuityFactor)
         // getValue = getValue3D(x, y, z, yDiscontinuityDistance, maxYDiscontinuityFactor, allowYFarlands)
-        for (int dx = 0; dx < ICube.BLOCK_SIZE; dx++) {
+        for (int dx = 0; dx < IBigCube.BLOCK_SIZE; dx++) {
             int blockX = cube.getCubePos().minCubeX() + dx;
-            for (int dz = 0; dz < ICube.BLOCK_SIZE; dz++) {
+            for (int dz = 0; dz < IBigCube.BLOCK_SIZE; dz++) {
                 int blockZ = cube.getCubePos().minCubeZ() + dz;
 
                 double v1 = gen1.noiseAt(blockX * 0.004567, blockZ * 0.004567, 0, 0) * 400;
                 double v2 = gen2.noiseAt(blockX * 0.004567, blockZ * 0.004567, 0, 0) * 400;
                 double v3 = gen3.noiseAt(blockX * 0.008567, blockZ * 0.008567, 0, 0) * 20 + 0.5;
                 int height = (int) MathHelper.clampedLerp(v1, v2, v3);
-                for (int dy = 0; dy < ICube.BLOCK_SIZE; dy++) {
+                for (int dy = 0; dy < IBigCube.BLOCK_SIZE; dy++) {
                     int blockY = cube.getCubePos().minCubeY() + dy;
                     if (blockY == height) {
                         cube.setBlock(new BlockPos(dx, dy, dz), Blocks.GRASS_BLOCK.getDefaultState(), false);
@@ -91,8 +91,8 @@ public class MixinChunkGenerator implements ICubeGenerator {
         Random r = new Random(mainCubeX * 678321 + mainCubeZ * 56392 + mainCubeY * 32894345);
         int treeCount = Math.abs((int) (gen1.getValue(mainCubeX * 0.00354, 8765, mainCubeZ * 0.00354, 0, 0, false) * 12*50));
         for (int i = 0; i < treeCount; i++) {
-            int x = Coords.cubeToMinBlock(mainCubeX) + r.nextInt(ICube.BLOCK_SIZE);
-            int z = Coords.cubeToMinBlock(mainCubeZ) + r.nextInt(ICube.BLOCK_SIZE);
+            int x = Coords.cubeToMinBlock(mainCubeX) + r.nextInt(IBigCube.BLOCK_SIZE);
+            int z = Coords.cubeToMinBlock(mainCubeZ) + r.nextInt(IBigCube.BLOCK_SIZE);
             BlockPos pos = new BlockPos(x, yStart, z);
             if (!region.getBlockState(pos).isAir(region, pos)) {
                 continue;

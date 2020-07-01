@@ -146,6 +146,7 @@ switch (OperatingSystem.current()) {
         break
     case OperatingSystem.MAC_OS:
         project.ext.lwjglNatives = "natives-macos"
+        project.ext.lwjglVersion = "3.2.1"
         break
 }
 

@@ -1,9 +1,9 @@
 package io.github.opencubicchunks.cubicchunks.mixin.core.common.chunk;
 
 import io.github.opencubicchunks.cubicchunks.CubicChunks;
-import io.github.opencubicchunks.cubicchunks.chunk.ICube;
+import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.ICubeProvider;
-import io.github.opencubicchunks.cubicchunks.chunk.cube.Cube;
+import io.github.opencubicchunks.cubicchunks.chunk.cube.BigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.EmptyCube;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import net.minecraft.entity.Entity;
@@ -53,7 +53,7 @@ public abstract class MixinChunk implements IChunk {
                     args = "array=get"
             ))
     private ChunkSection getStorage(ChunkSection[] array, int y) {
-        ICube cube = this.getCube(y);
+        IBigCube cube = this.getCube(y);
         if (cube instanceof EmptyCube) {
             return null;
         }
@@ -62,7 +62,7 @@ public abstract class MixinChunk implements IChunk {
     }
 
     @SuppressWarnings("ConstantConditions")
-    private ICube getCube(int y) {
+    private IBigCube getCube(int y) {
         try {
             return ((ICubeProvider) world.getChunkProvider()).getCube(
                     Coords.sectionToCube(pos.x),
@@ -103,7 +103,7 @@ public abstract class MixinChunk implements IChunk {
                     args = "array=set"
             ))
     private void setStorage(ChunkSection[] array, int y, ChunkSection newVal) {
-        ICube cube = this.getCube(y);
+        IBigCube cube = this.getCube(y);
         if (cube instanceof EmptyCube) {
             return;
         }
@@ -117,7 +117,7 @@ public abstract class MixinChunk implements IChunk {
             at = @At(value = "FIELD", target = "Lnet/minecraft/world/chunk/Chunk;entityLists:[Lnet/minecraft/util/ClassInheritanceMultiMap;",
                     args = "array=get"))
     public ClassInheritanceMultiMap<Entity> getEntityList(ClassInheritanceMultiMap<Entity>[] entityLists, int y) {
-        Cube cube = (Cube) this.getCube(y);
+        BigCube cube = (BigCube) this.getCube(y);
 
         if (!(cube instanceof EmptyCube)) {
             return cube.getEntityLists()[Coords.sectionToIndex(this.pos.x, y, this.pos.z)];
@@ -155,7 +155,7 @@ public abstract class MixinChunk implements IChunk {
     private Object getTileEntity(Map map, Object key) {
         if(map != this.tileEntities)
             return map.get(key);
-        Cube cube = (Cube) this.getCube(Coords.blockToSection(((BlockPos) key).getY()));
+        BigCube cube = (BigCube) this.getCube(Coords.blockToSection(((BlockPos) key).getY()));
         return cube.getTileEntityMap().get(key);
     }
 
@@ -166,7 +166,7 @@ public abstract class MixinChunk implements IChunk {
     private Object removeTileEntity(Map map, Object key) {
         if(map != this.tileEntities)
             return map.remove(key);
-        Cube cube = (Cube) this.getCube(Coords.blockToSection(((BlockPos) key).getY()));
+        BigCube cube = (BigCube) this.getCube(Coords.blockToSection(((BlockPos) key).getY()));
         return cube.getTileEntityMap().remove(key);
     }
 
@@ -176,18 +176,18 @@ public abstract class MixinChunk implements IChunk {
     private Object putTileEntity(Map map, Object key, Object value) {
         if(map != this.tileEntities)
             return map.put(key, value);
-        Cube cube = (Cube) this.getCube(Coords.blockToSection(((BlockPos) key).getY()));
+        BigCube cube = (BigCube) this.getCube(Coords.blockToSection(((BlockPos) key).getY()));
         return cube.getTileEntityMap().put((BlockPos) key, (TileEntity) value);
     }
 
     @Redirect(method = "addTileEntity(Lnet/minecraft/tileentity/TileEntity;)V", at = @At(value = "FIELD", target = "Lnet/minecraft/world/chunk/Chunk;loaded:Z"))
     private boolean getLoadedFromTileEntity(Chunk chunk, TileEntity tileEntity)
     {
-        return ((Cube)this.getCube(Coords.blockToSection(tileEntity.getPos().getY()))).getLoaded();
+        return ((BigCube)this.getCube(Coords.blockToSection(tileEntity.getPos().getY()))).getLoaded();
     }
     @Redirect(method = "removeTileEntity", at = @At(value = "FIELD", target = "Lnet/minecraft/world/chunk/Chunk;loaded:Z"))
     private boolean getLoadedFromBlockPos(Chunk chunk, BlockPos pos)
     {
-        return ((Cube)this.getCube(Coords.blockToSection(pos.getY()))).getLoaded();
+        return ((BigCube)this.getCube(Coords.blockToSection(pos.getY()))).getLoaded();
     }
 }

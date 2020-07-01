@@ -7,6 +7,6 @@ import javax.annotation.Nullable;
 public interface ICubeProvider {
 
     @Nullable
-    ICube getCube(int cubeX, int cubeY, int cubeZ, ChunkStatus requiredStatus, boolean load);
+    IBigCube getCube(int cubeX, int cubeY, int cubeZ, ChunkStatus requiredStatus, boolean load);
 
 }
