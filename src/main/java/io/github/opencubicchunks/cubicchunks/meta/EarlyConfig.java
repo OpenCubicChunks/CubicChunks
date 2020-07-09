@@ -12,7 +12,7 @@ import java.util.Properties;
 
 public class EarlyConfig {
 
-    private static final String FILE_NAME = "config/earlyconfig.properties";
+    private static final String FILE_NAME = "config/cubicchunks/earlyconfig.properties";
 
     private static final int[] VALID_CUBE_DIAMETERS = new int[] { 1, 2, 4, 8 };
 
@@ -24,30 +24,33 @@ public class EarlyConfig {
         try {
             Properties prop = new Properties();
             if (!Files.exists(Paths.get(FILE_NAME))) {
-                EarlyConfig.createDefaultEarlyConfigFile(FILE_NAME, prop);
-            }
-            try (InputStream inputStream = Files.newInputStream(Paths.get(FILE_NAME))) {
-                //If there are any exceptions while loading, return default.
-                prop.load(inputStream);
+                //If the file is not there we just use the default (and dont create the file). This should prevent most users
+                // from using this setting without actually knowing what it is
+                // EarlyConfig.createDefaultEarlyConfigFile(FILE_NAME, prop);
+            } else {
+                try (InputStream inputStream = Files.newInputStream(Paths.get(FILE_NAME))) {
+                    //If there are any exceptions while loading, return default.
+                    prop.load(inputStream);
 
-                diameter = Integer.parseInt(EarlyConfig.getPropertyOrSetDefault(prop, PROPERTY_NAME_CUBE_DIAMETER, String.valueOf(diameter)));
+                    diameter = Integer.parseInt(EarlyConfig.getPropertyOrSetDefault(prop, PROPERTY_NAME_CUBE_DIAMETER, String.valueOf(diameter)));
 
-                boolean valid = false;
-                for (int d : VALID_CUBE_DIAMETERS) {
-                    if (diameter == d) {
-                        valid = true;
-                        break;
+                    boolean valid = false;
+                    for (int d : VALID_CUBE_DIAMETERS) {
+                        if (diameter == d) {
+                            valid = true;
+                            break;
+                        }
+
                     }
-
+                    if (!valid) {
+                        throw new UnsupportedOperationException("CUBE_DIAMETER " + diameter + " is not supported. Please use one of"
+                                + " [1, 2, 4, 8].");
+                    }
                 }
-                if (!valid) {
-                    throw new UnsupportedOperationException("CUBE_DIAMETER " + diameter + " is not supported. Please use one of"
-                            + " [1, 2, 4, 8].");
+                prop.setProperty(PROPERTY_NAME_CUBE_DIAMETER, String.valueOf(diameter));
+                try (OutputStream out = Files.newOutputStream(Paths.get(FILE_NAME))) {
+                    prop.store(out, "");
                 }
-            }
-            prop.setProperty(PROPERTY_NAME_CUBE_DIAMETER, String.valueOf(diameter));
-            try (OutputStream out = Files.newOutputStream(Paths.get(FILE_NAME))) {
-                prop.store(out, "");
             }
         }catch(IOException e)
         {
