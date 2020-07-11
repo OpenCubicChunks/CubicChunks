@@ -143,7 +143,7 @@ public class IONbtReader {
     private static Cube readBaseCube(Chunk column, int cubeX, int cubeY, int cubeZ, NBTTagCompound nbt, World world) {// check the version number
         byte version = nbt.getByte("v");
         if (version != 1) {
-            throw new IllegalArgumentException("Cube has wrong version! " + version);
+            throw new IllegalArgumentException(String.format("Cube at CubePos:(%d, %d, %d), has wrong version! %d", cubeX, cubeY, cubeZ, version));
         }
 
         // check the coordinates
