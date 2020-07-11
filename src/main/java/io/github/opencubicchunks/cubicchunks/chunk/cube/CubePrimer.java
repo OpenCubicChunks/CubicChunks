@@ -4,6 +4,7 @@ import static net.minecraft.world.chunk.Chunk.EMPTY_SECTION;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.biome.CubeBiomeContainer;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
@@ -33,11 +34,7 @@ import net.minecraft.world.gen.feature.structure.Structure;
 import net.minecraft.world.gen.feature.structure.StructureStart;
 import net.minecraft.world.lighting.WorldLightManager;
 
-import java.util.BitSet;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Stream;
 
 import javax.annotation.Nullable;
@@ -52,6 +49,7 @@ public class CubePrimer implements IBigCube, IChunk {
     private CubeBiomeContainer biomes;
 
     private final Map<BlockPos, TileEntity> tileEntities = Maps.newHashMap();
+    private final Map<BlockPos, CompoundNBT> deferredTileEntities = Maps.newHashMap();
     private volatile boolean modified = true;
 
     private final List<BlockPos> lightPositions = Lists.newArrayList();
@@ -197,14 +195,17 @@ public class CubePrimer implements IBigCube, IChunk {
         this.tileEntities.put(pos, tileEntityIn);
     }
 
+    public void addTileEntity(CompoundNBT nbt) {
+        this.deferredTileEntities.put(new BlockPos(nbt.getInt("x"), nbt.getInt("y"), nbt.getInt("z")), nbt);
+    }
+
     @Override public void removeTileEntity(BlockPos pos) {
         removeCubeTileEntity(pos);
     }
 
     @Override public void removeCubeTileEntity(BlockPos pos) {
         this.tileEntities.remove(pos);
-        //TODO: reimplement deferredtileentities
-        //this.deferredTileEntities.remove(pos);
+        this.deferredTileEntities.remove(pos);
     }
 
     @Deprecated
@@ -214,7 +215,13 @@ public class CubePrimer implements IBigCube, IChunk {
 
     @Deprecated
     @Override public Set<BlockPos> getTileEntitiesPos() {
-        throw new UnsupportedOperationException("For later implementation");
+        Set<BlockPos> set = Sets.newHashSet(this.deferredTileEntities.keySet());
+        set.addAll(this.tileEntities.keySet());
+        return set;
+    }
+
+    public Map<BlockPos, TileEntity> getTileEntities() {
+        return this.tileEntities;
     }
 
     @Deprecated
@@ -314,11 +321,16 @@ public class CubePrimer implements IBigCube, IChunk {
     }
 
     @Nullable @Override public CompoundNBT getDeferredTileEntity(BlockPos pos) {
-        throw new UnsupportedOperationException("For later implementation");
+        return this.deferredTileEntities.get(pos);
+    }
+
+    public Map<BlockPos, CompoundNBT> getDeferredTileEntities() {
+        return Collections.unmodifiableMap(this.deferredTileEntities);
     }
 
     @Nullable @Override public CompoundNBT getTileEntityNBT(BlockPos pos) {
-        throw new UnsupportedOperationException("For later implementation");
+        TileEntity tileEntity = this.getTileEntity(pos);
+        return tileEntity != null ? tileEntity.write(new CompoundNBT()) : this.deferredTileEntities.get(pos);
     }
 
     @Override public Stream<BlockPos> getLightSources() {
