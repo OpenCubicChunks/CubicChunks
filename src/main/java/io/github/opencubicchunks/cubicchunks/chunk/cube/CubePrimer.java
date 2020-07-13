@@ -75,7 +75,6 @@ public class CubePrimer implements IBigCube, IChunk {
                 throw new IllegalStateException("Number of Sections must equal BigCube.CUBESIZE");
             }
         }
-
     }
 
     @Override
@@ -248,7 +247,6 @@ public class CubePrimer implements IBigCube, IChunk {
     public Map<BlockPos, TileEntity> getCubeTileEntities() {
         return this.tileEntities;
     }
-
 
     @Deprecated
     @Override public ChunkSection[] getSections() {

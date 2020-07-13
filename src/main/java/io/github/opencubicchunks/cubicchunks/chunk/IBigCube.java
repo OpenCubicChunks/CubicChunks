@@ -29,6 +29,7 @@ public interface IBigCube extends IBlockReader {
     ChunkSection[] getCubeSections();
     CubePos getCubePos();
 
+    //TODO: remove setCubeStatus from IBigCube
     void setCubeStatus(ChunkStatus status);
     ChunkStatus getCubeStatus();
 

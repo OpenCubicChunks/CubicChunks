@@ -6,7 +6,9 @@ import io.github.opencubicchunks.cubicchunks.chunk.ICubeProvider;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.BigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.EmptyCube;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
+import net.minecraft.block.BlockState;
 import net.minecraft.entity.Entity;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ClassInheritanceMultiMap;
 import net.minecraft.util.math.BlockPos;
@@ -24,10 +26,9 @@ import org.spongepowered.asm.mixin.injection.Constant;
 import org.spongepowered.asm.mixin.injection.ModifyConstant;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
+import javax.annotation.Nullable;
 import java.util.Map;
 import java.util.concurrent.CompletionException;
-
-import javax.annotation.Nullable;
 
 @Mixin(Chunk.class)
 public abstract class MixinChunk implements IChunk {
@@ -41,6 +42,8 @@ public abstract class MixinChunk implements IChunk {
     // getBlockState
 
     @Shadow @Final private Map<BlockPos, TileEntity> tileEntities;
+
+    @Shadow @Final private Map<BlockPos, CompoundNBT> deferredTileEntities;
 
     @Override public boolean isEmptyBetween(int startY, int endY) {
         return false;
@@ -110,6 +113,15 @@ public abstract class MixinChunk implements IChunk {
         cube.getCubeSections()[Coords.sectionToIndex(pos.x, y, pos.z)] = newVal;
     }
 
+    @Redirect(method = "setBlockState", at = @At(value = "FIELD", target = "Lnet/minecraft/world/chunk/Chunk;dirty:Z"))
+    private void setIsModifiedFromSetBlockState_Field(Chunk chunk, boolean isModifiedIn, BlockPos pos, BlockState state, boolean isMoving) {
+//        if (isColumn) {
+            this.getCube(Coords.blockToSection(pos.getY())).setDirty(isModifiedIn);
+//        } else {
+//            dirty = isModifiedIn;
+//        }
+    }
+
     // Entities
 
     @Redirect(method =
@@ -153,10 +165,14 @@ public abstract class MixinChunk implements IChunk {
     @Redirect(method = "*",
             at = @At(value = "INVOKE", target = "Ljava/util/Map;get(Ljava/lang/Object;)Ljava/lang/Object;"))
     private Object getTileEntity(Map map, Object key) {
-        if(map != this.tileEntities)
-            return map.get(key);
-        BigCube cube = (BigCube) this.getCube(Coords.blockToSection(((BlockPos) key).getY()));
-        return cube.getTileEntityMap().get(key);
+        if(map == this.tileEntities) {
+            BigCube cube = (BigCube) this.getCube(Coords.blockToSection(((BlockPos) key).getY()));
+            return cube.getTileEntityMap().get(key);
+        } else if(map == this.deferredTileEntities) {
+            BigCube cube = (BigCube) this.getCube(Coords.blockToSection(((BlockPos) key).getY()));
+            return cube.getDeferredTileEntityMap().get(key);
+        }
+        return map.get(key);
     }
 
     @SuppressWarnings({"rawtypes"}) @Nullable
@@ -164,20 +180,28 @@ public abstract class MixinChunk implements IChunk {
             method = "*",
             at = @At(value = "INVOKE", target = "Ljava/util/Map;remove(Ljava/lang/Object;)Ljava/lang/Object;"))
     private Object removeTileEntity(Map map, Object key) {
-        if(map != this.tileEntities)
-            return map.remove(key);
-        BigCube cube = (BigCube) this.getCube(Coords.blockToSection(((BlockPos) key).getY()));
-        return cube.getTileEntityMap().remove(key);
+        if(map == this.tileEntities) {
+            BigCube cube = (BigCube) this.getCube(Coords.blockToSection(((BlockPos) key).getY()));
+            return cube.getTileEntityMap().remove(key);
+        }else if(map == this.deferredTileEntities) {
+            BigCube cube = (BigCube) this.getCube(Coords.blockToSection(((BlockPos) key).getY()));
+            return cube.getDeferredTileEntityMap().remove(key);
+        }
+        return map.remove(key);
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"}) @Nullable
     @Redirect(method = "*",
             at = @At(value = "INVOKE", target = "Ljava/util/Map;put(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;"))
     private Object putTileEntity(Map map, Object key, Object value) {
-        if(map != this.tileEntities)
-            return map.put(key, value);
-        BigCube cube = (BigCube) this.getCube(Coords.blockToSection(((BlockPos) key).getY()));
-        return cube.getTileEntityMap().put((BlockPos) key, (TileEntity) value);
+        if(map == this.tileEntities) {
+            BigCube cube = (BigCube) this.getCube(Coords.blockToSection(((BlockPos) key).getY()));
+            return cube.getTileEntityMap().put((BlockPos) key, (TileEntity) value);
+        } else if(map == this.deferredTileEntities) {
+            BigCube cube = (BigCube) this.getCube(Coords.blockToSection(((BlockPos) key).getY()));
+            return cube.getDeferredTileEntityMap().put((BlockPos) key, (CompoundNBT) value);
+        }
+        return map.put(key, value);
     }
 
     @Redirect(method = "addTileEntity(Lnet/minecraft/tileentity/TileEntity;)V", at = @At(value = "FIELD", target = "Lnet/minecraft/world/chunk/Chunk;loaded:Z"))

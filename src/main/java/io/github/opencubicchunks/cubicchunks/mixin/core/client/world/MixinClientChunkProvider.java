@@ -100,10 +100,10 @@ public abstract class MixinClientChunkProvider implements IClientCubeProvider {
         int index = this.cubeArray.getIndex(cubeX, cubeY, cubeZ);
         BigCube cube = this.cubeArray.cubes.get(index);
         if (!isCubeValid(cube, cubeX, cubeY, cubeZ)) {
-            // if (biomeContainerIn == null) {
-            //     LOGGER.warn("Ignoring chunk since we don't have complete data: {}, {}", chunkX, chunkZ);
-            //     return null;
-            // }
+//             if (biomes == null) {
+//                 LOGGER.warn("Ignoring chunk since we don't have complete data: {}, {}, {}", cubeX, cubeY, cubeZ);
+//                 return null;
+//             }
 
             cube = new BigCube(this.world, CubePos.of(cubeX, cubeY, cubeZ), biomes);
             cube.read(biomes, readBuffer, nbtTagIn, cubeExists);

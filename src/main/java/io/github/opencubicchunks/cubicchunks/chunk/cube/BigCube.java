@@ -64,8 +64,6 @@ public class BigCube implements IChunk, IBigCube {
     private final ClassInheritanceMultiMap<Entity>[] entityLists;
     private final World world;
 
-    private ChunkStatus cubeStatus = ChunkStatus.EMPTY;
-
     private CubeBiomeContainer cubeBiomeContainer;
 
     private boolean dirty = true; // todo: change back to false?
@@ -77,6 +75,8 @@ public class BigCube implements IChunk, IBigCube {
     private final Map<BlockPos, CompoundNBT> deferredTileEntities = Maps.newHashMap();
 
     private long inhabitedTime;
+    @Nullable
+    private Consumer<BigCube> postLoadConsumer;
 
     public BigCube(World worldIn, CubePos cubePosIn, CubeBiomeContainer biomeContainerIn) {
         this(worldIn, cubePosIn, biomeContainerIn, UpgradeData.EMPTY, EmptyTickList.get(), EmptyTickList.get(), 0L, (ChunkSection[])null, (Consumer<BigCube>)null);
@@ -104,7 +104,7 @@ public class BigCube implements IChunk, IBigCube {
 //        this.blocksToBeTicked = tickBlocksIn;
 //        this.fluidsToBeTicked = tickFluidsIn;
         this.inhabitedTime = inhabitedTimeIn;
-//        this.postLoadConsumer = postLoadConsumerIn;
+        this.postLoadConsumer = postLoadConsumerIn;
 
         if(sectionsIn != null) {
             if (sectionsIn.length != CUBE_SIZE) {
@@ -129,8 +129,11 @@ public class BigCube implements IChunk, IBigCube {
     }
 
     public BigCube(World worldIn, CubePrimer cubePrimerIn) {
-        this(worldIn, cubePrimerIn.getCubePos(), cubePrimerIn.getCubeBiomes(), cubePrimerIn.getUpgradeData(), cubePrimerIn.getBlocksToBeTicked(),
-            cubePrimerIn.getFluidsToBeTicked(), cubePrimerIn.getInhabitedTime(), cubePrimerIn.getSections(), (Consumer<BigCube>)null);
+        //TODO: reimplement full BigCube constructor from CubePrimer
+//        this(worldIn, cubePrimerIn.getCubePos(), cubePrimerIn.getCubeBiomes(), cubePrimerIn.getUpgradeData(), cubePrimerIn.getBlocksToBeTicked(),
+//            cubePrimerIn.getFluidsToBeTicked(), cubePrimerIn.getInhabitedTime(), cubePrimerIn.getSections(), (Consumer<BigCube>)null);
+        this(worldIn, cubePrimerIn.getCubePos(), cubePrimerIn.getCubeBiomes(), null, null,
+            null, cubePrimerIn.getInhabitedTime(), cubePrimerIn.getCubeSections(), null);
 
         for(CompoundNBT compoundnbt : cubePrimerIn.getCubeEntities()) {
             EntityType.loadEntityAndExecute(compoundnbt, worldIn, (p_217325_1_) -> {
@@ -145,20 +148,21 @@ public class BigCube implements IChunk, IBigCube {
 
         this.deferredTileEntities.putAll(cubePrimerIn.getDeferredTileEntities());
 
+        //TODO: reimplement missing BigCube methods
 //        for(int i = 0; i < cubePrimerIn.getPackedPositions().length; ++i) {
 //            this.packedBlockPositions[i] = cubePrimerIn.getPackedPositions()[i];
 //        }
 
-        this.setStructureStarts(cubePrimerIn.getStructureStarts());
-        this.setStructureReferences(cubePrimerIn.getStructureReferences());
+        //this.setStructureStarts(cubePrimerIn.getStructureStarts());
+        //this.setStructureReferences(cubePrimerIn.getStructureReferences());
 
-        for(Map.Entry<Heightmap.Type, Heightmap> entry : cubePrimerIn.getHeightmaps()) {
-            if (ChunkStatus.FULL.getHeightMaps().contains(entry.getKey())) {
-                this.getHeightmap(entry.getKey()).setDataArray(entry.getValue().getDataArray());
-            }
-        }
+//        for(Map.Entry<Heightmap.Type, Heightmap> entry : cubePrimerIn.getHeightmaps()) {
+//            if (ChunkStatus.FULL.getHeightMaps().contains(entry.getKey())) {
+//                this.getHeightmap(entry.getKey()).setDataArray(entry.getValue().getDataArray());
+//            }
+//        }
 
-        this.setLight(cubePrimerIn.hasLight());
+        this.setCubeLight(cubePrimerIn.hasCubeLight());
         this.dirty = true;
     }
 
@@ -278,6 +282,9 @@ public class BigCube implements IChunk, IBigCube {
     public Map<BlockPos, TileEntity> getTileEntityMap() {
         return tileEntities;
     }
+    public Map<BlockPos, CompoundNBT> getDeferredTileEntityMap() {
+        return this.deferredTileEntities;
+    }
 
     public ClassInheritanceMultiMap<Entity>[] getCubeEntityLists() {
         return entityLists;
@@ -310,13 +317,13 @@ public class BigCube implements IChunk, IBigCube {
     }
 
     @Override public ChunkStatus getCubeStatus() {
-        return this.cubeStatus;
+        return ChunkStatus.FULL;
     }
 
     @Override
     public void setCubeStatus(ChunkStatus status)
     {
-        this.cubeStatus = status;
+        throw new UnsupportedOperationException("BigCube does not have a setter for setCubeStatus");
     }
 
     public CubePos getCubePos()
@@ -614,7 +621,7 @@ public class BigCube implements IChunk, IBigCube {
 
     @Deprecated
     @Override public ChunkStatus getStatus() {
-        return this.cubeStatus;
+        return this.getCubeStatus();
     }
 
     @Override public void removeCubeTileEntity(BlockPos pos) {
@@ -758,5 +765,11 @@ public class BigCube implements IChunk, IBigCube {
     public boolean getLoaded()
     {
         return this.loaded;
+    }
+    public void postLoad() {
+        if (this.postLoadConsumer != null) {
+            this.postLoadConsumer.accept(this);
+            this.postLoadConsumer = null;
+        }
     }
 }
