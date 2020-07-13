@@ -158,7 +158,7 @@ public class MixinChunkStatus {
             return;
         }
         CubePrimer cubePrimer = (CubePrimer) chunk;
-        cubePrimer.setLightManager(lightManager);
+        cubePrimer.setCubeLightManager(lightManager);
         if (!cubePrimer.getCubeStatus().isAtLeast(status)) {
             // TODO: reimplement heightmaps
             //Heightmap.updateChunkHeightmaps(chunk, EnumSet
