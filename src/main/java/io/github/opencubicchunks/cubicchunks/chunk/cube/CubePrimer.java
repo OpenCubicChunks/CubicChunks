@@ -398,7 +398,7 @@ public class CubePrimer implements IBigCube, IChunk {
     }
     @Override public void setCubeLight(boolean lightCorrectIn) {
         this.hasLight = lightCorrectIn;
-        this.setModified(true);
+        this.setDirty(true);
     }
 
     public void addCubeLightValue(short packedPosition, int lightValue) {
