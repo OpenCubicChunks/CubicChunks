@@ -20,7 +20,6 @@ apply plugin: 'maven-publish'
 apply plugin: 'org.spongepowered.mixin'
 apply plugin: "io.github.opencubicchunks.gradle.mixingen"
 apply plugin: "io.github.opencubicchunks.gradle.mcGitVersion"
-apply plugin: "io.github.opencubicchunks.gradle.asmstubs"
 
 mcGitVersion {
     snapshot = true
