@@ -316,7 +316,7 @@ public class BigCube implements IChunk, IBigCube {
         }
 
         this.entityLists[index].remove(entityIn);
-        this.setModified(true);
+        this.setDirty(true);
     }
 
     @Override public ChunkStatus getCubeStatus() {
@@ -472,7 +472,7 @@ public class BigCube implements IChunk, IBigCube {
         entityIn.chunkCoordY = cubeToSection(this.cubePos.getY(), 0);
         entityIn.chunkCoordZ = cubeToSection(this.cubePos.getZ(), 0);
         this.entityLists[idx].add(entityIn);
-        this.setModified(true); // Forge - ensure chunks are marked to save after an entity add
+        this.setDirty(true); // Forge - ensure chunks are marked to save after an entity add
     }
 
     @Nullable @Override public TileEntity getTileEntity(BlockPos pos) {
@@ -619,7 +619,7 @@ public class BigCube implements IChunk, IBigCube {
     @Override
     public void setCubeLight(boolean lightCorrectIn) {
         this.lightCorrect = lightCorrectIn;
-        this.setModified(true);
+        this.setDirty(true);
     }
 
     @Deprecated

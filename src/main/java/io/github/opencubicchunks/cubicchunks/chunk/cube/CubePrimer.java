@@ -251,15 +251,19 @@ public class CubePrimer implements IBigCube, IChunk {
         return tileEntity != null ? tileEntity.write(new CompoundNBT()) : this.deferredTileEntities.get(pos);
     }
 
+    public Map<BlockPos, TileEntity> getTileEntities() {
+        return this.getCubeTileEntities();
+    }
+    public Map<BlockPos, TileEntity> getCubeTileEntities() {
+        return this.tileEntities;
+    }
+
+
     @Override
     public Set<BlockPos> getCubeTileEntitiesPos() {
         Set<BlockPos> set = Sets.newHashSet(this.deferredTileEntities.keySet());
         set.addAll(this.tileEntities.keySet());
         return set;
-    }
-
-    public Map<BlockPos, TileEntity> getTileEntities() {
-        return this.tileEntities;
     }
 
     @Deprecated
@@ -302,12 +306,17 @@ public class CubePrimer implements IBigCube, IChunk {
         throw new UnsupportedOperationException("For later implementation");
     }
 
-    @Nullable @Override public CubeBiomeContainer getBiomes() {
+    @Nullable @Override public BiomeContainer getBiomes() {
         return this.getCubeBiomes();
     }
-    public void SetBiomes(CubeBiomeContainer biomes) {
-        this.biomes = biomes;
+
+    public void setBiomes(BiomeContainer biomes) {
+        this.setCubeBiomes((CubeBiomeContainer) biomes);
     }
+    public void setCubeBiomes(CubeBiomeContainer biomesIn) {
+        this.biomes = biomesIn;
+    }
+
 
 
     @Override public void setModified(boolean modified) {
@@ -412,7 +421,7 @@ public class CubePrimer implements IBigCube, IChunk {
     }
     @Override public void setCubeLight(boolean lightCorrectIn) {
         this.hasLight = lightCorrectIn;
-        this.setModified(true);
+        this.setDirty(true);
     }
 
     public void addCubeLightValue(short packedPosition, int lightValue) {

@@ -52,7 +52,7 @@ public class CubeSerializer {
                 CubicChunks.LOGGER.error("Chunk file at {} is in the wrong location; relocating. (Expected {}, got {})", pos, pos, cubePos);
             }
 
-            ChunkGenerator<?> chunkgenerator = worldIn.getChunkProvider().getChunkGenerator();
+            ChunkGenerator chunkgenerator = worldIn.getChunkProvider().getChunkGenerator();
             BiomeProvider biomeprovider = chunkgenerator.getBiomeProvider();
 
             CubeBiomeContainer biomecontainer = new CubeBiomeContainer(pos.asSectionPos(), biomeprovider, level.contains("Biomes", 11) ? level.getIntArray("Biomes") : null);
@@ -66,7 +66,8 @@ public class CubeSerializer {
             boolean isLightOn = level.getBoolean("isLightOn");
             ListNBT sectionsNBTList = level.getList("Sections", 10);
             ChunkSection[] sections = new ChunkSection[IBigCube.CUBE_SIZE];
-            boolean worldHasSkylight = worldIn.getDimension().hasSkyLight();
+            //TODO: 1.16 dimensions stuff
+//            boolean worldHasSkylight = worldIn.getDimension().hasSkyLight();
             AbstractChunkProvider abstractchunkprovider = worldIn.getChunkProvider();
             WorldLightManager worldlightmanager = abstractchunkprovider.getLightManager();
 //            if (isLightOn) {
@@ -92,11 +93,12 @@ public class CubeSerializer {
 
                 if (isLightOn) {
                     if (sectionNBT.contains("BlockLight", 7)) {
-                        worldlightmanager.setData(LightType.BLOCK, Coords.sectionPosByIndex(pos, cubeIndex), new NibbleArray(sectionNBT.getByteArray("BlockLight")));
+                        worldlightmanager.setData(LightType.BLOCK, Coords.sectionPosByIndex(pos, cubeIndex), new NibbleArray(sectionNBT.getByteArray("BlockLight")), true);
                     }
 
-                    if (worldHasSkylight && sectionNBT.contains("SkyLight", 7)) {
-                        worldlightmanager.setData(LightType.SKY, Coords.sectionPosByIndex(pos, cubeIndex), new NibbleArray(sectionNBT.getByteArray("SkyLight")));
+                    //TODO: reimplement
+                    if (/*worldHasSkylight &&*/ sectionNBT.contains("SkyLight", 7)) {
+                        worldlightmanager.setData(LightType.SKY, Coords.sectionPosByIndex(pos, cubeIndex), new NibbleArray(sectionNBT.getByteArray("SkyLight")), true);
                     }
                 }
             }
@@ -455,7 +457,7 @@ public class CubeSerializer {
 
         for(int i = 0; i < listnbt.size(); ++i) {
             CompoundNBT compoundnbt = listnbt.getCompound(i);
-            EntityType.loadEntityAndExecute(compoundnbt, world, (p_222655_1_) -> {
+            EntityType.func_220335_a(compoundnbt, world, (p_222655_1_) -> {
                 cube.addEntity(p_222655_1_);
                 return p_222655_1_;
             });
@@ -470,7 +472,8 @@ public class CubeSerializer {
             if (flag) {
                 cube.addCubeTileEntity(compoundnbt1);
             } else {
-                TileEntity tileentity = TileEntity.create(compoundnbt1);
+                BlockPos blockpos = new BlockPos(compoundnbt1.getInt("x"), compoundnbt1.getInt("y"), compoundnbt1.getInt("z"));
+                TileEntity tileentity = TileEntity.func_235657_b_(cube.getBlockState(blockpos), compoundnbt1);
                 if (tileentity != null) {
                     cube.addCubeTileEntity(tileentity);
                 }
