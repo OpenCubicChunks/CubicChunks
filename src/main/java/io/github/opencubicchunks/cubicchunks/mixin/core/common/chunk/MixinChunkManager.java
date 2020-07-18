@@ -1,7 +1,5 @@
 package io.github.opencubicchunks.cubicchunks.mixin.core.common.chunk;
 
-import static io.github.opencubicchunks.cubicchunks.utils.Coords.sectionToCube;
-
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -9,11 +7,7 @@ import com.google.common.collect.Queues;
 import com.mojang.datafixers.DataFixer;
 import com.mojang.datafixers.util.Either;
 import io.github.opencubicchunks.cubicchunks.CubicChunks;
-import io.github.opencubicchunks.cubicchunks.chunk.CubeCollectorFuture;
-import io.github.opencubicchunks.cubicchunks.chunk.IChunkManager;
-import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
-import io.github.opencubicchunks.cubicchunks.chunk.ICubeHolder;
-import io.github.opencubicchunks.cubicchunks.chunk.ICubeStatusListener;
+import io.github.opencubicchunks.cubicchunks.chunk.*;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.BigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.CubePrimer;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.CubePrimerWrapper;
@@ -25,11 +19,7 @@ import io.github.opencubicchunks.cubicchunks.chunk.ticket.ITicketManager;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.chunk.util.Utils;
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.EntityTrackerAccess;
-import io.github.opencubicchunks.cubicchunks.network.PacketCubes;
-import io.github.opencubicchunks.cubicchunks.network.PacketDispatcher;
-import io.github.opencubicchunks.cubicchunks.network.PacketUnloadCube;
-import io.github.opencubicchunks.cubicchunks.network.PacketUpdateCubePosition;
-import io.github.opencubicchunks.cubicchunks.network.PacketUpdateLight;
+import io.github.opencubicchunks.cubicchunks.network.*;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import io.github.opencubicchunks.cubicchunks.world.server.IServerWorld;
 import io.github.opencubicchunks.cubicchunks.world.server.IServerWorldLightManager;
@@ -59,9 +49,6 @@ import net.minecraft.util.concurrent.ThreadTaskExecutor;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.SectionPos;
-import net.minecraft.util.palette.UpgradeData;
-import net.minecraft.world.EmptyTickList;
-import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.chunk.IChunk;
 import net.minecraft.world.chunk.IChunkLightProvider;
@@ -89,6 +76,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
+import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collections;
@@ -106,7 +94,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import javax.annotation.Nullable;
+import static io.github.opencubicchunks.cubicchunks.utils.Coords.sectionToCube;
 
 @Mixin(ChunkManager.class)
 public abstract class MixinChunkManager implements IChunkManager {
@@ -220,9 +208,7 @@ public abstract class MixinChunkManager implements IChunkManager {
                     } while (cubeFuture != ((ICubeHolder) cubeHolder).getCurrentCubeFuture());
 
                     return cubeFuture.join();
-                }).filter((cube) -> {
-                    return cube instanceof CubePrimerWrapper || cube instanceof BigCube;
-                }).filter(this::cubeSave).forEach((unsavedCube) -> {
+                }).filter((cube) -> cube instanceof CubePrimerWrapper || cube instanceof BigCube).filter(this::cubeSave).forEach((unsavedCube) -> {
                     savedAny.setTrue();
                 });
             } while (savedAny.isTrue());
@@ -601,10 +587,7 @@ public abstract class MixinChunkManager implements IChunkManager {
                 if (prevCube instanceof CubePrimerWrapper) {
                         cube = ((CubePrimerWrapper)prevCube).getCube();
                 } else {
-                    cube = new BigCube(this.world, cubePos, null, UpgradeData.EMPTY, EmptyTickList.get(), EmptyTickList.get(), 0L,
-                            prevCube.getCubeSections(), null);
-
-                    cube.setCubeStatus(prevCube.getCubeStatus());
+                    cube = new BigCube(this.world, (CubePrimer) prevCube);
                     ((ICubeHolder) holder).onCubeWrapperCreated(new CubePrimerWrapper(cube));
                 }
 
@@ -612,7 +595,7 @@ public abstract class MixinChunkManager implements IChunkManager {
                 //chunkSection.setLocationType(() -> {
                 //    return ChunkHolder.getLocationTypeFromLevel(holder.getChunkLevel());
                 //});
-                //chunkSection.postLoad();
+                cube.postLoad();
                 if (this.loadedCubePositions.add(cubePos.asLong())) {
                     cube.setLoaded(true);
                     this.world.addTileEntities(cube.getTileEntityMap().values());
@@ -717,7 +700,7 @@ public abstract class MixinChunkManager implements IChunkManager {
                 LOGGER.error("Couldn't load cube {}", cubePos, exception);
             }
 
-            return Either.left(new CubePrimer(cubePos, null));
+            return Either.left(new CubePrimer(cubePos, null, null, null, null));
         }, this.mainThread);
     }
 

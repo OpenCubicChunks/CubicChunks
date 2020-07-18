@@ -10,6 +10,7 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.Util;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
+import net.minecraft.world.biome.BiomeContainer;
 import net.minecraft.world.chunk.ChunkSection;
 import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.gen.GenerationStage;
@@ -29,7 +30,7 @@ public class CubePrimerWrapper extends CubePrimer {
     private final BigCube cube;
 
     public CubePrimerWrapper(BigCube cubeIn) {
-        super(cubeIn.getCubePos(), cubeIn.getCubeSections());
+        super(cubeIn.getCubePos(), null, cubeIn.getCubeSections(), null, null);
         this.cube = cubeIn;
     }
 
@@ -140,8 +141,12 @@ public class CubePrimerWrapper extends CubePrimer {
     @Override public void setStructureReferences(Map<Structure<?>, LongSet> p_201606_1_) {
     }
 
-    @Override public CubeBiomeContainer getBiomes() {
+    @Override public CubeBiomeContainer getCubeBiomes() {
         return this.cube.getBiomes();
+    }
+
+    @Override public BiomeContainer getBiomes() {
+        return this.getCubeBiomes();
     }
 
     @Override public void setDirty(boolean modified) {
@@ -163,6 +168,12 @@ public class CubePrimerWrapper extends CubePrimer {
     }
 
     @Override public void addTileEntity(CompoundNBT nbt) {
+    }
+    @Override public void addCubeTileEntity(CompoundNBT nbt) {
+    }
+
+    @Override
+    public void addCubeEntity(Entity entityIn) {
     }
 
     @Override @Nullable
