@@ -11,6 +11,7 @@
         "conformVisibility": true
     },
     "mixins": [
+        "common.block.MixinDoorBlock",
         "common.chunk.MixinChunk",
         "common.chunk.MixinChunkCache_HeightLimits",
         "common.chunk.MixinChunkGenerator",
@@ -22,6 +23,7 @@
         "common.chunk.MixinChunkStatus",
         "common.chunk.MixinEntityTracker",
         "common.chunk.MixinISelectiveWorker",
+        "common.entity.item.MixinAbstractMinecartEntity",
         "common.entity.MixinEntity",
         "common.entity.MixinServerPlayerEntity",
         "common.MixinChunkDistanceGraph",
