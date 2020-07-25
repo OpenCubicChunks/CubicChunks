@@ -24,6 +24,7 @@
         "common.chunk.MixinEntityTracker",
         "common.chunk.MixinISelectiveWorker",
         "common.entity.item.MixinAbstractMinecartEntity",
+        "common.entity.item.MixinBoatEntity",
         "common.entity.MixinEntity",
         "common.entity.MixinServerPlayerEntity",
         "common.MixinChunkDistanceGraph",
