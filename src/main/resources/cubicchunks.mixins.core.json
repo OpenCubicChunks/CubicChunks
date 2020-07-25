@@ -40,9 +40,11 @@
         "common.world.lighting.MixinWorldLightManager",
         "common.world.MixinAbstractChunkProvider",
         "common.world.MixinIWorld",
+        "common.world.MixinIWorldReader",
         "common.world.MixinServerWorld",
         "common.world.MixinSpawnLocationHelper",
         "common.world.MixinWorld",
+        "common.world.server.MixinPlayerList",
         "common.world.server.MixinServerWorldLightManager"
     ],
     "client": [
