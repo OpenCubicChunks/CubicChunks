@@ -12,6 +12,7 @@
     },
     "mixins": [
         "common.block.MixinDoorBlock",
+        "common.block.MixinPistonBlock",
         "common.chunk.MixinChunk",
         "common.chunk.MixinChunkCache_HeightLimits",
         "common.chunk.MixinChunkGenerator",
