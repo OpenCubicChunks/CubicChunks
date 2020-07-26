@@ -15,7 +15,10 @@ import javax.annotation.Nullable;
 
 @Mixin(LoggingChunkStatusListener.class)
 public abstract class MixinLoggingChunkStatusListener implements ICubeStatusListener {
-    private static final int CUBES_EDGE_LENGTH = ((((int) Math.ceil(10 * (16 / (float) IBigCube.BLOCK_SIZE)))*2)+3);
+    // Server view radius, divided by CUBE_DIAMETER to get the radius in cubes
+    // Multiply by two to convert cube radius -> diameter,
+    // And then add three for the center cube, and boundary cubes that are generated but not loaded.
+    private static final int CUBES_EDGE_LENGTH = ((int) Math.ceil(10 / ((float) IBigCube.CUBE_DIAMETER)))*2+3;
     private static final int CUBES_TO_GENERATE = CUBES_EDGE_LENGTH*CUBES_EDGE_LENGTH*CUBES_EDGE_LENGTH;
 
     private int loadedCubes;
