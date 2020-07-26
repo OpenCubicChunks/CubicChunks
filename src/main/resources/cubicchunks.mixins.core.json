@@ -27,6 +27,7 @@
         "common.entity.MixinBoatEntity",
         "common.entity.MixinEntity",
         "common.entity.MixinServerPlayerEntity",
+        "common.entity.MixinWitherSkeletonSkullBlock",
         "common.MixinChunkDistanceGraph",
         "common.MixinIForgeDimension",
         "common.MixinIntegratedServer",
