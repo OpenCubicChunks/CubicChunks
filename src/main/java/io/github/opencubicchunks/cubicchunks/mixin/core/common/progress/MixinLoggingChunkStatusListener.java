@@ -9,19 +9,25 @@ import net.minecraft.world.chunk.listener.LoggingChunkStatusListener;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import javax.annotation.Nullable;
 
 @Mixin(LoggingChunkStatusListener.class)
 public abstract class MixinLoggingChunkStatusListener implements ICubeStatusListener {
-    // Server view radius, divided by CUBE_DIAMETER to get the radius in cubes
-    // Multiply by two to convert cube radius -> diameter,
-    // And then add three for the center cube, and boundary cubes that are generated but not loaded.
-    private static final int CUBES_EDGE_LENGTH = ((int) Math.ceil(10 / ((float) IBigCube.CUBE_DIAMETER)))*2+3;
-    private static final int CUBES_TO_GENERATE = CUBES_EDGE_LENGTH*CUBES_EDGE_LENGTH*CUBES_EDGE_LENGTH;
 
     private int loadedCubes;
+    private int cubesToGenerate;
+    
+    @Inject(method = "<init>", at = @At("RETURN"))
+    public void onInit(int serverChunkRadius, CallbackInfo ci) {
+        // Server chunk radius, divided by CUBE_DIAMETER to get the radius in cubes
+        // Multiply by two to convert cube radius -> diameter,
+        // And then add one for the center cube
+        int cubesEdgeLength = (1+(int) Math.ceil((serverChunkRadius-1) / ((float) IBigCube.CUBE_DIAMETER)))*2+1;
+        cubesToGenerate = cubesEdgeLength*cubesEdgeLength*cubesEdgeLength;
+    }
 
     @Override public void cubeStatusChanged(CubePos cubePos, @Nullable ChunkStatus newStatus) {
         if (newStatus == ChunkStatus.FULL) {
@@ -31,7 +37,7 @@ public abstract class MixinLoggingChunkStatusListener implements ICubeStatusList
 
     @Inject(method = "getPercentDone", at = @At("HEAD"), cancellable = true)
     public void getPercentDone(CallbackInfoReturnable<Integer> cir) {
-        int percentage = MathHelper.floor(this.loadedCubes * 100.0F / CUBES_TO_GENERATE);
+        int percentage = MathHelper.floor(this.loadedCubes * 100.0F / cubesToGenerate);
         cir.setReturnValue(percentage);
     }
 }
