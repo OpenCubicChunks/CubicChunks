@@ -47,8 +47,8 @@ public class MixinLightEngine <M extends LightDataMap<M>, S extends SectionLight
     public void func_215620_a(CubePos cubePos, boolean enable) {
         ChunkPos chunkPos = cubePos.asChunkPos();
         //TODO: implement invokeFunc_215526_b for CubePos in SkyLightStorage
-        for (int x = 0; x < IBigCube.CUBE_DIAMETER; x++) {
-            for (int z = 0; z < IBigCube.CUBE_DIAMETER; z++) {
+        for (int x = 0; x < IBigCube.DIAMETER_IN_SECTIONS; x++) {
+            for (int z = 0; z < IBigCube.DIAMETER_IN_SECTIONS; z++) {
                 ((SectionLightStorageAccess) this.storage).invokeSetColumnEnabled(new ChunkPos(chunkPos.x + x, chunkPos.z + z).asLong(), enable);
             }
         }

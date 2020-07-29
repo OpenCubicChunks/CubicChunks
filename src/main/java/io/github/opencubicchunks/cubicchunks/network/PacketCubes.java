@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
 
 public class PacketCubes {
     // vanilla has max chunk size of 2MB, it works out to be 128kB for a 32^3 cube
-    private static final int MAX_CUBE_SIZE = (IBigCube.CUBE_DIAMETER * IBigCube.CUBE_DIAMETER * IBigCube.CUBE_DIAMETER) * 128 * 1024;
+    private static final int MAX_CUBE_SIZE = (IBigCube.DIAMETER_IN_SECTIONS * IBigCube.DIAMETER_IN_SECTIONS * IBigCube.DIAMETER_IN_SECTIONS) * 128 * 1024;
 
     private final CubePos[] cubePositions;
     private final BigCube[] cubes;
@@ -107,9 +107,9 @@ public class PacketCubes {
                 //            if (cube != null /*&&fullCube*/) {
                 //                world.addEntitiesToChunk(cube.getColumn());
                 //            }
-                for (int dx = 0; dx < IBigCube.CUBE_DIAMETER; dx++) {
-                    for (int dy = 0; dy < IBigCube.CUBE_DIAMETER; dy++) {
-                        for (int dz = 0; dz < IBigCube.CUBE_DIAMETER; dz++) {
+                for (int dx = 0; dx < IBigCube.DIAMETER_IN_SECTIONS; dx++) {
+                    for (int dy = 0; dy < IBigCube.DIAMETER_IN_SECTIONS; dy++) {
+                        for (int dz = 0; dz < IBigCube.DIAMETER_IN_SECTIONS; dz++) {
                             world.markSurroundingsForRerender(
                                     cubeToSection(x, dx),
                                     cubeToSection(y, dy),

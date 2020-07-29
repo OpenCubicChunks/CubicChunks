@@ -59,7 +59,7 @@ import javax.annotation.Nullable;
 public class BigCube implements IChunk, IBigCube {
 
     private final CubePos cubePos;
-    private final ChunkSection[] sections = new ChunkSection[CUBE_SIZE];
+    private final ChunkSection[] sections = new ChunkSection[SECTION_COUNT];
 
     private final HashMap<BlockPos, TileEntity> tileEntities = new HashMap<>();
     private final ClassInheritanceMultiMap<Entity>[] entityLists;
@@ -98,7 +98,7 @@ public class BigCube implements IChunk, IBigCube {
 //        }
 
         //noinspection unchecked
-        this.entityLists = new ClassInheritanceMultiMap[IBigCube.CUBE_SIZE];
+        this.entityLists = new ClassInheritanceMultiMap[IBigCube.SECTION_COUNT];
         for(int i = 0; i < this.entityLists.length; ++i) {
             this.entityLists[i] = new ClassInheritanceMultiMap<>(Entity.class);
         }
@@ -110,7 +110,7 @@ public class BigCube implements IChunk, IBigCube {
         this.postLoadConsumer = postLoadConsumerIn;
 
         if(sectionsIn != null) {
-            if (sectionsIn.length != CUBE_SIZE) {
+            if (sectionsIn.length != SECTION_COUNT) {
                 throw new IllegalStateException("Number of Sections must equal BigCube.CUBESIZE");
             }
 
@@ -219,7 +219,7 @@ public class BigCube implements IChunk, IBigCube {
         this.cubeBiomeContainer = biomes;
 
         Sets.newHashSet(this.tileEntities.keySet()).forEach(this.world::removeTileEntity);
-        for (int i = 0; i < IBigCube.CUBE_SIZE; i++) {
+        for (int i = 0; i < IBigCube.SECTION_COUNT; i++) {
             boolean exists = emptyFlags.get(i);
 
             //        byte emptyFlags = 0;
@@ -297,8 +297,8 @@ public class BigCube implements IChunk, IBigCube {
     }
 
     private int getIndexFromEntity(Entity entityIn) {
-        return (MathHelper.floor(entityIn.getPosX() / 16.0D) * IBigCube.CUBE_DIAMETER * IBigCube.CUBE_DIAMETER) +
-                (MathHelper.floor(entityIn.getPosY() / 16.0D) * IBigCube.CUBE_DIAMETER) +
+        return (MathHelper.floor(entityIn.getPosX() / 16.0D) * IBigCube.DIAMETER_IN_SECTIONS * IBigCube.DIAMETER_IN_SECTIONS) +
+                (MathHelper.floor(entityIn.getPosY() / 16.0D) * IBigCube.DIAMETER_IN_SECTIONS) +
                 MathHelper.floor(entityIn.getPosZ() / 16.0D);
     }
 

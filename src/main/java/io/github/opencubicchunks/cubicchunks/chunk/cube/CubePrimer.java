@@ -64,13 +64,13 @@ public class CubePrimer implements IBigCube, IChunk {
 //        this.pendingBlockTicks = blockTickListIn;
 //        this.pendingFluidTicks = p_i49941_5_;
         if(sectionsIn == null) {
-            this.sections = new ChunkSection[IBigCube.CUBE_SIZE];
-            for(int i = 0; i < IBigCube.CUBE_SIZE; i++) {
+            this.sections = new ChunkSection[IBigCube.SECTION_COUNT];
+            for(int i = 0; i < IBigCube.SECTION_COUNT; i++) {
                 this.sections[i] = new ChunkSection(cubePos.getY(), (short) 0, (short) 0, (short) 0);
             }
         }
         else {
-            if(sectionsIn.length == IBigCube.CUBE_SIZE)
+            if(sectionsIn.length == IBigCube.SECTION_COUNT)
                 this.sections = sectionsIn;
             else
             {
