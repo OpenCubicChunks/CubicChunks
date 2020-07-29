@@ -40,7 +40,7 @@ public class CubicWorldLoadScreen {
             Object2IntMap<ChunkStatus> colors) {
         float aspectRatio = Minecraft.getInstance().currentScreen.field_230708_k_ / (float) Minecraft.getInstance().currentScreen.field_230709_l_;
 
-        float scaleWithCineSize = scale * IBigCube.CUBE_DIAMETER / 2.0f;
+        float scaleWithCineSize = scale * IBigCube.DIAMETER_IN_SECTIONS / 2.0f;
 
         RenderSystem.matrixMode(GL11.GL_PROJECTION);
         RenderSystem.pushMatrix();
@@ -92,7 +92,7 @@ public class CubicWorldLoadScreen {
                 int alpha = 0xB0;
                 int c = colors.getOrDefault(columnStatus, 0xFFFF00FF) | (alpha << 24);
                 drawCube(buffer, cdx - sectionRenderRadius / 2, -30, cdz - sectionRenderRadius / 2,
-                        0.12f * scale / IBigCube.CUBE_DIAMETER, c, EnumSet.of(Direction.UP));
+                        0.12f * scale / IBigCube.DIAMETER_IN_SECTIONS, c, EnumSet.of(Direction.UP));
             }
         }
 

@@ -8,7 +8,6 @@ import net.minecraft.block.BlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.ClassInheritanceMultiMap;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockReader;
 import net.minecraft.world.chunk.ChunkSection;
@@ -22,9 +21,12 @@ import javax.annotation.Nullable;
 
 public interface IBigCube extends IBlockReader {
 
-    int CUBE_DIAMETER = EarlyConfig.getCubeDiameter();
-    int CUBE_SIZE = CUBE_DIAMETER * CUBE_DIAMETER * CUBE_DIAMETER;
-    int BLOCK_SIZE = 16 * CUBE_DIAMETER;
+    int DIAMETER_IN_SECTIONS = EarlyConfig.getDiameterInSections();
+    int SECTION_COUNT = DIAMETER_IN_SECTIONS * DIAMETER_IN_SECTIONS * DIAMETER_IN_SECTIONS;
+    int CHUNK_COUNT = DIAMETER_IN_SECTIONS * DIAMETER_IN_SECTIONS;
+    int DIAMETER_IN_BLOCKS = 16 * DIAMETER_IN_SECTIONS;
+    int BLOCK_COUNT = DIAMETER_IN_BLOCKS * DIAMETER_IN_BLOCKS * DIAMETER_IN_BLOCKS;
+
 
     ChunkSection[] getCubeSections();
     CubePos getCubePos();
