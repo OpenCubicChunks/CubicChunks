@@ -46,7 +46,7 @@ public class CubicChunks {
         if (!(IChunkManager.class.isAssignableFrom(ChunkManager.class))) {
             throw new IllegalStateException("Mixin not applied!");
         }
-        EarlyConfig.getCubeDiameter();
+        EarlyConfig.getDiameterInSections();
         // Register the setup method for modloading
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::setup);
         // Register the doClientStuff method for modloading

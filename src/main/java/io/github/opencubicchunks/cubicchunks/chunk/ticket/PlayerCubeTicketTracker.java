@@ -20,7 +20,7 @@ public class PlayerCubeTicketTracker extends PlayerCubeTracker {
 
     public PlayerCubeTicketTracker(ITicketManager iTicketManager, int i) {
         //possibly make this a constant - there is only ever one playercubeticketracker at a time, so this should be fine.
-        super(iTicketManager, (32 / IBigCube.CUBE_DIAMETER) + 1);
+        super(iTicketManager, (32 / IBigCube.DIAMETER_IN_SECTIONS) + 1);
         this.iTicketManager = iTicketManager;
         this.viewDistance = 0;
         this.distances.defaultReturnValue(i + 2);

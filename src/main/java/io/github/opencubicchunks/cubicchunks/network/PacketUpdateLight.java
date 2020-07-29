@@ -32,9 +32,9 @@ public class PacketUpdateLight {
         this.skyLightData = Lists.newArrayList();
         this.blockLightData = Lists.newArrayList();
 
-        this.dataExists = new BitSet(IBigCube.CUBE_SIZE*2);
+        this.dataExists = new BitSet(IBigCube.SECTION_COUNT *2);
 
-        for(int i = 0; i < IBigCube.CUBE_SIZE; ++i) {
+        for(int i = 0; i < IBigCube.SECTION_COUNT; ++i) {
             NibbleArray skyNibbleArray = lightManager.getLightEngine(LightType.SKY).getData(Coords.sectionPosByIndex(pos, i));
             NibbleArray blockNibbleArray = lightManager.getLightEngine(LightType.BLOCK).getData(Coords.sectionPosByIndex(pos, i));
             if (skyNibbleArray != null) {
@@ -56,7 +56,7 @@ public class PacketUpdateLight {
     {
         this.cubePos = CubePos.of(buf.readInt(), buf.readInt(), buf.readInt());
 
-        int dataByteCount = MathUtil.ceilDiv(IBigCube.CUBE_SIZE*2, 8);
+        int dataByteCount = MathUtil.ceilDiv(IBigCube.SECTION_COUNT *2, 8);
         this.dataExists = BitSet.valueOf(buf.readByteArray(dataByteCount));
 
         this.skyLightData = new ArrayList<>();
@@ -78,7 +78,7 @@ public class PacketUpdateLight {
         buf.writeInt(this.cubePos.getY());
         buf.writeInt(this.cubePos.getZ());
 
-        byte[] byteArray = new byte[MathUtil.ceilDiv(IBigCube.CUBE_SIZE*2, 8)];
+        byte[] byteArray = new byte[MathUtil.ceilDiv(IBigCube.SECTION_COUNT *2, 8)];
         byte[] byteArray2 = dataExists.toByteArray();
 
         System.arraycopy(byteArray2, 0, byteArray, 0, Math.min(byteArray.length, byteArray2.length));
@@ -105,7 +105,7 @@ public class PacketUpdateLight {
             Iterator<byte[]> skyIterator = packet.skyLightData.iterator();
             Iterator<byte[]> blockIterator = packet.blockLightData.iterator();
 
-            for(int i = 0; i < IBigCube.CUBE_SIZE; ++i) {
+            for(int i = 0; i < IBigCube.SECTION_COUNT; ++i) {
                 SectionPos sectionPos = SectionPos.of(
                         packet.cubePos.getX() + Coords.indexToX(i),
                         packet.cubePos.getY() + Coords.indexToY(i),

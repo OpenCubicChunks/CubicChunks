@@ -41,12 +41,12 @@ public class Coords {
 
     public static final int NO_HEIGHT = Integer.MIN_VALUE + 32;
 
-    private static final int LOG2_BLOCK_SIZE = MathUtil.log2(IBigCube.BLOCK_SIZE);
+    private static final int LOG2_BLOCK_SIZE = MathUtil.log2(IBigCube.DIAMETER_IN_BLOCKS);
 
-    private static final int BLOCK_SIZE_MINUS_1 = IBigCube.BLOCK_SIZE - 1;
-    private static final int BLOCK_SIZE_DIV_2 = IBigCube.BLOCK_SIZE / 2;
-    private static final int BLOCK_SIZE_DIV_16 = IBigCube.BLOCK_SIZE / 16;
-    private static final int BLOCK_SIZE_DIV_32 = IBigCube.BLOCK_SIZE / 32;
+    private static final int BLOCK_SIZE_MINUS_1 = IBigCube.DIAMETER_IN_BLOCKS - 1;
+    private static final int BLOCK_SIZE_DIV_2 = IBigCube.DIAMETER_IN_BLOCKS / 2;
+    private static final int BLOCK_SIZE_DIV_16 = IBigCube.DIAMETER_IN_BLOCKS / 16;
+    private static final int BLOCK_SIZE_DIV_32 = IBigCube.DIAMETER_IN_BLOCKS / 32;
 
     private static final int POS_TO_INDEX_MASK = getPosToIndexMask();
     private static final int INDEX_TO_POS_MASK = POS_TO_INDEX_MASK >> 4;
@@ -60,7 +60,7 @@ public class Coords {
     private static int getPosToIndexMask()
     {
         int mask = 0;
-        for(int i = IBigCube.BLOCK_SIZE/2; i >= 16; i /= 2)
+        for(int i = IBigCube.DIAMETER_IN_BLOCKS /2; i >= 16; i /= 2)
         {
             mask += i;
         }
@@ -75,7 +75,7 @@ public class Coords {
     }
 
     public static int blockToLocal(int val) {
-        return val & (IBigCube.BLOCK_SIZE - 1);
+        return val & (IBigCube.DIAMETER_IN_BLOCKS - 1);
     }
 
     public static int localX(BlockPos pos) {
@@ -151,19 +151,19 @@ public class Coords {
 
         //        mask needs to be every power of 2 below IBigCube.BLOCK_SIZE that's > 16
 
-        if(IBigCube.CUBE_DIAMETER == 1) {
+        if(IBigCube.DIAMETER_IN_SECTIONS == 1) {
             return blockToIndex16(x, y, z);
         }
-        else if(IBigCube.CUBE_DIAMETER == 2) {
+        else if(IBigCube.DIAMETER_IN_SECTIONS == 2) {
             return blockToIndex32(x, y, z);
         }
-        else if(IBigCube.CUBE_DIAMETER == 4) {
+        else if(IBigCube.DIAMETER_IN_SECTIONS == 4) {
             return blockToIndex64(x, y, z);
         }
-        else if(IBigCube.CUBE_DIAMETER == 8) {
+        else if(IBigCube.DIAMETER_IN_SECTIONS == 8) {
             return blockToIndex128(x, y, z);
         }
-        throw new UnsupportedOperationException("Unsupported cube size " + IBigCube.CUBE_DIAMETER);
+        throw new UnsupportedOperationException("Unsupported cube size " + IBigCube.DIAMETER_IN_SECTIONS);
     }
 
     private static int blockToIndex16(int x, int y, int z)

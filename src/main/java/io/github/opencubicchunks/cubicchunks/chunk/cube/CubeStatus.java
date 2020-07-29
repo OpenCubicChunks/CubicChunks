@@ -63,7 +63,7 @@ public class CubeStatus {
     private static final List<ChunkStatus> STATUS_BY_RANGE = getStatusByRange();
 
     private static List<ChunkStatus> getStatusByRange() {
-        int cubeDiameter = EarlyConfig.getCubeDiameter();
+        int cubeDiameter = EarlyConfig.getDiameterInSections();
         switch(cubeDiameter) {
             case 1: return STATUS_BY_RANGE_16;
             case 2: return STATUS_BY_RANGE_32;

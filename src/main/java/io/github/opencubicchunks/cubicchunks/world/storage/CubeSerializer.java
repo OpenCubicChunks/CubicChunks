@@ -65,7 +65,7 @@ public class CubeSerializer {
 //            }, pos, level.getList("LiquidsToBeTicked", 9));
             boolean isLightOn = level.getBoolean("isLightOn");
             ListNBT sectionsNBTList = level.getList("Sections", 10);
-            ChunkSection[] sections = new ChunkSection[IBigCube.CUBE_SIZE];
+            ChunkSection[] sections = new ChunkSection[IBigCube.SECTION_COUNT];
             boolean worldHasSkylight = worldIn.getDimension().hasSkyLight();
             AbstractChunkProvider abstractchunkprovider = worldIn.getChunkProvider();
             WorldLightManager worldlightmanager = abstractchunkprovider.getLightManager();
@@ -236,9 +236,9 @@ public class CubeSerializer {
         }
         try (DataInputStream in = new DataInputStream(new BufferedInputStream(new GZIPInputStream(Files.newInputStream(cubePath))))) {
             ChunkStatus status = ChunkStatus.getAll().get(in.readUnsignedByte());
-            ChunkSection[] sections = new ChunkSection[IBigCube.CUBE_SIZE];
+            ChunkSection[] sections = new ChunkSection[IBigCube.SECTION_COUNT];
 
-            for (int i = 0; i < IBigCube.CUBE_SIZE; i++) {
+            for (int i = 0; i < IBigCube.SECTION_COUNT; i++) {
                 boolean isEmpty = in.readBoolean();
                 if (!isEmpty) {
                     ChunkSection chunkSection = new ChunkSection(pos.minCubeY() + Coords.indexToY(i));
@@ -299,7 +299,7 @@ public class CubeSerializer {
         WorldLightManager worldlightmanager = worldIn.getChunkProvider().getLightManager();
         boolean cubeHasLight = icube.hasCubeLight();
 
-        for(int i = 0; i < IBigCube.CUBE_SIZE; ++i) {
+        for(int i = 0; i < IBigCube.SECTION_COUNT; ++i) {
             ChunkSection section = sections[i];
 
             NibbleArray blockData = worldlightmanager.getLightEngine(LightType.BLOCK).getData(Coords.sectionPosByIndex(pos, i));

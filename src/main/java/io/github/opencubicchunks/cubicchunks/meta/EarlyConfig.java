@@ -8,7 +8,9 @@ import java.io.OutputStream;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.Properties;
+import java.util.stream.Collectors;
 
 public class EarlyConfig {
 
@@ -16,11 +18,11 @@ public class EarlyConfig {
 
     private static final int[] VALID_CUBE_DIAMETERS = new int[] { 1, 2, 4, 8 };
 
-    private static final String PROPERTY_NAME_CUBE_DIAMETER = "CUBE_DIAMETER";
-    private static final int DEFAULT_DIAMETER = 2; //Default
+    private static final String PROPERTY_NAME_DIAMETER_IN_SECTIONS = "CUBE_DIAMETER_IN_SECTIONS";
+    private static final int DEFAULT_DIAMETER_IN_SECTIONS = 2; //Default
 
-    public static int getCubeDiameter() {
-        int diameter = EarlyConfig.DEFAULT_DIAMETER;
+    public static int getDiameterInSections() {
+        int diameter = EarlyConfig.DEFAULT_DIAMETER_IN_SECTIONS;
         try {
             Properties prop = new Properties();
             if (!Files.exists(Paths.get(FILE_NAME))) {
@@ -32,7 +34,7 @@ public class EarlyConfig {
                     //If there are any exceptions while loading, return default.
                     prop.load(inputStream);
 
-                    diameter = Integer.parseInt(EarlyConfig.getPropertyOrSetDefault(prop, PROPERTY_NAME_CUBE_DIAMETER, String.valueOf(diameter)));
+                    diameter = Integer.parseInt(EarlyConfig.getPropertyOrSetDefault(prop, PROPERTY_NAME_DIAMETER_IN_SECTIONS, String.valueOf(diameter)));
 
                     boolean valid = false;
                     for (int d : VALID_CUBE_DIAMETERS) {
@@ -43,11 +45,11 @@ public class EarlyConfig {
 
                     }
                     if (!valid) {
-                        throw new UnsupportedOperationException("CUBE_DIAMETER " + diameter + " is not supported. Please use one of"
-                                + " [1, 2, 4, 8].");
+                        throw new UnsupportedOperationException(PROPERTY_NAME_DIAMETER_IN_SECTIONS + " " + diameter + " is not supported. Please use one of " +
+                                Arrays.stream(VALID_CUBE_DIAMETERS).mapToObj(String::valueOf).collect(Collectors.joining(", ", "[", "]")) + ".");
                     }
                 }
-                prop.setProperty(PROPERTY_NAME_CUBE_DIAMETER, String.valueOf(diameter));
+                prop.setProperty(PROPERTY_NAME_DIAMETER_IN_SECTIONS, String.valueOf(diameter));
                 try (OutputStream out = Files.newOutputStream(Paths.get(FILE_NAME))) {
                     prop.store(out, "");
                 }
@@ -65,7 +67,7 @@ public class EarlyConfig {
 
         //noinspection ResultOfMethodCallIgnored
         file.createNewFile();
-        prop.setProperty(PROPERTY_NAME_CUBE_DIAMETER, String.valueOf(EarlyConfig.DEFAULT_DIAMETER));
+        prop.setProperty(PROPERTY_NAME_DIAMETER_IN_SECTIONS, String.valueOf(EarlyConfig.DEFAULT_DIAMETER_IN_SECTIONS));
 
         prop.store(new FileOutputStream(file, false), null);
     }

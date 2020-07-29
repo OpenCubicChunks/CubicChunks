@@ -91,12 +91,12 @@ public abstract class MixinServerWorldLightManager extends MixinWorldLightManage
             super.enableLightSources(cubePos, false);
 
 
-            for(int i = 0; i < IBigCube.CUBE_SIZE; ++i) {
+            for(int i = 0; i < IBigCube.SECTION_COUNT; ++i) {
                 super.setData(LightType.BLOCK, Coords.sectionPosByIndex(cubePos, i), (NibbleArray)null);
                 super.setData(LightType.SKY, Coords.sectionPosByIndex(cubePos, i), (NibbleArray)null);
             }
 
-            for(int j = 0; j < IBigCube.CUBE_SIZE; ++j) {
+            for(int j = 0; j < IBigCube.SECTION_COUNT; ++j) {
                 super.updateSectionStatus(Coords.sectionPosByIndex(cubePos, j), true);
             }
 
@@ -109,7 +109,7 @@ public abstract class MixinServerWorldLightManager extends MixinWorldLightManage
         CubePos cubePos = icube.getCubePos();
         icube.setCubeLight(false);
         this.schedulePhaseTask(cubePos.getX(), cubePos.getY(), cubePos.getZ(), ServerWorldLightManager.Phase.PRE_UPDATE, Util.namedRunnable(() -> {
-            for(int i = 0; i < IBigCube.CUBE_SIZE; ++i) {
+            for(int i = 0; i < IBigCube.SECTION_COUNT; ++i) {
                 ChunkSection chunksection = icube.getCubeSections()[i];
                 if (!ChunkSection.isEmpty(chunksection)) {
                     super.updateSectionStatus(Coords.sectionPosByIndex(cubePos, i), false);
