@@ -7,6 +7,7 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.chunk.listener.LoggingChunkStatusListener;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -19,14 +20,23 @@ public abstract class MixinLoggingChunkStatusListener implements ICubeStatusList
 
     private int loadedCubes;
     private int cubesToGenerate;
+    private int chunksToGenerate;
+    
+    @Shadow private int loadedChunks;
     
     @Inject(method = "<init>", at = @At("RETURN"))
-    public void onInit(int serverChunkRadius, CallbackInfo ci) {
+    public void onInit(int vanillaSpawnRadius, CallbackInfo ci) {
         // Server chunk radius, divided by CUBE_DIAMETER to get the radius in cubes
+        // Except we subtract one before the ceil and readd it after, for... some reason
         // Multiply by two to convert cube radius -> diameter,
         // And then add one for the center cube
-        int cubesEdgeLength = (1+(int) Math.ceil((serverChunkRadius-1) / ((float) IBigCube.CUBE_DIAMETER)))*2+1;
-        cubesToGenerate = cubesEdgeLength*cubesEdgeLength*cubesEdgeLength;
+        int ccCubeRadius = 1+(int) Math.ceil((vanillaSpawnRadius-1) / ((float) IBigCube.DIAMETER_IN_SECTIONS));
+        int ccCubeDiameter = ccCubeRadius*2+1;
+        cubesToGenerate = ccCubeDiameter*ccCubeDiameter*ccCubeDiameter;
+        
+        int ccChunkRadius = ccCubeRadius * IBigCube.DIAMETER_IN_SECTIONS;
+        int ccChunkDiameter = ccChunkRadius*2+1;
+        chunksToGenerate = ccChunkDiameter*ccChunkDiameter;
     }
 
     @Override public void cubeStatusChanged(CubePos cubePos, @Nullable ChunkStatus newStatus) {
@@ -37,7 +47,9 @@ public abstract class MixinLoggingChunkStatusListener implements ICubeStatusList
 
     @Inject(method = "getPercentDone", at = @At("HEAD"), cancellable = true)
     public void getPercentDone(CallbackInfoReturnable<Integer> cir) {
-        int percentage = MathHelper.floor(this.loadedCubes * 100.0F / cubesToGenerate);
+        int loaded = loadedChunks + loadedCubes;
+        int total = chunksToGenerate + cubesToGenerate;
+        int percentage = MathHelper.floor(loaded * 100.0F / total);
         cir.setReturnValue(percentage);
     }
 }
