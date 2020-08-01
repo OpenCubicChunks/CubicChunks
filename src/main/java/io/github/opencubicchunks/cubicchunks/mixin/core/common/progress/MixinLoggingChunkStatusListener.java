@@ -6,8 +6,7 @@ import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.chunk.listener.LoggingChunkStatusListener;
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.*;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -19,11 +18,13 @@ import javax.annotation.Nullable;
 public abstract class MixinLoggingChunkStatusListener implements ICubeStatusListener {
 
     private int loadedCubes;
-    private int cubesToGenerate;
-    private int chunksToGenerate;
-    
+    private int totalCubes;
+
     @Shadow private int loadedChunks;
-    
+    @Shadow @Final
+    @Mutable
+    private int totalChunks;
+
     @Inject(method = "<init>", at = @At("RETURN"))
     public void onInit(int vanillaSpawnRadius, CallbackInfo ci) {
         // Server chunk radius, divided by CUBE_DIAMETER to get the radius in cubes
@@ -32,24 +33,29 @@ public abstract class MixinLoggingChunkStatusListener implements ICubeStatusList
         // And then add one for the center cube
         int ccCubeRadius = 1+(int) Math.ceil((vanillaSpawnRadius-1) / ((float) IBigCube.DIAMETER_IN_SECTIONS));
         int ccCubeDiameter = ccCubeRadius*2+1;
-        cubesToGenerate = ccCubeDiameter*ccCubeDiameter*ccCubeDiameter;
-        
+        totalCubes = ccCubeDiameter*ccCubeDiameter*ccCubeDiameter;
+
         int ccChunkRadius = ccCubeRadius * IBigCube.DIAMETER_IN_SECTIONS;
         int ccChunkDiameter = ccChunkRadius*2+1;
-        chunksToGenerate = ccChunkDiameter*ccChunkDiameter;
+        totalChunks = ccChunkDiameter*ccChunkDiameter;
     }
-    
+
+    @Override public void startCubes(CubePos center) {}
+
     @Override public void cubeStatusChanged(CubePos cubePos, @Nullable ChunkStatus newStatus) {
-    	if (newStatus == ChunkStatus.FULL) {
+        if (newStatus == ChunkStatus.FULL) {
             this.loadedCubes++;
         }
     }
 
-    @Inject(method = "getPercentDone", at = @At("HEAD"), cancellable = true)
-    public void getPercentDone(CallbackInfoReturnable<Integer> cir) {
+    /**
+     * @author CursedFlames & NotStirred
+     * @reason number of chunks is different due to rounding to chunks rounding to 1 cubes to 1, 2, 4, 8 depending on {@link IBigCube#DIAMETER_IN_SECTIONS}
+     */
+    @Overwrite
+    public int getPercentDone() {
         int loaded = loadedChunks + loadedCubes;
-        int total = chunksToGenerate + cubesToGenerate;
-        int percentage = MathHelper.floor(loaded * 100.0F / total);
-        cir.setReturnValue(percentage);
+        int total = totalChunks + totalCubes;
+        return MathHelper.floor(loaded * 100.0F / total);
     }
 }

@@ -7,10 +7,8 @@ import net.minecraft.world.chunk.listener.IChunkStatusListener;
 import javax.annotation.Nullable;
 
 public interface ICubeStatusListener extends IChunkStatusListener {
+    void startCubes(CubePos center);
 
-    default void startCubes(CubePos center) {
-    }
-
-    default void cubeStatusChanged(CubePos cubePos, @Nullable ChunkStatus newStatus) {
-    }
+    void cubeStatusChanged(CubePos cubePos, @Nullable ChunkStatus newStatus);
+    //Interface does not have a stopCubes(); because the equivalent stop for chunks does the same thing, and is called at the same time.
 }
