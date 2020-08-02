@@ -34,7 +34,8 @@ public class CubicChunks {
     public static long SECTIONPOS_SENTINEL = -1;
 
     // Directly reference a log4j logger.
-    public static int worldMAXHeight = Integer.MAX_VALUE / 2;
+    public static int MAX_SUPPORTED_HEIGHT = Integer.MAX_VALUE / 2;
+    public static int MIN_SUPPORTED_HEIGHT = -MAX_SUPPORTED_HEIGHT;
 
     public static final String MODID = "cubicchunks";
     public static final Logger LOGGER = LogManager.getLogger();

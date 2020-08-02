@@ -14,6 +14,6 @@ public class MixinDoorBlock {
      @reason Fix door placement
     **/
     @ModifyConstant(method = "getStateForPlacement", constant = @Constant(intValue = 255))
-    private int getOutOfWorldMaxPos(int _255) { return CubicChunks.worldMAXHeight; }
+    private int getOutOfWorldMaxPos(int _255) { return CubicChunks.MAX_SUPPORTED_HEIGHT; }
 
 }

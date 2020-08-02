@@ -14,6 +14,6 @@ public interface MixinIWorldGenerationReader {
     @Overwrite(remap = false)
     default int getMaxHeight() {
         return this instanceof net.minecraft.world.IWorld ?
-                ((net.minecraft.world.IWorld)this).getWorld().getDimension().getHeight() : CubicChunks.worldMAXHeight;
+                ((net.minecraft.world.IWorld)this).getWorld().getDimension().getHeight() : CubicChunks.MAX_SUPPORTED_HEIGHT;
     }
 }

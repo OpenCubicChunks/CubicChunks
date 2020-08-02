@@ -19,12 +19,12 @@ public interface MixinIChunk extends IBlockReader {
      */
     @Overwrite
     default boolean isEmptyBetween(int startY, int endY) {
-        if (startY < CubicChunks.worldMAXHeight) {
-            startY = -CubicChunks.worldMAXHeight;
+        if (startY < CubicChunks.MAX_SUPPORTED_HEIGHT) {
+            startY = CubicChunks.MIN_SUPPORTED_HEIGHT;
         }
 
-        if (endY >= CubicChunks.worldMAXHeight) {
-            endY = CubicChunks.worldMAXHeight - 1;
+        if (endY >= CubicChunks.MAX_SUPPORTED_HEIGHT) {
+            endY = CubicChunks.MAX_SUPPORTED_HEIGHT - 1;
         }
 
         endY = endY >> 4;

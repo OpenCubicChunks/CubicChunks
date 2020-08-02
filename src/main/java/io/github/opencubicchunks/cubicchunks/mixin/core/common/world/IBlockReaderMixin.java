@@ -13,9 +13,9 @@ public interface IBlockReaderMixin {
      */
     @Overwrite
     default int getHeight() {
-        return CubicChunks.worldMAXHeight;
+        return CubicChunks.MAX_SUPPORTED_HEIGHT;
     }
 
-    default int minHeight() { return -CubicChunks.worldMAXHeight; }
+    default int minHeight() { return CubicChunks.MIN_SUPPORTED_HEIGHT; }
     default int maxHeight() { return this.getHeight(); }
 }

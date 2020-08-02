@@ -10,6 +10,6 @@ import org.spongepowered.asm.mixin.injection.ModifyConstant;
 public class MixinBatEntity {
 
     @ModifyConstant(method = "updateAITasks", constant = @Constant(intValue = 1, ordinal = 0))
-    private int getUpdateAIWorldHeight(int _1) { return -CubicChunks.worldMAXHeight; }
+    private int getUpdateAIWorldHeight(int _1) { return CubicChunks.MIN_SUPPORTED_HEIGHT; }
 
 }

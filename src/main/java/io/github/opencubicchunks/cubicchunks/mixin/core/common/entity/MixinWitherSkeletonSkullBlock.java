@@ -10,11 +10,11 @@ import org.spongepowered.asm.mixin.injection.ModifyConstant;
 public class MixinWitherSkeletonSkullBlock {
 
     @ModifyConstant(method = "canSpawnMob", constant = @Constant(intValue = 2))
-    private static int getWitherSpawnCan(int _2) { return -CubicChunks.worldMAXHeight + 2; }
+    private static int getWitherSpawnCan(int _2) { return CubicChunks.MIN_SUPPORTED_HEIGHT + 2; }
 
     @ModifyConstant(method = "checkWitherSpawn", constant = @Constant(ordinal = 0, intValue = 2))
     private static int getWitherSpawnCheck(int _2) {
-        return -CubicChunks.worldMAXHeight;
+        return CubicChunks.MIN_SUPPORTED_HEIGHT;
     }
 
 }

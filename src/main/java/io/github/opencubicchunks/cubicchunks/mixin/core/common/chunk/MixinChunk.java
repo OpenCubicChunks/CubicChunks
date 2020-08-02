@@ -145,19 +145,19 @@ public abstract class MixinChunk implements IChunk {
                     args = "array=length"
             ))
     public int getEntityListsLength(ClassInheritanceMultiMap<Entity>[] entityLists) {
-        return CubicChunks.worldMAXHeight / 16;
+        return CubicChunks.MAX_SUPPORTED_HEIGHT / 16;
     }
 
     @ModifyConstant(method = {"addEntity", "removeEntityAtIndex"}, constant = @Constant(expandZeroConditions = Constant.Condition.LESS_THAN_ZERO,
             intValue = 0))
     public int getLowerHeightLimit(int _0) {
-        return -CubicChunks.worldMAXHeight / 16;
+        return CubicChunks.MIN_SUPPORTED_HEIGHT / 16;
     }
 
     @ModifyConstant(method = {"getEntitiesWithinAABBForEntity", "getEntitiesWithinAABBForList", "getEntitiesOfTypeWithinAABB"},
             constant = {@Constant(intValue = 0, ordinal = 0), @Constant(intValue = 0, ordinal = 1)})
     public int getLowerClampLimit(int _0) {
-        return -CubicChunks.worldMAXHeight / 16;
+        return CubicChunks.MIN_SUPPORTED_HEIGHT / 16;
     }
 
     //This should return object because Hashmap.get also does

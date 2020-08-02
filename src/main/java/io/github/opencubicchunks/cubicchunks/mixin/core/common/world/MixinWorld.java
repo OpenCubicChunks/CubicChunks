@@ -10,9 +10,7 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.AbstractChunkProvider;
-import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkStatus;
-import net.minecraft.world.chunk.IChunk;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -27,7 +25,7 @@ public class MixinWorld implements ICubicWorld {
 
     @Inject(at = @At("RETURN"), method = "isYOutOfBounds", cancellable = true)
     private static void isYOutOfBounds(int y, CallbackInfoReturnable<Boolean> cir) {
-        cir.setReturnValue(y < -CubicChunks.worldMAXHeight || y >= CubicChunks.worldMAXHeight);
+        cir.setReturnValue(y < CubicChunks.MIN_SUPPORTED_HEIGHT || y >= CubicChunks.MAX_SUPPORTED_HEIGHT);
     }
 
     @Inject(method = "markChunkDirty", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/chunk/Chunk;markDirty()V"))

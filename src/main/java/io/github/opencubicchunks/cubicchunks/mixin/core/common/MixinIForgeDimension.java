@@ -13,7 +13,7 @@ public interface MixinIForgeDimension {
     @Overwrite(remap = false)
     default int getHeight()
     {
-        return CubicChunks.worldMAXHeight;
+        return CubicChunks.MAX_SUPPORTED_HEIGHT;
     }
 
 }
