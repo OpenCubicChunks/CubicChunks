@@ -10,6 +10,6 @@ import org.spongepowered.asm.mixin.injection.ModifyConstant;
 public class MixinFallingBlock {
 
     @ModifyConstant(method = "tick", constant = @Constant( expandZeroConditions = Constant.Condition.GREATER_THAN_OR_EQUAL_TO_ZERO))
-    private int getTickPos(int _0) { return -CubicChunks.worldMAXHeight; }
+    private int getTickPos(int _0) { return CubicChunks.MIN_SUPPORTED_HEIGHT; }
 
 }

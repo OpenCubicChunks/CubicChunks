@@ -10,6 +10,6 @@ import org.spongepowered.asm.mixin.injection.ModifyConstant;
 public class MixinAbstractMinecartEntity {
 
     @ModifyConstant(method = "tick", constant = @Constant(doubleValue = -64.0D))
-    private double getOutOfWorldPos(double _64) { return -CubicChunks.worldMAXHeight - 64; }
+    private double getOutOfWorldPos(double _64) { return CubicChunks.MIN_SUPPORTED_HEIGHT - 64; }
 
 }

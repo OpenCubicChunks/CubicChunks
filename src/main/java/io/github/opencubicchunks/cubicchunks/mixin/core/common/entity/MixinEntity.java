@@ -12,7 +12,7 @@ public class MixinEntity {
     @ModifyConstant(method = "baseTick", constant = @Constant(doubleValue = -64.0D))
     private double getOutOfWorldPos(double _64)
     {
-        return -CubicChunks.worldMAXHeight - 64;
+        return CubicChunks.MIN_SUPPORTED_HEIGHT - 64;
     }
 
 }
