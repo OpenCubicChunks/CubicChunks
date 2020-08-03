@@ -29,18 +29,28 @@ public interface IBigCube extends IBlockReader {
     int BLOCK_COUNT = DIAMETER_IN_BLOCKS * DIAMETER_IN_BLOCKS * DIAMETER_IN_BLOCKS;
     int BLOCK_COLUMNS_PER_SECTION = SECTION_DIAMETER * SECTION_DIAMETER;
 
-    ChunkSection[] getCubeSections();
     CubePos getCubePos();
+    ChunkSection[] getCubeSections();
 
-    //TODO: remove setCubeStatus from IBigCube
+    //STATUS
+    //TODO: remove setCubeStatus from IBigCube to match IChunk
     void setCubeStatus(ChunkStatus status);
     ChunkStatus getCubeStatus();
 
+    //BLOCK
     // this can't be setBlockState because the implementations also implement IChunk which already has setBlockState and this breaks obfuscation
     @Nullable BlockState setBlock(BlockPos pos, BlockState state, boolean isMoving);
 
+    @Override default BlockState getBlockState(BlockPos pos) {
+        return getBlockState(Coords.localX(pos), Coords.localY(pos), Coords.localZ(pos));
+    }
+    //TODO: remove this getBlockState from IBigCube to match IChunk
+    BlockState getBlockState(int x, int y, int z);
+
+    //ENTITY
     void addCubeEntity(Entity entityIn);
 
+    //TILE ENTITY
     // can't be add/removeTileEntity due to obfuscation issues with IChunk
     default void addCubeTileEntity(CompoundNBT nbt) {
         LogManager.getLogger().warn("Trying to set a BlockEntity, but this operation is not supported.");
@@ -48,32 +58,30 @@ public interface IBigCube extends IBlockReader {
     void addCubeTileEntity(BlockPos pos, TileEntity tileEntity);
     void removeCubeTileEntity(BlockPos pos);
 
-    @Nullable CompoundNBT getCubeTileEntityNBT(BlockPos pos);
     Set<BlockPos> getCubeTileEntitiesPos();
+
+    @Nullable CompoundNBT getCubeTileEntityNBT(BlockPos pos);
 
     @Nullable CompoundNBT getCubeDeferredTileEntity(BlockPos pos);
 
-    // can't be isModified due to obfuscation issues with IChunk
-    boolean isDirty();
-
-    void setDirty(boolean modified);
-
-    boolean isEmptyCube();
-
+    //LIGHTING
     //can't be set/hasLight due to obfuscation issues with IChunk
     boolean hasCubeLight();
     void setCubeLight(boolean lightCorrectIn);
 
+    Stream<BlockPos> getCubeLightSources();
+
+    //MISC
+    // can't be isModified due to obfuscation issues with IChunk
+    void setDirty(boolean modified);
+
+    boolean isDirty();
+
+    //TODO: remove isEmptyCube from IBigCube to match IChunk
+    boolean isEmptyCube();
+
     void setCubeInhabitedTime(long newCubeInhabitedTime);
     long getCubeInhabitedTime();
 
-    @Override default BlockState getBlockState(BlockPos pos) {
-        return getBlockState(Coords.localX(pos), Coords.localY(pos), Coords.localZ(pos));
-    }
-
-    BlockState getBlockState(int x, int y, int z);
-
     @Nullable CubeBiomeContainer getCubeBiomes();
-
-    Stream<BlockPos> getCubeLightSources();
 }

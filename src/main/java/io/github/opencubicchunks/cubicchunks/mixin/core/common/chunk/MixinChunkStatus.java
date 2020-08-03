@@ -55,7 +55,7 @@ public class MixinChunkStatus {
             CallbackInfoReturnable<CompletableFuture<Either<IChunk, ChunkHolder.IChunkLoadingError>>> ci) {
 
         if (chunk instanceof CubePrimer && !chunk.getStatus().isAtLeast(status)) {
-            ((CubePrimer) chunk).setStatus(status);
+            ((CubePrimer) chunk).setCubeStatus(status);
         }
     }
 
@@ -84,7 +84,7 @@ public class MixinChunkStatus {
             }
 
             if (chunk instanceof CubePrimer) {
-                ((CubePrimer) chunk).setStatus(status);
+                ((CubePrimer) chunk).setCubeStatus(status);
             }
         }
     }
@@ -184,7 +184,7 @@ public class MixinChunkStatus {
         }
         boolean flag = ((CubePrimer) chunk).getCubeStatus().isAtLeast(status) && ((CubePrimer) chunk).hasCubeLight();
         if (!chunk.getStatus().isAtLeast(status)) {
-            ((CubePrimer) chunk).setStatus(status);
+            ((CubePrimer) chunk).setCubeStatus(status);
         }
         cir.setReturnValue(unsafeCast(((IServerWorldLightManager)lightManager).lightCube((IBigCube)chunk, flag).thenApply(Either::left)));
     }
