@@ -12,7 +12,7 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 @Mixin(PathNavigator.class)
 public class MixinPathNavigator {
 
-    @ModifyConstant(method = "func_225464_a", constant = @Constant(ordinal = 0))
+    @ModifyConstant(method = "func_225464_a", constant = @Constant(doubleValue = 0.0D, ordinal = 0))
     private double getPathMinPos(double _0) { return -CubicChunks.worldMAXHeight; }
 
 }
