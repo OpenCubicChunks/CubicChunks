@@ -111,7 +111,7 @@ public class CubePrimer implements IBigCube, IChunk {
             return state;
         } else {
             if(this.sections[index] == Chunk.EMPTY_SECTION) {
-                this.sections[index] = new ChunkSection(Coords.cubeToMinBlock(this.cubePos.getY() + Coords.sectonToMinBlock(Coords.indexToY(index))));
+                this.sections[index] = new ChunkSection(Coords.cubeToMinBlock(this.cubePos.getY() + Coords.sectionToMinBlock(Coords.indexToY(index))));
             }
 
             if (state.getLightValue(this, pos) > 0) {
