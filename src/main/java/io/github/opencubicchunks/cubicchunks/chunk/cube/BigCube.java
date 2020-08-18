@@ -1,9 +1,5 @@
 package io.github.opencubicchunks.cubicchunks.chunk.cube;
 
-import static io.github.opencubicchunks.cubicchunks.utils.Coords.blockToCube;
-import static io.github.opencubicchunks.cubicchunks.utils.Coords.cubeToSection;
-import static net.minecraft.world.chunk.Chunk.EMPTY_SECTION;
-
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import io.github.opencubicchunks.cubicchunks.CubicChunks;
@@ -44,17 +40,15 @@ import net.minecraft.world.gen.feature.structure.StructureStart;
 import net.minecraftforge.common.util.Constants;
 import org.apache.logging.log4j.LogManager;
 
-import java.util.Arrays;
-import java.util.BitSet;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+import javax.annotation.Nullable;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
-import javax.annotation.Nullable;
+import static io.github.opencubicchunks.cubicchunks.utils.Coords.blockToCube;
+import static io.github.opencubicchunks.cubicchunks.utils.Coords.cubeToSection;
+import static net.minecraft.world.chunk.Chunk.EMPTY_SECTION;
 
 public class BigCube implements IChunk, IBigCube {
 
@@ -137,7 +131,7 @@ public class BigCube implements IChunk, IBigCube {
                 null, cubePrimerIn.getInhabitedTime(), cubePrimerIn.getCubeSections(), null);
 
         for(CompoundNBT compoundnbt : cubePrimerIn.getCubeEntities()) {
-            EntityType.func_220335_a(compoundnbt, worldIn, (p_217325_1_) -> {
+            EntityType.loadEntityAndExecute(compoundnbt, worldIn, (p_217325_1_) -> {
                 this.addEntity(p_217325_1_);
                 return p_217325_1_;
             });
@@ -395,7 +389,7 @@ public class BigCube implements IChunk, IBigCube {
                 CubicChunks.LOGGER.warn("Tried to load a DUMMY block entity @ {} but found not block entity block {} at location", pos, this.getBlockState(pos));
             }
         } else {
-            tileentity = TileEntity.func_235657_b_(state, compound);
+            tileentity = TileEntity.readTileEntity(state, compound);
         }
 
         if (tileentity != null) {

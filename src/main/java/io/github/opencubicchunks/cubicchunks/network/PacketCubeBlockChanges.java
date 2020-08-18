@@ -57,7 +57,7 @@ public class PacketCubeBlockChanges {
         out.writeShort(localAddresses.length);
         for (int i = 0; i < localAddresses.length; i++) {
             out.writeShort(localAddresses[i]);
-            out.writeVarInt(Block.BLOCK_STATE_IDS.get(blockStates[i]));
+            out.writeVarInt(Block.BLOCK_STATE_IDS.getId(blockStates[i]));
         }
     }
 

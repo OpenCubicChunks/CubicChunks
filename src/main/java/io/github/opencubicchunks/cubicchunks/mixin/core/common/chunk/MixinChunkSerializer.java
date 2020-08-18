@@ -7,18 +7,13 @@ import net.minecraft.util.SharedConstants;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.palette.UpgradeData;
 import net.minecraft.util.registry.Registry;
+import net.minecraft.util.registry.WorldGenRegistries;
 import net.minecraft.village.PointOfInterestManager;
 import net.minecraft.world.SerializableTickList;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.BiomeContainer;
 import net.minecraft.world.biome.Biomes;
-import net.minecraft.world.chunk.Chunk;
-import net.minecraft.world.chunk.ChunkPrimer;
-import net.minecraft.world.chunk.ChunkPrimerTickList;
-import net.minecraft.world.chunk.ChunkPrimerWrapper;
-import net.minecraft.world.chunk.ChunkSection;
-import net.minecraft.world.chunk.ChunkStatus;
-import net.minecraft.world.chunk.IChunk;
+import net.minecraft.world.chunk.*;
 import net.minecraft.world.chunk.storage.ChunkSerializer;
 import net.minecraft.world.gen.Heightmap;
 import net.minecraft.world.gen.feature.template.TemplateManager;
@@ -31,12 +26,11 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Objects;
-
-import javax.annotation.Nullable;
 
 @Mixin(ChunkSerializer.class)
 public abstract class MixinChunkSerializer {
@@ -61,8 +55,9 @@ public abstract class MixinChunkSerializer {
         ChunkStatus.Type statusType = getChunkStatus(compound);
         IChunk newChunk;
         Biome[] biomesIn = new Biome[BiomeContainer.BIOMES_SIZE];
-        Arrays.fill(biomesIn, Biomes.FOREST);
-        BiomeContainer biomeContainerIn = new BiomeContainer(biomesIn);
+        Arrays.fill(biomesIn, WorldGenRegistries.field_243657_i.func_243576_d(Biomes.FOREST));
+        //TODO: Double Check that this is proper
+        BiomeContainer biomeContainerIn = new BiomeContainer(worldIn.func_241828_r().func_243612_b(Registry.BIOME_KEY), biomesIn);
         if (statusType == ChunkStatus.Type.LEVELCHUNK) {
             newChunk = new Chunk(worldIn.getWorld(), pos, biomeContainerIn, UpgradeData.EMPTY,
                     new SerializableTickList<>(Registry.BLOCK::getKey, new ArrayList<>(), 0), // TODO: supply game time
@@ -74,7 +69,7 @@ public abstract class MixinChunkSerializer {
                     new ChunkPrimerTickList<>((block) -> block == null || block.getDefaultState().isAir(), pos),
                     new ChunkPrimerTickList<>((fluid) -> fluid == null || fluid == Fluids.EMPTY, pos));
 
-            chunkprimer.func_225548_a_(biomeContainerIn); // setBiomes
+            chunkprimer.setBiomes(biomeContainerIn); // setBiomes
             newChunk = chunkprimer;
             chunkprimer.setInhabitedTime(inhabitedTime);
             chunkprimer.setStatus(ChunkStatus.byName(level.getString("Status")));

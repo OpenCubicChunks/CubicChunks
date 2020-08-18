@@ -7,6 +7,6 @@ import org.spongepowered.asm.mixin.gen.Invoker;
 @Mixin(SectionLightStorage.class)
 public interface SectionLightStorageAccess {
 
-    @Invoker("func_215526_b") void invokeSetColumnEnabled(long p_215526_1_, boolean p_215526_3_);
+    @Invoker("updateSectionStatus") void invokeSetColumnEnabled(long p_215526_1_, boolean p_215526_3_);
 
 }

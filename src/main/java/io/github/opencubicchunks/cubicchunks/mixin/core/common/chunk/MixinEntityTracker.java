@@ -1,7 +1,5 @@
 package io.github.opencubicchunks.cubicchunks.mixin.core.common.chunk;
 
-import static io.github.opencubicchunks.cubicchunks.utils.Coords.sectionToCube;
-
 import io.github.opencubicchunks.cubicchunks.chunk.IChunkManager;
 import io.github.opencubicchunks.cubicchunks.chunk.ICubeHolder;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
@@ -18,6 +16,8 @@ import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 
 import java.util.Set;
+
+import static io.github.opencubicchunks.cubicchunks.utils.Coords.sectionToCube;
 
 @Mixin(ChunkManager.EntityTracker.class)
 public abstract class MixinEntityTracker {
@@ -39,7 +39,7 @@ public abstract class MixinEntityTracker {
     @Overwrite
     public void updateTrackingState(ServerPlayerEntity player) {
         if (player != this.entity) {
-            Vector3d vec3d = player.getPositionVec().subtract(this.entry.func_219456_b());
+            Vector3d vec3d = player.getPositionVec().subtract(this.entry.getDecodedPosition());
                             //This function is fine
             int i = Math.min(this.func_229843_b_(), (((ChunkManagerAccess)this$0).getViewDistance() - 1) * 16);
             boolean flag = vec3d.x >= (double)(-i) && vec3d.x <= (double)i &&

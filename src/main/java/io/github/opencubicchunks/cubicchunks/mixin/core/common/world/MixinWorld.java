@@ -11,7 +11,6 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.ChunkStatus;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -19,7 +18,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(World.class)
 public abstract class MixinWorld implements ICubicWorld {
-    @Shadow public abstract World getWorld();
 
     @Inject(at = @At("RETURN"), method = "isYOutOfBounds", cancellable = true)
     private static void isYOutOfBounds(int y, CallbackInfoReturnable<Boolean> cir) {
@@ -40,8 +38,9 @@ public abstract class MixinWorld implements ICubicWorld {
         return (BigCube)this.getCube(cubeX, cubeY, cubeZ, ChunkStatus.FULL, true);
     }
 
+    //The method .getWorld() No longer exists
     public IBigCube getCube(int cubeX, int cubeY, int cubeZ, ChunkStatus requiredStatus, boolean nonnull) {
-        IBigCube icube = ((ICubeProvider)this.getWorld().getChunkProvider()).getCube(cubeX, cubeY, cubeZ, requiredStatus, nonnull);
+        IBigCube icube = ((ICubeProvider)((World)(Object)this).getChunkProvider()).getCube(cubeX, cubeY, cubeZ, requiredStatus, nonnull);
         if (icube == null && nonnull) {
             throw new IllegalStateException("Should always be able to create a cube!");
         } else {

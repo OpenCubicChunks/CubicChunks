@@ -13,11 +13,17 @@ import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
-import net.minecraft.nbt.*;
+import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.nbt.CompressedStreamTools;
+import net.minecraft.nbt.ListNBT;
+import net.minecraft.nbt.ShortNBT;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.palette.UpgradeData;
-import net.minecraft.world.*;
+import net.minecraft.util.registry.Registry;
+import net.minecraft.world.EmptyTickList;
+import net.minecraft.world.LightType;
+import net.minecraft.world.World;
 import net.minecraft.world.biome.BiomeContainer;
 import net.minecraft.world.biome.provider.BiomeProvider;
 import net.minecraft.world.chunk.*;
@@ -30,7 +36,7 @@ import javax.annotation.Nullable;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.Objects;
 import java.util.zip.GZIPInputStream;
 
 public class CubeSerializer {
@@ -55,7 +61,7 @@ public class CubeSerializer {
             ChunkGenerator chunkgenerator = worldIn.getChunkProvider().getChunkGenerator();
             BiomeProvider biomeprovider = chunkgenerator.getBiomeProvider();
 
-            CubeBiomeContainer biomecontainer = new CubeBiomeContainer(pos.asSectionPos(), biomeprovider, level.contains("Biomes", 11) ? level.getIntArray("Biomes") : null);
+            CubeBiomeContainer biomecontainer = new CubeBiomeContainer(worldIn.func_241828_r().func_243612_b(Registry.BIOME_KEY), pos.asSectionPos(), biomeprovider, level.contains("Biomes", 11) ? level.getIntArray("Biomes") : null);
 //            UpgradeData upgradedata = level.contains("UpgradeData", 10) ? new UpgradeData(level.getCompound("UpgradeData")) : UpgradeData.EMPTY;
 //            ChunkPrimerTickList<Block> chunkprimerticklist = new ChunkPrimerTickList<>((p_222652_0_) -> {
 //                return p_222652_0_ == null || p_222652_0_.getDefaultState().isAir();
@@ -457,7 +463,7 @@ public class CubeSerializer {
 
         for(int i = 0; i < listnbt.size(); ++i) {
             CompoundNBT compoundnbt = listnbt.getCompound(i);
-            EntityType.func_220335_a(compoundnbt, world, (p_222655_1_) -> {
+            EntityType.loadEntityAndExecute(compoundnbt, world, (p_222655_1_) -> {
                 cube.addEntity(p_222655_1_);
                 return p_222655_1_;
             });
@@ -473,7 +479,7 @@ public class CubeSerializer {
                 cube.addCubeTileEntity(compoundnbt1);
             } else {
                 BlockPos blockpos = new BlockPos(compoundnbt1.getInt("x"), compoundnbt1.getInt("y"), compoundnbt1.getInt("z"));
-                TileEntity tileentity = TileEntity.func_235657_b_(cube.getBlockState(blockpos), compoundnbt1);
+                TileEntity tileentity = TileEntity.readTileEntity(cube.getBlockState(blockpos), compoundnbt1);
                 if (tileentity != null) {
                     cube.addCubeTileEntity(tileentity);
                 }

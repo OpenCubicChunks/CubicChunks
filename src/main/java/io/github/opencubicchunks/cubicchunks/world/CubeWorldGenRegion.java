@@ -1,7 +1,5 @@
 package io.github.opencubicchunks.cubicchunks.world;
 
-import static io.github.opencubicchunks.cubicchunks.utils.Coords.blockToCube;
-
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
@@ -23,13 +21,9 @@ import net.minecraft.util.Util;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
-import net.minecraft.world.DifficultyInstance;
-import net.minecraft.world.DimensionType;
-import net.minecraft.world.EmptyTickList;
-import net.minecraft.world.ISeedReader;
-import net.minecraft.world.ITickList;
-import net.minecraft.world.IWorld;
-import net.minecraft.world.World;
+import net.minecraft.util.math.SectionPos;
+import net.minecraft.util.registry.DynamicRegistries;
+import net.minecraft.world.*;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.BiomeManager;
 import net.minecraft.world.border.WorldBorder;
@@ -37,18 +31,22 @@ import net.minecraft.world.chunk.AbstractChunkProvider;
 import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.chunk.IChunk;
 import net.minecraft.world.gen.Heightmap;
+import net.minecraft.world.gen.feature.structure.Structure;
+import net.minecraft.world.gen.feature.structure.StructureStart;
 import net.minecraft.world.lighting.WorldLightManager;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraft.world.storage.IWorldInfo;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import javax.annotation.Nullable;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 import java.util.function.Predicate;
+import java.util.stream.Stream;
 
-import javax.annotation.Nullable;
+import static io.github.opencubicchunks.cubicchunks.utils.Coords.blockToCube;
 
 public class CubeWorldGenRegion implements ISeedReader {
 
@@ -164,7 +162,7 @@ public class CubeWorldGenRegion implements ISeedReader {
         return new EmptyTickList<>();
     }
 
-    @Override public World getWorld() {
+    @Override public ServerWorld getWorld() {
         return this.world;
     }
 
@@ -176,7 +174,7 @@ public class CubeWorldGenRegion implements ISeedReader {
         if (!this.cubeExists(blockToCube(pos.getX()), blockToCube(pos.getY()), blockToCube(pos.getZ()))) {
             throw new RuntimeException("We are asking a region for a chunk out of bound");
         } else {
-            return new DifficultyInstance(this.world.getDifficulty(), this.world.getDayTime(), 0L, this.world.getCurrentMoonPhaseFactor());
+            return new DifficultyInstance(this.world.getDifficulty(), this.world.getDayTime(), 0L, this.world.func_242413_ae());
         }
     }
 
@@ -220,7 +218,7 @@ public class CubeWorldGenRegion implements ISeedReader {
                     }
                     tileentity = state.createTileEntity(this.world);
                 } else {
-                    tileentity = TileEntity.func_235657_b_(state, compoundnbt);
+                    tileentity = TileEntity.readTileEntity(state, compoundnbt);
                 }
 
                 if (tileentity != null) {
@@ -314,7 +312,7 @@ public class CubeWorldGenRegion implements ISeedReader {
     }
 
     // setBlockState
-    @Override public boolean func_241211_a_(BlockPos pos, BlockState newState, int flags, int recursionLimit) {
+    @Override public boolean setBlockState(BlockPos pos, BlockState newState, int flags, int recursionLimit) {
         IBigCube icube = this.getCube(pos);
         BlockState blockstate = icube.setBlock(pos, newState, false);
         if (blockstate != null) {
@@ -348,7 +346,7 @@ public class CubeWorldGenRegion implements ISeedReader {
     }
 
     // destroyBlock
-    @Override public boolean func_241212_a_(BlockPos pos, boolean isPlayerInCreative, @Nullable Entity droppedEntities, int recursionLimit) {
+    @Override public boolean destroyBlock(BlockPos pos, boolean isPlayerInCreative, @Nullable Entity droppedEntities, int recursionLimit) {
         BlockState blockstate = this.getBlockState(pos);
         if (blockstate.isAir(this, pos)) {
             return false;
@@ -358,11 +356,23 @@ public class CubeWorldGenRegion implements ISeedReader {
                 Block.spawnDrops(blockstate, this.world, pos, tileentity, droppedEntities, ItemStack.EMPTY);
             }
 
-            return this.func_241211_a_(pos, Blocks.AIR.getDefaultState(), 3, recursionLimit);
+            return this.setBlockState(pos, Blocks.AIR.getDefaultState(), 3, recursionLimit);
         }
     }
 
     @Override public boolean hasBlockState(BlockPos pos, Predicate<BlockState> blockstate) {
         return blockstate.test(this.getBlockState(pos));
+    }
+
+    //TODO: DOUBLE CHECK THESE
+
+    @Override
+    public DynamicRegistries func_241828_r() {
+        return this.world.func_241828_r();
+    }
+
+    @Override
+    public Stream<? extends StructureStart<?>> func_241827_a(SectionPos sectionPos, Structure<?> structure) {
+        return this.world.func_241827_a(sectionPos, structure);
     }
 }

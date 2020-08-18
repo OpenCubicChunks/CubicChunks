@@ -38,7 +38,7 @@ public class CubicWorldLoadScreen {
 
     private static void render3d(TrackingChunkStatusListener trackerParam, int xBase, int yBase, int scale, int spacing,
             Object2IntMap<ChunkStatus> colors) {
-        float aspectRatio = Minecraft.getInstance().currentScreen.field_230708_k_ / (float) Minecraft.getInstance().currentScreen.field_230709_l_;
+        float aspectRatio = Minecraft.getInstance().currentScreen.width / (float) Minecraft.getInstance().currentScreen.height;
 
         float scaleWithCineSize = scale * IBigCube.DIAMETER_IN_SECTIONS / 2.0f;
 
@@ -232,10 +232,10 @@ public class CubicWorldLoadScreen {
 
         int color = 0xff001ff;
         if (spacing != 0) {
-            AbstractGui.func_238467_a_(mStack, xBase - radiusPixels, yBase - radiusPixels, xBase - radiusPixels + 1, yBase + radiusPixels, color);
-            AbstractGui.func_238467_a_(mStack, xBase + radiusPixels - 1, yBase - radiusPixels, xBase + radiusPixels, yBase + radiusPixels, color);
-            AbstractGui.func_238467_a_(mStack, xBase - radiusPixels, yBase - radiusPixels, xBase + radiusPixels, yBase - radiusPixels + 1, color);
-            AbstractGui.func_238467_a_(mStack, xBase - radiusPixels, yBase + radiusPixels - 1, xBase + radiusPixels, yBase + radiusPixels, color);
+            AbstractGui.fill(mStack, xBase - radiusPixels, yBase - radiusPixels, xBase - radiusPixels + 1, yBase + radiusPixels, color);
+            AbstractGui.fill(mStack, xBase + radiusPixels - 1, yBase - radiusPixels, xBase + radiusPixels, yBase + radiusPixels, color);
+            AbstractGui.fill(mStack, xBase - radiusPixels, yBase - radiusPixels, xBase + radiusPixels, yBase - radiusPixels + 1, color);
+            AbstractGui.fill(mStack, xBase - radiusPixels, yBase + radiusPixels - 1, xBase + radiusPixels, yBase + radiusPixels, color);
         }
 
         final List<ChunkStatus> statuses = ChunkStatus.getAll();
