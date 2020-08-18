@@ -160,10 +160,12 @@ public class MixinChunkStatus {
         CubePrimer cubePrimer = (CubePrimer) chunk;
         cubePrimer.setCubeLightManager(lightManager);
         if (!cubePrimer.getCubeStatus().isAtLeast(status)) {
+
             // TODO: reimplement heightmaps
-            //Heightmap.updateChunkHeightmaps(chunk, EnumSet
+            // Heightmap.updateChunkHeightmaps(chunk, EnumSet
             //        .of(Heightmap.Type.MOTION_BLOCKING, Heightmap.Type.MOTION_BLOCKING_NO_LEAVES, Heightmap.Type.OCEAN_FLOOR,
             //        Heightmap.Type.WORLD_SURFACE));
+
             // TODO: reimplement worldgen
             // generator.decorate(new WorldGenRegion(world, chunks));
             ((ICubeGenerator) generator).decorate(new CubeWorldGenRegion(world, unsafeCast(chunks)));

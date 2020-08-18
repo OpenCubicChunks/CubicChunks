@@ -50,6 +50,7 @@
         "common.world.lighting.MixinSectionLightStorage",
         "common.world.lighting.MixinWorldLightManager",
         "common.world.MixinAbstractChunkProvider",
+        "common.world.MixinHeightmap",
         "common.world.MixinIWorld",
         "common.world.MixinIWorldReader",
         "common.world.MixinServerWorld",

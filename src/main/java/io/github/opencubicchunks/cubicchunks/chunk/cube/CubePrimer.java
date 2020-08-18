@@ -9,6 +9,7 @@ import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.biome.CubeBiomeContainer;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
+import io.github.opencubicchunks.cubicchunks.world.CubicHeightmap;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import it.unimi.dsi.fastutil.shorts.ShortList;
 import net.minecraft.block.Block;
@@ -24,6 +25,7 @@ import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.SectionPos;
 import net.minecraft.util.palette.UpgradeData;
 import net.minecraft.world.ITickList;
+import net.minecraft.world.World;
 import net.minecraft.world.biome.BiomeContainer;
 import net.minecraft.world.chunk.*;
 import net.minecraft.world.gen.GenerationStage;
@@ -40,6 +42,7 @@ public class CubePrimer implements IBigCube, IChunk {
 
     private final CubePos cubePos;
     private final ChunkSection[] sections;
+    private final IChunk[] chunks;
     private ChunkStatus status = ChunkStatus.EMPTY;
 
     @Nullable
@@ -57,11 +60,19 @@ public class CubePrimer implements IBigCube, IChunk {
     private long inhabitedTime;
 
     //TODO: add TickList<Block> and TickList<Fluid>
-    public CubePrimer(CubePos cubePosIn, UpgradeData p_i49941_2_, @Nullable ChunkSection[] sectionsIn, ChunkPrimerTickList<Block> blockTickListIn, ChunkPrimerTickList<Fluid> p_i49941_5_) {
+    public CubePrimer(CubePos cubePosIn, World world, UpgradeData p_i49941_2_, @Nullable ChunkSection[] sectionsIn, ChunkPrimerTickList<Block> blockTickListIn, ChunkPrimerTickList<Fluid> p_i49941_5_) {
         this.cubePos = cubePosIn;
 //        this.upgradeData = p_i49941_2_;
 //        this.pendingBlockTicks = blockTickListIn;
 //        this.pendingFluidTicks = p_i49941_5_;
+
+        this.chunks = new IChunk[IBigCube.CHUNK_COUNT];
+        for (int x = 0; x < DIAMETER_IN_SECTIONS; ++x) {
+            for (int z = 0; z < DIAMETER_IN_SECTIONS; ++z) {
+                this.chunks[x << 1 | z] = world.getChunk(cubePos.getX() + x, cubePos.getZ() + z, ChunkStatus.EMPTY, true);
+            }
+        }
+
         if(sectionsIn == null) {
             this.sections = new ChunkSection[IBigCube.SECTION_COUNT];
             for(int i = 0; i < IBigCube.SECTION_COUNT; i++) {
@@ -128,13 +139,16 @@ public class CubePrimer implements IBigCube, IChunk {
                 lightManager.checkBlock(pos);
             }
 
-            //TODO: implement heightmaps
-            /*
+
             EnumSet<Heightmap.Type> enumset1 = this.getStatus().getHeightMaps();
             EnumSet<Heightmap.Type> enumset = null;
 
+            int chunkX = Coords.blockToSection(x);
+            int chunkZ = Coords.blockToSection(z);
+            IChunk chunk = chunks[Coords.blockToChunkIndex(chunkX, chunkZ)];
+
             for(Heightmap.Type heightmap$type : enumset1) {
-                Heightmap heightmap = this.heightmaps.get(heightmap$type);
+                Heightmap heightmap = chunk.getHeightmap(heightmap$type);
                 if (heightmap == null) {
                     if (enumset == null) {
                         enumset = EnumSet.noneOf(Heightmap.Type.class);
@@ -145,13 +159,13 @@ public class CubePrimer implements IBigCube, IChunk {
             }
 
             if (enumset != null) {
-                Heightmap.updateChunkHeightmaps(this, enumset);
+                CubicHeightmap.updateChunkHeightmaps(chunk, enumset, Coords.cubeToMinBlock(cubePos.getY()), Coords.cubeToMaxBlock(cubePos.getY()));
             }
 
             for(Heightmap.Type heightmap$type1 : enumset1) {
-                this.heightmaps.get(heightmap$type1).update(x, y, z, state);
+                chunk.getHeightmap(heightmap$type1).update(x, y, z, state);
             }
-            */
+
             return blockstate;
         }
     }

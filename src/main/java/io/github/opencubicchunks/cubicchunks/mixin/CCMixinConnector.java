@@ -11,6 +11,7 @@ public class CCMixinConnector implements IMixinConnector {
         Mixins.addConfiguration("cubicchunks.mixins.access.json");
         Mixins.addConfiguration("cubicchunks.mixins.asm.json");
         Mixins.addConfiguration("cubicchunks.mixins.optifine.json");
+        Mixins.addConfiguration("cubicchunks.mixins.debug.json");
         InjectionPoint.register(BeforeInstanceofInjectionPoint.class);
     }
 }

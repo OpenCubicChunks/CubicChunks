@@ -254,6 +254,50 @@ public class Coords {
         return (blockXVal&mask) >> 4 | (blockYVal&mask) >> 1 | (blockZVal&mask) << 2;
     }
 
+
+    // Chunk Indices ---------------------------------------------------------------------------------------------------
+
+    public static int blockToChunkIndex(int x, int z) {
+
+        if(IBigCube.DIAMETER_IN_SECTIONS == 1) {
+            return blockToChunkIndex16(x, z);
+        }
+        else if(IBigCube.DIAMETER_IN_SECTIONS == 2) {
+            return blockToChunkIndex32(x, z);
+        }
+        else if(IBigCube.DIAMETER_IN_SECTIONS == 4) {
+            return blockToChunkIndex64(x, z);
+        }
+        else if(IBigCube.DIAMETER_IN_SECTIONS == 8) {
+            return blockToChunkIndex128(x, z);
+        }
+        throw new UnsupportedOperationException("Unsupported cube size " + IBigCube.DIAMETER_IN_SECTIONS);
+    }
+
+    private static int blockToChunkIndex16(int x, int z)
+    {
+        return 0;
+    }
+
+    private static int blockToChunkIndex32(int x, int z)
+    {
+        final int mask = POS_TO_INDEX_MASK;
+        return (x&mask) >> 3 | (z&mask) >> 2;
+    }
+
+    private static int blockToChunkIndex64(int x, int z)
+    {
+        final int mask = POS_TO_INDEX_MASK;
+        return (x&mask) >> 2 | (z&mask) >> 0;
+    }
+
+    private static int blockToChunkIndex128(int x, int z)
+    {
+        final int mask = POS_TO_INDEX_MASK;
+        return (x&mask) >> 1 | (z&mask) << 2;
+    }
+
+
     /**
      * @param idx Index of the {@link ChunkSection} within it's {@link BigCube}
      * @return The X offset (as a  {@link SectionPos}) from it's {@link CubePos} (as a  {@link SectionPos})

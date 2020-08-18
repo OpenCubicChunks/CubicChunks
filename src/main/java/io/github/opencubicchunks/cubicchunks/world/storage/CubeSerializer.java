@@ -129,7 +129,7 @@ public class CubeSerializer {
 //                if (level.contains("ForgeCaps")) ((Chunk)icube).readCapsFromNBT(level.getCompound("ForgeCaps"));
             } else {
 //                CubePrimer cubePrimer = new CubePrimer(pos, upgradedata, sections, chunkprimerticklist, chunkprimerticklist1);
-                CubePrimer cubePrimer = new CubePrimer(pos, null, sections, null, null);
+                CubePrimer cubePrimer = new CubePrimer(pos, worldIn, null, sections, null, null);
                 cubePrimer.setCubeBiomes(biomecontainer);
                 icube = cubePrimer;
                 cubePrimer.setInhabitedTime(inhabitedTime);
@@ -259,7 +259,7 @@ public class CubeSerializer {
 
             IBigCube cube;
             if (status.getType() == ChunkStatus.Type.PROTOCHUNK) {
-                cube = new CubePrimer(pos, null, sections, null, null);
+                cube = new CubePrimer(pos, world,null, sections, null, null);
                 cube.setCubeStatus(status);
 
                 if (cube.getCubeStatus().isAtLeast(ChunkStatus.FEATURES)) {

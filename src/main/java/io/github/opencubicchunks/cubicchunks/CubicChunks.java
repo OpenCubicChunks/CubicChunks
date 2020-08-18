@@ -1,6 +1,7 @@
 package io.github.opencubicchunks.cubicchunks;
 
 import io.github.opencubicchunks.cubicchunks.chunk.IChunkManager;
+import io.github.opencubicchunks.cubicchunks.common.CubicChunksCommand;
 import io.github.opencubicchunks.cubicchunks.meta.EarlyConfig;
 import io.github.opencubicchunks.cubicchunks.misc.TestWorldType;
 import io.github.opencubicchunks.cubicchunks.network.PacketDispatcher;
@@ -82,8 +83,7 @@ public class CubicChunks {
     // You can use SubscribeEvent and let the Event Bus discover methods to call
     @SubscribeEvent
     public void onServerStarting(FMLServerStartingEvent event) {
-        // do something when the server starts
-        LOGGER.info("HELLO from server starting");
+        CubicChunksCommand.register(event.getCommandDispatcher());
     }
 
     // You can use EventBusSubscriber to automatically subscribe events on the contained class (this is subscribing to the MOD

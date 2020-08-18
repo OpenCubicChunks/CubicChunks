@@ -30,7 +30,7 @@ public class CubePrimerWrapper extends CubePrimer {
     private final BigCube cube;
 
     public CubePrimerWrapper(BigCube cubeIn) {
-        super(cubeIn.getCubePos(), null, cubeIn.getCubeSections(), null, null);
+        super(cubeIn.getCubePos(), cubeIn.getWorld(), null, cubeIn.getCubeSections(), null, null);
         this.cube = cubeIn;
     }
 

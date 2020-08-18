@@ -698,7 +698,7 @@ public abstract class MixinChunkManager implements IChunkManager {
                 LOGGER.error("Couldn't load cube {}", cubePos, exception);
             }
 
-            return Either.left(new CubePrimer(cubePos, null, null, null, null));
+            return Either.left(new CubePrimer(cubePos, world, null, null, null, null));
         }, this.mainThread);
     }
 

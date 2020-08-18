@@ -1,0 +1,16 @@
+{
+    "required": true,
+    "package": "io.github.opencubicchunks.cubicchunks.mixin.debug",
+    "refmap": "cubicchunks.refmap.json",
+    "compatibilityLevel": "JAVA_8",
+    "minVersion": "0.8",
+    "injectors": {
+        "defaultRequire": 1
+    },
+    "overwrites": {
+        "conformVisibility": true
+    },
+    "mixins": [
+        "MixinDebug"
+    ]
+}
