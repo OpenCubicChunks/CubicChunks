@@ -58,6 +58,7 @@
         "common.world.server.MixinServerWorldLightManager"
     ],
     "client": [
+        "client.MixinDebugOverlayGui",
         "client.MixinDebugRenderChunkBorder",
         "client.MixinIChunk",
         "client.MixinViewFrustum",
