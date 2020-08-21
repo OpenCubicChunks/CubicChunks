@@ -24,9 +24,6 @@ public class CubeBiomeContainer extends BiomeContainer {
         super(indexedIterable, biomesIn);
     }
 
-//    public CubeBiomeContainer(PacketBuffer packetBufferIn) {
-//        super(packetBufferIn);
-//    }
 
     public CubeBiomeContainer(IObjectIntIterable<Biome> indexedIterable, SectionPos sectionPosIn, BiomeProvider biomeProviderIn) {
         this(indexedIterable);
