@@ -8,15 +8,21 @@ import net.minecraft.block.Blocks;
 import net.minecraft.util.SharedSeedRandom;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.registry.DynamicRegistries;
+import net.minecraft.util.registry.Registry;
+import net.minecraft.world.ISeedReader;
 import net.minecraft.world.IWorld;
-import net.minecraft.world.biome.DefaultBiomeFeatures;
+import net.minecraft.world.biome.Biome;
 import net.minecraft.world.chunk.IChunk;
 import net.minecraft.world.gen.ChunkGenerator;
+import net.minecraft.world.gen.Heightmap;
 import net.minecraft.world.gen.OctavesNoiseGenerator;
-import net.minecraft.world.gen.feature.BaseTreeFeatureConfig;
-import net.minecraft.world.gen.feature.Feature;
+import net.minecraft.world.gen.blockstateprovider.SimpleBlockStateProvider;
+import net.minecraft.world.gen.feature.*;
 import net.minecraft.world.gen.feature.structure.StructureManager;
 import net.minecraft.world.gen.feature.template.TemplateManager;
+import net.minecraft.world.gen.foliageplacer.DarkOakFoliagePlacer;
+import net.minecraft.world.gen.trunkplacer.DarkOakTrunkPlacer;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -24,6 +30,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.OptionalInt;
 import java.util.Random;
 
 @Mixin(ChunkGenerator.class)
@@ -37,20 +44,20 @@ public class MixinChunkGenerator implements ICubeGenerator {
         return Arrays.asList(3, 2, 1, 0);
     }
     // TODO: check which one is which
-    @Inject(method = "func_235954_a_", at = @At("HEAD"), cancellable = true)
-    public void onGenerateStructures(StructureManager p_235954_1_, IChunk p_235954_2_, TemplateManager p_235954_3_, long p_235954_4_, CallbackInfo ci) {
+    @Inject(method = "func_242707_a", at = @At("HEAD"), cancellable = true)
+    public void onGenerateStructures(DynamicRegistries p_242707_1_, StructureManager p_242707_2_, IChunk p_242707_3_, TemplateManager p_242707_4_, long p_242707_5_, CallbackInfo ci) {
 
         ci.cancel();
     }
 
 
     @Inject(method = "func_235953_a_", at = @At("HEAD"), cancellable = true)
-    public void generateStructureStarts(IWorld p_235953_1_, StructureManager p_235953_2_, IChunk p_235953_3_, CallbackInfo ci) {
+    public void generateStructureStarts(ISeedReader p_235953_1_, StructureManager p_235953_2_, IChunk p_235953_3_, CallbackInfo ci) {
         ci.cancel();
     }
 
-    @Inject(method = "generateBiomes", at = @At("HEAD"), cancellable = true)
-    public void generateBiomes(IChunk chunkIn, CallbackInfo ci) {
+    @Inject(method = "func_242706_a", at = @At("HEAD"), cancellable = true)
+    public void generateBiomes(Registry<Biome> p_242706_1_, IChunk chunkIn, CallbackInfo ci) {
         if (chunkIn instanceof IBigCube) {
             ci.cancel();
         }
@@ -105,21 +112,22 @@ public class MixinChunkGenerator implements ICubeGenerator {
             for (int y = yStart - 1; y >= yEnd; y--) {
                 pos = new BlockPos(x, y, z);
                 if (!region.getBlockState(pos).isAir(region, pos)) {
-                    BaseTreeFeatureConfig[] configs = {
-                            DefaultBiomeFeatures.OAK_TREE_CONFIG,
-                            DefaultBiomeFeatures.OAK_TREE_CONFIG,
-                            DefaultBiomeFeatures.OAK_TREE_CONFIG,
-                            DefaultBiomeFeatures.OAK_TREE_CONFIG,
-                            DefaultBiomeFeatures.OAK_TREE_CONFIG,
-                            DefaultBiomeFeatures.OAK_TREE_CONFIG,
-                            DefaultBiomeFeatures.field_230132_o_,
-                            DefaultBiomeFeatures.field_230133_p_,
-                            DefaultBiomeFeatures.BIRCH_TREE_CONFIG,
-                            DefaultBiomeFeatures.SWAMP_TREE_CONFIG,
-                            DefaultBiomeFeatures.SPRUCE_TREE_CONFIG,
-                            DefaultBiomeFeatures.FANCY_TREE_WITH_MORE_BEEHIVES_CONFIG,
-                    };
-                    Feature.field_236291_c_.withConfiguration(configs[r.nextInt(configs.length)]).func_236265_a_(region, structureManager,
+                    //Removed bc 1.16.2 has removed the config fields and creates them within the configuration instead
+//                    BaseTreeFeatureConfig[] configs = {
+//                            DefaultBiomeFeatures.OAK_TREE_CONFIG,
+//                            DefaultBiomeFeatures.OAK_TREE_CONFIG,
+//                            DefaultBiomeFeatures.OAK_TREE_CONFIG,
+//                            DefaultBiomeFeatures.OAK_TREE_CONFIG,
+//                            DefaultBiomeFeatures.OAK_TREE_CONFIG,
+//                            DefaultBiomeFeatures.OAK_TREE_CONFIG,
+//                            DefaultBiomeFeatures.field_230132_o_,
+//                            DefaultBiomeFeatures.field_230133_p_,
+//                            DefaultBiomeFeatures.BIRCH_TREE_CONFIG,
+//                            DefaultBiomeFeatures.SWAMP_TREE_CONFIG,
+//                            DefaultBiomeFeatures.SPRUCE_TREE_CONFIG,
+//                            DefaultBiomeFeatures.FANCY_TREE_WITH_MORE_BEEHIVES_CONFIG,
+//                    };
+                    Feature.field_236291_c_.withConfiguration(((new BaseTreeFeatureConfig.Builder(new SimpleBlockStateProvider(Blocks.DARK_OAK_LOG.getDefaultState()), new SimpleBlockStateProvider(Blocks.DARK_OAK_LEAVES.getDefaultState()), new DarkOakFoliagePlacer(FeatureSpread.func_242252_a(0), FeatureSpread.func_242252_a(0)), new DarkOakTrunkPlacer(6, 2, 1), new ThreeLayerFeature(1, 1, 0, 1, 2, OptionalInt.empty()))).func_236701_a_(Integer.MAX_VALUE).func_236702_a_(Heightmap.Type.MOTION_BLOCKING).setIgnoreVines().build())).func_242765_a(region,
                             (ChunkGenerator) (Object) this, r, pos.up());
                 }
             }

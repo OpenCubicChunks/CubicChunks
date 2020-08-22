@@ -1,10 +1,12 @@
 package io.github.opencubicchunks.cubicchunks;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import io.github.opencubicchunks.cubicchunks.chunk.IChunkManager;
 import io.github.opencubicchunks.cubicchunks.meta.EarlyConfig;
 import io.github.opencubicchunks.cubicchunks.network.PacketDispatcher;
+import net.minecraft.util.registry.WorldGenRegistries;
 import net.minecraft.world.biome.Biome;
-import net.minecraft.world.gen.GenerationStage;
 import net.minecraft.world.server.ChunkManager;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -13,11 +15,11 @@ import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.event.server.FMLServerStartingEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
-import net.minecraftforge.registries.ForgeRegistries;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.lang.reflect.InvocationTargetException;
+import java.util.stream.Collectors;
 
 /**
  * Requires Mixin BootStrap in order to use in forge.
@@ -65,10 +67,15 @@ public class CubicChunks {
     private void setup(final FMLCommonSetupEvent event) {
         PacketDispatcher.register();
 
-        for (Biome biome : ForgeRegistries.BIOMES) {
-            for (GenerationStage.Decoration stage : GenerationStage.Decoration.values()) {
-                biome.getFeatures(stage).clear();
-            }
+        for (Biome biome : WorldGenRegistries.field_243657_i) {
+                convertImmutableFeatures(biome);
+                biome.func_242440_e().field_242484_f.clear();
+        }
+    }
+
+    private static void convertImmutableFeatures(Biome biome) {
+        if (biome.func_242440_e().field_242484_f instanceof ImmutableList) {
+            biome.func_242440_e().field_242484_f = biome.func_242440_e().field_242484_f.stream().map(Lists::newArrayList).collect(Collectors.toList());
         }
     }
 

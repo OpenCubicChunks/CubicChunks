@@ -17,10 +17,9 @@ import java.util.function.Supplier;
 @Mixin(ClientWorld.class)
 public abstract class MixinClientWorld extends World implements IClientWorld {
 
-    protected MixinClientWorld(ISpawnWorldInfo p_i231617_1_, RegistryKey<World> p_i231617_2_,
-            RegistryKey<DimensionType> p_i231617_3_, DimensionType p_i231617_4_,
+    protected MixinClientWorld(ISpawnWorldInfo p_i231617_1_, RegistryKey<World> p_i231617_2_, DimensionType p_i231617_4_,
             Supplier<IProfiler> p_i231617_5_, boolean p_i231617_6_, boolean p_i231617_7_, long p_i231617_8_) {
-        super(p_i231617_1_, p_i231617_2_, p_i231617_3_, p_i231617_4_, p_i231617_5_, p_i231617_6_, p_i231617_7_, p_i231617_8_);
+        super(p_i231617_1_, p_i231617_2_, p_i231617_4_, p_i231617_5_, p_i231617_6_, p_i231617_7_, p_i231617_8_);
     }
 
     /**

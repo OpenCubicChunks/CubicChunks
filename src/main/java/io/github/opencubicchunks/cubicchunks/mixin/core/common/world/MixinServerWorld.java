@@ -26,10 +26,9 @@ public abstract class MixinServerWorld extends World implements IServerWorld {
 
     @Shadow @Final private Int2ObjectMap<Entity> entitiesById;
 
-    protected MixinServerWorld(ISpawnWorldInfo p_i231617_1_, RegistryKey<World> p_i231617_2_,
-            RegistryKey<DimensionType> p_i231617_3_, DimensionType p_i231617_4_,
+    protected MixinServerWorld(ISpawnWorldInfo p_i231617_1_, RegistryKey<World> p_i231617_2_, DimensionType p_i231617_4_,
             Supplier<IProfiler> p_i231617_5_, boolean p_i231617_6_, boolean p_i231617_7_, long p_i231617_8_) {
-        super(p_i231617_1_, p_i231617_2_, p_i231617_3_, p_i231617_4_, p_i231617_5_, p_i231617_6_, p_i231617_7_, p_i231617_8_);
+        super(p_i231617_1_, p_i231617_2_, p_i231617_4_, p_i231617_5_, p_i231617_6_, p_i231617_7_, p_i231617_8_);
     }
 
     @Shadow @Deprecated public abstract void onEntityRemoved(Entity entityIn);

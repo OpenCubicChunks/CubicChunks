@@ -3,6 +3,7 @@ import org.gradle.internal.os.OperatingSystem
 buildscript {
     repositories {
         maven { url = 'https://files.minecraftforge.net/maven' }
+        maven { url ='https://www.dogforce-games.com/maven/'}
         jcenter()
         mavenCentral()
         maven {url='https://dist.creeper.host/Sponge/maven'}
@@ -66,7 +67,7 @@ sourceSets {
 }
 
 minecraft {
-    mappings channel: "snapshot", version: "${mapping}-1.16"
+    mappings channel: "snapshot", version: "${mapping}-1.16.1"
     // makeObfSourceJar = false // an Srg named sources jar is made by default. uncomment this to disable.
 
     accessTransformer = file('src/main/resources/META-INF/accesstransformer.cfg')
@@ -254,4 +255,8 @@ mixinGen {
         it.configurationPlugin = 'io.github.opencubicchunks.cubicchunks.mixin.OptiFineMixinConfig'
         it.injectorsDefaultRequire = 1
     }
+}
+
+repositories {
+    maven { url ='https://www.dogforce-games.com/maven/'}
 }

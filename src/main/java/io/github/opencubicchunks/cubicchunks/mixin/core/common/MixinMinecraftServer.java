@@ -53,8 +53,8 @@ public abstract class MixinMinecraftServer {
     @Overwrite
     protected void loadInitialChunks(IChunkStatusListener statusListener) {
         ServerWorld serverworld = this.func_241755_D_();
-        LOGGER.info("Preparing start region for dimension {}", (Object)serverworld.func_234923_W_().func_240901_a_());
-        BlockPos spawnPos = serverworld.func_241135_u_(); // getSpawnPoint
+        LOGGER.info("Preparing start region for dimension {}", serverworld.getDimensionKey().func_240901_a_());
+        BlockPos spawnPos = serverworld.getSpawnPoint(); // getSpawnPoint
         CubePos spawnPosCube = CubePos.from(spawnPos);
 
         statusListener.start(new ChunkPos(spawnPos));
@@ -71,19 +71,19 @@ public abstract class MixinMinecraftServer {
 
         int i2 = 0;
         // func_217229_b = getChunkLoadCounter
-        while(isServerRunning() && (serverchunkprovider.func_217229_b() < chunkDiameter * chunkDiameter || ((IServerChunkProvider) serverchunkprovider).getCubeLoadCounter() < d*d*d)) {
+        while(isServerRunning() && (serverchunkprovider.getLoadedChunksCount() < chunkDiameter * chunkDiameter || ((IServerChunkProvider) serverchunkprovider).getCubeLoadCounter() < d*d*d)) {
             // from CC
             this.serverTime = Util.milliTime() + 10L;
             this.runScheduledTasks();
 
             if (i2 == 100) {
-                LOGGER.info("Current loaded chunks: " + serverchunkprovider.func_217229_b() + " | " + ((IServerChunkProvider)serverchunkprovider).getCubeLoadCounter());
+                LOGGER.info("Current loaded chunks: " + serverchunkprovider.getLoadedChunksCount() + " | " + ((IServerChunkProvider)serverchunkprovider).getCubeLoadCounter());
                 i2 = 0;
             }
 
             i2++;
         }
-        LOGGER.info("Current loaded chunks: " + serverchunkprovider.func_217229_b() + " | " + ((IServerChunkProvider)serverchunkprovider).getCubeLoadCounter());
+        LOGGER.info("Current loaded chunks: " + serverchunkprovider.getLoadedChunksCount() + " | " + ((IServerChunkProvider)serverchunkprovider).getCubeLoadCounter());
         this.serverTime = Util.milliTime() + 10L;
         this.runScheduledTasks();
 

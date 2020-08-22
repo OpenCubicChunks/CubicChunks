@@ -1,7 +1,5 @@
 package io.github.opencubicchunks.cubicchunks.mixin.core.common.chunk;
 
-import static io.github.opencubicchunks.cubicchunks.chunk.util.Utils.unsafeCast;
-
 import com.mojang.datafixers.util.Either;
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.ICubeGenerator;
@@ -25,6 +23,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
+
+import static io.github.opencubicchunks.cubicchunks.chunk.util.Utils.unsafeCast;
 
 @Mixin(ChunkStatus.class)
 public class MixinChunkStatus {
@@ -78,9 +78,9 @@ public class MixinChunkStatus {
         }
         //cc
         if (!((IBigCube) chunk).getCubeStatus().isAtLeast(status)) {
-            if (world.getServer().func_240793_aU_().func_230418_z_().func_236222_c_()) { // check if structures are enabled
+            if (world.getServer().func_240793_aU_().getDimensionGeneratorSettings().doesGenerateFeatures()) { // check if structures are enabled
                 // func_241112_a_ ==  getStructureManager?
-                generator.func_235954_a_(world.func_241112_a_(), chunk, templateManager, world.getSeed());
+                generator.func_242707_a(world.func_241828_r(), world.func_241112_a_(), chunk, templateManager, world.getSeed());
             }
 
             if (chunk instanceof CubePrimer) {

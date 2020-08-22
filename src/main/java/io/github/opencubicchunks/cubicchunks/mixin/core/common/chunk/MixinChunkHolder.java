@@ -1,17 +1,14 @@
 package io.github.opencubicchunks.cubicchunks.mixin.core.common.chunk;
 
-import static io.github.opencubicchunks.cubicchunks.chunk.util.Utils.unsafeCast;
-
 import com.mojang.datafixers.util.Either;
-import io.github.opencubicchunks.cubicchunks.chunk.IChunkManager;
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
+import io.github.opencubicchunks.cubicchunks.chunk.IChunkManager;
 import io.github.opencubicchunks.cubicchunks.chunk.ICubeHolder;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.BigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.CubePrimer;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.CubePrimerWrapper;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.network.PacketCubeBlockChanges;
-import io.github.opencubicchunks.cubicchunks.network.PacketCubes;
 import io.github.opencubicchunks.cubicchunks.network.PacketDispatcher;
 import io.github.opencubicchunks.cubicchunks.utils.AddressTools;
 import it.unimi.dsi.fastutil.shorts.ShortArrayList;
@@ -25,25 +22,21 @@ import net.minecraft.world.chunk.IChunk;
 import net.minecraft.world.lighting.WorldLightManager;
 import net.minecraft.world.server.ChunkHolder;
 import net.minecraft.world.server.ChunkManager;
-import org.spongepowered.asm.mixin.Dynamic;
-import org.spongepowered.asm.mixin.Final;
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
-import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.*;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import javax.annotation.Nullable;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicReferenceArray;
 import java.util.function.BiConsumer;
 
-import javax.annotation.Nullable;
+import static io.github.opencubicchunks.cubicchunks.chunk.util.Utils.unsafeCast;
 
 @Mixin(ChunkHolder.class)
 public abstract class MixinChunkHolder implements ICubeHolder {
@@ -223,7 +216,7 @@ public abstract class MixinChunkHolder implements ICubeHolder {
      * @reason height limits
      */
     @Overwrite
-    public void func_241819_a(int x, int y, int z) { // markBlockChanged
+    public void func_244386_a(BlockPos blockPos) {
         if (cubePos == null) {
             throw new IllegalStateException("Why is this getting called?");
         }
@@ -231,7 +224,7 @@ public abstract class MixinChunkHolder implements ICubeHolder {
         if (cube == null) {
             return;
         }
-        changedLocalBlocks.add((short) AddressTools.getLocalAddress(x, y, z));
+        changedLocalBlocks.add((short) AddressTools.getLocalAddress(blockPos.getX(), blockPos.getY(), blockPos.getZ()));
     }
 
     /**
@@ -270,13 +263,15 @@ public abstract class MixinChunkHolder implements ICubeHolder {
 
         ShortArraySet changed = changedLocalBlocks;
         int changedBlocks = changed.size();
-        if (changed.size() >= net.minecraftforge.common.ForgeConfig.SERVER.clumpingThreshold.get()) {
-            this.field_219318_m = -1;
-        }
+//        if (changed.size() >= net.minecraftforge.common.ForgeConfig.SERVER.clumpingThreshold.get()) {
+//            this.field_219318_m = -1;// boundaryMask
+//        }
+//
+//        if (changedBlocks >= net.minecraftforge.common.ForgeConfig.SERVER.clumpingThreshold.get()) {
+//            this.sendToTracking(new PacketCubes(Collections.singletonList(cube)), false);
+//        }
 
-        if (changedBlocks >= net.minecraftforge.common.ForgeConfig.SERVER.clumpingThreshold.get()) {
-            this.sendToTracking(new PacketCubes(Collections.singletonList(cube)), false);
-        } else if (changedBlocks != 0) {
+        if (changedBlocks != 0) {
             this.sendToTracking(new PacketCubeBlockChanges(cube, new ShortArrayList(changed)), false);
             for (short pos : changed) {
                 BlockPos blockpos1 = new BlockPos(

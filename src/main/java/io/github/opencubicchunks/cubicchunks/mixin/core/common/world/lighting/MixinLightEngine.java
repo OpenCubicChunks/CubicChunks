@@ -60,7 +60,7 @@ public class MixinLightEngine <M extends LightDataMap<M>, S extends SectionLight
      */
     //TODO: make this into a redirect that calls getCubeReader taking arguments blockPosLong
     @Overwrite // getBlockAndOpacity
-    protected BlockState func_227468_a_(long blockPosLong, @Nullable MutableInt opacity) {
+    protected BlockState getBlockAndOpacity(long blockPosLong, @Nullable MutableInt opacity) {
         if (blockPosLong == Long.MAX_VALUE) {
             if (opacity != null) {
                 opacity.setValue(0);

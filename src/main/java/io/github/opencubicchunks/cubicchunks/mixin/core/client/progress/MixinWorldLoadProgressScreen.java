@@ -39,7 +39,7 @@ public class MixinWorldLoadProgressScreen extends Screen {
 
     }
 
-    @Redirect(method = "func_230430_a_", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/chunk/listener/TrackingChunkStatusListener;getPercentDone()I"))
+    @Redirect(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/chunk/listener/TrackingChunkStatusListener;getPercentDone()I"))
     private int on$getPercentDone(TrackingChunkStatusListener trackingChunkStatusListener) {
         return trackingChunkStatusListener.getPercentDone();
     }
