@@ -24,6 +24,11 @@ public abstract class MixinWorld implements ICubicWorld {
         cir.setReturnValue(y < CubicChunks.MIN_SUPPORTED_HEIGHT || y >= CubicChunks.MAX_SUPPORTED_HEIGHT);
     }
 
+    @Inject(at = @At("RETURN"), method = "isInvalidYPosition", cancellable = true)
+    private static void isInvalidYPosition(int y, CallbackInfoReturnable<Boolean> cir) {
+        cir.setReturnValue(y < CubicChunks.MIN_SUPPORTED_HEIGHT || y >= CubicChunks.MAX_SUPPORTED_HEIGHT);
+    }
+
     @Inject(method = "markChunkDirty", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/chunk/Chunk;markDirty()V"))
     private void onMarkChunkDirty(BlockPos blockPos, TileEntity tileEntity, CallbackInfo ci) {
         this.getCubeAt(blockPos).setDirty(true);
