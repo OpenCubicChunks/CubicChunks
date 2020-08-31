@@ -59,7 +59,8 @@ public class CompatHandler {
     private static final Set<String> IWORLDGENERATOR_FAKE_HEIGHT = ImmutableSet.of(
             "ic2",
             "thaumcraft",
-            "fossil"
+            "fossil",
+            "realistictorches"
     );
 
     private static final Set<String> POPULATE_EVENT_PRE_FAKE_HEIGHT = ImmutableSet.of(
