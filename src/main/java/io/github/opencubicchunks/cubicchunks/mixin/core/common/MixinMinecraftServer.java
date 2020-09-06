@@ -31,7 +31,7 @@ import java.util.Map;
 public abstract class MixinMinecraftServer {
 
     @Shadow
-    protected long serverTime = Util.milliTime();
+    protected long serverTime = Util.getMillis();
 
     @Shadow
     private boolean isRunningScheduledTasks;
@@ -42,7 +42,7 @@ public abstract class MixinMinecraftServer {
 
     @Shadow protected abstract void runScheduledTasks();
 
-    @Shadow public abstract ServerWorld func_241755_D_();
+    @Shadow public abstract ServerWorld overworld();
 
     @Shadow @Final private Map<RegistryKey<World>, ServerWorld> worlds;
 
@@ -52,44 +52,43 @@ public abstract class MixinMinecraftServer {
      */
     @Overwrite
     protected void loadInitialChunks(IChunkStatusListener statusListener) {
-        ServerWorld serverworld = this.func_241755_D_();
-        LOGGER.info("Preparing start region for dimension {}", serverworld.getDimensionKey().func_240901_a_());
-        BlockPos spawnPos = serverworld.getSpawnPoint(); // getSpawnPoint
+        ServerWorld serverworld = this.overworld();
+        LOGGER.info("Preparing start region for dimension {}", serverworld.dimension().location());
+        BlockPos spawnPos = serverworld.getSharedSpawnPos();
         CubePos spawnPosCube = CubePos.from(spawnPos);
 
-        statusListener.start(new ChunkPos(spawnPos));
+        statusListener.updateSpawnPos(new ChunkPos(spawnPos));
         ((ICubeStatusListener) statusListener).startCubes(spawnPosCube);
 
-        ServerChunkProvider serverchunkprovider = serverworld.getChunkProvider();
-        serverchunkprovider.getLightManager().func_215598_a(500);
-        this.serverTime = Util.milliTime();
+        ServerChunkProvider serverchunkprovider = serverworld.getChunkSource();
+        serverchunkprovider.getLightEngine().setTaskPerBatch(500);
+        this.serverTime = Util.getMillis();
         int radius = (int) Math.ceil(10 * (16 / (float) IBigCube.DIAMETER_IN_BLOCKS)); //vanilla is 10, 32: 5, 64: 3
         int chunkDiameter = Coords.cubeToSection(radius, 0) * 2 + 1;
         int d = radius*2+1;
         ((IServerChunkProvider)serverchunkprovider).registerTicket(TicketType.START, spawnPosCube, radius + 1, Unit.INSTANCE);
-        serverchunkprovider.registerTicket(TicketType.START, spawnPosCube.asChunkPos(), Coords.cubeToSection(radius + 1, 0), Unit.INSTANCE);
+        serverchunkprovider.addRegionTicket(TicketType.START, spawnPosCube.asChunkPos(), Coords.cubeToSection(radius + 1, 0), Unit.INSTANCE);
 
         int i2 = 0;
-        // func_217229_b = getChunkLoadCounter
-        while(isServerRunning() && (serverchunkprovider.getLoadedChunksCount() < chunkDiameter * chunkDiameter || ((IServerChunkProvider) serverchunkprovider).getCubeLoadCounter() < d*d*d)) {
+        while(isServerRunning() && (serverchunkprovider.getTickingGenerated() < chunkDiameter * chunkDiameter || ((IServerChunkProvider) serverchunkprovider).getCubeLoadCounter() < d*d*d)) {
             // from CC
-            this.serverTime = Util.milliTime() + 10L;
+            this.serverTime = Util.getMillis() + 10L;
             this.runScheduledTasks();
 
             if (i2 == 100) {
-                LOGGER.info("Current loaded chunks: " + serverchunkprovider.getLoadedChunksCount() + " | " + ((IServerChunkProvider)serverchunkprovider).getCubeLoadCounter());
+                LOGGER.info("Current loaded chunks: " + serverchunkprovider.getTickingGenerated() + " | " + ((IServerChunkProvider)serverchunkprovider).getCubeLoadCounter());
                 i2 = 0;
             }
 
             i2++;
         }
-        LOGGER.info("Current loaded chunks: " + serverchunkprovider.getLoadedChunksCount() + " | " + ((IServerChunkProvider)serverchunkprovider).getCubeLoadCounter());
-        this.serverTime = Util.milliTime() + 10L;
+        LOGGER.info("Current loaded chunks: " + serverchunkprovider.getTickingGenerated() + " | " + ((IServerChunkProvider)serverchunkprovider).getCubeLoadCounter());
+        this.serverTime = Util.getMillis() + 10L;
         this.runScheduledTasks();
 
         for(ServerWorld serverworld1 : this.worlds.values()) {
-            ForcedChunksSaveData forcedchunkssavedata = serverworld1.getSavedData().get(ForcedChunksSaveData::new, "chunks");
-            ForcedCubesSaveData forcedcubessavedata = serverworld1.getSavedData().get(ForcedCubesSaveData::new, "cubes");
+            ForcedChunksSaveData forcedchunkssavedata = serverworld1.getDataStorage().get(ForcedChunksSaveData::new, "chunks");
+            ForcedCubesSaveData forcedcubessavedata = serverworld1.getDataStorage().get(ForcedCubesSaveData::new, "cubes");
             if (forcedchunkssavedata != null) {
                 LongIterator longiteratorChunks = forcedchunkssavedata.getChunks().iterator();
                 LongIterator longiteratorCubes = forcedcubessavedata.getCubes().iterator();
@@ -97,7 +96,7 @@ public abstract class MixinMinecraftServer {
                 while(longiteratorChunks.hasNext()) {
                     long i = longiteratorChunks.nextLong();
                     ChunkPos chunkPos = new ChunkPos(i);
-                    serverworld1.getChunkProvider().forceChunk(chunkPos, true);
+                    serverworld1.getChunkSource().updateChunkForced(chunkPos, true);
                 }
                 while(longiteratorCubes.hasNext()) {
                     long i = longiteratorCubes.nextLong();
@@ -106,9 +105,9 @@ public abstract class MixinMinecraftServer {
                 }
             }
         }
-        this.serverTime = Util.milliTime() + 10L;
+        this.serverTime = Util.getMillis() + 10L;
         this.runScheduledTasks();
         statusListener.stop();
-        serverchunkprovider.getLightManager().func_215598_a(5);
+        serverchunkprovider.getLightEngine().setTaskPerBatch(5);
     }
 }

@@ -22,7 +22,7 @@ public abstract class MixinBeaconTileEntity {
     @Redirect(method = "addEffectsToPlayers", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/math/AxisAlignedBB;expand(DDD)Lnet/minecraft/util/math/AxisAlignedBB;"))
     private AxisAlignedBB on$expand(AxisAlignedBB axisAlignedBB, double x, double y, double z) {
         CubicChunks.LOGGER.warn("on$expand called");
-        return axisAlignedBB.expand(x, 256, z);
+        return axisAlignedBB.expandTowards(x, 256, z);
     }
 
 }

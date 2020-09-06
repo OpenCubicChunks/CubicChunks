@@ -74,42 +74,42 @@ public class CubePrimerWrapper extends CubePrimer {
     @Override public void addCubeEntity(Entity entityIn) { }
 
     //TILE ENTITY
-    @Deprecated @Override public void addTileEntity(CompoundNBT nbt) { }
+    @Deprecated @Override public void setBlockEntityNbt(CompoundNBT nbt) { }
     @Override public void addCubeTileEntity(CompoundNBT nbt) { }
 
-    @Deprecated @Override public void removeTileEntity(BlockPos pos) { }
+    @Deprecated @Override public void removeBlockEntity(BlockPos pos) { }
     @Override public void removeCubeTileEntity(BlockPos pos) { }
 
-    @Deprecated @Override public void addTileEntity(BlockPos pos, TileEntity tileEntity) { }
+    @Deprecated @Override public void setBlockEntity(BlockPos pos, TileEntity tileEntity) { }
     @Override public void addCubeTileEntity(BlockPos pos, TileEntity tileEntityIn) { }
 
-    @Override @Nullable public TileEntity getTileEntity(BlockPos pos) {
-        return this.cube.getTileEntity(pos);
+    @Override @Nullable public TileEntity getBlockEntity(BlockPos pos) {
+        return this.cube.getBlockEntity(pos);
     }
 
-    @Deprecated @Override @Nullable public CompoundNBT getTileEntityNBT(BlockPos pos) { return this.getCubeTileEntityNBT(pos); }
+    @Deprecated @Override @Nullable public CompoundNBT getBlockEntityNbtForSaving(BlockPos pos) { return this.getCubeTileEntityNBT(pos); }
     @Override @Nullable public CompoundNBT getCubeTileEntityNBT(BlockPos pos) {
         return this.cube.getCubeTileEntityNBT(pos);
     }
 
-    @Deprecated @Override @Nullable public CompoundNBT getDeferredTileEntity(BlockPos pos) { return this.getCubeDeferredTileEntity(pos); }
+    @Deprecated @Override @Nullable public CompoundNBT getBlockEntityNbt(BlockPos pos) { return this.getCubeDeferredTileEntity(pos); }
     @Override @Nullable public CompoundNBT getCubeDeferredTileEntity(BlockPos pos) {
         return this.cube.getCubeDeferredTileEntity(pos);
     }
 
     //LIGHTING
-    @Deprecated @Override public void setLight(boolean lightCorrectIn) { throw new UnsupportedOperationException("Chunk method called on a cube!"); }
+    @Deprecated @Override public void setLightCorrect(boolean lightCorrectIn) { throw new UnsupportedOperationException("Chunk method called on a cube!"); }
     @Override public void setCubeLight(boolean lightCorrectIn)
     {
         this.cube.setCubeLight(lightCorrectIn);
     }
 
-    @Deprecated @Override public boolean hasLight() { throw new UnsupportedOperationException("Chunk method called on a cube!"); }
+    @Deprecated @Override public boolean isLightCorrect() { throw new UnsupportedOperationException("Chunk method called on a cube!"); }
     @Override public boolean hasCubeLight() {
         return this.cube.hasCubeLight();
     }
 
-    @Deprecated @Override public Stream<BlockPos> getLightSources() { return this.getCubeLightSources(); }
+    @Deprecated @Override public Stream<BlockPos> getLights() { return this.getCubeLightSources(); }
     @Override public Stream<BlockPos> getCubeLightSources() {
         return this.cube.getCubeLightSources();
     }
@@ -119,12 +119,12 @@ public class CubePrimerWrapper extends CubePrimer {
     }
 
     //MISC
-    @Deprecated @Override public void setModified(boolean modified) { this.setDirty(modified); }
+    @Deprecated @Override public void setUnsaved(boolean modified) { this.setDirty(modified); }
     @Override public void setDirty(boolean modified) {
         this.cube.setDirty(modified);
     }
 
-    @Deprecated @Override public boolean isModified() { return this.isDirty(); }
+    @Deprecated @Override public boolean isUnsaved() { return this.isDirty(); }
     @Override public boolean isDirty() {
         return this.cube.isDirty();
     }
@@ -141,7 +141,7 @@ public class CubePrimerWrapper extends CubePrimer {
     @Override public void setHeightmap(Heightmap.Type type, long[] data) {
     }
 
-    private Heightmap.Type func_209532_c(Heightmap.Type p_209532_1_) {
+    private Heightmap.Type fixType(Heightmap.Type p_209532_1_) {
         if (p_209532_1_ == Heightmap.Type.WORLD_SURFACE_WG) {
             return Heightmap.Type.WORLD_SURFACE;
         } else {
@@ -149,43 +149,43 @@ public class CubePrimerWrapper extends CubePrimer {
         }
     }
 
-    @Override public int getTopBlockY(Heightmap.Type heightmapType, int x, int z) {
-        return this.cube.getTopBlockY(this.func_209532_c(heightmapType), x, z);
+    @Override public int getHeight(Heightmap.Type heightmapType, int x, int z) {
+        return this.cube.getHeight(this.fixType(heightmapType), x, z);
     }
 
     @Override public void setLastSaveTime(long saveTime) {
     }
 
     // getStructureStart
-    @Override @Nullable public StructureStart<?> func_230342_a_(Structure<?> var1) {
-         return this.cube.func_230342_a_(var1);
+    @Override @Nullable public StructureStart<?> getStartForFeature(Structure<?> var1) {
+         return this.cube.getStartForFeature(var1);
     }
 
-    @Override public void func_230344_a_(Structure<?> structureIn, StructureStart<?> structureStartIn) {
+    @Override public void setStartForFeature(Structure<?> structureIn, StructureStart<?> structureStartIn) {
     }
 
-    @Override public Map<Structure<?>, StructureStart<?>> getStructureStarts() {
-        return this.cube.getStructureStarts();
+    @Override public Map<Structure<?>, StructureStart<?>> getAllStarts() {
+        return this.cube.getAllStarts();
     }
 
-    @Override public void setStructureStarts(Map<Structure<?>, StructureStart<?>> structureStartsIn) {
+    @Override public void setAllStarts(Map<Structure<?>, StructureStart<?>> structureStartsIn) {
     }
 
-    @Override public LongSet func_230346_b_(Structure<?> structureIn) {
-        return this.cube.func_230346_b_(structureIn);
+    @Override public LongSet getReferencesForFeature(Structure<?> structureIn) {
+        return this.cube.getReferencesForFeature(structureIn);
     }
 
-    @Override public void func_230343_a_(Structure<?> structure, long reference) {
+    @Override public void addReferenceForFeature(Structure<?> structure, long reference) {
     }
 
-    @Override public Map<Structure<?>, LongSet> getStructureReferences() {
-        return this.cube.getStructureReferences();
+    @Override public Map<Structure<?>, LongSet> getAllReferences() {
+        return this.cube.getAllReferences();
     }
 
-    @Override public void setStructureReferences(Map<Structure<?>, LongSet> p_201606_1_) {
+    @Override public void setAllReferences(Map<Structure<?>, LongSet> p_201606_1_) {
     }
 
-    @Override public void markBlockForPostprocessing(BlockPos pos) {
+    @Override public void markPosForPostprocessing(BlockPos pos) {
     }
 
     /*
@@ -203,9 +203,9 @@ public class CubePrimerWrapper extends CubePrimer {
     */
 
     @Override public BitSet getCarvingMask(GenerationStage.Carving type) {
-        throw Util.pauseDevMode(new UnsupportedOperationException("Meaningless in this context"));
+        throw Util.pauseInIde(new UnsupportedOperationException("Meaningless in this context"));
     }
     @Override public BitSet setCarvingMask(GenerationStage.Carving type) {
-        throw Util.pauseDevMode(new UnsupportedOperationException("Meaningless in this context"));
+        throw Util.pauseInIde(new UnsupportedOperationException("Meaningless in this context"));
     }
 }

@@ -18,15 +18,15 @@ public class MixinBlockLightEngine extends MixinLightEngine<BlockLightStorage.St
      */
     @Overwrite
     private int getLightValue(long worldPos) {
-        int blockX = BlockPos.unpackX(worldPos);
-        int blockY = BlockPos.unpackY(worldPos);
-        int blockZ = BlockPos.unpackZ(worldPos);
+        int blockX = BlockPos.getX(worldPos);
+        int blockY = BlockPos.getY(worldPos);
+        int blockZ = BlockPos.getZ(worldPos);
         IBlockReader iblockreader = ((ICubeLightProvider)this.chunkProvider).getCubeForLight(
-                SectionPos.toChunk(blockX),
-                SectionPos.toChunk(blockY),
-                SectionPos.toChunk(blockZ)
+                SectionPos.blockToSectionCoord(blockX),
+                SectionPos.blockToSectionCoord(blockY),
+                SectionPos.blockToSectionCoord(blockZ)
         );
-        return iblockreader != null ? iblockreader.getLightValue(this.scratchPos.setPos(blockX, blockY, blockZ)) : 0;
+        return iblockreader != null ? iblockreader.getLightEmission(this.scratchPos.set(blockX, blockY, blockZ)) : 0;
     }
 
 }

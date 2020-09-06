@@ -9,7 +9,7 @@ import org.spongepowered.asm.mixin.gen.Invoker;
 @Mixin(ChunkManager.class)
 public interface ChunkManagerAccess {
 
-    @Invoker("func_219220_a")
+    @Invoker("getUpdatingChunkIfPresent")
     ChunkHolder chunkHold(long chunkPosIn);
 
     @Invoker("refreshOffThreadCache")

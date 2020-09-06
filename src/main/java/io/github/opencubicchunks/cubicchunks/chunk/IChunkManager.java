@@ -52,16 +52,16 @@ public interface IChunkManager {
 
     Iterable<ChunkHolder> getLoadedCubeIterable();
 
-    //func_219215_b
+    // func_219215_b, checkerboardDistance
     static int getCubeChebyshevDistance(CubePos pos, ServerPlayerEntity player, boolean p_219215_2_)  {
         int x;
         int y;
         int z;
         if (p_219215_2_) {
-            SectionPos sectionpos = player.getManagedSectionPos();
-            x = Coords.sectionToCube(sectionpos.getSectionX());
-            y = Coords.sectionToCube(sectionpos.getSectionY());
-            z = Coords.sectionToCube(sectionpos.getSectionZ());
+            SectionPos sectionpos = player.getLastSectionPos();
+            x = Coords.sectionToCube(sectionpos.x());
+            y = Coords.sectionToCube(sectionpos.y());
+            z = Coords.sectionToCube(sectionpos.z());
         } else {
             x = Coords.getCubeXForEntity(player);
             y = Coords.getCubeYForEntity(player);

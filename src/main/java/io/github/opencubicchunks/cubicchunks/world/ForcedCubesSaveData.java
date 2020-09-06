@@ -15,11 +15,11 @@ public class ForcedCubesSaveData extends WorldSavedData {
     /**
      * reads in data from the NBTTagCompound into this MapDataBase
      */
-    public void read(CompoundNBT nbt) {
+    public void load(CompoundNBT nbt) {
         this.cubes = new LongOpenHashSet(nbt.getLongArray("Forced"));
     }
 
-    public CompoundNBT write(CompoundNBT compound) {
+    public CompoundNBT save(CompoundNBT compound) {
         compound.putLongArray("Forced", this.cubes.toLongArray());
         return compound;
     }

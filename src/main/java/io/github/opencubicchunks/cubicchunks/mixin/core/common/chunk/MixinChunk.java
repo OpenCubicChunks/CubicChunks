@@ -45,7 +45,7 @@ public abstract class MixinChunk implements IChunk {
 
     @Shadow @Final private Map<BlockPos, CompoundNBT> deferredTileEntities;
 
-    @Override public boolean isEmptyBetween(int startY, int endY) {
+    @Override public boolean isYSpaceEmpty(int startY, int endY) {
         return false;
     }
 
@@ -67,7 +67,7 @@ public abstract class MixinChunk implements IChunk {
     @SuppressWarnings("ConstantConditions")
     private IBigCube getCube(int y) {
         try {
-            return ((ICubeProvider) world.getChunkProvider()).getCube(
+            return ((ICubeProvider) world.getChunkSource()).getCube(
                     Coords.sectionToCube(pos.x),
                     Coords.sectionToCube(y),
                     Coords.sectionToCube(pos.z), getStatus(), true);
@@ -207,7 +207,7 @@ public abstract class MixinChunk implements IChunk {
     @Redirect(method = "addTileEntity(Lnet/minecraft/tileentity/TileEntity;)V", at = @At(value = "FIELD", target = "Lnet/minecraft/world/chunk/Chunk;loaded:Z"))
     private boolean getLoadedFromTileEntity(Chunk chunk, TileEntity tileEntity)
     {
-        return ((BigCube)this.getCube(Coords.blockToSection(tileEntity.getPos().getY()))).getLoaded();
+        return ((BigCube)this.getCube(Coords.blockToSection(tileEntity.getBlockPos().getY()))).getLoaded();
     }
     @Redirect(method = "removeTileEntity", at = @At(value = "FIELD", target = "Lnet/minecraft/world/chunk/Chunk;loaded:Z"))
     private boolean getLoadedFromBlockPos(Chunk chunk, BlockPos pos)

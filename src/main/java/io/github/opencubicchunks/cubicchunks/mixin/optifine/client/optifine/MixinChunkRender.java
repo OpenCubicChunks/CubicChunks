@@ -39,7 +39,7 @@ public abstract class MixinChunkRender implements IOptiFineChunkRender {
             return null;
         }
         if (cube == null || !cube.getLoaded()) {
-            cube = (BigCube) ((IClientCubeProvider) ((ChunkRenderDispatcherAccess) this$0).getWorld().getChunkProvider())
+            cube = (BigCube) ((IClientCubeProvider) ((ChunkRenderDispatcherAccess) this$0).getWorld().getChunkSource())
                     .getCube(Coords.blockToCube(position.getX()), Coords.blockToCube(position.getY()), Coords.blockToCube(position.getZ()),
                             ChunkStatus.FULL, true);
             assert cube != null;
@@ -67,9 +67,9 @@ public abstract class MixinChunkRender implements IOptiFineChunkRender {
         int y = this.getPosition().getY();
         int up = Direction.UP.ordinal();
         int down = Direction.DOWN.ordinal();
-        this.renderChunkNeighboursValid[up] = this.renderChunkNeighbours[up].getPosition().getY() == y + 16 ?
+        this.renderChunkNeighboursValid[up] = this.renderChunkNeighbours[up].getOrigin().getY() == y + 16 ?
                 this.renderChunkNeighbours[up] : null;
-        this.renderChunkNeighboursValid[down] = this.renderChunkNeighbours[down].getPosition().getY() == y - 16 ?
+        this.renderChunkNeighboursValid[down] = this.renderChunkNeighbours[down].getOrigin().getY() == y - 16 ?
                 this.renderChunkNeighbours[down] : null;
     }
 }

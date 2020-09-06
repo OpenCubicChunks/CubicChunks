@@ -30,7 +30,7 @@ public abstract class MixinEntityTracker {
 
     @Shadow @Final private Set<ServerPlayerEntity> trackingPlayers;
 
-    @Shadow protected abstract int func_229843_b_();
+    @Shadow protected abstract int getEffectiveRange();
 
     /**
      * @author NotStirred
@@ -39,18 +39,18 @@ public abstract class MixinEntityTracker {
     @Overwrite
     public void updateTrackingState(ServerPlayerEntity player) {
         if (player != this.entity) {
-            Vector3d vec3d = player.getPositionVec().subtract(this.entry.getDecodedPosition());
+            Vector3d vec3d = player.position().subtract(this.entry.sentPos());
                             //This function is fine
-            int i = Math.min(this.func_229843_b_(), (((ChunkManagerAccess)this$0).getViewDistance() - 1) * 16);
+            int i = Math.min(this.getEffectiveRange(), (((ChunkManagerAccess)this$0).getViewDistance() - 1) * 16);
             boolean flag = vec3d.x >= (double)(-i) && vec3d.x <= (double)i &&
                     vec3d.y >= (double)(-i) && vec3d.y <= (double)i && //Added y comparisons
                     vec3d.z >= (double)(-i) && vec3d.z <= (double)i &&
-                    this.entity.isSpectatedByPlayer(player);
+                    this.entity.broadcastToPlayer(player);
             if (flag) {
-                boolean spawn = this.entity.forceSpawn;
+                boolean spawn = this.entity.forcedLoading;
                 if (!spawn) {
-                    CubePos cubePos = CubePos.of(sectionToCube(this.entity.chunkCoordX), sectionToCube(this.entity.chunkCoordY),
-                            sectionToCube(this.entity.chunkCoordZ));
+                    CubePos cubePos = CubePos.of(sectionToCube(this.entity.xChunk), sectionToCube(this.entity.yChunk),
+                            sectionToCube(this.entity.zChunk));
                     ChunkHolder chunkholder = ((IChunkManager)this$0).getImmutableCubeHolder(cubePos.asLong());
                     if (chunkholder != null && ((ICubeHolder) chunkholder).getCubeIfComplete() != null) {
                         spawn = IChunkManager.getCubeChebyshevDistance(cubePos, player, false) <= ((ChunkManagerAccess)this$0).getViewDistance();
@@ -58,10 +58,10 @@ public abstract class MixinEntityTracker {
                 }
 
                 if (spawn && this.trackingPlayers.add(player)) {
-                    this.entry.track(player);
+                    this.entry.addPairing(player);
                 }
             } else if (this.trackingPlayers.remove(player)) {
-                this.entry.untrack(player);
+                this.entry.removePairing(player);
             }
 
         }

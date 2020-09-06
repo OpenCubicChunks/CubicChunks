@@ -38,7 +38,7 @@ public class CubicWorldLoadScreen {
 
     private static void render3d(TrackingChunkStatusListener trackerParam, int xBase, int yBase, int scale, int spacing,
             Object2IntMap<ChunkStatus> colors) {
-        float aspectRatio = Minecraft.getInstance().currentScreen.width / (float) Minecraft.getInstance().currentScreen.height;
+        float aspectRatio = Minecraft.getInstance().screen.width / (float) Minecraft.getInstance().screen.height;
 
         float scaleWithCineSize = scale * IBigCube.DIAMETER_IN_SECTIONS / 2.0f;
 
@@ -75,11 +75,11 @@ public class CubicWorldLoadScreen {
         RenderSystem.enableBlend();
         RenderSystem.enableAlphaTest();
 
-        BufferBuilder buffer = Tessellator.getInstance().getBuffer();
+        BufferBuilder buffer = Tessellator.getInstance().getBuilder();
 
         buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_COLOR);
 
-        int sectionRenderRadius = trackerParam.func_219523_d();
+        int sectionRenderRadius = trackerParam.getDiameter();
 
         EnumSet<Direction> renderFaces = EnumSet.noneOf(Direction.class);
 
@@ -107,12 +107,12 @@ public class CubicWorldLoadScreen {
                         continue;
                     }
                     renderFaces.clear();
-                    float ratio = status.ordinal() / (float) ChunkStatus.FULL.ordinal();
+                    float ratio = status.getIndex() / (float) ChunkStatus.FULL.getIndex();
                     int alpha = (int) (0x20 + ratio * (0xFF - 0x20));
                     int c = colors.getOrDefault(status, 0xFFFF00FF) | (alpha << 24);
                     for (Direction value : Direction.values()) {
-                        ChunkStatus cubeStatus = tracker.getCubeStatus(dx + value.getXOffset(), dy + value.getYOffset(), dz + value.getZOffset());
-                        if (cubeStatus == null || !cubeStatus.isAtLeast(status)) {
+                        ChunkStatus cubeStatus = tracker.getCubeStatus(dx + value.getStepX(), dy + value.getStepY(), dz + value.getStepZ());
+                        if (cubeStatus == null || !cubeStatus.isOrAfter(status)) {
                             renderFaces.add(value);
                         }
                     }
@@ -130,9 +130,9 @@ public class CubicWorldLoadScreen {
         Vector4f vec = new Vector4f(0, 0, 0, 1);
         vec.transform(m);
 
-        buffer.sortVertexData(vec.getX(), vec.getY(), vec.getZ());
-        buffer.finishDrawing();
-        WorldVertexBufferUploader.draw(buffer);
+        buffer.sortQuads(vec.x(), vec.y(), vec.z());
+        buffer.end();
+        WorldVertexBufferUploader.end(buffer);
 
         RenderSystem.enableTexture();
         RenderSystem.disableBlend();
@@ -213,16 +213,16 @@ public class CubicWorldLoadScreen {
         float b = (color & 0xFF) * scale;
         float a = (color >>> 24) * scale;
 
-        buffer.pos(x, y, z).color(r, g, b, a).endVertex();
+        buffer.vertex(x, y, z).color(r, g, b, a).endVertex();
     }
 
 
     private static void render2d(MatrixStack mStack, TrackingChunkStatusListener trackerParam, int xBase, int yBase, int scale, int spacing,
             Object2IntMap<ChunkStatus> colors) {
         int squareScale = scale + spacing;
-        int loadDiameter = trackerParam.getDiameter();
+        int loadDiameter = trackerParam.getFullDiameter();
         int diameterPixels = loadDiameter * squareScale - spacing;
-        int totalDiameter = trackerParam.func_219523_d();
+        int totalDiameter = trackerParam.getDiameter();
         int totalDiameterPixels = totalDiameter * squareScale - spacing;
 
         int minX = xBase - totalDiameterPixels / 2;
@@ -238,7 +238,7 @@ public class CubicWorldLoadScreen {
             AbstractGui.fill(mStack, xBase - radiusPixels, yBase + radiusPixels - 1, xBase + radiusPixels, yBase + radiusPixels, color);
         }
 
-        final List<ChunkStatus> statuses = ChunkStatus.getAll();
+        final List<ChunkStatus> statuses = ChunkStatus.getStatusList();
         final List<ChunkStatus> statusesReverse = new ArrayList<>(statuses);
         Collections.reverse(statusesReverse);
 
@@ -303,18 +303,18 @@ public class CubicWorldLoadScreen {
         float green = (float) (color >> 8 & 255) / 255.0F;
         float blue = (float) (color & 255) / 255.0F;
 
-        BufferBuilder buffer = Tessellator.getInstance().getBuffer();
+        BufferBuilder buffer = Tessellator.getInstance().getBuilder();
         RenderSystem.enableBlend();
         RenderSystem.disableTexture();
         RenderSystem.defaultBlendFunc();
         buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_COLOR);
-        buffer.pos(transform, x1, y2, 0.0F).color(red, green, blue, alpha).endVertex();
-        buffer.pos(transform, x2, y2, 0.0F).color(red, green, blue, alpha).endVertex();
-        buffer.pos(transform, x2, y1, 0.0F).color(red, green, blue, alpha).endVertex();
-        buffer.pos(transform, x1, y1, 0.0F).color(red, green, blue, alpha).endVertex();
-        buffer.finishDrawing();
+        buffer.vertex(transform, x1, y2, 0.0F).color(red, green, blue, alpha).endVertex();
+        buffer.vertex(transform, x2, y2, 0.0F).color(red, green, blue, alpha).endVertex();
+        buffer.vertex(transform, x2, y1, 0.0F).color(red, green, blue, alpha).endVertex();
+        buffer.vertex(transform, x1, y1, 0.0F).color(red, green, blue, alpha).endVertex();
+        buffer.end();
 
-        WorldVertexBufferUploader.draw(buffer);
+        WorldVertexBufferUploader.end(buffer);
         RenderSystem.enableTexture();
         RenderSystem.disableBlend();
     }

@@ -57,7 +57,7 @@ public class PacketDispatcher {
 
     private static <T> BiConsumer<T, Supplier<NetworkEvent.Context>> mainThreadHandler(BiConsumer<? super T, ? super World> handler) {
         return (packet, ctx) -> {
-            ctx.get().enqueueWork(() -> handler.accept(packet, Minecraft.getInstance().world));
+            ctx.get().enqueueWork(() -> handler.accept(packet, Minecraft.getInstance().level));
             ctx.get().setPacketHandled(true);
         };
     }

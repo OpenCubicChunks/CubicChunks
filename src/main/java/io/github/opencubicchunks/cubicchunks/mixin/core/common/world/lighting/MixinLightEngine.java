@@ -44,12 +44,12 @@ public class MixinLightEngine <M extends LightDataMap<M>, S extends SectionLight
     }
 
     @Override
-    public void func_215620_a(CubePos cubePos, boolean enable) {
+    public void enableLightSources(CubePos cubePos, boolean enable) {
         ChunkPos chunkPos = cubePos.asChunkPos();
-        //TODO: implement invokeFunc_215526_b for CubePos in SkyLightStorage
+        //TODO: implement invokeEnableLightSources for CubePos in SkyLightStorage
         for (int x = 0; x < IBigCube.DIAMETER_IN_SECTIONS; x++) {
             for (int z = 0; z < IBigCube.DIAMETER_IN_SECTIONS; z++) {
-                ((SectionLightStorageAccess) this.storage).invokeSetColumnEnabled(new ChunkPos(chunkPos.x + x, chunkPos.z + z).asLong(), enable);
+                ((SectionLightStorageAccess) this.storage).invokeSetColumnEnabled(new ChunkPos(chunkPos.x + x, chunkPos.z + z).toLong(), enable);
             }
         }
     }
@@ -66,27 +66,27 @@ public class MixinLightEngine <M extends LightDataMap<M>, S extends SectionLight
                 opacity.setValue(0);
             }
 
-            return Blocks.AIR.getDefaultState();
+            return Blocks.AIR.defaultBlockState();
         } else {
-            int sectionX = SectionPos.toChunk(BlockPos.unpackX(blockPosLong));
-            int sectionY = SectionPos.toChunk(BlockPos.unpackY(blockPosLong));
-            int sectionZ = SectionPos.toChunk(BlockPos.unpackZ(blockPosLong));
+            int sectionX = SectionPos.blockToSectionCoord(BlockPos.getX(blockPosLong));
+            int sectionY = SectionPos.blockToSectionCoord(BlockPos.getY(blockPosLong));
+            int sectionZ = SectionPos.blockToSectionCoord(BlockPos.getZ(blockPosLong));
             IBlockReader iblockreader = this.getCubeReader(sectionX, sectionY, sectionZ);
             if (iblockreader == null) {
                 if (opacity != null) {
                     opacity.setValue(16);
                 }
 
-                return Blocks.BEDROCK.getDefaultState();
+                return Blocks.BEDROCK.defaultBlockState();
             } else {
-                this.scratchPos.setPos(blockPosLong);
+                this.scratchPos.set(blockPosLong);
                 BlockState blockstate = iblockreader.getBlockState(this.scratchPos);
-                boolean flag = blockstate.isSolid() && blockstate.isTransparent();
+                boolean flag = blockstate.canOcclude() && blockstate.useShapeForLightOcclusion();
                 if (opacity != null) {
-                    opacity.setValue(blockstate.getOpacity(this.chunkProvider.getWorld(), this.scratchPos));
+                    opacity.setValue(blockstate.getLightBlock(this.chunkProvider.getLevel(), this.scratchPos));
                 }
 
-                return flag ? blockstate : Blocks.AIR.getDefaultState();
+                return flag ? blockstate : Blocks.AIR.defaultBlockState();
             }
         }
     }

@@ -47,6 +47,6 @@ public class PlayerCubeTracker extends CubeDistanceGraph {
     }
 
     public void processAllUpdates() {
-        this.processUpdates(Integer.MAX_VALUE);
+        this.runUpdates(Integer.MAX_VALUE);
     }
 }

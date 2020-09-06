@@ -21,7 +21,7 @@ public class CubeTicketTracker extends CubeDistanceGraph {
         if (sortedarrayset == null) {
             return Integer.MAX_VALUE;
         } else {
-            return sortedarrayset.isEmpty() ? Integer.MAX_VALUE : sortedarrayset.getSmallest().getLevel();
+            return sortedarrayset.isEmpty() ? Integer.MAX_VALUE : sortedarrayset.first().getTicketLevel();
         }
     }
 
@@ -30,7 +30,7 @@ public class CubeTicketTracker extends CubeDistanceGraph {
         if (!iTicketManager.containsCubes(cubePosIn)) {
             ChunkHolder chunkholder = iTicketManager.getCubeHolder(cubePosIn);
             if (chunkholder != null) {
-                return chunkholder.getChunkLevel();
+                return chunkholder.getTicketLevel();
             }
         }
 
@@ -40,7 +40,7 @@ public class CubeTicketTracker extends CubeDistanceGraph {
     @Override
     protected void setLevel(long cubePosIn, int level) {
         ChunkHolder chunkholder = iTicketManager.getCubeHolder(cubePosIn);
-        int i = chunkholder == null ? IChunkManager.MAX_CUBE_LOADED_LEVEL + 1 : chunkholder.getChunkLevel();
+        int i = chunkholder == null ? IChunkManager.MAX_CUBE_LOADED_LEVEL + 1 : chunkholder.getTicketLevel();
         if (i != level) {
             chunkholder = iTicketManager.setCubeLevel(cubePosIn, level, chunkholder, i);
             if (chunkholder != null) {
@@ -51,6 +51,6 @@ public class CubeTicketTracker extends CubeDistanceGraph {
     }
 
     public int update(int distance) {
-        return this.processUpdates(distance);
+        return this.runUpdates(distance);
     }
 }

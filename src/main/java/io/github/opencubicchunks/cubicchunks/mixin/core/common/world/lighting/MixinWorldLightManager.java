@@ -46,11 +46,11 @@ public abstract class MixinWorldLightManager implements IWorldLightManager, ILig
     @Override
     public void enableLightSources(CubePos cubePos, boolean retain) {
         if (this.blockLight != null) {
-            ((ILightEngine)this.blockLight).func_215620_a(cubePos, retain);
+            ((ILightEngine)this.blockLight).enableLightSources(cubePos, retain);
         }
 
         if (this.skyLight != null) {
-            ((ILightEngine)this.skyLight).func_215620_a(cubePos, retain);
+            ((ILightEngine)this.skyLight).enableLightSources(cubePos, retain);
         }
     }
 

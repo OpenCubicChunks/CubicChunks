@@ -125,7 +125,7 @@ public class CubePrimer implements IBigCube, IChunk {
 
             ChunkSection chunksection = this.sections[index];
             BlockState blockstate = chunksection.setBlockState(x, y, z, state);
-            if (this.status.isAtLeast(ChunkStatus.FEATURES) && state != blockstate && (state.getOpacity(this, pos) != blockstate.getOpacity(this, pos) || state.getLightValue(this, pos) != blockstate.getLightValue(this, pos) || state.isTransparent() || blockstate.isTransparent())) {
+            if (this.status.isOrAfter(ChunkStatus.FEATURES) && state != blockstate && (state.getLightBlock(this, pos) != blockstate.getLightBlock(this, pos) || state.getLightValue(this, pos) != blockstate.getLightValue(this, pos) || state.useShapeForLightOcclusion() || blockstate.useShapeForLightOcclusion())) {
                 lightManager.checkBlock(pos);
             }
 
@@ -160,7 +160,7 @@ public class CubePrimer implements IBigCube, IChunk {
     @Override public BlockState getBlockState(int x, int y, int z) {
         int index = Coords.blockToIndex(x, y, z);
         return ChunkSection.isEmpty(this.sections[index]) ?
-                Blocks.AIR.getDefaultState() :
+                Blocks.AIR.defaultBlockState() :
                 this.sections[index].getBlockState(x & 15, y & 15, z & 15);
     }
 
@@ -168,7 +168,7 @@ public class CubePrimer implements IBigCube, IChunk {
     @Deprecated @Override public void addEntity(Entity entityIn) { this.addCubeEntity(entityIn); }
     @Override public void addCubeEntity(Entity entityIn) {
         CompoundNBT compoundnbt = new CompoundNBT();
-        entityIn.writeUnlessPassenger(compoundnbt);
+        entityIn.save(compoundnbt);
         this.addCubeEntity(compoundnbt);
     }
     public void addCubeEntity(CompoundNBT entityCompound) {
@@ -181,41 +181,41 @@ public class CubePrimer implements IBigCube, IChunk {
 
     //TILE ENTITY
 
-    @Deprecated @Override public void addTileEntity(CompoundNBT nbt) { this.addCubeTileEntity(nbt); }
+    @Deprecated @Override public void setBlockEntityNbt(CompoundNBT nbt) { this.addCubeTileEntity(nbt); }
     @Override public void addCubeTileEntity(CompoundNBT nbt) {
         this.deferredTileEntities.put(new BlockPos(nbt.getInt("x"), nbt.getInt("y"), nbt.getInt("z")), nbt);
     }
 
-    @Deprecated @Override public void addTileEntity(BlockPos pos, TileEntity tileEntityIn) { this.addCubeTileEntity(pos, tileEntityIn); }
+    @Deprecated @Override public void setBlockEntity(BlockPos pos, TileEntity tileEntityIn) { this.addCubeTileEntity(pos, tileEntityIn); }
     @Override public void addCubeTileEntity(BlockPos pos, TileEntity tileEntityIn) {
-        tileEntityIn.setPos(pos);
+        tileEntityIn.setPosition(pos);
         this.tileEntities.put(pos, tileEntityIn);
     }
 
-    @Deprecated @Override public void removeTileEntity(BlockPos pos) { this.removeCubeTileEntity(pos); }
+    @Deprecated @Override public void removeBlockEntity(BlockPos pos) { this.removeCubeTileEntity(pos); }
     @Override public void removeCubeTileEntity(BlockPos pos) {
         this.tileEntities.remove(pos);
         this.deferredTileEntities.remove(pos);
     }
 
-    @Nullable @Override public TileEntity getTileEntity(BlockPos pos) {
+    @Nullable @Override public TileEntity getBlockEntity(BlockPos pos) {
         return this.tileEntities.get(pos);
     }
 
-    @Deprecated @Override public Set<BlockPos> getTileEntitiesPos() { return this.getCubeTileEntitiesPos(); }
+    @Deprecated @Override public Set<BlockPos> getBlockEntitiesPos() { return this.getCubeTileEntitiesPos(); }
     @Override public Set<BlockPos> getCubeTileEntitiesPos() {
         Set<BlockPos> set = Sets.newHashSet(this.deferredTileEntities.keySet());
         set.addAll(this.tileEntities.keySet());
         return set;
     }
 
-    @Deprecated @Nullable @Override public CompoundNBT getTileEntityNBT(BlockPos pos) { return this.getCubeTileEntityNBT(pos); }
+    @Deprecated @Nullable @Override public CompoundNBT getBlockEntityNbtForSaving(BlockPos pos) { return this.getCubeTileEntityNBT(pos); }
     @Nullable @Override public CompoundNBT getCubeTileEntityNBT(BlockPos pos) {
-        TileEntity tileEntity = this.getTileEntity(pos);
-        return tileEntity != null ? tileEntity.write(new CompoundNBT()) : this.deferredTileEntities.get(pos);
+        TileEntity tileEntity = this.getBlockEntity(pos);
+        return tileEntity != null ? tileEntity.save(new CompoundNBT()) : this.deferredTileEntities.get(pos);
     }
 
-    @Deprecated @Nullable @Override public CompoundNBT getDeferredTileEntity(BlockPos pos) { return this.getCubeDeferredTileEntity(pos); }
+    @Deprecated @Nullable @Override public CompoundNBT getBlockEntityNbt(BlockPos pos) { return this.getCubeDeferredTileEntity(pos); }
     @Nullable @Override public CompoundNBT getCubeDeferredTileEntity(BlockPos pos) {
         return this.deferredTileEntities.get(pos);
     }
@@ -232,18 +232,18 @@ public class CubePrimer implements IBigCube, IChunk {
     }
 
     //LIGHTING
-    @Deprecated @Override public boolean hasLight() { throw new UnsupportedOperationException("Chunk method called on a cube!"); }
+    @Deprecated @Override public boolean isLightCorrect() { throw new UnsupportedOperationException("Chunk method called on a cube!"); }
     @Override public boolean hasCubeLight() {
         return this.hasLight;
     }
 
-    @Deprecated @Override public void setLight(boolean lightCorrectIn) { throw new UnsupportedOperationException("Chunk method called on a cube!"); }
+    @Deprecated @Override public void setLightCorrect(boolean lightCorrectIn) { throw new UnsupportedOperationException("Chunk method called on a cube!"); }
     @Override public void setCubeLight(boolean lightCorrectIn) {
         this.hasLight = lightCorrectIn;
         this.setDirty(true);
     }
 
-    @Deprecated @Override public Stream<BlockPos> getLightSources() {
+    @Deprecated @Override public Stream<BlockPos> getLights() {
         throw new UnsupportedOperationException("Chunk method called on a cube!");
     }
     @Override public Stream<BlockPos> getCubeLightSources() {
@@ -255,7 +255,7 @@ public class CubePrimer implements IBigCube, IChunk {
     }
 
     public void addCubeLightPosition(BlockPos lightPos) {
-        this.lightPositions.add(lightPos.toImmutable());
+        this.lightPositions.add(lightPos.immutable());
     }
 
     public void setCubeLightManager(WorldLightManager lightManager) {
@@ -266,12 +266,12 @@ public class CubePrimer implements IBigCube, IChunk {
     }
 
     //MISC
-    @Deprecated @Override public void setModified(boolean modified) { setDirty(modified); }
+    @Deprecated @Override public void setUnsaved(boolean modified) { setDirty(modified); }
     @Override public void setDirty(boolean modified) {
         this.modified = modified;
     }
 
-    @Deprecated @Override public boolean isModified() { return isDirty(); }
+    @Deprecated @Override public boolean isUnsaved() { return isDirty(); }
     @Override public boolean isDirty() {
         return modified;
     }
@@ -317,11 +317,11 @@ public class CubePrimer implements IBigCube, IChunk {
         throw new UnsupportedOperationException("For later implementation");
     }
 
-    @Override public Heightmap getHeightmap(Heightmap.Type typeIn) {
+    @Override public Heightmap getOrCreateHeightmapUnprimed(Heightmap.Type typeIn) {
         throw new UnsupportedOperationException("For later implementation");
     }
 
-    @Override public int getTopBlockY(Heightmap.Type heightmapType, int x, int z) {
+    @Override public int getHeight(Heightmap.Type heightmapType, int x, int z) {
         throw new UnsupportedOperationException("For later implementation");
     }
 
@@ -329,23 +329,23 @@ public class CubePrimer implements IBigCube, IChunk {
         throw new UnsupportedOperationException("For later implementation");
     }
 
-    @Deprecated @Override public Map<Structure<?>, StructureStart<?>> getStructureStarts() {
+    @Deprecated @Override public Map<Structure<?>, StructureStart<?>> getAllStarts() {
         throw new UnsupportedOperationException("For later implementation");
     }
 
-    @Deprecated @Override public void setStructureStarts(Map<Structure<?>, StructureStart<?>> structureStartsIn) {
+    @Deprecated @Override public void setAllStarts(Map<Structure<?>, StructureStart<?>> structureStartsIn) {
         throw new UnsupportedOperationException("For later implementation");
     }
 
-    @Override public ShortList[] getPackedPositions() {
+    @Override public ShortList[] getPostProcessing() {
         throw new UnsupportedOperationException("For later implementation");
     }
 
-    @Override public ITickList<Block> getBlocksToBeTicked() {
+    @Override public ITickList<Block> getBlockTicks() {
         throw new UnsupportedOperationException("For later implementation");
     }
 
-    @Override public ITickList<Fluid> getFluidsToBeTicked() {
+    @Override public ITickList<Fluid> getLiquidTicks() {
         throw new UnsupportedOperationException("For later implementation");
     }
 
@@ -362,30 +362,30 @@ public class CubePrimer implements IBigCube, IChunk {
     }
 
     // getStructureStart
-    @Nullable @Override public StructureStart<?> func_230342_a_(Structure<?> var1) {
+    @Nullable @Override public StructureStart<?> getStartForFeature(Structure<?> var1) {
         throw new UnsupportedOperationException("For later implementation");
     }
 
     // putStructureStart
-    @Override public void func_230344_a_(Structure<?> structureIn, StructureStart<?> structureStartIn) {
+    @Override public void setStartForFeature(Structure<?> structureIn, StructureStart<?> structureStartIn) {
         throw new UnsupportedOperationException("For later implementation");
     }
 
     // getStructureReferences
-    @Override public LongSet func_230346_b_(Structure<?> structureIn) {
+    @Override public LongSet getReferencesForFeature(Structure<?> structureIn) {
         throw new UnsupportedOperationException("For later implementation");
     }
 
     // addStructureReference
-    @Override public void func_230343_a_(Structure<?> structure, long reference) {
+    @Override public void addReferenceForFeature(Structure<?> structure, long reference) {
         throw new UnsupportedOperationException("For later implementation");
     }
 
-    @Override public Map<Structure<?>, LongSet> getStructureReferences() {
+    @Override public Map<Structure<?>, LongSet> getAllReferences() {
         throw new UnsupportedOperationException("For later implementation");
     }
 
-    @Override public void setStructureReferences(Map<Structure<?>, LongSet> p_201606_1_) {
+    @Override public void setAllReferences(Map<Structure<?>, LongSet> p_201606_1_) {
         throw new UnsupportedOperationException("For later implementation");
     }
 

@@ -26,7 +26,7 @@ public class MixinWorldRenderer_Vanilla {
     private ChunkRenderDispatcher.ChunkRender getRenderChunkOffset(
             BlockPos playerPos, ChunkRenderDispatcher.ChunkRender renderChunkBase, Direction facing) {
 
-        BlockPos blockpos = renderChunkBase.getBlockPosOffset16(facing);
+        BlockPos blockpos = renderChunkBase.getRelativeOrigin(facing);
         if (MathHelper.abs(playerPos.getX() - blockpos.getX()) <= this.renderDistanceChunks * 16
                 && MathHelper.abs(playerPos.getY() - blockpos.getY()) <= this.renderDistanceChunks * 16
                 && MathHelper.abs(playerPos.getZ() - blockpos.getZ()) <= this.renderDistanceChunks * 16) {

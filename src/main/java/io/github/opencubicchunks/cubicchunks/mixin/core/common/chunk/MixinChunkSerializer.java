@@ -55,39 +55,39 @@ public abstract class MixinChunkSerializer {
         ChunkStatus.Type statusType = getChunkStatus(compound);
         IChunk newChunk;
         Biome[] biomesIn = new Biome[BiomeContainer.BIOMES_SIZE];
-        Arrays.fill(biomesIn, WorldGenRegistries.field_243657_i.func_243576_d(Biomes.FOREST));
+        Arrays.fill(biomesIn, WorldGenRegistries.BIOME.getOrThrow(Biomes.FOREST));
         //TODO: Double Check that this is proper
-        BiomeContainer biomeContainerIn = new BiomeContainer(worldIn.func_241828_r().func_243612_b(Registry.BIOME_KEY), biomesIn);
+        BiomeContainer biomeContainerIn = new BiomeContainer(worldIn.registryAccess().registryOrThrow(Registry.BIOME_REGISTRY), biomesIn);
         if (statusType == ChunkStatus.Type.LEVELCHUNK) {
-            newChunk = new Chunk(worldIn.getWorld(), pos, biomeContainerIn, UpgradeData.EMPTY,
+            newChunk = new Chunk(worldIn.getLevel(), pos, biomeContainerIn, UpgradeData.EMPTY,
                     new SerializableTickList<>(Registry.BLOCK::getKey, new ArrayList<>(), 0), // TODO: supply game time
                     new SerializableTickList<>(Registry.FLUID::getKey, new ArrayList<>(), 0),
                     inhabitedTime, new ChunkSection[16], (chunk) -> { });
             if (level.contains("ForgeCaps")) ((Chunk)newChunk).readCapsFromNBT(level.getCompound("ForgeCaps"));
         } else {
             ChunkPrimer chunkprimer = new ChunkPrimer(pos, UpgradeData.EMPTY, new ChunkSection[16],
-                    new ChunkPrimerTickList<>((block) -> block == null || block.getDefaultState().isAir(), pos),
+                    new ChunkPrimerTickList<>((block) -> block == null || block.defaultBlockState().isAir(), pos),
                     new ChunkPrimerTickList<>((fluid) -> fluid == null || fluid == Fluids.EMPTY, pos));
 
             chunkprimer.setBiomes(biomeContainerIn); // setBiomes
             newChunk = chunkprimer;
             chunkprimer.setInhabitedTime(inhabitedTime);
             chunkprimer.setStatus(ChunkStatus.byName(level.getString("Status")));
-            if (chunkprimer.getStatus().isAtLeast(ChunkStatus.FEATURES)) {
-                chunkprimer.setLightManager(worldIn.getChunkProvider().getLightManager());
+            if (chunkprimer.getStatus().isOrAfter(ChunkStatus.FEATURES)) {
+                chunkprimer.setLightEngine(worldIn.getChunkSource().getLightEngine());
             }
         }
-        newChunk.setLight(true);
+        newChunk.setLightCorrect(true);
         CompoundNBT heightmaps = level.getCompound("Heightmaps");
 
-        for(Heightmap.Type heightmapType : newChunk.getStatus().getHeightMaps()) {
-            String s = heightmapType.getId();
+        for(Heightmap.Type heightmapType : newChunk.getStatus().heightmapsAfter()) {
+            String s = heightmapType.getSerializationKey();
             if (heightmaps.contains(s, Constants.NBT.TAG_LONG_ARRAY)) {
                 newChunk.setHeightmap(heightmapType, heightmaps.getLongArray(s));
             }
         }
         if (level.getBoolean("shouldSave")) {
-            newChunk.setModified(true);
+            newChunk.setUnsaved(true);
         }
         if (statusType == ChunkStatus.Type.LEVELCHUNK) {
             net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.event.world.ChunkDataEvent.Load(newChunk, level, statusType));
@@ -108,16 +108,16 @@ public abstract class MixinChunkSerializer {
         ChunkPos chunkpos = chunkIn.getPos();
         CompoundNBT compoundnbt = new CompoundNBT();
         CompoundNBT level = new CompoundNBT();
-        compoundnbt.putInt("DataVersion", SharedConstants.getVersion().getWorldVersion());
+        compoundnbt.putInt("DataVersion", SharedConstants.getCurrentVersion().getWorldVersion());
         compoundnbt.put("Level", level);
         level.putInt("xPos", chunkpos.x);
         level.putInt("zPos", chunkpos.z);
         level.putLong("InhabitedTime", chunkIn.getInhabitedTime());
         level.putString("Status", chunkIn.getStatus().getName());
 
-        if (chunkIn.getStatus().getType() == ChunkStatus.Type.LEVELCHUNK) {
+        if (chunkIn.getStatus().getChunkType() == ChunkStatus.Type.LEVELCHUNK) {
             Chunk chunk = (Chunk)chunkIn;
-            chunk.setHasEntities(false);
+            chunk.setLastSaveHadEntities(false);
             try {
                 final CompoundNBT capTag = chunk.writeCapsToNBT();
                 if (capTag != null) level.put("ForgeCaps", capTag);
@@ -128,8 +128,8 @@ public abstract class MixinChunkSerializer {
 
         CompoundNBT heightmaps = new CompoundNBT();
         for(Map.Entry<Heightmap.Type, Heightmap> entry : chunkIn.getHeightmaps()) {
-            if (chunkIn.getStatus().getHeightMaps().contains(entry.getKey())) {
-                heightmaps.put(entry.getKey().getId(), new LongArrayNBT(entry.getValue().getDataArray()));
+            if (chunkIn.getStatus().heightmapsAfter().contains(entry.getKey())) {
+                heightmaps.put(entry.getKey().getSerializationKey(), new LongArrayNBT(entry.getValue().getRawData()));
             }
         }
         level.put("Heightmaps", heightmaps);

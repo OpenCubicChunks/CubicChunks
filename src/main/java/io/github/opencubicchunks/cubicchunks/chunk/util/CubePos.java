@@ -64,9 +64,9 @@ public class CubePos extends Vector3i {
             Coords.sectionToCube(sectionPos.getZ())); }
 
     public static CubePos from(Entity p_218157_0_) {
-        return new CubePos(blockToCube(MathHelper.floor(p_218157_0_.getPosX())),
-                blockToCube(MathHelper.floor(p_218157_0_.getPosY())),
-                blockToCube(MathHelper.floor(p_218157_0_.getPosZ())));
+        return new CubePos(blockToCube(MathHelper.floor(p_218157_0_.getX())),
+                blockToCube(MathHelper.floor(p_218157_0_.getY())),
+                blockToCube(MathHelper.floor(p_218157_0_.getZ())));
     }
 
 
@@ -133,6 +133,6 @@ public class CubePos extends Vector3i {
 
     public static long sectionToCubeSectionLong(long sectionPosIn)
     {
-        return CubePos.from(SectionPos.from(sectionPosIn)).asSectionPos().asLong();
+        return CubePos.from(SectionPos.of(sectionPosIn)).asSectionPos().asLong();
     }
 }

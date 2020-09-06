@@ -47,15 +47,15 @@ public abstract class MixinChunkHolder implements ICubeHolder {
     // these are using java type erasure as a feature - because the generic type information
     // doesn't exist at runtime, we can shadow those fields with different generic types
     // and as long as we are consistent, we can use them with different types than the declaration in the original class
-    @Shadow(aliases = "field_219312_g") @Final private AtomicReferenceArray<CompletableFuture<Either<IBigCube, ChunkHolder.IChunkLoadingError>>> futureByStatus;
+    @Shadow(aliases = "futures") @Final private AtomicReferenceArray<CompletableFuture<Either<IBigCube, ChunkHolder.IChunkLoadingError>>> futureByStatus;
     @Shadow private volatile CompletableFuture<Either<BigCube, ChunkHolder.IChunkLoadingError>> tickingFuture;
     @Shadow private volatile CompletableFuture<Either<BigCube, ChunkHolder.IChunkLoadingError>> entityTickingFuture;
-    @Shadow(aliases = "field_219315_j") private CompletableFuture<IBigCube> chunkFuture;
+    @Shadow(aliases = "chunkToSave") private CompletableFuture<IBigCube> chunkFuture;
 
 
     @Shadow private int skyLightChangeMask;
     @Shadow private int blockLightChangeMask;
-    @Shadow private int field_219318_m; // boundaryMask
+    @Shadow private int queueLevel; // boundaryMask
 
     @Shadow protected abstract void sendTileEntity(World worldIn, BlockPos posIn);
 
@@ -68,9 +68,9 @@ public abstract class MixinChunkHolder implements ICubeHolder {
         throw new Error("Mixin failed to apply");
     }
 
-    @Shadow public abstract CompletableFuture<Either<IChunk, ChunkHolder.IChunkLoadingError>> func_219301_a(ChunkStatus p_219301_1_);
+    @Shadow public abstract CompletableFuture<Either<IChunk, ChunkHolder.IChunkLoadingError>> getFutureIfPresentUnchecked(ChunkStatus p_219301_1_);
 
-    @Shadow(aliases = "func_219276_a")
+    @Shadow(aliases = "getOrScheduleFuture")
     public abstract CompletableFuture<Either<IBigCube, ChunkHolder.IChunkLoadingError>> createChunkFuture(ChunkStatus chunkStatus,
                                                                                                           ChunkManager chunkManager);
 
@@ -131,31 +131,31 @@ public abstract class MixinChunkHolder implements ICubeHolder {
         return this.entityTickingFuture;
     }
 
-    // func_219301_a
+    // func_219301_a, getFutureIfPresentUnchecked
     @Override
     public CompletableFuture<Either<IBigCube, ChunkHolder.IChunkLoadingError>> getCubeFuture(ChunkStatus chunkStatus) {
-        return unsafeCast(func_219301_a(chunkStatus));
+        return unsafeCast(getFutureIfPresentUnchecked(chunkStatus));
     }
 
-    // func_219302_f
+    // func_219302_f, getChunkToSave
     @Override
     public CompletableFuture<IBigCube> getCurrentCubeFuture() {
         return chunkFuture;
     }
 
-    // func_225410_b
+    // func_225410_b, getFutureIfPresent
     @Override public CompletableFuture<Either<IBigCube, ChunkHolder.IChunkLoadingError>> getFutureHigherThanCubeStatus(ChunkStatus chunkStatus) {
-        return ICubeHolder.getCubeStatusFromLevel(this.chunkLevel).isAtLeast(chunkStatus) ?
-                unsafeCast(this.func_219301_a(chunkStatus)) : // func_219301_a = getFutureByCubeStatus
+        return ICubeHolder.getCubeStatusFromLevel(this.chunkLevel).isOrAfter(chunkStatus) ?
+                unsafeCast(this.getFutureIfPresentUnchecked(chunkStatus)) : // getFutureIfPresentUnchecked = getFutureByCubeStatus
                 MISSING_CUBE_FUTURE;
     }
 
 
-    private AtomicReferenceArray<ArrayList<BiConsumer<Either<IBigCube, ChunkHolder.IChunkLoadingError>, Throwable>>> listenerLists = new AtomicReferenceArray<>(ChunkStatus.getAll().size());
+    private AtomicReferenceArray<ArrayList<BiConsumer<Either<IBigCube, ChunkHolder.IChunkLoadingError>, Throwable>>> listenerLists = new AtomicReferenceArray<>(ChunkStatus.getStatusList().size());
 
 
-    // func_219276_a
-    @Redirect(method = "func_219276_a", at = @At(
+    // func_219276_a, getOrScheduleFuture
+    @Redirect(method = "getOrScheduleFuture", at = @At(
             value = "INVOKE",
             target = "Lnet/minecraft/world/server/ChunkHolder;getChunkStatusFromLevel(I)Lnet/minecraft/world/chunk/ChunkStatus;"
     ))
@@ -167,19 +167,19 @@ public abstract class MixinChunkHolder implements ICubeHolder {
         }
     }
 
-    @Redirect(method = "func_219276_a", at = @At(
+    @Redirect(method = "getOrScheduleFuture", at = @At(
             value = "INVOKE",
-            target = "Lnet/minecraft/world/server/ChunkManager;func_219244_a(Lnet/minecraft/world/server/ChunkHolder;Lnet/minecraft/world/chunk/ChunkStatus;)Ljava/util/concurrent/CompletableFuture;"
+            target = "Lnet/minecraft/world/server/ChunkManager;schedule(Lnet/minecraft/world/server/ChunkHolder;Lnet/minecraft/world/chunk/ChunkStatus;)Ljava/util/concurrent/CompletableFuture;"
     ))
     private CompletableFuture<?> createChunkOrCubeFuture(ChunkManager chunkManager, ChunkHolder _this, ChunkStatus status) {
         if (cubePos == null) {
-            return chunkManager.func_219244_a(_this, status);
+            return chunkManager.schedule(_this, status);
         } else {
             return ((IChunkManager) chunkManager).createCubeFuture(_this, status);
         }
     }
 
-    // func_219276_a
+    // func_219276_a, getOrScheduleFuture
     @Override public CompletableFuture<Either<IBigCube, ChunkHolder.IChunkLoadingError>> createCubeFuture(ChunkStatus chunkStatus, ChunkManager chunkManager) {
         return createChunkFuture(chunkStatus, chunkManager);
     }
@@ -190,7 +190,7 @@ public abstract class MixinChunkHolder implements ICubeHolder {
         if (future.isDone()) {
             consumer.accept(future.getNow(null), null);
         } else {
-            List<BiConsumer<Either<IBigCube, ChunkHolder.IChunkLoadingError>, Throwable>> listenerList = this.listenerLists.get(status.ordinal());
+            List<BiConsumer<Either<IBigCube, ChunkHolder.IChunkLoadingError>, Throwable>> listenerList = this.listenerLists.get(status.getIndex());
             if (listenerList == null) {
 
                 final ArrayList<BiConsumer<Either<IBigCube, ChunkHolder.IChunkLoadingError>, Throwable>> listeners = new ArrayList<>();
@@ -201,7 +201,7 @@ public abstract class MixinChunkHolder implements ICubeHolder {
                     listeners.clear();
                     listeners.trimToSize();
                 });
-                this.listenerLists.set(status.ordinal(), listeners);
+                this.listenerLists.set(status.getIndex(), listeners);
                 listenerList = listeners;
             }
 
@@ -216,7 +216,7 @@ public abstract class MixinChunkHolder implements ICubeHolder {
      * @reason height limits
      */
     @Overwrite
-    public void func_244386_a(BlockPos blockPos) {
+    public void blockChanged(BlockPos blockPos) {
         if (cubePos == null) {
             throw new IllegalStateException("Why is this getting called?");
         }
@@ -264,7 +264,7 @@ public abstract class MixinChunkHolder implements ICubeHolder {
         ShortArraySet changed = changedLocalBlocks;
         int changedBlocks = changed.size();
 //        if (changed.size() >= net.minecraftforge.common.ForgeConfig.SERVER.clumpingThreshold.get()) {
-//            this.field_219318_m = -1;// boundaryMask
+//            this.queueLevel = -1;// boundaryMask
 //        }
 //
 //        if (changedBlocks >= net.minecraftforge.common.ForgeConfig.SERVER.clumpingThreshold.get()) {
@@ -288,11 +288,11 @@ public abstract class MixinChunkHolder implements ICubeHolder {
 
     private void sendToTracking(Object packetIn, boolean boundaryOnly) {
         // TODO: fix block update tracking
-        this.playerProvider.getTrackingPlayers(this.cubePos.asChunkPos(), boundaryOnly)
+        this.playerProvider.getPlayers(this.cubePos.asChunkPos(), boundaryOnly)
                 .forEach(player -> PacketDispatcher.sendTo(packetIn, player));
     }
 
-    // func_219294_a
+    // func_219294_a, replaceProtoChunk
     @Override
     public void onCubeWrapperCreated(CubePrimerWrapper primer) {
         for(int i = 0; i < this.futureByStatus.length(); ++i) {

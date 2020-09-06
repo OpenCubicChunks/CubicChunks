@@ -11,10 +11,10 @@ import javax.annotation.Nullable;
 @Mixin(targets = "net.minecraftforge.common.DimensionManager$NoopChunkStatusListener")
 public class MixinNoopChunkStatusListener implements ICubeStatusListener {
     @Override
-    public void start(ChunkPos center) { }
+    public void updateSpawnPos(ChunkPos center) { }
 
     @Override
-    public void statusChanged(ChunkPos chunkPosition, @Nullable ChunkStatus newStatus) { }
+    public void onStatusChange(ChunkPos chunkPosition, @Nullable ChunkStatus newStatus) { }
 
     @Override
     public void stop() { }

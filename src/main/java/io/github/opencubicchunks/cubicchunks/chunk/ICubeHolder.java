@@ -19,14 +19,15 @@ import javax.annotation.Nullable;
 
 public interface ICubeHolder {
     // TODO: all of their usages should be replaced with ASM
+    // TODO: rename to match mojang names
     @Deprecated
-    Either<IBigCube, ChunkHolder.IChunkLoadingError> MISSING_CUBE = unsafeCast(ChunkHolder.MISSING_CHUNK);
+    Either<IBigCube, ChunkHolder.IChunkLoadingError> MISSING_CUBE = unsafeCast(ChunkHolder.UNLOADED_CHUNK);
     @Deprecated
-    Either<BigCube, ChunkHolder.IChunkLoadingError> UNLOADED_CUBE = unsafeCast(ChunkHolder.UNLOADED_CHUNK);
+    Either<BigCube, ChunkHolder.IChunkLoadingError> UNLOADED_CUBE = unsafeCast(ChunkHolder.UNLOADED_LEVEL_CHUNK);
     @Deprecated
     CompletableFuture<Either<BigCube, ChunkHolder.IChunkLoadingError>> UNLOADED_CUBE_FUTURE = unsafeCast(ChunkHolderAccess.getUnloadedChunkFuture());
     @Deprecated
-    CompletableFuture<Either<IBigCube, ChunkHolder.IChunkLoadingError>> MISSING_CUBE_FUTURE = unsafeCast(ChunkHolder.MISSING_CHUNK_FUTURE);
+    CompletableFuture<Either<IBigCube, ChunkHolder.IChunkLoadingError>> MISSING_CUBE_FUTURE = unsafeCast(ChunkHolder.UNLOADED_CHUNK_FUTURE);
 
     static ChunkStatus getCubeStatusFromLevel(int cubeLevel) {
         return cubeLevel < 33 ? ChunkStatus.FULL : CubeStatus.getStatus(cubeLevel - 33);
@@ -37,17 +38,17 @@ public interface ICubeHolder {
 
     CubePos getCubePos();
 
-    // func_219276_a
+    // func_219276_a, getOrScheduleFuture
     CompletableFuture<Either<IBigCube, ChunkHolder.IChunkLoadingError>> createCubeFuture(ChunkStatus chunkStatus, ChunkManager chunkManager);
 
     CompletableFuture<Either<IBigCube, ChunkHolder.IChunkLoadingError>> getCubeFuture(ChunkStatus chunkStatus);
 
     CompletableFuture<Either<BigCube, ChunkHolder.IChunkLoadingError>> getCubeEntityTickingFuture();
 
-    // func_219294_a
+    // func_219294_a, replaceProtoChunk
     void onCubeWrapperCreated(CubePrimerWrapper primer);
 
-    // func_225410_b
+    // func_225410_b, getFutureIfPresent
     CompletableFuture<Either<IBigCube, ChunkHolder.IChunkLoadingError>> getFutureHigherThanCubeStatus(ChunkStatus chunkStatus);
 
     void addCubeStageListener(ChunkStatus status, BiConsumer<Either<IBigCube, ChunkHolder.IChunkLoadingError>, Throwable> consumer, ChunkManager chunkManager);

@@ -28,24 +28,23 @@ public abstract class MixinClientWorld extends World implements IClientWorld {
      */
     @Overwrite
     public void checkChunk(Entity entityIn) {
-        this.getProfiler().startSection("chunkCheck");
-        int i = MathHelper.floor(entityIn.getPosX() / 16.0D);
-        int j = MathHelper.floor(entityIn.getPosY() / 16.0D);
-        int k = MathHelper.floor(entityIn.getPosZ() / 16.0D);
-        if (!entityIn.addedToChunk || entityIn.chunkCoordX != i || entityIn.chunkCoordY != j || entityIn.chunkCoordZ != k) {
-            if (entityIn.addedToChunk && this.chunkExists(entityIn.chunkCoordX, entityIn.chunkCoordZ)) {
-                this.getChunk(entityIn.chunkCoordX, entityIn.chunkCoordZ).removeEntityAtIndex(entityIn, entityIn.chunkCoordY);
+        this.getProfiler().push("chunkCheck");
+        int i = MathHelper.floor(entityIn.getX() / 16.0D);
+        int j = MathHelper.floor(entityIn.getY() / 16.0D);
+        int k = MathHelper.floor(entityIn.getZ() / 16.0D);
+        if (!entityIn.inChunk || entityIn.xChunk != i || entityIn.yChunk != j || entityIn.zChunk != k) {
+            if (entityIn.inChunk && this.hasChunk(entityIn.xChunk, entityIn.zChunk)) {
+                this.getChunk(entityIn.xChunk, entityIn.zChunk).removeEntity(entityIn, entityIn.yChunk);
             }
 
-            // func_233577_ch_ = setPositionDirty
-            if (!entityIn.func_233577_ch_() && !this.chunkExists(i, k)) {
-                entityIn.addedToChunk = false;
+            if (!entityIn.checkAndResetForcedChunkAdditionFlag() && !this.hasChunk(i, k)) {
+                entityIn.inChunk = false;
             } else {
                 this.getChunk(i, k).addEntity(entityIn);
             }
         }
 
-        this.getProfiler().endSection();
+        this.getProfiler().pop();
     }
 
     @Override

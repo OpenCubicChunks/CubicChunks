@@ -74,7 +74,7 @@ public class BigCube implements IChunk, IBigCube {
     private Consumer<BigCube> postLoadConsumer;
 
     public BigCube(World worldIn, CubePos cubePosIn, CubeBiomeContainer biomeContainerIn) {
-        this(worldIn, cubePosIn, biomeContainerIn, UpgradeData.EMPTY, EmptyTickList.get(), EmptyTickList.get(), 0L, (ChunkSection[])null, (Consumer<BigCube>)null);
+        this(worldIn, cubePosIn, biomeContainerIn, UpgradeData.EMPTY, EmptyTickList.empty(), EmptyTickList.empty(), 0L, (ChunkSection[])null, (Consumer<BigCube>)null);
     }
 
     public BigCube(World worldIn, CubePos cubePosIn, CubeBiomeContainer biomeContainerIn, UpgradeData upgradeDataIn, ITickList<Block> tickBlocksIn,
@@ -115,7 +115,7 @@ public class BigCube implements IChunk, IBigCube {
                             ((ChunkSectionAccess) sectionsIn[i]).getBlockTickRefCount(),
                             ((ChunkSectionAccess) sectionsIn[i]).getFluidRefCount());
                     //noinspection ConstantConditions
-                    ((ChunkSectionAccess) sections[i]).setData(sectionsIn[i].getData());
+                    ((ChunkSectionAccess) sections[i]).setData(sectionsIn[i].getStates());
                 }
             }
         }
@@ -131,7 +131,7 @@ public class BigCube implements IChunk, IBigCube {
                 null, cubePrimerIn.getInhabitedTime(), cubePrimerIn.getCubeSections(), null);
 
         for(CompoundNBT compoundnbt : cubePrimerIn.getCubeEntities()) {
-            EntityType.loadEntityAndExecute(compoundnbt, worldIn, (p_217325_1_) -> {
+            EntityType.loadEntityRecursive(compoundnbt, worldIn, (p_217325_1_) -> {
                 this.addEntity(p_217325_1_);
                 return p_217325_1_;
             });
@@ -207,10 +207,10 @@ public class BigCube implements IChunk, IBigCube {
         //            this.heightMap.get(Heightmap.Type.OCEAN_FLOOR).update(i, j, k, state);
         //            this.heightMap.get(Heightmap.Type.WORLD_SURFACE).update(i, j, k, state);
 
-        if (!this.world.isRemote) {
-            blockstate.onReplaced(this.world, pos, state, isMoving);
+        if (!this.world.isClientSide) {
+            blockstate.onRemove(this.world, pos, state, isMoving);
         } else if ((block1 != block || !state.hasTileEntity()) && blockstate.hasTileEntity()) {
-            this.world.removeTileEntity(pos);
+            this.world.removeBlockEntity(pos);
         }
 
         if (chunksection.getBlockState(i, j, k).getBlock() != block) {
@@ -219,21 +219,21 @@ public class BigCube implements IChunk, IBigCube {
         if (blockstate.hasTileEntity()) {
             TileEntity tileentity = this.getTileEntity(pos, Chunk.CreateEntityType.CHECK);
             if (tileentity != null) {
-                tileentity.updateContainingBlockInfo();
+                tileentity.clearCache();
             }
         }
 
-        if (!this.world.isRemote) {
-            state.onBlockAdded(this.world, pos, blockstate, isMoving);
+        if (!this.world.isClientSide) {
+            state.onPlace(this.world, pos, blockstate, isMoving);
         }
 
         if (state.hasTileEntity()) {
             TileEntity tileentity1 = this.getTileEntity(pos, Chunk.CreateEntityType.CHECK);
             if (tileentity1 == null) {
                 tileentity1 = state.createTileEntity(this.world);
-                this.world.setTileEntity(pos, tileentity1);
+                this.world.setBlockEntity(pos, tileentity1);
             } else {
-                tileentity1.updateContainingBlockInfo();
+                tileentity1.clearCache();
             }
         }
 
@@ -243,7 +243,7 @@ public class BigCube implements IChunk, IBigCube {
     @Override public BlockState getBlockState(int x, int y, int z) {
         int index = Coords.blockToIndex(x, y, z);
         return ChunkSection.isEmpty(this.sections[index]) ?
-                Blocks.AIR.getDefaultState() :
+                Blocks.AIR.defaultBlockState() :
                 this.sections[index].getBlockState(x & 15, y & 15, z & 15);
     }
 
@@ -252,9 +252,9 @@ public class BigCube implements IChunk, IBigCube {
     @Override public void addCubeEntity(Entity entityIn) {
         this.hasEntities = true;
         //This needs to be blockToCube instead of getCubeXForEntity because of the `/ 16`
-        int xFloor = blockToCube(MathHelper.floor(entityIn.getPosX() / 16.0D));
-        int yFloor = blockToCube(MathHelper.floor(entityIn.getPosY() / 16.0D));
-        int zFloor = blockToCube(MathHelper.floor(entityIn.getPosZ() / 16.0D));
+        int xFloor = blockToCube(MathHelper.floor(entityIn.getX() / 16.0D));
+        int yFloor = blockToCube(MathHelper.floor(entityIn.getY() / 16.0D));
+        int zFloor = blockToCube(MathHelper.floor(entityIn.getZ() / 16.0D));
         if (xFloor != this.cubePos.getX() || yFloor != this.cubePos.getY() || zFloor != this.cubePos.getZ()) {
             CubicChunks.LOGGER.warn("Wrong location! ({}, {}, {}) should be ({}, {}, {}), {}", xFloor, yFloor, zFloor, this.cubePos.getX(),
                     this.cubePos.getY(), this.cubePos.getZ(), entityIn);
@@ -265,10 +265,10 @@ public class BigCube implements IChunk, IBigCube {
 
         //TODO: reimplement forge EntityEvent#EnteringChunk
         //net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.event.entity.EntityEvent.EnteringChunk(entityIn, this.pos.x, this.pos.z, entityIn.chunkCoordX, entityIn.chunkCoordZ));
-        entityIn.addedToChunk = true;
-        entityIn.chunkCoordX = cubeToSection(this.cubePos.getX(), 0);
-        entityIn.chunkCoordY = cubeToSection(this.cubePos.getY(), 0);
-        entityIn.chunkCoordZ = cubeToSection(this.cubePos.getZ(), 0);
+        entityIn.inChunk = true;
+        entityIn.xChunk = cubeToSection(this.cubePos.getX(), 0);
+        entityIn.yChunk = cubeToSection(this.cubePos.getY(), 0);
+        entityIn.zChunk = cubeToSection(this.cubePos.getZ(), 0);
         this.entityLists[idx].add(entityIn);
         this.setDirty(true); // Forge - ensure chunks are marked to save after an entity add
     }
@@ -281,9 +281,9 @@ public class BigCube implements IChunk, IBigCube {
     }
 
     private int getIndexFromEntity(Entity entityIn) {
-        return (MathHelper.floor(entityIn.getPosX() / 16.0D) * IBigCube.DIAMETER_IN_SECTIONS * IBigCube.DIAMETER_IN_SECTIONS) +
-                (MathHelper.floor(entityIn.getPosY() / 16.0D) * IBigCube.DIAMETER_IN_SECTIONS) +
-                MathHelper.floor(entityIn.getPosZ() / 16.0D);
+        return (MathHelper.floor(entityIn.getX() / 16.0D) * IBigCube.DIAMETER_IN_SECTIONS * IBigCube.DIAMETER_IN_SECTIONS) +
+                (MathHelper.floor(entityIn.getY() / 16.0D) * IBigCube.DIAMETER_IN_SECTIONS) +
+                MathHelper.floor(entityIn.getZ() / 16.0D);
     }
 
     public void removeEntity(Entity entityIn) {
@@ -307,43 +307,43 @@ public class BigCube implements IChunk, IBigCube {
     }
 
     //TILEENTITY
-    @Deprecated @Override public void addTileEntity(CompoundNBT nbt) {
+    @Deprecated @Override public void setBlockEntityNbt(CompoundNBT nbt) {
         this.addCubeTileEntity(nbt);
     }
     @Override public void addCubeTileEntity(CompoundNBT nbt) {
         this.deferredTileEntities.put(new BlockPos(nbt.getInt("x"), nbt.getInt("y"), nbt.getInt("z")), nbt);
     }
 
-    @Deprecated @Override public void addTileEntity(BlockPos pos, TileEntity tileEntityIn) { this.addCubeTileEntity(pos, tileEntityIn); }
+    @Deprecated @Override public void setBlockEntity(BlockPos pos, TileEntity tileEntityIn) { this.addCubeTileEntity(pos, tileEntityIn); }
     @Override public void addCubeTileEntity(BlockPos pos, TileEntity tileEntityIn) {
         if (this.getBlockState(pos).hasTileEntity()) {
-            tileEntityIn.setWorldAndPos(this.world, pos);
-            tileEntityIn.validate();
-            TileEntity tileentity = this.tileEntities.put(pos.toImmutable(), tileEntityIn);
+            tileEntityIn.setLevelAndPosition(this.world, pos);
+            tileEntityIn.clearRemoved();
+            TileEntity tileentity = this.tileEntities.put(pos.immutable(), tileEntityIn);
             if (tileentity != null && tileentity != tileEntityIn) {
-                tileentity.remove();
+                tileentity.setRemoved();
             }
         }
     }
 
     public void addCubeTileEntity(TileEntity tileEntityIn) {
-        this.addTileEntity(tileEntityIn.getPos(), tileEntityIn);
-        if (this.loaded || this.world.isRemote()) {
-            this.world.setTileEntity(tileEntityIn.getPos(), tileEntityIn);
+        this.setBlockEntity(tileEntityIn.getBlockPos(), tileEntityIn);
+        if (this.loaded || this.world.isClientSide()) {
+            this.world.setBlockEntity(tileEntityIn.getBlockPos(), tileEntityIn);
         }
     }
 
-    @Deprecated @Override public void removeTileEntity(BlockPos pos) { this.removeCubeTileEntity(pos); }
+    @Deprecated @Override public void removeBlockEntity(BlockPos pos) { this.removeCubeTileEntity(pos); }
     @Override public void removeCubeTileEntity(BlockPos pos) {
-        if (this.loaded || this.world.isRemote()) {
+        if (this.loaded || this.world.isClientSide()) {
             TileEntity tileentity = this.tileEntities.remove(pos);
             if (tileentity != null) {
-                tileentity.remove();
+                tileentity.setRemoved();
             }
         }
     }
 
-    @Nullable @Override public TileEntity getTileEntity(BlockPos pos) {
+    @Nullable @Override public TileEntity getBlockEntity(BlockPos pos) {
         return getTileEntity(pos, Chunk.CreateEntityType.CHECK);
     }
 
@@ -366,7 +366,7 @@ public class BigCube implements IChunk, IBigCube {
         if (tileentity == null) {
             if (creationMode == Chunk.CreateEntityType.IMMEDIATE) {
                 tileentity = this.createNewTileEntity(pos);
-                this.world.setTileEntity(pos, tileentity);
+                this.world.setBlockEntity(pos, tileentity);
             }
         }
 
@@ -389,11 +389,11 @@ public class BigCube implements IChunk, IBigCube {
                 CubicChunks.LOGGER.warn("Tried to load a DUMMY block entity @ {} but found not block entity block {} at location", pos, this.getBlockState(pos));
             }
         } else {
-            tileentity = TileEntity.readTileEntity(state, compound);
+            tileentity = TileEntity.loadStatic(state, compound);
         }
 
         if (tileentity != null) {
-            tileentity.setWorldAndPos(this.world, pos);
+            tileentity.setLevelAndPosition(this.world, pos);
             this.addCubeTileEntity(tileentity);
         } else {
             CubicChunks.LOGGER.warn("Tried to load a block entity for block {} but failed at location {}", state, pos);
@@ -409,7 +409,7 @@ public class BigCube implements IChunk, IBigCube {
         return this.deferredTileEntities;
     }
 
-    @Deprecated @Override public Set<BlockPos> getTileEntitiesPos() {
+    @Deprecated @Override public Set<BlockPos> getBlockEntitiesPos() {
         return this.getCubeTileEntitiesPos();
     }
     @Override public Set<BlockPos> getCubeTileEntitiesPos() {
@@ -418,12 +418,12 @@ public class BigCube implements IChunk, IBigCube {
         return set;
     }
 
-    @Deprecated @Nullable @Override public CompoundNBT getTileEntityNBT(BlockPos pos) { return this.getCubeTileEntityNBT(pos); }
+    @Deprecated @Nullable @Override public CompoundNBT getBlockEntityNbtForSaving(BlockPos pos) { return this.getCubeTileEntityNBT(pos); }
     @Nullable @Override public CompoundNBT getCubeTileEntityNBT(BlockPos pos) {
-        TileEntity tileentity = this.getTileEntity(pos);
+        TileEntity tileentity = this.getBlockEntity(pos);
         if (tileentity != null && !tileentity.isRemoved()) {
             try {
-                CompoundNBT compoundnbt1 = tileentity.write(new CompoundNBT());
+                CompoundNBT compoundnbt1 = tileentity.save(new CompoundNBT());
                 compoundnbt1.putBoolean("keepPacked", false);
                 return compoundnbt1;
             } catch (Exception e) {
@@ -441,38 +441,38 @@ public class BigCube implements IChunk, IBigCube {
         }
     }
 
-    @Deprecated @Nullable @Override public CompoundNBT getDeferredTileEntity(BlockPos pos) { return this.getCubeDeferredTileEntity(pos); }
+    @Deprecated @Nullable @Override public CompoundNBT getBlockEntityNbt(BlockPos pos) { return this.getCubeDeferredTileEntity(pos); }
     @Nullable @Override public CompoundNBT getCubeDeferredTileEntity(BlockPos pos) {
         return this.deferredTileEntities.get(pos);
     }
 
     //LIGHTING
-    @Deprecated @Override public boolean hasLight() { throw new UnsupportedOperationException("Chunk method called on a cube!"); }
+    @Deprecated @Override public boolean isLightCorrect() { throw new UnsupportedOperationException("Chunk method called on a cube!"); }
     @Override public boolean hasCubeLight() {
         return this.lightCorrect;
     }
 
-    @Deprecated @Override public void setLight(boolean lightCorrectIn) { throw new UnsupportedOperationException("Chunk method called on a cube!"); }
+    @Deprecated @Override public void setLightCorrect(boolean lightCorrectIn) { throw new UnsupportedOperationException("Chunk method called on a cube!"); }
     @Override public void setCubeLight(boolean lightCorrectIn) {
         this.lightCorrect = lightCorrectIn;
         this.setDirty(true);
     }
 
-    @Deprecated @Override public Stream<BlockPos> getLightSources() { return this.getCubeLightSources(); }
+    @Deprecated @Override public Stream<BlockPos> getLights() { return this.getCubeLightSources(); }
     @Override public Stream<BlockPos> getCubeLightSources() {
         return StreamSupport
-                .stream(BlockPos.getAllInBoxMutable(this.cubePos.minCubeX(), this.cubePos.minCubeY(), this.cubePos.minCubeZ(),
+                .stream(BlockPos.betweenClosed(this.cubePos.minCubeX(), this.cubePos.minCubeY(), this.cubePos.minCubeZ(),
                         this.cubePos.maxCubeX(), this.cubePos.maxCubeY(), this.cubePos.maxCubeZ())
                         .spliterator(), false).filter((blockPos) -> this.getBlockState(blockPos).getLightValue(getWorld(), blockPos) != 0);
     }
 
     //MISC
-    @Deprecated @Override public void setModified(boolean modified) { setDirty(modified); }
+    @Deprecated @Override public void setUnsaved(boolean modified) { setDirty(modified); }
     @Override public void setDirty(boolean modified) {
         this.dirty = modified;
     }
 
-    @Deprecated @Override public boolean isModified() { return isDirty(); }
+    @Deprecated @Override public boolean isUnsaved() { return isDirty(); }
     @Override public boolean isDirty() {
         return dirty || this.hasEntities; //return this.dirty || this.hasEntities && this.world.getGameTime() != this.lastSaveTime;
     }
@@ -506,7 +506,7 @@ public class BigCube implements IChunk, IBigCube {
         for(ChunkSection section : this.sections)
         {
             if(section != null)
-                size += section.getSize();
+                size += section.getSerializedSize();
         }
         return size;
     }
@@ -540,7 +540,7 @@ public class BigCube implements IChunk, IBigCube {
 
         this.cubeBiomeContainer = biomes;
 
-        Sets.newHashSet(this.tileEntities.keySet()).forEach(this.world::removeTileEntity);
+        Sets.newHashSet(this.tileEntities.keySet()).forEach(this.world::removeBlockEntity);
         for (int i = 0; i < IBigCube.SECTION_COUNT; i++) {
             boolean exists = emptyFlags.get(i);
 
@@ -571,7 +571,7 @@ public class BigCube implements IChunk, IBigCube {
                              boolean sectionExists) {
 
         for (TileEntity tileEntity : tileEntities.values()) {
-            tileEntity.updateContainingBlockInfo();
+            tileEntity.clearCache();
             tileEntity.getBlockState();
         }
 
@@ -589,14 +589,14 @@ public class BigCube implements IChunk, IBigCube {
         }
 
         for (Heightmap.Type type : Heightmap.Type.values()) {
-            String typeId = type.getId();
+            String typeId = type.getSerializationKey();
             if (nbtIn.contains(typeId, Constants.NBT.TAG_LONG_ARRAY)) {
                 this.setHeightmap(type, nbtIn.getLongArray(typeId));
             }
         }
 
         for (TileEntity tileentity : this.tileEntities.values()) {
-            tileentity.updateContainingBlockInfo();
+            tileentity.clearCache();
         }
     }
 
@@ -628,11 +628,11 @@ public class BigCube implements IChunk, IBigCube {
 
     }
 
-    @Override public Heightmap getHeightmap(Heightmap.Type typeIn) {
+    @Override public Heightmap getOrCreateHeightmapUnprimed(Heightmap.Type typeIn) {
         throw new UnsupportedOperationException("Not implemented");
     }
 
-    @Override public int getTopBlockY(Heightmap.Type heightmapType, int x, int z) {
+    @Override public int getHeight(Heightmap.Type heightmapType, int x, int z) {
         return 0;
     }
 
@@ -640,23 +640,23 @@ public class BigCube implements IChunk, IBigCube {
 
     }
 
-    @Deprecated @Override public Map<Structure<?>, StructureStart<?>> getStructureStarts() {
+    @Deprecated @Override public Map<Structure<?>, StructureStart<?>> getAllStarts() {
         throw new UnsupportedOperationException("Not implemented");
     }
 
-    @Deprecated @Override public void setStructureStarts(Map<Structure<?>, StructureStart<?>> structureStartsIn) {
+    @Deprecated @Override public void setAllStarts(Map<Structure<?>, StructureStart<?>> structureStartsIn) {
 
     }
 
-    @Override public ShortList[] getPackedPositions() {
+    @Override public ShortList[] getPostProcessing() {
         throw new UnsupportedOperationException("Not implemented");
     }
 
-    @Override public ITickList<Block> getBlocksToBeTicked() {
+    @Override public ITickList<Block> getBlockTicks() {
         throw new UnsupportedOperationException("Not implemented");
     }
 
-    @Override public ITickList<Fluid> getFluidsToBeTicked() {
+    @Override public ITickList<Fluid> getLiquidTicks() {
         throw new UnsupportedOperationException("Not implemented");
     }
 
@@ -669,30 +669,30 @@ public class BigCube implements IChunk, IBigCube {
     }
 
     // getStructureStart
-    @Nullable @Override public StructureStart<?> func_230342_a_(Structure<?> var1) {
+    @Nullable @Override public StructureStart<?> getStartForFeature(Structure<?> var1) {
         throw new UnsupportedOperationException("Not implemented");
     }
 
     // putStructureStart
-    @Override public void func_230344_a_(Structure<?> structureIn, StructureStart<?> structureStartIn) {
+    @Override public void setStartForFeature(Structure<?> structureIn, StructureStart<?> structureStartIn) {
 
     }
 
     // getStructureReferences
-    @Override public LongSet func_230346_b_(Structure<?> structureIn) {
+    @Override public LongSet getReferencesForFeature(Structure<?> structureIn) {
         throw new UnsupportedOperationException("Not implemented");
     }
 
     // addStructureReference
-    @Override public void func_230343_a_(Structure<?> structure, long reference) {
+    @Override public void addReferenceForFeature(Structure<?> structure, long reference) {
 
     }
 
-    @Override public Map<Structure<?>, LongSet> getStructureReferences() {
+    @Override public Map<Structure<?>, LongSet> getAllReferences() {
         throw new UnsupportedOperationException("Not implemented");
     }
 
-    @Override public void setStructureReferences(Map<Structure<?>, LongSet> p_201606_1_) {
+    @Override public void setAllReferences(Map<Structure<?>, LongSet> p_201606_1_) {
 
     }
 

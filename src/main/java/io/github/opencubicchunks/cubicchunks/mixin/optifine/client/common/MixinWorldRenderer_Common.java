@@ -24,7 +24,7 @@ public class MixinWorldRenderer_Common {
 //        if (!((ICubicWorld) world).isCubicWorld()) {
 //            return mc.gameSettings.renderDistanceChunks;
 //        }
-        return mc.gameSettings.renderDistanceChunks;
+        return mc.options.renderDistance;
     }
 
     @ModifyConstant(method = "renderWorldBorder", constant = @Constant(intValue = 256))

@@ -44,19 +44,19 @@ public class MixinChunkGenerator implements ICubeGenerator {
         return Arrays.asList(3, 2, 1, 0);
     }
     // TODO: check which one is which
-    @Inject(method = "func_242707_a", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "createStructures", at = @At("HEAD"), cancellable = true)
     public void onGenerateStructures(DynamicRegistries p_242707_1_, StructureManager p_242707_2_, IChunk p_242707_3_, TemplateManager p_242707_4_, long p_242707_5_, CallbackInfo ci) {
 
         ci.cancel();
     }
 
 
-    @Inject(method = "func_235953_a_", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "createReferences", at = @At("HEAD"), cancellable = true)
     public void generateStructureStarts(ISeedReader p_235953_1_, StructureManager p_235953_2_, IChunk p_235953_3_, CallbackInfo ci) {
         ci.cancel();
     }
 
-    @Inject(method = "func_242706_a", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "createBiomes", at = @At("HEAD"), cancellable = true)
     public void generateBiomes(Registry<Biome> p_242706_1_, IChunk chunkIn, CallbackInfo ci) {
         if (chunkIn instanceof IBigCube) {
             ci.cancel();
@@ -72,20 +72,20 @@ public class MixinChunkGenerator implements ICubeGenerator {
             for (int dz = 0; dz < IBigCube.DIAMETER_IN_BLOCKS; dz++) {
                 int blockZ = cube.getCubePos().minCubeZ() + dz;
 
-                double v1 = gen1.noiseAt(blockX * 0.004567, blockZ * 0.004567, 0, 0) * 400;
-                double v2 = gen2.noiseAt(blockX * 0.004567, blockZ * 0.004567, 0, 0) * 400;
-                double v3 = gen3.noiseAt(blockX * 0.008567, blockZ * 0.008567, 0, 0) * 20 + 0.5;
+                double v1 = gen1.getSurfaceNoiseValue(blockX * 0.004567, blockZ * 0.004567, 0, 0) * 400;
+                double v2 = gen2.getSurfaceNoiseValue(blockX * 0.004567, blockZ * 0.004567, 0, 0) * 400;
+                double v3 = gen3.getSurfaceNoiseValue(blockX * 0.008567, blockZ * 0.008567, 0, 0) * 20 + 0.5;
                 int height = (int) MathHelper.clampedLerp(v1, v2, v3);
                 for (int dy = 0; dy < IBigCube.DIAMETER_IN_BLOCKS; dy++) {
                     int blockY = cube.getCubePos().minCubeY() + dy;
                     if (blockY == height) {
-                        cube.setBlock(new BlockPos(dx, dy, dz), Blocks.GRASS_BLOCK.getDefaultState(), false);
+                        cube.setBlock(new BlockPos(dx, dy, dz), Blocks.GRASS_BLOCK.defaultBlockState(), false);
                     } else if (blockY >= height - 4 && blockY < height) {
-                        cube.setBlock(new BlockPos(dx, dy, dz), Blocks.DIRT.getDefaultState(), false);
+                        cube.setBlock(new BlockPos(dx, dy, dz), Blocks.DIRT.defaultBlockState(), false);
                     } else if (blockY < height) {
-                        cube.setBlock(new BlockPos(dx, dy, dz), Blocks.STONE.getDefaultState(), false);
+                        cube.setBlock(new BlockPos(dx, dy, dz), Blocks.STONE.defaultBlockState(), false);
                     } else if (blockY < 0) {
-                        cube.setBlock(new BlockPos(dx, dy, dz), Blocks.WATER.getDefaultState(), false);
+                        cube.setBlock(new BlockPos(dx, dy, dz), Blocks.WATER.defaultBlockState(), false);
                     }
                 }
             }
@@ -127,8 +127,8 @@ public class MixinChunkGenerator implements ICubeGenerator {
 //                            DefaultBiomeFeatures.SPRUCE_TREE_CONFIG,
 //                            DefaultBiomeFeatures.FANCY_TREE_WITH_MORE_BEEHIVES_CONFIG,
 //                    };
-                    Feature.field_236291_c_.withConfiguration(((new BaseTreeFeatureConfig.Builder(new SimpleBlockStateProvider(Blocks.DARK_OAK_LOG.getDefaultState()), new SimpleBlockStateProvider(Blocks.DARK_OAK_LEAVES.getDefaultState()), new DarkOakFoliagePlacer(FeatureSpread.func_242252_a(0), FeatureSpread.func_242252_a(0)), new DarkOakTrunkPlacer(6, 2, 1), new ThreeLayerFeature(1, 1, 0, 1, 2, OptionalInt.empty()))).func_236701_a_(Integer.MAX_VALUE).func_236702_a_(Heightmap.Type.MOTION_BLOCKING).setIgnoreVines().build())).func_242765_a(region,
-                            (ChunkGenerator) (Object) this, r, pos.up());
+                    Feature.TREE.configured(((new BaseTreeFeatureConfig.Builder(new SimpleBlockStateProvider(Blocks.DARK_OAK_LOG.defaultBlockState()), new SimpleBlockStateProvider(Blocks.DARK_OAK_LEAVES.defaultBlockState()), new DarkOakFoliagePlacer(FeatureSpread.fixed(0), FeatureSpread.fixed(0)), new DarkOakTrunkPlacer(6, 2, 1), new ThreeLayerFeature(1, 1, 0, 1, 2, OptionalInt.empty()))).maxWaterDepth(Integer.MAX_VALUE).heightmap(Heightmap.Type.MOTION_BLOCKING).ignoreVines().build())).place(region,
+                            (ChunkGenerator) (Object) this, r, pos.above());
                 }
             }
         }

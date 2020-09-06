@@ -64,7 +64,7 @@ public class PacketCubes {
         int teTagCount = buf.readVarInt();
         this.tileEntityTags = new ArrayList<>(teTagCount);
         for (int i = 0; i < teTagCount; i++) {
-            this.tileEntityTags.add(buf.readCompoundTag());
+            this.tileEntityTags.add(buf.readNbt());
         }
     }
 
@@ -83,7 +83,7 @@ public class PacketCubes {
         buf.writeVarInt(this.tileEntityTags.size());
 
         for (CompoundNBT compoundnbt : this.tileEntityTags) {
-            buf.writeCompoundTag(compoundnbt);
+            buf.writeNbt(compoundnbt);
         }
     }
 
@@ -100,7 +100,7 @@ public class PacketCubes {
                 int y = pos.getY();
                 int z = pos.getZ();
 
-                ((IClientCubeProvider) world.getChunkProvider()).loadCube(
+                ((IClientCubeProvider) world.getChunkSource()).loadCube(
                         x, y, z, null, dataReader, new CompoundNBT(), cubeExists.get(i));
 
                 // TODO: full cube info
@@ -110,7 +110,7 @@ public class PacketCubes {
                 for (int dx = 0; dx < IBigCube.DIAMETER_IN_SECTIONS; dx++) {
                     for (int dy = 0; dy < IBigCube.DIAMETER_IN_SECTIONS; dy++) {
                         for (int dz = 0; dz < IBigCube.DIAMETER_IN_SECTIONS; dz++) {
-                            world.markSurroundingsForRerender(
+                            world.setSectionDirtyWithNeighbors(
                                     cubeToSection(x, dx),
                                     cubeToSection(y, dy),
                                     cubeToSection(z, dz));
@@ -120,7 +120,7 @@ public class PacketCubes {
 
                 for (CompoundNBT nbt : packet.tileEntityTags) {
                     BlockPos tePos = new BlockPos(nbt.getInt("x"), nbt.getInt("y"), nbt.getInt("z"));
-                    TileEntity te = world.getTileEntity(tePos);
+                    TileEntity te = world.getBlockEntity(tePos);
                     if (te != null) {
                         te.handleUpdateTag(world.getBlockState(tePos), nbt);
                     }

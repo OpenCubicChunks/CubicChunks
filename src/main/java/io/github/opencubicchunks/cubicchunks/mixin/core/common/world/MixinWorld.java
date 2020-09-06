@@ -40,7 +40,7 @@ public abstract class MixinWorld implements ICubicWorld {
 
     //The method .getWorld() No longer exists
     public IBigCube getCube(int cubeX, int cubeY, int cubeZ, ChunkStatus requiredStatus, boolean nonnull) {
-        IBigCube icube = ((ICubeProvider)((World)(Object)this).getChunkProvider()).getCube(cubeX, cubeY, cubeZ, requiredStatus, nonnull);
+        IBigCube icube = ((ICubeProvider)((World)(Object)this).getChunkSource()).getCube(cubeX, cubeY, cubeZ, requiredStatus, nonnull);
         if (icube == null && nonnull) {
             throw new IllegalStateException("Should always be able to create a cube!");
         } else {

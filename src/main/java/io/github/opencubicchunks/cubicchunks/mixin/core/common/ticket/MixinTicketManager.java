@@ -55,7 +55,7 @@ public abstract class MixinTicketManager implements ITicketManager {
 
     //@Final @Shadow private Long2ObjectMap<ObjectSet<ServerPlayerEntity>> playersByChunkPos;
     //@Final @Shadow private LongSet chunkPositions;
-    @Final @Shadow private Executor field_219388_p;
+    @Final @Shadow private Executor mainThreadExecutor;
     @Shadow private long currentTime;
     //@Final @Shadow private Set<ChunkHolder> chunkHolders;
 
@@ -75,7 +75,7 @@ public abstract class MixinTicketManager implements ITicketManager {
 
     @Inject(method = "<init>", at = @At("RETURN"))
     public void init(Executor executor, Executor executor2, CallbackInfo ci) {
-        ITaskExecutor<Runnable> itaskexecutor = ITaskExecutor.inline("player ticket throttler", executor2::execute);
+        ITaskExecutor<Runnable> itaskexecutor = ITaskExecutor.of("player ticket throttler", executor2::execute);
         CubeTaskPriorityQueueSorter
                 cubeTaskPriorityQueueSorter = new CubeTaskPriorityQueueSorter(ImmutableList.of(itaskexecutor), executor, 4);
         this.cubeTaskPriorityQueueSorter = cubeTaskPriorityQueueSorter;
@@ -87,10 +87,10 @@ public abstract class MixinTicketManager implements ITicketManager {
     public void registerCube(long cubePosIn, Ticket<?> ticketIn) {
         SortedArraySet<Ticket<?>> sortedarrayset = this.getCubeTicketSet(cubePosIn);
         int i = getLevel(sortedarrayset);
-        Ticket<?> ticket = sortedarrayset.func_226175_a_(ticketIn);
+        Ticket<?> ticket = sortedarrayset.addOrGet(ticketIn);
         ((TicketAccess) ticket).setTimestampCC(this.currentTime);
-        if (ticketIn.getLevel() < i) {
-            this.cubeTicketTracker.updateSourceLevel(cubePosIn, ticketIn.getLevel(), true);
+        if (ticketIn.getTicketLevel() < i) {
+            this.cubeTicketTracker.updateSourceLevel(cubePosIn, ticketIn.getTicketLevel(), true);
         }
     }
 
@@ -108,7 +108,7 @@ public abstract class MixinTicketManager implements ITicketManager {
     }
 
     private SortedArraySet<Ticket<?>> getCubeTicketSet(long cubePos) {
-        return this.cubeTickets.computeIfAbsent(cubePos, (p_229851_0_) -> SortedArraySet.newSet(4));
+        return this.cubeTickets.computeIfAbsent(cubePos, (p_229851_0_) -> SortedArraySet.create(4));
     }
 
     @Inject(method = "setViewDistance", at = @At("HEAD"))
@@ -149,8 +149,8 @@ public abstract class MixinTicketManager implements ITicketManager {
 
                         CompletableFuture<Either<BigCube, ChunkHolder.IChunkLoadingError>> sectionEntityTickingFuture =
                                 ((ICubeHolder)chunkholder).getCubeEntityTickingFuture();
-                        sectionEntityTickingFuture.thenAccept((p_219363_3_) -> this.field_219388_p.execute(() -> {
-                            this.playerCubeTicketThrottlerSorter.enqueue(CubeTaskPriorityQueueSorter.createSorterMsg(() -> {
+                        sectionEntityTickingFuture.thenAccept((p_219363_3_) -> this.mainThreadExecutor.execute(() -> {
+                            this.playerCubeTicketThrottlerSorter.tell(CubeTaskPriorityQueueSorter.createSorterMsg(() -> {
                             }, j, false));
                         }));
                     }
@@ -277,7 +277,7 @@ public abstract class MixinTicketManager implements ITicketManager {
 
     @Override
     public Executor executor() {
-        return field_219388_p;
+        return mainThreadExecutor;
     }
 
     @Override

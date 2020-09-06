@@ -15,8 +15,8 @@ public class CubeStatus {
     private static final Object2IntOpenHashMap<ChunkStatus> CUBE_TASK_RANGE_XZ = new Object2IntOpenHashMap<>();
 
     static {
-        for (ChunkStatus chunkStatus : ChunkStatus.getAll()) {
-            int r = Coords.sectionToCubeCeil(chunkStatus.getTaskRange());
+        for (ChunkStatus chunkStatus : ChunkStatus.getStatusList()) {
+            int r = Coords.sectionToCubeCeil(chunkStatus.getRange());
             CUBE_TASK_RANGE_XZ.put(chunkStatus, r);
         }
     }
@@ -73,11 +73,11 @@ public class CubeStatus {
         }
     }
 
-    private static final IntList RANGE_BY_STATUS = Util.make(new IntArrayList(ChunkStatus.getAll().size()), (rangeByStatus) -> {
+    private static final IntList RANGE_BY_STATUS = Util.make(new IntArrayList(ChunkStatus.getStatusList().size()), (rangeByStatus) -> {
         int range = 0;
 
-        for(int status = ChunkStatus.getAll().size() - 1; status >= 0; --status) {
-            while(range + 1 < STATUS_BY_RANGE.size() && status <= STATUS_BY_RANGE.get(range + 1).ordinal()) {
+        for(int status = ChunkStatus.getStatusList().size() - 1; status >= 0; --status) {
+            while(range + 1 < STATUS_BY_RANGE.size() && status <= STATUS_BY_RANGE.get(range + 1).getIndex()) {
                 ++range;
             }
             rangeByStatus.add(0, range);
@@ -97,7 +97,7 @@ public class CubeStatus {
     }
 
     public static int getDistance(ChunkStatus status) {
-        return RANGE_BY_STATUS.getInt(status.ordinal());
+        return RANGE_BY_STATUS.getInt(status.getIndex());
     }
 
     public static int getCubeTaskRange(ChunkStatus chunkStatusIn) {

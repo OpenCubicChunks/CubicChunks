@@ -27,9 +27,9 @@ public class CubeBiomeContainer extends BiomeContainer {
 
     public CubeBiomeContainer(IObjectIntIterable<Biome> indexedIterable, SectionPos sectionPosIn, BiomeProvider biomeProviderIn) {
         this(indexedIterable);
-        int x = sectionPosIn.getWorldStartX() >> 2;
-        int y = sectionPosIn.getWorldStartY() >> 2;
-        int z = sectionPosIn.getWorldStartZ() >> 2;
+        int x = sectionPosIn.minBlockX() >> 2;
+        int y = sectionPosIn.minBlockY() >> 2;
+        int z = sectionPosIn.minBlockZ() >> 2;
 
         for(int k = 0; k < ((BiomeContainerAccess)this).getBiomes().length; ++k) {
             int dx = k & HORIZONTAL_MASK;
@@ -42,13 +42,13 @@ public class CubeBiomeContainer extends BiomeContainer {
 
     public CubeBiomeContainer(IObjectIntIterable<Biome> indexedIterable, SectionPos sectionPosIn, BiomeProvider biomeProviderIn, @Nullable int[] biomeIds) {
         this(indexedIterable);
-        int x = sectionPosIn.getWorldStartX() >> 2;
-        int y = sectionPosIn.getWorldStartY() >> 2;
-        int z = sectionPosIn.getWorldStartZ() >> 2;
+        int x = sectionPosIn.minBlockX() >> 2;
+        int y = sectionPosIn.minBlockY() >> 2;
+        int z = sectionPosIn.minBlockZ() >> 2;
         Biome[] biomes = ((BiomeContainerAccess) this).getBiomes();
         if (biomeIds != null) {
             for(int k = 0; k < biomeIds.length; ++k) {
-                biomes[k] = WorldGenRegistries.field_243657_i.getByValue(biomeIds[k]);
+                biomes[k] = WorldGenRegistries.BIOME.byId(biomeIds[k]);
                 if (biomes[k] == null) {
                     int dx = k & HORIZONTAL_MASK;
                     int dy = k >> SIZE_BITS + SIZE_BITS & HORIZONTAL_MASK;

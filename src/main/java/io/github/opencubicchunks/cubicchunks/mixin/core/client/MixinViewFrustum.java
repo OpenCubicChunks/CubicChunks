@@ -41,10 +41,10 @@ public abstract class MixinViewFrustum {
 
     @Inject(method = "updateChunkPositions", at = @At(value = "HEAD"), cancellable = true, require = 1)
     private void setCountChunkXYZ(double viewEntityX, double viewEntityZ, CallbackInfo ci) {
-        Entity view = Minecraft.getInstance().getRenderViewEntity();
-        double x = view.getPosX();
-        double y = view.getPosY();
-        double z = view.getPosZ();
+        Entity view = Minecraft.getInstance().getCameraEntity();
+        double x = view.getX();
+        double y = view.getY();
+        double z = view.getZ();
         int viewX = MathHelper.floor(x);
         int viewZ = MathHelper.floor(z);
         int viewY = MathHelper.floor(y);
@@ -64,7 +64,7 @@ public abstract class MixinViewFrustum {
                     int yTemp = viewY - 8 - yBase / 2;
                     int posY = yTemp + Math.floorMod(yIndex * 16 - yTemp, yBase);
                     ChunkRenderDispatcher.ChunkRender chunkrenderdispatcher$chunkrender = this.renderChunks[this.getIndex(xIndex, yIndex, zIndex)];
-                    chunkrenderdispatcher$chunkrender.setPosition(posX, posY, posZ);
+                    chunkrenderdispatcher$chunkrender.setOrigin(posX, posY, posZ);
                 }
             }
         }
@@ -76,9 +76,9 @@ public abstract class MixinViewFrustum {
         int x = MathHelper.intFloorDiv(pos.getX(), 16);
         int y = MathHelper.intFloorDiv(pos.getY(), 16);
         int z = MathHelper.intFloorDiv(pos.getZ(), 16);
-        x = MathHelper.normalizeAngle(x, this.countChunksX);
-        y = MathHelper.normalizeAngle(y, this.countChunksY);
-        z = MathHelper.normalizeAngle(z, this.countChunksZ);
+        x = MathHelper.positiveModulo(x, this.countChunksX);
+        y = MathHelper.positiveModulo(y, this.countChunksY);
+        z = MathHelper.positiveModulo(z, this.countChunksZ);
         ChunkRenderDispatcher.ChunkRender renderChunk = this.renderChunks[this.getIndex(x, y, z)];
         cbi.cancel();
         cbi.setReturnValue(renderChunk);

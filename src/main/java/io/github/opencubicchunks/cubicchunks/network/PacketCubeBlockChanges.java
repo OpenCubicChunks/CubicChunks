@@ -32,7 +32,7 @@ public class PacketCubeBlockChanges {
 
         for (int i = 0; i < numBlocks; i++) {
             localAddresses[i] = in.readShort();
-            blockStates[i] = Block.BLOCK_STATE_IDS.getByValue(in.readVarInt());
+            blockStates[i] = Block.BLOCK_STATE_REGISTRY.byId(in.readVarInt());
         }
     }
 
@@ -57,7 +57,7 @@ public class PacketCubeBlockChanges {
         out.writeShort(localAddresses.length);
         for (int i = 0; i < localAddresses.length; i++) {
             out.writeShort(localAddresses[i]);
-            out.writeVarInt(Block.BLOCK_STATE_IDS.getId(blockStates[i]));
+            out.writeVarInt(Block.BLOCK_STATE_REGISTRY.getId(blockStates[i]));
         }
     }
 
@@ -70,7 +70,7 @@ public class PacketCubeBlockChanges {
         public static void handle(PacketCubeBlockChanges packet, World world) {
             ClientWorld worldClient = (ClientWorld) world;
             for (int i = 0; i < packet.localAddresses.length; i++) {
-                worldClient.invalidateRegionAndSetBlock(packet.getPos(i), packet.blockStates[i]);
+                worldClient.setKnownState(packet.getPos(i), packet.blockStates[i]);
             }
         }
     }

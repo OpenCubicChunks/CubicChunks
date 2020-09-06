@@ -36,7 +36,7 @@ public abstract class MixinServerWorld extends World implements IServerWorld {
 
     @Override
     public void onCubeUnloading(BigCube cubeIn) {
-        this.tileEntitiesToBeRemoved.addAll(cubeIn.getTileEntityMap().values());
+        this.blockEntitiesToUnload.addAll(cubeIn.getTileEntityMap().values());
         ClassInheritanceMultiMap<Entity>[] aclassinheritancemultimap = cubeIn.getEntityLists();
         int i = aclassinheritancemultimap.length;
 
@@ -44,10 +44,10 @@ public abstract class MixinServerWorld extends World implements IServerWorld {
             for(Entity entity : aclassinheritancemultimap[j]) {
                 if (!(entity instanceof ServerPlayerEntity)) {
                     if (this.tickingEntities) {
-                        throw (IllegalStateException) Util.pauseDevMode(new IllegalStateException("Removing entity while ticking!"));
+                        throw (IllegalStateException) Util.pauseInIde(new IllegalStateException("Removing entity while ticking!"));
                     }
 
-                    this.entitiesById.remove(entity.getEntityId());
+                    this.entitiesById.remove(entity.getId());
                     this.onEntityRemoved(entity);
                 }
             }

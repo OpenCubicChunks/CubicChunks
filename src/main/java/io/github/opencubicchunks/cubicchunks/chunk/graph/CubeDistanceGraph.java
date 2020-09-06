@@ -8,11 +8,11 @@ public abstract class CubeDistanceGraph  extends LevelBasedGraph {
         super(levelCount, expectedUpdatesByLevel, expectedPropagationLevels);
     }
 
-    @Override protected boolean isRoot(long pos) {
+    @Override protected boolean isSource(long pos) {
         return pos == Long.MAX_VALUE;
     }
 
-    @Override protected void notifyNeighbors(long pos, int level, boolean isDecreasing) {
+    @Override protected void checkNeighborsAfterUpdate(long pos, int level, boolean isDecreasing) {
         CubePos cubePos =  CubePos.from(pos);
         int x = cubePos.getX();
         int y = cubePos.getY();
@@ -23,7 +23,7 @@ public abstract class CubeDistanceGraph  extends LevelBasedGraph {
                 for (int z2 = -1; z2 <= 1; ++z2) {
                     long i1 = CubePos.asLong(x + x2, y + y2, z + z2);
                     if (i1 != pos) {
-                        this.propagateLevel(pos, i1, level, isDecreasing);
+                        this.checkNeighbor(pos, i1, level, isDecreasing);
                     }
                 }
             }
@@ -34,7 +34,7 @@ public abstract class CubeDistanceGraph  extends LevelBasedGraph {
      * Computes level propagated from neighbors of specified position with given existing level, excluding the given
      * source position.
      */
-    @Override protected int computeLevel(long pos, long excludedSourcePos, int level) {
+    @Override protected int getComputedLevel(long pos, long excludedSourcePos, int level) {
         int i = level;
         CubePos cubePos =  CubePos.from(pos);
         int x = cubePos.getX();
@@ -50,7 +50,7 @@ public abstract class CubeDistanceGraph  extends LevelBasedGraph {
                     }
 
                     if (j1 != excludedSourcePos) {
-                        int k1 = this.getEdgeLevel(j1, pos, this.getLevel(j1));
+                        int k1 = this.computeLevelFromNeighbor(j1, pos, this.getLevel(j1));
                         if (i > k1) {
                             i = k1;
                         }
@@ -69,14 +69,14 @@ public abstract class CubeDistanceGraph  extends LevelBasedGraph {
     /**
      * Returns level propagated from start position with specified level to the neighboring end position.
      */
-    @Override protected int getEdgeLevel(long startPos, long endPos, int startLevel) {
+    @Override protected int computeLevelFromNeighbor(long startPos, long endPos, int startLevel) {
         return startPos == Long.MAX_VALUE ? this.getSourceLevel(endPos) : startLevel + 1;
     }
 
     protected abstract int getSourceLevel(long pos);
 
     public void updateSourceLevel(long pos, int level, boolean isDecreasing) {
-        this.scheduleUpdate(Long.MAX_VALUE, pos, level, isDecreasing);
+        this.checkEdge(Long.MAX_VALUE, pos, level, isDecreasing);
     }
 
 }

@@ -14,7 +14,7 @@ public interface MixinIWorldReader extends IWorldReader {
      */
     @Deprecated
     @Overwrite
-    default boolean isAreaLoaded(int fromX, int fromY, int fromZ, int toX, int toY, int toZ) {
+    default boolean hasChunksAt(int fromX, int fromY, int fromZ, int toX, int toY, int toZ) {
         if (toY >= CubicChunks.MIN_SUPPORTED_HEIGHT && fromY < CubicChunks.MAX_SUPPORTED_HEIGHT) {
             fromX = fromX >> 4;
             fromZ = fromZ >> 4;
@@ -23,7 +23,7 @@ public interface MixinIWorldReader extends IWorldReader {
 
             for(int i = fromX; i <= toX; ++i) {
                 for(int j = fromZ; j <= toZ; ++j) {
-                    if (!this.chunkExists(i, j)) {
+                    if (!this.hasChunk(i, j)) {
                         return false;
                     }
                 }

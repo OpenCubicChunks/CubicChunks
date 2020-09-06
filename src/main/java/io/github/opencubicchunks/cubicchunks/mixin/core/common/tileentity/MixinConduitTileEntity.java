@@ -20,6 +20,6 @@ public class MixinConduitTileEntity {
 //    }
     @Redirect(method = "addEffectsToPlayers", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/math/AxisAlignedBB;expand(DDD)Lnet/minecraft/util/math/AxisAlignedBB;"))
     private AxisAlignedBB on$expand(AxisAlignedBB axisAlignedBB, double x, double y, double z) {
-        return axisAlignedBB.expand(x, 256, z);
+        return axisAlignedBB.expandTowards(x, 256, z);
     }
 }

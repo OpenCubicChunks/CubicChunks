@@ -158,7 +158,7 @@ public class Coords {
      * @return The {@link CubePos} x of the entity
      */
     public static int getCubeXForEntity(Entity entity) {
-        return blockToCube(MathHelper.floor(entity.getPosX()));
+        return blockToCube(MathHelper.floor(entity.getX()));
     }
     /**
      * @param entity An entity
@@ -166,14 +166,14 @@ public class Coords {
      */
     public static int getCubeYForEntity(Entity entity) {
         // the entity is in the cube it's inside, not the cube it's standing on
-        return blockToCube(MathHelper.floor(entity.getPosY()));
+        return blockToCube(MathHelper.floor(entity.getY()));
     }
     /**
      * @param entity An entity
      * @return The {@link CubePos} z of the entity
      */
     public static int getCubeZForEntity(Entity entity) {
-        return blockToCube(MathHelper.floor(entity.getPosZ()));
+        return blockToCube(MathHelper.floor(entity.getZ()));
     }
 
     public static int cubeToCenterBlock(int cubeVal) {

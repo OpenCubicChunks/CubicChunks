@@ -14,7 +14,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class MixinPlayerList {
     @Inject(method = "playerLoggedOut", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/chunk/Chunk;markDirty()V"))
     private void onPlayerLoggedOut(ServerPlayerEntity player, CallbackInfo ci) {
-        CubePos playerCubePos = CubePos.from(SectionPos.of(player.chunkCoordX, player.chunkCoordY, player.chunkCoordZ));
-        ((ICubicWorld)player.getServerWorld()).getCube(playerCubePos.getX(), playerCubePos.getY(), playerCubePos.getZ());
+        CubePos playerCubePos = CubePos.from(SectionPos.of(player.xChunk, player.yChunk, player.zChunk));
+        ((ICubicWorld)player.getLevel()).getCube(playerCubePos.getX(), playerCubePos.getY(), playerCubePos.getZ());
     }
 }

@@ -32,7 +32,7 @@ public abstract class MixinSectionLightStorage <M extends LightDataMap<M>> exten
 
     @Shadow @Final protected M cachedLightData;
 
-    @Shadow(aliases = "func_215523_k") protected abstract void removeSection(long p_215523_1_);
+    @Shadow(aliases = "onNodeRemoved") protected abstract void removeSection(long p_215523_1_);
 
     @Shadow protected volatile boolean hasSectionsToUpdate;
 
@@ -69,7 +69,7 @@ public abstract class MixinSectionLightStorage <M extends LightDataMap<M>> exten
             for(long noLightPos : this.noLightSections) {
                 this.cancelSectionUpdates(engine, noLightPos);
                 NibbleArray nibblearray = this.newArrays.remove(noLightPos);
-                NibbleArray nibblearray1 = this.cachedLightData.removeArray(noLightPos);
+                NibbleArray nibblearray1 = this.cachedLightData.removeLayer(noLightPos);
                 if (this.cubesToRetain.contains(CubePos.sectionToCubeSectionLong(noLightPos))) {
                     if (nibblearray != null) {
                         this.newArrays.put(noLightPos, nibblearray);
@@ -79,7 +79,7 @@ public abstract class MixinSectionLightStorage <M extends LightDataMap<M>> exten
                 }
             }
 
-            this.cachedLightData.invalidateCaches();
+            this.cachedLightData.clearCache();
 
             for(long section : this.noLightSections) {
                 //TODO: implement this for CC
@@ -93,9 +93,9 @@ public abstract class MixinSectionLightStorage <M extends LightDataMap<M>> exten
                 long entryPos = entry.getLongKey();
                 if (this.hasSection(entryPos)) {
                     NibbleArray nibblearray2 = entry.getValue();
-                    if (this.cachedLightData.getArray(entryPos) != nibblearray2) {
+                    if (this.cachedLightData.getLayer(entryPos) != nibblearray2) {
                         this.cancelSectionUpdates(engine, entryPos);
-                        this.cachedLightData.setArray(entryPos, nibblearray2);
+                        this.cachedLightData.setLayer(entryPos, nibblearray2);
                         this.dirtyCachedSections.add(entryPos);
                     }
                 }
@@ -103,16 +103,16 @@ public abstract class MixinSectionLightStorage <M extends LightDataMap<M>> exten
 
             LevelBasedGraphAccess engineAccess = ((LevelBasedGraphAccess)engine);
 
-            this.cachedLightData.invalidateCaches();
+            this.cachedLightData.clearCache();
             if (!updateBlockLight) {
                 for(long newArray : this.newArrays.keySet()) {
                     if (this.hasSection(newArray)) {
-                        int newX = SectionPos.toWorld(SectionPos.extractX(newArray));
-                        int newY = SectionPos.toWorld(SectionPos.extractY(newArray));
-                        int newZ = SectionPos.toWorld(SectionPos.extractZ(newArray));
+                        int newX = SectionPos.sectionToBlockCoord(SectionPos.x(newArray));
+                        int newY = SectionPos.sectionToBlockCoord(SectionPos.y(newArray));
+                        int newZ = SectionPos.sectionToBlockCoord(SectionPos.z(newArray));
 
                         for(Direction direction : DIRECTIONS) {
-                            long posOffset = SectionPos.withOffset(newArray, direction);
+                            long posOffset = SectionPos.offset(newArray, direction);
                             if (!this.newArrays.containsKey(posOffset) && this.hasSection(posOffset)) {
                                 for(int i1 = 0; i1 < 16; ++i1) {
                                     for(int j1 = 0; j1 < 16; ++j1) {
@@ -120,28 +120,28 @@ public abstract class MixinSectionLightStorage <M extends LightDataMap<M>> exten
                                         long l1;
                                         switch(direction) {
                                             case DOWN:
-                                                k1 = BlockPos.pack(newX + j1, newY, newZ + i1);
-                                                l1 = BlockPos.pack(newX + j1, newY - 1, newZ + i1);
+                                                k1 = BlockPos.asLong(newX + j1, newY, newZ + i1);
+                                                l1 = BlockPos.asLong(newX + j1, newY - 1, newZ + i1);
                                                 break;
                                             case UP:
-                                                k1 = BlockPos.pack(newX + j1, newY + 16 - 1, newZ + i1);
-                                                l1 = BlockPos.pack(newX + j1, newY + 16, newZ + i1);
+                                                k1 = BlockPos.asLong(newX + j1, newY + 16 - 1, newZ + i1);
+                                                l1 = BlockPos.asLong(newX + j1, newY + 16, newZ + i1);
                                                 break;
                                             case NORTH:
-                                                k1 = BlockPos.pack(newX + i1, newY + j1, newZ);
-                                                l1 = BlockPos.pack(newX + i1, newY + j1, newZ - 1);
+                                                k1 = BlockPos.asLong(newX + i1, newY + j1, newZ);
+                                                l1 = BlockPos.asLong(newX + i1, newY + j1, newZ - 1);
                                                 break;
                                             case SOUTH:
-                                                k1 = BlockPos.pack(newX + i1, newY + j1, newZ + 16 - 1);
-                                                l1 = BlockPos.pack(newX + i1, newY + j1, newZ + 16);
+                                                k1 = BlockPos.asLong(newX + i1, newY + j1, newZ + 16 - 1);
+                                                l1 = BlockPos.asLong(newX + i1, newY + j1, newZ + 16);
                                                 break;
                                             case WEST:
-                                                k1 = BlockPos.pack(newX, newY + i1, newZ + j1);
-                                                l1 = BlockPos.pack(newX - 1, newY + i1, newZ + j1);
+                                                k1 = BlockPos.asLong(newX, newY + i1, newZ + j1);
+                                                l1 = BlockPos.asLong(newX - 1, newY + i1, newZ + j1);
                                                 break;
                                             default:
-                                                k1 = BlockPos.pack(newX + 16 - 1, newY + i1, newZ + j1);
-                                                l1 = BlockPos.pack(newX + 16, newY + i1, newZ + j1);
+                                                k1 = BlockPos.asLong(newX + 16 - 1, newY + i1, newZ + j1);
+                                                l1 = BlockPos.asLong(newX + 16, newY + i1, newZ + j1);
                                         }
 
                                         engineAccess.invokeScheduleUpdate(k1, l1, engineAccess.invokeGetEdgeLevel(k1, l1, engineAccess.invokeGetLevel(k1)),

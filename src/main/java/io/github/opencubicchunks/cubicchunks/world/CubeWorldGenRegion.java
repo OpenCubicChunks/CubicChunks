@@ -73,7 +73,7 @@ public class CubeWorldGenRegion implements ISeedReader {
     public CubeWorldGenRegion(ServerWorld worldIn, List<IBigCube> cubesIn) {
         int i = MathHelper.floor(Math.cbrt(cubesIn.size()));
         if (i * i * i != cubesIn.size()) {
-            throw Util.pauseDevMode(new IllegalStateException("Cache size is not a square."));
+            throw Util.pauseInIde(new IllegalStateException("Cache size is not a square."));
         } else {
             CubePos cubePos = cubesIn.get(cubesIn.size() / 2).getCubePos();
             this.cubePrimers = cubesIn;
@@ -84,10 +84,10 @@ public class CubeWorldGenRegion implements ISeedReader {
             this.world = worldIn;
             this.seed = worldIn.getSeed();
             this.seaLevel = worldIn.getSeaLevel();
-            this.worldInfo = worldIn.getWorldInfo();
+            this.worldInfo = worldIn.getLevelData();
             this.random = worldIn.getRandom();
-            this.dimension = worldIn.func_230315_m_();
-            this.biomeManager = new BiomeManager(this, BiomeManager.func_235200_a_(this.seed), worldIn.func_230315_m_().getMagnifier());
+            this.dimension = worldIn.dimensionType();
+            this.biomeManager = new BiomeManager(this, BiomeManager.obfuscateSeed(this.seed), worldIn.dimensionType().getBiomeZoomer());
         }
     }
 
@@ -116,7 +116,7 @@ public class CubeWorldGenRegion implements ISeedReader {
             int dy = y - cubePos.getY();
             int dz = z - cubePos.getZ();
             icube = this.cubePrimers.get(dx * this.diameter * this.diameter + dy * this.diameter + dz);
-            if (icube.getCubeStatus().isAtLeast(requiredStatus)) {
+            if (icube.getCubeStatus().isOrAfter(requiredStatus)) {
                 return icube;
             }
         } else {
@@ -133,10 +133,10 @@ public class CubeWorldGenRegion implements ISeedReader {
                     icube1.getCubePos().getX(), icube1.getCubePos().getY(), icube1.getCubePos().getZ(),
                     icube2.getCubePos().getX(), icube2.getCubePos().getY(), icube2.getCubePos().getZ());
             if (icube != null) {
-                throw Util.pauseDevMode(new RuntimeException(String.format("Section is not of correct status. Expecting %s, got %s "
+                throw Util.pauseInIde(new RuntimeException(String.format("Section is not of correct status. Expecting %s, got %s "
                         + "| %s %s %s", requiredStatus, icube.getCubeStatus(), x, y, z)));
             } else {
-                throw Util.pauseDevMode(new RuntimeException(String.format("We are asking a region for a section out of bound | "
+                throw Util.pauseInIde(new RuntimeException(String.format("We are asking a region for a section out of bound | "
                         + "%s %s %s", x, y, z)));
             }
         }
@@ -154,32 +154,32 @@ public class CubeWorldGenRegion implements ISeedReader {
         return this.seed;
     }
 
-    @Override public ITickList<Block> getPendingBlockTicks() {
+    @Override public ITickList<Block> getBlockTicks() {
         return new EmptyTickList<>();
     }
 
-    @Override public ITickList<Fluid> getPendingFluidTicks() {
+    @Override public ITickList<Fluid> getLiquidTicks() {
         return new EmptyTickList<>();
     }
 
-    @Override public ServerWorld getWorld() {
+    @Override public ServerWorld getLevel() {
         return this.world;
     }
 
-    @Override public IWorldInfo getWorldInfo() {
+    @Override public IWorldInfo getLevelData() {
         return this.worldInfo;
     }
 
-    @Override public DifficultyInstance getDifficultyForLocation(BlockPos pos) {
+    @Override public DifficultyInstance getCurrentDifficultyAt(BlockPos pos) {
         if (!this.cubeExists(blockToCube(pos.getX()), blockToCube(pos.getY()), blockToCube(pos.getZ()))) {
             throw new RuntimeException("We are asking a region for a chunk out of bound");
         } else {
-            return new DifficultyInstance(this.world.getDifficulty(), this.world.getDayTime(), 0L, this.world.func_242413_ae());
+            return new DifficultyInstance(this.world.getDifficulty(), this.world.getDayTime(), 0L, this.world.getMoonBrightness());
         }
     }
 
-    @Override public AbstractChunkProvider getChunkProvider() {
-        return world.getChunkProvider();
+    @Override public AbstractChunkProvider getChunkSource() {
+        return world.getChunkSource();
     }
 
     @Override public Random getRandom() {
@@ -195,7 +195,7 @@ public class CubeWorldGenRegion implements ISeedReader {
         throw new UnsupportedOperationException("Not implemented yet!");
     }
 
-    @Override public void playEvent(@Nullable PlayerEntity player, int type, BlockPos pos, int data) {
+    @Override public void levelEvent(@Nullable PlayerEntity player, int type, BlockPos pos, int data) {
         throw new UnsupportedOperationException("Not implemented yet!");
     }
 
@@ -203,9 +203,9 @@ public class CubeWorldGenRegion implements ISeedReader {
         return world.getWorldBorder();
     }
 
-    @Nullable @Override public TileEntity getTileEntity(BlockPos pos) {
+    @Nullable @Override public TileEntity getBlockEntity(BlockPos pos) {
         IBigCube icube = this.getCube(pos);
-        TileEntity tileentity = icube.getTileEntity(pos);
+        TileEntity tileentity = icube.getBlockEntity(pos);
         if (tileentity != null) {
             return tileentity;
         } else {
@@ -218,7 +218,7 @@ public class CubeWorldGenRegion implements ISeedReader {
                     }
                     tileentity = state.createTileEntity(this.world);
                 } else {
-                    tileentity = TileEntity.readTileEntity(state, compoundnbt);
+                    tileentity = TileEntity.loadStatic(state, compoundnbt);
                 }
 
                 if (tileentity != null) {
@@ -243,18 +243,18 @@ public class CubeWorldGenRegion implements ISeedReader {
         return this.getCube(pos).getFluidState(pos);
     }
 
-    @Override public List<Entity> getEntitiesInAABBexcluding(@Nullable Entity entityIn, AxisAlignedBB boundingBox,
+    @Override public List<Entity> getEntities(@Nullable Entity entityIn, AxisAlignedBB boundingBox,
             @Nullable Predicate<? super Entity> predicate) {
         return Collections.emptyList();
     }
 
     @Override
-    public <T extends Entity> List<T> getEntitiesWithinAABB(Class<? extends T> clazz, AxisAlignedBB aabb, @Nullable Predicate<? super T> filter) {
+    public <T extends Entity> List<T> getEntitiesOfClass(Class<? extends T> clazz, AxisAlignedBB aabb, @Nullable Predicate<? super T> filter) {
         return Collections.emptyList();
     }
 
-    @Override public List<? extends PlayerEntity> getPlayers() {
-        return world.getPlayers();
+    @Override public List<? extends PlayerEntity> players() {
+        return world.players();
     }
 
     @Deprecated
@@ -267,19 +267,19 @@ public class CubeWorldGenRegion implements ISeedReader {
         int yEnd = Coords.cubeToMinBlock(mainCubeY);
         BlockPos pos = new BlockPos(x, yStart, z);
 
-        if (heightmapType.getHeightLimitPredicate().test(getBlockState(pos))) {
+        if (heightmapType.isOpaque().test(getBlockState(pos))) {
             return yStart + 2;
         }
         for (int y = yStart - 1; y >= yEnd; y--) {
             pos = new BlockPos(x, y, z);
-            if (heightmapType.getHeightLimitPredicate().test(getBlockState(pos))) {
+            if (heightmapType.isOpaque().test(getBlockState(pos))) {
                 return y + 1;
             }
         }
         return yEnd - 1;
     }
 
-    @Override public int getSkylightSubtracted() {
+    @Override public int getSkyDarken() {
         return 0;
     }
 
@@ -287,11 +287,11 @@ public class CubeWorldGenRegion implements ISeedReader {
         return this.biomeManager;
     }
 
-    @Override public Biome getNoiseBiomeRaw(int x, int y, int z) {
-        return this.world.getNoiseBiomeRaw(x, y, z);
+    @Override public Biome getUncachedNoiseBiome(int x, int y, int z) {
+        return this.world.getUncachedNoiseBiome(x, y, z);
     }
 
-    @Override public boolean isRemote() {
+    @Override public boolean isClientSide() {
         return false;
     }
 
@@ -299,27 +299,27 @@ public class CubeWorldGenRegion implements ISeedReader {
         return this.seaLevel;
     }
 
-    @Override public DimensionType func_230315_m_() {
+    @Override public DimensionType dimensionType() {
         return this.dimension;
     }
 
-    @Override public float func_230487_a_(Direction direction, boolean b) {
+    @Override public float getShade(Direction direction, boolean b) {
         return 1f;
     }
 
-    @Override public WorldLightManager getLightManager() {
-        return world.getLightManager();
+    @Override public WorldLightManager getLightEngine() {
+        return world.getLightEngine();
     }
 
     // setBlockState
-    @Override public boolean setBlockState(BlockPos pos, BlockState newState, int flags, int recursionLimit) {
+    @Override public boolean setBlock(BlockPos pos, BlockState newState, int flags, int recursionLimit) {
         IBigCube icube = this.getCube(pos);
         BlockState blockstate = icube.setBlock(pos, newState, false);
         if (blockstate != null) {
             this.world.onBlockStateChange(pos, blockstate, newState);
         }
         if (newState.hasTileEntity()) {
-            if (icube.getCubeStatus().getType() == ChunkStatus.Type.LEVELCHUNK) {
+            if (icube.getCubeStatus().getChunkType() == ChunkStatus.Type.LEVELCHUNK) {
                 icube.addCubeTileEntity(pos, newState.createTileEntity(this));
             } else {
                 CompoundNBT compoundnbt = new CompoundNBT();
@@ -333,7 +333,7 @@ public class CubeWorldGenRegion implements ISeedReader {
             icube.removeCubeTileEntity(pos);
         }
 
-        if (newState.blockNeedsPostProcessing(this, pos)) {
+        if (newState.hasPostProcess(this, pos)) {
             //TODO: reimplement postprocessing
             //this.markBlockForPostprocessing(pos);
         }
@@ -342,7 +342,7 @@ public class CubeWorldGenRegion implements ISeedReader {
     }
 
     @Override public boolean removeBlock(BlockPos pos, boolean isMoving) {
-        return this.setBlockState(pos, Blocks.AIR.getDefaultState(), 3);
+        return this.setBlock(pos, Blocks.AIR.defaultBlockState(), 3);
     }
 
     // destroyBlock
@@ -352,27 +352,27 @@ public class CubeWorldGenRegion implements ISeedReader {
             return false;
         } else {
             if (isPlayerInCreative) {
-                TileEntity tileentity = blockstate.hasTileEntity() ? this.getTileEntity(pos) : null;
-                Block.spawnDrops(blockstate, this.world, pos, tileentity, droppedEntities, ItemStack.EMPTY);
+                TileEntity tileentity = blockstate.hasTileEntity() ? this.getBlockEntity(pos) : null;
+                Block.dropResources(blockstate, this.world, pos, tileentity, droppedEntities, ItemStack.EMPTY);
             }
 
-            return this.setBlockState(pos, Blocks.AIR.getDefaultState(), 3, recursionLimit);
+            return this.setBlock(pos, Blocks.AIR.defaultBlockState(), 3, recursionLimit);
         }
     }
 
-    @Override public boolean hasBlockState(BlockPos pos, Predicate<BlockState> blockstate) {
+    @Override public boolean isStateAtPosition(BlockPos pos, Predicate<BlockState> blockstate) {
         return blockstate.test(this.getBlockState(pos));
     }
 
     //TODO: DOUBLE CHECK THESE
 
     @Override
-    public DynamicRegistries func_241828_r() {
-        return this.world.func_241828_r();
+    public DynamicRegistries registryAccess() {
+        return this.world.registryAccess();
     }
 
     @Override
-    public Stream<? extends StructureStart<?>> func_241827_a(SectionPos sectionPos, Structure<?> structure) {
-        return this.world.func_241827_a(sectionPos, structure);
+    public Stream<? extends StructureStart<?>> startsForFeature(SectionPos sectionPos, Structure<?> structure) {
+        return this.world.startsForFeature(sectionPos, structure);
     }
 }

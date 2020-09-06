@@ -67,15 +67,15 @@ public class CubicChunks {
     private void setup(final FMLCommonSetupEvent event) {
         PacketDispatcher.register();
 
-        for (Biome biome : WorldGenRegistries.field_243657_i) {
+        for (Biome biome : WorldGenRegistries.BIOME) {
                 convertImmutableFeatures(biome);
-                biome.func_242440_e().field_242484_f.clear();
+                biome.getGenerationSettings().features.clear();
         }
     }
 
     private static void convertImmutableFeatures(Biome biome) {
-        if (biome.func_242440_e().field_242484_f instanceof ImmutableList) {
-            biome.func_242440_e().field_242484_f = biome.func_242440_e().field_242484_f.stream().map(Lists::newArrayList).collect(Collectors.toList());
+        if (biome.getGenerationSettings().features instanceof ImmutableList) {
+            biome.getGenerationSettings().features = biome.getGenerationSettings().features.stream().map(Lists::newArrayList).collect(Collectors.toList());
         }
     }
 

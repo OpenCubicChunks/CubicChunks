@@ -35,11 +35,11 @@ public abstract class MixinServerWorldLightManager extends MixinWorldLightManage
 
     @Shadow @Final private ChunkManager chunkManager;
 
-    @Shadow @Final private ObjectList<Pair<ServerWorldLightManager.Phase, Runnable>> field_215606_c;
+    @Shadow @Final private ObjectList<Pair<ServerWorldLightManager.Phase, Runnable>> lightTasks;
 
-    @Shadow private volatile int field_215609_f;
+    @Shadow private volatile int taskPerBatch;
 
-    @Shadow protected abstract void func_215603_b();
+    @Shadow protected abstract void runUpdate();
 
     @Override public void postConstructorSetup(CubeTaskPriorityQueueSorter sorter,
             ITaskExecutor<CubeTaskPriorityQueueSorter.FunctionEntry<Runnable>> taskExecutor) {
@@ -53,30 +53,30 @@ public abstract class MixinServerWorldLightManager extends MixinWorldLightManage
     @Overwrite
     public void checkBlock(BlockPos blockPosIn)
     {
-        BlockPos blockpos = blockPosIn.toImmutable();
+        BlockPos blockpos = blockPosIn.immutable();
         this.schedulePhaseTask(
                 Coords.blockToCube(blockPosIn.getX()),
                 Coords.blockToCube(blockPosIn.getY()),
                 Coords.blockToCube(blockPosIn.getZ()),
                 ServerWorldLightManager.Phase.POST_UPDATE,
-                Util.namedRunnable(() -> super.checkBlock(blockpos),
+                Util.name(() -> super.checkBlock(blockpos),
                 () -> "checkBlock " + blockpos)
         );
     }
 
-    // func_215586_a
+    // func_215586_a, addTask
     private void schedulePhaseTask(int cubePosX, int cubePosY, int cubePosZ, ServerWorldLightManager.Phase phase, Runnable runnable) {
         this.schedulePhaseTask(cubePosX, cubePosY, cubePosZ, ((IChunkManager)this.chunkManager).getCompletedLevel(CubePos.of(cubePosX, cubePosY,
                 cubePosZ).asLong()), phase, runnable);
     }
 
-    // func_215600_a
+    // func_215600_a, addTask
     private void schedulePhaseTask(int cubePosX, int cubePosY, int cubePosZ, IntSupplier getCompletedLevel, ServerWorldLightManager.Phase phase,
             Runnable runnable) {
-        this.taskExecutor.enqueue(CubeTaskPriorityQueueSorter.createMsg(() -> {
-            this.field_215606_c.add(Pair.of(phase, runnable));
-            if (this.field_215606_c.size() >= this.field_215609_f) {
-                this.func_215603_b();
+        this.taskExecutor.tell(CubeTaskPriorityQueueSorter.createMsg(() -> {
+            this.lightTasks.add(Pair.of(phase, runnable));
+            if (this.lightTasks.size() >= this.taskPerBatch) {
+                this.runUpdate();
             }
 
         }, CubePos.asLong(cubePosX, cubePosY, cubePosZ), getCompletedLevel));
@@ -86,7 +86,7 @@ public abstract class MixinServerWorldLightManager extends MixinWorldLightManage
     public void setCubeStatusEmpty(CubePos cubePos) {
         this.schedulePhaseTask(cubePos.getX(), cubePos.getY(), cubePos.getZ(), () -> {
             return 0;
-        }, ServerWorldLightManager.Phase.PRE_UPDATE, Util.namedRunnable(() -> {
+        }, ServerWorldLightManager.Phase.PRE_UPDATE, Util.name(() -> {
             super.retainData(cubePos, false);
             super.enableLightSources(cubePos, false);
 
@@ -108,7 +108,7 @@ public abstract class MixinServerWorldLightManager extends MixinWorldLightManage
     public CompletableFuture<IBigCube> lightCube(IBigCube icube, boolean flagIn) {
         CubePos cubePos = icube.getCubePos();
         icube.setCubeLight(false);
-        this.schedulePhaseTask(cubePos.getX(), cubePos.getY(), cubePos.getZ(), ServerWorldLightManager.Phase.PRE_UPDATE, Util.namedRunnable(() -> {
+        this.schedulePhaseTask(cubePos.getX(), cubePos.getY(), cubePos.getZ(), ServerWorldLightManager.Phase.PRE_UPDATE, Util.name(() -> {
             for(int i = 0; i < IBigCube.SECTION_COUNT; ++i) {
                 ChunkSection chunksection = icube.getCubeSections()[i];
                 if (!ChunkSection.isEmpty(chunksection)) {
@@ -119,7 +119,7 @@ public abstract class MixinServerWorldLightManager extends MixinWorldLightManage
             super.enableLightSources(cubePos, true);
             if (!flagIn) {
                 icube.getCubeLightSources().forEach((blockPos) -> {
-                    super.onBlockEmissionIncrease(blockPos, icube.getLightValue(blockPos));
+                    super.onBlockEmissionIncrease(blockPos, icube.getLightEmission(blockPos));
                 });
             }
 
@@ -141,14 +141,14 @@ public abstract class MixinServerWorldLightManager extends MixinWorldLightManage
     @Overwrite
     public void updateSectionStatus(SectionPos pos, boolean isEmpty) {
         CubePos cubePos = CubePos.from(pos);
-        this.schedulePhaseTask(cubePos.getX(), cubePos.getY(), cubePos.getZ(), () -> 0, ServerWorldLightManager.Phase.PRE_UPDATE, Util.namedRunnable(() -> {
+        this.schedulePhaseTask(cubePos.getX(), cubePos.getY(), cubePos.getZ(), () -> 0, ServerWorldLightManager.Phase.PRE_UPDATE, Util.name(() -> {
             super.updateSectionStatus(pos, isEmpty);
         }, () -> "updateSectionStatus " + pos + " " + isEmpty));
     }
 
     @Override
     public void enableLightSources(CubePos cubePos, boolean flag) {
-        this.schedulePhaseTask(cubePos.getX(), cubePos.getY(), cubePos.getZ(), ServerWorldLightManager.Phase.PRE_UPDATE, Util.namedRunnable(() -> {
+        this.schedulePhaseTask(cubePos.getX(), cubePos.getY(), cubePos.getZ(), ServerWorldLightManager.Phase.PRE_UPDATE, Util.name(() -> {
             super.enableLightSources(cubePos, flag);
         }, () -> "enableLight " + cubePos + " " + flag));
     }
@@ -160,7 +160,7 @@ public abstract class MixinServerWorldLightManager extends MixinWorldLightManage
     @Overwrite
     public void setData(LightType type, SectionPos pos, @Nullable NibbleArray array, boolean flag) {
         CubePos cubePos = CubePos.from(pos);
-        this.schedulePhaseTask(cubePos.getX(), cubePos.getY(), cubePos.getZ(), () -> 0, ServerWorldLightManager.Phase.PRE_UPDATE, Util.namedRunnable(() -> {
+        this.schedulePhaseTask(cubePos.getX(), cubePos.getY(), cubePos.getZ(), () -> 0, ServerWorldLightManager.Phase.PRE_UPDATE, Util.name(() -> {
             super.setData(type, pos, array, flag);
         }, () -> "queueData " + pos));
     }
@@ -168,7 +168,7 @@ public abstract class MixinServerWorldLightManager extends MixinWorldLightManage
     //retainData(ChunkPos, bool)
     @Override
     public void retainData(CubePos cubePos, boolean retain) {
-        this.schedulePhaseTask(cubePos.getX(), cubePos.getY(), cubePos.getZ(), () -> 0, ServerWorldLightManager.Phase.PRE_UPDATE, Util.namedRunnable(() -> {
+        this.schedulePhaseTask(cubePos.getX(), cubePos.getY(), cubePos.getZ(), () -> 0, ServerWorldLightManager.Phase.PRE_UPDATE, Util.name(() -> {
             super.retainData(cubePos, retain);
         }, () -> "retainData " + cubePos));
     }

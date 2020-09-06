@@ -79,8 +79,8 @@ public final class SpawnPlaceFinder {
             return null;
         }
         assert findNonEmpty(world, maxPos) == null && findNonEmpty(world, minPos) != null;
-        BlockPos foundPos = bisect(world, minPos.down(MIN_FREE_SPACE_SPAWN), maxPos.up(MIN_FREE_SPACE_SPAWN));
-        if (foundPos != null && checkValid && !world.getBlockState(foundPos).getBlock().isIn(BlockTags.VALID_SPAWN)) {
+        BlockPos foundPos = bisect(world, minPos.below(MIN_FREE_SPACE_SPAWN), maxPos.above(MIN_FREE_SPACE_SPAWN));
+        if (foundPos != null && checkValid && !world.getBlockState(foundPos).getBlock().is(BlockTags.VALID_SPAWN)) {
             return null;
         }
         return foundPos;
@@ -138,8 +138,8 @@ public final class SpawnPlaceFinder {
 
     @Nullable
     private static BlockPos findNonEmpty(World world, BlockPos pos) {
-        pos = pos.down(MIN_FREE_SPACE_SPAWN);
-        for (int i = 0; i < MIN_FREE_SPACE_SPAWN * 2; i++, pos = pos.up()) {
+        pos = pos.below(MIN_FREE_SPACE_SPAWN);
+        for (int i = 0; i < MIN_FREE_SPACE_SPAWN * 2; i++, pos = pos.above()) {
             if (!world.getBlockState(pos).getCollisionShape(world, pos).isEmpty()) {
                 return pos;
             }

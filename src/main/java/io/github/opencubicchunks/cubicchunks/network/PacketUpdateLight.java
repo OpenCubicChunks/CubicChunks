@@ -58,8 +58,8 @@ public class PacketUpdateLight {
         this.dataExists = new BitSet(IBigCube.SECTION_COUNT*2);
 
         for(int i = 0; i < IBigCube.SECTION_COUNT; ++i) {
-            NibbleArray skyNibbleArray = lightManager.getLightEngine(LightType.SKY).getData(Coords.sectionPosByIndex(pos, i));
-            NibbleArray blockNibbleArray = lightManager.getLightEngine(LightType.BLOCK).getData(Coords.sectionPosByIndex(pos, i));
+            NibbleArray skyNibbleArray = lightManager.getLayerListener(LightType.SKY).getDataLayerData(Coords.sectionPosByIndex(pos, i));
+            NibbleArray blockNibbleArray = lightManager.getLayerListener(LightType.BLOCK).getDataLayerData(Coords.sectionPosByIndex(pos, i));
             if (skyNibbleArray != null) {
                 if (!skyNibbleArray.isEmpty()) {
                     this.dataExists.set(i*2);
@@ -104,7 +104,7 @@ public class PacketUpdateLight {
             if(!(worldIn instanceof ClientWorld))
                 throw new Error("PacketUpdateLight handle called on server");
 
-            WorldLightManager worldlightmanager = worldIn.getChunkProvider().getLightManager();
+            WorldLightManager worldlightmanager = worldIn.getChunkSource().getLightEngine();
 
             Iterator<byte[]> skyIterator = packet.skyLightData.iterator();
             Iterator<byte[]> blockIterator = packet.blockLightData.iterator();
@@ -117,12 +117,12 @@ public class PacketUpdateLight {
                 );
 
                 if(packet.dataExists.get(i * 2)) {
-                    worldlightmanager.setData(LightType.SKY, sectionPos, new NibbleArray(skyIterator.next()), packet.lightFlag);
-                    ((ClientWorld)worldIn).markSurroundingsForRerender(sectionPos.getX(), sectionPos.getY(), sectionPos.getZ());
+                    worldlightmanager.queueSectionData(LightType.SKY, sectionPos, new NibbleArray(skyIterator.next()), packet.lightFlag);
+                    ((ClientWorld)worldIn).setSectionDirtyWithNeighbors(sectionPos.getX(), sectionPos.getY(), sectionPos.getZ());
                 }
                 if(packet.dataExists.get(i * 2 + 1)) {
-                    worldlightmanager.setData(LightType.BLOCK, sectionPos, new NibbleArray(blockIterator.next()), packet.lightFlag);
-                    ((ClientWorld)worldIn).markSurroundingsForRerender(sectionPos.getX(), sectionPos.getY(), sectionPos.getZ());
+                    worldlightmanager.queueSectionData(LightType.BLOCK, sectionPos, new NibbleArray(blockIterator.next()), packet.lightFlag);
+                    ((ClientWorld)worldIn).setSectionDirtyWithNeighbors(sectionPos.getX(), sectionPos.getY(), sectionPos.getZ());
                 }
             }
         }

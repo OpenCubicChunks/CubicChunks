@@ -20,10 +20,10 @@ public abstract class MixinChainedChunkStatusListener implements ICubeStatusList
     @Shadow @Final private IChunkStatusListener delegate;
 
     @Override public void startCubes(CubePos center) {
-        this.executor.enqueue(() -> ((ICubeStatusListener) this.delegate).startCubes(center));
+        this.executor.tell(() -> ((ICubeStatusListener) this.delegate).startCubes(center));
     }
 
     @Override public void cubeStatusChanged(CubePos cubePos, @Nullable ChunkStatus newStatus) {
-        this.executor.enqueue(() -> ((ICubeStatusListener) this.delegate).cubeStatusChanged(cubePos, newStatus));
+        this.executor.tell(() -> ((ICubeStatusListener) this.delegate).cubeStatusChanged(cubePos, newStatus));
     }
 }

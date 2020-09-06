@@ -46,11 +46,11 @@ public abstract class MixinServerChunkProvider implements IServerChunkProvider, 
 
     @Shadow @Final private Thread mainThread;
 
-    @Shadow protected abstract boolean func_217224_a(@Nullable ChunkHolder chunkHolderIn, int p_217224_2_);
+    @Shadow protected abstract boolean chunkAbsent(@Nullable ChunkHolder chunkHolderIn, int p_217224_2_);
 
     @Shadow public abstract int getLoadedChunkCount();
 
-    @Shadow @Final private static List<ChunkStatus> field_217239_c;
+    @Shadow @Final private static List<ChunkStatus> CHUNK_STATUSES;
     private final long[] recentCubePositions = new long[4];
     private final ChunkStatus[] recentCubeStatuses = new ChunkStatus[4];
     private final IBigCube[] recentCubes = new IBigCube[4];
@@ -78,7 +78,7 @@ public abstract class MixinServerChunkProvider implements IServerChunkProvider, 
             }, this.executor).join();
         } else {
             IProfiler iprofiler = this.world.getProfiler();
-            iprofiler.func_230035_c_("getCube");
+            iprofiler.incrementCounter("getCube");
             long i = CubePos.asLong(cubeX, cubeY, cubeZ);
 
             for(int j = 0; j < 4; ++j) {
@@ -90,16 +90,16 @@ public abstract class MixinServerChunkProvider implements IServerChunkProvider, 
                 }
             }
 
-            iprofiler.func_230035_c_("getChunkCacheMiss");
+            iprofiler.incrementCounter("getChunkCacheMiss");
             CompletableFuture<Either<IBigCube, ChunkHolder.IChunkLoadingError>> completablefuture = this.getCubeFuture(cubeX, cubeY, cubeZ,
                     requiredStatus,
                     load);
-            this.executor.driveUntil(completablefuture::isDone);
+            this.executor.managedBlock(completablefuture::isDone);
             IBigCube icube = completablefuture.join().map((p_222874_0_) -> {
                 return p_222874_0_;
             }, (p_222870_1_) -> {
                 if (load) {
-                    throw Util.pauseDevMode(new IllegalStateException("Chunk not there when requested: " + p_222870_1_));
+                    throw Util.pauseInIde(new IllegalStateException("Chunk not there when requested: " + p_222870_1_));
                 } else {
                     return null;
                 }
@@ -114,7 +114,7 @@ public abstract class MixinServerChunkProvider implements IServerChunkProvider, 
         if (Thread.currentThread() != this.mainThread) {
             return null;
         } else {
-            this.world.getProfiler().func_230035_c_("getChunkNow");
+            this.world.getProfiler().incrementCounter("getChunkNow");
             long posAsLong = CubePos.asLong(cubeX, cubeY, cubeZ);
 
             for(int j = 0; j < 4; ++j) {
@@ -152,7 +152,7 @@ public abstract class MixinServerChunkProvider implements IServerChunkProvider, 
         ((ITicketManager)this.ticketManager).forceCube(pos, add);
     }
 
-    // func_217233_c
+    // func_217233_c, getChunkFutureMainThread
     private CompletableFuture<Either<IBigCube, ChunkHolder.IChunkLoadingError>> getCubeFuture(int cubeX, int cubeY, int cubeZ,
                                                                                               ChunkStatus requiredStatus, boolean load) {
         CubePos cubePos = CubePos.of(cubeX, cubeY, cubeZ);
@@ -161,29 +161,29 @@ public abstract class MixinServerChunkProvider implements IServerChunkProvider, 
         ChunkHolder chunkholder = this.getImmutableCubeHolder(i);
         if (load) {
             ((ITicketManager)this.ticketManager).registerWithLevel(CCTicketType.CCUNKNOWN, cubePos, j, cubePos);
-            if (this.func_217224_a(chunkholder, j)) {
+            if (this.chunkAbsent(chunkholder, j)) {
                 IProfiler iprofiler = this.world.getProfiler();
-                iprofiler.startSection("chunkLoad");
+                iprofiler.push("chunkLoad");
                 this.refreshAndInvalidate();
                 chunkholder = this.getImmutableCubeHolder(i);
-                iprofiler.endSection();
-                if (this.func_217224_a(chunkholder, j)) {
-                    throw Util.pauseDevMode(new IllegalStateException("No chunk holder after ticket has been added"));
+                iprofiler.pop();
+                if (this.chunkAbsent(chunkholder, j)) {
+                    throw Util.pauseInIde(new IllegalStateException("No chunk holder after ticket has been added"));
                 }
             }
         }
 
-        return this.func_217224_a(chunkholder, j) ? ICubeHolder.MISSING_CUBE_FUTURE : ((ICubeHolder)chunkholder).createCubeFuture(requiredStatus,
+        return this.chunkAbsent(chunkholder, j) ? ICubeHolder.MISSING_CUBE_FUTURE : ((ICubeHolder)chunkholder).createCubeFuture(requiredStatus,
                 this.chunkManager);
     }
 
-    //func_217213_a
+    // func_217213_a, getVisibleChunkIfPresent
     private ChunkHolder getImmutableCubeHolder(long cubePosIn)
     {
         return ((IChunkManager)this.chunkManager).getImmutableCubeHolder(cubePosIn);
     }
 
-    // func_225315_a
+    // func_225315_a, storeInCache
     private void addRecents(long newPositionIn, IBigCube newCubeIn, ChunkStatus newStatusIn) {
         for(int i = 3; i > 0; --i) {
             this.recentCubePositions[i] = this.recentCubePositions[i - 1];
@@ -196,15 +196,15 @@ public abstract class MixinServerChunkProvider implements IServerChunkProvider, 
         this.recentCubes[0] = newCubeIn;
     }
 
-    @Inject(method = "func_217235_l", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/server/ServerChunkProvider;invalidateCaches()V"))
+    @Inject(method = "runDistanceManagerUpdates", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/server/ServerChunkProvider;invalidateCaches()V"))
     private void onRefeshAndInvalidate(CallbackInfoReturnable<Boolean> cir)
     {
         this.invalidateCubeCaches();
     }
 
-    // func_217235_l
+    // func_217235_l, runDistanceManagerUpdates
     private boolean refreshAndInvalidate() {
-        boolean flag = this.ticketManager.processUpdates(this.chunkManager);
+        boolean flag = this.ticketManager.runAllUpdates(this.chunkManager);
         boolean flag1 = ((ChunkManagerAccess)this.chunkManager).refreshOffThreadCacheSection();
         if (!flag && !flag1) {
             return false;
@@ -228,10 +228,10 @@ public abstract class MixinServerChunkProvider implements IServerChunkProvider, 
         if (chunkholder == null) {
             return null;
         } else {
-            int j = field_217239_c.size() - 1;
+            int j = CHUNK_STATUSES.size() - 1;
 
             while(true) {
-                ChunkStatus chunkstatus = field_217239_c.get(j);
+                ChunkStatus chunkstatus = CHUNK_STATUSES.get(j);
                 Optional<IBigCube> optional = ((ICubeHolder)chunkholder).getCubeFuture(chunkstatus).getNow(ICubeHolder.MISSING_CUBE).left();
                 if (optional.isPresent()) {
                     return optional.get();
@@ -255,7 +255,7 @@ public abstract class MixinServerChunkProvider implements IServerChunkProvider, 
         ChunkHolder chunkholder = ((IChunkManager) this.chunkManager).getCubeHolder(CubePos.from(pos).asLong());
         if (chunkholder != null) {
             // markBlockChanged
-            chunkholder.func_244386_a(new BlockPos(Coords.localX(pos), Coords.localY(pos), Coords.localZ(pos)));
+            chunkholder.blockChanged(new BlockPos(Coords.localX(pos), Coords.localY(pos), Coords.localZ(pos)));
         }
     }
 
@@ -268,9 +268,9 @@ public abstract class MixinServerChunkProvider implements IServerChunkProvider, 
                     ((ICubeHolder) cubeHolder).getCubeEntityTickingFuture().getNow(ICubeHolder.UNLOADED_CUBE).left();
             if (optional.isPresent()) {
                 BigCube section = (BigCube) optional.get();
-                this.world.getProfiler().startSection("broadcast");
+                this.world.getProfiler().push("broadcast");
                 ((ICubeHolder) cubeHolder).sendChanges(section);
-                this.world.getProfiler().endSection();
+                this.world.getProfiler().pop();
             }
         });
     }

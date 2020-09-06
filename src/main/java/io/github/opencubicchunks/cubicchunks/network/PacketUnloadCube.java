@@ -27,7 +27,7 @@ public class PacketUnloadCube {
 
     public static class Handler {
         public static void handle(PacketUnloadCube packet, World worldIn) {
-            AbstractChunkProvider chunkProvider = worldIn.getChunkProvider();
+            AbstractChunkProvider chunkProvider = worldIn.getChunkSource();
             ((IClientCubeProvider) chunkProvider).unloadCube(packet.pos.getX(), packet.pos.getY(), packet.pos.getZ());
         }
     }

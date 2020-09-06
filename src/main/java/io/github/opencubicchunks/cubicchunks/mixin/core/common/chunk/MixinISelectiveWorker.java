@@ -34,7 +34,7 @@ public interface MixinISelectiveWorker {
             Function<IChunk, CompletableFuture<Either<IChunk, ChunkHolder.IChunkLoadingError>>> p_doWork_6_,
             List<IChunk> p_doWork_7_, IChunk chunk) {
 
-        if (!chunk.getStatus().isAtLeast(status)) {
+        if (!chunk.getStatus().isOrAfter(status)) {
             this.doWork(p_doWork_2_, p_doWork_3_, p_doWork_7_, chunk);
             if (chunk instanceof ChunkPrimer) {
                 ((ChunkPrimer)chunk).setStatus(status);

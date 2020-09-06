@@ -27,7 +27,7 @@ public class PacketUpdateCubePosition {
 
     public static class Handler {
         public static void handle(PacketUpdateCubePosition packet, World worldIn) {
-            AbstractChunkProvider chunkProvider = worldIn.getChunkProvider();
+            AbstractChunkProvider chunkProvider = worldIn.getChunkSource();
             ((IClientCubeProvider) chunkProvider).setCenter(packet.pos.getX(), packet.pos.getY(), packet.pos.getZ());
         }
     }
