@@ -103,13 +103,17 @@ public class MergedMappingsPlugin implements Plugin<Project> {
             publishing.getPublications().create("mavenLocalMappings", MavenPublication.class, publication -> {
                 publication.setGroupId("net.minecraft");
                 publication.setArtifactId("mappings_snapshot");
-                publication.setVersion("merged-" + mergedMappings.getOfficialMappings() + "-" + mergedMappings.getParamMappingsVersion());
+                project.afterEvaluate((x) -> {
+                    publication.setVersion("merged-" + mergedMappings.getOfficialMappings() + "-" + mergedMappings.getParamMappingsVersion());
+                });
                 publication.artifact(output);
             });
             publishing.getPublications().create("mavenLocalMappingsMcp", MavenPublication.class, publication -> {
                 publication.setGroupId("de.oceanlabs.mcp");
                 publication.setArtifactId("mcp_snapshot");
-                publication.setVersion("merged-" + mergedMappings.getOfficialMappings() + "-" + mergedMappings.getParamMappingsVersion());
+                project.afterEvaluate((x) -> {
+                    publication.setVersion("merged-" + mergedMappings.getOfficialMappings() + "-" + mergedMappings.getParamMappingsVersion());
+                });
                 publication.artifact(output);
             });
         });
