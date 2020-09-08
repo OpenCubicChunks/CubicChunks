@@ -21,12 +21,12 @@ public abstract class MixinWorldLightManager implements IWorldLightManager, ILig
 
     @Shadow public void checkBlock(BlockPos pos) { throw new Error("Mixin failed to apply correctly"); }
 
-    @Shadow public void setData(LightType type, SectionPos pos, @Nullable NibbleArray array, boolean flag) { throw new Error("Mixin failed to apply "
+    @Shadow public void queueSectionData(LightType type, SectionPos pos, @Nullable NibbleArray array, boolean flag) { throw new Error("Mixin failed to apply "
             + "correctly"); }
 
-    @Shadow @Final @Nullable private LightEngine<?, ?> blockLight;
+    @Shadow @Final @Nullable private LightEngine<?, ?> blockEngine;
 
-    @Shadow @Final @Nullable private LightEngine<?, ?> skyLight;
+    @Shadow @Final @Nullable private LightEngine<?, ?> skyEngine;
 
     @Shadow public void updateSectionStatus(SectionPos pos, boolean isEmpty) { }
 
@@ -34,23 +34,23 @@ public abstract class MixinWorldLightManager implements IWorldLightManager, ILig
 
     @Override
     public void retainData(CubePos cubePos, boolean retain) {
-        if (this.blockLight != null) {
-            ((ILightEngine)this.blockLight).retainCubeData(cubePos, retain);
+        if (this.blockEngine != null) {
+            ((ILightEngine)this.blockEngine).retainCubeData(cubePos, retain);
         }
 
-        if (this.skyLight != null) {
-            ((ILightEngine)this.skyLight).retainCubeData(cubePos, retain);
+        if (this.skyEngine != null) {
+            ((ILightEngine)this.skyEngine).retainCubeData(cubePos, retain);
         }
     }
 
     @Override
     public void enableLightSources(CubePos cubePos, boolean retain) {
-        if (this.blockLight != null) {
-            ((ILightEngine)this.blockLight).enableLightSources(cubePos, retain);
+        if (this.blockEngine != null) {
+            ((ILightEngine)this.blockEngine).enableLightSources(cubePos, retain);
         }
 
-        if (this.skyLight != null) {
-            ((ILightEngine)this.skyLight).enableLightSources(cubePos, retain);
+        if (this.skyEngine != null) {
+            ((ILightEngine)this.skyEngine).enableLightSources(cubePos, retain);
         }
     }
 

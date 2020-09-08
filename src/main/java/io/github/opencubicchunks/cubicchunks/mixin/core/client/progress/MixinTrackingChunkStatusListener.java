@@ -21,28 +21,28 @@ import javax.annotation.Nullable;
 @Mixin(TrackingChunkStatusListener.class)
 public abstract class MixinTrackingChunkStatusListener implements ICubeStatusListener, ITrackingCubeStatusListener {
 
-    @Shadow private boolean tracking;
+    @Shadow private boolean started;
 
-    @Shadow @Final private LoggingChunkStatusListener loggingListener;
+    @Shadow @Final private LoggingChunkStatusListener delegate;
 
-    @Shadow @Final private int positionOffset;
-    @Shadow private ChunkPos center;
-    private CubePos centerCube;
+    @Shadow @Final private int radius;
+    @Shadow private ChunkPos spawnPos;
+    private CubePos spawnCube;
     private final Long2ObjectOpenHashMap<ChunkStatus> cubeStatuses = new Long2ObjectOpenHashMap<>();
 
     @Override
-    public void startCubes(CubePos center) {
-        if (this.tracking) {
-            ((ICubeStatusListener) this.loggingListener).startCubes(center);
-            this.centerCube = center;
-            this.center = centerCube.asChunkPos();
+    public void startCubes(CubePos spawn) {
+        if (this.started) {
+            ((ICubeStatusListener) this.delegate).startCubes(spawn);
+            this.spawnCube = spawn;
+            this.spawnPos = spawnCube.asChunkPos();
         }
     }
 
     @Override
-    public void cubeStatusChanged(CubePos cubePos, @Nullable ChunkStatus newStatus) {
-        if (this.tracking) {
-            ((ICubeStatusListener) this.loggingListener).cubeStatusChanged(cubePos, newStatus);
+    public void onCubeStatusChange(CubePos cubePos, @Nullable ChunkStatus newStatus) {
+        if (this.started) {
+            ((ICubeStatusListener) this.delegate).onCubeStatusChange(cubePos, newStatus);
             if (newStatus == null) {
                 this.cubeStatuses.remove(cubePos.asLong());
             } else {
@@ -51,20 +51,20 @@ public abstract class MixinTrackingChunkStatusListener implements ICubeStatusLis
         }
     }
 
-    @Inject(method = "startTracking", at = @At("HEAD"))
+    @Inject(method = "start", at = @At("HEAD"))
     public void startTracking(CallbackInfo ci) {
         this.cubeStatuses.clear();
     }
 
     @Nullable @Override
     public ChunkStatus getCubeStatus(int x, int y, int z) {
-        if (centerCube == null) {
+        if (spawnCube == null) {
             return null; // vanilla race condition, made worse by forge moving IChunkStatusListener ichunkstatuslistener = this.chunkStatusListenerFactory.create(11); earlier
         }
-        int offset = Coords.sectionToCubeCeil(this.positionOffset);
+        int radiusCubes = Coords.sectionToCubeCeil(this.radius);
         return this.cubeStatuses.get(CubePos.asLong(
-                x + this.centerCube.getX() - offset,
-                y + this.centerCube.getY() - offset,
-                z + this.centerCube.getZ() - offset));
+                x + this.spawnCube.getX() - radiusCubes,
+                y + this.spawnCube.getY() - radiusCubes,
+                z + this.spawnCube.getZ() - radiusCubes));
     }
 }

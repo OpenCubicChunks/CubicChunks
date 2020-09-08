@@ -29,13 +29,13 @@ public class MixinLightEngine <M extends LightDataMap<M>, S extends SectionLight
 
     @Shadow @Final protected S storage;
 
-    @Shadow @Final protected BlockPos.Mutable scratchPos;
+    @Shadow @Final protected BlockPos.Mutable pos;
 
-    @Shadow @Final protected IChunkLightProvider chunkProvider;
+    @Shadow @Final protected IChunkLightProvider chunkSource;
 
-    @Shadow @Final private long[] recentPositions;
+    @Shadow @Final private long[] lastChunkPos;
 
-    @Shadow @Final private IBlockReader[] recentChunks;
+    @Shadow @Final private IBlockReader[] lastChunk;
 
     @Override
     public void retainCubeData(CubePos pos, boolean retain) {
@@ -59,8 +59,8 @@ public class MixinLightEngine <M extends LightDataMap<M>, S extends SectionLight
      * @reason Vanilla lighting is gone
      */
     //TODO: make this into a redirect that calls getCubeReader taking arguments blockPosLong
-    @Overwrite // getBlockAndOpacity
-    protected BlockState getBlockAndOpacity(long blockPosLong, @Nullable MutableInt opacity) {
+    @Overwrite
+    protected BlockState getStateAndOpacity(long blockPosLong, @Nullable MutableInt opacity) {
         if (blockPosLong == Long.MAX_VALUE) {
             if (opacity != null) {
                 opacity.setValue(0);
@@ -79,11 +79,11 @@ public class MixinLightEngine <M extends LightDataMap<M>, S extends SectionLight
 
                 return Blocks.BEDROCK.defaultBlockState();
             } else {
-                this.scratchPos.set(blockPosLong);
-                BlockState blockstate = iblockreader.getBlockState(this.scratchPos);
+                this.pos.set(blockPosLong);
+                BlockState blockstate = iblockreader.getBlockState(this.pos);
                 boolean flag = blockstate.canOcclude() && blockstate.useShapeForLightOcclusion();
                 if (opacity != null) {
-                    opacity.setValue(blockstate.getLightBlock(this.chunkProvider.getLevel(), this.scratchPos));
+                    opacity.setValue(blockstate.getLightBlock(this.chunkSource.getLevel(), this.pos));
                 }
 
                 return flag ? blockstate : Blocks.AIR.defaultBlockState();
@@ -96,20 +96,20 @@ public class MixinLightEngine <M extends LightDataMap<M>, S extends SectionLight
         long i = SectionPos.asLong(sectionX, sectionY, sectionZ);
 
         for(int j = 0; j < 2; ++j) {
-            if (i == this.recentPositions[j]) {
-                return this.recentChunks[j];
+            if (i == this.lastChunkPos[j]) {
+                return this.lastChunk[j];
             }
         }
 
-        IBlockReader iblockreader = ((ICubeLightProvider)this.chunkProvider).getCubeForLight(sectionX, sectionY, sectionZ);
+        IBlockReader iblockreader = ((ICubeLightProvider)this.chunkSource).getCubeForLighting(sectionX, sectionY, sectionZ);
 
         for(int k = 1; k > 0; --k) {
-            this.recentPositions[k] = this.recentPositions[k - 1];
-            this.recentChunks[k] = this.recentChunks[k - 1];
+            this.lastChunkPos[k] = this.lastChunkPos[k - 1];
+            this.lastChunk[k] = this.lastChunk[k - 1];
         }
 
-        this.recentPositions[0] = i;
-        this.recentChunks[0] = iblockreader;
+        this.lastChunkPos[0] = i;
+        this.lastChunk[0] = iblockreader;
         return iblockreader;
     }
 }

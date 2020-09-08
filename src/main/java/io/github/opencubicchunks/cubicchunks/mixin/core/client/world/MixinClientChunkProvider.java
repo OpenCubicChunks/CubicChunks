@@ -34,19 +34,19 @@ public abstract class MixinClientChunkProvider implements IClientCubeProvider {
 
     @Shadow @Final private static Logger LOGGER;
 
-    @Shadow @Final private ClientWorld world;
+    @Shadow @Final private ClientWorld level;
     private EmptyCube emptyCube;
 
-    @Shadow private volatile ClientChunkProvider.ChunkArray array;
+    @Shadow private volatile ClientChunkProvider.ChunkArray storage;
 
     @Shadow public abstract int getLoadedChunksCount();
 
-    @Shadow public abstract WorldLightManager getLightManager();
+    @Shadow public abstract WorldLightManager getLightEngine();
 
     @Inject(method = "<init>", at = @At("RETURN"))
     private void onConstruct(ClientWorld clientWorldIn, int viewDistance, CallbackInfo ci) {
         this.cubeArray = new ClientChunkProviderCubeArray(adjustCubeViewDistance(viewDistance), cube -> {});
-        this.emptyCube = new EmptyCube(world);
+        this.emptyCube = new EmptyCube(level);
     }
 
     private int adjustCubeViewDistance(int viewDistance) {
@@ -62,7 +62,7 @@ public abstract class MixinClientChunkProvider implements IClientCubeProvider {
     }
 
     @Override
-    public void unloadCube(int x, int y, int z) {
+    public void drop(int x, int y, int z) {
         if (!this.cubeArray.inView(x, y, z)) {
             return;
         }
@@ -90,7 +90,7 @@ public abstract class MixinClientChunkProvider implements IClientCubeProvider {
     }
 
     @Override
-    public BigCube loadCube(int cubeX, int cubeY, int cubeZ,
+    public BigCube replaceWithPacketData(int cubeX, int cubeY, int cubeZ,
                             @Nullable CubeBiomeContainer biomes, PacketBuffer readBuffer, CompoundNBT nbtTagIn, boolean cubeExists) {
 
         if (!this.cubeArray.inView(cubeX, cubeY, cubeZ)) {
@@ -105,14 +105,14 @@ public abstract class MixinClientChunkProvider implements IClientCubeProvider {
 //                 return null;
 //             }
 
-            cube = new BigCube(this.world, CubePos.of(cubeX, cubeY, cubeZ), biomes);
+            cube = new BigCube(this.level, CubePos.of(cubeX, cubeY, cubeZ), biomes);
             cube.read(biomes, readBuffer, nbtTagIn, cubeExists);
             this.cubeArray.replace(index, cube);
         } else {
             cube.read(biomes, readBuffer, nbtTagIn, cubeExists);
         }
 
-        WorldLightManager worldlightmanager = this.getLightManager();
+        WorldLightManager worldlightmanager = this.getLightEngine();
         ((IWorldLightManager) worldlightmanager).enableLightSources(CubePos.of(cubeX, cubeY, cubeZ), true);
 
         ChunkSection[] cubeSections = cube.getCubeSections();
@@ -121,7 +121,7 @@ public abstract class MixinClientChunkProvider implements IClientCubeProvider {
             worldlightmanager.updateSectionStatus(Coords.sectionPosByIndex(cube.getCubePos(), i), ChunkSection.isEmpty(chunksection));
         }
 
-        ((IClientWorld)this.world).onCubeLoaded(cubeX, cubeY, cubeZ);
+        ((IClientWorld)this.level).onCubeLoaded(cubeX, cubeY, cubeZ);
         // TODO: forge client cube load event
         // net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.event.world.ChunkEvent.Load(cube));
         return cube;
@@ -133,8 +133,8 @@ public abstract class MixinClientChunkProvider implements IClientCubeProvider {
         this.cubeArray.centerZ = Coords.sectionToCube(sectionZ);
     }
 
-    @Inject(method = "setViewDistance", at = @At("HEAD"))
-    private void setViewDistance(int viewDistance, CallbackInfo ci) {
+    @Inject(method = "updateViewRadius", at = @At("HEAD"))
+    private void updateViewRadius(int viewDistance, CallbackInfo ci) {
         int old = this.cubeArray.viewDistance;
         int newDist = adjustCubeViewDistance(viewDistance);
         if (old == newDist) {
@@ -164,9 +164,9 @@ public abstract class MixinClientChunkProvider implements IClientCubeProvider {
      * @reason Change the debug string
      */
     @Overwrite
-    public String makeString() {
+    public String gatherStats() {
         //noinspection ConstantConditions
-        return "Client Chunk Cache: " + ((ClientChunkProviderChunkArrayAccess) (Object) this.array).getChunks().length() + ", " + this.getLoadedChunksCount() +
+        return "Client Chunk Cache: " + ((ClientChunkProviderChunkArrayAccess) (Object) this.storage).getChunks().length() + ", " + this.getLoadedChunksCount() +
                 " | " + this.cubeArray.cubes.length() + ", " + getLoadedCubesCount();
     }
 

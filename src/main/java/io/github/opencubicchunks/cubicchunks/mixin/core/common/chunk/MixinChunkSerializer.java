@@ -19,6 +19,7 @@ import net.minecraft.world.gen.Heightmap;
 import net.minecraft.world.gen.feature.template.TemplateManager;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.common.util.Constants;
+import net.minecraftforge.registries.ForgeRegistries;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.spongepowered.asm.mixin.Final;
@@ -36,7 +37,7 @@ import java.util.Objects;
 public abstract class MixinChunkSerializer {
     @Shadow @Final private static Logger LOGGER;
 
-    @Shadow public static ChunkStatus.Type getChunkStatus(@Nullable CompoundNBT chunkNBT) {
+    @Shadow public static ChunkStatus.Type getChunkTypeFromTag(@Nullable CompoundNBT chunkNBT) {
         throw new Error("Mixin didn't apply");
     }
 
@@ -52,7 +53,7 @@ public abstract class MixinChunkSerializer {
             LOGGER.error("Chunk file at {} is in the wrong location; relocating. (Expected {}, got {})", pos, pos, loadedPos);
         }
         long inhabitedTime = level.getLong("InhabitedTime");
-        ChunkStatus.Type statusType = getChunkStatus(compound);
+        ChunkStatus.Type statusType = getChunkTypeFromTag(compound);
         IChunk newChunk;
         Biome[] biomesIn = new Biome[BiomeContainer.BIOMES_SIZE];
         Arrays.fill(biomesIn, WorldGenRegistries.BIOME.getOrThrow(Biomes.FOREST));

@@ -30,28 +30,19 @@ import java.util.Map;
 @Mixin(MinecraftServer.class)
 public abstract class MixinMinecraftServer {
 
-    @Shadow
-    protected long serverTime = Util.getMillis();
-
-    @Shadow
-    private boolean isRunningScheduledTasks;
-
     @Shadow @Final private static Logger LOGGER;
-
-    @Shadow public abstract boolean isServerRunning();
-
-    @Shadow protected abstract void runScheduledTasks();
-
+    @Shadow protected long nextTickTime;
+    @Shadow @Final private Map<RegistryKey<World>, ServerWorld> levels;
+    @Shadow protected abstract void waitUntilNextTick();
     @Shadow public abstract ServerWorld overworld();
-
-    @Shadow @Final private Map<RegistryKey<World>, ServerWorld> worlds;
+    @Shadow public abstract boolean isRunning();
 
     /**
      * @author NotStirred
      * @reason Additional CC functionality and logging.
      */
     @Overwrite
-    protected void loadInitialChunks(IChunkStatusListener statusListener) {
+    protected void prepareLevels(IChunkStatusListener statusListener) {
         ServerWorld serverworld = this.overworld();
         LOGGER.info("Preparing start region for dimension {}", serverworld.dimension().location());
         BlockPos spawnPos = serverworld.getSharedSpawnPos();
@@ -62,31 +53,23 @@ public abstract class MixinMinecraftServer {
 
         ServerChunkProvider serverchunkprovider = serverworld.getChunkSource();
         serverchunkprovider.getLightEngine().setTaskPerBatch(500);
-        this.serverTime = Util.getMillis();
+        this.nextTickTime = Util.getMillis();
         int radius = (int) Math.ceil(10 * (16 / (float) IBigCube.DIAMETER_IN_BLOCKS)); //vanilla is 10, 32: 5, 64: 3
         int chunkDiameter = Coords.cubeToSection(radius, 0) * 2 + 1;
         int d = radius*2+1;
-        ((IServerChunkProvider)serverchunkprovider).registerTicket(TicketType.START, spawnPosCube, radius + 1, Unit.INSTANCE);
+        ((IServerChunkProvider)serverchunkprovider).addCubeRegionTicket(TicketType.START, spawnPosCube, radius + 1, Unit.INSTANCE);
         serverchunkprovider.addRegionTicket(TicketType.START, spawnPosCube.asChunkPos(), Coords.cubeToSection(radius + 1, 0), Unit.INSTANCE);
 
-        int i2 = 0;
-        while(isServerRunning() && (serverchunkprovider.getTickingGenerated() < chunkDiameter * chunkDiameter || ((IServerChunkProvider) serverchunkprovider).getCubeLoadCounter() < d*d*d)) {
+        while(this.isRunning() && (serverchunkprovider.getTickingGenerated() < chunkDiameter * chunkDiameter || ((IServerChunkProvider) serverchunkprovider).getTickingGeneratedCubes() < d*d*d)) {
             // from CC
-            this.serverTime = Util.getMillis() + 10L;
-            this.runScheduledTasks();
-
-            if (i2 == 100) {
-                LOGGER.info("Current loaded chunks: " + serverchunkprovider.getTickingGenerated() + " | " + ((IServerChunkProvider)serverchunkprovider).getCubeLoadCounter());
-                i2 = 0;
-            }
-
-            i2++;
+            this.nextTickTime = Util.getMillis() + 10L;
+            this.waitUntilNextTick();
         }
-        LOGGER.info("Current loaded chunks: " + serverchunkprovider.getTickingGenerated() + " | " + ((IServerChunkProvider)serverchunkprovider).getCubeLoadCounter());
-        this.serverTime = Util.getMillis() + 10L;
-        this.runScheduledTasks();
+        LOGGER.info("Current loaded chunks: " + serverchunkprovider.getTickingGenerated() + " | " + ((IServerChunkProvider)serverchunkprovider).getTickingGeneratedCubes());
+        this.nextTickTime = Util.getMillis() + 10L;
+        this.waitUntilNextTick();
 
-        for(ServerWorld serverworld1 : this.worlds.values()) {
+        for(ServerWorld serverworld1 : this.levels.values()) {
             ForcedChunksSaveData forcedchunkssavedata = serverworld1.getDataStorage().get(ForcedChunksSaveData::new, "chunks");
             ForcedCubesSaveData forcedcubessavedata = serverworld1.getDataStorage().get(ForcedCubesSaveData::new, "cubes");
             if (forcedchunkssavedata != null) {
@@ -105,8 +88,8 @@ public abstract class MixinMinecraftServer {
                 }
             }
         }
-        this.serverTime = Util.getMillis() + 10L;
-        this.runScheduledTasks();
+        this.nextTickTime = Util.getMillis() + 10L;
+        this.waitUntilNextTick();
         statusListener.stop();
         serverchunkprovider.getLightEngine().setTaskPerBatch(5);
     }

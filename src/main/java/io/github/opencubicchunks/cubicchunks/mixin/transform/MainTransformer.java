@@ -42,36 +42,36 @@ public class MainTransformer {
                 + "net.minecraft.world.server.ChunkHolder$IPlayerProvider)"),
                 "<init>");
         vanillaToCubic.put(getMethod("void func_219291_a(net.minecraft.world.server.ChunkManager)"),
-                "processCubeUpdates");
+                "updateCubeFutures");
 
         Map<ClassMethod, String> methods = new HashMap<>();
         methods.put(new ClassMethod(
                 getObjectType("net/minecraft/world/server/ChunkHolder"),
-                getMethod("net.minecraft.world.chunk.ChunkStatus getChunkStatusFromLevel(int)")
-        ), "getCubeStatusFromLevel");
+                getMethod("net.minecraft.world.chunk.ChunkStatus getStatus(int)")
+        ), "getCubeStatus");
         methods.put(new ClassMethod(
                 getObjectType("net/minecraft/world/server/ChunkManager"),
                 getMethod("java.util.concurrent.CompletableFuture func_222961_b(net.minecraft.world.server.ChunkHolder)")
-        ), "createCubeBorderFuture");
+        ), "unpackCubeTicks");
         methods.put(new ClassMethod(
                 getObjectType("net/minecraft/world/server/ChunkManager"),
                 getMethod("java.util.concurrent.CompletableFuture func_219179_a(net.minecraft.world.server.ChunkHolder)")
-        ), "createCubeTickingFuture");
+        ), "postProcessCube");
         methods.put(new ClassMethod(
                 getObjectType("net/minecraft/world/server/ChunkManager"),
                 getMethod("java.util.concurrent.CompletableFuture func_219188_b(net.minecraft.util.math.ChunkPos)")
-        ), "createCubeEntityTickingFuture");
+        ), "getCubeEntityTickingRangeFuture");
         methods.put(new ClassMethod(
                 getObjectType("net/minecraft/world/server/ChunkManager"),
                 getMethod("java.util.concurrent.CompletableFuture func_222973_a(net.minecraft.world.chunk.Chunk)")
-        ), "saveCubeScheduleTicks");
+        ), "packCubeTicks");
         methods.put(new ClassMethod(
                 getObjectType("net/minecraft/world/server/ChunkHolder$IListener"),
                 getMethod("void func_219066_a(net.minecraft.util.math.ChunkPos, java.util.function.IntSupplier, int, java.util.function.IntConsumer)")
-        ), "onUpdateCubeLevel");
+        ), "onCubeLevelChange");
 
         Map<ClassField, String> fields = new HashMap<>();
-        fields.put(new ClassField("net/minecraft/world/server/ChunkManager", "field_219249_a"), "MAX_CUBE_LOADED_LEVEL"); //MAX_LOADED_LEVEL
+        fields.put(new ClassField("net/minecraft/world/server/ChunkManager", "field_219249_a"), "MAX_CUBE_DISTANCE"); //MAX_CHUNK_DISTANCE
         fields.put(new ClassField("net/minecraft/world/server/ChunkHolder", "field_219319_n"), "cubePos"); // pos
 
         Map<Type, Type> types = new HashMap<>();
@@ -88,21 +88,21 @@ public class MainTransformer {
     public static void transformChunkManager(ClassNode targetClass) {
         final Method targetMethod = getMethod(
                 "net.minecraft.world.server.ChunkHolder func_219213_a(long, int, net.minecraft.world.server.ChunkHolder, int)");
-        final String newTargetName = "setCubeLevel";
+        final String newTargetName = "updateCubeScheduling";
 
         Map<ClassMethod, String> methodRedirects = new HashMap<>();
 
         Map<ClassField, String> fieldRedirects = new HashMap<>();
         fieldRedirects.put(new ClassField("net/minecraft/world/server/ChunkManager", "field_219261_o"), // unloadableChunks
-                "unloadableCubes");
+                "cubesToDrop");
         fieldRedirects.put(new ClassField("net/minecraft/world/server/ChunkManager", "field_219253_g"), // chunksToUnload
-                "cubesToUnload");
+                "pendingCubeUnloads");
         fieldRedirects.put(new ClassField("net/minecraft/world/server/ChunkManager", "field_219263_q"), // chunkTaskPriorityQueueSorter
-                "cubeTaskPriorityQueueSorter");
+                "cubeQueueSorter");
         fieldRedirects.put(new ClassField("net/minecraft/world/server/ChunkManager", "field_219251_e"), // loadedChunks
-                "loadedCubes");
+                "updatingCubeMap");
         fieldRedirects.put(new ClassField("net/minecraft/world/server/ChunkManager", "field_219249_a"),
-                "MAX_CUBE_LOADED_LEVEL"); //MAX_LOADED_LEVEL
+                "MAX_CUBE_DISTANCE"); //MAX_LOADED_LEVEL
 
 
         Map<Type, Type> typeRedirects = new HashMap<>();
@@ -120,20 +120,20 @@ public class MainTransformer {
     public static void transformProxyTicketManager(ClassNode targetClass) {
         final Method setChunkLevel = getMethod(
                 "net.minecraft.world.server.ChunkHolder func_219372_a(long, int, net.minecraft.world.server.ChunkHolder, int)");
-        final String setCubeLevel = "setCubeLevel";
+        final String updateCubeScheduling = "updateCubeScheduling";
 
         Map<ClassMethod, String> methodRedirects = new HashMap<>();
-        methodRedirects.put(// synthetic accessor for func_219213_a (setChunkLevel)
+        methodRedirects.put(// synthetic accessor for func_219213_a (updateChunkScheduling)
                 new ClassMethod(
                         getObjectType("net/minecraft/world/server/ChunkManager"),
                         getMethod("net.minecraft.world.server.ChunkHolder access$700("
                                 + "net.minecraft.world.server.ChunkManager, long, int, net.minecraft.world.server.ChunkHolder, int)")
-                ), "setCubeLevel");
+                ), updateCubeScheduling);
 
         Map<ClassField, String> fieldRedirects = new HashMap<>();
         Map<Type, Type> typeRedirects = new HashMap<>();
 
-        cloneAndApplyRedirects(targetClass, setChunkLevel, setCubeLevel, methodRedirects, fieldRedirects, typeRedirects);
+        cloneAndApplyRedirects(targetClass, setChunkLevel, updateCubeScheduling, methodRedirects, fieldRedirects, typeRedirects);
     }
 
     private static void makeStaticSyntheticAccessor(ClassNode node, MethodNode newMethod) {

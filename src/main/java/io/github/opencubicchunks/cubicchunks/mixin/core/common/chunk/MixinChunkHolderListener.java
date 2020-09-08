@@ -11,6 +11,6 @@ import java.util.function.IntSupplier;
 @Mixin(ChunkHolder.IListener.class)
 public interface MixinChunkHolderListener extends ICubeHolderListener {
 
-    @Override default void onUpdateCubeLevel(CubePos pos, IntSupplier intSupplier, int p_219066_3_, IntConsumer p_219066_4_) {
+    @Override default void onCubeLevelChange(CubePos pos, IntSupplier intSupplier, int p_219066_3_, IntConsumer p_219066_4_) {
     }
 }

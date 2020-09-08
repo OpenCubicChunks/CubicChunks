@@ -22,13 +22,13 @@ import static io.github.opencubicchunks.cubicchunks.utils.Coords.sectionToCube;
 @Mixin(ChunkManager.EntityTracker.class)
 public abstract class MixinEntityTracker {
 
-    @Shadow ChunkManager this$0;
+    @SuppressWarnings("ShadowTarget") @Shadow ChunkManager this$0;
 
     @Shadow @Final private Entity entity;
 
-    @Shadow @Final private TrackedEntity entry;
+    @Shadow @Final private TrackedEntity serverEntity;
 
-    @Shadow @Final private Set<ServerPlayerEntity> trackingPlayers;
+    @Shadow @Final private Set<ServerPlayerEntity> seenBy;
 
     @Shadow protected abstract int getEffectiveRange();
 
@@ -37,9 +37,9 @@ public abstract class MixinEntityTracker {
      * @reason Entire method needs to be rewritten
      */
     @Overwrite
-    public void updateTrackingState(ServerPlayerEntity player) {
+    public void updatePlayer(ServerPlayerEntity player) {
         if (player != this.entity) {
-            Vector3d vec3d = player.position().subtract(this.entry.sentPos());
+            Vector3d vec3d = player.position().subtract(this.serverEntity.sentPos());
                             //This function is fine
             int i = Math.min(this.getEffectiveRange(), (((ChunkManagerAccess)this$0).getViewDistance() - 1) * 16);
             boolean flag = vec3d.x >= (double)(-i) && vec3d.x <= (double)i &&
@@ -57,11 +57,11 @@ public abstract class MixinEntityTracker {
                     }
                 }
 
-                if (spawn && this.trackingPlayers.add(player)) {
-                    this.entry.addPairing(player);
+                if (spawn && this.seenBy.add(player)) {
+                    this.serverEntity.addPairing(player);
                 }
-            } else if (this.trackingPlayers.remove(player)) {
-                this.entry.removePairing(player);
+            } else if (this.seenBy.remove(player)) {
+                this.serverEntity.removePairing(player);
             }
 
         }

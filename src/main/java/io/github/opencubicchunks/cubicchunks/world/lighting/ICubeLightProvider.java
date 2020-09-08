@@ -6,5 +6,5 @@ import javax.annotation.Nullable;
 
 public interface ICubeLightProvider {
 
-    @Nullable IBlockReader getCubeForLight(int sectionX, int sectionY, int sectionZ);
+    @Nullable IBlockReader getCubeForLighting(int sectionX, int sectionY, int sectionZ);
 }

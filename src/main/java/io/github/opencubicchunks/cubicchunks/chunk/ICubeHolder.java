@@ -39,27 +39,27 @@ public interface ICubeHolder {
     CubePos getCubePos();
 
     // func_219276_a, getOrScheduleFuture
-    CompletableFuture<Either<IBigCube, ChunkHolder.IChunkLoadingError>> createCubeFuture(ChunkStatus chunkStatus, ChunkManager chunkManager);
+    CompletableFuture<Either<IBigCube, ChunkHolder.IChunkLoadingError>> getOrScheduleCubeFuture(ChunkStatus chunkStatus, ChunkManager chunkManager);
 
-    CompletableFuture<Either<IBigCube, ChunkHolder.IChunkLoadingError>> getCubeFuture(ChunkStatus chunkStatus);
+    CompletableFuture<Either<IBigCube, ChunkHolder.IChunkLoadingError>> getCubeFutureIfPresentUnchecked(ChunkStatus chunkStatus);
 
     CompletableFuture<Either<BigCube, ChunkHolder.IChunkLoadingError>> getCubeEntityTickingFuture();
 
     // func_219294_a, replaceProtoChunk
-    void onCubeWrapperCreated(CubePrimerWrapper primer);
+    void replaceProtoCube(CubePrimerWrapper primer);
 
     // func_225410_b, getFutureIfPresent
-    CompletableFuture<Either<IBigCube, ChunkHolder.IChunkLoadingError>> getFutureHigherThanCubeStatus(ChunkStatus chunkStatus);
+    CompletableFuture<Either<IBigCube, ChunkHolder.IChunkLoadingError>> getCubeFutureIfPresent(ChunkStatus chunkStatus);
 
     void addCubeStageListener(ChunkStatus status, BiConsumer<Either<IBigCube, ChunkHolder.IChunkLoadingError>, Throwable> consumer, ChunkManager chunkManager);
 
 
-    void sendChanges(BigCube cube);
+    void broadcastChanges(BigCube cube);
 
-    CompletableFuture<IBigCube> getCurrentCubeFuture();
+    CompletableFuture<IBigCube> getCubeToSave();
 
     // added with ASM, can't be shadow because mixin validates shadows before preApply runs
-    void processCubeUpdates(ChunkManager chunkManagerIn);
+    void updateCubeFutures(ChunkManager chunkManagerIn);
 
     class CubeLoadingError implements ChunkHolder.IChunkLoadingError {
         private final ChunkHolder holder;

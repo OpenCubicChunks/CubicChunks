@@ -9,10 +9,10 @@ import javax.annotation.Nullable;
 
 public interface IClientCubeProvider extends ICubeProvider {
 
-    void unloadCube(int x, int y, int z);
+    void drop(int x, int y, int z);
 
     void setCenter(int x, int y, int z);
 
-    BigCube loadCube(int cubeX, int cubeY, int cubeZ, @Nullable CubeBiomeContainer biomes, PacketBuffer readBuffer, CompoundNBT nbtTagIn,
+    BigCube replaceWithPacketData(int cubeX, int cubeY, int cubeZ, @Nullable CubeBiomeContainer biomes, PacketBuffer readBuffer, CompoundNBT nbtTagIn,
                      boolean cubeExists);
 }

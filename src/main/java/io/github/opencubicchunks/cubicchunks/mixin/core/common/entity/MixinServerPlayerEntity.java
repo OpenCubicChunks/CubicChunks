@@ -9,7 +9,7 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 
 @Mixin(ServerPlayerEntity.class)
 public class MixinServerPlayerEntity {
-    @Redirect(method = "sendChunkLoad", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/play/ServerPlayNetHandler;sendPacket"
+    @Redirect(method = "trackChunk", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/play/ServerPlayNetHandler;send"
             + "(Lnet/minecraft/network/IPacket;)V", ordinal = 0))
     public void onSendChunkLoad(ServerPlayNetHandler serverPlayNetHandler, IPacket<?> packetIn) { }
 }

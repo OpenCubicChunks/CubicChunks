@@ -20,7 +20,7 @@ public class MixinRenderChunkUtils {
     private static void getCountBlocks(ChunkRenderDispatcher.ChunkRender renderChunk, CallbackInfoReturnable<Integer> cbi) {
         //if (((IOptiFineChunkRender) renderChunk).isCubic()) {
         ChunkSection ebs = ((IOptiFineChunkRender) renderChunk).getCube();
-        int ret = ebs == null ? 0 : ((ChunkSectionAccess) ebs).getBlockRefCount();
+        int ret = ebs == null ? 0 : ((ChunkSectionAccess) ebs).getNonEmptyBlockCount();
         cbi.cancel();
         cbi.setReturnValue(ret);
         //}

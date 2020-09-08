@@ -100,7 +100,7 @@ public class PacketCubes {
                 int y = pos.getY();
                 int z = pos.getZ();
 
-                ((IClientCubeProvider) world.getChunkSource()).loadCube(
+                ((IClientCubeProvider) world.getChunkSource()).replaceWithPacketData(
                         x, y, z, null, dataReader, new CompoundNBT(), cubeExists.get(i));
 
                 // TODO: full cube info

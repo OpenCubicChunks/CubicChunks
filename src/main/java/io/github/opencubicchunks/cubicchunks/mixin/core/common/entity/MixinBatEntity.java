@@ -9,7 +9,7 @@ import org.spongepowered.asm.mixin.injection.ModifyConstant;
 @Mixin(BatEntity.class)
 public class MixinBatEntity {
 
-    @ModifyConstant(method = "updateAITasks", constant = @Constant(intValue = 1, ordinal = 0))
+    @ModifyConstant(method = "customServerAiStep", constant = @Constant(intValue = 1, ordinal = 0))
     private int getUpdateAIWorldHeight(int _1) { return -CubicChunks.MAX_SUPPORTED_HEIGHT; }
 
 }

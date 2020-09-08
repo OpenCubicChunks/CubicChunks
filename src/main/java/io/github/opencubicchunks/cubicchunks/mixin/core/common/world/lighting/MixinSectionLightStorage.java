@@ -23,29 +23,23 @@ import org.spongepowered.asm.mixin.Shadow;
 @Mixin(SectionLightStorage.class)
 public abstract class MixinSectionLightStorage <M extends LightDataMap<M>> extends SectionDistanceGraph implements ISectionLightStorage {
 
-    @Shadow protected abstract boolean hasSectionsToUpdate();
-
-    @Shadow @Final protected Long2ObjectMap<NibbleArray> newArrays;
-    @Shadow @Final private LongSet noLightSections;
-
-    @Shadow protected abstract void cancelSectionUpdates(LightEngine<?, ?> engine, long sectionPosIn);
-
-    @Shadow @Final protected M cachedLightData;
-
-    @Shadow(aliases = "onNodeRemoved") protected abstract void removeSection(long p_215523_1_);
-
-    @Shadow protected volatile boolean hasSectionsToUpdate;
-
-    @Shadow protected abstract boolean hasSection(long sectionPosIn);
-
-    @Shadow @Final protected LongSet dirtyCachedSections;
-
+    @Shadow @Final protected Long2ObjectMap<NibbleArray> queuedSections;
+    @Shadow @Final private LongSet toRemove;
+    @Shadow @Final protected M updatingSectionData;
+    @Shadow protected volatile boolean hasToRemove;
+    @Shadow @Final protected LongSet changedSections;
     @Shadow @Final private static Direction[] DIRECTIONS;
-
-    @Shadow protected abstract void processAllLevelUpdates();
 
     private final LongSet cubesToRetain = new LongOpenHashSet();
 
+    @Shadow protected abstract void clearQueuedSectionBlocks(LightEngine<?, ?> engine, long sectionPosIn);
+
+    @Shadow protected abstract void onNodeRemoved(long p_215523_1_);
+
+    @Shadow protected abstract boolean storingLightForSection(long sectionPosIn);
+
+    @Shadow protected abstract boolean hasInconsistencies();
+    
     protected MixinSectionLightStorage(int p_i50706_1_, int p_i50706_2_, int p_i50706_3_) {
         super(p_i50706_1_, p_i50706_2_, p_i50706_3_);
     }
@@ -64,56 +58,56 @@ public abstract class MixinSectionLightStorage <M extends LightDataMap<M>> exten
      * @reason entire method was chunk based
      */
     @Overwrite
-    protected void updateSections(LightEngine<M, ?> engine, boolean updateSkyLight, boolean updateBlockLight) {
-        if (this.hasSectionsToUpdate() || !this.newArrays.isEmpty()) {
-            for(long noLightPos : this.noLightSections) {
-                this.cancelSectionUpdates(engine, noLightPos);
-                NibbleArray nibblearray = this.newArrays.remove(noLightPos);
-                NibbleArray nibblearray1 = this.cachedLightData.removeLayer(noLightPos);
+    protected void markNewInconsistencies(LightEngine<M, ?> engine, boolean updateSkyLight, boolean updateBlockLight) {
+        if (this.hasInconsistencies() || !this.queuedSections.isEmpty()) {
+            for(long noLightPos : this.toRemove) {
+                this.clearQueuedSectionBlocks(engine, noLightPos);
+                NibbleArray nibblearray = this.queuedSections.remove(noLightPos);
+                NibbleArray nibblearray1 = this.updatingSectionData.removeLayer(noLightPos);
                 if (this.cubesToRetain.contains(CubePos.sectionToCubeSectionLong(noLightPos))) {
                     if (nibblearray != null) {
-                        this.newArrays.put(noLightPos, nibblearray);
+                        this.queuedSections.put(noLightPos, nibblearray);
                     } else if (nibblearray1 != null) {
-                        this.newArrays.put(noLightPos, nibblearray1);
+                        this.queuedSections.put(noLightPos, nibblearray1);
                     }
                 }
             }
 
-            this.cachedLightData.clearCache();
+            this.updatingSectionData.clearCache();
 
-            for(long section : this.noLightSections) {
+            for(long section : this.toRemove) {
                 //TODO: implement this for CC
-                this.removeSection(section);
+                this.onNodeRemoved(section);
             }
 
-            this.noLightSections.clear();
-            this.hasSectionsToUpdate = false;
+            this.toRemove.clear();
+            this.hasToRemove = false;
 
-            for(Long2ObjectMap.Entry<NibbleArray> entry : this.newArrays.long2ObjectEntrySet()) {
+            for(Long2ObjectMap.Entry<NibbleArray> entry : this.queuedSections.long2ObjectEntrySet()) {
                 long entryPos = entry.getLongKey();
-                if (this.hasSection(entryPos)) {
+                if (this.storingLightForSection(entryPos)) {
                     NibbleArray nibblearray2 = entry.getValue();
-                    if (this.cachedLightData.getLayer(entryPos) != nibblearray2) {
-                        this.cancelSectionUpdates(engine, entryPos);
-                        this.cachedLightData.setLayer(entryPos, nibblearray2);
-                        this.dirtyCachedSections.add(entryPos);
+                    if (this.updatingSectionData.getLayer(entryPos) != nibblearray2) {
+                        this.clearQueuedSectionBlocks(engine, entryPos);
+                        this.updatingSectionData.setLayer(entryPos, nibblearray2);
+                        this.changedSections.add(entryPos);
                     }
                 }
             }
 
             LevelBasedGraphAccess engineAccess = ((LevelBasedGraphAccess)engine);
 
-            this.cachedLightData.clearCache();
+            this.updatingSectionData.clearCache();
             if (!updateBlockLight) {
-                for(long newArray : this.newArrays.keySet()) {
-                    if (this.hasSection(newArray)) {
+                for(long newArray : this.queuedSections.keySet()) {
+                    if (this.storingLightForSection(newArray)) {
                         int newX = SectionPos.sectionToBlockCoord(SectionPos.x(newArray));
                         int newY = SectionPos.sectionToBlockCoord(SectionPos.y(newArray));
                         int newZ = SectionPos.sectionToBlockCoord(SectionPos.z(newArray));
 
                         for(Direction direction : DIRECTIONS) {
                             long posOffset = SectionPos.offset(newArray, direction);
-                            if (!this.newArrays.containsKey(posOffset) && this.hasSection(posOffset)) {
+                            if (!this.queuedSections.containsKey(posOffset) && this.storingLightForSection(posOffset)) {
                                 for(int i1 = 0; i1 < 16; ++i1) {
                                     for(int j1 = 0; j1 < 16; ++j1) {
                                         long k1;
@@ -144,9 +138,9 @@ public abstract class MixinSectionLightStorage <M extends LightDataMap<M>> exten
                                                 l1 = BlockPos.asLong(newX + 16, newY + i1, newZ + j1);
                                         }
 
-                                        engineAccess.invokeScheduleUpdate(k1, l1, engineAccess.invokeGetEdgeLevel(k1, l1, engineAccess.invokeGetLevel(k1)),
+                                        engineAccess.invokeCheckEdge(k1, l1, engineAccess.invokeComputeLevelFromNeighbor(k1, l1, engineAccess.invokeGetLevel(k1)),
                                                 false);
-                                        engineAccess.invokeScheduleUpdate(l1, k1, engineAccess.invokeGetEdgeLevel(l1, k1, engineAccess.invokeGetLevel(l1)),
+                                        engineAccess.invokeCheckEdge(l1, k1, engineAccess.invokeComputeLevelFromNeighbor(l1, k1, engineAccess.invokeGetLevel(l1)),
                                                 false);
                                     }
                                 }
@@ -156,12 +150,12 @@ public abstract class MixinSectionLightStorage <M extends LightDataMap<M>> exten
                 }
             }
 
-            ObjectIterator<Long2ObjectMap.Entry<NibbleArray>> objectiterator = this.newArrays.long2ObjectEntrySet().iterator();
+            ObjectIterator<Long2ObjectMap.Entry<NibbleArray>> objectiterator = this.queuedSections.long2ObjectEntrySet().iterator();
 
             while(objectiterator.hasNext()) {
                 Long2ObjectMap.Entry<NibbleArray> entry1 = objectiterator.next();
                 long k2 = entry1.getLongKey();
-                if (this.hasSection(k2)) {
+                if (this.storingLightForSection(k2)) {
                     objectiterator.remove();
                 }
             }

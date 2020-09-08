@@ -18,7 +18,7 @@ public interface MixinIChunk extends IBlockReader {
      * @reason Need to overwrite as this is an interface.
      */
     @Overwrite
-    default boolean isEmptyBetween(int startY, int endY) {
+    default boolean isYSpaceEmpty(int startY, int endY) {
         if (startY < CubicChunks.MAX_SUPPORTED_HEIGHT) {
             startY = CubicChunks.MIN_SUPPORTED_HEIGHT;
         }

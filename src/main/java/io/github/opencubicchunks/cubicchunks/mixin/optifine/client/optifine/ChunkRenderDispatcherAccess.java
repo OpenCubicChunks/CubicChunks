@@ -8,5 +8,5 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 @Mixin(ChunkRenderDispatcher.class)
 public interface ChunkRenderDispatcherAccess {
 
-    @Accessor World getWorld();
+    @Accessor World getLevel();
 }

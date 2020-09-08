@@ -25,50 +25,50 @@ public interface ITicketManager {
 
     boolean processUpdates(ChunkManager chunkManager);
 
-    <T> void registerWithLevel(TicketType<T> type, CubePos pos, int level, T value);
+    <T> void addCubeTicket(TicketType<T> type, CubePos pos, int level, T value);
 
-    <T> void releaseWithLevel(TicketType<T> type, CubePos pos, int level, T value);
+    <T> void removeCubeTicket(TicketType<T> type, CubePos pos, int level, T value);
 
-    <T> void register(TicketType<T> type, CubePos pos, int distance, T value);
+    <T> void addCubeRegionTicket(TicketType<T> type, CubePos pos, int distance, T value);
 
-    void registerCube(long chunkPosIn, Ticket<?> ticketIn);
+    void addCubeTicket(long chunkPosIn, Ticket<?> ticketIn);
 
-    <T> void release(TicketType<T> type, CubePos pos, int distance, T value);
+    <T> void removeCubeRegionTicket(TicketType<T> type, CubePos pos, int distance, T value);
 
-    void releaseCube(long chunkPosIn, Ticket<?> ticketIn);
+    void removeCubeTicket(long chunkPosIn, Ticket<?> ticketIn);
 
     // forceChunk
-    void forceCube(CubePos pos, boolean add);
+    void updateCubeForced(CubePos pos, boolean add);
 
-    void updateCubePlayerPosition(CubePos cubePos, ServerPlayerEntity player);
+    void addCubePlayer(CubePos cubePos, ServerPlayerEntity player);
 
     void removeCubePlayer(CubePos cubePosIn, ServerPlayerEntity player);
 
-    int getSpawningCubeCount();
+    int getNaturalSpawnCubeCount();
 
-    boolean isCubeOutsideSpawningRadius(long cubePosIn);
+    boolean hasPlayersNearbyCube(long cubePosIn);
 
     Long2ObjectOpenHashMap<SortedArraySet<Ticket<?>>> getCubeTickets();
 
-    Long2ObjectMap<ObjectSet<ServerPlayerEntity>> getPlayersByCubePos();
+    Long2ObjectMap<ObjectSet<ServerPlayerEntity>> getPlayersPerCube();
 
-    ITaskExecutor<CubeTaskPriorityQueueSorter.FunctionEntry<Runnable>> getCubePlayerTicketThrottler();
+    ITaskExecutor<CubeTaskPriorityQueueSorter.FunctionEntry<Runnable>> getCubeTicketThrottlerInput();
 
-    ITaskExecutor<CubeTaskPriorityQueueSorter.RunnableEntry> getPlayerCubeTicketThrottlerSorter();
+    ITaskExecutor<CubeTaskPriorityQueueSorter.RunnableEntry> getCubeTicketThrottlerReleaser();
 
-    LongSet getCubePositions();
+    LongSet getCubeTicketsToRelease();
 
-    Set<ChunkHolder> getCubeHolders();
+    Set<ChunkHolder> getCubesToUpdateFutures();
 
     @Nullable
     ChunkHolder getCubeHolder(long chunkPosIn);
 
     @Nullable
-    ChunkHolder setCubeLevel(long cubePosIn, int newLevel, @Nullable ChunkHolder holder, int oldLevel);
+    ChunkHolder updateCubeScheduling(long cubePosIn, int newLevel, @Nullable ChunkHolder holder, int oldLevel);
 
     boolean containsCubes(long cubePosIn);
 
-    Executor executor();
+    Executor getMainThreadExecutor();
 
-    CubeTaskPriorityQueueSorter getCubeTaskPriorityQueueSorter();
+    CubeTaskPriorityQueueSorter getCubeTicketThrottler();
 }

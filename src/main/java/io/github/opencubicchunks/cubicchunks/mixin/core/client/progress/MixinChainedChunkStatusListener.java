@@ -15,15 +15,15 @@ import javax.annotation.Nullable;
 @Mixin(ChainedChunkStatusListener.class)
 public abstract class MixinChainedChunkStatusListener implements ICubeStatusListener {
 
-    @Shadow @Final private DelegatedTaskExecutor<Runnable> executor;
+    @Shadow @Final private DelegatedTaskExecutor<Runnable> mailbox;
 
     @Shadow @Final private IChunkStatusListener delegate;
 
     @Override public void startCubes(CubePos center) {
-        this.executor.tell(() -> ((ICubeStatusListener) this.delegate).startCubes(center));
+        this.mailbox.tell(() -> ((ICubeStatusListener) this.delegate).startCubes(center));
     }
 
-    @Override public void cubeStatusChanged(CubePos cubePos, @Nullable ChunkStatus newStatus) {
-        this.executor.tell(() -> ((ICubeStatusListener) this.delegate).cubeStatusChanged(cubePos, newStatus));
+    @Override public void onCubeStatusChange(CubePos cubePos, @Nullable ChunkStatus newStatus) {
+        this.mailbox.tell(() -> ((ICubeStatusListener) this.delegate).onCubeStatusChange(cubePos, newStatus));
     }
 }

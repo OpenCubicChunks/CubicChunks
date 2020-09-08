@@ -26,24 +26,25 @@ import org.spongepowered.asm.mixin.injection.Constant;
 import org.spongepowered.asm.mixin.injection.ModifyConstant;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
-import javax.annotation.Nullable;
 import java.util.Map;
 import java.util.concurrent.CompletionException;
+
+import javax.annotation.Nullable;
 
 @Mixin(Chunk.class)
 public abstract class MixinChunk implements IChunk {
 
-    @Shadow @Final private World world;
+    @Shadow @Final private World level;
 
-    @Shadow @Final private ChunkPos pos;
+    @Shadow @Final private ChunkPos chunkPos;
 
     @Shadow public abstract ChunkStatus getStatus();
 
     // getBlockState
 
-    @Shadow @Final private Map<BlockPos, TileEntity> tileEntities;
+    @Shadow @Final private Map<BlockPos, TileEntity> blockEntities;
 
-    @Shadow @Final private Map<BlockPos, CompoundNBT> deferredTileEntities;
+    @Shadow @Final private Map<BlockPos, CompoundNBT> pendingBlockEntities;
 
     @Override public boolean isYSpaceEmpty(int startY, int endY) {
         return false;
@@ -61,16 +62,16 @@ public abstract class MixinChunk implements IChunk {
             return null;
         }
         ChunkSection[] cubeSections = cube.getCubeSections();
-        return cubeSections[Coords.sectionToIndex(pos.x, y, pos.z)];
+        return cubeSections[Coords.sectionToIndex(chunkPos.x, y, chunkPos.z)];
     }
 
     @SuppressWarnings("ConstantConditions")
     private IBigCube getCube(int y) {
         try {
-            return ((ICubeProvider) world.getChunkSource()).getCube(
-                    Coords.sectionToCube(pos.x),
+            return ((ICubeProvider) level.getChunkSource()).getCube(
+                    Coords.sectionToCube(chunkPos.x),
                     Coords.sectionToCube(y),
-                    Coords.sectionToCube(pos.z), getStatus(), true);
+                    Coords.sectionToCube(chunkPos.z), getStatus(), true);
         } catch (CompletionException ex) {
             // CompletionException here breaks vanilla crash report handler
             // because CompletionException stacktrace doesn't have any part in common
@@ -110,10 +111,10 @@ public abstract class MixinChunk implements IChunk {
         if (cube instanceof EmptyCube) {
             return;
         }
-        cube.getCubeSections()[Coords.sectionToIndex(pos.x, y, pos.z)] = newVal;
+        cube.getCubeSections()[Coords.sectionToIndex(chunkPos.x, y, chunkPos.z)] = newVal;
     }
 
-    @Redirect(method = "setBlockState", at = @At(value = "FIELD", target = "Lnet/minecraft/world/chunk/Chunk;dirty:Z"))
+    @Redirect(method = "setBlockState", at = @At(value = "FIELD", target = "Lnet/minecraft/world/chunk/Chunk;unsaved:Z"))
     private void setIsModifiedFromSetBlockState_Field(Chunk chunk, boolean isModifiedIn, BlockPos pos, BlockState state, boolean isMoving) {
 //        if (isColumn) {
             this.getCube(Coords.blockToSection(pos.getY())).setDirty(isModifiedIn);
@@ -124,94 +125,101 @@ public abstract class MixinChunk implements IChunk {
 
     // Entities
 
-    @Redirect(method =
-            {"removeEntityAtIndex", "addEntity", "getEntitiesWithinAABBForEntity", "getEntitiesWithinAABBForList", "getEntitiesOfTypeWithinAABB"},
-            at = @At(value = "FIELD", target = "Lnet/minecraft/world/chunk/Chunk;entityLists:[Lnet/minecraft/util/ClassInheritanceMultiMap;",
-                    args = "array=get"))
+    @Redirect(method = {
+            "removeEntity(Lnet/minecraft/entity/Entity;I)V",
+            "addEntity",
+            "getEntities(Lnet/minecraft/entity/Entity;Lnet/minecraft/util/math/AxisAlignedBB;Ljava/util/List;Ljava/util/function/Predicate;)V",
+            "getEntities(Lnet/minecraft/entity/EntityType;Lnet/minecraft/util/math/AxisAlignedBB;Ljava/util/List;Ljava/util/function/Predicate;)V",
+            "getEntitiesOfClass"
+    }, at = @At(value = "FIELD", target = "Lnet/minecraft/world/chunk/Chunk;entitySections:[Lnet/minecraft/util/ClassInheritanceMultiMap;",
+            args = "array=get"))
     public ClassInheritanceMultiMap<Entity> getEntityList(ClassInheritanceMultiMap<Entity>[] entityLists, int y) {
         BigCube cube = (BigCube) this.getCube(y);
 
         if (!(cube instanceof EmptyCube)) {
-            return cube.getEntityLists()[Coords.sectionToIndex(this.pos.x, y, this.pos.z)];
+            return cube.getEntityLists()[Coords.sectionToIndex(this.chunkPos.x, y, this.chunkPos.z)];
         }
         return new ClassInheritanceMultiMap<>(Entity.class);
     }
 
-    @Redirect(method =
-            {"addEntity", "removeEntityAtIndex", "getEntitiesWithinAABBForEntity", "getEntitiesWithinAABBForList", "getEntitiesOfTypeWithinAABB"},
-            at = @At(
-                    value = "FIELD",
-                    target = "Lnet/minecraft/world/chunk/Chunk;entityLists:[Lnet/minecraft/util/ClassInheritanceMultiMap;",
-                    args = "array=length"
-            ))
+    @Redirect(method = {
+            "removeEntity(Lnet/minecraft/entity/Entity;I)V",
+            "addEntity",
+            "getEntities(Lnet/minecraft/entity/Entity;Lnet/minecraft/util/math/AxisAlignedBB;Ljava/util/List;Ljava/util/function/Predicate;)V",
+            "getEntities(Lnet/minecraft/entity/EntityType;Lnet/minecraft/util/math/AxisAlignedBB;Ljava/util/List;Ljava/util/function/Predicate;)V",
+            "getEntitiesOfClass"
+    }, at = @At(value = "FIELD", target = "Lnet/minecraft/world/chunk/Chunk;entitySections:[Lnet/minecraft/util/ClassInheritanceMultiMap;",
+            args = "array=length"))
     public int getEntityListsLength(ClassInheritanceMultiMap<Entity>[] entityLists) {
         return CubicChunks.MAX_SUPPORTED_HEIGHT / 16;
     }
 
-    @ModifyConstant(method = {"addEntity", "removeEntityAtIndex"}, constant = @Constant(expandZeroConditions = Constant.Condition.LESS_THAN_ZERO,
-            intValue = 0))
+    @ModifyConstant(method = {"addEntity", "removeEntity(Lnet/minecraft/entity/Entity;I)V"},
+            constant = @Constant(expandZeroConditions = Constant.Condition.LESS_THAN_ZERO, intValue = 0))
     public int getLowerHeightLimit(int _0) {
         return CubicChunks.MIN_SUPPORTED_HEIGHT / 16;
     }
 
-    @ModifyConstant(method = {"getEntitiesWithinAABBForEntity", "getEntitiesWithinAABBForList", "getEntitiesOfTypeWithinAABB"},
-            constant = {@Constant(intValue = 0, ordinal = 0), @Constant(intValue = 0, ordinal = 1)})
+    @ModifyConstant(method = {
+            "getEntities(Lnet/minecraft/entity/Entity;Lnet/minecraft/util/math/AxisAlignedBB;Ljava/util/List;Ljava/util/function/Predicate;)V",
+            "getEntities(Lnet/minecraft/entity/EntityType;Lnet/minecraft/util/math/AxisAlignedBB;Ljava/util/List;Ljava/util/function/Predicate;)V",
+            "getEntitiesOfClass"
+    }, constant = {@Constant(intValue = 0, ordinal = 0), @Constant(intValue = 0, ordinal = 1)})
     public int getLowerClampLimit(int _0) {
         return CubicChunks.MIN_SUPPORTED_HEIGHT / 16;
     }
 
     //This should return object because Hashmap.get also does
-    @SuppressWarnings({"rawtypes"})
+    @SuppressWarnings({"rawtypes", "UnresolvedMixinReference"})
     @Redirect(method = "*",
             at = @At(value = "INVOKE", target = "Ljava/util/Map;get(Ljava/lang/Object;)Ljava/lang/Object;"))
     private Object getTileEntity(Map map, Object key) {
-        if(map == this.tileEntities) {
+        if(map == this.blockEntities) {
             BigCube cube = (BigCube) this.getCube(Coords.blockToSection(((BlockPos) key).getY()));
             return cube.getTileEntityMap().get(key);
-        } else if(map == this.deferredTileEntities) {
+        } else if(map == this.pendingBlockEntities) {
             BigCube cube = (BigCube) this.getCube(Coords.blockToSection(((BlockPos) key).getY()));
             return cube.getDeferredTileEntityMap().get(key);
         }
         return map.get(key);
     }
 
-    @SuppressWarnings({"rawtypes"}) @Nullable
+    @SuppressWarnings({"rawtypes", "UnresolvedMixinReference"}) @Nullable
     @Redirect(
             method = "*",
             at = @At(value = "INVOKE", target = "Ljava/util/Map;remove(Ljava/lang/Object;)Ljava/lang/Object;"))
     private Object removeTileEntity(Map map, Object key) {
-        if(map == this.tileEntities) {
+        if(map == this.blockEntities) {
             BigCube cube = (BigCube) this.getCube(Coords.blockToSection(((BlockPos) key).getY()));
             return cube.getTileEntityMap().remove(key);
-        }else if(map == this.deferredTileEntities) {
+        }else if(map == this.pendingBlockEntities) {
             BigCube cube = (BigCube) this.getCube(Coords.blockToSection(((BlockPos) key).getY()));
             return cube.getDeferredTileEntityMap().remove(key);
         }
         return map.remove(key);
     }
 
-    @SuppressWarnings({"rawtypes", "unchecked"}) @Nullable
+    @SuppressWarnings({"rawtypes", "unchecked", "UnresolvedMixinReference"}) @Nullable
     @Redirect(method = "*",
             at = @At(value = "INVOKE", target = "Ljava/util/Map;put(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;"))
     private Object putTileEntity(Map map, Object key, Object value) {
-        if(map == this.tileEntities) {
+        if(map == this.blockEntities) {
             BigCube cube = (BigCube) this.getCube(Coords.blockToSection(((BlockPos) key).getY()));
             return cube.getTileEntityMap().put((BlockPos) key, (TileEntity) value);
-        } else if(map == this.deferredTileEntities) {
+        } else if(map == this.pendingBlockEntities) {
             BigCube cube = (BigCube) this.getCube(Coords.blockToSection(((BlockPos) key).getY()));
             return cube.getDeferredTileEntityMap().put((BlockPos) key, (CompoundNBT) value);
         }
         return map.put(key, value);
     }
 
-    @Redirect(method = "addTileEntity(Lnet/minecraft/tileentity/TileEntity;)V", at = @At(value = "FIELD", target = "Lnet/minecraft/world/chunk/Chunk;loaded:Z"))
-    private boolean getLoadedFromTileEntity(Chunk chunk, TileEntity tileEntity)
-    {
+    @Redirect(method = "addBlockEntity(Lnet/minecraft/tileentity/TileEntity;)V",
+            at = @At(value = "FIELD", target = "Lnet/minecraft/world/chunk/Chunk;loaded:Z"))
+    private boolean getLoadedFromBlockEntity(Chunk chunk, TileEntity tileEntity) {
         return ((BigCube)this.getCube(Coords.blockToSection(tileEntity.getBlockPos().getY()))).getLoaded();
     }
-    @Redirect(method = "removeTileEntity", at = @At(value = "FIELD", target = "Lnet/minecraft/world/chunk/Chunk;loaded:Z"))
-    private boolean getLoadedFromBlockPos(Chunk chunk, BlockPos pos)
-    {
+    @Redirect(method = "removeBlockEntity", at = @At(value = "FIELD", target = "Lnet/minecraft/world/chunk/Chunk;loaded:Z"))
+    private boolean getLoadedFromBlockPos(Chunk chunk, BlockPos pos) {
         return ((BigCube)this.getCube(Coords.blockToSection(pos.getY()))).getLoaded();
     }
 }

@@ -8,9 +8,9 @@ import org.spongepowered.asm.mixin.injection.ModifyConstant;
 @Mixin(RegionSectionCache.class)
 public class MixinRegionSectionCache {
 
-    @ModifyConstant(method = "readColumn", constant = @Constant(intValue = 16))
-    public int getMaxSection(int _16)
-    {
+    @ModifyConstant(method = "readColumn(Lnet/minecraft/util/math/ChunkPos;Lcom/mojang/serialization/DynamicOps;Ljava/lang/Object;)V",
+            constant = @Constant(intValue = 16))
+    public int getMaxSection(int _16) {
         return 32;
     }
 

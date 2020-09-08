@@ -16,31 +16,27 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(ViewFrustum.class)
 public abstract class MixinViewFrustum {
-    @Shadow
-    public ChunkRenderDispatcher.ChunkRender[] renderChunks;
-    @Shadow
-    protected int countChunksY;
-    @Shadow
-    protected int countChunksX;
-    @Shadow
-    protected int countChunksZ;
+    @Shadow public ChunkRenderDispatcher.ChunkRender[] chunks;
+    @Shadow protected int chunkGridSizeY;
+    @Shadow protected int chunkGridSizeX;
+    @Shadow protected int chunkGridSizeZ;
 
-    @Shadow protected abstract int getIndex(int x, int y, int z);
+    @Shadow protected abstract int getChunkIndex(int x, int y, int z);
 
     /**
      * @author Barteks2x
      * @reason vertical view distance = horizontal
      */
     @Overwrite
-    protected void setCountChunksXYZ(int renderDistanceChunks) {
+    protected void setViewDistance(int renderDistanceChunks) {
         int d = renderDistanceChunks * 2 + 1;
-        this.countChunksX = d;
-        this.countChunksY = d;
-        this.countChunksZ = d;
+        this.chunkGridSizeX = d;
+        this.chunkGridSizeY = d;
+        this.chunkGridSizeZ = d;
     }
 
-    @Inject(method = "updateChunkPositions", at = @At(value = "HEAD"), cancellable = true, require = 1)
-    private void setCountChunkXYZ(double viewEntityX, double viewEntityZ, CallbackInfo ci) {
+    @Inject(method = "repositionCamera", at = @At(value = "HEAD"), cancellable = true, require = 1)
+    private void repositionCamera(double viewEntityX, double viewEntityZ, CallbackInfo ci) {
         Entity view = Minecraft.getInstance().getCameraEntity();
         double x = view.getX();
         double y = view.getY();
@@ -49,21 +45,21 @@ public abstract class MixinViewFrustum {
         int viewZ = MathHelper.floor(z);
         int viewY = MathHelper.floor(y);
 
-        for (int xIndex = 0; xIndex < this.countChunksX; ++xIndex) {
-            int xBase = this.countChunksX * 16;
+        for (int xIndex = 0; xIndex < this.chunkGridSizeX; ++xIndex) {
+            int xBase = this.chunkGridSizeX * 16;
             int xTemp = viewX - 8 - xBase / 2;
             int posX = xTemp + Math.floorMod(xIndex * 16 - xTemp, xBase);
 
-            for (int zIndex = 0; zIndex < this.countChunksZ; ++zIndex) {
-                int zBase = this.countChunksZ * 16;
+            for (int zIndex = 0; zIndex < this.chunkGridSizeZ; ++zIndex) {
+                int zBase = this.chunkGridSizeZ * 16;
                 int zTemp = viewZ - 8 - zBase / 2;
                 int posZ = zTemp + Math.floorMod(zIndex * 16 - zTemp, zBase);
 
-                for (int yIndex = 0; yIndex < this.countChunksY; ++yIndex) {
-                    int yBase = this.countChunksY * 16;
+                for (int yIndex = 0; yIndex < this.chunkGridSizeY; ++yIndex) {
+                    int yBase = this.chunkGridSizeY * 16;
                     int yTemp = viewY - 8 - yBase / 2;
                     int posY = yTemp + Math.floorMod(yIndex * 16 - yTemp, yBase);
-                    ChunkRenderDispatcher.ChunkRender chunkrenderdispatcher$chunkrender = this.renderChunks[this.getIndex(xIndex, yIndex, zIndex)];
+                    ChunkRenderDispatcher.ChunkRender chunkrenderdispatcher$chunkrender = this.chunks[this.getChunkIndex(xIndex, yIndex, zIndex)];
                     chunkrenderdispatcher$chunkrender.setOrigin(posX, posY, posZ);
                 }
             }
@@ -71,15 +67,15 @@ public abstract class MixinViewFrustum {
         ci.cancel();
     }
 
-    @Inject(method = "getRenderChunk", at = @At(value = "HEAD"), cancellable = true)
-    private void getRenderChunk(BlockPos pos, CallbackInfoReturnable<ChunkRenderDispatcher.ChunkRender> cbi) {
+    @Inject(method = "getRenderChunkAt", at = @At(value = "HEAD"), cancellable = true)
+    private void getRenderChunkAt(BlockPos pos, CallbackInfoReturnable<ChunkRenderDispatcher.ChunkRender> cbi) {
         int x = MathHelper.intFloorDiv(pos.getX(), 16);
         int y = MathHelper.intFloorDiv(pos.getY(), 16);
         int z = MathHelper.intFloorDiv(pos.getZ(), 16);
-        x = MathHelper.positiveModulo(x, this.countChunksX);
-        y = MathHelper.positiveModulo(y, this.countChunksY);
-        z = MathHelper.positiveModulo(z, this.countChunksZ);
-        ChunkRenderDispatcher.ChunkRender renderChunk = this.renderChunks[this.getIndex(x, y, z)];
+        x = MathHelper.positiveModulo(x, this.chunkGridSizeX);
+        y = MathHelper.positiveModulo(y, this.chunkGridSizeY);
+        z = MathHelper.positiveModulo(z, this.chunkGridSizeZ);
+        ChunkRenderDispatcher.ChunkRender renderChunk = this.chunks[this.getChunkIndex(x, y, z)];
         cbi.cancel();
         cbi.setReturnValue(renderChunk);
     }

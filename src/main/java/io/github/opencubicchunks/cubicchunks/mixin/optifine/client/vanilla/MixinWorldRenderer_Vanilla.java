@@ -14,23 +14,23 @@ import org.spongepowered.asm.mixin.Shadow;
 @Mixin(WorldRenderer.class)
 public class MixinWorldRenderer_Vanilla {
 
-    @Shadow private int renderDistanceChunks;
+    @Shadow private int lastViewDistance;
 
-    @Shadow private ViewFrustum viewFrustum;
+    @Shadow private ViewFrustum viewArea;
 
     /**
      * @author Barteks2x
      */
     @javax.annotation.Nullable
     @Overwrite
-    private ChunkRenderDispatcher.ChunkRender getRenderChunkOffset(
+    private ChunkRenderDispatcher.ChunkRender getRelativeFrom(
             BlockPos playerPos, ChunkRenderDispatcher.ChunkRender renderChunkBase, Direction facing) {
 
         BlockPos blockpos = renderChunkBase.getRelativeOrigin(facing);
-        if (MathHelper.abs(playerPos.getX() - blockpos.getX()) <= this.renderDistanceChunks * 16
-                && MathHelper.abs(playerPos.getY() - blockpos.getY()) <= this.renderDistanceChunks * 16
-                && MathHelper.abs(playerPos.getZ() - blockpos.getZ()) <= this.renderDistanceChunks * 16) {
-            return ((ViewFrustumAccess) this.viewFrustum).getRenderChunkAt(blockpos);
+        if (MathHelper.abs(playerPos.getX() - blockpos.getX()) <= this.lastViewDistance * 16
+                && MathHelper.abs(playerPos.getY() - blockpos.getY()) <= this.lastViewDistance * 16
+                && MathHelper.abs(playerPos.getZ() - blockpos.getZ()) <= this.lastViewDistance * 16) {
+            return ((ViewFrustumAccess) this.viewArea).invokeGetRenderChunkAt(blockpos);
         }
         return null;
     }

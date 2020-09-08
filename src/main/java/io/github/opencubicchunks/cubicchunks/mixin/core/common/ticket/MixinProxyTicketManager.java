@@ -11,11 +11,11 @@ import javax.annotation.Nullable;
 @Mixin(ChunkManager.ProxyTicketManager.class)
 public abstract class MixinProxyTicketManager extends MixinTicketManager {
 
-    @Shadow ChunkManager this$0;
+    @SuppressWarnings("ShadowTarget") @Shadow ChunkManager this$0;
 
     @Override
     public boolean containsCubes(long cubePosIn) {
-        return ((IChunkManager)this$0).getUnloadableCubes().contains(cubePosIn);
+        return ((IChunkManager)this$0).getCubesToDrop().contains(cubePosIn);
     }
 
     @Override

@@ -25,11 +25,6 @@ public class MixinWorldLoadProgressScreen extends Screen {
         super(titleIn);
     }
 
-    //@ModifyVariable(method = "drawProgress", at = @At("HEAD"), ordinal = 0)
-    //private static int shiftLeft(int xBase) {
-    //    return xBase - 100;
-    //}
-
     @Inject(method = "renderChunks", at = @At("HEAD"), cancellable = true)
     private static void onDraw(MatrixStack mStack, TrackingChunkStatusListener trackerParam,
             int xBase, int yBase, int scale, int spacing, CallbackInfo ci) {
@@ -39,8 +34,8 @@ public class MixinWorldLoadProgressScreen extends Screen {
 
     }
 
-    @Redirect(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/chunk/listener/TrackingChunkStatusListener;getPercentDone()I"))
-    private int on$getPercentDone(TrackingChunkStatusListener trackingChunkStatusListener) {
+    @Redirect(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/chunk/listener/TrackingChunkStatusListener;getProgress()I"))
+    private int onGetProgress(TrackingChunkStatusListener trackingChunkStatusListener) {
         return trackingChunkStatusListener.getProgress();
     }
 }

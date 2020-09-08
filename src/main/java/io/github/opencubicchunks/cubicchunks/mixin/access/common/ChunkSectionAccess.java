@@ -8,13 +8,13 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 
 @Mixin(ChunkSection.class)
 public interface ChunkSectionAccess {
-    @Accessor short getBlockRefCount();
-    @Accessor short getBlockTickRefCount();
-    @Accessor short getFluidRefCount();
+    @Accessor short getNonEmptyBlockCount();
+    @Accessor short getTickingBlockCount();
+    @Accessor short getTickingFluidCount();
 
-    @Accessor void setBlockRefCount(short value);
-    @Accessor void setBlockTickRefCount(short value);
-    @Accessor void setFluidRefCount(short value);
+    @Accessor void setNonEmptyBlockCount(short value);
+    @Accessor void setTickingBlockCount(short value);
+    @Accessor void setTickingFluidCount(short value);
 
-    @Accessor void setData(PalettedContainer<BlockState> data);
+    @Accessor void setStates(PalettedContainer<BlockState> states);
 }

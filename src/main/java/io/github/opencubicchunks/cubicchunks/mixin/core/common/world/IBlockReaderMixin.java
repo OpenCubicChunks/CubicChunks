@@ -12,10 +12,10 @@ public interface IBlockReaderMixin {
      * @reason Need to overwrite as this is an interface.
      */
     @Overwrite
-    default int getHeight() {
+    default int getMaxBuildHeight() {
         return CubicChunks.MAX_SUPPORTED_HEIGHT;
     }
 
     default int minHeight() { return CubicChunks.MIN_SUPPORTED_HEIGHT; }
-    default int maxHeight() { return this.getHeight(); }
+    default int maxHeight() { return this.getMaxBuildHeight(); }
 }

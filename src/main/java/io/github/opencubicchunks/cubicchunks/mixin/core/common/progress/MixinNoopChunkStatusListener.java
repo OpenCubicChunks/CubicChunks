@@ -23,5 +23,5 @@ public class MixinNoopChunkStatusListener implements ICubeStatusListener {
     public void startCubes(CubePos center) { }
 
     @Override
-    public void cubeStatusChanged(CubePos cubePos, @Nullable ChunkStatus newStatus) { }
+    public void onCubeStatusChange(CubePos cubePos, @Nullable ChunkStatus newStatus) { }
 }

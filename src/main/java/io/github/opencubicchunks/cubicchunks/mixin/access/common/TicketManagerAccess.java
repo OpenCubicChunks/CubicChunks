@@ -7,5 +7,5 @@ import org.spongepowered.asm.mixin.gen.Invoker;
 
 @Mixin(TicketManager.class)
 public interface TicketManagerAccess {
-    @Invoker("register") void registerCC(long chunkPosIn, Ticket<?> ticketIn);
+    @Invoker void invokeAddTicket(long chunkPosIn, Ticket<?> ticketIn);
 }

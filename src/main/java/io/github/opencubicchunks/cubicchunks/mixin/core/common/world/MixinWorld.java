@@ -19,13 +19,13 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(World.class)
 public abstract class MixinWorld implements ICubicWorld {
 
-    @Inject(at = @At("RETURN"), method = "isYOutOfBounds", cancellable = true)
+    @Inject(at = @At("RETURN"), method = "isOutsideBuildHeight(I)Z", cancellable = true)
     private static void isYOutOfBounds(int y, CallbackInfoReturnable<Boolean> cir) {
         cir.setReturnValue(y < CubicChunks.MIN_SUPPORTED_HEIGHT || y >= CubicChunks.MAX_SUPPORTED_HEIGHT);
     }
 
-    @Inject(method = "markChunkDirty", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/chunk/Chunk;markDirty()V"))
-    private void onMarkChunkDirty(BlockPos blockPos, TileEntity tileEntity, CallbackInfo ci) {
+    @Inject(method = "blockEntityChanged", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/chunk/Chunk;markUnsaved()V"))
+    private void onBlockEntityChanged(BlockPos blockPos, TileEntity tileEntity, CallbackInfo ci) {
         this.getCubeAt(blockPos).setDirty(true);
     }
 

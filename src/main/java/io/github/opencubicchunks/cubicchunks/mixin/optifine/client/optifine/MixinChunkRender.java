@@ -22,14 +22,14 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(ChunkRenderDispatcher.ChunkRender.class)
 public abstract class MixinChunkRender implements IOptiFineChunkRender {
 
-    @Shadow @Final private BlockPos.Mutable position;
+    @Shadow @Final private BlockPos.Mutable origin;
     @Shadow(remap = false) @Final ChunkRenderDispatcher this$0;
     @Shadow(remap = false) public int regionX;
     @Shadow(remap = false) public int regionZ;
     @Dynamic @Shadow(remap = false) private ChunkRenderDispatcher.ChunkRender[] renderChunkNeighboursValid;
     @Dynamic @Shadow(remap = false) private ChunkRenderDispatcher.ChunkRender[] renderChunkNeighbours;
 
-    @Shadow public abstract BlockPos getPosition();
+    @Shadow public abstract BlockPos getOrigin();
 
     private BigCube cube;
 
@@ -39,8 +39,8 @@ public abstract class MixinChunkRender implements IOptiFineChunkRender {
             return null;
         }
         if (cube == null || !cube.getLoaded()) {
-            cube = (BigCube) ((IClientCubeProvider) ((ChunkRenderDispatcherAccess) this$0).getWorld().getChunkSource())
-                    .getCube(Coords.blockToCube(position.getX()), Coords.blockToCube(position.getY()), Coords.blockToCube(position.getZ()),
+            cube = (BigCube) ((IClientCubeProvider) ((ChunkRenderDispatcherAccess) this$0).getLevel().getChunkSource())
+                    .getCube(Coords.blockToCube(origin.getX()), Coords.blockToCube(origin.getY()), Coords.blockToCube(origin.getZ()),
                             ChunkStatus.FULL, true);
             assert cube != null;
             this.cube = cube;
@@ -48,7 +48,7 @@ public abstract class MixinChunkRender implements IOptiFineChunkRender {
                 return null;
             }
         }
-        return cube.getCubeSections()[Coords.blockToIndex(position.getX(), position.getY(), position.getZ())];
+        return cube.getCubeSections()[Coords.blockToIndex(origin.getX(), origin.getY(), origin.getZ())];
     }
 
     @Override public int getRegionX() {
@@ -64,7 +64,7 @@ public abstract class MixinChunkRender implements IOptiFineChunkRender {
         // if (!isCubic) {
         //     return;
         // }
-        int y = this.getPosition().getY();
+        int y = this.getOrigin().getY();
         int up = Direction.UP.ordinal();
         int down = Direction.DOWN.ordinal();
         this.renderChunkNeighboursValid[up] = this.renderChunkNeighbours[up].getOrigin().getY() == y + 16 ?

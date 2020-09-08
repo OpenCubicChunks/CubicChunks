@@ -1191,22 +1191,22 @@ public class DebugVulkan {
         mvp.setIdentity();
 
         //proj
-        mvp.mul(Matrix4f.perspective(60, swapChainExtent.width() / (float) swapChainExtent.height(), 0.1f, 10));
+        mvp.multiply(Matrix4f.perspective(60, swapChainExtent.width() / (float) swapChainExtent.height(), 0.1f, 10));
         Matrix4f modelView = inverseMatrix;
         modelView.setIdentity();
         //view
-        modelView.mul(Matrix4f.makeTranslate(0, 0, -5));
+        modelView.multiply(Matrix4f.createTranslateMatrix(0, 0, -5));
         //model
-        modelView.mul(Vector3f.XP.rotationDegrees(50));
-        modelView.mul(Vector3f.ZP.rotationDegrees((float) ((System.currentTimeMillis() * 0.04) % 360)));//
+        modelView.multiply(Vector3f.XP.rotationDegrees(50));
+        modelView.multiply(Vector3f.ZP.rotationDegrees((float) ((System.currentTimeMillis() * 0.04) % 360)));//
 
-        mvp.mul(modelView);
+        mvp.multiply(modelView);
         inverseMatrix.invert();
 
         int bufferSize = Float.BYTES * 16;
         vkMapMemory(device, uniformBuffersMemory[currentImage], 0, bufferSize, 0, pp);
         FloatBuffer data = pp.getFloatBuffer(0, (bufferSize) >> 2);
-        mvp.write(data);
+        mvp.store(data);
         vkUnmapMemory(device, uniformBuffersMemory[currentImage]);
     }
 
@@ -1457,9 +1457,9 @@ public class DebugVulkan {
 
         public int[] getData() {
             return new int[] {
-                    Float.floatToIntBits(pos.getX()),
-                    Float.floatToIntBits(pos.getY()),
-                    Float.floatToIntBits(pos.getZ()),
+                    Float.floatToIntBits(pos.x()),
+                    Float.floatToIntBits(pos.y()),
+                    Float.floatToIntBits(pos.z()),
                     color
             };
         }

@@ -16,5 +16,5 @@ public interface ChunkHolderAccess {
         throw new Error("Mixin failed to apply");
     }
 
-    @Invoker("processUpdates") void processUpdatesCC(ChunkManager chunkManagerIn);
+    @Invoker void invokeUpdateFutures(ChunkManager chunkManagerIn);
 }

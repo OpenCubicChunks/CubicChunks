@@ -16,7 +16,7 @@ public abstract class MixinAbstractChunkProvider implements ICubeLightProvider, 
 
     @Override
     @Nullable
-    public IBlockReader getCubeForLight(int sectionX, int sectionY, int sectionZ) {
+    public IBlockReader getCubeForLighting(int sectionX, int sectionY, int sectionZ) {
         return this.getCube(Coords.sectionToCube(sectionX), Coords.sectionToCube(sectionY), Coords.sectionToCube(sectionZ), ChunkStatus.EMPTY, false);
     }
 

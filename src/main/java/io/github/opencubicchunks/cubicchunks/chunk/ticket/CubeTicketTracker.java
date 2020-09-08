@@ -11,7 +11,7 @@ public class CubeTicketTracker extends CubeDistanceGraph {
 
     public CubeTicketTracker(ITicketManager iTicketManager) {
         //TODO: change the arguments passed into super to CCCubeManager or CCColumnManager
-        super(IChunkManager.MAX_CUBE_LOADED_LEVEL + 2, 16, 256);
+        super(IChunkManager.MAX_CUBE_DISTANCE + 2, 16, 256);
         this.iTicketManager = iTicketManager;
     }
 
@@ -34,17 +34,17 @@ public class CubeTicketTracker extends CubeDistanceGraph {
             }
         }
 
-        return IChunkManager.MAX_CUBE_LOADED_LEVEL + 1;
+        return IChunkManager.MAX_CUBE_DISTANCE + 1;
     }
 
     @Override
     protected void setLevel(long cubePosIn, int level) {
         ChunkHolder chunkholder = iTicketManager.getCubeHolder(cubePosIn);
-        int i = chunkholder == null ? IChunkManager.MAX_CUBE_LOADED_LEVEL + 1 : chunkholder.getTicketLevel();
+        int i = chunkholder == null ? IChunkManager.MAX_CUBE_DISTANCE + 1 : chunkholder.getTicketLevel();
         if (i != level) {
-            chunkholder = iTicketManager.setCubeLevel(cubePosIn, level, chunkholder, i);
+            chunkholder = iTicketManager.updateCubeScheduling(cubePosIn, level, chunkholder, i);
             if (chunkholder != null) {
-                iTicketManager.getCubeHolders().add(chunkholder);
+                iTicketManager.getCubesToUpdateFutures().add(chunkholder);
             }
 
         }

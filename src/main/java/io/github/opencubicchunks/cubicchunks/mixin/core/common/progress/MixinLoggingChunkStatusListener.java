@@ -10,7 +10,6 @@ import org.spongepowered.asm.mixin.*;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import javax.annotation.Nullable;
 
@@ -20,10 +19,8 @@ public abstract class MixinLoggingChunkStatusListener implements ICubeStatusList
     private int loadedCubes;
     private int totalCubes;
 
-    @Shadow private int loadedChunks;
-    @Shadow @Final
-    @Mutable
-    private int totalChunks;
+    @Shadow private int count;
+    @Shadow @Final @Mutable private int maxCount;
 
     @Inject(method = "<init>", at = @At("RETURN"))
     public void onInit(int vanillaSpawnRadius, CallbackInfo ci) {
@@ -37,12 +34,12 @@ public abstract class MixinLoggingChunkStatusListener implements ICubeStatusList
 
         int ccChunkRadius = ccCubeRadius * IBigCube.DIAMETER_IN_SECTIONS;
         int ccChunkDiameter = ccChunkRadius*2+1;
-        totalChunks = ccChunkDiameter*ccChunkDiameter;
+        maxCount = ccChunkDiameter*ccChunkDiameter;
     }
 
     @Override public void startCubes(CubePos center) {}
 
-    @Override public void cubeStatusChanged(CubePos cubePos, @Nullable ChunkStatus newStatus) {
+    @Override public void onCubeStatusChange(CubePos cubePos, @Nullable ChunkStatus newStatus) {
         if (newStatus == ChunkStatus.FULL) {
             this.loadedCubes++;
         }
@@ -53,9 +50,9 @@ public abstract class MixinLoggingChunkStatusListener implements ICubeStatusList
      * @reason number of chunks is different due to rounding to chunks rounding to 1 cubes to 1, 2, 4, 8 depending on {@link IBigCube#DIAMETER_IN_SECTIONS}
      */
     @Overwrite
-    public int getPercentDone() {
-        int loaded = loadedChunks + loadedCubes;
-        int total = totalChunks + totalCubes;
+    public int getProgress() {
+        int loaded = count + loadedCubes;
+        int total = maxCount + totalCubes;
         return MathHelper.floor(loaded * 100.0F / total);
     }
 }

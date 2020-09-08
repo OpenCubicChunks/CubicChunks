@@ -13,8 +13,7 @@ public interface ViewFrustumAccess {
     Allows us to get this method in {@link MixinWorldRenderer_Common}
      */
 
-    @Invoker("getRenderChunk")
-    ChunkRenderDispatcher.ChunkRender getRenderChunkAt(BlockPos pos);
+    @Invoker ChunkRenderDispatcher.ChunkRender invokeGetRenderChunkAt(BlockPos pos);
 
 
 }

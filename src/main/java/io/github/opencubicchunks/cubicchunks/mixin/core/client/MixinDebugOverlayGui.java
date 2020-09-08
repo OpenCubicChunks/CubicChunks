@@ -22,11 +22,11 @@ import java.util.List;
 @Mixin(DebugOverlayGui.class)
 public class MixinDebugOverlayGui {
     @SuppressWarnings("rawtypes")
-    @Inject(method = "getDebugInfoLeft",
+    @Inject(method = "getGameInformation",
             at = @At(value = "INVOKE", target = "Ljava/util/List;add(Ljava/lang/Object;)Z", ordinal = 6),
             locals = LocalCapture.CAPTURE_FAILSOFT
     )
-    private void on$addChunkInfo(CallbackInfoReturnable<List> cir, IntegratedServer integratedserver, NetworkManager networkmanager, float f, float f1, String s, BlockPos blockpos, Entity entity, Direction direction, String s1, ChunkPos chunkpos, World world, LongSet longset, List debugScreenList, String s2) {
+    private void onAddChunkInfo(CallbackInfoReturnable<List> cir, IntegratedServer integratedserver, NetworkManager networkmanager, float f, float f1, String s, BlockPos blockpos, Entity entity, Direction direction, String s1, ChunkPos chunkpos, World world, LongSet longset, List debugScreenList, String s2) {
         //noinspection unchecked
         debugScreenList.add(String.format("Cube:  %d %d %d in %d %d %d",
                 blockpos.getX() & (IBigCube.DIAMETER_IN_BLOCKS-1), blockpos.getY() & (IBigCube.DIAMETER_IN_BLOCKS-1), blockpos.getZ() & (IBigCube.DIAMETER_IN_BLOCKS-1),

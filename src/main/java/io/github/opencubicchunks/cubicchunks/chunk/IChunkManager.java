@@ -19,38 +19,39 @@ import java.util.function.IntSupplier;
 import javax.annotation.Nullable;
 
 public interface IChunkManager {
-    int MAX_CUBE_LOADED_LEVEL = 33 + CubeStatus.maxDistance();
+    int MAX_CUBE_DISTANCE = 33 + CubeStatus.maxDistance();
 
-    int getCubeLoadCounter();
+    int getTickingGeneratedCubes();
 
-    int getLoadedCubeCount();
+    int sizeCubes();
 
+    // implemented by ASM in MainTransformer
     @Nullable
-    ChunkHolder setCubeLevel(long cubePosIn, int newLevel, @Nullable ChunkHolder holder, int oldLevel);
+    ChunkHolder updateCubeScheduling(long cubePosIn, int newLevel, @Nullable ChunkHolder holder, int oldLevel);
 
-    LongSet getUnloadableCubes();
+    LongSet getCubesToDrop();
 
     @Nullable
     ChunkHolder getCubeHolder(long cubePosIn);
     @Nullable
     ChunkHolder getImmutableCubeHolder(long cubePosIn);
 
-    CompletableFuture<Either<IBigCube, ChunkHolder.IChunkLoadingError>> createCubeFuture(ChunkHolder chunkHolderIn,
+    CompletableFuture<Either<IBigCube, ChunkHolder.IChunkLoadingError>> scheduleCube(ChunkHolder chunkHolderIn,
                                                                                          ChunkStatus chunkStatusIn);
 
-    CompletableFuture<Either<BigCube, ChunkHolder.IChunkLoadingError>> createCubeBorderFuture(ChunkHolder chunkHolder);
+    CompletableFuture<Either<BigCube, ChunkHolder.IChunkLoadingError>> unpackCubeTicks(ChunkHolder chunkHolder);
 
 
-    CompletableFuture<Either<BigCube, ChunkHolder.IChunkLoadingError>> createCubeTickingFuture(ChunkHolder chunkHolder);
+    CompletableFuture<Either<BigCube, ChunkHolder.IChunkLoadingError>> postProcessCube(ChunkHolder chunkHolder);
 
-    CompletableFuture<Either<List<IBigCube>, ChunkHolder.IChunkLoadingError>> createCubeRegionFuture(CubePos pos, int p_219236_2_,
+    CompletableFuture<Either<List<IBigCube>, ChunkHolder.IChunkLoadingError>> getCubeRangeFuture(CubePos pos, int p_219236_2_,
                                                                                                      IntFunction<ChunkStatus> p_219236_3_);
 
-    CompletableFuture<Void> saveCubeScheduleTicks(BigCube cubeIn);
+    CompletableFuture<Void> packCubeTicks(BigCube cubeIn);
 
-    CompletableFuture<Either<BigCube, ChunkHolder.IChunkLoadingError>> createCubeEntityTickingFuture(CubePos pos);
+    CompletableFuture<Either<BigCube, ChunkHolder.IChunkLoadingError>> getCubeEntityTickingRangeFuture(CubePos pos);
 
-    Iterable<ChunkHolder> getLoadedCubeIterable();
+    Iterable<ChunkHolder> getCubes();
 
     // func_219215_b, checkerboardDistance
     static int getCubeChebyshevDistance(CubePos pos, ServerPlayerEntity player, boolean p_219215_2_)  {
@@ -78,7 +79,7 @@ public interface IChunkManager {
         return Math.max(Math.max(Math.abs(dX), Math.abs(dZ)), Math.abs(dY));
     }
 
-    IntSupplier getCompletedLevel(long cubePosIn);
+    IntSupplier getCubeQueueLevel(long cubePosIn);
 
     void releaseLightTicket(CubePos cubePos);
 }

@@ -17,7 +17,7 @@ import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
 public class CubeTaskPriorityQueue<T> {
-   public static final int levelCount = IChunkManager.MAX_CUBE_LOADED_LEVEL + 2;
+   public static final int levelCount = IChunkManager.MAX_CUBE_DISTANCE + 2;
    private final List<Long2ObjectLinkedOpenHashMap<List<Optional<T>>>> levelToPosToElements = IntStream.range(0, levelCount).mapToObj((p_219415_0_) -> new Long2ObjectLinkedOpenHashMap<List<Optional<T>>>()).collect(Collectors.toList());
    private volatile int firstNonEmptyLvl = levelCount;
    private final String name;

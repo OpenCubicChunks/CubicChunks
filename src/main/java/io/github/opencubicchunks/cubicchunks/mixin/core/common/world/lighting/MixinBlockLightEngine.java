@@ -17,16 +17,16 @@ public class MixinBlockLightEngine extends MixinLightEngine<BlockLightStorage.St
      * @reason Vanilla lighting is bye bye
      */
     @Overwrite
-    private int getLightValue(long worldPos) {
+    private int getLightEmission(long worldPos) {
         int blockX = BlockPos.getX(worldPos);
         int blockY = BlockPos.getY(worldPos);
         int blockZ = BlockPos.getZ(worldPos);
-        IBlockReader iblockreader = ((ICubeLightProvider)this.chunkProvider).getCubeForLight(
+        IBlockReader iblockreader = ((ICubeLightProvider)this.chunkSource).getCubeForLighting(
                 SectionPos.blockToSectionCoord(blockX),
                 SectionPos.blockToSectionCoord(blockY),
                 SectionPos.blockToSectionCoord(blockZ)
         );
-        return iblockreader != null ? iblockreader.getLightEmission(this.scratchPos.set(blockX, blockY, blockZ)) : 0;
+        return iblockreader != null ? iblockreader.getLightEmission(this.pos.set(blockX, blockY, blockZ)) : 0;
     }
 
 }

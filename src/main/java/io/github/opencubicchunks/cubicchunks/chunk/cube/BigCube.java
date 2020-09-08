@@ -111,11 +111,11 @@ public class BigCube implements IChunk, IBigCube {
 
                 if(sectionsIn[i] != null) {
                     sections[i] = new ChunkSection(sectionYPos,
-                            ((ChunkSectionAccess) sectionsIn[i]).getBlockRefCount(),
-                            ((ChunkSectionAccess) sectionsIn[i]).getBlockTickRefCount(),
-                            ((ChunkSectionAccess) sectionsIn[i]).getFluidRefCount());
+                            ((ChunkSectionAccess) sectionsIn[i]).getNonEmptyBlockCount(),
+                            ((ChunkSectionAccess) sectionsIn[i]).getTickingBlockCount(),
+                            ((ChunkSectionAccess) sectionsIn[i]).getTickingFluidCount());
                     //noinspection ConstantConditions
-                    ((ChunkSectionAccess) sections[i]).setData(sectionsIn[i].getStates());
+                    ((ChunkSectionAccess) sections[i]).setStates(sectionsIn[i].getStates());
                 }
             }
         }

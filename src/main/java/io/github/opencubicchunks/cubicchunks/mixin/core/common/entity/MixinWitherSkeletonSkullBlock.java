@@ -12,7 +12,7 @@ public class MixinWitherSkeletonSkullBlock {
     @ModifyConstant(method = "canSpawnMob", constant = @Constant(intValue = 2))
     private static int getWitherSpawnCan(int _2) { return CubicChunks.MIN_SUPPORTED_HEIGHT + 2; }
 
-    @ModifyConstant(method = "checkWitherSpawn", constant = @Constant(ordinal = 0, expandZeroConditions = Constant.Condition.GREATER_THAN_OR_EQUAL_TO_ZERO))
+    @ModifyConstant(method = "checkSpawn", constant = @Constant(ordinal = 0, expandZeroConditions = Constant.Condition.GREATER_THAN_OR_EQUAL_TO_ZERO))
     private static int getWitherSpawnCheck(int _2) {
         return CubicChunks.MIN_SUPPORTED_HEIGHT;
     }

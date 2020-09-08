@@ -30,7 +30,7 @@ public class PlayerCubeTicketTracker extends PlayerCubeTracker {
         this.positionsAffected.add(cubePosIn);
     }
 
-    public void setViewDistance(int viewDistanceIn) {
+    public void updateCubeViewDistance(int viewDistanceIn) {
         for (it.unimi.dsi.fastutil.longs.Long2ByteMap.Entry entry : this.cubesInRange.long2ByteEntrySet()) {
             byte b0 = entry.getByteValue();
             long i = entry.getLongKey();
@@ -45,21 +45,21 @@ public class PlayerCubeTicketTracker extends PlayerCubeTracker {
         if (oldWithinViewDistance != withinViewDistance) {
             Ticket<?> ticket = new Ticket<>(CCTicketType.CCPLAYER, ITicketManager.PLAYER_CUBE_TICKET_LEVEL, CubePos.from(cubePosIn));
             if (withinViewDistance) {
-                iTicketManager.getCubePlayerTicketThrottler().tell(CubeTaskPriorityQueueSorter.createMsg(() ->
-                        iTicketManager.executor().execute(() -> {
+                iTicketManager.getCubeTicketThrottlerInput().tell(CubeTaskPriorityQueueSorter.createMsg(() ->
+                        iTicketManager.getMainThreadExecutor().execute(() -> {
                             if (this.isWithinViewDistance(this.getLevel(cubePosIn))) {
-                                iTicketManager.registerCube(cubePosIn, ticket);
-                                iTicketManager.getCubePositions().add(cubePosIn);
+                                iTicketManager.addCubeTicket(cubePosIn, ticket);
+                                iTicketManager.getCubeTicketsToRelease().add(cubePosIn);
                             } else {
-                                iTicketManager.getPlayerCubeTicketThrottlerSorter().tell(CubeTaskPriorityQueueSorter.createSorterMsg(() -> {
+                                iTicketManager.getCubeTicketThrottlerReleaser().tell(CubeTaskPriorityQueueSorter.createSorterMsg(() -> {
                                 }, cubePosIn, false));
                             }
 
                         }), cubePosIn, () -> distance));
             } else {
-                iTicketManager.getPlayerCubeTicketThrottlerSorter().tell(CubeTaskPriorityQueueSorter.createSorterMsg(() ->
-                        iTicketManager.executor().execute(() ->
-                                iTicketManager.releaseCube(cubePosIn, ticket)),
+                iTicketManager.getCubeTicketThrottlerReleaser().tell(CubeTaskPriorityQueueSorter.createSorterMsg(() ->
+                        iTicketManager.getMainThreadExecutor().execute(() ->
+                                iTicketManager.removeCubeTicket(cubePosIn, ticket)),
                         cubePosIn, true));
             }
         }
@@ -76,7 +76,7 @@ public class PlayerCubeTicketTracker extends PlayerCubeTracker {
                 int j = this.distances.get(i);
                 int k = this.getLevel(i);
                 if (j != k) {
-                    iTicketManager.getCubeTaskPriorityQueueSorter().onUpdateCubeLevel(CubePos.from(i), () -> this.distances.get(i), k, (ix) -> {
+                    iTicketManager.getCubeTicketThrottler().onCubeLevelChange(CubePos.from(i), () -> this.distances.get(i), k, (ix) -> {
                         if (ix >= this.distances.defaultReturnValue()) {
                             this.distances.remove(i);
                         } else {

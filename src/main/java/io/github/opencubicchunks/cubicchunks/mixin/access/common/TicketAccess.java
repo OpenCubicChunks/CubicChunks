@@ -6,7 +6,6 @@ import org.spongepowered.asm.mixin.gen.Invoker;
 
 @Mixin(Ticket.class)
 public interface TicketAccess {
-    @Invoker("isExpired")boolean cc$isexpired(long currentTime);
-
-    @Invoker("setTimestamp") void setTimestampCC(long time);
+    @Invoker boolean invokeTimedOut(long currentTime);
+    @Invoker void invokeSetCreatedTick(long time);
 }

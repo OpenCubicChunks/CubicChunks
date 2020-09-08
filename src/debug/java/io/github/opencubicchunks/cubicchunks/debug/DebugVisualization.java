@@ -101,7 +101,7 @@ public class DebugVisualization {
     private static int perfTimerIdx = 0;
     private static float screenWidth = 854.0f;
     private static float screenHeight = 480f;
-    private static final boolean IS_LINUX = Util.getOSType() == Util.OS.LINUX;
+    private static final boolean IS_LINUX = Util.getPlatform() == Util.OS.LINUX;
     private static GLCapabilities debugGlCapabilities;
 
     private static final boolean IS_VULKAN = false;
@@ -170,7 +170,7 @@ public class DebugVisualization {
                 return;
             }
             try {
-                bufferBuilder.finishDrawing();
+                bufferBuilder.end();
             } catch (Throwable t) {
                 t.printStackTrace();
             }
@@ -194,7 +194,7 @@ public class DebugVisualization {
         if (w instanceof ClientWorld) {
             clientWorld = (World) w;
         } else if (w instanceof ServerWorld) {
-            serverWorlds.put(((ServerWorld) w).getDimensionKey(), (World) w);
+            serverWorlds.put(((ServerWorld) w).dimension(), (World) w);
         }
 
     }
@@ -202,7 +202,7 @@ public class DebugVisualization {
     public static void onWorldUnload(WorldEvent.Unload t) {
         IWorld w = t.getWorld();
         if (w instanceof ServerWorld) {
-            serverWorlds.remove(((ServerWorld) w).getDimensionKey());
+            serverWorlds.remove(((ServerWorld) w).dimension());
         }
     }
 
@@ -253,7 +253,7 @@ public class DebugVisualization {
                         return;
                     }
                     try {
-                        bufferBuilder.finishDrawing();
+                        bufferBuilder.end();
                     } catch (Throwable t) {
                         t.printStackTrace();
                     }
@@ -371,31 +371,31 @@ public class DebugVisualization {
         mvpMatrix.setIdentity();
         // mvp = projection*view*model
         // projection
-        mvpMatrix.mul(Matrix4f.perspective(60, screenWidth / screenHeight, 0.01f, 1000));
+        mvpMatrix.multiply(Matrix4f.perspective(60, screenWidth / screenHeight, 0.01f, 1000));
         Matrix4f modelView = inverseMatrix;
         modelView.setIdentity();
         // view
-        modelView.mul(Matrix4f.makeTranslate(0, 0, -500));
+        modelView.multiply(Matrix4f.createTranslateMatrix(0, 0, -500));
         // model
-        modelView.mul(Vector3f.XP.rotationDegrees(30));
-        modelView.mul(Vector3f.YP.rotationDegrees((float) ((System.currentTimeMillis() * 0.04) % 360)));//
+        modelView.multiply(Vector3f.XP.rotationDegrees(30));
+        modelView.multiply(Vector3f.YP.rotationDegrees((float) ((System.currentTimeMillis() * 0.04) % 360)));//
 
-        mvpMatrix.mul(modelView);
+        mvpMatrix.multiply(modelView);
         inverseMatrix.invert();
         timer().matrixSetup = System.nanoTime();
     }
 
     private static void resetBuffer() {
-        if (bufferBuilder.isDrawing()) {
-            bufferBuilder.finishDrawing();
+        if (bufferBuilder.building()) {
+            bufferBuilder.end();
         }
-        bufferBuilder.reset();
+        bufferBuilder.discard();
         bufferBuilder.begin(GL_QUADS, DefaultVertexFormats.POSITION_COLOR);
         timer().bufferReset = System.nanoTime();
     }
 
     private static void drawSelectedWorld(BufferBuilder bufferBuilder) {
-        World w = serverWorlds.get(DimensionType.OVERWORLD);
+        World w = serverWorlds.get(DimensionType.OVERWORLD_LOCATION);
         if (w == null) {
             return;
         }
@@ -409,7 +409,7 @@ public class DebugVisualization {
         int playerY = player == null ? 0 : Coords.getCubeYForEntity(player);
         int playerZ = player == null ? 0 : Coords.getCubeZForEntity(player);
 
-        AbstractChunkProvider chunkProvider = world.getChunkProvider();
+        AbstractChunkProvider chunkProvider = world.getChunkSource();
         if (chunkProvider instanceof ServerChunkProvider) {
             Long2ByteLinkedOpenHashMap cubeMap = buildStatusMaps((ServerChunkProvider) chunkProvider);
             timer().buildStatusMap = System.nanoTime();
@@ -420,7 +420,7 @@ public class DebugVisualization {
     }
 
     private static Long2ByteLinkedOpenHashMap buildStatusMaps(ServerChunkProvider chunkProvider) {
-        ChunkManager chunkManager = chunkProvider.chunkManager;
+        ChunkManager chunkManager = chunkProvider.chunkMap;
         Long2ObjectLinkedOpenHashMap<ChunkHolder> loadedCubes =
                 ObfuscationReflectionHelper.getPrivateValue(ChunkManager.class, chunkManager, "immutableLoadedCubes");
         Object[] data = ObfuscationReflectionHelper.getPrivateValue(Long2ObjectLinkedOpenHashMap.class, loadedCubes, "value");
@@ -432,8 +432,8 @@ public class DebugVisualization {
                 continue;
             }
             ChunkHolder holder = (ChunkHolder) data[i];
-            ChunkStatus status = holder == null ? null : ICubeHolder.getCubeStatusFromLevel(holder.getChunkLevel());
-            IChunk chunk = holder == null ? null : holder.func_219302_f().getNow(null);
+            ChunkStatus status = holder == null ? null : ICubeHolder.getCubeStatusFromLevel(holder.getTicketLevel());
+            IChunk chunk = holder == null ? null : holder.getChunkToSave().getNow(null);
             ChunkStatus realStatus = chunk == null ? null : chunk.getStatus();
             cubeMap.put(pos, realStatus == null ? (byte) 255 : (byte) Registry.CHUNK_STATUS.getId(realStatus));
         }
@@ -454,7 +454,7 @@ public class DebugVisualization {
         colorsArray[255] = 0x00FF00FF;
         EnumSet<Direction> renderFaces = EnumSet.noneOf(Direction.class);
         Direction[] directions = Direction.values();
-        float ratioFactor =  1/(float) ChunkStatus.FULL.ordinal();
+        float ratioFactor =  1/(float) ChunkStatus.FULL.getIndex();
         final boolean drawNull = false;
         for (Long2ByteMap.Entry e : cubeMap.long2ByteEntrySet()) {
             long posLong = e.getLongKey();
@@ -467,11 +467,11 @@ public class DebugVisualization {
             }
             renderFaces.clear();
             ChunkStatus statusObj = statusLookup[status];
-            float ratio = statusObj == null ? 1 : statusObj.ordinal() * ratioFactor;
+            float ratio = statusObj == null ? 1 : statusObj.getIndex() * ratioFactor;
             int alpha = status == 255 ? 0x22 : (int) (0x20 + ratio * (0xFF - 0x20));
             int c = colorsArray[status] | (alpha << 24);
             for (Direction value : directions) {
-                long l = CubePos.asLong(posX + value.getXOffset(), posY + value.getYOffset(), posZ + value.getZOffset());
+                long l = CubePos.asLong(posX + value.getStepX(), posY + value.getStepY(), posZ + value.getStepZ());
                 int cubeStatus = cubeMap.get(l) & 0xFF;
                 // this.ordinal() >= status.ordinal();
                 if (drawNull) {
@@ -492,14 +492,14 @@ public class DebugVisualization {
     private static void sortQuads() {
         Vector4f vec = new Vector4f(0, 0, 0, 1);
         vec.transform(inverseMatrix);
-        bufferBuilder.sortVertexData(vec.getX(), vec.getY(), vec.getZ());
+        bufferBuilder.sortQuads(vec.x(), vec.y(), vec.z());
 
-        bufferBuilder.finishDrawing();
+        bufferBuilder.end();
         timer().sortQuads = System.nanoTime();
     }
 
     private static Pair<Integer, FloatBuffer> quadsToTriangles() {
-        Pair<BufferBuilder.DrawState, ByteBuffer> stateBuffer = bufferBuilder.getNextBuffer();
+        Pair<BufferBuilder.DrawState, ByteBuffer> stateBuffer = bufferBuilder.popNextBuffer();
         Pair<Integer, FloatBuffer> integerFloatBufferPair = toTriangles(stateBuffer);
         timer().toTriangles = System.nanoTime();
         return integerFloatBufferPair;
@@ -508,9 +508,9 @@ public class DebugVisualization {
     private static Pair<Integer, FloatBuffer> toTriangles(Pair<BufferBuilder.DrawState, ByteBuffer> stateBuffer) {
         FloatBuffer in = stateBuffer.getSecond().asFloatBuffer();
         in.clear();
-        int quadCount = stateBuffer.getFirst().getVertexCount() / 4;
+        int quadCount = stateBuffer.getFirst().vertexCount() / 4;
         int triangleCount = quadCount * 2;
-        int floatsPerVertex = stateBuffer.getFirst().getFormat().getIntegerSize();
+        int floatsPerVertex = stateBuffer.getFirst().format().getIntegerSize();
         FloatBuffer out = MemoryUtil.memAllocFloat(triangleCount * 3 * floatsPerVertex);
         for (int i = 0; i < quadCount; i++) {
             int startPos = i * 4 * floatsPerVertex;
@@ -554,7 +554,7 @@ public class DebugVisualization {
     private static void shaderUniforms() {
         ByteBuffer byteBuffer = MemoryUtil.memAlignedAlloc(64, 64);
         FloatBuffer fb = byteBuffer.asFloatBuffer();
-        mvpMatrix.write(fb);
+        mvpMatrix.store(fb);
         glUniformMatrix4fv(matrixLocation, false, fb);
         MemoryUtil.memFree(byteBuffer);
     }
@@ -571,10 +571,10 @@ public class DebugVisualization {
 
 
     private static void drawPerfStats() {
-        if (perfGraphBuilder.isDrawing()) {
-            perfGraphBuilder.finishDrawing();
+        if (perfGraphBuilder.building()) {
+            perfGraphBuilder.end();
         }
-        perfGraphBuilder.reset();
+        perfGraphBuilder.discard();
 
         int[] colors = {
                 0x000000, // glStateSetup
@@ -595,7 +595,6 @@ public class DebugVisualization {
                 0x808000, //
                 0xB8860B
         };
-        perfGraphBuilder.reset();
         perfGraphBuilder.begin(GL_QUADS, DefaultVertexFormats.POSITION_COLOR);
         for (int i = 0; i < perfTimer.length; i++) {
             int x = perfTimer.length - 1 - i;
@@ -611,7 +610,7 @@ public class DebugVisualization {
             });
         }
 
-        perfGraphBuilder.finishDrawing();
+        perfGraphBuilder.end();
 
         glUseProgram(shaderProgram);
 
@@ -622,13 +621,13 @@ public class DebugVisualization {
                 0, 0, 0, 1
         });;
         FloatBuffer buffer = MemoryUtil.memAllocFloat(16);
-        ortho.write(buffer);
+        ortho.store(buffer);
         buffer.clear();
         glUniformMatrix4fv(matrixLocation, false, buffer);
         MemoryUtil.memFree(buffer);
 
 
-        Pair<BufferBuilder.DrawState, ByteBuffer> nextBuffer = perfGraphBuilder.getNextBuffer();
+        Pair<BufferBuilder.DrawState, ByteBuffer> nextBuffer = perfGraphBuilder.popNextBuffer();
         nextBuffer.getSecond().clear();
         Pair<Integer, FloatBuffer> buf = toTriangles(nextBuffer);
         buf.getSecond().clear();
@@ -718,7 +717,7 @@ public class DebugVisualization {
         int b = color & 0xFF;
         int a = color >>> 24;
 
-        buffer.pos(x, y, z);
+        buffer.vertex(x, y, z);
         buffer.color(r, g, b, a);
         buffer.endVertex();
     }
