@@ -70,6 +70,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Group;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -335,11 +336,13 @@ public abstract class MixinChunkManager implements IChunkManager {
 
     // TODO: remove when cubic chunks versions are done
     @SuppressWarnings({"UnresolvedMixinReference"})
-    @Inject(method = "lambda$schedule$13", at = @At(
+    // lambda$func_219244_a$13 or lambda$schedule$13 or lambda$null$13
+    @Inject(method = "*", at = @At(
             value = "INVOKE",
             target = "Lnet/minecraft/world/chunk/listener/IChunkStatusListener;onStatusChange(Lnet/minecraft/util/math/ChunkPos;"
                     + "Lnet/minecraft/world/chunk/ChunkStatus;)V")
     )
+    @Group(name = "MixinChunkManager.on_func_219244_a_StatusChange", min = 1, max = 1)
     private void on_func_219244_a_StatusChange(ChunkStatus chunkStatusIn, ChunkPos chunkpos,
             ChunkHolder chunkHolderIn, Either<?, ?> p_223180_4_, CallbackInfoReturnable<CompletionStage<?>> cir) {
         if (((ICubeHolder) chunkHolderIn).getCubePos() != null) {
@@ -350,11 +353,13 @@ public abstract class MixinChunkManager implements IChunkManager {
     }
 
     @SuppressWarnings("UnresolvedMixinReference")
-    @Inject(method = "lambda$scheduleUnload$10", at = @At(
+    // lambda$scheduleUnload$10 or lambda$scheduleSave$10 or ???
+    @Inject(method = "*", at = @At(
             value = "INVOKE",
             target = "Lnet/minecraft/world/chunk/listener/IChunkStatusListener;onStatusChange(Lnet/minecraft/util/math/ChunkPos;"
                     + "Lnet/minecraft/world/chunk/ChunkStatus;)V")
     )
+    @Group(name = "MixinChunkManager.onScheduleSaveStatusChange", min = 1, max = 1)
     private void onScheduleSaveStatusChange(ChunkHolder chunkHolderIn, CompletableFuture<?> completablefuture,
             long chunkPosIn, IChunk p_219185_5_, CallbackInfo ci) {
         if (((ICubeHolder) chunkHolderIn).getCubePos() != null) {
