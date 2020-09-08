@@ -56,7 +56,7 @@ public abstract class MixinChunkSerializer {
         ChunkStatus.Type statusType = getChunkTypeFromTag(compound);
         IChunk newChunk;
         Biome[] biomesIn = new Biome[BiomeContainer.BIOMES_SIZE];
-        Arrays.fill(biomesIn, WorldGenRegistries.BIOME.getOrThrow(Biomes.FOREST));
+        Arrays.fill(biomesIn, ForgeRegistries.BIOMES.getValue(Biomes.FOREST.location()));
         //TODO: Double Check that this is proper
         BiomeContainer biomeContainerIn = new BiomeContainer(worldIn.registryAccess().registryOrThrow(Registry.BIOME_REGISTRY), biomesIn);
         if (statusType == ChunkStatus.Type.LEVELCHUNK) {
