@@ -42,12 +42,12 @@ import static io.github.opencubicchunks.cubicchunks.chunk.util.Utils.unsafeCast;
 public abstract class MixinChunkHolder implements ICubeHolder {
 
     @Shadow private int ticketLevel;
-    @Shadow private ChunkPos pos;
+    @Mutable @Final @Shadow private ChunkPos pos;
 
     // these are using java type erasure as a feature - because the generic type information
     // doesn't exist at runtime, we can shadow those fields with different generic types
     // and as long as we are consistent, we can use them with different types than the declaration in the original class
-    @Shadow(aliases = "futures") @Final private AtomicReferenceArray<CompletableFuture<Either<IBigCube, ChunkHolder.IChunkLoadingError>>> futureByStatus;
+    @Shadow @Final private AtomicReferenceArray<CompletableFuture<Either<IBigCube, ChunkHolder.IChunkLoadingError>>> futures;
     @Shadow private volatile CompletableFuture<Either<BigCube, ChunkHolder.IChunkLoadingError>> tickingChunkFuture;
     @Shadow private volatile CompletableFuture<Either<BigCube, ChunkHolder.IChunkLoadingError>> entityTickingChunkFuture;
     @Shadow private CompletableFuture<IBigCube> chunkToSave;
@@ -74,7 +74,6 @@ public abstract class MixinChunkHolder implements ICubeHolder {
     public abstract CompletableFuture<Either<IBigCube, ChunkHolder.IChunkLoadingError>> getOrScheduleFuture(ChunkStatus chunkStatus,
                                                                                                           ChunkManager chunkManager);
 
-    @SuppressWarnings("unused")
     private CubePos cubePos; // set from ASM
 
     private final ShortArraySet changedLocalBlocks = new ShortArraySet();
@@ -296,12 +295,12 @@ public abstract class MixinChunkHolder implements ICubeHolder {
     // func_219294_a, replaceProtoChunk
     @Override
     public void replaceProtoCube(CubePrimerWrapper primer) {
-        for(int i = 0; i < this.futureByStatus.length(); ++i) {
-            CompletableFuture<Either<IBigCube, ChunkHolder.IChunkLoadingError>> future = this.futureByStatus.get(i);
+        for(int i = 0; i < this.futures.length(); ++i) {
+            CompletableFuture<Either<IBigCube, ChunkHolder.IChunkLoadingError>> future = this.futures.get(i);
             if (future != null) {
                 Optional<IBigCube> optional = future.getNow(MISSING_CUBE).left();
                 if (optional.isPresent() && optional.get() instanceof CubePrimer) {
-                    this.futureByStatus.set(i, CompletableFuture.completedFuture(Either.left(primer)));
+                    this.futures.set(i, CompletableFuture.completedFuture(Either.left(primer)));
                 }
             }
         }

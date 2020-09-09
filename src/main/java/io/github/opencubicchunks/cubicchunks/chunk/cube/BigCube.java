@@ -74,7 +74,7 @@ public class BigCube implements IChunk, IBigCube {
     private Consumer<BigCube> postLoadConsumer;
 
     public BigCube(World worldIn, CubePos cubePosIn, CubeBiomeContainer biomeContainerIn) {
-        this(worldIn, cubePosIn, biomeContainerIn, UpgradeData.EMPTY, EmptyTickList.empty(), EmptyTickList.empty(), 0L, (ChunkSection[])null, (Consumer<BigCube>)null);
+        this(worldIn, cubePosIn, biomeContainerIn, UpgradeData.EMPTY, EmptyTickList.empty(), EmptyTickList.empty(), 0L, null, null);
     }
 
     public BigCube(World worldIn, CubePos cubePosIn, CubeBiomeContainer biomeContainerIn, UpgradeData upgradeDataIn, ITickList<Block> tickBlocksIn,
@@ -258,6 +258,7 @@ public class BigCube implements IChunk, IBigCube {
         if (xFloor != this.cubePos.getX() || yFloor != this.cubePos.getY() || zFloor != this.cubePos.getZ()) {
             CubicChunks.LOGGER.warn("Wrong location! ({}, {}, {}) should be ({}, {}, {}), {}", xFloor, yFloor, zFloor, this.cubePos.getX(),
                     this.cubePos.getY(), this.cubePos.getZ(), entityIn);
+            //noinspection deprecation
             entityIn.removed = true;
         }
 

@@ -48,6 +48,7 @@ public class CubeBiomeContainer extends BiomeContainer {
         Biome[] biomes = ((BiomeContainerAccess) this).getBiomes();
         if (biomeIds != null) {
             for(int k = 0; k < biomeIds.length; ++k) {
+                //noinspection deprecation
                 biomes[k] = WorldGenRegistries.BIOME.byId(biomeIds[k]);
                 if (biomes[k] == null) {
                     int dx = k & HORIZONTAL_MASK;
