@@ -23,11 +23,11 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public abstract class MixinChunkRender implements IOptiFineChunkRender {
 
     @Shadow @Final private BlockPos.Mutable origin;
-    @Shadow(remap = false) @Final ChunkRenderDispatcher this$0;
-    @Shadow(remap = false) public int regionX;
-    @Shadow(remap = false) public int regionZ;
-    @Dynamic @Shadow(remap = false) private ChunkRenderDispatcher.ChunkRender[] renderChunkNeighboursValid;
-    @Dynamic @Shadow(remap = false) private ChunkRenderDispatcher.ChunkRender[] renderChunkNeighbours;
+    @SuppressWarnings("target") @Shadow(aliases = "this$0", remap = false) @Final ChunkRenderDispatcher syntheticThis;
+    @SuppressWarnings("target") @Shadow(remap = false) public int regionX;
+    @SuppressWarnings("target") @Shadow(remap = false) public int regionZ;
+    @SuppressWarnings("target") @Dynamic @Shadow(remap = false) private ChunkRenderDispatcher.ChunkRender[] renderChunkNeighboursValid;
+    @SuppressWarnings("target") @Dynamic @Shadow(remap = false) private ChunkRenderDispatcher.ChunkRender[] renderChunkNeighbours;
 
     @Shadow public abstract BlockPos getOrigin();
 
@@ -39,7 +39,7 @@ public abstract class MixinChunkRender implements IOptiFineChunkRender {
             return null;
         }
         if (cube == null || !cube.getLoaded()) {
-            cube = (BigCube) ((IClientCubeProvider) ((ChunkRenderDispatcherAccess) this$0).getLevel().getChunkSource())
+            cube = (BigCube) ((IClientCubeProvider) ((ChunkRenderDispatcherAccess) syntheticThis).getLevel().getChunkSource())
                     .getCube(Coords.blockToCube(origin.getX()), Coords.blockToCube(origin.getY()), Coords.blockToCube(origin.getZ()),
                             ChunkStatus.FULL, true);
             assert cube != null;
@@ -59,6 +59,7 @@ public abstract class MixinChunkRender implements IOptiFineChunkRender {
         return regionZ;
     }
 
+    @SuppressWarnings("target")
     @Dynamic @Inject(method = "updateRenderChunkNeighboursValid()V", at = @At("HEAD"), remap = false)
     private void onUpdateNeighbors(CallbackInfo cbi) {
         // if (!isCubic) {

@@ -22,7 +22,7 @@ import static io.github.opencubicchunks.cubicchunks.utils.Coords.sectionToCube;
 @Mixin(ChunkManager.EntityTracker.class)
 public abstract class MixinEntityTracker {
 
-    @SuppressWarnings("ShadowTarget") @Shadow ChunkManager this$0;
+    @SuppressWarnings({"target"}) @Shadow(aliases = "this$0", remap = false) ChunkManager syntheticThis;
 
     @Shadow @Final private Entity entity;
 
@@ -41,7 +41,7 @@ public abstract class MixinEntityTracker {
         if (player != this.entity) {
             Vector3d vec3d = player.position().subtract(this.serverEntity.sentPos());
                             //This function is fine
-            int i = Math.min(this.getEffectiveRange(), (((ChunkManagerAccess)this$0).getViewDistance() - 1) * 16);
+            int i = Math.min(this.getEffectiveRange(), (((ChunkManagerAccess) syntheticThis).getViewDistance() - 1) * 16);
             boolean flag = vec3d.x >= (double)(-i) && vec3d.x <= (double)i &&
                     vec3d.y >= (double)(-i) && vec3d.y <= (double)i && //Added y comparisons
                     vec3d.z >= (double)(-i) && vec3d.z <= (double)i &&
@@ -51,9 +51,9 @@ public abstract class MixinEntityTracker {
                 if (!spawn) {
                     CubePos cubePos = CubePos.of(sectionToCube(this.entity.xChunk), sectionToCube(this.entity.yChunk),
                             sectionToCube(this.entity.zChunk));
-                    ChunkHolder chunkholder = ((IChunkManager)this$0).getImmutableCubeHolder(cubePos.asLong());
+                    ChunkHolder chunkholder = ((IChunkManager) syntheticThis).getImmutableCubeHolder(cubePos.asLong());
                     if (chunkholder != null && ((ICubeHolder) chunkholder).getCubeIfComplete() != null) {
-                        spawn = IChunkManager.getCubeChebyshevDistance(cubePos, player, false) <= ((ChunkManagerAccess)this$0).getViewDistance();
+                        spawn = IChunkManager.getCubeChebyshevDistance(cubePos, player, false) <= ((ChunkManagerAccess) syntheticThis).getViewDistance();
                     }
                 }
 

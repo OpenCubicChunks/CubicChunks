@@ -12,7 +12,7 @@ import javax.annotation.Nullable;
 public abstract class MixinProxyTicketManager extends MixinTicketManager {
 
     // this$0 has an SRG name, but it's not actually used at runtime, but FG will remap it anyway. This alias gets around that remapping.
-    @SuppressWarnings("ShadowTarget") @Shadow(aliases = "this$0") ChunkManager syntheticThis;
+    @SuppressWarnings({"target"}) @Shadow(aliases = "this$0", remap = false) ChunkManager syntheticThis;
 
     @Override
     public boolean containsCubes(long cubePosIn) {

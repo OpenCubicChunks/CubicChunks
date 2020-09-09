@@ -11,6 +11,8 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 
+import javax.annotation.Nullable;
+
 @Mixin(WorldRenderer.class)
 public class MixinWorldRenderer_Vanilla {
 
@@ -20,8 +22,9 @@ public class MixinWorldRenderer_Vanilla {
 
     /**
      * @author Barteks2x
+     * @reason Vanilla doesn't use y pos, and constrains between 0 and 256
      */
-    @javax.annotation.Nullable
+    @Nullable
     @Overwrite
     private ChunkRenderDispatcher.ChunkRender getRelativeFrom(
             BlockPos playerPos, ChunkRenderDispatcher.ChunkRender renderChunkBase, Direction facing) {

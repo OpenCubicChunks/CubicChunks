@@ -27,7 +27,7 @@ public abstract class MixinClientWorld extends World implements IClientWorld {
      * @reason Vanilla chunks now do not have entities.
      */
     @Overwrite
-    public void updateChunkPos(Entity entityIn) {
+    private void updateChunkPos(Entity entityIn) {
         this.getProfiler().push("chunkCheck");
         int i = MathHelper.floor(entityIn.getX() / 16.0D);
         int j = MathHelper.floor(entityIn.getY() / 16.0D);

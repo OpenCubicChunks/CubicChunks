@@ -42,7 +42,7 @@ public abstract class MixinMinecraftServer {
      * @reason Additional CC functionality and logging.
      */
     @Overwrite
-    protected void prepareLevels(IChunkStatusListener statusListener) {
+    private void prepareLevels(IChunkStatusListener statusListener) {
         ServerWorld serverworld = this.overworld();
         LOGGER.info("Preparing start region for dimension {}", serverworld.dimension().location());
         BlockPos spawnPos = serverworld.getSharedSpawnPos();

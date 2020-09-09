@@ -335,7 +335,7 @@ public abstract class MixinChunkManager implements IChunkManager {
     }
 
     // TODO: remove when cubic chunks versions are done
-    @SuppressWarnings({"UnresolvedMixinReference"})
+    @SuppressWarnings("UnresolvedMixinReference")
     // lambda$func_219244_a$13 or lambda$schedule$13 or lambda$null$13
     @Inject(method = "*", at = @At(
             value = "INVOKE",
@@ -368,11 +368,14 @@ public abstract class MixinChunkManager implements IChunkManager {
         }
     }
 
-    @SuppressWarnings("UnresolvedMixinReference")
-    @Inject(method = "lambda$null$18", at = @At(
-            value = "INVOKE",
-            target = "Lnet/minecraft/world/chunk/listener/IChunkStatusListener;onStatusChange(Lnet/minecraft/util/math/ChunkPos;"
-                    + "Lnet/minecraft/world/chunk/ChunkStatus;)V"))
+    @SuppressWarnings({"UnresolvedMixinReference", "target"})
+    @Inject(method = "lambda$null$18(Lnet/minecraft/world/chunk/ChunkStatus;Lnet/minecraft/world/server/ChunkHolder;Lnet/minecraft/util/math/ChunkPos;Ljava/util/List;)Ljava/util/concurrent/CompletableFuture;",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lnet/minecraft/world/chunk/listener/IChunkStatusListener;onStatusChange(Lnet/minecraft/util/math/ChunkPos;"
+                    + "Lnet/minecraft/world/chunk/ChunkStatus;)V"
+            )
+    )
     private void onGenerateStatusChange(ChunkStatus chunkStatusIn, ChunkHolder chunkHolderIn, ChunkPos chunkpos, List<?> p_223148_4_,
             CallbackInfoReturnable<CompletableFuture<?>> cir) {
         if (((ICubeHolder) chunkHolderIn).getCubePos() != null) {
@@ -381,7 +384,12 @@ public abstract class MixinChunkManager implements IChunkManager {
         }
     }
 
-    @Inject(method = "promoteChunkMap", at = @At(value = "INVOKE", target = "Lit/unimi/dsi/fastutil/longs/Long2ObjectLinkedOpenHashMap;clone()Lit/unimi/dsi/fastutil/longs/Long2ObjectLinkedOpenHashMap;"))
+    @Inject(method = "promoteChunkMap",
+            at = @At(value = "INVOKE",
+                    target = "Lit/unimi/dsi/fastutil/longs/Long2ObjectLinkedOpenHashMap;clone()Lit/unimi/dsi/fastutil/longs/Long2ObjectLinkedOpenHashMap;",
+                    remap = false
+            )
+    )
     private void onPromoteChunkMap(CallbackInfoReturnable<Boolean> cir) {
         this.visibleCubeMap = updatingCubeMap.clone();
     }
@@ -392,7 +400,6 @@ public abstract class MixinChunkManager implements IChunkManager {
     }
 
     // func_219244_a, schedule
-    @SuppressWarnings("unchecked")
     @Override
     public CompletableFuture<Either<IBigCube, ChunkHolder.IChunkLoadingError>> scheduleCube(ChunkHolder chunkHolderIn, ChunkStatus chunkStatusIn) {
         CubePos cubePos = ((ICubeHolder) chunkHolderIn).getCubePos();

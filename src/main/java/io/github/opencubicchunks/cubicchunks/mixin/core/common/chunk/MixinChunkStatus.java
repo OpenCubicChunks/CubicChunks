@@ -45,8 +45,13 @@ public class MixinChunkStatus {
     // lambda$static$14 == FULL
     // lambda$static$15 == FULL (loading worker)
 
-    @SuppressWarnings("UnresolvedMixinReference")
-    @Inject(method = "lambda$static$0", at = @At("HEAD"))
+    @SuppressWarnings({"UnresolvedMixinReference", "target"})
+
+    //(Lnet/minecraft/world/chunk/ChunkStatus;Lnet/minecraft/world/server/ServerWorld;Lnet/minecraft/world/gen/feature/template/TemplateManager;Lnet/minecraft/world/server/ServerWorldLightManager;Ljava/util/function/Function;Lnet/minecraft/world/chunk/IChunk;Lorg/spongepowered/asm/mixin/injection/callback/CallbackInfoReturnable;)V
+
+    @Inject(method = "lambda$static$0(Lnet/minecraft/world/chunk/ChunkStatus;Lnet/minecraft/world/server/ServerWorld;Lnet/minecraft/world/gen/feature/template/TemplateManager;Lnet/minecraft/world/server/ServerWorldLightManager;Ljava/util/function/Function;Lnet/minecraft/world/chunk/IChunk;)Ljava/util/concurrent/CompletableFuture;",
+            at = @At("HEAD"), remap = false
+    )
     private static void noopLoadingWorker(
             ChunkStatus status, ServerWorld world, TemplateManager templateManager,
             ServerWorldLightManager lightManager,
@@ -62,8 +67,10 @@ public class MixinChunkStatus {
     // EMPTY -> does nothing already
 
     // structure starts - replace setStatus, handled by MixinChunkGenerator
-    @SuppressWarnings("UnresolvedMixinReference")
-    @Inject(method = "lambda$static$2", at = @At("HEAD"), cancellable = true)
+    @SuppressWarnings({"UnresolvedMixinReference", "target"})
+    @Inject(method = "lambda$static$2(Lnet/minecraft/world/chunk/ChunkStatus;Lnet/minecraft/world/server/ServerWorld;Lnet/minecraft/world/gen/ChunkGenerator;Lnet/minecraft/world/gen/feature/template/TemplateManager;Lnet/minecraft/world/server/ServerWorldLightManager;Ljava/util/function/Function;Ljava/util/List;Lnet/minecraft/world/chunk/IChunk;)Ljava/util/concurrent/CompletableFuture;",
+            at = @At("HEAD"), cancellable = true, remap = false
+    )
     private static void generateStructureStatus(
             ChunkStatus status, ServerWorld world, ChunkGenerator generator,
             TemplateManager templateManager, ServerWorldLightManager lightManager,
@@ -89,8 +96,10 @@ public class MixinChunkStatus {
         }
     }
 
-    @SuppressWarnings("UnresolvedMixinReference")
-    @Inject(method = "lambda$static$3", at = @At("HEAD"), cancellable = true)
+    @SuppressWarnings({"UnresolvedMixinReference", "target"})
+    @Inject(method = "lambda$static$3(Lnet/minecraft/world/server/ServerWorld;Lnet/minecraft/world/gen/ChunkGenerator;Ljava/util/List;Lnet/minecraft/world/chunk/IChunk;)V",
+            at = @At("HEAD"), cancellable = true, remap = false
+    )
     private static void cubicChunksStructureReferences(ServerWorld world, ChunkGenerator generator, List<IChunk> neighbors, IChunk chunk,
             CallbackInfo ci) {
 
@@ -100,8 +109,10 @@ public class MixinChunkStatus {
         }
     }
     // biomes -> handled by MixinChunkGenerator
-    @SuppressWarnings("UnresolvedMixinReference")
-    @Inject(method = "lambda$static$5", at = @At("HEAD"), cancellable = true)
+    @SuppressWarnings({"UnresolvedMixinReference", "target"})
+    @Inject(method = "lambda$static$5(Lnet/minecraft/world/server/ServerWorld;Lnet/minecraft/world/gen/ChunkGenerator;Ljava/util/List;Lnet/minecraft/world/chunk/IChunk;)V",
+            at = @At("HEAD"), cancellable = true, remap = false
+    )
     private static void cubicChunksNoise(ServerWorld world, ChunkGenerator generator, List<IChunk> neighbors, IChunk chunk,
             CallbackInfo ci) {
 
@@ -113,8 +124,10 @@ public class MixinChunkStatus {
         }
     }
 
-    @SuppressWarnings("UnresolvedMixinReference")
-    @Inject(method = "lambda$static$6", at = @At("HEAD"), cancellable = true)
+    @SuppressWarnings({"UnresolvedMixinReference", "target"})
+    @Inject(method = "lambda$static$6(Lnet/minecraft/world/server/ServerWorld;Lnet/minecraft/world/gen/ChunkGenerator;Ljava/util/List;Lnet/minecraft/world/chunk/IChunk;)V",
+            at = @At("HEAD"), cancellable = true, remap = false
+    )
     private static void cubicChunksSurface(ServerWorld world, ChunkGenerator generator, List<IChunk> neighbors, IChunk chunk,
             CallbackInfo ci) {
 
@@ -124,8 +137,10 @@ public class MixinChunkStatus {
         }
     }
 
-    @SuppressWarnings("UnresolvedMixinReference")
-    @Inject(method = "lambda$static$7", at = @At("HEAD"), cancellable = true)
+    @SuppressWarnings({"UnresolvedMixinReference", "target"})
+    @Inject(method = "lambda$static$7(Lnet/minecraft/world/server/ServerWorld;Lnet/minecraft/world/gen/ChunkGenerator;Ljava/util/List;Lnet/minecraft/world/chunk/IChunk;)V",
+            at = @At("HEAD"), cancellable = true, remap = false
+    )
     private static void cubicChunksCarvers(ServerWorld world, ChunkGenerator generator, List<IChunk> neighbors, IChunk chunk,
             CallbackInfo ci) {
 
@@ -135,8 +150,10 @@ public class MixinChunkStatus {
         }
     }
 
-    @SuppressWarnings("UnresolvedMixinReference")
-    @Inject(method = "lambda$static$8", at = @At("HEAD"), cancellable = true)
+    @SuppressWarnings({"UnresolvedMixinReference", "target"})
+    @Inject(method = "lambda$static$8(Lnet/minecraft/world/server/ServerWorld;Lnet/minecraft/world/gen/ChunkGenerator;Ljava/util/List;Lnet/minecraft/world/chunk/IChunk;)V",
+            at = @At("HEAD"), cancellable = true, remap = false
+    )
     private static void cubicChunksLiquidCarvers(ServerWorld world, ChunkGenerator generator, List<IChunk> neighbors, IChunk chunk,
             CallbackInfo ci) {
 
@@ -146,8 +163,10 @@ public class MixinChunkStatus {
         }
     }
 
-    @SuppressWarnings("UnresolvedMixinReference")
-    @Inject(method = "lambda$static$9", at = @At(value = "HEAD"), cancellable = true)
+    @SuppressWarnings({"UnresolvedMixinReference", "target"})
+    @Inject(method = "lambda$static$9(Lnet/minecraft/world/chunk/ChunkStatus;Lnet/minecraft/world/server/ServerWorld;Lnet/minecraft/world/gen/ChunkGenerator;Lnet/minecraft/world/gen/feature/template/TemplateManager;Lnet/minecraft/world/server/ServerWorldLightManager;Ljava/util/function/Function;Ljava/util/List;Lnet/minecraft/world/chunk/IChunk;)Ljava/util/concurrent/CompletableFuture;",
+            at = @At(value = "HEAD"), cancellable = true, remap = false
+    )
     private static void featuresSetStatus(
             ChunkStatus status, ServerWorld world, ChunkGenerator generator,
             TemplateManager templateManager, ServerWorldLightManager lightManager,
@@ -191,8 +210,10 @@ public class MixinChunkStatus {
     }
 
     //lambda$static$12
-    @SuppressWarnings("UnresolvedMixinReference")
-    @Inject(method = "lambda$static$12", at = @At("HEAD"), cancellable = true)
+    @SuppressWarnings({"UnresolvedMixinReference", "target"})
+    @Inject(method = "lambda$static$12(Lnet/minecraft/world/server/ServerWorld;Lnet/minecraft/world/gen/ChunkGenerator;Ljava/util/List;Lnet/minecraft/world/chunk/IChunk;)V",
+            at = @At("HEAD"), cancellable = true, remap = false
+    )
     private static void cubicChunksSpawnMobs(ServerWorld world, ChunkGenerator generator, List<IChunk> neighbors, IChunk chunk,
             CallbackInfo ci) {
 
