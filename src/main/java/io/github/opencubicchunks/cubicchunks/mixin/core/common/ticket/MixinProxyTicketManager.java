@@ -11,16 +11,17 @@ import javax.annotation.Nullable;
 @Mixin(ChunkManager.ProxyTicketManager.class)
 public abstract class MixinProxyTicketManager extends MixinTicketManager {
 
-    @SuppressWarnings("ShadowTarget") @Shadow ChunkManager this$0;
+    // this$0 has an SRG name, but it's not actually used at runtime, but FG will remap it anyway. This alias gets around that remapping.
+    @SuppressWarnings("ShadowTarget") @Shadow(aliases = "this$0") ChunkManager syntheticThis;
 
     @Override
     public boolean containsCubes(long cubePosIn) {
-        return ((IChunkManager)this$0).getCubesToDrop().contains(cubePosIn);
+        return ((IChunkManager) syntheticThis).getCubesToDrop().contains(cubePosIn);
     }
 
     @Override
     @Nullable
     public ChunkHolder getCubeHolder(long cubePosIn) {
-        return ((IChunkManager)this$0).getCubeHolder(cubePosIn);
+        return ((IChunkManager) syntheticThis).getCubeHolder(cubePosIn);
     }
 }
