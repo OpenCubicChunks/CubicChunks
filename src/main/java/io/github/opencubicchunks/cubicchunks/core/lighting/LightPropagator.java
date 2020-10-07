@@ -110,10 +110,6 @@ public class LightPropagator {
                         continue;
                     }
                     setLightCallback.accept(pos);
-                    // if no distance left - stop spreading, so that it won't run into problems when updating too much
-                    if (distance <= LightUpdateQueue.MIN_DISTANCE) {
-                        continue;
-                    }
                     // add all neighbors even those already checked - the check above will fail for them
                     // because currentValue-1 == -1 (already checked are set to 0)
                     // and min. possible lightFromNeighbors is 0
