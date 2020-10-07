@@ -326,7 +326,11 @@ public abstract class MixinChunk_Cubes implements IColumnInternal {
             int oldOpacity, ExtendedBlockStorage ebs, boolean createdNewEbsAboveTop, int newOpacity) {
 
         if (isColumn) {
-            getWorld().getLightingManager().doOnBlockSetLightUpdates((Chunk) (Object) this, localX, oldHeightValue, y, localZ);
+            if (oldHeightValue == y + 1) { // oldHeightValue is the previous block Y above the top block, so this is the "removing to block" case
+                getWorld().getLightingManager().doOnBlockSetLightUpdates((Chunk) (Object) this, localX, getHeightValue(localX, localZ), y, localZ);
+            } else {
+                getWorld().getLightingManager().doOnBlockSetLightUpdates((Chunk) (Object) this, localX, oldHeightValue, y, localZ);
+            }
         }
     }
     
