@@ -152,6 +152,13 @@ public class LightPropagator {
                         // can't go further, the next block already has the same or higher light value
                         continue;
                     }
+                    if (blocks.getEmittedLight(nextPos, type) >= newLight) {
+                        // this next block is not yet updated source, no need to go into it here
+                        // it will be updated later anyway
+                        // NOTE: this check is expected to have big positive performance impact
+                        // for skylight propagation
+                        continue;
+                    }
                     if (blocks.setLightFor(type, nextPos, newLight)) {
                         setLightCallback.accept(nextPos);
                     } else {
