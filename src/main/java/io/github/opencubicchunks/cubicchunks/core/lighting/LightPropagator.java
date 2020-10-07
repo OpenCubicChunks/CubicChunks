@@ -125,7 +125,7 @@ public class LightPropagator {
 
             // then handle everything
             coords.forEach(pos -> {
-                int emitted = blocks.getEmittedLight(pos, type);
+                int emitted = getExpectedLight(blocks, type, pos);
                 // blocks where light decreased are already added (previous run over the queue)
                 if (emitted > blocks.getLightFor(type, pos)) {
                     internalRelightQueue.put(pos, emitted, LightUpdateQueue.MAX_DISTANCE);
