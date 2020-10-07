@@ -77,8 +77,7 @@ public class LightingManager implements ILightingManager {
 
     }
 
-    @Nullable
-    private LightUpdateTracker getTracker() {
+    @Nullable LightUpdateTracker getTracker() {
         if (NO_SUNLIGHT_PROPAGATION) {
             return null;
         }
@@ -155,11 +154,24 @@ public class LightingManager implements ILightingManager {
         int blockZ = localToBlock(cube.getZ(), localZ);
 
         return this.relightMultiBlock(
-                new BlockPos(blockX, minInCubeY, blockZ), new BlockPos(blockX, maxInCubeY, blockZ), EnumSkyBlock.SKY, world::notifyLightSet);
+                new BlockPos(blockX, minInCubeY, blockZ), new BlockPos(blockX, maxInCubeY, blockZ), EnumSkyBlock.SKY, pos -> {
+                    world.notifyLightSet(pos);
+                    LightUpdateTracker tracker = getTracker();
+                    if (tracker != null) {
+                        tracker.onUpdate(pos);
+                    }
+                });
     }
 
     @Override public void doOnBlockSetLightUpdates(Chunk column, int localX, int y1, int y2, int localZ) {
         this.columnSkylightUpdate(UpdateType.IMMEDIATE, column, localX, Math.min(y1, y2), Math.max(y1, y2), localZ);
+    }
+
+    @Override public void onTick() {
+        LightUpdateTracker tracker = getTracker();
+        if (tracker != null ) {
+            tracker.sendAll();
+        }
     }
 
     //TODO: make it private

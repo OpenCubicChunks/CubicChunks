@@ -170,6 +170,7 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
         if (!this.isCubicWorld()) {
             throw new NotCubicChunksWorldException();
         }
+        getLightingManager().onTick();
         if (this.spawnArea != null) {
             this.spawnArea.update((World) (Object) this);
         }

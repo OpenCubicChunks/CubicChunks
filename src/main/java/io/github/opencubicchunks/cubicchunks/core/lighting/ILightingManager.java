@@ -37,6 +37,8 @@ public interface ILightingManager {
 
     void doOnBlockSetLightUpdates(Chunk column, int localX, int oldHeight, int changeY, int localZ);
 
+    void onTick();
+
     //TODO: make it private
     void markCubeBlockColumnForUpdate(ICube cube, int blockX, int blockZ);
 

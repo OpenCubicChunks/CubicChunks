@@ -99,7 +99,7 @@ public class FirstLightProcessor {
     @Nonnull private final ICubeProviderInternal cache;
 
     @Nonnull private final LightPropagator propagator = new LightPropagator();
-    @Nonnull private final LightUpdateTracker tracker;
+    private final LightUpdateTracker tracker;
 
 
     /**
@@ -109,7 +109,8 @@ public class FirstLightProcessor {
      */
     public FirstLightProcessor(WorldServer world) {
         this.cache = (ICubeProviderInternal) world.getChunkProvider();
-        this.tracker = new LightUpdateTracker((PlayerCubeMap) world.getPlayerChunkMap());
+        LightingManager lightingManager = ((ICubicWorldInternal) world).getLightingManager();
+        this.tracker = lightingManager.getTracker();
     }
 
 
@@ -215,7 +216,6 @@ public class FirstLightProcessor {
                 toUpdate.clear();
             }
         }
-        tracker.sendAll();
         cube.setInitialLightingDone(true);
     }
 
