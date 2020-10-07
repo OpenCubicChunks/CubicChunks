@@ -182,15 +182,22 @@ public class LightingManager implements ILightingManager {
         }
     }
 
-    @Override public void onHeightMapUpdate(Chunk column, int localX, int localZ, int oldHeight, int newHeight) {
-        if (NO_SUNLIGHT_PROPAGATION) {
-            return;
+    @Override public boolean checkLightFor(EnumSkyBlock lightType, BlockPos pos) {
+        if (!world.isBlockLoaded(pos)) {
+            return false;
         }
-        int minCubeY = blockToCube(Math.min(oldHeight, newHeight));
-        int maxCubeY = blockToCube(Math.max(oldHeight, newHeight));
-        ((IColumn) column).getLoadedCubes().stream().filter(cube -> cube.getY() >= minCubeY && cube.getY() <= maxCubeY).forEach(cube -> {
-            markCubeBlockColumnForUpdate(cube, localX, localZ);
+        ILightBlockAccess blocks = FastCubeBlockAccess.forBlockRegion(
+                (ICubeProviderInternal) world.getChunkProvider(),
+                pos.add(-17, -17, -17),
+                pos.add(17, 17, 17));
+        LightUpdateTracker tracker = getTracker();
+        lightPropagator.propagateLight(pos, Collections.singleton(pos), blocks, lightType, (updated) -> {
+            world.notifyLightSet(updated);
+            if (tracker != null) {
+                tracker.onUpdate(updated);
+            }
         });
+        return true;
     }
 
     /**

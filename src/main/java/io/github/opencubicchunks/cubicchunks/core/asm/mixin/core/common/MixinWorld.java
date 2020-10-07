@@ -33,6 +33,7 @@ import io.github.opencubicchunks.cubicchunks.api.util.IntRange;
 import io.github.opencubicchunks.cubicchunks.api.util.NotCubicChunksWorldException;
 import io.github.opencubicchunks.cubicchunks.api.world.ICube;
 import io.github.opencubicchunks.cubicchunks.api.world.ICubicWorld;
+import io.github.opencubicchunks.cubicchunks.core.CubicChunksConfig;
 import io.github.opencubicchunks.cubicchunks.core.asm.mixin.ICubicWorldInternal;
 import io.github.opencubicchunks.cubicchunks.core.asm.mixin.ICubicWorldSettings;
 import io.github.opencubicchunks.cubicchunks.core.lighting.LightingManager;
@@ -45,6 +46,7 @@ import net.minecraft.profiler.Profiler;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.DifficultyInstance;
+import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.GameRules;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
@@ -247,6 +249,14 @@ public abstract class MixinWorld implements ICubicWorldInternal {
         return this.provider.getHeight();
     }
 
+
+    @Inject(method = "checkLightFor", at = @At("HEAD"), cancellable = true)
+    public void checkLightFor(EnumSkyBlock lightType, BlockPos pos, CallbackInfoReturnable<Boolean> ci) {
+        if (!CubicChunksConfig.replaceLightRecheck || !isCubicWorld()) {
+            return;
+        }
+        ci.setReturnValue(getLightingManager().checkLightFor(lightType, pos));
+    }
 
     /**
      * @param pos block position

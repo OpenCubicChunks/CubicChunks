@@ -158,6 +158,13 @@ public class CubicChunksConfig {
     @Config.RangeInt(min = 16, max = CubicChunks.MAX_SUPPORTED_BLOCK_Y)
     public static int defaultMaxHeight = 1 << 30;
 
+    @Config.LangKey("cubicchunks.config.replaceLightRecheck")
+    @Config.Comment("Replaces vanilla light check code with cubic chunks code for cubic chunks worlds.\n"
+            + "Cubic chunks version keeps track of light changes on the server and sends them to client\n"
+            + "and handles the edge of the world by scheduling chunk edge updates instead of failing.")
+    public static boolean replaceLightRecheck = true;
+
+
     public static int defaultMaxCubesPerChunkloadingTicket = 25 * 16;
     public static Map<String, Integer> modMaxCubesPerChunkloadingTicket = new HashMap<>();
 

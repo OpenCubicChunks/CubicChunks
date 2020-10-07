@@ -26,6 +26,8 @@ package io.github.opencubicchunks.cubicchunks.core.lighting;
 
 import io.github.opencubicchunks.cubicchunks.api.world.ICube;
 import mcp.MethodsReturnNonnullByDefault;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.chunk.Chunk;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -42,5 +44,5 @@ public interface ILightingManager {
     //TODO: make it private
     void markCubeBlockColumnForUpdate(ICube cube, int blockX, int blockZ);
 
-    void onHeightMapUpdate(Chunk column, int localX, int localZ, int oldHeight, int newHeight);
+    boolean checkLightFor(EnumSkyBlock lightType, BlockPos pos);
 }
