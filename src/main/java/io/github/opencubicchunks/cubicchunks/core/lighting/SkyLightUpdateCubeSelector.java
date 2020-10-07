@@ -78,7 +78,7 @@ class SkyLightUpdateCubeSelector {
                 localToBlock(column.z, localZ)
         );
 
-        int newMaxBlockY = column.getHeightValue(localX, localZ);
+        int newMaxBlockY = column.getHeightValue(localX, localZ) - 1;
 
         //if there is no min block - there are no blocks here
         //so assume it's at Integer.MIN_VALUE
