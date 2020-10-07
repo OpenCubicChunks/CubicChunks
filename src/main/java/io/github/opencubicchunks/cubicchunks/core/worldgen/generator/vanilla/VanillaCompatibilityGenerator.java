@@ -109,23 +109,6 @@ public class VanillaCompatibilityGenerator implements ICubeGenerator {
      * @param world The world in which cubes are being generated
      */
     public VanillaCompatibilityGenerator(IChunkGenerator vanilla, World world) {
-        if (vanilla instanceof ChunkGeneratorOverworld && ((ICubicWorld) world).getMaxHeight() == 16) {
-            ChunkGeneratorSettings.Factory factory = new ChunkGeneratorSettings.Factory();
-            factory.seaLevel = 67;
-            factory.stretchY *= 8;
-            factory.baseSize += 0.15;
-            factory.useCaves = false;
-            factory.useDungeons = false;
-            factory.useStrongholds = false;
-            factory.useRavines = false;
-            factory.fixedBiome = Biome.REGISTRY.getIDForObject(Biomes.PLAINS);
-            String settingsString = factory.toString();
-            ObfuscationReflectionHelper.setPrivateValue(WorldProvider.class, world.provider,
-                    new BiomeProviderSingle(Biomes.PLAINS), "field_76578_c");
-
-            vanilla = new ChunkGeneratorOverworld(world, world.getSeed(), false,
-                    settingsString);
-        }
         this.vanilla = vanilla;
         this.world = world;
     }
@@ -247,7 +230,7 @@ public class VanillaCompatibilityGenerator implements ICubeGenerator {
             } else {
                 // Make vanilla generate a chunk for us to copy
                 if (lastChunk.x != cubeX || lastChunk.z != cubeZ) {
-                    if (CubicChunksConfig.optimizedCompatibilityGenerator&&false) {
+                    if (CubicChunksConfig.optimizedCompatibilityGenerator) {
                         try (ICubicWorldInternal.CompatGenerationScope ignored =
                                      ((ICubicWorldInternal.Server) world).doCompatibilityGeneration()) {
                             lastChunk = vanilla.generateChunk(cubeX, cubeZ);
@@ -449,10 +432,12 @@ public class VanillaCompatibilityGenerator implements ICubeGenerator {
             this.cubeYBase = Coords.cubeToMinBlock(cubeY);
         }
 
+        @Override
         public IBlockState getBlockState(int x, int y, int z) {
             return chunkPrimer.getBlockState(x, y | cubeYBase, z);
         }
 
+        @Override
         public void setBlockState(int x, int y, int z, @Nonnull IBlockState state) {
             chunkPrimer.setBlockState(x, y | cubeYBase, z, state);
         }
