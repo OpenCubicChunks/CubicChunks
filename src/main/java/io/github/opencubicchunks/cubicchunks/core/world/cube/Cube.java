@@ -116,10 +116,6 @@ public class Cube implements ICube {
      */
     private boolean isInitialLightingDone = false;
     /**
-     * Do neighbor need a sky light update when it is loaded?
-     */
-    public boolean[] edgeNeedSkyLightUpdate = new boolean[6];
-    /**
      * The world of this cube
      */
     @Nonnull
@@ -764,7 +760,10 @@ public class Cube implements ICube {
     }
 
     public void markEdgeNeedSkyLightUpdate(EnumFacing side) {
-        this.edgeNeedSkyLightUpdate[side.ordinal()] = true;
+        LightingManager.CubeLightUpdateInfo cubeLightUpdateInfo = this.getCubeLightUpdateInfo();
+        if (cubeLightUpdateInfo != null) {
+            cubeLightUpdateInfo.markEdgeNeedSkyLightUpdate(side);
+        }
     }
 
     public boolean hasBeenTicked() {

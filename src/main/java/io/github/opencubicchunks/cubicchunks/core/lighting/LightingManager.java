@@ -50,6 +50,8 @@ import net.minecraft.world.WorldServer;
 import net.minecraft.world.chunk.Chunk;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -156,8 +158,8 @@ public class LightingManager implements ILightingManager {
                 new BlockPos(blockX, minInCubeY, blockZ), new BlockPos(blockX, maxInCubeY, blockZ), EnumSkyBlock.SKY, world::notifyLightSet);
     }
 
-    @Override public void doOnBlockSetLightUpdates(Chunk column, int localX, int oldHeight, int changeY, int localZ) {
-        this.columnSkylightUpdate(UpdateType.IMMEDIATE, column, localX, Math.min(oldHeight, changeY), Math.max(oldHeight, changeY), localZ);
+    @Override public void doOnBlockSetLightUpdates(Chunk column, int localX, int y1, int y2, int localZ) {
+        this.columnSkylightUpdate(UpdateType.IMMEDIATE, column, localX, Math.min(y1, y2), Math.max(y1, y2), localZ);
     }
 
     //TODO: make it private
@@ -222,6 +224,10 @@ public class LightingManager implements ILightingManager {
         private final Cube cube;
         private final boolean[] toUpdateColumns = new boolean[Cube.SIZE * Cube.SIZE];
         private boolean hasUpdates;
+        /**
+         * Do neighbor need a sky light update when it is loaded?
+         */
+        public EnumSet<EnumFacing> edgeNeedSkyLightUpdate = EnumSet.noneOf(EnumFacing.class);
 
         public CubeLightUpdateInfo(Cube cube) {
             this.cube = cube;
@@ -230,6 +236,10 @@ public class LightingManager implements ILightingManager {
         void markBlockColumnForUpdate(int localX, int localZ) {
             toUpdateColumns[index(localX, localZ)] = true;
             hasUpdates = true;
+        }
+
+        public void markEdgeNeedSkyLightUpdate(EnumFacing side) {
+            edgeNeedSkyLightUpdate.add(side);
         }
 
         public void tick() {
@@ -242,14 +252,15 @@ public class LightingManager implements ILightingManager {
             ICubeProviderInternal cache = cubicWorld.getCubeCache();
 
             for (EnumFacing dir : EnumFacing.values()) {
-                if (cube.edgeNeedSkyLightUpdate[dir.ordinal()]) {
+                if (edgeNeedSkyLightUpdate.contains(dir)) {
                     CubePos cpos = cube.getCoords();
                     Cube loadedCube = cache.getLoadedCube(
                             cpos.getX() + dir.getXOffset(),
                             cpos.getY() + dir.getYOffset(),
                             cpos.getZ() + dir.getZOffset());
-                    if (loadedCube == null)
+                    if (loadedCube == null) {
                         continue;
+                    }
 
                     int fromBlockX = cpos.getMinBlockX();
                     int fromBlockY = cpos.getMinBlockY();
@@ -257,31 +268,30 @@ public class LightingManager implements ILightingManager {
                     int toBlockX = cpos.getMaxBlockX();
                     int toBlockY = cpos.getMaxBlockY();
                     int toBlockZ = cpos.getMaxBlockZ();
-                    boolean extendBack = loadedCube.edgeNeedSkyLightUpdate[dir.getOpposite().ordinal()];
                     switch (dir) {
                         case DOWN:
                             fromBlockY = fromBlockY - 1;
-                            toBlockY = extendBack ? fromBlockY + 1 : fromBlockY;
+                            toBlockY = fromBlockY + 1;
                             break;
                         case UP:
                             toBlockY = toBlockY + 1;
-                            fromBlockY = extendBack ? toBlockY - 1 : toBlockY;
+                            fromBlockY = toBlockY - 1;
                             break;
                         case NORTH:
                             fromBlockZ = fromBlockZ - 1;
-                            toBlockZ = extendBack ? fromBlockZ + 1 : fromBlockZ;
+                            toBlockZ = fromBlockZ + 1;
                             break;
                         case SOUTH:
                             toBlockZ = toBlockZ + 1;
-                            fromBlockZ = extendBack ? toBlockZ - 1 : toBlockZ;
+                            fromBlockZ = toBlockZ - 1;
                             break;
                         case WEST:
                             fromBlockX = fromBlockX - 1;
-                            toBlockX = extendBack ? fromBlockX + 1 : fromBlockX;
+                            toBlockX = fromBlockX + 1;
                             break;
                         case EAST:
                             toBlockX = toBlockX + 1;
-                            fromBlockX = extendBack ? toBlockX - 1 : toBlockX;
+                            fromBlockX = toBlockX - 1;
                             break;
                     }
                     manager.relightMultiBlock(
@@ -293,8 +303,11 @@ public class LightingManager implements ILightingManager {
                                     tracker.onUpdate(pos);
                                 }
                             });
-                    cube.edgeNeedSkyLightUpdate[dir.ordinal()] = false;
-                    loadedCube.edgeNeedSkyLightUpdate[dir.getOpposite().ordinal()] = false;
+                    edgeNeedSkyLightUpdate.remove(dir);
+                    CubeLightUpdateInfo cubeLightUpdateInfo = loadedCube.getCubeLightUpdateInfo();
+                    if (cubeLightUpdateInfo != null) {
+                        cubeLightUpdateInfo.edgeNeedSkyLightUpdate.remove(dir);
+                    }
                 }
             }
             if (!this.hasUpdates) {
@@ -326,7 +339,7 @@ public class LightingManager implements ILightingManager {
         }
 
         public boolean hasUpdates() {
-            return hasUpdates;
+            return hasUpdates || !edgeNeedSkyLightUpdate.isEmpty();
         }
 
         public void clear() {

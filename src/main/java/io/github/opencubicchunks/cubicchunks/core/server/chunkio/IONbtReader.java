@@ -40,6 +40,7 @@ import net.minecraft.block.Block;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
@@ -288,8 +289,13 @@ public class IONbtReader {
         byte edgeNeedSkyLightUpdate = 0x3F;
         if (lightingInfo.hasKey("EdgeNeedSkyLightUpdate"))
             edgeNeedSkyLightUpdate = lightingInfo.getByte("EdgeNeedSkyLightUpdate");
-        for (int i = 0; i < cube.edgeNeedSkyLightUpdate.length; i++) {
-            cube.edgeNeedSkyLightUpdate[i] = (edgeNeedSkyLightUpdate >>> i & 1) == 1;
+        LightingManager.CubeLightUpdateInfo cubeLightUpdateInfo = cube.getCubeLightUpdateInfo();
+        if (cubeLightUpdateInfo != null) {
+            for (int i = 0; i < EnumFacing.VALUES.length; i++) {
+                if ((edgeNeedSkyLightUpdate >>> i & 1) != 0) {
+                    cubeLightUpdateInfo.markEdgeNeedSkyLightUpdate(EnumFacing.VALUES[i]);
+                }
+            }
         }
 
         // assume changes outside of this cube have no effect on this cube.

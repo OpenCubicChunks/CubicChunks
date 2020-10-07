@@ -30,6 +30,7 @@ import io.github.opencubicchunks.cubicchunks.api.world.IColumn;
 import io.github.opencubicchunks.cubicchunks.api.world.IHeightMap;
 import io.github.opencubicchunks.cubicchunks.core.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.core.asm.mixin.ICubicWorldInternal;
+import io.github.opencubicchunks.cubicchunks.core.lighting.LightingManager;
 import io.github.opencubicchunks.cubicchunks.core.world.ClientHeightMap;
 import io.github.opencubicchunks.cubicchunks.core.world.ServerHeightMap;
 import io.github.opencubicchunks.cubicchunks.core.world.cube.Cube;
@@ -39,6 +40,7 @@ import net.minecraft.nbt.CompressedStreamTools;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.NextTickListEntry;
 import net.minecraft.world.WorldServer;
@@ -265,9 +267,11 @@ class IONbtWriter {
         int[] lastHeightmap = cube.getColumn().getHeightMap();
         lightingInfo.setIntArray("LastHeightMap", lastHeightmap); //TODO: why are we storing the height map on a Cube???
         byte edgeNeedSkyLightUpdate = 0;
-        for (int i = 0; i < cube.edgeNeedSkyLightUpdate.length; i++) {
-            if (cube.edgeNeedSkyLightUpdate[i])
-                edgeNeedSkyLightUpdate |= 1 << i;
+        LightingManager.CubeLightUpdateInfo cubeLightUpdateInfo = cube.getCubeLightUpdateInfo();
+        if (cubeLightUpdateInfo != null) {
+            for (EnumFacing enumFacing : cubeLightUpdateInfo.edgeNeedSkyLightUpdate) {
+                edgeNeedSkyLightUpdate |= 1 << enumFacing.ordinal();
+            }
         }
         lightingInfo.setByte("EdgeNeedSkyLightUpdate", edgeNeedSkyLightUpdate);
     }

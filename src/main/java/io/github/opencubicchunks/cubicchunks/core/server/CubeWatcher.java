@@ -178,7 +178,8 @@ public class CubeWatcher implements ITicket, ICubeWatcher {
             if (info != null) {
                 info.tick();
             }
-            assert !this.cube.hasLightUpdates();
+            // NOTE: edge light updates may cause hasLightUpdates to be true
+            // if the neighbor cube is not loaded. Just send the cube anyway
         }
         playerCubeMap.getWorldServer().profiler.endSection();
 
