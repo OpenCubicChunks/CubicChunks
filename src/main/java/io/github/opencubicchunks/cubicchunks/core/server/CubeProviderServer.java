@@ -555,7 +555,7 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
             return loaded;
         }
         if (column != null) {
-            loadedChunks.put(ChunkPos.asLong(columnX, columnZ), (Chunk) column);
+            loadedChunks.put(ChunkPos.asLong(columnX, columnZ), column);
             column.setLastSaveTime(this.worldServer.getTotalWorldTime()); // the column was just loaded
             column.onLoad();
             return column;
@@ -563,10 +563,10 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
             return null;
         }
 
-        column = (Chunk) new Chunk((World) worldServer, columnX, columnZ);
+        column = new Chunk(worldServer, columnX, columnZ);
         cubeGen.generateColumn(column);
 
-        loadedChunks.put(ChunkPos.asLong(columnX, columnZ), (Chunk) column);
+        loadedChunks.put(ChunkPos.asLong(columnX, columnZ), column);
         column.setLastSaveTime(this.worldServer.getTotalWorldTime()); // the column was just generated
         column.onLoad();
         return column;
@@ -636,8 +636,11 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
             return false; // it will be unloaded later by ChunkGC
         }
         if (((IColumn) column).hasLoadedCubes()) {
-            return false; // It has loaded Cubes in it
-            // (Cubes are to Columns, as tickets are to Cubes... in a way)
+            return false; // It has loaded Cubes in it (Cubes are to Columns, as tickets are to Cubes... in a way)
+        }
+        // PlayerChunkMap may contain reference to a column that for a while doesn't yet have any cubes generated
+        if (world.getPlayerChunkMap().contains(column.x, column.z)) {
+            return false;
         }
         // ask async loader if there are currently any cubes being loaded for this column
         // this should prevent hard to debug issues with columns being unloaded while cubes have reference to them

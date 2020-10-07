@@ -827,13 +827,13 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
         //don't unload, ChunkGc unloads chunks
     }
 
-    // CHECKED: 1.10.2-12.18.1.2092
     public void removeEntry(ColumnWatcher entry) {
         ChunkPos pos = entry.getPos();
         entry.updateChunkInhabitedTime();
         this.columnWatchers.remove(pos.x, pos.z);
         this.columnsToGenerate.remove(entry);
         this.columnsToSendToClients.remove(entry);
+        this.columnWatchersToUpdate.remove(entry);
     }
 
     public void scheduleSendCubeToPlayer(Cube cube, EntityPlayerMP player) {

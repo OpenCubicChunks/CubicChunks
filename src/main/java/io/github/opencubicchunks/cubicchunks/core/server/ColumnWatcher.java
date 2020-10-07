@@ -67,6 +67,7 @@ class ColumnWatcher extends PlayerChunkMapEntry implements XZAddressable {
 
     // CHECKED: 1.10.2-12.18.1.2092
     public void addPlayer(EntityPlayerMP player) {
+        assert this.getChunk() == null || this.getChunk() == playerCubeMap.getWorldServer().getChunkProvider().getLoadedChunk(getX(), getZ());
         if (self().getPlayerList().contains(player)) {
             CubicChunks.LOGGER.debug("Failed to expand player. {} already is in chunk {}, {}", player,
                     this.getPos().x,
@@ -91,6 +92,7 @@ class ColumnWatcher extends PlayerChunkMapEntry implements XZAddressable {
 
     // CHECKED: 1.10.2-12.18.1.2092//TODO: remove it, the only different line is sending packet
     public void removePlayer(EntityPlayerMP player) {
+        assert this.getChunk() == playerCubeMap.getWorldServer().getChunkProvider().getLoadedChunk(getX(), getZ());
         if (!self().getPlayerList().contains(player)) {
             return;
         }
@@ -124,6 +126,7 @@ class ColumnWatcher extends PlayerChunkMapEntry implements XZAddressable {
     // CHECKED: 1.10.2-12.18.1.2092
     @Override
     public boolean sendToPlayers() {
+        assert this.getChunk() == playerCubeMap.getWorldServer().getChunkProvider().getLoadedChunk(getX(), getZ());
         if (this.isSentToPlayers()) {
             return true;
         }
@@ -146,6 +149,7 @@ class ColumnWatcher extends PlayerChunkMapEntry implements XZAddressable {
     @Override
     @Deprecated
     public void sendToPlayer(EntityPlayerMP player) {
+        assert this.getChunk() == playerCubeMap.getWorldServer().getChunkProvider().getLoadedChunk(getX(), getZ());
         //done by cube watcher
     }
 
@@ -154,6 +158,7 @@ class ColumnWatcher extends PlayerChunkMapEntry implements XZAddressable {
     @Override
     @Deprecated
     public void blockChanged(int x, int y, int z) {
+        assert this.getChunk() == playerCubeMap.getWorldServer().getChunkProvider().getLoadedChunk(getX(), getZ());
         CubeWatcher watcher = playerCubeMap.getCubeWatcher(CubePos.fromBlockCoords(x, y, z));
         if (watcher != null) {
             watcher.blockChanged(x, y, z);
@@ -162,7 +167,13 @@ class ColumnWatcher extends PlayerChunkMapEntry implements XZAddressable {
 
     @Override
     public void update() {
-        if (!this.isSentToPlayers() || this.dirtyColumns.isEmpty()) {
+        if (!this.isSentToPlayers()) {
+            return;
+        }
+        assert this.getChunk() == playerCubeMap.getWorldServer().getChunkProvider().getLoadedChunk(getX(), getZ()) :
+            "Column watcher " + this + " at " + getPos() + " contains column " + getChunk() + " but loaded column is " +
+                    playerCubeMap.getWorldServer().getChunkProvider().getLoadedChunk(getX(), getZ());
+        if (this.dirtyColumns.isEmpty()) {
             return;
         }
         assert getChunk() != null;
@@ -186,6 +197,7 @@ class ColumnWatcher extends PlayerChunkMapEntry implements XZAddressable {
         if (!isSentToPlayers()) {
             return;
         }
+        assert this.getChunk() == playerCubeMap.getWorldServer().getChunkProvider().getLoadedChunk(getX(), getZ());
         if (this.dirtyColumns.isEmpty()) {
             playerCubeMap.addToUpdateEntry(this);
         }
