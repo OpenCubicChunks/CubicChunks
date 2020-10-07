@@ -153,7 +153,7 @@ public class FastCubeBlockAccess implements ILightBlockAccess {
 
     @Override
     public int getBlockLightOpacity(BlockPos pos) {
-        return this.getBlockState(pos.getX(), pos.getY(), pos.getZ()).getLightOpacity((World) world, pos);
+        return this.getBlockState(pos.getX(), pos.getY(), pos.getZ()).getLightOpacity(world, pos);
     }
 
     @Override 
@@ -170,7 +170,7 @@ public class FastCubeBlockAccess implements ILightBlockAccess {
                 return ebs.getBlockLight(localX, localY, localZ);
             }
         }
-        return lightType.defaultLightValue;
+        return 0;
     }
 
     @Override 
