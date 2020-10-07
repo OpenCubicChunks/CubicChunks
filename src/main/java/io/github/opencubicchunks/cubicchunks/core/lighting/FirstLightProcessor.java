@@ -121,33 +121,6 @@ public class FirstLightProcessor {
      * @param cube the cube whose skylight is to be initialized
      */
     public void initializeSkylight(Cube cube) {
-        if (!cube.getWorld().provider.hasSkyLight()) {
-            return;
-        }
-
-        IHeightMap opacityIndex = cube.getColumn().getOpacityIndex();
-
-        int cubeMinY = cubeToMinBlock(cube.getY());
-
-        BlockPos startPos = cube.getCoords().getMinBlockPos();
-
-        ExtendedBlockStorage ebs = cube.getStorage();
-
-        for (int localX = 0; localX < Cube.SIZE; ++localX) {
-            for (int localZ = 0; localZ < Cube.SIZE; ++localZ) {
-                for (int localY = Cube.SIZE - 1; localY >= 0; --localY) {
-
-                    if (opacityIndex.isOccluded(localX, cubeMinY + localY, localZ)) {
-                        break;
-                    }
-                    if (ebs == null) {
-                        ebs = cube.setStorage(new ExtendedBlockStorage(cubeToMinBlock(cube.getY()), cube.getWorld().provider.hasSkyLight()));
-                    }
-                    assert ebs != null;
-                    ebs.setSkyLight(localX, localY, localZ, 15);
-                }
-            }
-        }
     }
 
     /**
