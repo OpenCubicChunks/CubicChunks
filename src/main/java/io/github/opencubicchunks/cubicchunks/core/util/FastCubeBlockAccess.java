@@ -95,6 +95,8 @@ public class FastCubeBlockAccess implements ILightBlockAccess {
                         ExtendedBlockStorage storage = cube.getStorage();
                         this.cache[relativeCubeX][relativeCubeY][relativeCubeZ] = storage;
                         this.cubes[relativeCubeX][relativeCubeY][relativeCubeZ] = cube;
+                        // markDirty ahead of time to avoid doing it on every setLight
+                        cube.markDirty();
                     }
                 }
             }
