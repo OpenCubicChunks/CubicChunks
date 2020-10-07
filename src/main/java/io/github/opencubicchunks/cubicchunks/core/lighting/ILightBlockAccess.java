@@ -91,6 +91,10 @@ public interface ILightBlockAccess {
 
     default int getLightFromNeighbors(EnumSkyBlock type, BlockPos pos) {
         //TODO: use MutableBlockPos?
+        int blockLightOpacity = getBlockLightOpacity(pos);
+        if (blockLightOpacity > 15) {
+            return 0;
+        }
         int max = 0;
         for (EnumFacing direction : EnumFacing.VALUES) {
             int light = getLightFor(type, pos.offset(direction));
@@ -98,7 +102,7 @@ public interface ILightBlockAccess {
                 max = light;
             }
         }
-        int decrease = Math.max(1, getBlockLightOpacity(pos));
+        int decrease = Math.max(1, blockLightOpacity);
         return Math.max(0, max - decrease);
     }
 
