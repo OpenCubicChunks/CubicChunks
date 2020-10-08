@@ -277,7 +277,7 @@ public class LightingManager implements ILightingManager {
                             cpos.getX() + dir.getXOffset(),
                             cpos.getY() + dir.getYOffset(),
                             cpos.getZ() + dir.getZOffset());
-                    if (loadedCube == null) {
+                    if (loadedCube == null || !loadedCube.isInitialLightingDone()) {
                         continue;
                     }
 
@@ -325,7 +325,7 @@ public class LightingManager implements ILightingManager {
                     edgeNeedSkyLightUpdate.remove(dir);
                     CubeLightUpdateInfo cubeLightUpdateInfo = loadedCube.getCubeLightUpdateInfo();
                     if (cubeLightUpdateInfo != null) {
-                        cubeLightUpdateInfo.edgeNeedSkyLightUpdate.remove(dir);
+                        cubeLightUpdateInfo.edgeNeedSkyLightUpdate.remove(dir.getOpposite());
                     }
                 }
             }
