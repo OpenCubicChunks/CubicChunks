@@ -186,7 +186,7 @@ public class LightingManager implements ILightingManager {
         }
         ms += System.currentTimeMillis();
         int updated = total - updateSet.size();
-        if (updated > 0 && ms > 50) {
+        if (ms > 50) {
             CubicChunks.LOGGER.debug("Light tick: " + total + " cubes, " + updated + " updated in " + ms + "ms, " + (ms/(double)updated) + "ms/cube");
         }
         this.toUpdate.addAll(updateSet);
@@ -301,59 +301,71 @@ public class LightingManager implements ILightingManager {
             LightUpdateTracker tracker = manager.getTracker();
             ICubeProviderInternal cache = cubicWorld.getCubeCache();
 
-            for (EnumFacing dir : EnumFacing.values()) {
-                if (edgeNeedSkyLightUpdate.contains(dir)) {
+            if (!edgeNeedSkyLightUpdate.isEmpty() && cube.getWorld().isAreaLoaded(cube.getCoords().getCenterBlockPos(), 16)) {
+                EnumSet<EnumFacing> removed = EnumSet.noneOf(EnumFacing.class);
+                for (EnumFacing dir : EnumFacing.values()) {
+                    if (this.edgeNeedSkyLightUpdate.contains(dir)) {
+                        CubePos cpos = cube.getCoords();
+                        Cube loadedCube = cache.getLoadedCube(
+                                cpos.getX() + dir.getXOffset(),
+                                cpos.getY() + dir.getYOffset(),
+                                cpos.getZ() + dir.getZOffset());
+                        if (loadedCube == null || !loadedCube.isInitialLightingDone()) {
+                            continue;
+                        }
+
+                        int minX = cpos.getMinBlockX();
+                        int minY = cpos.getMinBlockY();
+                        int minZ = cpos.getMinBlockZ();
+                        int maxX = cpos.getMaxBlockX();
+                        int maxY = cpos.getMaxBlockY();
+                        int maxZ = cpos.getMaxBlockZ();
+                        switch (dir) {
+                            case DOWN:
+                                minY = minY - 1;
+                                maxY = minY + 1;
+                                break;
+                            case UP:
+                                maxY = maxY + 1;
+                                minY = maxY - 1;
+                                break;
+                            case NORTH:
+                                minZ = minZ - 1;
+                                maxZ = minZ + 1;
+                                break;
+                            case SOUTH:
+                                maxZ = maxZ + 1;
+                                minZ = maxZ - 1;
+                                break;
+                            case WEST:
+                                minX = minX - 1;
+                                maxX = minX + 1;
+                                break;
+                            case EAST:
+                                maxX = maxX + 1;
+                                minX = maxX - 1;
+                                break;
+                        }
+                        manager.relightMultiBlock(
+                                new BlockPos(minX, minY, minZ),
+                                new BlockPos(maxX, maxY, maxZ),
+                                EnumSkyBlock.SKY, pos -> {
+                                    cube.getWorld().notifyLightSet(pos);
+                                    if (tracker != null) {
+                                        tracker.onUpdate(pos);
+                                    }
+                                });
+                        removed.add(dir);
+                    }
+                }
+                for (EnumFacing dir : removed) {
+                    this.edgeNeedSkyLightUpdate.remove(dir);
                     CubePos cpos = cube.getCoords();
                     Cube loadedCube = cache.getLoadedCube(
                             cpos.getX() + dir.getXOffset(),
                             cpos.getY() + dir.getYOffset(),
                             cpos.getZ() + dir.getZOffset());
-                    if (loadedCube == null || !loadedCube.isInitialLightingDone()) {
-                        continue;
-                    }
-
-                    int minX = cpos.getMinBlockX();
-                    int minY = cpos.getMinBlockY();
-                    int minZ = cpos.getMinBlockZ();
-                    int maxX = cpos.getMaxBlockX();
-                    int maxY = cpos.getMaxBlockY();
-                    int maxZ = cpos.getMaxBlockZ();
-                    switch (dir) {
-                        case DOWN:
-                            minY = minY - 1;
-                            maxY = minY + 1;
-                            break;
-                        case UP:
-                            maxY = maxY + 1;
-                            minY = maxY - 1;
-                            break;
-                        case NORTH:
-                            minZ = minZ - 1;
-                            maxZ = minZ + 1;
-                            break;
-                        case SOUTH:
-                            maxZ = maxZ + 1;
-                            minZ = maxZ - 1;
-                            break;
-                        case WEST:
-                            minX = minX - 1;
-                            maxX = minX + 1;
-                            break;
-                        case EAST:
-                            maxX = maxX + 1;
-                            minX = maxX - 1;
-                            break;
-                    }
-                    manager.relightMultiBlock(
-                            new BlockPos(minX, minY, minZ),
-                            new BlockPos(maxX, maxY, maxZ),
-                            EnumSkyBlock.SKY, pos -> {
-                                cube.getWorld().notifyLightSet(pos);
-                                if (tracker != null) {
-                                    tracker.onUpdate(pos);
-                                }
-                            });
-                    edgeNeedSkyLightUpdate.remove(dir);
+                    assert loadedCube != null;
                     CubeLightUpdateInfo cubeLightUpdateInfo = loadedCube.getCubeLightUpdateInfo();
                     if (cubeLightUpdateInfo != null) {
                         cubeLightUpdateInfo.edgeNeedSkyLightUpdate.remove(dir.getOpposite());
