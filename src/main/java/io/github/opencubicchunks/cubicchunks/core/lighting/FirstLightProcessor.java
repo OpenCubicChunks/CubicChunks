@@ -29,7 +29,6 @@ import static io.github.opencubicchunks.cubicchunks.api.util.Coords.blockToLocal
 import static io.github.opencubicchunks.cubicchunks.api.util.Coords.cubeToMaxBlock;
 import static io.github.opencubicchunks.cubicchunks.api.util.Coords.cubeToMinBlock;
 
-import io.github.opencubicchunks.cubicchunks.api.util.Coords;
 import io.github.opencubicchunks.cubicchunks.api.util.MathUtil;
 import io.github.opencubicchunks.cubicchunks.api.world.IColumn;
 import io.github.opencubicchunks.cubicchunks.api.world.ICube;
@@ -71,14 +70,6 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
 public class FirstLightProcessor {
-
-    private static final int LIGHT_UPDATE_RADIUS = 17;
-
-    private static final int CUBE_RADIUS = Cube.SIZE / 2;
-
-    private static final int UPDATE_BUFFER_RADIUS = 1;
-
-    private static final int UPDATE_RADIUS = LIGHT_UPDATE_RADIUS + CUBE_RADIUS + UPDATE_BUFFER_RADIUS;
 
     private static final IntHash.Strategy CUBE_Y_HASH = new IntHash.Strategy() {
 
@@ -250,7 +241,7 @@ public class FirstLightProcessor {
      *
      * @return true if the specified block needs a skylight update, false otherwise
      */
-    private static boolean needsSkylightUpdate(@Nonnull FastCubeBlockAccess access, @Nonnull MutableBlockPos pos) {
+    private static boolean needsSkylightUpdate(@Nonnull ILightBlockAccess access, @Nonnull MutableBlockPos pos) {
 
         // Opaque blocks don't need update. Nothing can emit skylight, and skylight can't get into them nor out of them.
         if (access.getBlockLightOpacity(pos) >= 15) {
@@ -280,14 +271,14 @@ public class FirstLightProcessor {
 
     /**
      * Returns the y-coordinate of the highest occluding block in the specified block column. If there exists no such
-     * block {@link Coords#NO_HEIGHT} will be returned instead.
+     * block {@link io.github.opencubicchunks.cubicchunks.api.util.Coords#NO_HEIGHT} will be returned instead.
      *
      * @param column the column containing the block column
      * @param localX the block column's local x-coordinate
      * @param localZ the block column's local z-coordinate
      *
      * @return the y-coordinate of the highest occluding block in the specified block column or {@link
-     * Coords#NO_HEIGHT} if no such block exists
+     * io.github.opencubicchunks.cubicchunks.api.util.Coords#NO_HEIGHT} if no such block exists
      */
     private static int getOcclusionHeight(@Nonnull IColumn column, int localX, int localZ) {
         return column.getOpacityIndex().getTopBlockY(localX, localZ);
@@ -295,7 +286,7 @@ public class FirstLightProcessor {
 
     /**
      * Returns the y-coordinate of the highest occluding block in the specified block column, that is underneath the
-     * cube at the given y-coordinate. If there exists no such block {@link Coords#NO_HEIGHT} will be
+     * cube at the given y-coordinate. If there exists no such block {@link io.github.opencubicchunks.cubicchunks.api.util.Coords#NO_HEIGHT} will be
      * returned instead.
      *
      * @param IColumn the column containing the block column
@@ -304,7 +295,7 @@ public class FirstLightProcessor {
      * @param cubeY the y-coordinate of the cube underneath which the highest occluding block is to be found
      *
      * @return the y-coordinate of the highest occluding block underneath the given cube in the specified block column
-     * or {@link Coords#NO_HEIGHT} if no such block exists
+     * or {@link io.github.opencubicchunks.cubicchunks.api.util.Coords#NO_HEIGHT} if no such block exists
      */
     private static int getOcclusionHeightBelowCubeY(@Nonnull IColumn IColumn, int blockX, int blockZ, int cubeY) {
         IHeightMap index = IColumn.getOpacityIndex();
@@ -336,23 +327,10 @@ public class FirstLightProcessor {
         int blockX = cubeToMinBlock(cube.getX()) + localX;
         int blockZ = cubeToMinBlock(cube.getZ()) + localZ;
 
-        // ??? If the given cube lies underneath the occluding block, it must be updated from the top down.
+        // If the given cube lies underneath the occluding block,
+        // then only blocks in this cube need updating, already handled
         if (cubeY < blockToCube(heightMax)) {
-            // Determine the y-coordinate of the highest block (and its cube) occluding blocks inside of the given cube
-            // or further down.
-            int topBlockYInThisCubeOrBelow = getOcclusionHeightBelowCubeY(column, blockX, blockZ, cube.getY() + 1);
-            int topBlockCubeYInThisCubeOrBelow = blockToCube(topBlockYInThisCubeOrBelow);
-
-            // If the given cube contains the occluding block, the update can be limited down to that block.
-            if (topBlockCubeYInThisCubeOrBelow == cubeY) {
-                int heightBelowCube = getOcclusionHeightBelowCubeY(column, blockX, blockZ, cube.getY()) + 1;
-                //noinspection SuspiciousNameCombination
-                return new ImmutablePair<>(heightBelowCube, cubeToMaxBlock(cubeY));
-            }
-            // Otherwise, the whole height of the cube must be updated.
-            else {
-                return new ImmutablePair<>(cubeToMinBlock(cubeY), cubeToMaxBlock(cubeY));
-            }
+            return null;
         }
 
         // ... otherwise, the update must start at the occluding block.
