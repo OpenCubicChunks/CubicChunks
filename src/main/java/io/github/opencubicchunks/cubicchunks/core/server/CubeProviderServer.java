@@ -490,6 +490,7 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
             }
         }
         ((ICubicWorldInternal.Server) this.worldServer).getFirstLightProcessor().diffuseSkylight(cube);
+        cube.setInitialLightingDone(true);
     }
 
 

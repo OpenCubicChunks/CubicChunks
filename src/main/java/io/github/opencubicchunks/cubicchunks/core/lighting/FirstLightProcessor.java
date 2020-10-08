@@ -123,7 +123,6 @@ public class FirstLightProcessor {
             return;
         }
         if (!cube.getWorld().provider.hasSkyLight()) {
-            cube.setInitialLightingDone(true);
             return;
         }
 
@@ -205,7 +204,6 @@ public class FirstLightProcessor {
                 toUpdate.clear();
             }
         }
-        cube.setInitialLightingDone(true);
     }
 
     /**
