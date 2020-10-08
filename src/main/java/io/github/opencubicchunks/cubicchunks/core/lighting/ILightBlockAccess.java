@@ -89,6 +89,10 @@ public interface ILightBlockAccess {
 
     int getEmittedLight(BlockPos pos, EnumSkyBlock type);
 
+    default boolean hasNeighborsAccessible(BlockPos pos) {
+        return true;
+    }
+
     default int getLightFromNeighbors(EnumSkyBlock type, BlockPos pos) {
         //TODO: use MutableBlockPos?
         int blockLightOpacity = getBlockLightOpacity(pos);

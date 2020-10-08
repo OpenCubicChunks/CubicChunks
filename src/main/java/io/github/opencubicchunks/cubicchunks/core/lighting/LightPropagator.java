@@ -113,6 +113,10 @@ public class LightPropagator {
                     // and min. possible lightFromNeighbors is 0
                     for (EnumFacing direction : EnumFacing.values()) {
                         BlockPos offset = pos.offset(direction);
+                        if (!blocks.hasNeighborsAccessible(offset)) {
+                            this.markNeighborEdgeNeedLightUpdate(pos, blocks, type);
+                            continue;
+                        }
                         //add the emitted value even if it's not used here - it will be used when relighting that area
                         internalRelightQueue.put(offset, blocks.getEmittedLight(offset, type), distance - 1);
                     }
@@ -145,6 +149,10 @@ public class LightPropagator {
 
                 for (EnumFacing direction : EnumFacing.values()) {
                     BlockPos nextPos = pos.offset(direction);
+                    if (!blocks.hasNeighborsAccessible(nextPos)) {
+                        this.markNeighborEdgeNeedLightUpdate(pos, blocks, type);
+                        continue;
+                    }
                     int newLight = getExpectedLight(blocks, type, nextPos);
                     if (newLight <= blocks.getLightFor(type, nextPos)) {
                         // can't go further, the next block already has the same or higher light value
