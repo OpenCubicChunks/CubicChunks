@@ -112,17 +112,20 @@ public class FirstLightProcessor {
         if (LightingManager.NO_SUNLIGHT_PROPAGATION) {
             return;
         }
+        FastCubeBlockAccess access = new FastCubeBlockAccess(this.cache, cube, 2);
+
+        Iterable<BlockPos> allBlocks = BlockPos.getAllInBox(
+                cube.getCoords().getMinBlockPos().add(-1, -1, -1),
+                cube.getCoords().getMaxBlockPos().add(1, 1, 1)
+        );
+        propagator.propagateLight(cube.getCoords().getCenterBlockPos(),
+                allBlocks, access, EnumSkyBlock.BLOCK, pos -> {});
+
         if (!cube.getWorld().provider.hasSkyLight()) {
             return;
         }
-
-        FastCubeBlockAccess access = new FastCubeBlockAccess(this.cache, cube, 1);
-
         propagator.propagateLight(cube.getCoords().getCenterBlockPos(),
-                BlockPos.getAllInBox(
-                        cube.getCoords().getMinBlockPos(),
-                        cube.getCoords().getMaxBlockPos()
-                ), access, EnumSkyBlock.SKY, tracker::onUpdate);
+                allBlocks, access, EnumSkyBlock.SKY, tracker::onUpdate);
 
         // Cache min/max Y, generating them may be expensive
         int[][] minBlockYArr = new int[Cube.SIZE][Cube.SIZE];
