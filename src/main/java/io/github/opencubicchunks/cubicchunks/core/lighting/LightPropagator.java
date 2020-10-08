@@ -24,8 +24,6 @@
  */
 package io.github.opencubicchunks.cubicchunks.core.lighting;
 
-import static io.github.opencubicchunks.cubicchunks.core.lighting.LightUpdateQueue.MAX_DISTANCE;
-import static io.github.opencubicchunks.cubicchunks.core.lighting.LightUpdateQueue.MIN_DISTANCE;
 import static net.minecraft.crash.CrashReportCategory.getCoordinateInfo;
 
 import mcp.MethodsReturnNonnullByDefault;
@@ -163,7 +161,7 @@ public class LightPropagator {
                         setLightCallback.accept(nextPos);
                     } else {
                         // If cube is not loaded we will notify neighbors so cube will update light when it loads.
-                        blocks.markEdgeNeedLightUpdate(pos, type);
+                        this.markNeighborEdgeNeedLightUpdate(pos, blocks, type);
                         continue;
                     }
 
@@ -197,7 +195,7 @@ public class LightPropagator {
         // If cube is not loaded we will notify neighbors so cube will update light when it loads.
         for (EnumFacing direction : EnumFacing.values()) {
             BlockPos offset = pos.offset(direction);
-            blocks.markEdgeNeedLightUpdate(offset, type);
+            blocks.markEdgeNeedLightUpdate(offset, direction, type);
         }
     }
 }

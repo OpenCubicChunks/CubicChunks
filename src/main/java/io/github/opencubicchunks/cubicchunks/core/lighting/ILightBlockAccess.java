@@ -106,5 +106,5 @@ public interface ILightBlockAccess {
         return Math.max(0, max - decrease);
     }
 
-    void markEdgeNeedLightUpdate(BlockPos offset, EnumSkyBlock type);
+    void markEdgeNeedLightUpdate(BlockPos offset, EnumFacing direction, EnumSkyBlock type);
 }

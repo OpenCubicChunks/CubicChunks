@@ -26,26 +26,22 @@ package io.github.opencubicchunks.cubicchunks.core.util;
 
 import static io.github.opencubicchunks.cubicchunks.api.util.Coords.blockToLocal;
 
-import io.github.opencubicchunks.cubicchunks.api.world.ICube;
-import io.github.opencubicchunks.cubicchunks.core.client.CubeProviderClient;
-import io.github.opencubicchunks.cubicchunks.core.lighting.ILightBlockAccess;
-import io.github.opencubicchunks.cubicchunks.core.server.CubeProviderServer;
-import io.github.opencubicchunks.cubicchunks.core.world.ICubeProviderInternal;
-import io.github.opencubicchunks.cubicchunks.core.world.cube.Cube;
 import io.github.opencubicchunks.cubicchunks.api.util.Coords;
 import io.github.opencubicchunks.cubicchunks.api.util.CubePos;
-import io.github.opencubicchunks.cubicchunks.api.world.ICubeProvider;
+import io.github.opencubicchunks.cubicchunks.api.world.ICube;
+import io.github.opencubicchunks.cubicchunks.core.lighting.ILightBlockAccess;
+import io.github.opencubicchunks.cubicchunks.core.world.IColumnInternal;
+import io.github.opencubicchunks.cubicchunks.core.world.ICubeProviderInternal;
+import io.github.opencubicchunks.cubicchunks.core.world.cube.Cube;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.EnumSkyBlock;
-import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
-import net.minecraftforge.fml.common.SidedProxy;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -60,7 +56,6 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @MethodsReturnNonnullByDefault
 public class FastCubeBlockAccess implements ILightBlockAccess {
 
-    @SidedProxy private static GetLoadedChunksProxy getLoadedChunksProxy;
     @Nonnull private final ExtendedBlockStorage[][][] cache;
     @Nonnull private final Cube[][][] cubes;
     @Nonnull private final Chunk[][] columns;
@@ -221,7 +216,7 @@ public class FastCubeBlockAccess implements ILightBlockAccess {
     @Override public int getEmittedLight(BlockPos pos, EnumSkyBlock type) {
         switch (type) {
             case BLOCK:
-                return getBlockState(pos).getLightValue((IBlockAccess) world, pos);
+                return getBlockState(pos).getLightValue(world, pos);
             case SKY:
                 return canSeeSky(pos) ? 15 : 0;
             default:
@@ -237,33 +232,8 @@ public class FastCubeBlockAccess implements ILightBlockAccess {
                 CubePos.fromBlockCoords(startPos), CubePos.fromBlockCoords(endPos));
     }
 
-    private interface GetLoadedChunksProxy {
-
-        Iterable<Chunk> getLoadedChunks(ICubeProvider prov);
-    }
-
-    public static final class ServerProxy implements GetLoadedChunksProxy {
-
-        public ServerProxy() {
-        }
-
-        @Override public Iterable<Chunk> getLoadedChunks(ICubeProvider prov) {
-            return ((CubeProviderServer) prov).getLoadedChunks();
-        }
-    }
-
-    public static final class ClientProxy implements GetLoadedChunksProxy {
-
-        public ClientProxy() {
-        }
-
-        @Override public Iterable<Chunk> getLoadedChunks(ICubeProvider prov) {
-            return ((CubeProviderClient) prov).getLoadedChunks();
-        }
-    }
-
     @Override
-    public void markEdgeNeedLightUpdate(BlockPos pos, EnumSkyBlock type) {
+    public void markEdgeNeedLightUpdate(BlockPos pos, EnumFacing direction, EnumSkyBlock type) {
         if (type == EnumSkyBlock.BLOCK)
             return;
         int x = pos.getX();
@@ -272,24 +242,6 @@ public class FastCubeBlockAccess implements ILightBlockAccess {
         Cube cube = this.getCube(x, y, z);
         if (cube == null)
             return;
-        // What edge?
-        int localX = Coords.blockToLocal(x);
-        int localY = Coords.blockToLocal(y);
-        int localZ = Coords.blockToLocal(z);
-        if (localX == 0) {
-            cube.markEdgeNeedSkyLightUpdate(EnumFacing.WEST);
-        } else if (localX == 15) {
-            cube.markEdgeNeedSkyLightUpdate(EnumFacing.EAST);
-        }
-        if (localY == 0) {
-            cube.markEdgeNeedSkyLightUpdate(EnumFacing.DOWN);
-        } else if (localY == 15) {
-            cube.markEdgeNeedSkyLightUpdate(EnumFacing.UP);
-        }
-        if (localZ == 0) {
-            cube.markEdgeNeedSkyLightUpdate(EnumFacing.NORTH);
-        } else if (localZ == 15) {
-            cube.markEdgeNeedSkyLightUpdate(EnumFacing.SOUTH);
-        }
+        cube.markEdgeNeedSkyLightUpdate(direction);
     }
 }
