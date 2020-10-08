@@ -164,6 +164,10 @@ public class CubicChunksConfig {
             + "and handles the edge of the world by scheduling chunk edge updates instead of failing.")
     public static boolean replaceLightRecheck = true;
 
+    @Config.LangKey("cubicchunks.config.updateKnownBrokenLightingOnLoad")
+    @Config.Comment("Attempts to detect worlds saved with cubic chunks versions with lighting glitches, and fix them on world load.")
+    public static boolean updateKnownBrokenLightingOnLoad = true;
+
 
     public static int defaultMaxCubesPerChunkloadingTicket = 25 * 16;
     public static Map<String, Integer> modMaxCubesPerChunkloadingTicket = new HashMap<>();

@@ -143,6 +143,8 @@ class IONbtWriter {
         cubeNbt.setBoolean("isSurfaceTracked", cube.isSurfaceTracked());
         cubeNbt.setBoolean("fullyPopulated", cube.isFullyPopulated());
 
+        // this will allow to detect worlds with older versions of light propagation in CC
+        cubeNbt.setInteger("initLightVersion", 1);
         cubeNbt.setBoolean("initLightDone", cube.isInitialLightingDone());
 
         if (cube.getCapabilities() != null) {

@@ -30,6 +30,7 @@ import io.github.opencubicchunks.cubicchunks.api.util.Coords;
 import io.github.opencubicchunks.cubicchunks.api.world.IColumn;
 import io.github.opencubicchunks.cubicchunks.api.world.IHeightMap;
 import io.github.opencubicchunks.cubicchunks.core.CubicChunks;
+import io.github.opencubicchunks.cubicchunks.core.CubicChunksConfig;
 import io.github.opencubicchunks.cubicchunks.core.asm.mixin.ICubicWorldInternal;
 import io.github.opencubicchunks.cubicchunks.core.lighting.LightingManager;
 import io.github.opencubicchunks.cubicchunks.core.world.ClientHeightMap;
@@ -172,7 +173,10 @@ public class IONbtReader {
         cube.setSurfaceTracked(nbt.getBoolean("isSurfaceTracked")); // previous versions will get their surface tracking redone. This is intended
         cube.setFullyPopulated(nbt.getBoolean("fullyPopulated"));
 
-        cube.setInitialLightingDone(nbt.getBoolean("initLightDone"));
+        int lightVersion = nbt.getInteger("initLightVersion");
+        cube.setInitialLightingDone(
+                (!CubicChunksConfig.updateKnownBrokenLightingOnLoad || lightVersion >= 1)
+                && nbt.getBoolean("initLightDone"));
 
         if (cube.getCapabilities() != null && nbt.hasKey("ForgeCaps")) {
             cube.getCapabilities().deserializeNBT(nbt.getCompoundTag("ForgeCaps"));
