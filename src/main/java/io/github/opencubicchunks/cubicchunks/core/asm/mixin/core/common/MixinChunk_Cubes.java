@@ -39,6 +39,7 @@ import io.github.opencubicchunks.cubicchunks.core.asm.mixin.ICubicWorldInternal;
 import io.github.opencubicchunks.cubicchunks.core.world.ClientHeightMap;
 import io.github.opencubicchunks.cubicchunks.core.world.IColumnInternal;
 import io.github.opencubicchunks.cubicchunks.core.world.ServerHeightMap;
+import io.github.opencubicchunks.cubicchunks.core.world.StagingHeightMap;
 import io.github.opencubicchunks.cubicchunks.core.world.column.ColumnTileEntityMap;
 import io.github.opencubicchunks.cubicchunks.core.world.column.CubeMap;
 import io.github.opencubicchunks.cubicchunks.core.world.cube.BlankCube;
@@ -114,6 +115,7 @@ public abstract class MixinChunk_Cubes implements IColumnInternal {
     private CubeMap cubeMap;
     private IHeightMap opacityIndex;
     private Cube cachedCube; // todo: make it always nonnull using BlankCube
+    private StagingHeightMap stagingHeightMap;
 
     private boolean isColumn = false;
 
@@ -396,8 +398,12 @@ public abstract class MixinChunk_Cubes implements IColumnInternal {
         if (!isColumn) {
             return;
         }
-        opacityIndex.onOpacityChange(blockToLocal(pos.getX()), pos.getY(), blockToLocal(pos.getZ()), state.getLightOpacity(world, pos));
-        getWorld().getLightingManager().sendHeightMapUpdate(pos);
+        if (getCube(blockToCube(pos.getY())).isSurfaceTracked()) {
+            opacityIndex.onOpacityChange(blockToLocal(pos.getX()), pos.getY(), blockToLocal(pos.getZ()), state.getLightOpacity(world, pos));
+            getWorld().getLightingManager().sendHeightMapUpdate(pos);
+        } else {
+            stagingHeightMap.onOpacityChange(blockToLocal(pos.getX()), pos.getY(), blockToLocal(pos.getZ()), state.getLightOpacity(world, pos));
+        }
     }
 
     @Redirect(method = "setBlockState", at = @At(

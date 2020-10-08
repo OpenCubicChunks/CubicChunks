@@ -209,7 +209,7 @@ public class FastCubeBlockAccess implements ILightBlockAccess {
         Chunk column = columns[cubeX][cubeZ];
         if (column == null)
             return false;
-        int height = column.getHeightValue(blockToLocal(blockX), blockToLocal(blockZ));
+        int height = ((IColumnInternal) column).getHeightWithStaging(blockToLocal(blockX), blockToLocal(blockZ));
         return height <= blockY;
     }
 

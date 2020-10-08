@@ -43,6 +43,7 @@ import io.github.opencubicchunks.cubicchunks.core.util.CompatHandler;
 import io.github.opencubicchunks.cubicchunks.core.util.ticket.ITicket;
 import io.github.opencubicchunks.cubicchunks.core.util.ticket.TicketList;
 import io.github.opencubicchunks.cubicchunks.core.world.EntityContainer;
+import io.github.opencubicchunks.cubicchunks.core.world.IColumnInternal;
 import io.github.opencubicchunks.cubicchunks.core.world.chunkloader.ICubicTicketInternal;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.Block;
@@ -168,7 +169,7 @@ public class Cube implements ICube {
     /**
      * True only if all the blocks have been added to server height map. Always true clientside.
      */
-    private boolean isSurfaceTracked = true;
+    private boolean isSurfaceTracked = false;
     private boolean ticked = false;
 
     /**
@@ -222,9 +223,6 @@ public class Cube implements ICube {
     public Cube(Chunk column, int cubeY, CubePrimer primer) {
         this(column, cubeY);
 
-        int miny = cubeToMinBlock(cubeY);
-        IHeightMap opindex = ((IColumn) column).getOpacityIndex();
-
         for (int y = Cube.SIZE - 1; y >= 0; y--) {
             for (int z = 0; z < Cube.SIZE; z++) {
                 for (int x = 0; x < Cube.SIZE; x++) {
@@ -235,11 +233,6 @@ public class Cube implements ICube {
                             newStorage();
                         }
                         storage.set(x, y, z, newstate);
-
-                        if (newstate.getLightOpacity() != 0) {
-                            column.setModified(true); //TODO: this is a bit of am abstraction leak... maybe ServerHeightMap needs its own isModified
-                            opindex.onOpacityChange(x, miny + y, z, newstate.getLightOpacity());
-                        }
                     }
                 }
             }
@@ -253,7 +246,6 @@ public class Cube implements ICube {
                 }
             }
         }
-        isSurfaceTracked = true;
         isModified = true;
     }
 
@@ -569,14 +561,14 @@ public class Cube implements ICube {
         this.world.loadEntities(this.entities.getEntities());
         this.isCubeLoaded = true;
         if (!isSurfaceTracked) {
-            trackSurface();
+            ((IColumnInternal) getColumn()).addToStagingHeightmap(this);
         }
         CompatHandler.onCubeLoad(new ChunkEvent.Load(getColumn()));
         EVENT_BUS.post(new CubeEvent.Load(this));
     }
 
     @SuppressWarnings("deprecation")
-    private void trackSurface() {
+    public void trackSurface() {
         IHeightMap opindex = ((IColumn) column).getOpacityIndex();
         int miny = getCoords().getMinBlockY();
 
@@ -592,6 +584,7 @@ public class Cube implements ICube {
             }
         }
         isSurfaceTracked = true;
+        ((IColumnInternal) getColumn()).removeFromStagingHeightmap(this);
     }
 
     /**
@@ -624,6 +617,7 @@ public class Cube implements ICube {
         if (cubeLightUpdateInfo != null) {
             cubeLightUpdateInfo.onUnload();
         }
+        ((IColumnInternal) getColumn()).removeFromStagingHeightmap(this);
         EVENT_BUS.post(new CubeEvent.Unload(this));
     }
 

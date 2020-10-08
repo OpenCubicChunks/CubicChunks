@@ -218,9 +218,8 @@ public class SingleCubeNeighborLightAccess implements ILightBlockAccess, IBlockA
                 return false;
             }
         }
-        int height = ((IColumnInternal) chunk).getHeightValue(
+        int height = ((IColumnInternal) chunk).getHeightWithStaging(
                 blockToLocal(blockX),
-                blockToLocal(pos.getY()),
                 blockToLocal(blockZ)
         );
         return pos.getY() >= height;

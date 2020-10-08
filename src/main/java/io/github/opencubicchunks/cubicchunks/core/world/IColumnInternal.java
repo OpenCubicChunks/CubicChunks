@@ -25,8 +25,18 @@
 package io.github.opencubicchunks.cubicchunks.core.world;
 
 import io.github.opencubicchunks.cubicchunks.api.world.IColumn;
+import io.github.opencubicchunks.cubicchunks.api.world.ICube;
 import net.minecraft.world.chunk.ChunkPrimer;
 
 public interface IColumnInternal extends IColumn {
     ChunkPrimer getCompatGenerationPrimer();
+
+    void removeFromStagingHeightmap(ICube cube);
+
+    void addToStagingHeightmap(ICube cube);
+
+    /**
+     * Returns Y coordinate of the block above the top non-transparent block
+     */
+    int getHeightWithStaging(int localX, int localZ);
 }

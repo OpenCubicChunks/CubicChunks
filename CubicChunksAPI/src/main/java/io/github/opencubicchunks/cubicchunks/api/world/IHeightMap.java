@@ -51,7 +51,9 @@ public interface IHeightMap {
      *
      * @return true if there exists a known non-opaque block above the given y-coordinate
      */
-    boolean isOccluded(int localX, int blockY, int localZ);
+    default boolean isOccluded(int localX, int blockY, int localZ) {
+        return blockY <= this.getTopBlockY(localX, localZ);
+    }
 
     /**
      * Returns the y-coordinate of the highest non-transparent block in the specified block-column.
@@ -74,6 +76,7 @@ public interface IHeightMap {
      * @return Y position of the top non-transparent block below blockY, or very low (far below the min world height) if
      * one doesn't exist
      */
+    @Deprecated
     int getTopBlockYBelow(int localX, int localZ, int blockY);
 
     /**

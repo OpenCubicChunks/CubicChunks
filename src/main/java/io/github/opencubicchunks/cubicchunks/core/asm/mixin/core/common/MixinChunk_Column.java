@@ -28,6 +28,8 @@ import io.github.opencubicchunks.cubicchunks.api.world.IColumn;
 import io.github.opencubicchunks.cubicchunks.api.world.ICube;
 import io.github.opencubicchunks.cubicchunks.api.world.IHeightMap;
 import io.github.opencubicchunks.cubicchunks.core.asm.mixin.ICubicWorldInternal;
+import io.github.opencubicchunks.cubicchunks.core.world.IColumnInternal;
+import io.github.opencubicchunks.cubicchunks.core.world.StagingHeightMap;
 import io.github.opencubicchunks.cubicchunks.core.world.column.CubeMap;
 import io.github.opencubicchunks.cubicchunks.core.world.cube.Cube;
 import mcp.MethodsReturnNonnullByDefault;
@@ -38,6 +40,7 @@ import org.spongepowered.asm.mixin.Implements;
 import org.spongepowered.asm.mixin.Interface;
 import org.spongepowered.asm.mixin.Intrinsic;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -50,7 +53,7 @@ import java.util.Collection;
 @MethodsReturnNonnullByDefault
 @Mixin(value = Chunk.class, priority = 2000)
 @Implements(@Interface(iface = IColumn.class, prefix = "chunk$"))
-public abstract class MixinChunk_Column implements IColumn {
+public abstract class MixinChunk_Column implements IColumn, IColumnInternal {
 
     /*
      * WARNING: WHEN YOU RENAME ANY OF THESE 3 FIELDS RENAME CORRESPONDING
@@ -60,6 +63,8 @@ public abstract class MixinChunk_Column implements IColumn {
     private CubeMap cubeMap;
     private IHeightMap opacityIndex;
     private Cube cachedCube;
+    private final StagingHeightMap stagingHeightMap = new StagingHeightMap();
+
 
     @Shadow @Final public int z;
 
@@ -70,9 +75,6 @@ public abstract class MixinChunk_Column implements IColumn {
     @Shadow public boolean unloadQueued;
 
     @Shadow @Final private int[] heightMap;
-
-    @SuppressWarnings({"deprecation", "RedundantSuppression"})
-    @Shadow public abstract int getHeightValue(int x, int z);
 
     @Override public Cube getLoadedCube(int cubeY) {
         if (cachedCube != null && cachedCube.getY() == cubeY) {
@@ -100,6 +102,21 @@ public abstract class MixinChunk_Column implements IColumn {
             invalidateCachedCube();
         }
         return this.cubeMap.remove(cubeY);
+    }
+
+    @Override
+    public void removeFromStagingHeightmap(ICube cube) {
+        stagingHeightMap.removeStagedCube(cube);
+    }
+
+    @Override
+    public void addToStagingHeightmap(ICube cube) {
+        stagingHeightMap.addStagedCube(cube);
+    }
+
+    @Override
+    public int getHeightWithStaging(int localX, int localZ) {
+        return Math.max(opacityIndex.getTopBlockY(localX, localZ), stagingHeightMap.getTopBlockY(localX, localZ)) + 1;
     }
 
     private void invalidateCachedCube() {
@@ -155,11 +172,20 @@ public abstract class MixinChunk_Column implements IColumn {
 
     @Override
     public int getHeightValue(int localX, int blockY, int localZ) {
-        return this.heightMap[localZ << 4 | localX];
+        return getHeightWithStaging(localX, localZ);
+    }
+
+    /**
+     * @author Barteks2x
+     * @reason go through staging heightmap
+     */
+    @Overwrite
+    public int getHeightValue(int localX, int localZ) {
+        return getHeightWithStaging(localX, localZ);
     }
 
     @Intrinsic
     public int chunk$getHeightValue(int localX, int localZ) {
-        return getHeightValue(localX, localZ);
+        return getHeightWithStaging(localX, localZ);
     }
 }

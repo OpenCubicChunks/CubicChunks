@@ -130,11 +130,6 @@ public class ServerHeightMap implements IHeightMap {
     }
 
     @Override
-    public boolean isOccluded(int localX, int blockY, int localZ) {
-        return blockY <= this.getTopBlockY(localX, localZ);
-    }
-
-    @Override
     public int getTopBlockY(int localX, int localZ) {
         return this.ymax.get(getIndex(localX, localZ));
     }
