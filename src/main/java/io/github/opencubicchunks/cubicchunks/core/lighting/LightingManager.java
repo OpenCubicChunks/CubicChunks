@@ -187,7 +187,7 @@ public class LightingManager implements ILightingManager {
         ms += System.currentTimeMillis();
         int updated = total - updateSet.size();
         if (updated > 0 && ms > 50) {
-            CubicChunks.LOGGER.info("Light tick: " + total + " cubes, " + updated + " updated in " + ms + "ms, " + (ms/(double)updated) + "ms/cube");
+            CubicChunks.LOGGER.debug("Light tick: " + total + " cubes, " + updated + " updated in " + ms + "ms, " + (ms/(double)updated) + "ms/cube");
         }
         this.toUpdate.addAll(updateSet);
 
