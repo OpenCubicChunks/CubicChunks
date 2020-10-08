@@ -100,6 +100,9 @@ public interface ILightBlockAccess {
             int light = getLightFor(type, pos.offset(direction));
             if (light > max) {
                 max = light;
+                if (max >= 15) {
+                    break;
+                }
             }
         }
         int decrease = Math.max(1, blockLightOpacity);
