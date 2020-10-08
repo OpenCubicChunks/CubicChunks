@@ -407,10 +407,6 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
         Cube cube = new Cube(column, cubeY, primer);
 
         onCubeLoaded(cube, column);
-
-        ((ICubicWorldInternal.Server) this.worldServer).getFirstLightProcessor()
-                .initializeSkylight(cube); // init sky light, (does not require any other cubes, just ServerHeightMap)
-
         return cube;
     }
 

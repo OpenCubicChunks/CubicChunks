@@ -113,17 +113,6 @@ public class FirstLightProcessor {
         this.tracker = lightingManager.getTracker();
     }
 
-
-    /**
-     * Initializes skylight in the given cube. The skylight will be consistent with respect to the world configuration
-     * and already existing cubes. It is however possible for cubes being considered lit at this stage to be occluded
-     * by cubes being generated further up.
-     *
-     * @param cube the cube whose skylight is to be initialized
-     */
-    public void initializeSkylight(Cube cube) {
-    }
-
     /**
      * Diffuses skylight in the given cube and all cubes affected by this update.
      *
