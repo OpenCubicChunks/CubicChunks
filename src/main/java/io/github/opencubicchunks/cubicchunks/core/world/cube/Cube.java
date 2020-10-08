@@ -394,10 +394,6 @@ public class Cube implements ICube {
                 this.world.markBlockRangeForRenderUpdate(blockpos, blockpos);
             }
         }
-
-        if (this.cubeLightUpdateInfo != null && this.cubeLightUpdateInfo.hasUpdates() && !tryToTickFaster.getAsBoolean()) {
-            this.cubeLightUpdateInfo.tick();
-        }
     }
 
     /**
@@ -624,6 +620,9 @@ public class Cube implements ICube {
         // tell the world to forget about tile entities
         for (TileEntity blockEntity : this.tileEntityMap.values()) {
             this.world.markTileEntityForRemoval(blockEntity);
+        }
+        if (cubeLightUpdateInfo != null) {
+            cubeLightUpdateInfo.onUnload();
         }
         EVENT_BUS.post(new CubeEvent.Unload(this));
     }

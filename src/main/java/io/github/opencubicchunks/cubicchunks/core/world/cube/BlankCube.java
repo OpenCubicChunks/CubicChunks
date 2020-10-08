@@ -54,7 +54,7 @@ public class BlankCube extends Cube {
     public BlankCube(Chunk column) {
         super(new TicketList(null), column.getWorld(), column, new CubePos(0, 0, 0),
                 Cube.NULL_STORAGE, new BlankEntityContainer(), new HashMap<>(), new ConcurrentLinkedQueue<>(),
-                new LightingManager.CubeLightUpdateInfo(null) {
+                new LightingManager.CubeLightUpdateInfo(null, null) {
                     @Override
                     public void tick() {
                     }

@@ -24,22 +24,22 @@
  */
 package io.github.opencubicchunks.cubicchunks.core.lighting;
 
-import static io.github.opencubicchunks.cubicchunks.api.util.Coords.blockToCube;
 import static io.github.opencubicchunks.cubicchunks.api.util.Coords.cubeToMaxBlock;
 import static io.github.opencubicchunks.cubicchunks.api.util.Coords.cubeToMinBlock;
 import static io.github.opencubicchunks.cubicchunks.api.util.Coords.localToBlock;
 
-import io.github.opencubicchunks.cubicchunks.api.world.ICube;
-import io.github.opencubicchunks.cubicchunks.core.world.ICubeProviderInternal;
-import io.github.opencubicchunks.cubicchunks.core.server.PlayerCubeMap;
-import io.github.opencubicchunks.cubicchunks.api.util.Coords;
-import io.github.opencubicchunks.cubicchunks.api.util.CubePos;
-import io.github.opencubicchunks.cubicchunks.core.util.FastCubeBlockAccess;
-import io.github.opencubicchunks.cubicchunks.api.world.IColumn;
-import io.github.opencubicchunks.cubicchunks.core.asm.mixin.ICubicWorldInternal;
-import io.github.opencubicchunks.cubicchunks.core.world.cube.Cube;
 import gnu.trove.iterator.TIntIterator;
 import gnu.trove.set.TIntSet;
+import io.github.opencubicchunks.cubicchunks.api.util.Coords;
+import io.github.opencubicchunks.cubicchunks.api.util.CubePos;
+import io.github.opencubicchunks.cubicchunks.api.world.IColumn;
+import io.github.opencubicchunks.cubicchunks.api.world.ICube;
+import io.github.opencubicchunks.cubicchunks.core.CubicChunks;
+import io.github.opencubicchunks.cubicchunks.core.asm.mixin.ICubicWorldInternal;
+import io.github.opencubicchunks.cubicchunks.core.server.PlayerCubeMap;
+import io.github.opencubicchunks.cubicchunks.core.util.FastCubeBlockAccess;
+import io.github.opencubicchunks.cubicchunks.core.world.ICubeProviderInternal;
+import io.github.opencubicchunks.cubicchunks.core.world.cube.Cube;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
@@ -52,7 +52,10 @@ import net.minecraft.world.chunk.Chunk;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumSet;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Consumer;
 
 import javax.annotation.Nonnull;
@@ -71,6 +74,7 @@ public class LightingManager implements ILightingManager {
     @Nonnull private LightPropagator lightPropagator = new LightPropagator();
     @Nonnull private final List<IHeightChangeListener> heightUpdateListeners = new ArrayList<>();
     @Nullable private LightUpdateTracker tracker;
+    @Nonnull private final Set<CubeLightUpdateInfo> toUpdate = new HashSet<>();
 
     public LightingManager(World world) {
         this.world = world;
@@ -82,7 +86,7 @@ public class LightingManager implements ILightingManager {
             return null;
         }
         if (tracker == null) {
-            if (!world.isRemote) {
+            if (!world.isRemote && world.provider.hasSkyLight()) {
                 tracker = new LightUpdateTracker((PlayerCubeMap) ((WorldServer) world).getPlayerChunkMap());
             }
         }
@@ -105,7 +109,7 @@ public class LightingManager implements ILightingManager {
         if (!cube.getWorld().provider.hasSkyLight()) {
             return null;
         }
-        return new CubeLightUpdateInfo(cube);
+        return new CubeLightUpdateInfo(cube, this);
     }
 
     private void columnSkylightUpdate(UpdateType type, Chunk column, int localX, int minY, int maxY, int localZ) {
@@ -168,8 +172,28 @@ public class LightingManager implements ILightingManager {
     }
 
     @Override public void onTick() {
+        // make a copy to prevent CME
+        Set<CubeLightUpdateInfo> updateSet = new HashSet<>(this.toUpdate);
+        this.toUpdate.clear();
+        int total = updateSet.size();
+        long ms = -System.currentTimeMillis();
+        for (Iterator<CubeLightUpdateInfo> iterator = updateSet.iterator(); iterator.hasNext(); ) {
+            CubeLightUpdateInfo cubeLightUpdateInfo = iterator.next();
+            cubeLightUpdateInfo.tick();
+            if (!cubeLightUpdateInfo.hasUpdates()) {
+                iterator.remove();
+            }
+        }
+        ms += System.currentTimeMillis();
+        int updated = total - updateSet.size();
+        if (updated > 0 && ms > 50) {
+            CubicChunks.LOGGER.info("Light tick: " + total + " cubes, " + updated + " updated in " + ms + "ms, " + (ms/(double)updated) + "ms/cube");
+        }
+        this.toUpdate.addAll(updateSet);
+
+
         LightUpdateTracker tracker = getTracker();
-        if (tracker != null ) {
+        if (tracker != null) {
             tracker.sendAll();
         }
     }
@@ -198,6 +222,10 @@ public class LightingManager implements ILightingManager {
             }
         });
         return true;
+    }
+
+    private void markToUpdate(CubeLightUpdateInfo cubeLightUpdateInfo) {
+        this.toUpdate.add(cubeLightUpdateInfo);
     }
 
     /**
@@ -239,26 +267,29 @@ public class LightingManager implements ILightingManager {
 
     //this will be interface
     public static class CubeLightUpdateInfo {
-
         private final Cube cube;
         private final boolean[] toUpdateColumns = new boolean[Cube.SIZE * Cube.SIZE];
+        private final LightingManager lightingManager;
         private boolean hasUpdates;
         /**
          * Do neighbor need a sky light update when it is loaded?
          */
         public EnumSet<EnumFacing> edgeNeedSkyLightUpdate = EnumSet.noneOf(EnumFacing.class);
 
-        public CubeLightUpdateInfo(Cube cube) {
+        public CubeLightUpdateInfo(Cube cube, LightingManager lm) {
             this.cube = cube;
+            this.lightingManager = lm;
         }
 
         void markBlockColumnForUpdate(int localX, int localZ) {
             toUpdateColumns[index(localX, localZ)] = true;
             hasUpdates = true;
+            lightingManager.markToUpdate(this);
         }
 
         public void markEdgeNeedSkyLightUpdate(EnumFacing side) {
             edgeNeedSkyLightUpdate.add(side);
+            lightingManager.markToUpdate(this);
         }
 
         public void tick() {
@@ -281,41 +312,41 @@ public class LightingManager implements ILightingManager {
                         continue;
                     }
 
-                    int fromBlockX = cpos.getMinBlockX();
-                    int fromBlockY = cpos.getMinBlockY();
-                    int fromBlockZ = cpos.getMinBlockZ();
-                    int toBlockX = cpos.getMaxBlockX();
-                    int toBlockY = cpos.getMaxBlockY();
-                    int toBlockZ = cpos.getMaxBlockZ();
+                    int minX = cpos.getMinBlockX();
+                    int minY = cpos.getMinBlockY();
+                    int minZ = cpos.getMinBlockZ();
+                    int maxX = cpos.getMaxBlockX();
+                    int maxY = cpos.getMaxBlockY();
+                    int maxZ = cpos.getMaxBlockZ();
                     switch (dir) {
                         case DOWN:
-                            fromBlockY = fromBlockY - 1;
-                            toBlockY = fromBlockY + 1;
+                            minY = minY - 1;
+                            maxY = minY + 1;
                             break;
                         case UP:
-                            toBlockY = toBlockY + 1;
-                            fromBlockY = toBlockY - 1;
+                            maxY = maxY + 1;
+                            minY = maxY - 1;
                             break;
                         case NORTH:
-                            fromBlockZ = fromBlockZ - 1;
-                            toBlockZ = fromBlockZ + 1;
+                            minZ = minZ - 1;
+                            maxZ = minZ + 1;
                             break;
                         case SOUTH:
-                            toBlockZ = toBlockZ + 1;
-                            fromBlockZ = toBlockZ - 1;
+                            maxZ = maxZ + 1;
+                            minZ = maxZ - 1;
                             break;
                         case WEST:
-                            fromBlockX = fromBlockX - 1;
-                            toBlockX = fromBlockX + 1;
+                            minX = minX - 1;
+                            maxX = minX + 1;
                             break;
                         case EAST:
-                            toBlockX = toBlockX + 1;
-                            fromBlockX = toBlockX - 1;
+                            maxX = maxX + 1;
+                            minX = maxX - 1;
                             break;
                     }
                     manager.relightMultiBlock(
-                            new BlockPos(fromBlockX, fromBlockY, fromBlockZ),
-                            new BlockPos(toBlockX, toBlockY, toBlockZ),
+                            new BlockPos(minX, minY, minZ),
+                            new BlockPos(maxX, maxY, maxZ),
                             EnumSkyBlock.SKY, pos -> {
                                 cube.getWorld().notifyLightSet(pos);
                                 if (tracker != null) {
@@ -360,7 +391,6 @@ public class LightingManager implements ILightingManager {
         public boolean hasUpdates() {
             return hasUpdates || !edgeNeedSkyLightUpdate.isEmpty();
         }
-
         public void clear() {
             for (int localX = 0; localX < Cube.SIZE; localX++) {
                 for (int localZ = 0; localZ < Cube.SIZE; localZ++) {
@@ -368,6 +398,10 @@ public class LightingManager implements ILightingManager {
                 }
             }
             hasUpdates = false;
+        }
+
+        public void onUnload() {
+            lightingManager.toUpdate.remove(this);
         }
     }
 

@@ -382,8 +382,6 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
             }
         }
 
-        //TODO: Direct skylight might have changed and even Cubes that have there
-        //      initial light done, there might be work to do for a cube that just loaded
         if (!cube.isInitialLightingDone()) {
             calculateDiffuseSkylight(cube);
         }
