@@ -199,7 +199,7 @@ public class LightPropagator {
         // If cube is not loaded we will notify neighbors so cube will update light when it loads.
         for (EnumFacing direction : EnumFacing.values()) {
             BlockPos offset = pos.offset(direction);
-            blocks.markEdgeNeedLightUpdate(offset, direction, type);
+            blocks.markEdgeNeedLightUpdate(offset, type);
         }
     }
 }

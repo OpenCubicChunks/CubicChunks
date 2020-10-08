@@ -233,7 +233,7 @@ public class FastCubeBlockAccess implements ILightBlockAccess {
     }
 
     @Override
-    public void markEdgeNeedLightUpdate(BlockPos pos, EnumFacing direction, EnumSkyBlock type) {
+    public void markEdgeNeedLightUpdate(BlockPos pos, EnumSkyBlock type) {
         if (type == EnumSkyBlock.BLOCK)
             return;
         int x = pos.getX();
@@ -242,6 +242,24 @@ public class FastCubeBlockAccess implements ILightBlockAccess {
         Cube cube = this.getCube(x, y, z);
         if (cube == null)
             return;
-        cube.markEdgeNeedSkyLightUpdate(direction);
+        // What edge?
+        int localX = Coords.blockToLocal(x);
+        int localY = Coords.blockToLocal(y);
+        int localZ = Coords.blockToLocal(z);
+        if (localX == 0) {
+            cube.markEdgeNeedSkyLightUpdate(EnumFacing.WEST);
+        } else if (localX == 15) {
+            cube.markEdgeNeedSkyLightUpdate(EnumFacing.EAST);
+        }
+        if (localY == 0) {
+            cube.markEdgeNeedSkyLightUpdate(EnumFacing.DOWN);
+        } else if (localY == 15) {
+            cube.markEdgeNeedSkyLightUpdate(EnumFacing.UP);
+        }
+        if (localZ == 0) {
+            cube.markEdgeNeedSkyLightUpdate(EnumFacing.NORTH);
+        } else if (localZ == 15) {
+            cube.markEdgeNeedSkyLightUpdate(EnumFacing.SOUTH);
+        }
     }
 }
