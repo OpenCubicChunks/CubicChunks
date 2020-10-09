@@ -198,7 +198,7 @@ public class LightPropagator {
     private int getExpectedLight(ILightBlockAccess blocks, EnumSkyBlock type, BlockPos pos) {
         int emittedLight = blocks.getEmittedLight(pos, type);
         if (emittedLight >= 15) {
-            return emittedLight;
+            return 15;
         }
         return Math.max(emittedLight, blocks.getLightFromNeighbors(type, pos));
     }
