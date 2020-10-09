@@ -162,7 +162,7 @@ public class CubicChunksConfig {
     @Config.Comment("Replaces vanilla light check code with cubic chunks code for cubic chunks worlds.\n"
             + "Cubic chunks version keeps track of light changes on the server and sends them to client\n"
             + "and handles the edge of the world by scheduling chunk edge updates instead of failing.")
-    public static boolean replaceLightRecheck = true;
+    public static boolean replaceLightRecheck = false;
 
     @Config.LangKey("cubicchunks.config.updateKnownBrokenLightingOnLoad")
     @Config.Comment("Attempts to detect worlds saved with cubic chunks versions with lighting glitches, and fix them on world load.")
