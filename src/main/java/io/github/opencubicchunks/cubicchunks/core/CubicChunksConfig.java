@@ -171,7 +171,7 @@ public class CubicChunksConfig {
     @Config.LangKey("cubicchunks.config.worldgenWatchdogTimeLimit")
     @Config.Comment("Maximum amount of time (milliseconds) generating a single chunk can take in vanilla compatibility generator before forcing a "
             + "crash.")
-    public static long worldgenWatchdogTimeLimit = 10000;
+    public static int worldgenWatchdogTimeLimit = 10000;
 
     public static int defaultMaxCubesPerChunkloadingTicket = 25 * 16;
     public static Map<String, Integer> modMaxCubesPerChunkloadingTicket = new HashMap<>();
