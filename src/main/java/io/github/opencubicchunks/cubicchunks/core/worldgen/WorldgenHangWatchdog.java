@@ -25,6 +25,7 @@
 package io.github.opencubicchunks.cubicchunks.core.worldgen;
 
 import io.github.opencubicchunks.cubicchunks.core.CubicChunks;
+import io.github.opencubicchunks.cubicchunks.core.CubicChunksConfig;
 import io.github.opencubicchunks.cubicchunks.core.util.CompatHandler;
 
 import java.util.ArrayList;
@@ -113,7 +114,7 @@ public class WorldgenHangWatchdog {
 
                     long dt = currentTime - e.startTime;
 
-                    if (dt > TimeUnit.SECONDS.toNanos(10)) {
+                    if (dt > TimeUnit.MILLISECONDS.toNanos(CubicChunksConfig.worldgenWatchdogTimeLimit)) {
                         StringBuilder sb = new StringBuilder();
                         sb.append("World generation taking ").append(dt / (double) TimeUnit.SECONDS.toNanos(1))
                                 .append(" seconds, should be less than 50ms. Stopping the server.\n");
