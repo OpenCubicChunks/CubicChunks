@@ -63,7 +63,8 @@ public abstract class MixinChunk_Column implements IColumn, IColumnInternal {
     private CubeMap cubeMap;
     private IHeightMap opacityIndex;
     private Cube cachedCube;
-    private final StagingHeightMap stagingHeightMap = new StagingHeightMap();
+    private StagingHeightMap stagingHeightMap;
+    private boolean isColumn;
 
 
     @Shadow @Final public int z;
@@ -116,6 +117,9 @@ public abstract class MixinChunk_Column implements IColumn, IColumnInternal {
 
     @Override
     public int getHeightWithStaging(int localX, int localZ) {
+        if (!isColumn) {
+            return heightMap[localZ << 4 | localX];
+        }
         return Math.max(opacityIndex.getTopBlockY(localX, localZ), stagingHeightMap.getTopBlockY(localX, localZ)) + 1;
     }
 

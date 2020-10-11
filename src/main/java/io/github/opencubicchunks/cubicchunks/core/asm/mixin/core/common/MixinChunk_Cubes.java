@@ -116,7 +116,6 @@ public abstract class MixinChunk_Cubes implements IColumnInternal {
     private IHeightMap opacityIndex;
     private Cube cachedCube; // todo: make it always nonnull using BlankCube
     private StagingHeightMap stagingHeightMap;
-
     private boolean isColumn = false;
 
     private ChunkPrimer compatGenerationPrimer;
@@ -199,7 +198,7 @@ public abstract class MixinChunk_Cubes implements IColumnInternal {
         } else {
             this.opacityIndex = new ServerHeightMap(heightMap);
         }
-
+        this.stagingHeightMap = new StagingHeightMap();
         // instead of redirecting access to this map, just make the map do the work
         this.tileEntities = new ColumnTileEntityMap(this);
 
