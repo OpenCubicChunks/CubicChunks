@@ -54,6 +54,7 @@ import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
+import net.minecraftforge.fml.common.network.NetworkRegistry;
 import net.minecraftforge.fml.common.network.handshake.NetworkDispatcher;
 
 import java.lang.reflect.Constructor;
@@ -309,7 +310,17 @@ public class VanillaNetworkHandler {
         return sentSections;
     }
 
+    public static boolean hasFML(EntityPlayerMP player) {
+        NetHandlerPlayServer connection = player.connection;
+        NetworkManager netManager = connection.netManager;
+        Channel channel = netManager.channel();
+        return channel.attr(NetworkRegistry.FML_MARKER).get();
+    }
+
     public boolean hasCubicChunks(EntityPlayerMP player) {
+        if (!hasFML(player))    {
+            return false;
+        }
         NetHandlerPlayServer connection = player.connection;
         NetworkManager netManager = connection.netManager;
         Channel channel = netManager.channel();

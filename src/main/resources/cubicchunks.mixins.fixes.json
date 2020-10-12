@@ -40,6 +40,7 @@
         "common.MixinWalkNodeProcessor_HeightLimit",
         "common.MixinWorld",
         "common.vanillaclient.MixinNetHandlerPlayServer",
+        "common.vanillaclient.MixinNetworkDispatcher",
         "common.vanillaclient.MixinSPacketBlockAction",
         "common.vanillaclient.MixinSPacketBlockBreakAnim",
         "common.vanillaclient.MixinSPacketBlockChange",
