@@ -243,6 +243,8 @@ public class VanillaNetworkHandler {
 
         sendFullCubeLoadPackets(secondSendCubes, player);
         sendFullCubeLoadPackets(lastSendCubes, player);
+        world.getEntityTracker().removePlayerFromTrackers(player);
+        world.getEntityTracker().updateVisibility(player);
     }
 
     private static SPacketChunkData constructChunkData(ChunkPos pos, Iterable<ICube> cubes, int yOffset, boolean hasSkyLight) {
