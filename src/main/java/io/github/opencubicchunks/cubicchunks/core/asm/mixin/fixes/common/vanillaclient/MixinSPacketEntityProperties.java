@@ -49,6 +49,7 @@ public abstract class MixinSPacketEntityProperties implements IVanillaEncodingPa
     public void writeVanillaPacketData(PacketBuffer buf, EntityPlayerMP player) throws IOException {
         if (VanillaNetworkHandler.hasFML(player)) {
             this.writePacketData(buf); //forge players can accept all entity data
+            return;
         }
 
         //the player is vanilla, don't send what would be unknown properties
