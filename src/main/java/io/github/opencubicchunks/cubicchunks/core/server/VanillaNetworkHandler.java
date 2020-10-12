@@ -116,19 +116,6 @@ public class VanillaNetworkHandler {
         return fields;
     }
 
-    public static boolean hasFML(EntityPlayerMP player) {
-        NetHandlerPlayServer connection = player.connection;
-        if (connection == null) { //if connection or connection.netManager is null, we're currently in the middle of the FML handshake
-            return true;
-        }
-        NetworkManager netManager = connection.netManager;
-        if (netManager == null) {
-            return true;
-        }
-        Channel channel = netManager.channel();
-        return channel.attr(NetworkRegistry.FML_MARKER).get();
-    }
-
     public void sendCubeLoadPackets(Collection<? extends ICube> cubes, EntityPlayerMP player) {
         Map<ChunkPos, List<ICube>> columns = cubes.stream().collect(Collectors.groupingBy(c -> c.getCoords().chunkPos()));
         for (Map.Entry<ChunkPos, List<ICube>> chunkPosListEntry : columns.entrySet()) {
@@ -324,12 +311,18 @@ public class VanillaNetworkHandler {
     }
 
     public boolean hasCubicChunks(EntityPlayerMP player) {
-        if (!hasFML(player))    {
+        NetHandlerPlayServer connection = player.connection;
+        if (connection == null) { //if connection or connection.netManager is null, we're currently in the middle of the FML handshake
             return false;
         }
-        NetHandlerPlayServer connection = player.connection;
         NetworkManager netManager = connection.netManager;
+        if (netManager == null) {
+            return false;
+        }
         Channel channel = netManager.channel();
+        if (!channel.attr(NetworkRegistry.FML_MARKER).get())    {
+            return false;
+        }
         Attribute<NetworkDispatcher> attr = channel.attr(NetworkDispatcher.FML_DISPATCHER);
         NetworkDispatcher networkDispatcher = attr.get();
         Map<String, String> modList = networkDispatcher.getModList();
