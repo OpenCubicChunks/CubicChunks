@@ -235,10 +235,10 @@ public class VanillaNetworkHandler {
 
         sendCubeLoadPackets(firstSendCubes, player);
 
-        int dy = Coords.cubeToMinBlock(yOffset - newYOffset);
+        int dy = Coords.cubeToMinBlock(newYOffset - yOffset);
         SPacketKeepAlive fakeKeepAlive = new SPacketKeepAlive(SPECIAL_KEEP_ALIVE);
         player.connection.sendPacket(fakeKeepAlive);
-        SPacketPlayerPosLook tpPacket = new SPacketPlayerPosLook(0, dy, 0, 0, 0, EnumSet.allOf(SPacketPlayerPosLook.EnumFlags.class), 0);
+        SPacketPlayerPosLook tpPacket = new SPacketPlayerPosLook(0, dy + 0.01, 0, 0, 0, EnumSet.allOf(SPacketPlayerPosLook.EnumFlags.class), 0);
         player.connection.sendPacket(tpPacket);
 
         sendFullCubeLoadPackets(secondSendCubes, player);
