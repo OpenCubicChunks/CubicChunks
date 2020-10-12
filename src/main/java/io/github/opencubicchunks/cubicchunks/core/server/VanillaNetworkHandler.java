@@ -44,6 +44,7 @@ import net.minecraft.network.NetHandlerPlayServer;
 import net.minecraft.network.NetworkManager;
 import net.minecraft.network.Packet;
 import net.minecraft.network.PacketBuffer;
+import net.minecraft.network.play.server.SPacketBlockChange;
 import net.minecraft.network.play.server.SPacketChunkData;
 import net.minecraft.network.play.server.SPacketKeepAlive;
 import net.minecraft.network.play.server.SPacketMultiBlockChange;
@@ -167,6 +168,15 @@ public class VanillaNetworkHandler {
         if (idx < 0 || idx >= 16) {
             return;
         }
+        if (dirtyBlocks.size() == 1) {
+            int localAddress = dirtyBlocks.get(0);
+            int x = localToBlock(cube.getX(), AddressTools.getLocalX(localAddress));
+            int y = localToBlock(cube.getY(), AddressTools.getLocalY(localAddress));
+            int z = localToBlock(cube.getZ(), AddressTools.getLocalZ(localAddress));
+            SPacketBlockChange packet = new SPacketBlockChange(world, new BlockPos(x, y, z));
+            player.connection.sendPacket(packet);
+            return;
+        }
         SPacketMultiBlockChange.BlockUpdateData[] updates = new SPacketMultiBlockChange.BlockUpdateData[dirtyBlocks.size()];
         SPacketMultiBlockChange packet = new SPacketMultiBlockChange();
         for (int i = 0; i < dirtyBlocks.size(); i++) {
@@ -224,10 +234,8 @@ public class VanillaNetworkHandler {
             if (cx <= 1 && cz <= 1) {
                 if (cy <= 1) {
                     firstSendCubes.add(cubeWatcher.getCube());
-                    secondSendCubes.add(cubeWatcher.getCube());
-                } else {
-                    secondSendCubes.add(cubeWatcher.getCube());
                 }
+                secondSendCubes.add(cubeWatcher.getCube());
             } else {
                 lastSendCubes.add(cubeWatcher.getCube());
             }
@@ -346,7 +354,7 @@ public class VanillaNetworkHandler {
         int cubeCount = cubesToSend.length;
 
         for (int j = 0; j < cubeCount; j++) {
-            ExtendedBlockStorage storage = cubesToSend[j] == null ? null : cubesToSend[j].getStorage();
+            ExtendedBlockStorage storage = getStorage(cubesToSend, j);
 
             if (storage != Chunk.NULL_BLOCK_STORAGE && (mask & 1 << j) != 0) {
                 total += storage.getData().getSerializedSize();
@@ -361,6 +369,10 @@ public class VanillaNetworkHandler {
         return total;
     }
 
+    private static ExtendedBlockStorage getStorage(ICube[] cubesToSend, int idx) {
+        return cubesToSend[idx] == null ? null : cubesToSend[idx].getStorage();
+    }
+
     private static int computeBufferSize(Chunk chunk) {
         return 256;
     }
@@ -370,7 +382,7 @@ public class VanillaNetworkHandler {
         int cubeCount = cubesToSend.length;
 
         for (int j = 0; j < cubeCount; j++) {
-            ExtendedBlockStorage storage = cubesToSend[j] == null ? null : cubesToSend[j].getStorage();
+            ExtendedBlockStorage storage = getStorage(cubesToSend, j);
 
             if (storage != Chunk.NULL_BLOCK_STORAGE && (!storage.isEmpty()) && (mask & 1 << j) != 0) {
                 total += storage.getData().getSerializedSize();
@@ -390,7 +402,7 @@ public class VanillaNetworkHandler {
 
         int cubeCount = cubes.length;
         for (int j = 0; j < cubeCount; ++j) {
-            ExtendedBlockStorage storage = cubes[j] == null ? null : cubes[j].getStorage();
+            ExtendedBlockStorage storage = getStorage(cubes, j);
 
             if (storage != Chunk.NULL_BLOCK_STORAGE && (mask & 1 << j) != 0) {
                 sentSections |= 1 << j;
@@ -415,7 +427,7 @@ public class VanillaNetworkHandler {
 
         int cubeCount = cubes.length;
         for (int j = 0; j < cubeCount; ++j) {
-            ExtendedBlockStorage storage = cubes[j] == null ? null : cubes[j].getStorage();
+            ExtendedBlockStorage storage = getStorage(cubes, j);
 
             if (storage != Chunk.NULL_BLOCK_STORAGE && (!storage.isEmpty()) && (mask & 1 << j) != 0) {
                 sentSections |= 1 << j;
