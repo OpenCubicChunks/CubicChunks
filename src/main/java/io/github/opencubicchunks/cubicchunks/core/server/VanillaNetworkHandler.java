@@ -133,7 +133,13 @@ public class VanillaNetworkHandler {
 
     public static boolean hasFML(EntityPlayerMP player) {
         NetHandlerPlayServer connection = player.connection;
+        if (connection == null) { //if connection or connection.netManager is null, we're currently in the middle of the FML handshake
+            return true;
+        }
         NetworkManager netManager = connection.netManager;
+        if (netManager == null) {
+            return true;
+        }
         Channel channel = netManager.channel();
         return channel.attr(NetworkRegistry.FML_MARKER).get();
     }
