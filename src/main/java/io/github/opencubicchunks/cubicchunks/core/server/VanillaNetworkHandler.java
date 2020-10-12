@@ -62,6 +62,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -71,6 +72,20 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 public class VanillaNetworkHandler {
+    private static final Set<String> VANILLA_ENTITY_PROPERTIES = new HashSet<>(Arrays.asList(
+            "generic.maxHealth",
+            "generic.followRange",
+            "generic.knockbackResistance",
+            "generic.movementSpeed",
+            "generic.attackDamage",
+            "generic.attackSpeed",
+            "generic.armor",
+            "generic.armorToughness",
+            "generic.luck",
+            "generic.flyingSpeed",
+            "horse.jumpStrength",
+            "zombie.spawnReinforcements"
+    ));
 
     private static final Map<Class<?>, Field[]> packetFields = new HashMap<>();
     private final WorldServer world;
@@ -114,6 +129,17 @@ public class VanillaNetworkHandler {
             aClass = aClass.getSuperclass();
         } while (aClass != Object.class);
         return fields;
+    }
+
+    public static boolean hasFML(EntityPlayerMP player) {
+        NetHandlerPlayServer connection = player.connection;
+        NetworkManager netManager = connection.netManager;
+        Channel channel = netManager.channel();
+        return channel.attr(NetworkRegistry.FML_MARKER).get();
+    }
+
+    public static boolean isVanillaEntityProperty(String propertyName)  {
+        return VANILLA_ENTITY_PROPERTIES.contains(propertyName);
     }
 
     public void sendCubeLoadPackets(Collection<? extends ICube> cubes, EntityPlayerMP player) {
@@ -308,13 +334,6 @@ public class VanillaNetworkHandler {
         }
 
         return sentSections;
-    }
-
-    public static boolean hasFML(EntityPlayerMP player) {
-        NetHandlerPlayServer connection = player.connection;
-        NetworkManager netManager = connection.netManager;
-        Channel channel = netManager.channel();
-        return channel.attr(NetworkRegistry.FML_MARKER).get();
     }
 
     public boolean hasCubicChunks(EntityPlayerMP player) {
