@@ -173,6 +173,12 @@ public class CubicChunksConfig {
             + "crash.")
     public static int worldgenWatchdogTimeLimit = 10000;
 
+    @Config.LangKey("cubicchunks.config.allowVanillaClients")
+    @Config.Comment("Allows clients without cubic chunks to join. "
+            + "THIS IS INTENDED FOR VANILLA CLIENTS. "
+            + "This is VERY likely to break when used with other mods")
+    public static boolean allowVanillaClients = false;
+    
     public static int defaultMaxCubesPerChunkloadingTicket = 25 * 16;
     public static Map<String, Integer> modMaxCubesPerChunkloadingTicket = new HashMap<>();
 

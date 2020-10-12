@@ -83,8 +83,12 @@ class ColumnWatcher extends PlayerChunkMapEntry implements XZAddressable {
         //always sent to players, no need to check it
 
         if (this.isSentToPlayers()) {
-            PacketColumn message = new PacketColumn(this.getChunk());
-            PacketDispatcher.sendTo(message, player);
+            if (playerCubeMap.vanillaNetworkHandler.hasCubicChunks(player)) {
+                PacketColumn message = new PacketColumn(this.getChunk());
+                PacketDispatcher.sendTo(message, player);
+            } else {
+                playerCubeMap.vanillaNetworkHandler.sendColumnLoadPacket(this.getChunk(), player);
+            }
             //this.sendNearbySpecialEntities - done by cube entry
             MinecraftForge.EVENT_BUS.post(new ChunkWatchEvent.Watch(this.getChunk(), player));
         }
@@ -109,7 +113,11 @@ class ColumnWatcher extends PlayerChunkMapEntry implements XZAddressable {
         }
 
         if (this.isSentToPlayers()) {
-            PacketDispatcher.sendTo(new PacketUnloadColumn(getPos()), player);
+            if (playerCubeMap.vanillaNetworkHandler.hasCubicChunks(player)) {
+                PacketDispatcher.sendTo(new PacketUnloadColumn(getPos()), player);
+            } else {
+                playerCubeMap.vanillaNetworkHandler.sendColumnUnloadPacket(getPos(), player);
+            }
         }
 
         self().getPlayerList().remove(player);
@@ -135,9 +143,14 @@ class ColumnWatcher extends PlayerChunkMapEntry implements XZAddressable {
         }
 
         try {
+
             PacketColumn message = new PacketColumn(this.getChunk());
             for (EntityPlayerMP player : self().getPlayerList()) {
-                PacketDispatcher.sendTo(message, player);
+                if (playerCubeMap.vanillaNetworkHandler.hasCubicChunks(player)) {
+                    PacketDispatcher.sendTo(message, player);
+                } else {
+                    playerCubeMap.vanillaNetworkHandler.sendColumnLoadPacket(this.getChunk(), player);
+                }
             }
             self().setSentToPlayers(true);
         } catch (Throwable throwable) {
@@ -178,7 +191,9 @@ class ColumnWatcher extends PlayerChunkMapEntry implements XZAddressable {
         }
         assert getChunk() != null;
         for (EntityPlayerMP player : self().getPlayerList()) {
-            PacketDispatcher.sendTo(new PacketHeightMapUpdate(getPos(), dirtyColumns, ((IColumn) getChunk()).getOpacityIndex()), player);
+            if (playerCubeMap.vanillaNetworkHandler.hasCubicChunks(player)) {
+                PacketDispatcher.sendTo(new PacketHeightMapUpdate(getPos(), dirtyColumns, ((IColumn) getChunk()).getOpacityIndex()), player);
+            }
         }
         this.dirtyColumns.clear();
     }

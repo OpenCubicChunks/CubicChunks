@@ -36,6 +36,7 @@ import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 import gnu.trove.map.TIntObjectMap;
 import gnu.trove.map.hash.TIntObjectHashMap;
+import io.github.opencubicchunks.cubicchunks.api.util.Coords;
 import io.github.opencubicchunks.cubicchunks.api.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.api.util.XYZMap;
 import io.github.opencubicchunks.cubicchunks.api.util.XZMap;
@@ -130,7 +131,7 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
      * Mapping of Cube positions to CubeWatchers (Cube equivalent of PlayerManager.PlayerInstance).
      * Contains cube positions of all cubes loaded by players.
      */
-    private final XYZMap<CubeWatcher> cubeWatchers = new XYZMap<>(0.7f, 25 * 25 * 25);
+    final XYZMap<CubeWatcher> cubeWatchers = new XYZMap<>(0.7f, 25 * 25 * 25);
 
     /**
      * Mapping of Column positions to ColumnWatchers.
@@ -138,7 +139,7 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
      * Exists for compatibility with vanilla and to send ColumnLoad/Unload packets to clients.
      * Columns cannot be managed by client because they have separate data, like heightmap and biome array.
      */
-    private final XZMap<ColumnWatcher> columnWatchers = new XZMap<>(0.7f, 25 * 25);
+    final XZMap<ColumnWatcher> columnWatchers = new XZMap<>(0.7f, 25 * 25);
 
     /**
      * All cubeWatchers that have pending block updates to send.
@@ -211,6 +212,8 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
     // see comment in updateMovingPlayer() for explnation why it's in this class
     private final ChunkGc chunkGc;
 
+    final VanillaNetworkHandler vanillaNetworkHandler;
+
     public PlayerCubeMap(WorldServer worldServer) {
         super(worldServer);
         this.cubeCache = ((ICubicWorldInternal.Server) worldServer).getCubeCache();
@@ -218,6 +221,7 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
                 ((ICubicPlayerList) worldServer.getMinecraftServer().getPlayerList()).getVerticalViewDistance());
         ((ICubicWorldInternal) worldServer).getLightingManager().registerHeightChangeListener(this);
         this.chunkGc = new ChunkGc(((ICubicWorldInternal.Server) worldServer).getCubeCache());
+        this.vanillaNetworkHandler = ((ICubicWorldInternal.Server) worldServer).getVanillaNetworkHandler();
     }
 
     /**
@@ -434,8 +438,12 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
         getWorldServer().profiler.endStartSection("sendCubes");//unload
         for (EntityPlayerMP player : cubesToSend.keySet()) {
             Collection<Cube> cubes = cubesToSend.get(player);
-            PacketCubes packet = new PacketCubes(new ArrayList<>(cubes));
-            PacketDispatcher.sendTo(packet, player);
+            if (vanillaNetworkHandler.hasCubicChunks(player)) {
+                PacketCubes packet = new PacketCubes(new ArrayList<>(cubes));
+                PacketDispatcher.sendTo(packet, player);
+            } else {
+                vanillaNetworkHandler.sendCubeLoadPackets(cubes, player);
+            }
             //Sending entities per cube.
             for (Cube cube : cubes) {
                 ((ICubicEntityTracker) getWorldServer().getEntityTracker()).sendLeashedEntitiesInCube(player, cube);
@@ -565,6 +573,7 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
         });
         this.players.put(player.getEntityId(), playerWrapper);
         this.setNeedSort();
+        vanillaNetworkHandler.updatePlayerPosition(this, player, Coords.blockToCube(playerWrapper.managedPosY));
     }
 
     // CHECKED: 1.10.2-12.18.1.2092
@@ -603,6 +612,7 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
                 .forEach(watcher->watcher.removePlayer(player));
         this.players.remove(player.getEntityId());
         this.setNeedSort();
+        vanillaNetworkHandler.removePlayer(player);
     }
 
     // CHECKED: 1.10.2-12.18.1.2092
@@ -627,6 +637,8 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
         this.updatePlayer(playerWrapper, playerWrapper.getManagedCubePos(), CubePos.fromEntity(player));
         playerWrapper.updateManagedPos();
         this.setNeedSort();
+
+        vanillaNetworkHandler.updatePlayerPosition(this, player, Coords.blockToCube(playerWrapper.managedPosY));
 
         // With ChunkGc being separate from PlayerCubeMap, there are 2 issues:
         // Problem 0: Sometimes, a chunk can be generated after CubeWatcher's chunk load callback returns with a null

@@ -39,13 +39,13 @@ import io.github.opencubicchunks.cubicchunks.api.world.ICubeProviderServer;
 import io.github.opencubicchunks.cubicchunks.api.world.ICubicWorldServer;
 import io.github.opencubicchunks.cubicchunks.api.worldgen.ICubeGenerator;
 import io.github.opencubicchunks.cubicchunks.core.CubicChunks;
-import io.github.opencubicchunks.cubicchunks.core.CubicChunksConfig;
 import io.github.opencubicchunks.cubicchunks.core.asm.mixin.ICubicWorldInternal;
 import io.github.opencubicchunks.cubicchunks.core.lighting.FirstLightProcessor;
 import io.github.opencubicchunks.cubicchunks.core.server.ChunkGc;
 import io.github.opencubicchunks.cubicchunks.core.server.CubeProviderServer;
 import io.github.opencubicchunks.cubicchunks.core.server.PlayerCubeMap;
 import io.github.opencubicchunks.cubicchunks.core.server.SpawnCubes;
+import io.github.opencubicchunks.cubicchunks.core.server.VanillaNetworkHandler;
 import io.github.opencubicchunks.cubicchunks.core.util.world.CubeSplitTickList;
 import io.github.opencubicchunks.cubicchunks.core.util.world.CubeSplitTickSet;
 import io.github.opencubicchunks.cubicchunks.core.world.CubeWorldEntitySpawner;
@@ -113,6 +113,7 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
     private ChunkGc worldChunkGc;
     private SpawnCubes spawnArea;
     private boolean runningCompatibilityGenerator;
+    private VanillaNetworkHandler vanillaNetworkHandler;
 
     @Shadow protected abstract void playerCheckLight();
 
@@ -137,6 +138,7 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
         this.chunkProvider = new CubeProviderServer((WorldServer) (Object) this,
                 ((ICubicWorldProvider) this.provider).createCubeGenerator());
 
+        this.vanillaNetworkHandler = new VanillaNetworkHandler((WorldServer) (Object) this);
         this.playerChunkMap = new PlayerCubeMap((WorldServer) (Object) this);
 
         this.firstLightProcessor = new FirstLightProcessor((WorldServer) (Object) this);
@@ -148,6 +150,10 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
         this.pendingTickListEntriesHashSet = new CubeSplitTickSet();
         this.pendingTickListEntriesThisTick = new CubeSplitTickList();
         this.worldChunkGc = new ChunkGc(getCubeCache());
+    }
+
+    @Override public VanillaNetworkHandler getVanillaNetworkHandler() {
+        return vanillaNetworkHandler;
     }
 
     @Override public void setSpawnArea(SpawnCubes spawn) {

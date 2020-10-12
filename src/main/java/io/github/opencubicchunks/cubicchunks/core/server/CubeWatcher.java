@@ -273,7 +273,8 @@ public class CubeWatcher implements ITicket, ICubeWatcher {
             this.players.forEach(entry -> playerCubeMap.scheduleSendCubeToPlayer(cube, entry));
         } else {
             // send all the dirty blocks
-            sendPacketToAllPlayers(new PacketCubeBlockChange(this.cube, this.dirtyBlocks));
+            sendPacketToAllCCPlayers(new PacketCubeBlockChange(this.cube, this.dirtyBlocks));
+            sendBlockChangesToAllVanillaPlayers();
             // send the block entites on those blocks too
             this.dirtyBlocks.forEach(localAddress -> {
                 BlockPos pos = cube.localAddressToBlockPos(localAddress);
@@ -292,7 +293,7 @@ public class CubeWatcher implements ITicket, ICubeWatcher {
         if (blockEntity == null) {
             return;
         }
-        Packet packet = blockEntity.getUpdatePacket();
+        Packet<?> packet = blockEntity.getUpdatePacket();
         if (packet == null) {
             return;
         }
@@ -372,6 +373,22 @@ public class CubeWatcher implements ITicket, ICubeWatcher {
     @Override public void sendPacketToAllPlayers(IMessage packet) {
         for (EntityPlayerMP entry : this.players) {
             PacketDispatcher.sendTo(packet, entry);
+        }
+    }
+
+    public void sendPacketToAllCCPlayers(IMessage packet) {
+        for (EntityPlayerMP entry : this.players) {
+            if (playerCubeMap.vanillaNetworkHandler.hasCubicChunks(entry)) {
+                PacketDispatcher.sendTo(packet, entry);
+            }
+        }
+    }
+
+    private void sendBlockChangesToAllVanillaPlayers() {
+        for (EntityPlayerMP entry : this.players) {
+            if (!playerCubeMap.vanillaNetworkHandler.hasCubicChunks(entry)) {
+                playerCubeMap.vanillaNetworkHandler.sendBlockChanges(dirtyBlocks, cube, entry);
+            }
         }
     }
 

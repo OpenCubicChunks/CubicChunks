@@ -37,7 +37,15 @@
         "common.MixinWorldInfo",
         "common.MixinWorldProvider",
         "common.MixinWorldServer",
-        "common.MixinWorldSettings"
+        "common.MixinWorldSettings",
+        "common.vanillaclient.ICPacketPlayer",
+        "common.vanillaclient.ICPacketPlayerDigging",
+        "common.vanillaclient.ICPacketPlayerTryUseItemOnBlock",
+        "common.vanillaclient.ICPacketTabComplete",
+        "common.vanillaclient.ICPacketUpdateSign",
+        "common.vanillaclient.ICPacketVehicleMove",
+        "common.vanillaclient.ISPacketChunkData",
+        "common.vanillaclient.ISPacketMultiBlockChange"
     ],
     "client": [
         "client.IChunkProviderClient",

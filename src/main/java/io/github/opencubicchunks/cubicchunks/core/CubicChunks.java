@@ -44,6 +44,7 @@ import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.fml.client.FMLClientHandler;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.ICrashCallable;
+import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
@@ -52,6 +53,8 @@ import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLServerAboutToStartEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.network.NetworkCheckHandler;
+import net.minecraftforge.fml.common.network.NetworkRegistry;
+import net.minecraftforge.fml.common.network.internal.NetworkModHolder;
 import net.minecraftforge.fml.common.versioning.ArtifactVersion;
 import net.minecraftforge.fml.common.versioning.DefaultArtifactVersion;
 import net.minecraftforge.fml.common.versioning.InvalidVersionSpecificationException;
@@ -119,6 +122,11 @@ public class CubicChunks {
         });
         VanillaCubicWorldType.create();
         LOGGER.debug("Registered world types");
+
+        // we have to redo the check for network compatibility because it depends on config
+        // and config is done after forge does the check
+        NetworkModHolder holder = NetworkRegistry.INSTANCE.registry().get(Loader.instance().activeModContainer());
+        holder.testVanillaAcceptance();
     }
 
     @EventHandler
@@ -171,7 +179,7 @@ public class CubicChunks {
         String remoteFullVersion = modVersions.get(MODID);
         if (remoteFullVersion == null) {
             if (remoteSide.isClient()) {
-                return false; // don't allow client without CC to connect
+                return CubicChunksConfig.allowVanillaClients; // don't allow client without CC to connect
             }
             return true; // allow connecting to server without CC
         }
