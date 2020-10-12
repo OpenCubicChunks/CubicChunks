@@ -27,6 +27,7 @@ package io.github.opencubicchunks.cubicchunks.core.asm.mixin.fixes.common.vanill
 import io.github.opencubicchunks.cubicchunks.core.server.vanillaproxy.IPositionPacket;
 import net.minecraft.network.play.server.SPacketSpawnPosition;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.MathHelper;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -51,7 +52,17 @@ public class MixinSPacketSpawnPosition implements IPositionPacket {
     @Redirect(method = "writePacketData", at = @At(value = "FIELD",
             target = "Lnet/minecraft/network/play/server/SPacketSpawnPosition;spawnBlockPos:Lnet/minecraft/util/math/BlockPos;"))
     private BlockPos preprocessPacket(SPacketSpawnPosition _this) {
-        return offsetY == 0 ? this.spawnBlockPos : this.spawnBlockPos.add(0, offsetY, 0);
+        BlockPos pos = offsetY == 0 ? this.spawnBlockPos : this.spawnBlockPos.add(0, offsetY, 0);
+
+        int y = pos.getY();
+        if (!this.hasYOffset //if the Y value isn't offset, it means the client has cubic chunks and we should always send the un-clamped Y coord
+            || y <= 2047 && y >= -2047)    {
+            return pos;
+        } else {
+            //the spawn position might be outside of the +-2048 range, even after translation, so clamp it to avoid sending an invalid
+            //packet
+            return new BlockPos(pos.getX(), MathHelper.clamp(y, -2047, 2047), pos.getZ());
+        }
     }
 
 }
