@@ -28,7 +28,6 @@ import static io.github.opencubicchunks.cubicchunks.api.util.Coords.localToBlock
 
 import gnu.trove.list.TShortList;
 import io.github.opencubicchunks.cubicchunks.api.util.Coords;
-import io.github.opencubicchunks.cubicchunks.api.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.api.world.ICube;
 import io.github.opencubicchunks.cubicchunks.core.asm.mixin.core.common.vanillaclient.ISPacketChunkData;
 import io.github.opencubicchunks.cubicchunks.core.asm.mixin.core.common.vanillaclient.ISPacketMultiBlockChange;
@@ -46,7 +45,9 @@ import net.minecraft.network.NetworkManager;
 import net.minecraft.network.Packet;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.network.play.server.SPacketChunkData;
+import net.minecraft.network.play.server.SPacketKeepAlive;
 import net.minecraft.network.play.server.SPacketMultiBlockChange;
+import net.minecraft.network.play.server.SPacketPlayerPosLook;
 import net.minecraft.network.play.server.SPacketUnloadChunk;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
@@ -63,18 +64,25 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.EnumSet;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 public class VanillaNetworkHandler {
 
+    // special value for out hacky keepalive packet used as a ping
+    // to synchronize player Y offset properly
+    // vanilla will never have MSB set because it divides nanotime by 1000000
+    public static final long SPECIAL_KEEP_ALIVE = 0x4000000000000000L | (System.nanoTime() / 1000000);
+
     private static final Map<Class<?>, Field[]> packetFields = new HashMap<>();
     private final WorldServer world;
     private Object2IntMap<EntityPlayerMP> playerYOffsets = new Object2IntOpenHashMap<>();
+    // separate offset because when switching layers, there is a short moment where
+    // packets still sent with the client on the old offset will be processed
+    private Object2IntMap<EntityPlayerMP> playerYOffsetsC2S = new Object2IntOpenHashMap<>();
 
     public VanillaNetworkHandler(WorldServer world) {
         this.world = world;
@@ -116,23 +124,36 @@ public class VanillaNetworkHandler {
         return fields;
     }
 
+    private int getPlayerOffset(EntityPlayerMP player) {
+        return playerYOffsets.getOrDefault(player, 0);
+    }
+
+    private int getPlayerOffsetC2S(EntityPlayerMP player) {
+        return playerYOffsetsC2S.getOrDefault(player, 0);
+    }
+
     public void sendCubeLoadPackets(Collection<? extends ICube> cubes, EntityPlayerMP player) {
         Map<ChunkPos, List<ICube>> columns = cubes.stream().collect(Collectors.groupingBy(c -> c.getCoords().chunkPos()));
         for (Map.Entry<ChunkPos, List<ICube>> chunkPosListEntry : columns.entrySet()) {
             ChunkPos pos = chunkPosListEntry.getKey();
             List<ICube> column = chunkPosListEntry.getValue();
-            SPacketChunkData chunkData = constructChunkData(pos, column, playerYOffsets.getOrDefault(player, 0), world.provider.hasSkyLight());
+            SPacketChunkData chunkData = constructChunkData(pos, column, getPlayerOffset(player), world.provider.hasSkyLight());
             player.connection.sendPacket(chunkData);
         }
+    }
 
+    public void sendFullCubeLoadPackets(Collection<? extends ICube> cubes, EntityPlayerMP player) {
+        Map<Chunk, List<ICube>> columns = cubes.stream().collect(Collectors.groupingBy(ICube::getColumn));
+        for (Map.Entry<Chunk, List<ICube>> chunkPosListEntry : columns.entrySet()) {
+            Chunk chunk = chunkPosListEntry.getKey();
+            List<ICube> column = chunkPosListEntry.getValue();
+            SPacketChunkData chunkData = constructChunkData(chunk, column, getPlayerOffset(player), world.provider.hasSkyLight());
+            player.connection.sendPacket(chunkData);
+        }
     }
 
     public void sendColumnLoadPacket(Chunk chunk, EntityPlayerMP player) {
         player.connection.sendPacket(constructChunkData(chunk));
-    }
-
-    public void sendCubeUnloadPacket(CubePos pos, EntityPlayerMP player) {
-        // TODO: do we have to do this?
     }
 
     public void sendColumnUnloadPacket(ChunkPos pos, EntityPlayerMP player) {
@@ -141,7 +162,7 @@ public class VanillaNetworkHandler {
 
     @SuppressWarnings("ConstantConditions")
     public void sendBlockChanges(TShortList dirtyBlocks, Cube cube, EntityPlayerMP player) {
-        int yOffset = playerYOffsets.getOrDefault(player, 0);
+        int yOffset = getPlayerOffset(player);
         int idx = cube.getY() + yOffset;
         if (idx < 0 || idx >= 16) {
             return;
@@ -179,40 +200,54 @@ public class VanillaNetworkHandler {
         }
     }
 
+    public void receiveOffsetUpdateConfirmKeepalive(EntityPlayerMP player) {
+        playerYOffsetsC2S.put(player, playerYOffsets.get(player));
+    }
+
     public void removePlayer(EntityPlayerMP player) {
         playerYOffsets.remove(player);
+        playerYOffsetsC2S.remove(player);
     }
 
     private void switchPlayerOffset(PlayerCubeMap cubeMap, EntityPlayerMP player, int yOffset, int newYOffset) {
-        Set<Chunk> toUnload = new HashSet<>();
-        List<ICube> cubesToSend = new ArrayList<>();
+        List<ICube> firstSendCubes = new ArrayList<>();
+        List<ICube> secondSendCubes = new ArrayList<>();
+        List<ICube> lastSendCubes = new ArrayList<>();
         for (CubeWatcher cubeWatcher : cubeMap.cubeWatchers) {
             if (!cubeWatcher.isSentToPlayers()) {
                 continue;
             }
-            toUnload.add(cubeWatcher.getCube().getColumn());
-            cubesToSend.add(cubeWatcher.getCube());
+            int cy = Math.abs(player.chunkCoordY - cubeWatcher.getY());
+            int cx = Math.abs(player.chunkCoordX - cubeWatcher.getX());
+            int cz = Math.abs(player.chunkCoordZ - cubeWatcher.getZ());
+
+            if (cx <= 1 && cz <= 1) {
+                if (cy <= 1) {
+                    firstSendCubes.add(cubeWatcher.getCube());
+                    secondSendCubes.add(cubeWatcher.getCube());
+                } else {
+                    secondSendCubes.add(cubeWatcher.getCube());
+                }
+            } else {
+                lastSendCubes.add(cubeWatcher.getCube());
+            }
         }
-        toUnload.forEach(chunk -> sendColumnUnloadPacket(chunk.getPos(), player));
-        toUnload.forEach(chunk -> sendColumnLoadPacket(chunk, player));
-        player.setPositionAndUpdate(player.posX, player.posY, player.posZ);
-        sendCubeLoadPackets(cubesToSend, player);
+
+        sendCubeLoadPackets(firstSendCubes, player);
+
+        int dy = Coords.cubeToMinBlock(yOffset - newYOffset);
+        SPacketKeepAlive fakeKeepAlive = new SPacketKeepAlive(SPECIAL_KEEP_ALIVE);
+        player.connection.sendPacket(fakeKeepAlive);
+        SPacketPlayerPosLook tpPacket = new SPacketPlayerPosLook(0, dy, 0, 0, 0, EnumSet.allOf(SPacketPlayerPosLook.EnumFlags.class), 0);
+        player.connection.sendPacket(tpPacket);
+
+        sendFullCubeLoadPackets(secondSendCubes, player);
+        sendFullCubeLoadPackets(lastSendCubes, player);
     }
 
     private static SPacketChunkData constructChunkData(ChunkPos pos, Iterable<ICube> cubes, int yOffset, boolean hasSkyLight) {
         ICube[] cubesToSend = new ICube[16];
-        int mask = 0;
-        for (ICube cube : cubes) {
-            int idx = cube.getY() + yOffset;
-            if (idx < 0 || idx >= 16) {
-                continue;
-            }
-            if (cube.isEmpty()) {
-                continue;
-            }
-            cubesToSend[idx] = cube;
-            mask |= 1 << idx;
-        }
+        int mask = getCubesToSend(cubes, yOffset, cubesToSend);
 
         SPacketChunkData chunkData = new SPacketChunkData();
         @SuppressWarnings("ConstantConditions")
@@ -227,22 +262,11 @@ public class VanillaNetworkHandler {
         dataAccess.setAvailableSections(availableSections);
         dataAccess.setBuffer(dataBuffer);
 
-
-        List<NBTTagCompound> teList = new ArrayList<>();
-        for (ICube c : cubesToSend) {
-            if (c!=null) {
-                for (TileEntity value : c.getTileEntityMap().values()) {
-                    NBTTagCompound updateTag = value.getUpdateTag();
-                    if (updateTag.hasKey("y")) {
-                        updateTag.setInteger("y", updateTag.getInteger("y") + Coords.cubeToMinBlock(yOffset));
-                    }
-                    teList.add(updateTag);
-                }
-            }
-        }
+        List<NBTTagCompound> teList = collectTileEntityTags(yOffset, cubesToSend);
         dataAccess.setTileEntityTags(teList);
         return chunkData;
     }
+
 
     private SPacketChunkData constructChunkData(Chunk chunk) {
         SPacketChunkData chunkData = new SPacketChunkData();
@@ -261,12 +285,58 @@ public class VanillaNetworkHandler {
         return chunkData;
     }
 
-    private static int computeBufferSize(Chunk chunk) {
-        return 256;
+    private static SPacketChunkData constructChunkData(Chunk chunk, Iterable<ICube> cubes, int yOffset, boolean hasSkyLight) {
+        ICube[] cubesToSend = new ICube[16];
+        int mask = getCubesToSend(cubes, yOffset, cubesToSend);
+
+        SPacketChunkData chunkData = new SPacketChunkData();
+        @SuppressWarnings("ConstantConditions")
+        ISPacketChunkData dataAccess = (ISPacketChunkData) chunkData;
+        dataAccess.setChunkX(chunk.x);
+        dataAccess.setChunkZ(chunk.z);
+        dataAccess.setFullChunk(true);
+        byte[] dataBuffer = new byte[computeBufferSize(chunk, cubesToSend, hasSkyLight, mask)];
+        PacketBuffer buf = new PacketBuffer(Unpooled.wrappedBuffer(dataBuffer));
+        buf.writerIndex(0);
+        int availableSections = writeData(chunk, buf, cubesToSend, hasSkyLight, mask);
+        dataAccess.setAvailableSections(availableSections);
+        dataAccess.setBuffer(dataBuffer);
+
+        List<NBTTagCompound> teList = collectTileEntityTags(yOffset, cubesToSend);
+        dataAccess.setTileEntityTags(teList);
+        return chunkData;
     }
 
-    private static void writeData(PacketBuffer buf, Chunk chunk) {
-        buf.writeBytes(chunk.getBiomeArray());
+    private static int getCubesToSend(Iterable<ICube> cubes, int yOffset, ICube[] cubesToSend) {
+        int mask = 0;
+        for (ICube cube : cubes) {
+            int idx = cube.getY() + yOffset;
+            if (idx < 0 || idx >= 16) {
+                continue;
+            }
+            if (cube.isEmpty()) {
+                continue;
+            }
+            cubesToSend[idx] = cube;
+            mask |= 1 << idx;
+        }
+        return mask;
+    }
+
+    private static List<NBTTagCompound> collectTileEntityTags(int yOffset, ICube[] cubesToSend) {
+        List<NBTTagCompound> teList = new ArrayList<>();
+        for (ICube c : cubesToSend) {
+            if (c != null) {
+                for (TileEntity value : c.getTileEntityMap().values()) {
+                    NBTTagCompound updateTag = value.getUpdateTag();
+                    if (updateTag.hasKey("y")) {
+                        updateTag.setInteger("y", updateTag.getInteger("y") + Coords.cubeToMinBlock(yOffset));
+                    }
+                    teList.add(updateTag);
+                }
+            }
+        }
+        return teList;
     }
 
     private static int computeBufferSize(ICube[] cubesToSend, boolean hasSkyLight, int mask) {
@@ -289,6 +359,30 @@ public class VanillaNetworkHandler {
         return total;
     }
 
+    private static int computeBufferSize(Chunk chunk) {
+        return 256;
+    }
+
+    private static int computeBufferSize(Chunk chunk, ICube[] cubesToSend, boolean hasSkyLight, int mask) {
+        int total = 0;
+        int cubeCount = cubesToSend.length;
+
+        for (int j = 0; j < cubeCount; j++) {
+            ExtendedBlockStorage storage = cubesToSend[j] == null ? null : cubesToSend[j].getStorage();
+
+            if (storage != Chunk.NULL_BLOCK_STORAGE && (!storage.isEmpty()) && (mask & 1 << j) != 0) {
+                total += storage.getData().getSerializedSize();
+                total += storage.getBlockLight().getData().length;
+
+                if (hasSkyLight) {
+                    total += storage.getSkyLight().getData().length;
+                }
+            }
+        }
+        total += chunk.getBiomeArray().length;
+        return total;
+    }
+
     private static int writeData(PacketBuffer buf, ICube[] cubes, boolean hasSkylight, int mask) {
         int sentSections = 0;
 
@@ -306,6 +400,33 @@ public class VanillaNetworkHandler {
                 }
             }
         }
+
+        return sentSections;
+    }
+
+    private static void writeData(PacketBuffer buf, Chunk chunk) {
+        buf.writeBytes(chunk.getBiomeArray());
+    }
+
+    private static int writeData(Chunk chunk, PacketBuffer buf, ICube[] cubes, boolean hasSkylight, int mask) {
+        int sentSections = 0;
+
+        int cubeCount = cubes.length;
+        for (int j = 0; j < cubeCount; ++j) {
+            ExtendedBlockStorage storage = cubes[j] == null ? null : cubes[j].getStorage();
+
+            if (storage != Chunk.NULL_BLOCK_STORAGE && (!storage.isEmpty()) && (mask & 1 << j) != 0) {
+                sentSections |= 1 << j;
+                storage.getData().write(buf);
+                buf.writeBytes(storage.getBlockLight().getData());
+
+                if (hasSkylight) {
+                    buf.writeBytes(storage.getSkyLight().getData());
+                }
+            }
+        }
+
+        buf.writeBytes(chunk.getBiomeArray());
 
         return sentSections;
     }
@@ -332,16 +453,16 @@ public class VanillaNetworkHandler {
     public BlockPos modifyPositionC2S(BlockPos position, EntityPlayerMP player) {
         return new BlockPos(
                 position.getX(),
-                position.getY() - Coords.cubeToMinBlock(playerYOffsets.getOrDefault(player, 0)),
+                position.getY() - Coords.cubeToMinBlock(getPlayerOffsetC2S(player)),
                 position.getZ()
         );
     }
 
     public double modifyPositionC2S(double y, EntityPlayerMP player) {
-        return y - Coords.cubeToMinBlock(playerYOffsets.getOrDefault(player, 0));
+        return y - Coords.cubeToMinBlock(getPlayerOffsetC2S(player));
     }
 
     public int getS2COffset(EntityPlayerMP player) {
-        return Coords.cubeToMinBlock(playerYOffsets.getOrDefault(player, 0));
+        return Coords.cubeToMinBlock(getPlayerOffset(player));
     }
 }

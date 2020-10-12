@@ -37,6 +37,7 @@ import io.github.opencubicchunks.cubicchunks.core.server.vanillaproxy.IPositionP
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.network.NetHandlerPlayServer;
 import net.minecraft.network.Packet;
+import net.minecraft.network.play.client.CPacketKeepAlive;
 import net.minecraft.network.play.client.CPacketPlayer;
 import net.minecraft.network.play.client.CPacketPlayerDigging;
 import net.minecraft.network.play.client.CPacketPlayerTryUseItemOnBlock;
@@ -159,6 +160,23 @@ public class MixinNetHandlerPlayServer {
         boolean hasCC = vanillaHandler.hasCubicChunks(player);
         if (!hasCC) {
             ((ICPacketVehicleMove) packetIn).setY(vanillaHandler.modifyPositionC2S(packetIn.getY(), player));
+        }
+    }
+
+    @Inject(method = "processKeepAlive", at = @At("HEAD"), cancellable = true)
+    public void preprocessKeepalive(CPacketKeepAlive packetIn, CallbackInfo ci) {
+        if (packetIn.getKey() != VanillaNetworkHandler.SPECIAL_KEEP_ALIVE) {
+            return;
+        }
+        WorldServer world = (WorldServer) player.world;
+        if (!((ICubicWorld) world).isCubicWorld()) {
+            return;
+        }
+        VanillaNetworkHandler vanillaHandler = ((ICubicWorldInternal.Server) world).getVanillaNetworkHandler();
+        boolean hasCC = vanillaHandler.hasCubicChunks(player);
+        if (!hasCC) {
+            vanillaHandler.receiveOffsetUpdateConfirmKeepalive(player);
+            ci.cancel();
         }
     }
 
