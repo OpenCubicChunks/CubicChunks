@@ -583,7 +583,6 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
     public void removePlayer(EntityPlayerMP player) {
         PlayerWrapper playerWrapper = this.players.get(player.getEntityId());
         if (playerWrapper == null) {
-            CubicChunks.bigWarning("PlayerCubeMap#removePlayer got called when there is no player in this world! Things may break!");
             return;
         }
         // Minecraft does something evil there: this method is called *after* changing the player's position
