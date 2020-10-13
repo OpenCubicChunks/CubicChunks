@@ -573,7 +573,7 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
         });
         this.players.put(player.getEntityId(), playerWrapper);
         this.setNeedSort();
-        if (vanillaNetworkHandler.hasCubicChunks(player)) {
+        if (!vanillaNetworkHandler.hasCubicChunks(player)) {
             vanillaNetworkHandler.updatePlayerPosition(this, player, Coords.blockToCube(playerWrapper.managedPosY));
         }
     }
@@ -640,7 +640,7 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
         playerWrapper.updateManagedPos();
         this.setNeedSort();
 
-        if (vanillaNetworkHandler.hasCubicChunks(player)) {
+        if (!vanillaNetworkHandler.hasCubicChunks(player)) {
             vanillaNetworkHandler.updatePlayerPosition(this, player, Coords.blockToCube(playerWrapper.managedPosY));
         }
         // With ChunkGc being separate from PlayerCubeMap, there are 2 issues:
