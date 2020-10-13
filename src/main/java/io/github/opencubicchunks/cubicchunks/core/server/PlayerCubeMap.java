@@ -573,7 +573,9 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
         });
         this.players.put(player.getEntityId(), playerWrapper);
         this.setNeedSort();
-        vanillaNetworkHandler.updatePlayerPosition(this, player, Coords.blockToCube(playerWrapper.managedPosY));
+        if (vanillaNetworkHandler.hasCubicChunks(player)) {
+            vanillaNetworkHandler.updatePlayerPosition(this, player, Coords.blockToCube(playerWrapper.managedPosY));
+        }
     }
 
     // CHECKED: 1.10.2-12.18.1.2092

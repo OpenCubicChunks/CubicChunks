@@ -29,6 +29,7 @@ import static io.github.opencubicchunks.cubicchunks.api.util.Coords.localToBlock
 import gnu.trove.list.TShortList;
 import io.github.opencubicchunks.cubicchunks.api.util.Coords;
 import io.github.opencubicchunks.cubicchunks.api.world.ICube;
+import io.github.opencubicchunks.cubicchunks.core.CubicChunksConfig;
 import io.github.opencubicchunks.cubicchunks.core.asm.mixin.core.common.vanillaclient.ISPacketChunkData;
 import io.github.opencubicchunks.cubicchunks.core.asm.mixin.core.common.vanillaclient.ISPacketMultiBlockChange;
 import io.github.opencubicchunks.cubicchunks.core.asm.mixin.fixes.common.vanillaclient.INetHandlerPlayServer;
@@ -453,6 +454,9 @@ public class VanillaNetworkHandler {
     }
 
     public boolean hasCubicChunks(EntityPlayerMP player) {
+        if (!CubicChunksConfig.allowVanillaClients) {
+            return true;
+        }
         NetHandlerPlayServer connection = player.connection;
         if (connection == null) { //if connection or connection.netManager is null, we're currently in the middle of the FML handshake
             return false;
