@@ -382,7 +382,7 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
             }
         }
 
-        if (!cube.isInitialLightingDone()) {
+        if (!cube.isInitialLightingDone() || !cube.isSurfaceTracked()) {
             calculateDiffuseSkylight(cube);
         }
         if (!cube.isSurfaceTracked()) {
