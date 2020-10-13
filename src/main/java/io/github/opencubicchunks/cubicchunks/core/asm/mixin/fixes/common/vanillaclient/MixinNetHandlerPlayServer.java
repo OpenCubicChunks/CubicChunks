@@ -25,6 +25,7 @@
 package io.github.opencubicchunks.cubicchunks.core.asm.mixin.fixes.common.vanillaclient;
 
 import io.github.opencubicchunks.cubicchunks.api.world.ICubicWorld;
+import io.github.opencubicchunks.cubicchunks.core.CubicChunksConfig;
 import io.github.opencubicchunks.cubicchunks.core.asm.mixin.ICubicWorldInternal;
 import io.github.opencubicchunks.cubicchunks.core.asm.mixin.core.common.vanillaclient.ICPacketPlayer;
 import io.github.opencubicchunks.cubicchunks.core.asm.mixin.core.common.vanillaclient.ICPacketPlayerDigging;
@@ -37,7 +38,7 @@ import io.github.opencubicchunks.cubicchunks.core.server.vanillaproxy.IPositionP
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.network.NetHandlerPlayServer;
 import net.minecraft.network.Packet;
-import net.minecraft.network.play.client.CPacketKeepAlive;
+import net.minecraft.network.play.client.CPacketConfirmTeleport;
 import net.minecraft.network.play.client.CPacketPlayer;
 import net.minecraft.network.play.client.CPacketPlayerDigging;
 import net.minecraft.network.play.client.CPacketPlayerTryUseItemOnBlock;
@@ -163,9 +164,9 @@ public class MixinNetHandlerPlayServer {
         }
     }
 
-    @Inject(method = "processKeepAlive", at = @At("HEAD"), cancellable = true)
-    public void preprocessKeepalive(CPacketKeepAlive packetIn, CallbackInfo ci) {
-        if (packetIn.getKey() != VanillaNetworkHandler.SPECIAL_KEEP_ALIVE) {
+    @Inject(method = "processConfirmTeleport", at = @At("HEAD"), cancellable = true)
+    public void preprocessTeleportConfirm(CPacketConfirmTeleport packetIn, CallbackInfo ci) {
+        if (!CubicChunksConfig.allowVanillaClients) {
             return;
         }
         WorldServer world = (WorldServer) player.world;
@@ -175,8 +176,9 @@ public class MixinNetHandlerPlayServer {
         VanillaNetworkHandler vanillaHandler = ((ICubicWorldInternal.Server) world).getVanillaNetworkHandler();
         boolean hasCC = vanillaHandler.hasCubicChunks(player);
         if (!hasCC) {
-            vanillaHandler.receiveOffsetUpdateConfirmKeepalive(player);
-            ci.cancel();
+            if (vanillaHandler.receiveOffsetUpdateConfirm(player, packetIn.getTeleportId())) {
+                ci.cancel();
+            }
         }
     }
 

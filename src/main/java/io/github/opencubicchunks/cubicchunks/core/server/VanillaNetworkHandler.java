@@ -31,6 +31,7 @@ import io.github.opencubicchunks.cubicchunks.api.util.Coords;
 import io.github.opencubicchunks.cubicchunks.api.world.ICube;
 import io.github.opencubicchunks.cubicchunks.core.asm.mixin.core.common.vanillaclient.ISPacketChunkData;
 import io.github.opencubicchunks.cubicchunks.core.asm.mixin.core.common.vanillaclient.ISPacketMultiBlockChange;
+import io.github.opencubicchunks.cubicchunks.core.asm.mixin.fixes.common.vanillaclient.INetHandlerPlayServer;
 import io.github.opencubicchunks.cubicchunks.core.util.AddressTools;
 import io.github.opencubicchunks.cubicchunks.core.world.cube.Cube;
 import io.netty.buffer.Unpooled;
@@ -73,17 +74,13 @@ import java.util.stream.Collectors;
 
 public class VanillaNetworkHandler {
 
-    // special value for out hacky keepalive packet used as a ping
-    // to synchronize player Y offset properly
-    // vanilla will never have MSB set because it divides nanotime by 1000000
-    public static final long SPECIAL_KEEP_ALIVE = 0x4000000000000000L | (System.nanoTime() / 1000000);
-
     private static final Map<Class<?>, Field[]> packetFields = new HashMap<>();
     private final WorldServer world;
     private Object2IntMap<EntityPlayerMP> playerYOffsets = new Object2IntOpenHashMap<>();
     // separate offset because when switching layers, there is a short moment where
     // packets still sent with the client on the old offset will be processed
     private Object2IntMap<EntityPlayerMP> playerYOffsetsC2S = new Object2IntOpenHashMap<>();
+    private Map<EntityPlayerMP, Integer> expectedTeleportId = new HashMap<>();
 
     public VanillaNetworkHandler(WorldServer world) {
         this.world = world;
@@ -210,13 +207,18 @@ public class VanillaNetworkHandler {
         }
     }
 
-    public void receiveOffsetUpdateConfirmKeepalive(EntityPlayerMP player) {
+    public boolean receiveOffsetUpdateConfirm(EntityPlayerMP player, int teleportId) {
+        if (!expectedTeleportId.containsKey(player) || expectedTeleportId.remove(player) != teleportId) {
+            return false;
+        }
         playerYOffsetsC2S.put(player, playerYOffsets.get(player));
+        return true;
     }
 
     public void removePlayer(EntityPlayerMP player) {
         playerYOffsets.remove(player);
         playerYOffsetsC2S.remove(player);
+        expectedTeleportId.remove(player);
     }
 
     private void switchPlayerOffset(PlayerCubeMap cubeMap, EntityPlayerMP player, int yOffset, int newYOffset) {
@@ -243,10 +245,15 @@ public class VanillaNetworkHandler {
 
         sendCubeLoadPackets(firstSendCubes, player);
 
+        int teleportId = ((INetHandlerPlayServer) player.connection).getTeleportId();
+        if (++teleportId == Integer.MAX_VALUE) {
+            teleportId = 0;
+        }
+        ((INetHandlerPlayServer) player.connection).setTeleportId(teleportId);
+        expectedTeleportId.put(player, teleportId);
         int dy = Coords.cubeToMinBlock(newYOffset - yOffset);
-        SPacketKeepAlive fakeKeepAlive = new SPacketKeepAlive(SPECIAL_KEEP_ALIVE);
-        player.connection.sendPacket(fakeKeepAlive);
-        SPacketPlayerPosLook tpPacket = new SPacketPlayerPosLook(0, dy + 0.01, 0, 0, 0, EnumSet.allOf(SPacketPlayerPosLook.EnumFlags.class), 0);
+        SPacketPlayerPosLook tpPacket = new SPacketPlayerPosLook(0, dy + 0.01, 0, 0, 0,
+                EnumSet.allOf(SPacketPlayerPosLook.EnumFlags.class), teleportId);
         player.connection.sendPacket(tpPacket);
 
         sendFullCubeLoadPackets(secondSendCubes, player);

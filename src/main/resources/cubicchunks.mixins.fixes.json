@@ -39,6 +39,7 @@
         "common.MixinTileEntityEndGateway",
         "common.MixinWalkNodeProcessor_HeightLimit",
         "common.MixinWorld",
+        "common.vanillaclient.INetHandlerPlayServer",
         "common.vanillaclient.MixinNetHandlerPlayServer",
         "common.vanillaclient.MixinSPacketBlockAction",
         "common.vanillaclient.MixinSPacketBlockBreakAnim",
