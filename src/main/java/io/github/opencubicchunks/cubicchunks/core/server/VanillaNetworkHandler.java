@@ -467,6 +467,9 @@ public class VanillaNetworkHandler {
         }
         Attribute<NetworkDispatcher> attr = channel.attr(NetworkDispatcher.FML_DISPATCHER);
         NetworkDispatcher networkDispatcher = attr.get();
+        if (networkDispatcher == null) {
+            return false;
+        }
         Map<String, String> modList = networkDispatcher.getModList();
         return modList.containsKey("cubicchunks");
     }
