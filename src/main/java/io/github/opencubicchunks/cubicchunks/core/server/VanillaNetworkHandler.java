@@ -227,7 +227,7 @@ public class VanillaNetworkHandler {
         List<ICube> secondSendCubes = new ArrayList<>();
         List<ICube> lastSendCubes = new ArrayList<>();
         for (CubeWatcher cubeWatcher : cubeMap.cubeWatchers) {
-            if (!cubeWatcher.isSentToPlayers()) {
+            if (!cubeWatcher.isSentToPlayers() || !cubeWatcher.containsPlayer(player)) {
                 continue;
             }
             int cy = Math.abs(player.chunkCoordY - cubeWatcher.getY());
