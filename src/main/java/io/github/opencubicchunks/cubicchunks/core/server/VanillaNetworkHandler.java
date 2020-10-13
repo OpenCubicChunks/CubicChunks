@@ -89,6 +89,9 @@ public class VanillaNetworkHandler {
 
     // TODO: more efficient way?
     public static Packet<?> copyPacket(Packet<?> packetIn) {
+        if (!CubicChunksConfig.allowVanillaClients) {
+            return packetIn;
+        }
         try {
             Field[] fields = packetFields.computeIfAbsent(packetIn.getClass(), VanillaNetworkHandler::collectFields);
             Constructor<?> constructor = packetIn.getClass().getConstructor();
@@ -132,6 +135,9 @@ public class VanillaNetworkHandler {
     }
 
     public void sendCubeLoadPackets(Collection<? extends ICube> cubes, EntityPlayerMP player) {
+        if (!CubicChunksConfig.allowVanillaClients) {
+            return;
+        }
         Map<ChunkPos, List<ICube>> columns = cubes.stream().collect(Collectors.groupingBy(c -> c.getCoords().chunkPos()));
         for (Map.Entry<ChunkPos, List<ICube>> chunkPosListEntry : columns.entrySet()) {
             ChunkPos pos = chunkPosListEntry.getKey();
@@ -142,6 +148,9 @@ public class VanillaNetworkHandler {
     }
 
     public void sendFullCubeLoadPackets(Collection<? extends ICube> cubes, EntityPlayerMP player) {
+        if (!CubicChunksConfig.allowVanillaClients) {
+            return;
+        }
         Map<Chunk, List<ICube>> columns = cubes.stream().collect(Collectors.groupingBy(ICube::getColumn));
         for (Map.Entry<Chunk, List<ICube>> chunkPosListEntry : columns.entrySet()) {
             Chunk chunk = chunkPosListEntry.getKey();
@@ -152,15 +161,24 @@ public class VanillaNetworkHandler {
     }
 
     public void sendColumnLoadPacket(Chunk chunk, EntityPlayerMP player) {
+        if (!CubicChunksConfig.allowVanillaClients) {
+            return;
+        }
         player.connection.sendPacket(constructChunkData(chunk));
     }
 
     public void sendColumnUnloadPacket(ChunkPos pos, EntityPlayerMP player) {
+        if (!CubicChunksConfig.allowVanillaClients) {
+            return;
+        }
         player.connection.sendPacket(new SPacketUnloadChunk(pos.x, pos.z));
     }
 
     @SuppressWarnings("ConstantConditions")
     public void sendBlockChanges(TShortList dirtyBlocks, Cube cube, EntityPlayerMP player) {
+        if (!CubicChunksConfig.allowVanillaClients) {
+            return;
+        }
         int yOffset = getPlayerOffset(player);
         int idx = cube.getY() + yOffset;
         if (idx < 0 || idx >= 16) {
@@ -197,6 +215,9 @@ public class VanillaNetworkHandler {
     }
 
     public void updatePlayerPosition(PlayerCubeMap cubeMap, EntityPlayerMP player, int managedPosY) {
+        if (!CubicChunksConfig.allowVanillaClients) {
+            return;
+        }
         if (!playerYOffsets.containsKey(player)) {
             playerYOffsets.put(player, 0);
         }
@@ -209,6 +230,9 @@ public class VanillaNetworkHandler {
     }
 
     public boolean receiveOffsetUpdateConfirm(EntityPlayerMP player, int teleportId) {
+        if (!CubicChunksConfig.allowVanillaClients) {
+            return false;
+        }
         if (!expectedTeleportId.containsKey(player) || expectedTeleportId.remove(player) != teleportId) {
             return false;
         }
@@ -217,12 +241,18 @@ public class VanillaNetworkHandler {
     }
 
     public void removePlayer(EntityPlayerMP player) {
+        if (!CubicChunksConfig.allowVanillaClients) {
+            return;
+        }
         playerYOffsets.remove(player);
         playerYOffsetsC2S.remove(player);
         expectedTeleportId.remove(player);
     }
 
     private void switchPlayerOffset(PlayerCubeMap cubeMap, EntityPlayerMP player, int yOffset, int newYOffset) {
+        if (!CubicChunksConfig.allowVanillaClients) {
+            return;
+        }
         List<ICube> firstSendCubes = new ArrayList<>();
         List<ICube> secondSendCubes = new ArrayList<>();
         List<ICube> lastSendCubes = new ArrayList<>();
@@ -479,6 +509,9 @@ public class VanillaNetworkHandler {
     }
 
     public BlockPos modifyPositionC2S(BlockPos position, EntityPlayerMP player) {
+        if (!CubicChunksConfig.allowVanillaClients) {
+            return position;
+        }
         return new BlockPos(
                 position.getX(),
                 position.getY() - Coords.cubeToMinBlock(getPlayerOffsetC2S(player)),
@@ -487,10 +520,16 @@ public class VanillaNetworkHandler {
     }
 
     public double modifyPositionC2S(double y, EntityPlayerMP player) {
+        if (!CubicChunksConfig.allowVanillaClients) {
+            return y;
+        }
         return y - Coords.cubeToMinBlock(getPlayerOffsetC2S(player));
     }
 
     public int getS2COffset(EntityPlayerMP player) {
+        if (!CubicChunksConfig.allowVanillaClients) {
+            return 0;
+        }
         return Coords.cubeToMinBlock(getPlayerOffset(player));
     }
 }
