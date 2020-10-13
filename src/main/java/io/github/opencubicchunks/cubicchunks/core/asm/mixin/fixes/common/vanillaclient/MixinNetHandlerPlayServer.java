@@ -164,7 +164,10 @@ public class MixinNetHandlerPlayServer {
         }
     }
 
-    @Inject(method = "processConfirmTeleport", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "processConfirmTeleport",
+            at = @At(value = "INVOKE", shift = At.Shift.AFTER,
+            target = "Lnet/minecraft/network/PacketThreadUtil;checkThreadAndEnqueue(Lnet/minecraft/network/Packet;"
+                    + "Lnet/minecraft/network/INetHandler;Lnet/minecraft/util/IThreadListener;)V"), cancellable = true)
     public void preprocessTeleportConfirm(CPacketConfirmTeleport packetIn, CallbackInfo ci) {
         if (!CubicChunksConfig.allowVanillaClients) {
             return;
