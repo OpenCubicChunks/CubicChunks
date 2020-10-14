@@ -48,7 +48,6 @@ import net.minecraft.network.Packet;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.network.play.server.SPacketBlockChange;
 import net.minecraft.network.play.server.SPacketChunkData;
-import net.minecraft.network.play.server.SPacketKeepAlive;
 import net.minecraft.network.play.server.SPacketMultiBlockChange;
 import net.minecraft.network.play.server.SPacketPlayerPosLook;
 import net.minecraft.network.play.server.SPacketUnloadChunk;
@@ -155,7 +154,9 @@ public class VanillaNetworkHandler {
         for (Map.Entry<Chunk, List<ICube>> chunkPosListEntry : columns.entrySet()) {
             Chunk chunk = chunkPosListEntry.getKey();
             List<ICube> column = chunkPosListEntry.getValue();
-            SPacketChunkData chunkData = constructChunkData(chunk, column, getPlayerOffset(player), world.provider.hasSkyLight());
+            SPacketChunkData chunkData = constructFullChunkData(chunk, column, getPlayerOffset(player), world.provider.hasSkyLight());
+            SPacketUnloadChunk unload = new SPacketUnloadChunk(chunk.x, chunk.z);
+            player.connection.sendPacket(unload);
             player.connection.sendPacket(chunkData);
         }
     }
@@ -333,7 +334,7 @@ public class VanillaNetworkHandler {
         return chunkData;
     }
 
-    private static SPacketChunkData constructChunkData(Chunk chunk, Iterable<ICube> cubes, int yOffset, boolean hasSkyLight) {
+    private static SPacketChunkData constructFullChunkData(Chunk chunk, Iterable<ICube> cubes, int yOffset, boolean hasSkyLight) {
         ICube[] cubesToSend = new ICube[16];
         int mask = getCubesToSend(cubes, yOffset, cubesToSend);
 
