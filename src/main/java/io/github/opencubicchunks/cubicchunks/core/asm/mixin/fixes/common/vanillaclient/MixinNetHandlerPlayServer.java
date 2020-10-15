@@ -188,6 +188,9 @@ public class MixinNetHandlerPlayServer {
     @ModifyVariable(method = "sendPacket", at = @At("HEAD"), argsOnly = true)
     private Packet<?> onSendPacket(Packet<?> packetIn) {
         World world = this.player.world;
+        if (!((ICubicWorld) world).isCubicWorld()) {
+            return packetIn;
+        }
         VanillaNetworkHandler vanillaHandler = ((ICubicWorldInternal.Server) world).getVanillaNetworkHandler();
         if (packetIn instanceof IPositionPacket) {
             if (!vanillaHandler.hasCubicChunks(player)) {
