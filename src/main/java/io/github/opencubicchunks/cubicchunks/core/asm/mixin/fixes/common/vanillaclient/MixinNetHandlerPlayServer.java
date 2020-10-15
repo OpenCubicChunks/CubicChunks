@@ -187,6 +187,9 @@ public class MixinNetHandlerPlayServer {
 
     @ModifyVariable(method = "sendPacket", at = @At("HEAD"), argsOnly = true)
     private Packet<?> onSendPacket(Packet<?> packetIn) {
+        if (!CubicChunksConfig.allowVanillaClients) {
+            return packetIn;
+        }
         World world = this.player.world;
         if (!((ICubicWorld) world).isCubicWorld()) {
             return packetIn;
