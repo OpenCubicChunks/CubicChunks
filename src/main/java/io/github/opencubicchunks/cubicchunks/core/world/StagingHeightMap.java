@@ -83,7 +83,8 @@ public class StagingHeightMap implements IHeightMap {
     }
 
     private int computeHeightMap(int localX, int localZ) {
-        for (ICube stagedCube : stagedCubes) {
+        for (int j = 0, stagedCubesSize = stagedCubes.size(); j < stagedCubesSize; j++) {
+            ICube stagedCube = stagedCubes.get(j);
             ExtendedBlockStorage ebs = stagedCube.getStorage();
             if (ebs == null || ebs.isEmpty()) {
                 continue;

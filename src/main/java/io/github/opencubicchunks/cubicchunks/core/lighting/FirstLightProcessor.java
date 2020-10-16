@@ -115,7 +115,7 @@ public class FirstLightProcessor {
         }
         FastCubeBlockAccess access = new FastCubeBlockAccess(this.cache, cube, 2);
 
-        Iterable<BlockPos> allBlocks = BlockPos.getAllInBox(
+        Iterable<? extends BlockPos> allBlocks = BlockPos.getAllInBoxMutable(
                 cube.getCoords().getMinBlockPos().add(-1, -1, -1),
                 cube.getCoords().getMaxBlockPos().add(1, 1, 1)
         );
