@@ -51,7 +51,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-class ColumnWatcher extends PlayerChunkMapEntry implements XZAddressable {
+public class ColumnWatcher extends PlayerChunkMapEntry implements XZAddressable {
 
     @Nonnull private PlayerCubeMap playerCubeMap;
     @Nonnull private final TByteList dirtyColumns = new TByteArrayList(64);
