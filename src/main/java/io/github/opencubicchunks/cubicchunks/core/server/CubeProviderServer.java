@@ -33,7 +33,6 @@ import io.github.opencubicchunks.cubicchunks.api.worldgen.CubePrimer;
 import io.github.opencubicchunks.cubicchunks.api.world.ICube;
 import io.github.opencubicchunks.cubicchunks.api.worldgen.ICubeGenerator;
 import io.github.opencubicchunks.cubicchunks.api.world.ICubeProviderServer;
-import io.github.opencubicchunks.cubicchunks.core.asm.CubicChunksMixinConfig;
 import io.github.opencubicchunks.cubicchunks.api.util.Box;
 import io.github.opencubicchunks.cubicchunks.api.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.api.util.XYZMap;
@@ -86,6 +85,7 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
     // TODO: Use a better hash map!
     @Nonnull private XYZMap<Cube> cubeMap = new XYZMap<>(0.7f, 8000);
 
+    @Nonnull private CubePrimer primer;
     @Nonnull private ICubeGenerator cubeGen;
     @Nonnull private Profiler profiler;
 
@@ -94,6 +94,7 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
                 worldServer.getSaveHandler().getChunkLoader(worldServer.provider), // forge uses this in
                 worldServer.provider.createChunkGenerator()); // let's create the chunk generator, for now the vanilla one may be enough
 
+        this.primer = new CubePrimer();
         this.cubeGen = cubeGen;
         this.worldServer = worldServer;
         this.profiler = worldServer.profiler;
@@ -404,8 +405,15 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
      * @return The generated cube
      */
     private Cube generateCube(int cubeX, int cubeY, int cubeZ, Chunk column) {
-        CubePrimer primer = cubeGen.generateCube(cubeX, cubeY, cubeZ);
+        CubePrimer primer = cubeGen.generateCube(cubeX, cubeY, cubeZ, this.primer);
         Cube cube = new Cube(column, cubeY, primer);
+
+        // don't bother resetting the primer if it wasn't used by the generator.
+        // if the generator modifies the primer and then returns a different one it's
+        // not implementing generateCube correctly, so we don't account for that case
+        if (primer == this.primer) {
+            primer.reset();
+        }
 
         onCubeLoaded(cube, column);
         return cube;

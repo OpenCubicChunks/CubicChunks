@@ -33,6 +33,7 @@ import net.minecraft.world.biome.Biome;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
+import java.util.Arrays;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
@@ -142,6 +143,17 @@ public class CubePrimer {
             }
             extData[idx] = (byte) (value >>> 16);
         }
+    }
+
+    /**
+     * Resets this primer to a state as if it were newly constructed.
+     */
+    public void reset() {
+        Arrays.fill(this.data, '\0');
+
+        // simply reset extra data and biomes to null, these are unlikely to be set in most cases anyway
+        this.extData = null;
+        this.biomes3d = null;
     }
 
     /**

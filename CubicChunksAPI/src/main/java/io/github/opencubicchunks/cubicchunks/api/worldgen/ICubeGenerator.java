@@ -63,9 +63,28 @@ public interface ICubeGenerator {
      * @param cubeY the cube's Y coordinate
      * @param cubeZ the cube's Z coordinate
      *
-     * @return An ICubePrimer with the generated blocks
+     * @return A CubePrimer with the generated blocks
+     * @deprecated generators are advised to implement {@link #generateCube(int, int, int, CubePrimer)}
      */
+    @Deprecated
     CubePrimer generateCube(int cubeX, int cubeY, int cubeZ);
+
+    /**
+     * Generate a new cube
+     *
+     * @param cubeX the cube's X coordinate
+     * @param cubeY the cube's Y coordinate
+     * @param cubeZ the cube's Z coordinate
+     * @param primer a CubePrimer which may be used for generating the new cube. Note that generators are allowed to return an
+     *               arbitrary CubePrimer, this parameter is simply a hint to help reduce allocations. However, if a different
+     *               primer is to be returned, the given primer's state must remain unmodified.
+     *
+     * @return A CubePrimer with the generated blocks
+     */
+    default CubePrimer generateCube(int cubeX, int cubeY, int cubeZ, CubePrimer primer) {
+        // proxy to legacy generateCube method to retain API backwards-compatibility
+        return this.generateCube(cubeX, cubeY, cubeZ);
+    }
 
     /**
      * Generate column-global information such as biome data
