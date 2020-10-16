@@ -44,6 +44,7 @@ import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
 import net.minecraft.profiler.Profiler;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.DifficultyInstance;
 import net.minecraft.world.EnumSkyBlock;
@@ -137,6 +138,10 @@ public abstract class MixinWorld implements ICubicWorldInternal {
     @Shadow public abstract boolean isOutsideBuildHeight(BlockPos pos);
 
     @Shadow public abstract Chunk getChunk(BlockPos pos);
+
+    @Shadow public abstract boolean canSeeSky(BlockPos pos);
+
+    @Shadow public abstract void setLightFor(EnumSkyBlock type, BlockPos pos, int lightValue);
 
     protected void initCubicWorld(IntRange heightRange, IntRange generationRange) {
         ((ICubicWorldSettings) worldInfo).setCubic(true);
@@ -252,6 +257,20 @@ public abstract class MixinWorld implements ICubicWorldInternal {
 
     @Inject(method = "checkLightFor", at = @At("HEAD"), cancellable = true)
     public void checkLightFor(EnumSkyBlock lightType, BlockPos pos, CallbackInfoReturnable<Boolean> ci) {
+        if (CubicChunksConfig.fastSimplifiedSkyLight && lightType == EnumSkyBlock.SKY) {
+            if (!isAreaLoaded(pos, 1)) {
+                ci.setReturnValue(false);
+                return;
+            }
+            int max = canSeeSky(pos) ? 15 : 0;
+            int opacity = getBlockState(pos).getLightOpacity((World) (Object) this, pos);
+            for (EnumFacing value : EnumFacing.VALUES) {
+                max = Math.max(max, (canSeeSky(pos.offset(value)) ? 15 : 0) - Math.max(1, opacity) * 4);
+            }
+            setLightFor(EnumSkyBlock.SKY, pos, Math.max(7, max));
+            ci.setReturnValue(true);
+            return;
+        }
         if (!CubicChunksConfig.replaceLightRecheck || !isCubicWorld()) {
             return;
         }

@@ -25,6 +25,7 @@
 package io.github.opencubicchunks.cubicchunks.core.lighting;
 
 import static io.github.opencubicchunks.cubicchunks.api.util.Coords.blockToCube;
+import static io.github.opencubicchunks.cubicchunks.api.util.Coords.blockToLocal;
 import static io.github.opencubicchunks.cubicchunks.api.util.Coords.cubeToMaxBlock;
 import static io.github.opencubicchunks.cubicchunks.api.util.Coords.cubeToMinBlock;
 
@@ -118,14 +119,30 @@ public class FirstLightProcessor {
                 cube.getCoords().getMinBlockPos().add(-1, -1, -1),
                 cube.getCoords().getMaxBlockPos().add(1, 1, 1)
         );
-        propagator.propagateLight(cube.getCoords().getCenterBlockPos(),
-                allBlocks, access, EnumSkyBlock.BLOCK, pos -> {});
+        if (cube.isEmpty()) {
+            List<BlockPos> positions = new ArrayList<>();
+            for (BlockPos pos : allBlocks) {
+                int localX = blockToLocal(pos.getX());
+                int localY = blockToLocal(pos.getY());
+                int localZ = blockToLocal(pos.getZ());
+                // add edges of current and neighbor cube
+                if (localX == 15 || localX == 0 || localY == 15 || localY == 0 || localZ == 15 || localZ == 0) {
+                    positions.add(pos);
+                }
+            }
+            propagator.propagateLight(cube.getCoords().getCenterBlockPos(),
+                    positions, access, EnumSkyBlock.BLOCK, false, pos -> {});
+        } else {
+            propagator.propagateLight(cube.getCoords().getCenterBlockPos(),
+                    allBlocks, access, EnumSkyBlock.BLOCK, false, pos -> {});
+        }
+
 
         if (!cube.getWorld().provider.hasSkyLight()) {
             return;
         }
         propagator.propagateLight(cube.getCoords().getCenterBlockPos(),
-                allBlocks, access, EnumSkyBlock.SKY, tracker::onUpdate);
+                allBlocks, access, EnumSkyBlock.SKY, false, tracker::onUpdate);
 
         // Cache min/max Y, generating them may be expensive
         int[][] minBlockYArr = new int[Cube.SIZE][Cube.SIZE];
