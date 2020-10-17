@@ -49,17 +49,17 @@ public class MixinSPacketSpawnGlobalEntity implements IPositionPacket {
     }
 
     @Redirect(method = "writePacketData", at = @At(value = "FIELD", target = "Lnet/minecraft/network/play/server/SPacketSpawnGlobalEntity;x:D"))
-    private double preprocessPacketX(MixinSPacketSpawnGlobalEntity _this) {
+    private double preprocessPacketX(SPacketSpawnGlobalEntity _this) {
         return this.x + this.posOffset.getX();
     }
 
     @Redirect(method = "writePacketData", at = @At(value = "FIELD", target = "Lnet/minecraft/network/play/server/SPacketSpawnGlobalEntity;y:D"))
-    private double preprocessPacketY(MixinSPacketSpawnGlobalEntity _this) {
+    private double preprocessPacketY(SPacketSpawnGlobalEntity _this) {
         return this.y + this.posOffset.getY();
     }
 
     @Redirect(method = "writePacketData", at = @At(value = "FIELD", target = "Lnet/minecraft/network/play/server/SPacketSpawnGlobalEntity;z:D"))
-    private double preprocessPacketZ(MixinSPacketSpawnGlobalEntity _this) {
+    private double preprocessPacketZ(SPacketSpawnGlobalEntity _this) {
         return this.z + this.posOffset.getZ();
     }
 }

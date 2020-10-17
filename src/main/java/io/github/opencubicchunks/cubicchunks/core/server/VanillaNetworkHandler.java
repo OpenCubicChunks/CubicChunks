@@ -76,9 +76,6 @@ import java.util.stream.Collectors;
 
 public class VanillaNetworkHandler {
 
-    public static final int HORIZ_WRAPAROUND = 65536;
-    public static final int WRAPAROUND_CUBES = HORIZ_WRAPAROUND >> 4;
-
     private static final Map<Class<?>, Field[]> packetFields = new HashMap<>();
     private final WorldServer world;
     private Map<EntityPlayerMP, CubePos> playerYOffsetsS2C = new Object2ObjectOpenHashMap<>();

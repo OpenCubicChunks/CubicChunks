@@ -49,17 +49,17 @@ public class MixinSPacketSpawnPlayer implements IPositionPacket {
     }
 
     @Redirect(method = "writePacketData", at = @At(value = "FIELD", target = "Lnet/minecraft/network/play/server/SPacketSpawnPlayer;x:D"))
-    private double preprocessPacketX(MixinSPacketSpawnPlayer _this) {
+    private double preprocessPacketX(SPacketSpawnPlayer _this) {
         return this.x + this.posOffset.getX();
     }
 
     @Redirect(method = "writePacketData", at = @At(value = "FIELD", target = "Lnet/minecraft/network/play/server/SPacketSpawnPlayer;y:D"))
-    private double preprocessPacketY(MixinSPacketSpawnPlayer _this) {
+    private double preprocessPacketY(SPacketSpawnPlayer _this) {
         return this.y + this.posOffset.getY();
     }
 
     @Redirect(method = "writePacketData", at = @At(value = "FIELD", target = "Lnet/minecraft/network/play/server/SPacketSpawnPlayer;z:D"))
-    private double preprocessPacketZ(MixinSPacketSpawnPlayer _this) {
+    private double preprocessPacketZ(SPacketSpawnPlayer _this) {
         return this.z + this.posOffset.getZ();
     }
 }

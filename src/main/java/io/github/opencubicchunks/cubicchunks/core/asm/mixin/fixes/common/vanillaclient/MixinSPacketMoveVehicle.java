@@ -49,17 +49,17 @@ public class MixinSPacketMoveVehicle implements IPositionPacket {
     }
 
     @Redirect(method = "writePacketData", at = @At(value = "FIELD", target = "Lnet/minecraft/network/play/server/SPacketMoveVehicle;x:D"))
-    private double preprocessPacketX(MixinSPacketMoveVehicle _this) {
+    private double preprocessPacketX(SPacketMoveVehicle _this) {
         return this.x + this.posOffset.getX();
     }
 
     @Redirect(method = "writePacketData", at = @At(value = "FIELD", target = "Lnet/minecraft/network/play/server/SPacketMoveVehicle;y:D"))
-    private double preprocessPacketY(MixinSPacketMoveVehicle _this) {
+    private double preprocessPacketY(SPacketMoveVehicle _this) {
         return this.y + this.posOffset.getY();
     }
 
     @Redirect(method = "writePacketData", at = @At(value = "FIELD", target = "Lnet/minecraft/network/play/server/SPacketMoveVehicle;z:D"))
-    private double preprocessPacketZ(MixinSPacketMoveVehicle _this) {
+    private double preprocessPacketZ(SPacketMoveVehicle _this) {
         return this.z + this.posOffset.getZ();
     }
 }
