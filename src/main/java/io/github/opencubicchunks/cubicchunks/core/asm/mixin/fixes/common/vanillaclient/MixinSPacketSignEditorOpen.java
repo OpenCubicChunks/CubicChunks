@@ -49,7 +49,7 @@ public class MixinSPacketSignEditorOpen implements IPositionPacket {
     @Redirect(method = "writePacketData", at = @At(value = "FIELD",
             target = "Lnet/minecraft/network/play/server/SPacketSignEditorOpen;signPosition:Lnet/minecraft/util/math/BlockPos;"))
     private BlockPos preprocessPacket(SPacketSignEditorOpen _this) {
-        return offsetY == 0 ? this.signPosition : this.signPosition.add(0, offsetY, 0);
+        return this.posOffset == BlockPos.ORIGIN ? this.signPosition : this.signPosition.add(this.posOffset);
     }
 
 }

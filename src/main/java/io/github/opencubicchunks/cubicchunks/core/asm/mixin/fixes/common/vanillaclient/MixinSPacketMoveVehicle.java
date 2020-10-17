@@ -35,7 +35,9 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 @Mixin(SPacketMoveVehicle.class)
 public class MixinSPacketMoveVehicle implements IPositionPacket {
 
+    @Shadow private double x;
     @Shadow private double y;
+    @Shadow private double z;
     private BlockPos posOffset = BlockPos.ORIGIN;
 
     @Override public void setPosOffset(BlockPos posOffset) {
@@ -46,9 +48,18 @@ public class MixinSPacketMoveVehicle implements IPositionPacket {
         return this.posOffset != BlockPos.ORIGIN;
     }
 
-    @Redirect(method = "writePacketData", at = @At(value = "FIELD", target = "Lnet/minecraft/network/play/server/SPacketMoveVehicle;y:D"))
-    private double preprocessPacket(SPacketMoveVehicle _this) {
-        return this.y + offsetY;
+    @Redirect(method = "writePacketData", at = @At(value = "FIELD", target = "Lnet/minecraft/network/play/server/SPacketMoveVehicle;x:D"))
+    private double preprocessPacketX(MixinSPacketMoveVehicle _this) {
+        return this.x + this.posOffset.getX();
     }
 
+    @Redirect(method = "writePacketData", at = @At(value = "FIELD", target = "Lnet/minecraft/network/play/server/SPacketMoveVehicle;y:D"))
+    private double preprocessPacketY(MixinSPacketMoveVehicle _this) {
+        return this.y + this.posOffset.getY();
+    }
+
+    @Redirect(method = "writePacketData", at = @At(value = "FIELD", target = "Lnet/minecraft/network/play/server/SPacketMoveVehicle;z:D"))
+    private double preprocessPacketZ(MixinSPacketMoveVehicle _this) {
+        return this.z + this.posOffset.getZ();
+    }
 }

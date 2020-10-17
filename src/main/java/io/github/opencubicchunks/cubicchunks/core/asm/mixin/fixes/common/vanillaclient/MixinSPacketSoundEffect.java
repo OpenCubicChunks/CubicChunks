@@ -35,7 +35,9 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 @Mixin(SPacketSoundEffect.class)
 public class MixinSPacketSoundEffect implements IPositionPacket {
 
+    @Shadow private int posX;
     @Shadow private int posY;
+    @Shadow private int posZ;
     private BlockPos posOffset = BlockPos.ORIGIN;
 
     @Override public void setPosOffset(BlockPos posOffset) {
@@ -46,9 +48,18 @@ public class MixinSPacketSoundEffect implements IPositionPacket {
         return this.posOffset != BlockPos.ORIGIN;
     }
 
-    @Redirect(method = "writePacketData", at = @At(value = "FIELD", target = "Lnet/minecraft/network/play/server/SPacketSoundEffect;posY:I"))
-    private int preprocessPacket(SPacketSoundEffect _this) {
-        return this.posY + offsetY;
+    @Redirect(method = "writePacketData", at = @At(value = "FIELD", target = "Lnet/minecraft/network/play/server/SPacketSoundEffect;posX:I"))
+    private int preprocessPacketX(SPacketSoundEffect _this) {
+        return this.posX + this.posOffset.getX();
     }
 
+    @Redirect(method = "writePacketData", at = @At(value = "FIELD", target = "Lnet/minecraft/network/play/server/SPacketSoundEffect;posY:I"))
+    private int preprocessPacketY(SPacketSoundEffect _this) {
+        return this.posY + this.posOffset.getY();
+    }
+
+    @Redirect(method = "writePacketData", at = @At(value = "FIELD", target = "Lnet/minecraft/network/play/server/SPacketSoundEffect;posZ:I"))
+    private int preprocessPacketZ(SPacketSoundEffect _this) {
+        return this.posZ + this.posOffset.getZ();
+    }
 }

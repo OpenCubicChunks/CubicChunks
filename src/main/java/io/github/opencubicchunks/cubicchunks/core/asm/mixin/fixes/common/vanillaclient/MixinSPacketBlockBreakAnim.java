@@ -49,6 +49,6 @@ public class MixinSPacketBlockBreakAnim implements IPositionPacket {
     @Redirect(method = "writePacketData", at = @At(value = "FIELD",
             target = "Lnet/minecraft/network/play/server/SPacketBlockBreakAnim;position:Lnet/minecraft/util/math/BlockPos;"))
     private BlockPos preprocessPacket(SPacketBlockBreakAnim _this) {
-        return offsetY == 0 ? this.position : this.position.add(0, offsetY, 0);
+        return this.posOffset == BlockPos.ORIGIN ? this.position : this.position.add(this.posOffset);
     }
 }

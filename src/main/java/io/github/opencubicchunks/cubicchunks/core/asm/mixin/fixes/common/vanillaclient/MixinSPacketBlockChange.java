@@ -49,6 +49,6 @@ public class MixinSPacketBlockChange implements IPositionPacket {
     @Redirect(method = "writePacketData", at = @At(value = "FIELD",
             target = "Lnet/minecraft/network/play/server/SPacketBlockChange;blockPosition:Lnet/minecraft/util/math/BlockPos;"))
     private BlockPos preprocessPacket(SPacketBlockChange _this) {
-        return offsetY == 0 ? this.blockPosition : this.blockPosition.add(0, offsetY, 0);
+        return this.posOffset == BlockPos.ORIGIN ? this.blockPosition : this.blockPosition.add(this.posOffset);
     }
 }

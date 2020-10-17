@@ -35,7 +35,9 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 @Mixin(SPacketParticles.class)
 public class MixinSPacketParticles implements IPositionPacket {
 
+    @Shadow private float xCoord;
     @Shadow private float yCoord;
+    @Shadow private float zCoord;
     private BlockPos posOffset = BlockPos.ORIGIN;
 
     @Override public void setPosOffset(BlockPos posOffset) {
@@ -46,9 +48,18 @@ public class MixinSPacketParticles implements IPositionPacket {
         return this.posOffset != BlockPos.ORIGIN;
     }
 
-    @Redirect(method = "writePacketData", at = @At(value = "FIELD", target = "Lnet/minecraft/network/play/server/SPacketParticles;yCoord:F"))
-    private float preprocessPacket(SPacketParticles _this) {
-        return this.yCoord + offsetY;
+    @Redirect(method = "writePacketData", at = @At(value = "FIELD", target = "Lnet/minecraft/network/play/server/SPacketParticles;xCoord:F"))
+    private float preprocessPacketX(SPacketParticles _this) {
+        return this.xCoord + this.posOffset.getX();
     }
 
+    @Redirect(method = "writePacketData", at = @At(value = "FIELD", target = "Lnet/minecraft/network/play/server/SPacketParticles;yCoord:F"))
+    private float preprocessPacketY(SPacketParticles _this) {
+        return this.yCoord + this.posOffset.getY();
+    }
+
+    @Redirect(method = "writePacketData", at = @At(value = "FIELD", target = "Lnet/minecraft/network/play/server/SPacketParticles;zCoord:F"))
+    private float preprocessPacketZ(SPacketParticles _this) {
+        return this.zCoord + this.posOffset.getZ();
+    }
 }

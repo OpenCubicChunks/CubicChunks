@@ -50,10 +50,10 @@ public class MixinSPacketSpawnPosition implements IPositionPacket {
     @Redirect(method = "writePacketData", at = @At(value = "FIELD",
             target = "Lnet/minecraft/network/play/server/SPacketSpawnPosition;spawnBlockPos:Lnet/minecraft/util/math/BlockPos;"))
     private BlockPos preprocessPacket(SPacketSpawnPosition _this) {
-        BlockPos pos = offsetY == 0 ? this.spawnBlockPos : this.spawnBlockPos.add(0, offsetY, 0);
+        BlockPos pos = this.posOffset == BlockPos.ORIGIN ? this.spawnBlockPos : this.spawnBlockPos.add(this.posOffset);
 
         int y = pos.getY();
-        if (!this.hasYOffset //if the Y value isn't offset, it means the client has cubic chunks and we should always send the un-clamped Y coord
+        if (!this.hasPosOffset() //if the Y value isn't offset, it means the client has cubic chunks and we should always send the un-clamped Y coord
             || y <= 2047 && y >= -2047)    {
             return pos;
         } else {

@@ -49,7 +49,7 @@ public class MixinSPacketEffect implements IPositionPacket {
     @Redirect(method = "writePacketData",
             at = @At(value = "FIELD", target = "Lnet/minecraft/network/play/server/SPacketEffect;soundPos:Lnet/minecraft/util/math/BlockPos;"))
     private BlockPos preprocessPacket(SPacketEffect _this) {
-        return offsetY == 0 ? this.soundPos : this.soundPos.add(0, offsetY, 0);
+        return this.posOffset == BlockPos.ORIGIN ? this.soundPos : this.soundPos.add(this.posOffset);
     }
 
 }

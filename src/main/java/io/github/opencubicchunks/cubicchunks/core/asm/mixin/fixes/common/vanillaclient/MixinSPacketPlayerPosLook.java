@@ -37,7 +37,9 @@ import java.util.Set;
 @Mixin(SPacketPlayerPosLook.class)
 public class MixinSPacketPlayerPosLook implements IPositionPacket {
 
+    @Shadow private double x;
     @Shadow private double y;
+    @Shadow private double z;
     @Shadow private Set<SPacketPlayerPosLook.EnumFlags> flags;
     private BlockPos posOffset = BlockPos.ORIGIN;
 
@@ -49,9 +51,18 @@ public class MixinSPacketPlayerPosLook implements IPositionPacket {
         return this.posOffset != BlockPos.ORIGIN;
     }
 
-    @Redirect(method = "writePacketData", at = @At(value = "FIELD", target = "Lnet/minecraft/network/play/server/SPacketPlayerPosLook;y:D"))
-    private double preprocessPacket(SPacketPlayerPosLook _this) {
-        return this.flags.contains(SPacketPlayerPosLook.EnumFlags.Y) ? this.y : this.y + offsetY;
+    @Redirect(method = "writePacketData", at = @At(value = "FIELD", target = "Lnet/minecraft/network/play/server/SPacketPlayerPosLook;x:D"))
+    private double preprocessPacketX(SPacketPlayerPosLook _this) {
+        return this.flags.contains(SPacketPlayerPosLook.EnumFlags.X) ? this.x : this.x + this.posOffset.getY();
     }
 
+    @Redirect(method = "writePacketData", at = @At(value = "FIELD", target = "Lnet/minecraft/network/play/server/SPacketPlayerPosLook;y:D"))
+    private double preprocessPacketY(SPacketPlayerPosLook _this) {
+        return this.flags.contains(SPacketPlayerPosLook.EnumFlags.Y) ? this.y : this.y + this.posOffset.getY();
+    }
+
+    @Redirect(method = "writePacketData", at = @At(value = "FIELD", target = "Lnet/minecraft/network/play/server/SPacketPlayerPosLook;z:D"))
+    private double preprocessPacketZ(SPacketPlayerPosLook _this) {
+        return this.flags.contains(SPacketPlayerPosLook.EnumFlags.Z) ? this.z : this.z + this.posOffset.getY();
+    }
 }

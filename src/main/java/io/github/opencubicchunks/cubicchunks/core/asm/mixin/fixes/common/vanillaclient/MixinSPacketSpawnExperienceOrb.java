@@ -35,7 +35,9 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 @Mixin(SPacketSpawnExperienceOrb.class)
 public class MixinSPacketSpawnExperienceOrb implements IPositionPacket {
 
+    @Shadow private double posX;
     @Shadow private double posY;
+    @Shadow private double posZ;
     private BlockPos posOffset = BlockPos.ORIGIN;
 
     @Override public void setPosOffset(BlockPos posOffset) {
@@ -46,9 +48,18 @@ public class MixinSPacketSpawnExperienceOrb implements IPositionPacket {
         return this.posOffset != BlockPos.ORIGIN;
     }
 
-    @Redirect(method = "writePacketData", at = @At(value = "FIELD", target = "Lnet/minecraft/network/play/server/SPacketSpawnExperienceOrb;posY:D"))
-    private double preprocessPacket(SPacketSpawnExperienceOrb _this) {
-        return this.posY + offsetY;
+    @Redirect(method = "writePacketData", at = @At(value = "FIELD", target = "Lnet/minecraft/network/play/server/SPacketSpawnExperienceOrb;posX:D"))
+    private double preprocessPacketX(SPacketSpawnExperienceOrb _this) {
+        return this.posX + this.posOffset.getX();
     }
 
+    @Redirect(method = "writePacketData", at = @At(value = "FIELD", target = "Lnet/minecraft/network/play/server/SPacketSpawnExperienceOrb;posY:D"))
+    private double preprocessPacketY(SPacketSpawnExperienceOrb _this) {
+        return this.posY + this.posOffset.getY();
+    }
+
+    @Redirect(method = "writePacketData", at = @At(value = "FIELD", target = "Lnet/minecraft/network/play/server/SPacketSpawnExperienceOrb;posZ:D"))
+    private double preprocessPacketZ(SPacketSpawnExperienceOrb _this) {
+        return this.posZ + this.posOffset.getZ();
+    }
 }

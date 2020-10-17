@@ -51,15 +51,23 @@ public class MixinSPacketUpdateTileEntity implements IPositionPacket {
     @Redirect(method = "writePacketData", at = @At(value = "FIELD",
             target = "Lnet/minecraft/network/play/server/SPacketUpdateTileEntity;blockPos:Lnet/minecraft/util/math/BlockPos;"))
     private BlockPos preprocessPacket(SPacketUpdateTileEntity _this) {
-        return offsetY == 0 ? this.blockPos : this.blockPos.add(0, offsetY, 0);
+        return this.posOffset == BlockPos.ORIGIN ? this.blockPos : this.blockPos.add(this.posOffset);
     }
 
     @Redirect(method = "writePacketData",
             at = @At(value = "FIELD", target = "Lnet/minecraft/network/play/server/SPacketUpdateTileEntity;nbt:Lnet/minecraft/nbt/NBTTagCompound;"))
     private NBTTagCompound preprocessPacketNBT(SPacketUpdateTileEntity _this) {
-        if (offsetY != 0 && this.nbt.hasKey("y")) {
+        if (this.hasPosOffset()) {
             NBTTagCompound copy = this.nbt.copy();
-            copy.setInteger("y", this.nbt.getInteger("y") + offsetY);
+            if (copy.hasKey("x")) {
+                copy.setInteger("x", copy.getInteger("x") + this.posOffset.getX());
+            }
+            if (copy.hasKey("y")) {
+                copy.setInteger("y", copy.getInteger("y") + this.posOffset.getY());
+            }
+            if (copy.hasKey("z")) {
+                copy.setInteger("z", copy.getInteger("z") + this.posOffset.getZ());
+            }
             return copy;
         }
         return this.nbt;

@@ -44,10 +44,18 @@ public class MixinSPacketEntityLookMove extends SPacketEntity implements IPositi
         return this.posOffset != BlockPos.ORIGIN;
     }
 
-    @Redirect(method = "writePacketData",
-            at = @At(value = "FIELD", target = "Lnet/minecraft/network/play/server/SPacketEntity$S17PacketEntityLookMove;posY:I"))
-    private int preprocessPacket(S17PacketEntityLookMove buf) {
-        return this.posY + offsetY;
+    @Redirect(method = "writePacketData", at = @At(value = "FIELD", target = "Lnet/minecraft/network/play/server/SPacketEntity$S17PacketEntityLookMove;posX:I"))
+    private int preprocessPacketX(S17PacketEntityLookMove buf) {
+        return this.posX + this.posOffset.getX();
+    }
+    
+    @Redirect(method = "writePacketData", at = @At(value = "FIELD", target = "Lnet/minecraft/network/play/server/SPacketEntity$S17PacketEntityLookMove;posY:I"))
+    private int preprocessPacketY(S17PacketEntityLookMove buf) {
+        return this.posY + this.posOffset.getY();
     }
 
+    @Redirect(method = "writePacketData", at = @At(value = "FIELD", target = "Lnet/minecraft/network/play/server/SPacketEntity$S17PacketEntityLookMove;posZ:I"))
+    private int preprocessPacketZ(S17PacketEntityLookMove buf) {
+        return this.posZ + this.posOffset.getZ();
+    }
 }

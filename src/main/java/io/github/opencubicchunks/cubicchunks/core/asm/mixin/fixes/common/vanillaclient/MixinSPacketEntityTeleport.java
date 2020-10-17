@@ -35,7 +35,9 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 @Mixin(SPacketEntityTeleport.class)
 public class MixinSPacketEntityTeleport implements IPositionPacket {
 
+    @Shadow private double posX;
     @Shadow private double posY;
+    @Shadow private double posZ;
     private BlockPos posOffset = BlockPos.ORIGIN;
 
     @Override public void setPosOffset(BlockPos posOffset) {
@@ -46,9 +48,18 @@ public class MixinSPacketEntityTeleport implements IPositionPacket {
         return this.posOffset != BlockPos.ORIGIN;
     }
 
-    @Redirect(method = "writePacketData", at = @At(value = "FIELD", target = "Lnet/minecraft/network/play/server/SPacketEntityTeleport;posY:D"))
-    private double preprocessPacket(SPacketEntityTeleport _this) {
-        return this.posY + offsetY;
+    @Redirect(method = "writePacketData", at = @At(value = "FIELD", target = "Lnet/minecraft/network/play/server/SPacketEntityTeleport;posX:D"))
+    private double preprocessPacketX(SPacketEntityTeleport _this) {
+        return this.posX + this.posOffset.getX();
     }
 
+    @Redirect(method = "writePacketData", at = @At(value = "FIELD", target = "Lnet/minecraft/network/play/server/SPacketEntityTeleport;posY:D"))
+    private double preprocessPacketY(SPacketEntityTeleport _this) {
+        return this.posY + this.posOffset.getY();
+    }
+
+    @Redirect(method = "writePacketData", at = @At(value = "FIELD", target = "Lnet/minecraft/network/play/server/SPacketEntityTeleport;posZ:D"))
+    private double preprocessPacketZ(SPacketEntityTeleport _this) {
+        return this.posZ + this.posOffset.getZ();
+    }
 }

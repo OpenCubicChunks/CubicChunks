@@ -50,6 +50,6 @@ public class MixinSPacketBlockAction implements IPositionPacket {
             at = @At(value = "FIELD", target = "Lnet/minecraft/network/play/server/SPacketBlockAction;"
                     + "blockPosition:Lnet/minecraft/util/math/BlockPos;"))
     private BlockPos preprocessPacket(SPacketBlockAction _this) {
-        return offsetY == 0 ? this.blockPosition : this.blockPosition.add(0, offsetY, 0);
+        return this.posOffset == BlockPos.ORIGIN ? this.blockPosition : this.blockPosition.add(this.posOffset);
     }
 }

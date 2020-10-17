@@ -49,6 +49,6 @@ public class MixinSPacketUseBed implements IPositionPacket {
     @Redirect(method = "writePacketData",
             at = @At(value = "FIELD", target = "Lnet/minecraft/network/play/server/SPacketUseBed;bedPos:Lnet/minecraft/util/math/BlockPos;"))
     private BlockPos preprocessPacket(SPacketUseBed _this) {
-        return offsetY == 0 ? this.bedPos : this.bedPos.add(0, offsetY, 0);
+        return this.posOffset == BlockPos.ORIGIN ? this.bedPos : this.bedPos.add(this.posOffset);
     }
 }
