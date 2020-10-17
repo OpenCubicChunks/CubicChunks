@@ -34,11 +34,14 @@ import io.github.opencubicchunks.cubicchunks.core.asm.mixin.core.common.vanillac
 import io.github.opencubicchunks.cubicchunks.core.asm.mixin.core.common.vanillaclient.ICPacketUpdateSign;
 import io.github.opencubicchunks.cubicchunks.core.asm.mixin.core.common.vanillaclient.ICPacketVehicleMove;
 import io.github.opencubicchunks.cubicchunks.core.server.VanillaNetworkHandler;
+import io.github.opencubicchunks.cubicchunks.core.server.vanillaproxy.IBedrockPlayer;
 import io.github.opencubicchunks.cubicchunks.core.server.vanillaproxy.IPositionPacket;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.network.NetHandlerPlayServer;
 import net.minecraft.network.Packet;
+import net.minecraft.network.PacketBuffer;
 import net.minecraft.network.play.client.CPacketConfirmTeleport;
+import net.minecraft.network.play.client.CPacketCustomPayload;
 import net.minecraft.network.play.client.CPacketPlayer;
 import net.minecraft.network.play.client.CPacketPlayerDigging;
 import net.minecraft.network.play.client.CPacketPlayerTryUseItemOnBlock;
@@ -59,6 +62,19 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class MixinNetHandlerPlayServer {
 
     @Shadow public EntityPlayerMP player;
+
+    @Inject(method = "processCustomPayload",
+            at = @At(value = "INVOKE", shift = At.Shift.AFTER,
+                    target = "Lnet/minecraft/network/PacketThreadUtil;checkThreadAndEnqueue(Lnet/minecraft/network/Packet;"
+                             + "Lnet/minecraft/network/INetHandler;Lnet/minecraft/util/IThreadListener;)V"))
+    public void preprocessPacket(CPacketCustomPayload packet, CallbackInfo ci) {
+        if (!CubicChunksConfig.allowVanillaClients || !"MC|Brand".equals(packet.getChannelName())) {
+            return;
+        }
+        PacketBuffer packetbuffer = packet.getBufferData();
+        ((IBedrockPlayer) this.player).setBedrock(packetbuffer.readString(32767).contains("Geyser"));
+        packetbuffer.resetReaderIndex(); // reset buffer position in case another mod tries to access the client brand the same way
+    }
 
     @Inject(method = "processPlayerDigging",
             at = @At(value = "INVOKE", shift = At.Shift.AFTER,

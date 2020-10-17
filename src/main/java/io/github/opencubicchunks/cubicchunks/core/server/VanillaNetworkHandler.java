@@ -34,6 +34,7 @@ import io.github.opencubicchunks.cubicchunks.core.CubicChunksConfig;
 import io.github.opencubicchunks.cubicchunks.core.asm.mixin.core.common.vanillaclient.ISPacketChunkData;
 import io.github.opencubicchunks.cubicchunks.core.asm.mixin.core.common.vanillaclient.ISPacketMultiBlockChange;
 import io.github.opencubicchunks.cubicchunks.core.asm.mixin.fixes.common.vanillaclient.INetHandlerPlayServer;
+import io.github.opencubicchunks.cubicchunks.core.server.vanillaproxy.IBedrockPlayer;
 import io.github.opencubicchunks.cubicchunks.core.util.AddressTools;
 import io.github.opencubicchunks.cubicchunks.core.world.cube.Cube;
 import io.netty.buffer.Unpooled;
@@ -230,7 +231,8 @@ public class VanillaNetworkHandler {
 
         boolean shouldSliceTransition = idy < 2 || idy >= 14;
         boolean isHorizontalSlices = CubicChunksConfig.vanillaClients.horizontalSlices;
-        if (!shouldSliceTransition && isHorizontalSlices) {
+        if (!shouldSliceTransition && isHorizontalSlices
+            && (!CubicChunksConfig.vanillaClients.horizontalSlicesBedrockOnly || ((IBedrockPlayer) player).isBedrock())) {
             int horizontalSliceSize = CubicChunksConfig.vanillaClients.horizontalSliceSize;
             int maxHorizontalOffset = Math.max(Math.abs(idx), Math.abs(idz));
             shouldSliceTransition = maxHorizontalOffset >= Coords.blockToCube(horizontalSliceSize);
