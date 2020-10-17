@@ -85,7 +85,7 @@ public class LightPropagator {
         internalRelightQueue.begin(centerPos);
         try {
             if (CubicChunksConfig.fastSimplifiedSkyLight && type == EnumSkyBlock.SKY) {
-                doFastSimplifiedSkylight(coords, blocks, type);
+                doFastSimplifiedSkylight(coords, blocks, type, setLightCallback);
                 return;
             }
             if (handleDecreased) {
@@ -226,7 +226,8 @@ public class LightPropagator {
         }
     }
 
-    private void doFastSimplifiedSkylight(Iterable<? extends BlockPos> coords, ILightBlockAccess blocks, EnumSkyBlock type) {
+    private void doFastSimplifiedSkylight(Iterable<? extends BlockPos> coords, ILightBlockAccess blocks, EnumSkyBlock type,
+            Consumer<BlockPos> setLightCallback) {
         for (BlockPos coord : coords) {
             int max = blocks.getEmittedLight(coord, type);
             if (max >= 11) {
@@ -244,6 +245,7 @@ public class LightPropagator {
                 }
             }
             blocks.setLightFor(type, coord, Math.max(7, max));
+            setLightCallback.accept(coord);
         }
     }
 
