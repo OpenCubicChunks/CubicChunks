@@ -40,9 +40,6 @@ import io.github.opencubicchunks.cubicchunks.core.world.cube.Cube;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
 import io.netty.util.Attribute;
-import it.unimi.dsi.fastutil.objects.Object2IntMap;
-import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
-import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.NetHandlerPlayServer;
@@ -70,20 +67,20 @@ import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.EnumSet;
-import java.util.HashMap;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 public class VanillaNetworkHandler {
 
-    private static final Map<Class<?>, Field[]> packetFields = new HashMap<>();
+    private static final Map<Class<?>, Field[]> packetFields = new IdentityHashMap<>();
     private final WorldServer world;
-    private Map<EntityPlayerMP, CubePos> playerYOffsetsS2C = new Object2ObjectOpenHashMap<>();
+    private Map<EntityPlayerMP, CubePos> playerOffsets = new IdentityHashMap<>();
     // separate offset because when switching layers, there is a short moment where
     // packets still sent with the client on the old offset will be processed
-    private Map<EntityPlayerMP, CubePos> playerYOffsetsC2S = new Object2ObjectOpenHashMap<>();
-    private Map<EntityPlayerMP, Integer> expectedTeleportId = new HashMap<>();
+    private Map<EntityPlayerMP, CubePos> playerOffsetsC2S = new IdentityHashMap<>();
+    private Map<EntityPlayerMP, Integer> expectedTeleportId = new IdentityHashMap<>();
 
     public VanillaNetworkHandler(WorldServer world) {
         this.world = world;
@@ -129,11 +126,11 @@ public class VanillaNetworkHandler {
     }
 
     private CubePos getPlayerOffsetS2C(EntityPlayerMP player) {
-        return playerYOffsetsS2C.getOrDefault(player, CubePos.ZERO);
+        return playerOffsets.getOrDefault(player, CubePos.ZERO);
     }
 
     private CubePos getPlayerOffsetC2S(EntityPlayerMP player) {
-        return playerYOffsetsC2S.getOrDefault(player, CubePos.ZERO);
+        return playerOffsetsC2S.getOrDefault(player, CubePos.ZERO);
     }
 
     public void sendCubeLoadPackets(Collection<? extends ICube> cubes, EntityPlayerMP player) {
@@ -224,7 +221,7 @@ public class VanillaNetworkHandler {
         if (!CubicChunksConfig.allowVanillaClients) {
             return;
         }
-        CubePos offset = playerYOffsetsS2C.getOrDefault(player, CubePos.ZERO);
+        CubePos offset = playerOffsets.getOrDefault(player, CubePos.ZERO);
         int idx = managedPos.getX() + offset.getX();
         int idy = managedPos.getY() + offset.getY();
         int idz = managedPos.getZ() + offset.getZ();
@@ -242,7 +239,7 @@ public class VanillaNetworkHandler {
             int newYOffset = 8 - managedPos.getY();
             int newZOffset = isHorizontalSlices ? -managedPos.getZ() : 0;
             CubePos newOffset = new CubePos(newXOffset, newYOffset, newZOffset);
-            playerYOffsetsS2C.put(player, newOffset);
+            playerOffsets.put(player, newOffset);
             switchPlayerOffset(cubeMap, player, offset, newOffset);
         }
     }
@@ -254,7 +251,7 @@ public class VanillaNetworkHandler {
         if (!expectedTeleportId.containsKey(player) || !expectedTeleportId.remove(player, teleportId)) {
             return false;
         }
-        playerYOffsetsC2S.put(player, playerYOffsetsS2C.get(player));
+        playerOffsetsC2S.put(player, playerOffsets.get(player));
         return true;
     }
 
@@ -262,8 +259,8 @@ public class VanillaNetworkHandler {
         if (!CubicChunksConfig.allowVanillaClients) {
             return;
         }
-        playerYOffsetsS2C.remove(player);
-        playerYOffsetsC2S.remove(player);
+        playerOffsets.remove(player);
+        playerOffsetsC2S.remove(player);
         expectedTeleportId.remove(player);
     }
 
