@@ -91,9 +91,9 @@ public class MixinNetHandlerPlayServer {
         if (!hasCC) {
             ICPacketPlayer p = (ICPacketPlayer) packet;
             BlockPos offset = vanillaHandler.getC2SOffset(player);
-            p.setX(p.getX() + offset.getX());
-            p.setY(p.getY() + offset.getY());
-            p.setZ(p.getZ() + offset.getZ());
+            p.setX(p.getX() - offset.getX());
+            p.setY(p.getY() - offset.getY());
+            p.setZ(p.getZ() - offset.getZ());
         }
     }
 
@@ -166,9 +166,9 @@ public class MixinNetHandlerPlayServer {
         if (!hasCC) {
             ICPacketVehicleMove p = (ICPacketVehicleMove) packetIn;
             BlockPos offset = vanillaHandler.getC2SOffset(player);
-            p.setX(packetIn.getX() + offset.getX());
-            p.setY(packetIn.getY() + offset.getY());
-            p.setZ(packetIn.getZ() + offset.getZ());
+            p.setX(packetIn.getX() - offset.getX());
+            p.setY(packetIn.getY() - offset.getY());
+            p.setZ(packetIn.getZ() - offset.getZ());
         }
     }
 

@@ -207,6 +207,8 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
     // (player respawn packet?)
     private Set<EntityPlayerMP> pendingPlayerAdd = new HashSet<>();
 
+    private Set<EntityPlayerMP> pendingUpdateVanillaPlayerPosition = new HashSet<>();
+
     private final TickableChunkContainer tickableChunksCubesToReturn = new TickableChunkContainer();
 
     // see comment in updateMovingPlayer() for explnation why it's in this class
@@ -305,6 +307,15 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
             for (EntityPlayerMP player : players) {
                 addPlayer(player);
             }
+        }
+        if (!this.pendingUpdateVanillaPlayerPosition.isEmpty()) {
+            for (EntityPlayerMP player : this.pendingUpdateVanillaPlayerPosition) {
+                PlayerWrapper playerWrapper = this.players.get(player.getEntityId());
+                if (playerWrapper != null) {
+                    vanillaNetworkHandler.updatePlayerPosition(this, player, playerWrapper.getManagedCubePos());
+                }
+            }
+            this.pendingUpdateVanillaPlayerPosition.clear();
         }
         getWorldServer().profiler.endStartSection("tickEntries");
         //force update-all every 8000 ticks (400 seconds)
@@ -574,7 +585,8 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
         this.players.put(player.getEntityId(), playerWrapper);
         this.setNeedSort();
         if (!vanillaNetworkHandler.hasCubicChunks(player)) {
-            vanillaNetworkHandler.updatePlayerPosition(this, player, playerWrapper.getManagedCubePos());
+            //delay by one tick
+            this.pendingUpdateVanillaPlayerPosition.add(player);
         }
     }
 

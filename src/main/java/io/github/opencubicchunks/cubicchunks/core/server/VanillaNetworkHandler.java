@@ -229,7 +229,7 @@ public class VanillaNetworkHandler {
             int newYOffset = 8 - managedPos.getY();
             CubePos newOffset = new CubePos(0, newYOffset, 0);
             playerYOffsetsS2C.put(player, newOffset);
-            switchPlayerOffset(cubeMap, player, newOffset, newOffset);
+            switchPlayerOffset(cubeMap, player, offset, newOffset);
         }
     }
 
@@ -237,7 +237,7 @@ public class VanillaNetworkHandler {
         if (!CubicChunksConfig.allowVanillaClients) {
             return false;
         }
-        if (!expectedTeleportId.containsKey(player) || expectedTeleportId.remove(player) != teleportId) {
+        if (!expectedTeleportId.containsKey(player) || !expectedTeleportId.remove(player, teleportId)) {
             return false;
         }
         playerYOffsetsC2S.put(player, playerYOffsetsS2C.get(player));

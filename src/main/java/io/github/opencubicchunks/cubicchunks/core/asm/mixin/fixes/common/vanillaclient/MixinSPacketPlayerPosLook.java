@@ -53,7 +53,7 @@ public class MixinSPacketPlayerPosLook implements IPositionPacket {
 
     @Redirect(method = "writePacketData", at = @At(value = "FIELD", target = "Lnet/minecraft/network/play/server/SPacketPlayerPosLook;x:D"))
     private double preprocessPacketX(SPacketPlayerPosLook _this) {
-        return this.flags.contains(SPacketPlayerPosLook.EnumFlags.X) ? this.x : this.x + this.posOffset.getY();
+        return this.flags.contains(SPacketPlayerPosLook.EnumFlags.X) ? this.x : this.x + this.posOffset.getX();
     }
 
     @Redirect(method = "writePacketData", at = @At(value = "FIELD", target = "Lnet/minecraft/network/play/server/SPacketPlayerPosLook;y:D"))
@@ -63,6 +63,6 @@ public class MixinSPacketPlayerPosLook implements IPositionPacket {
 
     @Redirect(method = "writePacketData", at = @At(value = "FIELD", target = "Lnet/minecraft/network/play/server/SPacketPlayerPosLook;z:D"))
     private double preprocessPacketZ(SPacketPlayerPosLook _this) {
-        return this.flags.contains(SPacketPlayerPosLook.EnumFlags.Z) ? this.z : this.z + this.posOffset.getY();
+        return this.flags.contains(SPacketPlayerPosLook.EnumFlags.Z) ? this.z : this.z + this.posOffset.getZ();
     }
 }
