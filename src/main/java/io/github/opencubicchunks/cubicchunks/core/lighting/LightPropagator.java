@@ -123,6 +123,7 @@ public class LightPropagator {
 
     private void handleDecreasedLights(ILightBlockAccess blocks, EnumSkyBlock type, Consumer<BlockPos> setLightCallback) {
         BlockPos.MutableBlockPos scratchPos = new BlockPos.MutableBlockPos();
+        BlockPos.MutableBlockPos scratchPos2 = new BlockPos.MutableBlockPos();
         // follow decreasing light values until it stops decreasing,
         // setting each encountered value to 0 for easy spreading
         while (internalRelightQueue.next()) {
@@ -131,7 +132,7 @@ public class LightPropagator {
 
             int currentValue = blocks.getLightFor(type, pos);
             // note: min value is 0
-            int lightFromNeighbors = getExpectedLight(blocks, type, pos, scratchPos);
+            int lightFromNeighbors = getExpectedLight(blocks, type, pos, scratchPos2);
             // if this is true, this blocks currently spreads light out, and has no light coming in from neighbors
             // lightFromNeighbors == currentValue-1 means that some neighbor has the same light value, or that
             // currentValue == 1 and all surrounding blocks have light 0
@@ -184,20 +185,22 @@ public class LightPropagator {
 
     private void handleLightSpread(ILightBlockAccess blocks, EnumSkyBlock type, Consumer<BlockPos> setLightCallback) {
         BlockPos.MutableBlockPos scratchPos = new BlockPos.MutableBlockPos();
+        BlockPos.MutableBlockPos scratchPos2 = new BlockPos.MutableBlockPos();
+        BlockPos.MutableBlockPos scratchPos3 = new BlockPos.MutableBlockPos();
         // spread out light values
         while (internalRelightQueue.next()) {
             BlockPos pos = scratchPos.setPos(internalRelightQueue.getX(), internalRelightQueue.getY(), internalRelightQueue.getZ());
             int distance = internalRelightQueue.isBeforeReset() ? LightUpdateQueue.MAX_DISTANCE : internalRelightQueue.getDistance();
 
             for (EnumFacing direction : EnumFacing.values()) {
-                scratchPos.setPos(pos);
-                scratchPos.move(direction);
-                BlockPos nextPos = scratchPos;
+                scratchPos2.setPos(pos);
+                scratchPos2.move(direction);
+                BlockPos nextPos = scratchPos2;
                 if (!blocks.hasNeighborsAccessible(nextPos)) {
                     this.markNeighborEdgeNeedLightUpdate(pos, blocks, type);
                     continue;
                 }
-                int newLight = getExpectedLight(blocks, type, nextPos, scratchPos);
+                int newLight = getExpectedLight(blocks, type, nextPos, scratchPos3);
                 if (newLight <= blocks.getLightFor(type, nextPos)) {
                     // can't go further, the next block already has the same or higher light value
                     continue;
