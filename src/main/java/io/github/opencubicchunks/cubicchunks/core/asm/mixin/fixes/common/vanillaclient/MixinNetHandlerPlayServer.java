@@ -34,7 +34,6 @@ import io.github.opencubicchunks.cubicchunks.core.asm.mixin.core.common.vanillac
 import io.github.opencubicchunks.cubicchunks.core.asm.mixin.core.common.vanillaclient.ICPacketUpdateSign;
 import io.github.opencubicchunks.cubicchunks.core.asm.mixin.core.common.vanillaclient.ICPacketVehicleMove;
 import io.github.opencubicchunks.cubicchunks.core.server.VanillaNetworkHandler;
-import io.github.opencubicchunks.cubicchunks.core.server.vanillaproxy.IBedrockPlayer;
 import io.github.opencubicchunks.cubicchunks.core.server.vanillaproxy.IPositionPacket;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.network.NetHandlerPlayServer;
@@ -72,7 +71,9 @@ public class MixinNetHandlerPlayServer {
             return;
         }
         PacketBuffer packetbuffer = packet.getBufferData();
-        ((IBedrockPlayer) this.player).setBedrock(packetbuffer.readString(32767).contains("Geyser"));
+        if (packetbuffer.readString(32767).contains("Geyser")) {
+            VanillaNetworkHandler.addBedrockPlayer(this.player);
+        }
         packetbuffer.resetReaderIndex(); // reset buffer position in case another mod tries to access the client brand the same way
     }
 

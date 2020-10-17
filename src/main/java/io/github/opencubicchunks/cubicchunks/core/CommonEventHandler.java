@@ -33,6 +33,7 @@ import io.github.opencubicchunks.cubicchunks.core.asm.mixin.ICubicWorldSettings;
 import io.github.opencubicchunks.cubicchunks.core.network.PacketCubicWorldData;
 import io.github.opencubicchunks.cubicchunks.core.network.PacketDispatcher;
 import io.github.opencubicchunks.cubicchunks.core.server.SpawnCubes;
+import io.github.opencubicchunks.cubicchunks.core.server.VanillaNetworkHandler;
 import io.github.opencubicchunks.cubicchunks.core.util.ReflectionUtil;
 import io.github.opencubicchunks.cubicchunks.core.world.WorldSavedCubicChunksData;
 import io.github.opencubicchunks.cubicchunks.core.world.provider.ICubicWorldProvider;
@@ -49,6 +50,7 @@ import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.common.gameevent.PlayerEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.relauncher.Side;
 
@@ -146,6 +148,11 @@ public class CommonEventHandler {
         if (evt.getEntity() instanceof EntityPlayerMP && ((ICubicWorld) evt.getWorld()).isCubicWorld()) {
             PacketDispatcher.sendTo(new PacketCubicWorldData((WorldServer) evt.getWorld()), (EntityPlayerMP) evt.getEntity());
         }
+    }
+
+    @SubscribeEvent
+    public void onPlayerLoggedOut(PlayerEvent.PlayerLoggedOutEvent event) {
+        VanillaNetworkHandler.removeBedrockPlayer((EntityPlayerMP) event.player);
     }
 
     @SuppressWarnings("unchecked")

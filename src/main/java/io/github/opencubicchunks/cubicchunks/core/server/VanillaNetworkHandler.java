@@ -34,7 +34,6 @@ import io.github.opencubicchunks.cubicchunks.core.CubicChunksConfig;
 import io.github.opencubicchunks.cubicchunks.core.asm.mixin.core.common.vanillaclient.ISPacketChunkData;
 import io.github.opencubicchunks.cubicchunks.core.asm.mixin.core.common.vanillaclient.ISPacketMultiBlockChange;
 import io.github.opencubicchunks.cubicchunks.core.asm.mixin.fixes.common.vanillaclient.INetHandlerPlayServer;
-import io.github.opencubicchunks.cubicchunks.core.server.vanillaproxy.IBedrockPlayer;
 import io.github.opencubicchunks.cubicchunks.core.util.AddressTools;
 import io.github.opencubicchunks.cubicchunks.core.world.cube.Cube;
 import io.netty.buffer.Unpooled;
@@ -67,14 +66,18 @@ import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.EnumSet;
+import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 public class VanillaNetworkHandler {
 
     private static final Map<Class<?>, Field[]> packetFields = new IdentityHashMap<>();
+    private static final Set<UUID> bedrockPlayers = new HashSet<>();
     private final WorldServer world;
     private Map<EntityPlayerMP, CubePos> playerOffsets = new IdentityHashMap<>();
     // separate offset because when switching layers, there is a short moment where
@@ -84,6 +87,14 @@ public class VanillaNetworkHandler {
 
     public VanillaNetworkHandler(WorldServer world) {
         this.world = world;
+    }
+
+    public static void addBedrockPlayer(EntityPlayerMP player) {
+        bedrockPlayers.add(player.getUniqueID());
+    }
+
+    public static void removeBedrockPlayer(EntityPlayerMP player) {
+        bedrockPlayers.remove(player.getUniqueID());
     }
 
     // TODO: more efficient way?
@@ -229,7 +240,7 @@ public class VanillaNetworkHandler {
         boolean shouldSliceTransition = idy < 2 || idy >= 14;
         boolean isHorizontalSlices = CubicChunksConfig.vanillaClients.horizontalSlices;
         if (!shouldSliceTransition && isHorizontalSlices
-            && (!CubicChunksConfig.vanillaClients.horizontalSlicesBedrockOnly || ((IBedrockPlayer) player).isBedrock())) {
+            && (!CubicChunksConfig.vanillaClients.horizontalSlicesBedrockOnly || bedrockPlayers.contains(player.getUniqueID()))) {
             int horizontalSliceSize = CubicChunksConfig.vanillaClients.horizontalSliceSize;
             int maxHorizontalOffset = Math.max(Math.abs(idx), Math.abs(idz));
             shouldSliceTransition = maxHorizontalOffset >= Coords.blockToCube(horizontalSliceSize);
