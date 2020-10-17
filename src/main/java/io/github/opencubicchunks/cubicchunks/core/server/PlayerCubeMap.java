@@ -586,6 +586,8 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
         this.setNeedSort();
         if (!vanillaNetworkHandler.hasCubicChunks(player)) {
             //delay by one tick
+            //if we don't do this, VanillaNetworkHandler will send a relative teleport before NetHandlerPlayServer is able to send the initial absolute
+            //teleport to spawn the player, which causes the client to get stuck teleporting back and forth in position
             this.pendingUpdateVanillaPlayerPosition.add(player);
         }
     }

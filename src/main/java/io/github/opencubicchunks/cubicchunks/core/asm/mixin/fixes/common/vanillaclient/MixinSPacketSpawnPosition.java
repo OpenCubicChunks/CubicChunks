@@ -53,7 +53,7 @@ public class MixinSPacketSpawnPosition implements IPositionPacket {
         BlockPos pos = this.posOffset == BlockPos.ORIGIN ? this.spawnBlockPos : this.spawnBlockPos.add(this.posOffset);
 
         int y = pos.getY();
-        if (!this.hasPosOffset() //if the Y value isn't offset, it means the client has cubic chunks and we should always send the un-clamped Y coord
+        if (!this.hasPosOffset() //if the position isn't offset, it means the client has cubic chunks and we should always send the un-clamped Y coord
             || y <= 2047 && y >= -2047)    {
             return pos;
         } else {

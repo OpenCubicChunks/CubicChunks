@@ -192,10 +192,10 @@ public class VanillaNetworkHandler {
             return;
         }
         CubePos offset = getPlayerOffsetS2C(player);
-        int idx = cube.getX() + offset.getX();
-        int idy = cube.getY() + offset.getY();
-        int idz = cube.getZ() + offset.getZ();
-        if (idy < 0 || idy >= 16) {
+        int posX = cube.getX() + offset.getX();
+        int posY = cube.getY() + offset.getY();
+        int posZ = cube.getZ() + offset.getZ();
+        if (posY < 0 || posY >= 16) {
             return;
         }
         if (dirtyBlocks.size() == 1) {
@@ -213,7 +213,7 @@ public class VanillaNetworkHandler {
             int localAddress = dirtyBlocks.get(i);
             int x = AddressTools.getLocalX(localAddress);
             int localY = AddressTools.getLocalY(localAddress);
-            int y = localY + Coords.cubeToMinBlock(idy);
+            int y = localY + Coords.cubeToMinBlock(posY);
             int z = AddressTools.getLocalZ(localAddress);
             short vanillaPos = (short)(x << 12 | z << 8 | y);
             updates[i] = packet.new BlockUpdateData(vanillaPos,
@@ -223,7 +223,7 @@ public class VanillaNetworkHandler {
                             localToBlock(cube.getZ(), z)));
         }
         ((ISPacketMultiBlockChange) packet).setChangedBlocks(updates);
-        ((ISPacketMultiBlockChange) packet).setChunkPos(new ChunkPos(idx, idz));
+        ((ISPacketMultiBlockChange) packet).setChunkPos(new ChunkPos(posX, posZ));
 
         player.connection.sendPacket(packet);
     }
@@ -233,16 +233,16 @@ public class VanillaNetworkHandler {
             return;
         }
         CubePos offset = playerOffsets.getOrDefault(player, CubePos.ZERO);
-        int idx = managedPos.getX() + offset.getX();
-        int idy = managedPos.getY() + offset.getY();
-        int idz = managedPos.getZ() + offset.getZ();
+        int posX = managedPos.getX() + offset.getX();
+        int posY = managedPos.getY() + offset.getY();
+        int posZ = managedPos.getZ() + offset.getZ();
 
-        boolean shouldSliceTransition = idy < 2 || idy >= 14;
+        boolean shouldSliceTransition = posY < 2 || posY >= 14;
         boolean isHorizontalSlices = CubicChunksConfig.vanillaClients.horizontalSlices;
         if (!shouldSliceTransition && isHorizontalSlices
             && (!CubicChunksConfig.vanillaClients.horizontalSlicesBedrockOnly || bedrockPlayers.contains(player.getUniqueID()))) {
             int horizontalSliceSize = CubicChunksConfig.vanillaClients.horizontalSliceSize;
-            int maxHorizontalOffset = Math.max(Math.abs(idx), Math.abs(idz));
+            int maxHorizontalOffset = Math.max(Math.abs(posX), Math.abs(posZ));
             shouldSliceTransition = maxHorizontalOffset >= Coords.blockToCube(horizontalSliceSize);
         }
         if (shouldSliceTransition) {
