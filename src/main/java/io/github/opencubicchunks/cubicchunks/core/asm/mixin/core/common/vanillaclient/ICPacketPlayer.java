@@ -30,6 +30,10 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 
 @Mixin(CPacketPlayer.class)
 public interface ICPacketPlayer {
+    @Accessor("x") void setX(double x);
+    @Accessor("x") double getX();
     @Accessor("y") void setY(double y);
     @Accessor("y") double getY();
+    @Accessor("z") void setZ(double z);
+    @Accessor("z") double getZ();
 }

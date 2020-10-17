@@ -30,6 +30,7 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 
 @Mixin(CPacketVehicleMove.class)
 public interface ICPacketVehicleMove {
-
+    @Accessor("x") void setX(double x);
     @Accessor("y") void setY(double y);
+    @Accessor("z") void setZ(double z);
 }

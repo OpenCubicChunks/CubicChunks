@@ -89,7 +89,11 @@ public class MixinNetHandlerPlayServer {
         VanillaNetworkHandler vanillaHandler = ((ICubicWorldInternal.Server) world).getVanillaNetworkHandler();
         boolean hasCC = vanillaHandler.hasCubicChunks(player);
         if (!hasCC) {
-            ((ICPacketPlayer) packet).setY(vanillaHandler.modifyPositionC2S(((ICPacketPlayer) packet).getY(), player));
+            ICPacketPlayer p = (ICPacketPlayer) packet;
+            BlockPos offset = vanillaHandler.getC2SOffset(player);
+            p.setX(p.getX() + offset.getX());
+            p.setY(p.getY() + offset.getY());
+            p.setZ(p.getZ() + offset.getZ());
         }
     }
 
@@ -160,7 +164,11 @@ public class MixinNetHandlerPlayServer {
         VanillaNetworkHandler vanillaHandler = ((ICubicWorldInternal.Server) world).getVanillaNetworkHandler();
         boolean hasCC = vanillaHandler.hasCubicChunks(player);
         if (!hasCC) {
-            ((ICPacketVehicleMove) packetIn).setY(vanillaHandler.modifyPositionC2S(packetIn.getY(), player));
+            ICPacketVehicleMove p = (ICPacketVehicleMove) packetIn;
+            BlockPos offset = vanillaHandler.getC2SOffset(player);
+            p.setX(packetIn.getX() + offset.getX());
+            p.setY(packetIn.getY() + offset.getY());
+            p.setZ(packetIn.getZ() + offset.getZ());
         }
     }
 

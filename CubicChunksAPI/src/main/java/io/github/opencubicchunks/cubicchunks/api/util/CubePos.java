@@ -59,6 +59,8 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @MethodsReturnNonnullByDefault
 public class CubePos {
 
+    public static final CubePos ZERO = new CubePos(0, 0, 0);
+
     private static final int Y_BITS = 20;
     private static final int X_BITS = 22;
     private static final int Z_BITS = 22;
