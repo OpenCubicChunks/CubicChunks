@@ -184,6 +184,21 @@ public class CubicChunksConfig {
             + "You can enable it if you don't need normal skylight values but want extra performance for worldgen and block updates")
     public static boolean fastSimplifiedSkyLight = true;
 
+    @Config.LangKey("cubicchunks.config.vanillaClients")
+    @Config.Comment("Options relating to support for vanilla clients.")
+    public static VanillaClients vanillaClients = new VanillaClients();
+
+    public static final class VanillaClients {
+        @Config.LangKey("cubicchunks.config.vanillaClients.horizontalSlices")
+        @Config.Comment("Enables horizontal slices for vanilla clients. "
+                        + "This will cause coordinates to wrap around on the X and Z axes in the same way as on Y.")
+        public boolean horizontalSlices = false;
+
+        @Config.LangKey("cubicchunks.config.vanillaClients.horizontalSliceSize")
+        @Config.Comment("The size (radius) of a horizontal slice.")
+        public int horizontalSliceSize = 65536;
+    }
+
     public static int defaultMaxCubesPerChunkloadingTicket = 25 * 16;
     public static Map<String, Integer> modMaxCubesPerChunkloadingTicket = new HashMap<>();
 

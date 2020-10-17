@@ -224,10 +224,22 @@ public class VanillaNetworkHandler {
             return;
         }
         CubePos offset = playerYOffsetsS2C.getOrDefault(player, CubePos.ZERO);
+        int idx = managedPos.getX() + offset.getX();
         int idy = managedPos.getY() + offset.getY();
-        if (idy < 2 || idy >= 14) {
+        int idz = managedPos.getZ() + offset.getZ();
+
+        boolean shouldSliceTransition = idy < 2 || idy >= 14;
+        boolean isHorizontalSlices = CubicChunksConfig.vanillaClients.horizontalSlices;
+        if (!shouldSliceTransition && isHorizontalSlices) {
+            int horizontalSliceSize = CubicChunksConfig.vanillaClients.horizontalSliceSize;
+            int maxHorizontalOffset = Math.max(Math.abs(idx), Math.abs(idz));
+            shouldSliceTransition = maxHorizontalOffset >= Coords.blockToCube(horizontalSliceSize);
+        }
+        if (shouldSliceTransition) {
+            int newXOffset = isHorizontalSlices ? -managedPos.getX() : 0;
             int newYOffset = 8 - managedPos.getY();
-            CubePos newOffset = new CubePos(0, newYOffset, 0);
+            int newZOffset = isHorizontalSlices ? -managedPos.getZ() : 0;
+            CubePos newOffset = new CubePos(newXOffset, newYOffset, newZOffset);
             playerYOffsetsS2C.put(player, newOffset);
             switchPlayerOffset(cubeMap, player, offset, newOffset);
         }
