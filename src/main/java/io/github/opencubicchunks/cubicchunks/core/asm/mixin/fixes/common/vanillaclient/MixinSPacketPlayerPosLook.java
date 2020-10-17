@@ -26,6 +26,7 @@ package io.github.opencubicchunks.cubicchunks.core.asm.mixin.fixes.common.vanill
 
 import io.github.opencubicchunks.cubicchunks.core.server.vanillaproxy.IPositionPacket;
 import net.minecraft.network.play.server.SPacketPlayerPosLook;
+import net.minecraft.util.math.BlockPos;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -38,16 +39,14 @@ public class MixinSPacketPlayerPosLook implements IPositionPacket {
 
     @Shadow private double y;
     @Shadow private Set<SPacketPlayerPosLook.EnumFlags> flags;
-    private int offsetY;
-    private boolean hasYOffset = false;
+    private BlockPos posOffset = BlockPos.ORIGIN;
 
-    @Override public void setYOffset(int blockOffset) {
-        this.offsetY = blockOffset;
-        this.hasYOffset = true;
+    @Override public void setPosOffset(BlockPos posOffset) {
+        this.posOffset = posOffset;
     }
 
-    @Override public boolean hasYOffset() {
-        return hasYOffset;
+    @Override public boolean hasPosOffset() {
+        return this.posOffset != BlockPos.ORIGIN;
     }
 
     @Redirect(method = "writePacketData", at = @At(value = "FIELD", target = "Lnet/minecraft/network/play/server/SPacketPlayerPosLook;y:D"))

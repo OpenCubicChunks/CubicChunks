@@ -205,15 +205,15 @@ public class MixinNetHandlerPlayServer {
         VanillaNetworkHandler vanillaHandler = ((ICubicWorldInternal.Server) world).getVanillaNetworkHandler();
         if (packetIn instanceof IPositionPacket) {
             if (!vanillaHandler.hasCubicChunks(player)) {
-                int targetOffset = vanillaHandler.getS2COffset(player);
+                BlockPos targetOffset = vanillaHandler.getS2COffset(player);
                 // we have to sometimes copy the packet because MC may attempt to send the same packet object
                 // to multiple players
-                if (((IPositionPacket) packetIn).hasYOffset()) {
+                if (((IPositionPacket) packetIn).hasPosOffset()) {
                     packetIn = copyPacket(packetIn);
                 }
-                ((IPositionPacket) packetIn).setYOffset(targetOffset);
+                ((IPositionPacket) packetIn).setPosOffset(targetOffset);
                 return packetIn;
-            } else if (((IPositionPacket) packetIn).hasYOffset()) {
+            } else if (((IPositionPacket) packetIn).hasPosOffset()) {
                 return copyPacket(packetIn);
             }
         }

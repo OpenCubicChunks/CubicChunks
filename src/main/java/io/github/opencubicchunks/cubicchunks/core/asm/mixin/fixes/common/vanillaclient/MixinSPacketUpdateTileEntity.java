@@ -38,16 +38,14 @@ public class MixinSPacketUpdateTileEntity implements IPositionPacket {
 
     @Shadow private BlockPos blockPos;
     @Shadow private NBTTagCompound nbt;
-    private int offsetY;
-    private boolean hasYOffset = false;
+    private BlockPos posOffset = BlockPos.ORIGIN;
 
-    @Override public void setYOffset(int blockOffset) {
-        this.offsetY = blockOffset;
-        this.hasYOffset = true;
+    @Override public void setPosOffset(BlockPos posOffset) {
+        this.posOffset = posOffset;
     }
 
-    @Override public boolean hasYOffset() {
-        return hasYOffset;
+    @Override public boolean hasPosOffset() {
+        return this.posOffset != BlockPos.ORIGIN;
     }
 
     @Redirect(method = "writePacketData", at = @At(value = "FIELD",
@@ -55,7 +53,6 @@ public class MixinSPacketUpdateTileEntity implements IPositionPacket {
     private BlockPos preprocessPacket(SPacketUpdateTileEntity _this) {
         return offsetY == 0 ? this.blockPos : this.blockPos.add(0, offsetY, 0);
     }
-
 
     @Redirect(method = "writePacketData",
             at = @At(value = "FIELD", target = "Lnet/minecraft/network/play/server/SPacketUpdateTileEntity;nbt:Lnet/minecraft/nbt/NBTTagCompound;"))
