@@ -49,7 +49,7 @@ public class LightPropagator {
 
     @Nonnull private LightUpdateQueue internalRelightQueue = new LightUpdateQueue();
 
-    public void propagateLight(BlockPos centerPos, Iterable<BlockPos> coords, ILightBlockAccess blocks, EnumSkyBlock type,
+    public void propagateLight(BlockPos centerPos, Iterable<? extends BlockPos> coords, ILightBlockAccess blocks, EnumSkyBlock type,
             Consumer<BlockPos> setLightCallback) {
         propagateLight(centerPos, coords, blocks, type, true, setLightCallback);
     }
@@ -77,15 +77,15 @@ public class LightPropagator {
      * @param handleDecreased whether decreasing light values should be handled
      * @param setLightCallback this will be called for each position where light value is changed
      */
-     public void propagateLight(BlockPos centerPos, Iterable<BlockPos> coords, ILightBlockAccess blocks, EnumSkyBlock type, boolean handleDecreased,
-            Consumer<BlockPos> setLightCallback) {
+     public void propagateLight(BlockPos centerPos, Iterable<? extends BlockPos> coords, ILightBlockAccess blocks, EnumSkyBlock type,
+             boolean handleDecreased, Consumer<BlockPos> setLightCallback) {
         if (type == EnumSkyBlock.SKY && LightingManager.NO_SUNLIGHT_PROPAGATION) {
             return;
         }
         internalRelightQueue.begin(centerPos);
         try {
             if (CubicChunksConfig.fastSimplifiedSkyLight && type == EnumSkyBlock.SKY) {
-                doFastSimplifiedSkylight(coords, blocks, type);
+                doFastSimplifiedSkylight(coords, blocks, type, setLightCallback);
                 return;
             }
             if (handleDecreased) {
@@ -111,7 +111,7 @@ public class LightPropagator {
         }
     }
 
-    private void queueDecreasedLights(Iterable<BlockPos> coords, ILightBlockAccess blocks, EnumSkyBlock type) {
+    private void queueDecreasedLights(Iterable<? extends BlockPos> coords, ILightBlockAccess blocks, EnumSkyBlock type) {
         for (BlockPos coord : coords) {
             int emitted = blocks.getEmittedLight(coord, type);
             if (blocks.getLightFor(type, coord) > emitted) {
@@ -122,15 +122,17 @@ public class LightPropagator {
     }
 
     private void handleDecreasedLights(ILightBlockAccess blocks, EnumSkyBlock type, Consumer<BlockPos> setLightCallback) {
+        BlockPos.MutableBlockPos scratchPos = new BlockPos.MutableBlockPos();
+        BlockPos.MutableBlockPos scratchPos2 = new BlockPos.MutableBlockPos();
         // follow decreasing light values until it stops decreasing,
         // setting each encountered value to 0 for easy spreading
         while (internalRelightQueue.next()) {
-            BlockPos pos = internalRelightQueue.getPos();
+            BlockPos pos = scratchPos.setPos(internalRelightQueue.getX(), internalRelightQueue.getY(), internalRelightQueue.getZ());
             int distance = internalRelightQueue.getDistance();
 
             int currentValue = blocks.getLightFor(type, pos);
             // note: min value is 0
-            int lightFromNeighbors = getExpectedLight(blocks, type, pos);
+            int lightFromNeighbors = getExpectedLight(blocks, type, pos, scratchPos2);
             // if this is true, this blocks currently spreads light out, and has no light coming in from neighbors
             // lightFromNeighbors == currentValue-1 means that some neighbor has the same light value, or that
             // currentValue == 1 and all surrounding blocks have light 0
@@ -160,10 +162,11 @@ public class LightPropagator {
         }
     }
 
-    private void queueIncreasedLights(Iterable<BlockPos> coords, ILightBlockAccess blocks, EnumSkyBlock type, Consumer<BlockPos> setLightCallback) {
+    private void queueIncreasedLights(Iterable<? extends BlockPos> coords, ILightBlockAccess blocks, EnumSkyBlock type, Consumer<BlockPos> setLightCallback) {
+        BlockPos.MutableBlockPos scratchPos = new BlockPos.MutableBlockPos();
         // then handle everything
         for (BlockPos coord : coords) {
-            int emitted = getExpectedLight(blocks, type, coord);
+            int emitted = getExpectedLight(blocks, type, coord, scratchPos);
             // blocks where light decreased are already added (previous run over the queue)
             if (emitted > blocks.getLightFor(type, coord)) {
                 internalRelightQueue.put(coord, emitted, LightUpdateQueue.MAX_DISTANCE);
@@ -181,18 +184,23 @@ public class LightPropagator {
     }
 
     private void handleLightSpread(ILightBlockAccess blocks, EnumSkyBlock type, Consumer<BlockPos> setLightCallback) {
+        BlockPos.MutableBlockPos scratchPos = new BlockPos.MutableBlockPos();
+        BlockPos.MutableBlockPos scratchPos2 = new BlockPos.MutableBlockPos();
+        BlockPos.MutableBlockPos scratchPos3 = new BlockPos.MutableBlockPos();
         // spread out light values
         while (internalRelightQueue.next()) {
-            BlockPos pos = internalRelightQueue.getPos();
+            BlockPos pos = scratchPos.setPos(internalRelightQueue.getX(), internalRelightQueue.getY(), internalRelightQueue.getZ());
             int distance = internalRelightQueue.isBeforeReset() ? LightUpdateQueue.MAX_DISTANCE : internalRelightQueue.getDistance();
 
             for (EnumFacing direction : EnumFacing.values()) {
-                BlockPos nextPos = pos.offset(direction);
+                scratchPos2.setPos(pos);
+                scratchPos2.move(direction);
+                BlockPos nextPos = scratchPos2;
                 if (!blocks.hasNeighborsAccessible(nextPos)) {
                     this.markNeighborEdgeNeedLightUpdate(pos, blocks, type);
                     continue;
                 }
-                int newLight = getExpectedLight(blocks, type, nextPos);
+                int newLight = getExpectedLight(blocks, type, nextPos, scratchPos3);
                 if (newLight <= blocks.getLightFor(type, nextPos)) {
                     // can't go further, the next block already has the same or higher light value
                     continue;
@@ -221,7 +229,8 @@ public class LightPropagator {
         }
     }
 
-    private void doFastSimplifiedSkylight(Iterable<BlockPos> coords, ILightBlockAccess blocks, EnumSkyBlock type) {
+    private void doFastSimplifiedSkylight(Iterable<? extends BlockPos> coords, ILightBlockAccess blocks, EnumSkyBlock type,
+            Consumer<BlockPos> setLightCallback) {
         for (BlockPos coord : coords) {
             int max = blocks.getEmittedLight(coord, type);
             if (max >= 11) {
@@ -239,15 +248,16 @@ public class LightPropagator {
                 }
             }
             blocks.setLightFor(type, coord, Math.max(7, max));
+            setLightCallback.accept(coord);
         }
     }
 
-    private int getExpectedLight(ILightBlockAccess blocks, EnumSkyBlock type, BlockPos pos) {
+    private int getExpectedLight(ILightBlockAccess blocks, EnumSkyBlock type, BlockPos pos, BlockPos.MutableBlockPos scratchPos) {
         int emittedLight = blocks.getEmittedLight(pos, type);
         if (emittedLight >= 15) {
             return 15;
         }
-        return Math.max(emittedLight, blocks.getLightFromNeighbors(type, pos));
+        return Math.max(emittedLight, blocks.getLightFromNeighbors(type, pos, scratchPos));
     }
     
     private void markNeighborEdgeNeedLightUpdate(BlockPos pos, ILightBlockAccess blocks, EnumSkyBlock type) {

@@ -115,7 +115,7 @@ public class FirstLightProcessor {
         }
         FastCubeBlockAccess access = new FastCubeBlockAccess(this.cache, cube, 2);
 
-        Iterable<BlockPos> allBlocks = BlockPos.getAllInBox(
+        Iterable<? extends BlockPos> allBlocks = BlockPos.getAllInBoxMutable(
                 cube.getCoords().getMinBlockPos().add(-1, -1, -1),
                 cube.getCoords().getMaxBlockPos().add(1, 1, 1)
         );
@@ -127,7 +127,7 @@ public class FirstLightProcessor {
                 int localZ = blockToLocal(pos.getZ());
                 // add edges of current and neighbor cube
                 if (localX == 15 || localX == 0 || localY == 15 || localY == 0 || localZ == 15 || localZ == 0) {
-                    positions.add(pos);
+                    positions.add(pos.toImmutable());
                 }
             }
             propagator.propagateLight(cube.getCoords().getCenterBlockPos(),

@@ -93,7 +93,7 @@ public interface ILightBlockAccess {
         return true;
     }
 
-    default int getLightFromNeighbors(EnumSkyBlock type, BlockPos pos) {
+    default int getLightFromNeighbors(EnumSkyBlock type, BlockPos pos, BlockPos.MutableBlockPos scratchPos) {
         //TODO: use MutableBlockPos?
         int blockLightOpacity = getBlockLightOpacity(pos);
         if (blockLightOpacity > 15) {
@@ -101,7 +101,9 @@ public interface ILightBlockAccess {
         }
         int max = 0;
         for (EnumFacing direction : EnumFacing.VALUES) {
-            int light = getLightFor(type, pos.offset(direction));
+            scratchPos.setPos(pos);
+            scratchPos.move(direction);
+            int light = getLightFor(type, scratchPos);
             if (light > max) {
                 max = light;
                 if (max >= 15) {

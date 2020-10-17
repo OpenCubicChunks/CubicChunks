@@ -182,7 +182,7 @@ public class CubicChunksConfig {
     @Config.LangKey("cubicchunks.config.fastSimplifiedSkyLight")
     @Config.Comment("Forces an MC-classic-like skylight propagation algorithm. It's much faster and doesn't look too bad. "
             + "You can enable it if you don't need normal skylight values but want extra performance for worldgen and block updates")
-    public static boolean fastSimplifiedSkyLight = true;
+    public static boolean fastSimplifiedSkyLight = false;
 
     @Config.LangKey("cubicchunks.config.vanillaClients")
     @Config.Comment("Options relating to support for vanilla clients.")
