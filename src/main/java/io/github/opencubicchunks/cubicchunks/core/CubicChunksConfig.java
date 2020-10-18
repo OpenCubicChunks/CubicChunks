@@ -195,7 +195,8 @@ public class CubicChunksConfig {
         public boolean horizontalSlices = true;
 
         @Config.LangKey("cubicchunks.config.vanillaClients.horizontalSlicesBedrockOnly")
-        @Config.Comment("If horizontal slices is enabled, restricts horizontal slices to Bedrock edition clients.")
+        @Config.Comment("If horizontal slices is enabled, restricts horizontal slices to Bedrock edition clients.\n"
+                        + "Note that Bedrock clients are not supported directly, but only when connecting through a proxy such as Geyser.")
         public boolean horizontalSlicesBedrockOnly = true;
 
         @Config.LangKey("cubicchunks.config.vanillaClients.horizontalSliceSize")
