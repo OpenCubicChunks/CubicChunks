@@ -36,7 +36,6 @@ import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 import gnu.trove.map.TIntObjectMap;
 import gnu.trove.map.hash.TIntObjectHashMap;
-import io.github.opencubicchunks.cubicchunks.api.util.Coords;
 import io.github.opencubicchunks.cubicchunks.api.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.api.util.XYZMap;
 import io.github.opencubicchunks.cubicchunks.api.util.XZMap;
@@ -207,8 +206,6 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
     // (player respawn packet?)
     private Set<EntityPlayerMP> pendingPlayerAdd = new HashSet<>();
 
-    private Set<EntityPlayerMP> pendingUpdateVanillaPlayerPosition = new HashSet<>();
-
     private final TickableChunkContainer tickableChunksCubesToReturn = new TickableChunkContainer();
 
     // see comment in updateMovingPlayer() for explnation why it's in this class
@@ -307,15 +304,6 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
             for (EntityPlayerMP player : players) {
                 addPlayer(player);
             }
-        }
-        if (!this.pendingUpdateVanillaPlayerPosition.isEmpty()) {
-            for (EntityPlayerMP player : this.pendingUpdateVanillaPlayerPosition) {
-                PlayerWrapper playerWrapper = this.players.get(player.getEntityId());
-                if (playerWrapper != null) {
-                    vanillaNetworkHandler.updatePlayerPosition(this, player, playerWrapper.getManagedCubePos());
-                }
-            }
-            this.pendingUpdateVanillaPlayerPosition.clear();
         }
         getWorldServer().profiler.endStartSection("tickEntries");
         //force update-all every 8000 ticks (400 seconds)
@@ -568,6 +556,10 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
         PlayerWrapper playerWrapper = new PlayerWrapper(player);
         playerWrapper.updateManagedPos();
 
+        if (!vanillaNetworkHandler.hasCubicChunks(player)) {
+            vanillaNetworkHandler.updatePlayerPosition(this, player, playerWrapper.getManagedCubePos(), -1);
+        }
+
         CubePos playerCubePos = CubePos.fromEntity(player);
 
         this.cubeSelector.forAllVisibleFrom(playerCubePos, horizontalViewDistance, verticalViewDistance, (currentPos) -> {
@@ -584,12 +576,6 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
         });
         this.players.put(player.getEntityId(), playerWrapper);
         this.setNeedSort();
-        if (!vanillaNetworkHandler.hasCubicChunks(player)) {
-            //delay by one tick
-            //if we don't do this, VanillaNetworkHandler will send a relative teleport before NetHandlerPlayServer is able to send the initial absolute
-            //teleport to spawn the player, which causes the client to get stuck teleporting back and forth in position
-            this.pendingUpdateVanillaPlayerPosition.add(player);
-        }
     }
 
     // CHECKED: 1.10.2-12.18.1.2092
@@ -654,7 +640,7 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
         this.setNeedSort();
 
         if (!vanillaNetworkHandler.hasCubicChunks(player)) {
-            vanillaNetworkHandler.updatePlayerPosition(this, player, playerWrapper.getManagedCubePos());
+            vanillaNetworkHandler.updatePlayerPosition(this, player, playerWrapper.getManagedCubePos(), -1);
         }
         // With ChunkGc being separate from PlayerCubeMap, there are 2 issues:
         // Problem 0: Sometimes, a chunk can be generated after CubeWatcher's chunk load callback returns with a null

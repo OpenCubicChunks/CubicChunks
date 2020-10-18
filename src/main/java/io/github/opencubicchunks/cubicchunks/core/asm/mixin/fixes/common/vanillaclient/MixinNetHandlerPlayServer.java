@@ -24,6 +24,8 @@
  */
 package io.github.opencubicchunks.cubicchunks.core.asm.mixin.fixes.common.vanillaclient;
 
+import io.github.opencubicchunks.cubicchunks.api.util.Coords;
+import io.github.opencubicchunks.cubicchunks.api.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.api.world.ICubicWorld;
 import io.github.opencubicchunks.cubicchunks.core.CubicChunksConfig;
 import io.github.opencubicchunks.cubicchunks.core.asm.mixin.ICubicWorldInternal;
@@ -33,6 +35,7 @@ import io.github.opencubicchunks.cubicchunks.core.asm.mixin.core.common.vanillac
 import io.github.opencubicchunks.cubicchunks.core.asm.mixin.core.common.vanillaclient.ICPacketTabComplete;
 import io.github.opencubicchunks.cubicchunks.core.asm.mixin.core.common.vanillaclient.ICPacketUpdateSign;
 import io.github.opencubicchunks.cubicchunks.core.asm.mixin.core.common.vanillaclient.ICPacketVehicleMove;
+import io.github.opencubicchunks.cubicchunks.core.server.PlayerCubeMap;
 import io.github.opencubicchunks.cubicchunks.core.server.VanillaNetworkHandler;
 import io.github.opencubicchunks.cubicchunks.core.server.vanillaproxy.IPositionPacket;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -47,7 +50,9 @@ import net.minecraft.network.play.client.CPacketPlayerTryUseItemOnBlock;
 import net.minecraft.network.play.client.CPacketTabComplete;
 import net.minecraft.network.play.client.CPacketUpdateSign;
 import net.minecraft.network.play.client.CPacketVehicleMove;
+import net.minecraft.network.play.server.SPacketPlayerPosLook;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 import org.spongepowered.asm.mixin.Mixin;
@@ -57,10 +62,16 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import java.util.Set;
+
 @Mixin(NetHandlerPlayServer.class)
 public class MixinNetHandlerPlayServer {
 
     @Shadow public EntityPlayerMP player;
+
+    @Shadow private Vec3d targetPos;
+
+    @Shadow private int teleportId;
 
     @Inject(method = "processCustomPayload",
             at = @At(value = "INVOKE", shift = At.Shift.AFTER,
@@ -240,5 +251,23 @@ public class MixinNetHandlerPlayServer {
     private Packet<?> copyPacket(Packet<?> packetIn) {
         // TODO: make this faster
         return VanillaNetworkHandler.copyPacket(packetIn);
+    }
+
+    @Inject(method = "Lnet/minecraft/network/NetHandlerPlayServer;setPlayerLocation(DDDFFLjava/util/Set;)V",
+            at = @At(value = "INVOKE", shift = At.Shift.BEFORE,
+                    target = "Lnet/minecraft/network/NetHandlerPlayServer;sendPacket(Lnet/minecraft/network/Packet;)V"))
+    private void notifyVanillaHandlerOfTeleport(double x, double y, double z, float yaw, float pitch, Set<SPacketPlayerPosLook.EnumFlags> relativeSet, CallbackInfo ci) {
+        if (!CubicChunksConfig.allowVanillaClients) {
+            return;
+        }
+        World world = this.player.world;
+        if (!((ICubicWorld) world).isCubicWorld()) {
+            return;
+        }
+        VanillaNetworkHandler vanillaHandler = ((ICubicWorldInternal.Server) world).getVanillaNetworkHandler();
+        if (!vanillaHandler.hasCubicChunks(this.player)) {
+            vanillaHandler.updatePlayerPosition((PlayerCubeMap) ((WorldServer) world).getPlayerChunkMap(), this.player,
+                    new CubePos(Coords.blockToCube(this.targetPos.x), Coords.blockToCube(this.targetPos.y), Coords.blockToCube(this.targetPos.z)), this.teleportId);
+        }
     }
 }

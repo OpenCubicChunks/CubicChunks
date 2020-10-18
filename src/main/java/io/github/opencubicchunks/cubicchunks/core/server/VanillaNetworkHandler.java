@@ -236,22 +236,29 @@ public class VanillaNetworkHandler {
         player.connection.sendPacket(packet);
     }
 
-    public void updatePlayerPosition(PlayerCubeMap cubeMap, EntityPlayerMP player, CubePos managedPos) {
+    public void updatePlayerPosition(PlayerCubeMap cubeMap, EntityPlayerMP player, CubePos managedPos, int teleportId) {
         if (!CubicChunksConfig.allowVanillaClients) {
             return;
         }
-        CubePos offset = playerOffsets.getOrDefault(player, CubePos.ZERO);
+        CubePos offset = playerOffsets.get(player);
+        boolean isFirst = offset == null;
+        if (isFirst) {
+            playerOffsets.put(player, offset = CubePos.ZERO);
+        }
         int posX = managedPos.getX() + offset.getX();
         int posY = managedPos.getY() + offset.getY();
         int posZ = managedPos.getZ() + offset.getZ();
 
         boolean shouldSliceTransition = posY < 2 || posY >= 14;
         boolean isHorizontalSlices = CubicChunksConfig.vanillaClients.horizontalSlices;
-        if (!shouldSliceTransition && isHorizontalSlices
-            && (!CubicChunksConfig.vanillaClients.horizontalSlicesBedrockOnly || bedrockPlayers.contains(player.getUniqueID()))) {
-            int horizontalSliceSize = CubicChunksConfig.vanillaClients.horizontalSliceSize;
-            int maxHorizontalOffset = Math.max(Math.abs(posX), Math.abs(posZ));
-            shouldSliceTransition = maxHorizontalOffset >= Coords.blockToCube(horizontalSliceSize);
+        if (!shouldSliceTransition && isHorizontalSlices) {
+            if (!CubicChunksConfig.vanillaClients.horizontalSlicesBedrockOnly || bedrockPlayers.contains(player.getUniqueID())) {
+                int horizontalSliceSize = CubicChunksConfig.vanillaClients.horizontalSliceSize;
+                int maxHorizontalOffset = Math.max(Math.abs(posX), Math.abs(posZ));
+                shouldSliceTransition = maxHorizontalOffset >= Coords.blockToCube(horizontalSliceSize);
+            } else {
+                isHorizontalSlices = false;
+            }
         }
         if (shouldSliceTransition) {
             int newXOffset = isHorizontalSlices ? -managedPos.getX() : 0;
@@ -259,15 +266,20 @@ public class VanillaNetworkHandler {
             int newZOffset = isHorizontalSlices ? -managedPos.getZ() : 0;
             CubePos newOffset = new CubePos(newXOffset, newYOffset, newZOffset);
             playerOffsets.put(player, newOffset);
-            switchPlayerOffset(cubeMap, player, offset, newOffset);
+            if (isFirst) {
+                //don't do anything if this is the first time the player was added to the chunk map.
+                //if we do, the relative teleport will be received before the absolute teleport sent by NetHandlerPlayServer
+                //which actually spawns the player, causing the player to get stuck.
+                //we also immediately change the offset in playerOffsetC2S because there is no teleport ID for the client to respond to
+                playerOffsetsC2S.put(player, newOffset);
+            } else {
+                switchPlayerOffset(cubeMap, player, offset, newOffset, teleportId);
+            }
         }
     }
 
     public boolean receiveOffsetUpdateConfirm(EntityPlayerMP player, int teleportId) {
-        if (!CubicChunksConfig.allowVanillaClients) {
-            return false;
-        }
-        if (!expectedTeleportId.containsKey(player) || !expectedTeleportId.remove(player, teleportId)) {
+        if (!CubicChunksConfig.allowVanillaClients || !expectedTeleportId.remove(player, teleportId)) {
             return false;
         }
         playerOffsetsC2S.put(player, playerOffsets.get(player));
@@ -283,10 +295,11 @@ public class VanillaNetworkHandler {
         expectedTeleportId.remove(player);
     }
 
-    private void switchPlayerOffset(PlayerCubeMap cubeMap, EntityPlayerMP player, CubePos offset, CubePos newOffset) {
+    private void switchPlayerOffset(PlayerCubeMap cubeMap, EntityPlayerMP player, CubePos offset, CubePos newOffset, int teleportId) {
         if (!CubicChunksConfig.allowVanillaClients) {
             return;
         }
+
         List<ICube> firstSendCubes = new ArrayList<>();
         List<ICube> secondSendCubes = new ArrayList<>();
         List<ICube> lastSendCubes = new ArrayList<>();
@@ -316,18 +329,22 @@ public class VanillaNetworkHandler {
             sendFullCubeLoadPackets(firstSendCubes, player, offset, newOffset);
         }
 
-        int teleportId = ((INetHandlerPlayServer) player.connection).getTeleportId();
-        if (++teleportId == Integer.MAX_VALUE) {
-            teleportId = 0;
+        if (teleportId < 0) {
+            teleportId = ((INetHandlerPlayServer) player.connection).getTeleportId();
+            if (++teleportId == Integer.MAX_VALUE) {
+                teleportId = 0;
+            }
+            ((INetHandlerPlayServer) player.connection).setTeleportId(teleportId);
+            int dx = Coords.cubeToMinBlock(newOffset.getX() - offset.getX());
+            int dy = Coords.cubeToMinBlock(newOffset.getY() - offset.getY());
+            int dz = Coords.cubeToMinBlock(newOffset.getZ() - offset.getZ());
+            expectedTeleportId.put(player, teleportId);
+            SPacketPlayerPosLook tpPacket = new SPacketPlayerPosLook(dx, dy + 0.01, dz, 0, 0,
+                    EnumSet.allOf(SPacketPlayerPosLook.EnumFlags.class), teleportId);
+            player.connection.sendPacket(tpPacket);
+        } else {
+            expectedTeleportId.put(player, teleportId);
         }
-        ((INetHandlerPlayServer) player.connection).setTeleportId(teleportId);
-        expectedTeleportId.put(player, teleportId);
-        int dx = Coords.cubeToMinBlock(newOffset.getX() - offset.getX());
-        int dy = Coords.cubeToMinBlock(newOffset.getY() - offset.getY());
-        int dz = Coords.cubeToMinBlock(newOffset.getZ() - offset.getZ());
-        SPacketPlayerPosLook tpPacket = new SPacketPlayerPosLook(dx, dy + 0.01, dz, 0, 0,
-                EnumSet.allOf(SPacketPlayerPosLook.EnumFlags.class), teleportId);
-        player.connection.sendPacket(tpPacket);
 
         sendFullCubeLoadPackets(secondSendCubes, player, offset, newOffset);
         sendFullCubeLoadPackets(lastSendCubes, player, offset, newOffset);
