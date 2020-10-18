@@ -24,8 +24,6 @@
  */
 package io.github.opencubicchunks.cubicchunks.core.server;
 
-import static io.github.opencubicchunks.cubicchunks.api.util.Coords.localToBlock;
-
 import gnu.trove.list.TShortList;
 import io.github.opencubicchunks.cubicchunks.api.util.Coords;
 import io.github.opencubicchunks.cubicchunks.api.util.CubePos;
@@ -39,6 +37,7 @@ import io.github.opencubicchunks.cubicchunks.core.world.cube.Cube;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
 import io.netty.util.Attribute;
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.NetHandlerPlayServer;
@@ -74,6 +73,8 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import static io.github.opencubicchunks.cubicchunks.api.util.Coords.*;
+
 public class VanillaNetworkHandler {
 
     private static final Map<Class<?>, Field[]> packetFields = new IdentityHashMap<>();
@@ -84,6 +85,7 @@ public class VanillaNetworkHandler {
     // packets still sent with the client on the old offset will be processed
     private Map<EntityPlayerMP, CubePos> playerOffsetsC2S = new IdentityHashMap<>();
     private Map<EntityPlayerMP, Integer> expectedTeleportId = new IdentityHashMap<>();
+    private Map<EntityPlayerMP, Map<ChunkPos, ChunkPos>> clientLoadedChunkPositions = new IdentityHashMap<>();
 
     public VanillaNetworkHandler(WorldServer world) {
         this.world = world;
@@ -159,12 +161,14 @@ public class VanillaNetworkHandler {
         for (Map.Entry<ChunkPos, List<ICube>> chunkPosListEntry : columns.entrySet()) {
             ChunkPos pos = chunkPosListEntry.getKey();
             List<ICube> column = chunkPosListEntry.getValue();
+            clientLoadedChunkPositions.computeIfAbsent(player, p -> new Object2ObjectOpenHashMap<>())
+                    .put(new ChunkPos(pos.x + offset.getX(), pos.z + offset.getZ()), pos);
             SPacketChunkData chunkData = constructChunkData(pos, column, offset, world.provider.hasSkyLight());
             player.connection.sendPacket(chunkData);
         }
     }
 
-    public void sendFullCubeLoadPackets(Collection<? extends ICube> cubes, EntityPlayerMP player, CubePos oldOffset, CubePos newOffset) {
+    public void sendFullCubeLoadPackets(Collection<? extends ICube> cubes, EntityPlayerMP player, Map<ChunkPos, ChunkPos> loadedChunks, CubePos oldOffset, CubePos newOffset) {
         if (!CubicChunksConfig.allowVanillaClients) {
             return;
         }
@@ -173,8 +177,19 @@ public class VanillaNetworkHandler {
             Chunk chunk = chunkPosListEntry.getKey();
             List<ICube> column = chunkPosListEntry.getValue();
             SPacketChunkData chunkData = constructFullChunkData(chunk, column, newOffset, world.provider.hasSkyLight());
-            SPacketUnloadChunk unload = new SPacketUnloadChunk(chunk.x + oldOffset.getX(), chunk.z + oldOffset.getZ());
-            player.connection.sendPacket(unload);
+
+            ChunkPos clientChunkPosNew = new ChunkPos(chunk.x + newOffset.getX(), chunk.z + newOffset.getZ());
+            ChunkPos clientChunkPos = new ChunkPos(chunk.x + oldOffset.getX(), chunk.z + oldOffset.getZ());
+            ChunkPos serverChunkPos = loadedChunks.get(clientChunkPos);
+            if ((serverChunkPos != null && serverChunkPos.x == chunk.x && serverChunkPos.z == chunk.z)
+                || loadedChunks.containsKey(clientChunkPos = clientChunkPosNew)) {
+                //only send chunk unload if:
+                //a) the chunk currently loaded at the old position is actually this chunk, or
+                //b) the client already has any chunk loaded at the new position
+                player.connection.sendPacket(new SPacketUnloadChunk(clientChunkPos.x, clientChunkPos.z));
+            }
+            loadedChunks.put(clientChunkPosNew, chunk.getPos());
+
             player.connection.sendPacket(chunkData);
         }
     }
@@ -183,7 +198,10 @@ public class VanillaNetworkHandler {
         if (!CubicChunksConfig.allowVanillaClients) {
             return;
         }
-        player.connection.sendPacket(constructChunkData(chunk, getPlayerOffsetS2C(player)));
+        CubePos offset = getPlayerOffsetS2C(player);
+        clientLoadedChunkPositions.computeIfAbsent(player, p -> new Object2ObjectOpenHashMap<>())
+                .put(new ChunkPos(chunk.x + offset.getX(), chunk.z + offset.getZ()), chunk.getPos());
+        player.connection.sendPacket(constructChunkData(chunk, offset));
     }
 
     public void sendColumnUnloadPacket(ChunkPos pos, EntityPlayerMP player) {
@@ -192,6 +210,11 @@ public class VanillaNetworkHandler {
         }
         CubePos offset = getPlayerOffsetS2C(player);
         player.connection.sendPacket(new SPacketUnloadChunk(pos.x + offset.getX(), pos.z + offset.getZ()));
+
+        Map<ChunkPos, ChunkPos> clientLoadedChunks = clientLoadedChunkPositions.get(player);
+        if (clientLoadedChunks != null) {
+            clientLoadedChunks.remove(new ChunkPos(pos.x + offset.getX(), pos.z + offset.getZ()));
+        }
     }
 
     @SuppressWarnings("ConstantConditions")
@@ -293,6 +316,7 @@ public class VanillaNetworkHandler {
         playerOffsets.remove(player);
         playerOffsetsC2S.remove(player);
         expectedTeleportId.remove(player);
+        clientLoadedChunkPositions.remove(player);
     }
 
     private void switchPlayerOffset(PlayerCubeMap cubeMap, EntityPlayerMP player, CubePos offset, CubePos newOffset, int teleportId) {
@@ -321,12 +345,14 @@ public class VanillaNetworkHandler {
             }
         }
 
+        Map<ChunkPos, ChunkPos> clientLoadedChunks = clientLoadedChunkPositions.computeIfAbsent(player, p -> new Object2ObjectOpenHashMap<>());
+
         if (offset.getX() == newOffset.getX() && offset.getZ() == newOffset.getZ()) {
             //no horizontal shift has occurred, send partial chunk updates
             sendCubeLoadPackets(firstSendCubes, player, newOffset);
         } else {
             //we've shifted horizontally, send full chunks
-            sendFullCubeLoadPackets(firstSendCubes, player, offset, newOffset);
+            sendFullCubeLoadPackets(firstSendCubes, player, clientLoadedChunks, offset, newOffset);
         }
 
         if (teleportId < 0) {
@@ -346,8 +372,8 @@ public class VanillaNetworkHandler {
             expectedTeleportId.put(player, teleportId);
         }
 
-        sendFullCubeLoadPackets(secondSendCubes, player, offset, newOffset);
-        sendFullCubeLoadPackets(lastSendCubes, player, offset, newOffset);
+        sendFullCubeLoadPackets(secondSendCubes, player, clientLoadedChunks, offset, newOffset);
+        sendFullCubeLoadPackets(lastSendCubes, player, clientLoadedChunks, offset, newOffset);
         world.getEntityTracker().removePlayerFromTrackers(player);
         world.getEntityTracker().updateVisibility(player);
     }
