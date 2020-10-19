@@ -178,6 +178,28 @@ public class VanillaNetworkHandler {
         }
     }
 
+    public void sendFullCubeLoadPacketsWhereNecessary(Collection<? extends ICube> cubes, EntityPlayerMP player, CubePos offset, Set<ChunkPos> clientLoadedChunks) {
+        if (!CubicChunksConfig.allowVanillaClients) {
+            return;
+        }
+        Map<Chunk, List<ICube>> columns = cubes.stream().collect(Collectors.groupingBy(ICube::getColumn));
+        for (Map.Entry<Chunk, List<ICube>> chunkPosListEntry : columns.entrySet()) {
+            Chunk chunk = chunkPosListEntry.getKey();
+            ChunkPos pos = chunk.getPos();
+            List<ICube> column = chunkPosListEntry.getValue();
+            if (clientLoadedChunks.contains(new ChunkPos(pos.x + offset.getX(), pos.z + offset.getZ()))) {
+                //chunk is loaded on client, send partial chunk update
+                player.connection.sendPacket(constructChunkData(pos, column, offset, world.provider.hasSkyLight()));
+            } else {
+                //chunk is *not* loaded on client, send full chunk update
+                player.connection.sendPacket(constructFullChunkData(chunk, column, offset, world.provider.hasSkyLight()));
+                //add new position to client loaded chunks, as a second full chunk update for the same column
+                //will be sent after the relative teleport and we don't want to send the same full chunk twice
+                clientLoadedChunks.add(pos);
+            }
+        }
+    }
+
     public void sendColumnLoadPacket(Chunk chunk, EntityPlayerMP player) {
         if (!CubicChunksConfig.allowVanillaClients) {
             return;
@@ -297,9 +319,7 @@ public class VanillaNetworkHandler {
             return;
         }
 
-        boolean horizontalShift = offset.getX() != newOffset.getX() || offset.getZ() != newOffset.getZ();
-
-        Set<ChunkPos> toUnloadChunks = horizontalShift ? new HashSet<>() : null;
+        Set<ChunkPos> clientLoadedChunks = new HashSet<>();
         List<ICube> firstSendCubes = new ArrayList<>();
         List<ICube> secondSendCubes = new ArrayList<>();
         List<ICube> lastSendCubes = new ArrayList<>();
@@ -320,20 +340,10 @@ public class VanillaNetworkHandler {
                 lastSendCubes.add(cubeWatcher.getCube());
             }
 
-            if (horizontalShift) {
-                toUnloadChunks.add(new ChunkPos(cubeWatcher.getX() + offset.getX(), cubeWatcher.getZ() + offset.getZ()));
-            }
+            clientLoadedChunks.add(new ChunkPos(cubeWatcher.getX() + offset.getX(), cubeWatcher.getZ() + offset.getZ()));
         }
 
-        if (horizontalShift) {
-            //unload every chunk
-            toUnloadChunks.stream().map(pos -> new SPacketUnloadChunk(pos.x, pos.z)).forEach(player.connection::sendPacket);
-            //we've shifted horizontally, send full chunks
-            sendFullCubeLoadPackets(firstSendCubes, player, newOffset);
-        } else {
-            //no horizontal shift has occurred, send partial chunk updates
-            sendCubeLoadPackets(firstSendCubes, player, newOffset);
-        }
+        sendFullCubeLoadPacketsWhereNecessary(firstSendCubes, player, newOffset, clientLoadedChunks);
 
         if (teleportId < 0) {
             teleportId = ((INetHandlerPlayServer) player.connection).getTeleportId();
@@ -352,15 +362,11 @@ public class VanillaNetworkHandler {
             expectedTeleportId.put(player, teleportId);
         }
 
-        if (horizontalShift) {
-            //we've shifted horizontally, send full chunks
-            sendFullCubeLoadPackets(secondSendCubes, player, newOffset);
-            sendFullCubeLoadPackets(lastSendCubes, player, newOffset);
-        } else {
-            //no horizontal shift has occurred, send partial chunk updates
-            sendCubeLoadPackets(secondSendCubes, player, newOffset);
-            sendCubeLoadPackets(lastSendCubes, player, newOffset);
-        }
+        //unload every chunk before sending new full chunks
+        clientLoadedChunks.stream().map(pos -> new SPacketUnloadChunk(pos.x, pos.z)).forEach(player.connection::sendPacket);
+        sendFullCubeLoadPackets(secondSendCubes, player, newOffset);
+        sendFullCubeLoadPackets(lastSendCubes, player, newOffset);
+
         world.getEntityTracker().removePlayerFromTrackers(player);
         world.getEntityTracker().updateVisibility(player);
     }

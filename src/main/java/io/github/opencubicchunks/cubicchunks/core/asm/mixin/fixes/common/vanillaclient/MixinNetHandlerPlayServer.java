@@ -50,7 +50,6 @@ import net.minecraft.network.play.client.CPacketPlayerTryUseItemOnBlock;
 import net.minecraft.network.play.client.CPacketTabComplete;
 import net.minecraft.network.play.client.CPacketUpdateSign;
 import net.minecraft.network.play.client.CPacketVehicleMove;
-import net.minecraft.network.play.server.SPacketPlayerPosLook;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
@@ -61,8 +60,6 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-
-import java.util.Set;
 
 @Mixin(NetHandlerPlayServer.class)
 public class MixinNetHandlerPlayServer {
@@ -264,23 +261,5 @@ public class MixinNetHandlerPlayServer {
     private Packet<?> copyPacket(Packet<?> packetIn) {
         // TODO: make this faster
         return VanillaNetworkHandler.copyPacket(packetIn);
-    }
-
-    @Inject(method = "Lnet/minecraft/network/NetHandlerPlayServer;setPlayerLocation(DDDFFLjava/util/Set;)V",
-            at = @At(value = "INVOKE", shift = At.Shift.BEFORE,
-                    target = "Lnet/minecraft/network/NetHandlerPlayServer;sendPacket(Lnet/minecraft/network/Packet;)V"))
-    private void notifyVanillaHandlerOfTeleport(double x, double y, double z, float yaw, float pitch, Set<SPacketPlayerPosLook.EnumFlags> relativeSet, CallbackInfo ci) {
-        if (!CubicChunksConfig.allowVanillaClients) {
-            return;
-        }
-        World world = this.player.world;
-        if (!((ICubicWorld) world).isCubicWorld()) {
-            return;
-        }
-        VanillaNetworkHandler vanillaHandler = ((ICubicWorldInternal.Server) world).getVanillaNetworkHandler();
-        if (!vanillaHandler.hasCubicChunks(this.player)) {
-            vanillaHandler.updatePlayerPosition((PlayerCubeMap) ((WorldServer) world).getPlayerChunkMap(), this.player,
-                    new CubePos(Coords.blockToCube(this.targetPos.x), Coords.blockToCube(this.targetPos.y), Coords.blockToCube(this.targetPos.z)), this.teleportId);
-        }
     }
 }
