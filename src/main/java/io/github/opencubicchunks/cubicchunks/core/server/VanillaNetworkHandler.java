@@ -182,17 +182,17 @@ public class VanillaNetworkHandler {
         Set<ChunkPos> sentAsFullChunks = Collections.emptySet();
         for (Map.Entry<Chunk, List<ICube>> chunkPosListEntry : columns.entrySet()) {
             Chunk chunk = chunkPosListEntry.getKey();
-            ChunkPos pos = chunk.getPos();
+            ChunkPos offsetPos = new ChunkPos(chunk.x + offset.getX(), chunk.z + offset.getZ());
             List<ICube> column = chunkPosListEntry.getValue();
-            if (clientLoadedChunks.contains(pos)) {
+            if (clientLoadedChunks.contains(offsetPos)) {
                 //chunk is loaded on client, send partial chunk update
-                player.connection.sendPacket(constructChunkData(pos, column, offset, world.provider.hasSkyLight()));
+                player.connection.sendPacket(constructChunkData(chunk.getPos(), column, offset, world.provider.hasSkyLight()));
             } else {
                 //chunk is *not* loaded on client, send full chunk update
                 player.connection.sendPacket(constructFullChunkData(chunk, column, offset, world.provider.hasSkyLight()));
                 //inform caller that a full chunk update was sent for the given chunk, as a second full chunk update for the same column
                 //will be sent after the relative teleport and we don't want to send the same full chunk twice
-                (sentAsFullChunks.isEmpty() ? sentAsFullChunks = new HashSet<>() : sentAsFullChunks).add(pos);
+                (sentAsFullChunks.isEmpty() ? sentAsFullChunks = new HashSet<>() : sentAsFullChunks).add(offsetPos);
             }
         }
         return sentAsFullChunks;
@@ -312,7 +312,7 @@ public class VanillaNetworkHandler {
         expectedTeleportId.remove(player);
     }
 
-    private void switchPlayerOffset(PlayerCubeMap cubeMap, EntityPlayerMP player, CubePos offset, CubePos newOffset) {
+    private void switchPlayerOffset(PlayerCubeMap cubeMap, EntityPlayerMP player, CubePos oldOffset, CubePos newOffset) {
         if (!CubicChunksConfig.allowVanillaClients) {
             return;
         }
@@ -323,7 +323,7 @@ public class VanillaNetworkHandler {
             if (!columnWatcher.isSentToPlayers() || !columnWatcher.containsPlayer(player)) {
                 continue;
             }
-            clientLoadedChunks.add(columnWatcher.getPos());
+            clientLoadedChunks.add(new ChunkPos(columnWatcher.getX() + oldOffset.getX(), columnWatcher.getZ() + oldOffset.getZ()));
         }
 
         //all columns that are loaded on the client and contain at least one section
@@ -348,7 +348,7 @@ public class VanillaNetworkHandler {
                 lastSendCubes.add(cubeWatcher.getCube());
             }
 
-            clientLoadedNonEmptyChunks.add(cubeWatcher.getCubePos().chunkPos());
+            clientLoadedNonEmptyChunks.add(new ChunkPos(cubeWatcher.getX() + oldOffset.getX(), cubeWatcher.getZ() + oldOffset.getZ()));
         }
 
         Set<ChunkPos> sentAsFullChunks = sendFullCubeLoadPacketsWhereNecessary(firstSendCubes, player, newOffset, clientLoadedChunks);
@@ -358,9 +358,9 @@ public class VanillaNetworkHandler {
             teleportId = 0;
         }
         ((INetHandlerPlayServer) player.connection).setTeleportId(teleportId);
-        int dx = Coords.cubeToMinBlock(newOffset.getX() - offset.getX());
-        int dy = Coords.cubeToMinBlock(newOffset.getY() - offset.getY());
-        int dz = Coords.cubeToMinBlock(newOffset.getZ() - offset.getZ());
+        int dx = Coords.cubeToMinBlock(newOffset.getX() - oldOffset.getX());
+        int dy = Coords.cubeToMinBlock(newOffset.getY() - oldOffset.getY());
+        int dz = Coords.cubeToMinBlock(newOffset.getZ() - oldOffset.getZ());
         expectedTeleportId.put(player, teleportId);
         SPacketPlayerPosLook tpPacket = new SPacketPlayerPosLook(dx, dy + 0.01, dz, 0, 0,
                 EnumSet.allOf(SPacketPlayerPosLook.EnumFlags.class), teleportId);
@@ -369,14 +369,16 @@ public class VanillaNetworkHandler {
         //remove sections that were sent as full chunks in the first send pass from total loaded chunks to avoid unloading them again immediately
         clientLoadedChunks.removeAll(sentAsFullChunks);
         //unload all remaining chunk before sending new chunks
-        clientLoadedChunks.stream().map(pos -> new SPacketUnloadChunk(pos.x + newOffset.getX(), pos.z + newOffset.getZ())).forEach(player.connection::sendPacket);
+        //the coordinates are already offset so we don't need to do anything
+        clientLoadedChunks.stream().map(pos -> new SPacketUnloadChunk(pos.x, pos.z)).forEach(player.connection::sendPacket);
         //actually send said chunks
         sendFullCubeLoadPackets(secondSendCubes, player, newOffset, sentAsFullChunks);
         sendFullCubeLoadPackets(lastSendCubes, player, newOffset, sentAsFullChunks);
         //finally, re-send any remaining chunks that had been sent before but no longer contain any sections
         clientLoadedChunks.removeAll(clientLoadedNonEmptyChunks);
         if (!clientLoadedChunks.isEmpty()) {
-            clientLoadedChunks.stream().map(pos -> cubeMap.columnWatchers.get(pos.x, pos.z).getChunk())
+            clientLoadedChunks.stream()
+                    .map(pos -> cubeMap.columnWatchers.get(pos.x - oldOffset.getX(), pos.z - oldOffset.getZ()).getChunk())
                     .forEach(chunk -> player.connection.sendPacket(constructFullChunkData(chunk, Collections.emptyList(), newOffset, world.provider.hasSkyLight())));
         }
 
