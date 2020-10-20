@@ -76,8 +76,6 @@ import java.util.stream.Collectors;
 import static io.github.opencubicchunks.cubicchunks.api.util.Coords.*;
 
 public class VanillaNetworkHandler {
-    public static final int FORCE_BEDROCK_HORIZONTAL_RECHECK = -2;
-
     private static final Map<Class<?>, Field[]> packetFields = new IdentityHashMap<>();
     private static final Set<UUID> bedrockPlayers = new HashSet<>();
     private final WorldServer world;
@@ -257,7 +255,7 @@ public class VanillaNetworkHandler {
         player.connection.sendPacket(packet);
     }
 
-    public void updatePlayerPosition(PlayerCubeMap cubeMap, EntityPlayerMP player, CubePos managedPos, int teleportId) {
+    public void updatePlayerPosition(PlayerCubeMap cubeMap, EntityPlayerMP player, CubePos managedPos) {
         if (!CubicChunksConfig.allowVanillaClients) {
             return;
         }
@@ -273,7 +271,7 @@ public class VanillaNetworkHandler {
         boolean shouldSliceTransition = posY < 2 || posY >= 14;
         boolean isHorizontalSlices = CubicChunksConfig.vanillaClients.horizontalSlices
                 && (!CubicChunksConfig.vanillaClients.horizontalSlicesBedrockOnly || bedrockPlayers.contains(player.getUniqueID()));
-        if (isHorizontalSlices || teleportId == FORCE_BEDROCK_HORIZONTAL_RECHECK) {
+        if (isHorizontalSlices) {
             int horizontalSliceSize = CubicChunksConfig.vanillaClients.horizontalSliceSize;
             int maxHorizontalOffset = Math.max(Math.abs(posX), Math.abs(posZ));
             shouldSliceTransition |= maxHorizontalOffset >= Coords.blockToCube(horizontalSliceSize);

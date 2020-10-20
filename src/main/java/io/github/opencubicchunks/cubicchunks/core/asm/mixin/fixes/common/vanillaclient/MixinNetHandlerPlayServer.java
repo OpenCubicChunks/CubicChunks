@@ -91,8 +91,7 @@ public class MixinNetHandlerPlayServer {
                 }
                 VanillaNetworkHandler vanillaHandler = ((ICubicWorldInternal.Server) world).getVanillaNetworkHandler();
                 vanillaHandler.updatePlayerPosition((PlayerCubeMap) world.getPlayerChunkMap(), this.player,
-                        new CubePos(Coords.blockToCube(player.posX), Coords.blockToCube(player.posY), Coords.blockToCube(player.posZ)),
-                        VanillaNetworkHandler.FORCE_BEDROCK_HORIZONTAL_RECHECK);
+                        new CubePos(Coords.blockToCube(player.posX), Coords.blockToCube(player.posY), Coords.blockToCube(player.posZ)));
             }
         }
         packetbuffer.resetReaderIndex(); // reset buffer position in case another mod tries to access the client brand the same way

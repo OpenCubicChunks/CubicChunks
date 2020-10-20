@@ -557,7 +557,7 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
         playerWrapper.updateManagedPos();
 
         if (!vanillaNetworkHandler.hasCubicChunks(player)) {
-            vanillaNetworkHandler.updatePlayerPosition(this, player, playerWrapper.getManagedCubePos(), -1);
+            vanillaNetworkHandler.updatePlayerPosition(this, player, playerWrapper.getManagedCubePos());
         }
 
         CubePos playerCubePos = CubePos.fromEntity(player);
@@ -640,7 +640,7 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
         this.setNeedSort();
 
         if (!vanillaNetworkHandler.hasCubicChunks(player)) {
-            vanillaNetworkHandler.updatePlayerPosition(this, player, playerWrapper.getManagedCubePos(), -1);
+            vanillaNetworkHandler.updatePlayerPosition(this, player, playerWrapper.getManagedCubePos());
         }
         // With ChunkGc being separate from PlayerCubeMap, there are 2 issues:
         // Problem 0: Sometimes, a chunk can be generated after CubeWatcher's chunk load callback returns with a null
