@@ -26,6 +26,7 @@ package io.github.opencubicchunks.cubicchunks.core.asm.mixin.fixes.common.vanill
 
 import io.github.opencubicchunks.cubicchunks.core.server.vanillaproxy.IPositionPacket;
 import net.minecraft.network.play.server.SPacketSpawnPlayer;
+import net.minecraft.util.math.BlockPos;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -34,22 +35,31 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 @Mixin(SPacketSpawnPlayer.class)
 public class MixinSPacketSpawnPlayer implements IPositionPacket {
 
+    @Shadow private double x;
     @Shadow private double y;
-    private int offsetY;
-    private boolean hasYOffset = false;
+    @Shadow private double z;
+    private BlockPos posOffset = BlockPos.ORIGIN;
 
-    @Override public void setYOffset(int blockOffset) {
-        this.offsetY = blockOffset;
-        this.hasYOffset = true;
+    @Override public void setPosOffset(BlockPos posOffset) {
+        this.posOffset = posOffset;
     }
 
-    @Override public boolean hasYOffset() {
-        return hasYOffset;
+    @Override public boolean hasPosOffset() {
+        return this.posOffset != BlockPos.ORIGIN;
+    }
+
+    @Redirect(method = "writePacketData", at = @At(value = "FIELD", target = "Lnet/minecraft/network/play/server/SPacketSpawnPlayer;x:D"))
+    private double preprocessPacketX(SPacketSpawnPlayer _this) {
+        return this.x + this.posOffset.getX();
     }
 
     @Redirect(method = "writePacketData", at = @At(value = "FIELD", target = "Lnet/minecraft/network/play/server/SPacketSpawnPlayer;y:D"))
-    private double preprocessPacket(SPacketSpawnPlayer _this) {
-        return this.y + offsetY;
+    private double preprocessPacketY(SPacketSpawnPlayer _this) {
+        return this.y + this.posOffset.getY();
     }
 
+    @Redirect(method = "writePacketData", at = @At(value = "FIELD", target = "Lnet/minecraft/network/play/server/SPacketSpawnPlayer;z:D"))
+    private double preprocessPacketZ(SPacketSpawnPlayer _this) {
+        return this.z + this.posOffset.getZ();
+    }
 }

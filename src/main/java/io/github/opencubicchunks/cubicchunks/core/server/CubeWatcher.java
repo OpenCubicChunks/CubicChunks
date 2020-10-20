@@ -273,8 +273,17 @@ public class CubeWatcher implements ITicket, ICubeWatcher {
             this.players.forEach(entry -> playerCubeMap.scheduleSendCubeToPlayer(cube, entry));
         } else {
             // send all the dirty blocks
-            sendPacketToAllCCPlayers(new PacketCubeBlockChange(this.cube, this.dirtyBlocks));
-            sendBlockChangesToAllVanillaPlayers();
+            PacketCubeBlockChange packet = null;
+            for (EntityPlayerMP player : this.players) {
+                if (playerCubeMap.vanillaNetworkHandler.hasCubicChunks(player)) {
+                    if (packet == null) { // create packet lazily
+                        packet = new PacketCubeBlockChange(this.cube, this.dirtyBlocks);
+                    }
+                    PacketDispatcher.sendTo(packet, player);
+                } else {
+                    playerCubeMap.vanillaNetworkHandler.sendBlockChanges(dirtyBlocks, cube, player);
+                }
+            }
             // send the block entites on those blocks too
             this.dirtyBlocks.forEach(localAddress -> {
                 BlockPos pos = cube.localAddressToBlockPos(localAddress);
@@ -373,22 +382,6 @@ public class CubeWatcher implements ITicket, ICubeWatcher {
     @Override public void sendPacketToAllPlayers(IMessage packet) {
         for (EntityPlayerMP entry : this.players) {
             PacketDispatcher.sendTo(packet, entry);
-        }
-    }
-
-    public void sendPacketToAllCCPlayers(IMessage packet) {
-        for (EntityPlayerMP entry : this.players) {
-            if (playerCubeMap.vanillaNetworkHandler.hasCubicChunks(entry)) {
-                PacketDispatcher.sendTo(packet, entry);
-            }
-        }
-    }
-
-    private void sendBlockChangesToAllVanillaPlayers() {
-        for (EntityPlayerMP entry : this.players) {
-            if (!playerCubeMap.vanillaNetworkHandler.hasCubicChunks(entry)) {
-                playerCubeMap.vanillaNetworkHandler.sendBlockChanges(dirtyBlocks, cube, entry);
-            }
         }
     }
 

@@ -24,6 +24,8 @@
  */
 package io.github.opencubicchunks.cubicchunks.core.asm.mixin.fixes.common.vanillaclient;
 
+import io.github.opencubicchunks.cubicchunks.api.util.Coords;
+import io.github.opencubicchunks.cubicchunks.api.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.api.world.ICubicWorld;
 import io.github.opencubicchunks.cubicchunks.core.CubicChunksConfig;
 import io.github.opencubicchunks.cubicchunks.core.asm.mixin.ICubicWorldInternal;
@@ -33,12 +35,15 @@ import io.github.opencubicchunks.cubicchunks.core.asm.mixin.core.common.vanillac
 import io.github.opencubicchunks.cubicchunks.core.asm.mixin.core.common.vanillaclient.ICPacketTabComplete;
 import io.github.opencubicchunks.cubicchunks.core.asm.mixin.core.common.vanillaclient.ICPacketUpdateSign;
 import io.github.opencubicchunks.cubicchunks.core.asm.mixin.core.common.vanillaclient.ICPacketVehicleMove;
+import io.github.opencubicchunks.cubicchunks.core.server.PlayerCubeMap;
 import io.github.opencubicchunks.cubicchunks.core.server.VanillaNetworkHandler;
 import io.github.opencubicchunks.cubicchunks.core.server.vanillaproxy.IPositionPacket;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.network.NetHandlerPlayServer;
 import net.minecraft.network.Packet;
+import net.minecraft.network.PacketBuffer;
 import net.minecraft.network.play.client.CPacketConfirmTeleport;
+import net.minecraft.network.play.client.CPacketCustomPayload;
 import net.minecraft.network.play.client.CPacketPlayer;
 import net.minecraft.network.play.client.CPacketPlayerDigging;
 import net.minecraft.network.play.client.CPacketPlayerTryUseItemOnBlock;
@@ -46,6 +51,7 @@ import net.minecraft.network.play.client.CPacketTabComplete;
 import net.minecraft.network.play.client.CPacketUpdateSign;
 import net.minecraft.network.play.client.CPacketVehicleMove;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 import org.spongepowered.asm.mixin.Mixin;
@@ -59,6 +65,37 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class MixinNetHandlerPlayServer {
 
     @Shadow public EntityPlayerMP player;
+
+    @Shadow private Vec3d targetPos;
+
+    @Shadow private int teleportId;
+
+    @Inject(method = "processCustomPayload",
+            at = @At(value = "INVOKE", shift = At.Shift.AFTER,
+                    target = "Lnet/minecraft/network/PacketThreadUtil;checkThreadAndEnqueue(Lnet/minecraft/network/Packet;"
+                             + "Lnet/minecraft/network/INetHandler;Lnet/minecraft/util/IThreadListener;)V"))
+    public void preprocessPacket(CPacketCustomPayload packet, CallbackInfo ci) {
+        if (!CubicChunksConfig.allowVanillaClients || !"MC|Brand".equals(packet.getChannelName())) {
+            return;
+        }
+        PacketBuffer packetbuffer = packet.getBufferData();
+        if (packetbuffer.readString(32767).contains("Geyser")) {
+            VanillaNetworkHandler.addBedrockPlayer(this.player);
+
+            if (CubicChunksConfig.vanillaClients.horizontalSlices && CubicChunksConfig.vanillaClients.horizontalSlicesBedrockOnly) {
+                //notify vanilla handler, because otherwise bedrock players will log in at the wrong location as the client brand
+                //is sent later in the handshake than the first call to updatePlayerPosition
+                WorldServer world = (WorldServer) player.world;
+                if (!((ICubicWorld) world).isCubicWorld()) {
+                    return;
+                }
+                VanillaNetworkHandler vanillaHandler = ((ICubicWorldInternal.Server) world).getVanillaNetworkHandler();
+                vanillaHandler.updatePlayerPosition((PlayerCubeMap) world.getPlayerChunkMap(), this.player,
+                        new CubePos(Coords.blockToCube(player.posX), Coords.blockToCube(player.posY), Coords.blockToCube(player.posZ)));
+            }
+        }
+        packetbuffer.resetReaderIndex(); // reset buffer position in case another mod tries to access the client brand the same way
+    }
 
     @Inject(method = "processPlayerDigging",
             at = @At(value = "INVOKE", shift = At.Shift.AFTER,
@@ -89,7 +126,11 @@ public class MixinNetHandlerPlayServer {
         VanillaNetworkHandler vanillaHandler = ((ICubicWorldInternal.Server) world).getVanillaNetworkHandler();
         boolean hasCC = vanillaHandler.hasCubicChunks(player);
         if (!hasCC) {
-            ((ICPacketPlayer) packet).setY(vanillaHandler.modifyPositionC2S(((ICPacketPlayer) packet).getY(), player));
+            ICPacketPlayer p = (ICPacketPlayer) packet;
+            BlockPos offset = vanillaHandler.getC2SOffset(player);
+            p.setX(p.getX() - offset.getX());
+            p.setY(p.getY() - offset.getY());
+            p.setZ(p.getZ() - offset.getZ());
         }
     }
 
@@ -160,7 +201,11 @@ public class MixinNetHandlerPlayServer {
         VanillaNetworkHandler vanillaHandler = ((ICubicWorldInternal.Server) world).getVanillaNetworkHandler();
         boolean hasCC = vanillaHandler.hasCubicChunks(player);
         if (!hasCC) {
-            ((ICPacketVehicleMove) packetIn).setY(vanillaHandler.modifyPositionC2S(packetIn.getY(), player));
+            ICPacketVehicleMove p = (ICPacketVehicleMove) packetIn;
+            BlockPos offset = vanillaHandler.getC2SOffset(player);
+            p.setX(packetIn.getX() - offset.getX());
+            p.setY(packetIn.getY() - offset.getY());
+            p.setZ(packetIn.getZ() - offset.getZ());
         }
     }
 
@@ -197,15 +242,15 @@ public class MixinNetHandlerPlayServer {
         VanillaNetworkHandler vanillaHandler = ((ICubicWorldInternal.Server) world).getVanillaNetworkHandler();
         if (packetIn instanceof IPositionPacket) {
             if (!vanillaHandler.hasCubicChunks(player)) {
-                int targetOffset = vanillaHandler.getS2COffset(player);
+                BlockPos targetOffset = vanillaHandler.getS2COffset(player);
                 // we have to sometimes copy the packet because MC may attempt to send the same packet object
                 // to multiple players
-                if (((IPositionPacket) packetIn).hasYOffset()) {
+                if (((IPositionPacket) packetIn).hasPosOffset()) {
                     packetIn = copyPacket(packetIn);
                 }
-                ((IPositionPacket) packetIn).setYOffset(targetOffset);
+                ((IPositionPacket) packetIn).setPosOffset(targetOffset);
                 return packetIn;
-            } else if (((IPositionPacket) packetIn).hasYOffset()) {
+            } else if (((IPositionPacket) packetIn).hasPosOffset()) {
                 return copyPacket(packetIn);
             }
         }

@@ -24,7 +24,9 @@
  */
 package io.github.opencubicchunks.cubicchunks.core.server.vanillaproxy;
 
+import net.minecraft.util.math.BlockPos;
+
 public interface IPositionPacket {
-    void setYOffset(int blockOffset);
-    boolean hasYOffset();
+    void setPosOffset(BlockPos posOffset);
+    boolean hasPosOffset();
 }

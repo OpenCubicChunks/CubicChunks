@@ -36,22 +36,20 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 public class MixinSPacketEffect implements IPositionPacket {
 
     @Shadow private BlockPos soundPos;
-    private int offsetY;
-    private boolean hasYOffset = false;
+    private BlockPos posOffset = BlockPos.ORIGIN;
 
-    @Override public void setYOffset(int blockOffset) {
-        this.offsetY = blockOffset;
-        this.hasYOffset = true;
+    @Override public void setPosOffset(BlockPos posOffset) {
+        this.posOffset = posOffset;
     }
 
-    @Override public boolean hasYOffset() {
-        return hasYOffset;
+    @Override public boolean hasPosOffset() {
+        return this.posOffset != BlockPos.ORIGIN;
     }
 
     @Redirect(method = "writePacketData",
             at = @At(value = "FIELD", target = "Lnet/minecraft/network/play/server/SPacketEffect;soundPos:Lnet/minecraft/util/math/BlockPos;"))
     private BlockPos preprocessPacket(SPacketEffect _this) {
-        return offsetY == 0 ? this.soundPos : this.soundPos.add(0, offsetY, 0);
+        return this.posOffset == BlockPos.ORIGIN ? this.soundPos : this.soundPos.add(this.posOffset);
     }
 
 }

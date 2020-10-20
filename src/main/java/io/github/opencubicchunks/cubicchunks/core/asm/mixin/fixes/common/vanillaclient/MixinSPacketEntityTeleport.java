@@ -26,6 +26,7 @@ package io.github.opencubicchunks.cubicchunks.core.asm.mixin.fixes.common.vanill
 
 import io.github.opencubicchunks.cubicchunks.core.server.vanillaproxy.IPositionPacket;
 import net.minecraft.network.play.server.SPacketEntityTeleport;
+import net.minecraft.util.math.BlockPos;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -34,22 +35,31 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 @Mixin(SPacketEntityTeleport.class)
 public class MixinSPacketEntityTeleport implements IPositionPacket {
 
+    @Shadow private double posX;
     @Shadow private double posY;
-    private int offsetY;
-    private boolean hasYOffset = false;
+    @Shadow private double posZ;
+    private BlockPos posOffset = BlockPos.ORIGIN;
 
-    @Override public void setYOffset(int blockOffset) {
-        this.offsetY = blockOffset;
-        this.hasYOffset = true;
+    @Override public void setPosOffset(BlockPos posOffset) {
+        this.posOffset = posOffset;
     }
 
-    @Override public boolean hasYOffset() {
-        return hasYOffset;
+    @Override public boolean hasPosOffset() {
+        return this.posOffset != BlockPos.ORIGIN;
+    }
+
+    @Redirect(method = "writePacketData", at = @At(value = "FIELD", target = "Lnet/minecraft/network/play/server/SPacketEntityTeleport;posX:D"))
+    private double preprocessPacketX(SPacketEntityTeleport _this) {
+        return this.posX + this.posOffset.getX();
     }
 
     @Redirect(method = "writePacketData", at = @At(value = "FIELD", target = "Lnet/minecraft/network/play/server/SPacketEntityTeleport;posY:D"))
-    private double preprocessPacket(SPacketEntityTeleport _this) {
-        return this.posY + offsetY;
+    private double preprocessPacketY(SPacketEntityTeleport _this) {
+        return this.posY + this.posOffset.getY();
     }
 
+    @Redirect(method = "writePacketData", at = @At(value = "FIELD", target = "Lnet/minecraft/network/play/server/SPacketEntityTeleport;posZ:D"))
+    private double preprocessPacketZ(SPacketEntityTeleport _this) {
+        return this.posZ + this.posOffset.getZ();
+    }
 }

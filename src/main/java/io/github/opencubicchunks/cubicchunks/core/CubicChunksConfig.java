@@ -184,6 +184,26 @@ public class CubicChunksConfig {
             + "You can enable it if you don't need normal skylight values but want extra performance for worldgen and block updates")
     public static boolean fastSimplifiedSkyLight = false;
 
+    @Config.LangKey("cubicchunks.config.vanillaClients")
+    @Config.Comment("Options relating to support for vanilla clients.")
+    public static VanillaClients vanillaClients = new VanillaClients();
+
+    public static final class VanillaClients {
+        @Config.LangKey("cubicchunks.config.vanillaClients.horizontalSlices")
+        @Config.Comment("Enables horizontal slices for vanilla clients. "
+                        + "This will cause coordinates to wrap around on the X and Z axes in the same way as on Y.")
+        public boolean horizontalSlices = true;
+
+        @Config.LangKey("cubicchunks.config.vanillaClients.horizontalSlicesBedrockOnly")
+        @Config.Comment("If horizontal slices is enabled, restricts horizontal slices to Bedrock edition clients.\n"
+                        + "Note that Bedrock clients are not supported directly, but only when connecting through a proxy such as Geyser.")
+        public boolean horizontalSlicesBedrockOnly = true;
+
+        @Config.LangKey("cubicchunks.config.vanillaClients.horizontalSliceSize")
+        @Config.Comment("The size (radius) of a horizontal slice.")
+        public int horizontalSliceSize = 65536;
+    }
+
     public static int defaultMaxCubesPerChunkloadingTicket = 25 * 16;
     public static Map<String, Integer> modMaxCubesPerChunkloadingTicket = new HashMap<>();
 

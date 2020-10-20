@@ -36,7 +36,6 @@ import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 import gnu.trove.map.TIntObjectMap;
 import gnu.trove.map.hash.TIntObjectHashMap;
-import io.github.opencubicchunks.cubicchunks.api.util.Coords;
 import io.github.opencubicchunks.cubicchunks.api.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.api.util.XYZMap;
 import io.github.opencubicchunks.cubicchunks.api.util.XZMap;
@@ -557,6 +556,10 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
         PlayerWrapper playerWrapper = new PlayerWrapper(player);
         playerWrapper.updateManagedPos();
 
+        if (!vanillaNetworkHandler.hasCubicChunks(player)) {
+            vanillaNetworkHandler.updatePlayerPosition(this, player, playerWrapper.getManagedCubePos());
+        }
+
         CubePos playerCubePos = CubePos.fromEntity(player);
 
         this.cubeSelector.forAllVisibleFrom(playerCubePos, horizontalViewDistance, verticalViewDistance, (currentPos) -> {
@@ -573,9 +576,6 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
         });
         this.players.put(player.getEntityId(), playerWrapper);
         this.setNeedSort();
-        if (!vanillaNetworkHandler.hasCubicChunks(player)) {
-            vanillaNetworkHandler.updatePlayerPosition(this, player, Coords.blockToCube(playerWrapper.managedPosY));
-        }
     }
 
     // CHECKED: 1.10.2-12.18.1.2092
@@ -640,7 +640,7 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
         this.setNeedSort();
 
         if (!vanillaNetworkHandler.hasCubicChunks(player)) {
-            vanillaNetworkHandler.updatePlayerPosition(this, player, Coords.blockToCube(playerWrapper.managedPosY));
+            vanillaNetworkHandler.updatePlayerPosition(this, player, playerWrapper.getManagedCubePos());
         }
         // With ChunkGc being separate from PlayerCubeMap, there are 2 issues:
         // Problem 0: Sometimes, a chunk can be generated after CubeWatcher's chunk load callback returns with a null
