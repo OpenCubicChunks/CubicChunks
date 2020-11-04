@@ -30,9 +30,9 @@ mcGitVersion {
 }
 
 mergedMappings {
-    officialMappings = '1.16.2'
+    officialMappings = '1.16.3'
     paramMappingsChannel = 'snapshot'
-    paramMappingsVersion = '20200820-1.16.1' // replace with mappings version you want
+    paramMappingsVersion = '20201028-1.16.3' // replace with mappings version you want
 }
 
 group = "io.github.opencubicchunks" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
@@ -94,14 +94,18 @@ minecraft {
             "-XX:-OmitStackTraceInFastThrow",
             "-Dmixin.checks.interfaces=true"
     ]
-    // Default run configurations.
-    // These can be tweaked, removed, or duplicated as needed.
+    def dataArgs = [
+            '--mod cubicchunks',
+            '--all --output ' + file('src/generated/resources/'),
+            '--existing' + file('src/main/resources/')
+    ]
+
     runs {
         client {
             workingDirectory project.file('run')
             jvmArgs(args)
 
-            // Recommended logging level for the console
+            property 'forge.logging.markers', 'SCAN,REGISTRIES,REGISTRYDUMP'
             property 'forge.logging.console.level', 'debug'
 
             ideaModule = project.name + '.debug'
@@ -118,8 +122,25 @@ minecraft {
             workingDirectory project.file('run')
             jvmArgs(args)
 
-            // Recommended logging level for the console
+            property 'forge.logging.markers', 'SCAN,REGISTRIES,REGISTRYDUMP'
             property 'forge.logging.console.level', 'debug'
+
+            mods {
+                cubicchunks {
+                    source sourceSets.main
+                }
+            }
+        }
+
+        data {
+            workingDirectory project.file('run')
+
+            jvmArgs(dataArgs)
+
+            property 'forge.logging.markers', 'SCAN,REGISTRIES,REGISTRYDUMP'
+            property 'forge.logging.console.level', 'debug'
+
+            // Specify the modid for data generation, where to output the resulting resource, and where to look for existing resources.
 
             mods {
                 cubicchunks {
@@ -136,9 +157,6 @@ repositories{
     mavenLocal()
     maven {
         url "https://oss.sonatype.org/content/repositories/snapshots/"
-    }
-    maven {
-        url 'https://www.dogforce-games.com/maven/'
     }
 }
 
@@ -164,9 +182,6 @@ switch (OperatingSystem.current()) {
 }
 
 dependencies {
-    // Specify the version of Minecraft to use, If this is any group other then 'net.minecraft' it is assumed
-    // that the dep is a ForgeGradle 'patcher' dependency. And it's patches will be applied.
-    // The userdev artifact is a special name and will get all sorts of transformations applied to it.
     minecraft "net.minecraftforge:forge:${mc_version}-${forge_version}" //21
 
     implementation 'org.spongepowered:mixin:0.8'
@@ -177,28 +192,8 @@ dependencies {
 
     debugCompile "org.lwjgl:lwjgl-vulkan:$lwjglVersion"
     debugRuntime "org.lwjgl:lwjgl::$lwjglNatives"
-
-    // You may put jars on which you depend on in ./libs or you may define them like so..
-    // compile "some.group:artifact:version:classifier"
-    // compile "some.group:artifact:version"
-
-    // Real examples
-    // compile 'com.mod-buildcraft:buildcraft:6.0.8:dev'  // adds buildcraft to the dev env
-    // compile 'com.googlecode.efficient-java-matrix-library:ejml:0.24' // adds ejml to the dev env
-
-    // The 'provided' configuration is for optional dependencies that exist at compile-time but might not at runtime.
-    // provided 'com.mod-buildcraft:buildcraft:6.0.8:dev'
-
-    // These dependencies get remapped to your current MCP mappings
-    // deobf 'com.mod-buildcraft:buildcraft:6.0.8:dev'
-
-    // For more info...
-    // http://www.gradle.org/docs/current/userguide/artifact_dependencies_tutorial.html
-    // http://www.gradle.org/docs/current/userguide/dependency_management.html
-
 }
 
-// Example for how to get properties into the manifest for reading by the runtime..
 jar {
     manifest {
         attributes([
@@ -214,10 +209,6 @@ jar {
     }
 }
 
-// Example configuration to allow publishing using the maven-publish task
-// we define a custom artifact that is sourced from the reobfJar output task
-// and then declare that to be published
-// Note you'll need to add a repository here
 def reobfFile = file("$buildDir/reobfJar/output.jar")
 def reobfArtifact = artifacts.add('default', reobfFile) {
     type 'jar'
@@ -267,8 +258,4 @@ mixinGen {
         it.configurationPlugin = 'io.github.opencubicchunks.cubicchunks.mixin.OptiFineMixinConfig'
         it.injectorsDefaultRequire = 1
     }
-}
-
-repositories {
-    maven { url ='https://www.dogforce-games.com/maven/'}
 }
