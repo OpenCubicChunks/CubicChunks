@@ -14,6 +14,12 @@ buildscript {
         classpath 'org.spongepowered:mixingradle:0.7-SNAPSHOT'
     }
 }
+
+plugins {
+    id 'com.github.johnrengelman.shadow' version '4.0.0'
+    id 'java'
+}
+
 apply plugin: 'net.minecraftforge.gradle'
 // Only edit below this line, the above code adds and enables the necessary things for Forge to be setup.
 apply plugin: 'eclipse'
@@ -22,6 +28,13 @@ apply plugin: 'org.spongepowered.mixin'
 apply plugin: "io.github.opencubicchunks.gradle.mixingen"
 apply plugin: "io.github.opencubicchunks.gradle.mcGitVersion"
 apply plugin: 'io.github.opencubicchunks.gradle.merged-mappings'
+
+build.dependsOn(tasks.findByName("shadowJar"))
+
+configurations {
+    shadow
+    implementation.extendsFrom(shadow)
+}
 
 mcGitVersion {
     snapshot = true
@@ -192,6 +205,8 @@ dependencies {
 
     debugCompile "org.lwjgl:lwjgl-vulkan:$lwjglVersion"
     debugRuntime "org.lwjgl:lwjgl::$lwjglNatives"
+
+    shadow('io.github.opencubicchunks:regionlib:0.63.0-SNAPSHOT')
 }
 
 jar {
