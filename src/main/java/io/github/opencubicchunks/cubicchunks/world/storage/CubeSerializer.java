@@ -553,7 +553,7 @@ public class CubeSerializer {
         for(int i = 0; i < listnbt.size(); ++i) {
             CompoundNBT compoundnbt = listnbt.getCompound(i);
             EntityType.loadEntityRecursive(compoundnbt, world, (p_222655_1_) -> {
-                cube.addEntity(p_222655_1_);
+                cube.addCubeEntity(p_222655_1_);
                 return p_222655_1_;
             });
             cube.setHasEntities(true);

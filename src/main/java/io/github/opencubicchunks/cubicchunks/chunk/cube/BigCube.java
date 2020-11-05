@@ -254,9 +254,10 @@ public class BigCube implements IChunk, IBigCube {
     @Override public void addCubeEntity(Entity entityIn) {
         this.hasEntities = true;
         //This needs to be blockToCube instead of getCubeXForEntity because of the `/ 16`
-        int xFloor = blockToCube(MathHelper.floor(entityIn.getX() / 16.0D));
-        int yFloor = blockToCube(MathHelper.floor(entityIn.getY() / 16.0D));
-        int zFloor = blockToCube(MathHelper.floor(entityIn.getZ() / 16.0D));
+
+        int xFloor = Coords.getCubeXForEntity(entityIn);
+        int yFloor = Coords.getCubeYForEntity(entityIn);
+        int zFloor = Coords.getCubeZForEntity(entityIn);
         if (xFloor != this.cubePos.getX() || yFloor != this.cubePos.getY() || zFloor != this.cubePos.getZ()) {
             CubicChunks.LOGGER.warn("Wrong location! ({}, {}, {}) should be ({}, {}, {}), {}", xFloor, yFloor, zFloor, this.cubePos.getX(),
                     this.cubePos.getY(), this.cubePos.getZ(), entityIn);
@@ -284,9 +285,7 @@ public class BigCube implements IChunk, IBigCube {
     }
 
     private int getIndexFromEntity(Entity entityIn) {
-        return (MathHelper.floor(entityIn.getX() / 16.0D) * IBigCube.DIAMETER_IN_SECTIONS * IBigCube.DIAMETER_IN_SECTIONS) +
-                (MathHelper.floor(entityIn.getY() / 16.0D) * IBigCube.DIAMETER_IN_SECTIONS) +
-                MathHelper.floor(entityIn.getZ() / 16.0D);
+        return Coords.blockToIndex((int)entityIn.getX(), (int)entityIn.getY(), (int)entityIn.getZ());
     }
 
     public void removeEntity(Entity entityIn) {
