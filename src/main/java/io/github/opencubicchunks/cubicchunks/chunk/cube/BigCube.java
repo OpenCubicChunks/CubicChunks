@@ -66,6 +66,8 @@ public class BigCube implements IChunk, IBigCube {
 
     private boolean hasEntities;
 
+    private long lastSaveTime;
+
     private volatile boolean lightCorrect;
     private final Map<BlockPos, CompoundNBT> deferredTileEntities = Maps.newHashMap();
 
@@ -475,7 +477,7 @@ public class BigCube implements IChunk, IBigCube {
 
     @Deprecated @Override public boolean isUnsaved() { return isDirty(); }
     @Override public boolean isDirty() {
-        return dirty || this.hasEntities; //return this.dirty || this.hasEntities && this.world.getGameTime() != this.lastSaveTime;
+        return this.dirty || this.hasEntities && this.world.getGameTime() != this.lastSaveTime;
     }
 
     @Override public boolean isEmptyCube() {
@@ -639,6 +641,9 @@ public class BigCube implements IChunk, IBigCube {
 
     @Override public void setLastSaveTime(long saveTime) {
 
+    }
+    @Override public void setCubeLastSaveTime(long saveTime) {
+        lastSaveTime = saveTime;
     }
 
     @Deprecated @Override public Map<Structure<?>, StructureStart<?>> getAllStarts() {

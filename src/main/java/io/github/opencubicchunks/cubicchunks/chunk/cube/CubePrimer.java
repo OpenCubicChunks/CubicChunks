@@ -326,7 +326,8 @@ public class CubePrimer implements IBigCube, IChunk {
     }
 
     @Override public void setLastSaveTime(long saveTime) {
-        throw new UnsupportedOperationException("For later implementation");
+    }
+    @Override public void setCubeLastSaveTime(long saveTime) {
     }
 
     @Deprecated @Override public Map<Structure<?>, StructureStart<?>> getAllStarts() {

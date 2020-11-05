@@ -74,8 +74,9 @@ public interface IBigCube extends IBlockReader {
     //MISC
     // can't be isModified due to obfuscation issues with IChunk
     void setDirty(boolean modified);
-
     boolean isDirty();
+
+    void setCubeLastSaveTime(long time);
 
     //TODO: remove isEmptyCube from IBigCube to match IChunk
     boolean isEmptyCube();
