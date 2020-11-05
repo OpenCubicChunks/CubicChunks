@@ -296,9 +296,7 @@ public class BigCube implements ChunkAccess, IBigCube {
     }
 
     private int getIndexFromEntity(Entity entityIn) {
-        return (Mth.floor(entityIn.getX() / 16.0D) * IBigCube.DIAMETER_IN_SECTIONS * IBigCube.DIAMETER_IN_SECTIONS) +
-                (Mth.floor(entityIn.getY() / 16.0D) * IBigCube.DIAMETER_IN_SECTIONS) +
-                Mth.floor(entityIn.getZ() / 16.0D);
+        return Coords.blockToIndex((int)entityIn.getX(), (int)entityIn.getY(), (int)entityIn.getZ());
     }
 
     public void removeEntity(Entity entityIn) {
