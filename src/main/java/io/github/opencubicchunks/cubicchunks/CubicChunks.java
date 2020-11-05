@@ -21,10 +21,6 @@ import org.apache.logging.log4j.Logger;
 import java.lang.reflect.InvocationTargetException;
 import java.util.stream.Collectors;
 
-/**
- * Requires Mixin BootStrap in order to use in forge.
- */
-// The value here should match an entry in the META-INF/mods.toml file
 @Mod(CubicChunks.MODID)
 public class CubicChunks {
 
@@ -48,8 +44,6 @@ public class CubicChunks {
         EarlyConfig.getDiameterInSections();
         // Register the setup method for modloading
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::setup);
-        // Register the doClientStuff method for modloading
-        FMLJavaModLoadingContext.get().getModEventBus().addListener(this::doClientStuff);
 
         if (System.getProperty("cubicchunks.debug", "false").equalsIgnoreCase("true")) {
             try {
@@ -78,17 +72,4 @@ public class CubicChunks {
             biome.getGenerationSettings().features = biome.getGenerationSettings().features.stream().map(Lists::newArrayList).collect(Collectors.toList());
         }
     }
-
-    private void doClientStuff(final FMLClientSetupEvent event) {
-    }
-
-    // You can use SubscribeEvent and let the Event Bus discover methods to call
-    @SubscribeEvent
-    public void onServerStarting(FMLServerStartingEvent event) {
-        // do something when the server starts
-        LOGGER.info("HELLO from server starting");
-    }
-
-    // You can use EventBusSubscriber to automatically subscribe events on the contained class (this is subscribing to the MOD
-    // Event bus for receiving Registry Events)
 }

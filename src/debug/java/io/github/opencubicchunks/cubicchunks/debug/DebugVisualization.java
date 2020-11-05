@@ -106,7 +106,7 @@ public class DebugVisualization {
 
     private static final boolean IS_VULKAN = false;
 
-    private static final DebugVulkan debugVulkan = new DebugVulkan();
+//    private static DebugVulkan debugVulkan = new DebugVulkan();
 
     public static void init() {
         MinecraftForge.EVENT_BUS.addListener(DebugVisualization::onWorldLoad);
@@ -132,16 +132,16 @@ public class DebugVisualization {
 
         if(IS_VULKAN) {
             if(!initialized.getAndSet(true)) {
-                debugVulkan.initWindow();
-                debugVulkan.initVulkan();
+//                debugVulkan.initWindow();
+//                debugVulkan.initVulkan();
             }
             try {
-                if(glfwWindowShouldClose(debugVulkan.window)) {
-                    debugVulkan.cleanup();
-                    shutdown = true;
-                }
-
-                debugVulkan.drawAndWait();
+//                if(glfwWindowShouldClose(debugVulkan.window)) {
+//                    debugVulkan.cleanup();
+//                    shutdown = true;
+//                }
+//
+//                debugVulkan.drawAndWait();
 
             } catch (Exception e) {
                 e.printStackTrace();
