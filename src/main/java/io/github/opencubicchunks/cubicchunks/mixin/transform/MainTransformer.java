@@ -3,6 +3,7 @@ package io.github.opencubicchunks.cubicchunks.mixin.transform;
 import static org.objectweb.asm.Type.ARRAY;
 import static org.objectweb.asm.Type.OBJECT;
 import static org.objectweb.asm.Type.getObjectType;
+import static org.objectweb.asm.Type.getType;
 import static org.objectweb.asm.commons.Method.getMethod;
 
 import com.google.common.collect.Sets;
@@ -98,7 +99,7 @@ public class MainTransformer {
     }
 
     public static void transformChunkManager(ClassNode targetClass) {
-        final ClassMethod targetMethod = new ClassMethod(getObjectType("net/minecraft/class_3898"),
+        final ClassMethod targetMethod = new ClassMethod(getObjectType("net/minecraft/class_3898"), // ChunkMap
                 getMethod("net.minecraft.class_3193 " // ChunkHolder
                         + "method_17217(long, int, " // updateChunkScheduling
                         + "net.minecraft.class_3193, int)")); // ChunkHolder
@@ -124,8 +125,8 @@ public class MainTransformer {
                         "field_17213", "Lit/unimi/dsi/fastutil/longs/Long2ObjectLinkedOpenHashMap;"), // updatingChunkMap
                 "updatingCubeMap");
         fieldRedirects.put(new ClassField(
-                        "net/minecraft/class_3898", // net/minecraft/server/level/ChunkMap
-                        "field_18239", "I"), // MAX_CHUNK_DISTANCE
+                        getObjectType("net/minecraft/class_3898"), // net/minecraft/server/level/ChunkMap
+                        "field_18239", Type.INT_TYPE), // MAX_CHUNK_DISTANCE
                 "MAX_CUBE_DISTANCE");
 
 
@@ -151,8 +152,9 @@ public class MainTransformer {
         Map<ClassMethod, String> methodRedirects = new HashMap<>();
         methodRedirects.put(// synthetic accessor for method_14053 (updateChunkScheduling)
                 new ClassMethod(
-                        getObjectType("net/minecraft/world/server/ChunkManager"),
-                        getMethod("net.minecraft.class_3193 access$700(" // ChunkHolder
+                        getObjectType("net/minecraft/class_3898"), // ChunkMap
+                        getMethod("net.minecraft.class_3193 " // ChunkHolder
+                                + "access$400(" // was access$700 on forge?
                                 + "net.minecraft.class_3898, " // ChunkMap
                                 + "long, int, "
                                 + "net.minecraft.class_3193, int)") // ChunkHolder
@@ -186,7 +188,7 @@ public class MainTransformer {
 
     private static MethodNode cloneAndApplyRedirects(ClassNode node, ClassMethod existingMethodIn, String newName,
             Map<ClassMethod, String> methodRedirectsIn, Map<ClassField, String> fieldRedirectsIn, Map<Type, Type> typeRedirectsIn) {
-        LOGGER.debug("Transforming " + node.name + ": Cloning method " + existingMethodIn.method.getName() + " " + existingMethodIn.method.getDescriptor() + " "
+        LOGGER.info("Transforming " + node.name + ": Cloning method " + existingMethodIn.method.getName() + " " + existingMethodIn.method.getDescriptor() + " "
                 + "into " + newName + " and applying remapping");
         Method existingMethod = remapMethod(existingMethodIn).method;
 
@@ -207,7 +209,7 @@ public class MainTransformer {
             ClassMethod classMethod = remapMethod(classMethodUnmapped);
             methodRedirects.put(
                     classMethod.owner.getInternalName() + "." + classMethod.method.getName() + classMethod.method.getDescriptor(),
-                    methodRedirectsIn.get(classMethod)
+                    methodRedirectsIn.get(classMethodUnmapped)
             );
         }
         for (Handle handle : redirectedLambdas.keySet()) {
@@ -222,7 +224,7 @@ public class MainTransformer {
             ClassField classField = remapField(classFieldUnmapped);
             fieldRedirects.put(
                     classField.owner.getInternalName() + "." + classField.name,
-                    fieldRedirectsIn.get(classField)
+                    fieldRedirectsIn.get(classFieldUnmapped)
             );
         }
 
@@ -325,11 +327,11 @@ public class MainTransformer {
     private static ClassField remapField(ClassField clField) {
         MappingResolver mappingResolver = FabricLoader.getInstance().getMappingResolver();
 
-        Type mappedType = getObjectType(mappingResolver.mapClassName("intermediary", clField.owner.getClassName()));
+        Type mappedType = remapType(clField.owner);
         String mappedName =  mappingResolver.mapFieldName("intermediary",
                 clField.owner.getClassName(), clField.name, clField.desc.getDescriptor());
         Type mappedDesc = remapDescType(clField.desc);
-        if (clField.name.contains("method") && IS_DEV && mappedName.equals(clField.name)) {
+        if (clField.name.contains("field") && IS_DEV && mappedName.equals(clField.name)) {
             throw new Error("Fail! Mapping field " + clField.name  + " failed in dev!");
         }
         return new ClassField(mappedType, mappedName, mappedDesc);
@@ -340,7 +342,7 @@ public class MainTransformer {
         Type[] params = Type.getArgumentTypes(clMethod.method.getDescriptor());
         Type returnType = Type.getReturnType(clMethod.method.getDescriptor());
 
-        Type mappedType = getObjectType(mappingResolver.mapClassName("intermediary", clMethod.owner.getClassName()));
+        Type mappedType = remapType(clMethod.owner);
         String mappedName =  mappingResolver.mapMethodName("intermediary",
                 clMethod.owner.getClassName(), clMethod.method.getName(), clMethod.method.getDescriptor());
         if (clMethod.method.getName().contains("method") && IS_DEV && mappedName.equals(clMethod.method.getName())) {
@@ -459,7 +461,7 @@ public class MainTransformer {
         ClassField(String owner, String name, String desc) {
             this.owner = getObjectType(owner);
             this.name = name;
-            this.desc = getObjectType(desc);
+            this.desc = getType(desc);
         }
 
         public ClassField(Type owner, String name, Type desc) {
