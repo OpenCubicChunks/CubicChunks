@@ -5,19 +5,27 @@ import static org.hamcrest.Matchers.empty;
 import static org.junit.Assert.assertThat;
 
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
-import net.minecraft.world.chunk.IChunk;
+import net.minecraft.world.level.chunk.ChunkAccess;
 import org.junit.Test;
 import org.objectweb.asm.Type;
 
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 public class TestInheritanceObfuscationCollisions {
     @Test
     public void tesChunkCube() {
-        verifyNoCollision(IBigCube.class, IChunk.class);
+        for (int i = 0; i < 6; i++) {
+            System.out.println((Predicate<Object>) x->true);
+        }
+        for (int i = 0; i < 6; i++) {
+            int j = i;
+            System.out.println((Predicate<Object>) x->j==0);
+        }
+        verifyNoCollision(IBigCube.class, ChunkAccess.class);
     }
 
     private void verifyNoCollision(Class<?> ccClass, Class<?> mcClass) {

@@ -24,7 +24,7 @@
  */
 package io.github.opencubicchunks.cubicchunks.utils;
 
-import mcp.MethodsReturnNonnullByDefault;
+import io.github.opencubicchunks.cubicchunks.annotation.MethodsReturnNonnullByDefault;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 

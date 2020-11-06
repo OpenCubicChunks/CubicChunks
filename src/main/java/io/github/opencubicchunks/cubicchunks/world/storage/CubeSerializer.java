@@ -9,27 +9,31 @@ import io.github.opencubicchunks.cubicchunks.chunk.cube.CubePrimerWrapper;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import it.unimi.dsi.fastutil.shorts.ShortList;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.CompressedStreamTools;
-import net.minecraft.nbt.ListNBT;
-import net.minecraft.nbt.ShortNBT;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.palette.UpgradeData;
-import net.minecraft.util.registry.Registry;
-import net.minecraft.world.EmptyTickList;
-import net.minecraft.world.LightType;
-import net.minecraft.world.World;
-import net.minecraft.world.biome.BiomeContainer;
-import net.minecraft.world.biome.provider.BiomeProvider;
-import net.minecraft.world.chunk.*;
-import net.minecraft.world.gen.ChunkGenerator;
-import net.minecraft.world.lighting.WorldLightManager;
-import net.minecraft.world.server.ServerWorld;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Registry;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.NbtIo;
+import net.minecraft.nbt.ShortTag;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.level.EmptyTickList;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LightLayer;
+import net.minecraft.world.level.biome.BiomeSource;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.chunk.ChunkBiomeContainer;
+import net.minecraft.world.level.chunk.ChunkGenerator;
+import net.minecraft.world.level.chunk.ChunkSource;
+import net.minecraft.world.level.chunk.ChunkStatus;
+import net.minecraft.world.level.chunk.DataLayer;
+import net.minecraft.world.level.chunk.LevelChunk;
+import net.minecraft.world.level.chunk.LevelChunkSection;
+import net.minecraft.world.level.chunk.UpgradeData;
+import net.minecraft.world.level.lighting.LevelLightEngine;
 import org.apache.logging.log4j.LogManager;
 
 import javax.annotation.Nullable;
@@ -41,7 +45,7 @@ import java.util.zip.GZIPInputStream;
 
 public class CubeSerializer {
 
-    public static IBigCube loadCube(ServerWorld worldIn, CubePos pos, Path worldDir) throws IOException {
+    public static IBigCube loadCube(ServerLevel worldIn, CubePos pos, Path worldDir) throws IOException {
         Path cubePath = worldDir.resolve("cubes32/" + pos.getX() + "_" + pos.getY() + "_" + pos.getZ() + ".bin");
         if (!Files.exists(cubePath)) {
             return null;
@@ -51,15 +55,15 @@ public class CubeSerializer {
 
         IBigCube cube = null;
         try {
-            CompoundNBT root = CompressedStreamTools.read(datainputstream);
-            CompoundNBT level = root.getCompound("Level");
+            CompoundTag root = NbtIo.read(datainputstream);
+            CompoundTag level = root.getCompound("Level");
             CubePos cubePos = CubePos.of(level.getInt("xPos"), level.getInt("yPos"), level.getInt("zPos"));
             if (!Objects.equals(pos, cubePos)) {
                 CubicChunks.LOGGER.error("Chunk file at {} is in the wrong location; relocating. (Expected {}, got {})", pos, pos, cubePos);
             }
 
             ChunkGenerator chunkgenerator = worldIn.getChunkSource().getGenerator();
-            BiomeProvider biomeprovider = chunkgenerator.getBiomeSource();
+            BiomeSource biomeprovider = chunkgenerator.getBiomeSource();
 
             CubeBiomeContainer biomecontainer = new CubeBiomeContainer(worldIn.registryAccess().registryOrThrow(Registry.BIOME_REGISTRY), pos.asSectionPos(), biomeprovider, level.contains("Biomes", 11) ? level.getIntArray("Biomes") : null);
 //            UpgradeData upgradedata = level.contains("UpgradeData", 10) ? new UpgradeData(level.getCompound("UpgradeData")) : UpgradeData.EMPTY;
@@ -70,23 +74,23 @@ public class CubeSerializer {
 //                return p_222646_0_ == null || p_222646_0_ == Fluids.EMPTY;
 //            }, pos, level.getList("LiquidsToBeTicked", 9));
             boolean isLightOn = level.getBoolean("isLightOn");
-            ListNBT sectionsNBTList = level.getList("Sections", 10);
-            ChunkSection[] sections = new ChunkSection[IBigCube.SECTION_COUNT];
+            ListTag sectionsNBTList = level.getList("Sections", 10);
+            LevelChunkSection[] sections = new LevelChunkSection[IBigCube.SECTION_COUNT];
             //TODO: 1.16 dimensions stuff
 //            boolean worldHasSkylight = worldIn.getDimension().hasSkyLight();
-            AbstractChunkProvider abstractchunkprovider = worldIn.getChunkSource();
-            WorldLightManager worldlightmanager = abstractchunkprovider.getLightEngine();
+            ChunkSource abstractchunkprovider = worldIn.getChunkSource();
+            LevelLightEngine worldlightmanager = abstractchunkprovider.getLightEngine();
 //            if (isLightOn) {
 //                worldlightmanager.retainData(pos, true);
 //            }
 
             for(int i = 0; i < sectionsNBTList.size(); ++i) {
-                CompoundNBT sectionNBT = sectionsNBTList.getCompound(i);
+                CompoundTag sectionNBT = sectionsNBTList.getCompound(i);
                 int cubeIndex = sectionNBT.getShort("i");
 
                 if (sectionNBT.contains("Palette", 9) && sectionNBT.contains("BlockStates", 12)) {
                     int sectionY = Coords.sectionPosByIndex(pos, cubeIndex).getY();
-                    ChunkSection chunksection = new ChunkSection(sectionY);
+                    LevelChunkSection chunksection = new LevelChunkSection(sectionY);
                     chunksection.getStates().read(sectionNBT.getList("Palette", 10), sectionNBT.getLongArray("BlockStates"));
                     chunksection.recalcBlockCounts();
                     if (!chunksection.isEmpty()) {
@@ -99,20 +103,20 @@ public class CubeSerializer {
 
                 if (isLightOn) {
                     if (sectionNBT.contains("BlockLight", 7)) {
-                        worldlightmanager.queueSectionData(LightType.BLOCK, Coords.sectionPosByIndex(pos, cubeIndex), new NibbleArray(sectionNBT.getByteArray("BlockLight")), true);
+                        worldlightmanager.queueSectionData(LightLayer.BLOCK, Coords.sectionPosByIndex(pos, cubeIndex), new DataLayer(sectionNBT.getByteArray("BlockLight")), true);
                     }
 
                     //TODO: reimplement
                     if (/*worldHasSkylight &&*/ sectionNBT.contains("SkyLight", 7)) {
-                        worldlightmanager.queueSectionData(LightType.SKY, Coords.sectionPosByIndex(pos, cubeIndex), new NibbleArray(sectionNBT.getByteArray("SkyLight")), true);
+                        worldlightmanager.queueSectionData(LightLayer.SKY, Coords.sectionPosByIndex(pos, cubeIndex), new DataLayer(sectionNBT.getByteArray("SkyLight")), true);
                     }
                 }
             }
 
             long inhabitedTime = level.getLong("InhabitedTime");
-            ChunkStatus.Type chunkstatus$type = getChunkStatus(root);
+            ChunkStatus.ChunkType chunkstatus$type = getChunkStatus(root);
             IBigCube icube;
-            if (chunkstatus$type == ChunkStatus.Type.LEVELCHUNK) {
+            if (chunkstatus$type == ChunkStatus.ChunkType.LEVELCHUNK) {
 //                ITickList<Block> iticklist;
 //                if (level.contains("TileTicks", 9)) {
 //                    iticklist = SerializableTickList.create(level.getList("TileTicks", 10), Registry.BLOCK::getKey, Registry.BLOCK::getOrDefault);
@@ -148,7 +152,7 @@ public class CubeSerializer {
 
                 if (!isLightOn && cubePrimer.getCubeStatus().isOrAfter(ChunkStatus.LIGHT)) {
                     for(BlockPos blockpos : BlockPos.betweenClosed(pos.minCubeX(), pos.minCubeY(), pos.minCubeZ(), pos.maxCubeX(), pos.maxCubeY(), pos.maxCubeZ())) {
-                        if (icube.getBlockState(blockpos).getLightValue(icube, blockpos) != 0) {
+                        if (icube.getBlockState(blockpos).getLightEmission() != 0) {
                             //TODO: reimplement light positions in save format
 //                            cubePrimer.addLightPosition(blockpos);
                         }
@@ -188,29 +192,29 @@ public class CubeSerializer {
 //                }
 //            }
 
-            if (chunkstatus$type == ChunkStatus.Type.LEVELCHUNK) {
+            if (chunkstatus$type == ChunkStatus.ChunkType.LEVELCHUNK) {
                 //TODO: reimplement forge chunk load event
 //                net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.event.world.ChunkDataEvent.Load(icube, level, chunkstatus$type));
                 return new CubePrimerWrapper((BigCube) icube);
             } else {
                 CubePrimer cubePrimer = (CubePrimer)icube;
-                ListNBT entitiesNBT = level.getList("Entities", 10);
+                ListTag entitiesNBT = level.getList("Entities", 10);
 
                 for(int i2 = 0; i2 < entitiesNBT.size(); ++i2) {
                     cubePrimer.addCubeEntity(entitiesNBT.getCompound(i2));
                 }
 
-                ListNBT tileEntitiesNBTList = level.getList("TileEntities", 10);
+                ListTag tileEntitiesNBTList = level.getList("TileEntities", 10);
 
                 for(int i1 = 0; i1 < tileEntitiesNBTList.size(); ++i1) {
-                    CompoundNBT tileEntityNBT = tileEntitiesNBTList.getCompound(i1);
+                    CompoundTag tileEntityNBT = tileEntitiesNBTList.getCompound(i1);
                     icube.addCubeTileEntity(tileEntityNBT);
                 }
 
-                ListNBT lightsNBTList = level.getList("Lights", 9);
+                ListTag lightsNBTList = level.getList("Lights", 9);
 
                 for(int j2 = 0; j2 < lightsNBTList.size(); ++j2) {
-                    ListNBT listnbt2 = lightsNBTList.getList(j2);
+                    ListTag listnbt2 = lightsNBTList.getList(j2);
 
                     for(int j1 = 0; j1 < listnbt2.size(); ++j1) {
                         cubePrimer.addCubeLightValue(listnbt2.getShort(j1), j2);
@@ -237,19 +241,19 @@ public class CubeSerializer {
     }
 
     @Nullable
-    public static IBigCube loadCubeOld(World world, CubePos pos, Path worldDir) throws IOException {
+    public static IBigCube loadCubeOld(Level world, CubePos pos, Path worldDir) throws IOException {
         Path cubePath = worldDir.resolve("cubes32/" + pos.getX() + "_" + pos.getY() + "_" + pos.getZ() + ".bin");
         if (!Files.exists(cubePath)) {
             return null;
         }
         try (DataInputStream in = new DataInputStream(new BufferedInputStream(new GZIPInputStream(Files.newInputStream(cubePath))))) {
             ChunkStatus status = ChunkStatus.getStatusList().get(in.readUnsignedByte());
-            ChunkSection[] sections = new ChunkSection[IBigCube.SECTION_COUNT];
+            LevelChunkSection[] sections = new LevelChunkSection[IBigCube.SECTION_COUNT];
 
             for (int i = 0; i < IBigCube.SECTION_COUNT; i++) {
                 boolean isEmpty = in.readBoolean();
                 if (!isEmpty) {
-                    ChunkSection chunkSection = new ChunkSection(pos.minCubeY() + Coords.indexToY(i));
+                    LevelChunkSection chunkSection = new LevelChunkSection(pos.minCubeY() + Coords.indexToY(i));
                     sections[i] = chunkSection;
 
                     for (int y = 0; y < 16; y++) {
@@ -266,7 +270,7 @@ public class CubeSerializer {
             }
 
             IBigCube cube;
-            if (status.getChunkType() == ChunkStatus.Type.PROTOCHUNK) {
+            if (status.getChunkType() == ChunkStatus.ChunkType.PROTOCHUNK) {
                 cube = new CubePrimer(pos, null, sections, null, null);
                 cube.setCubeStatus(status);
 
@@ -282,16 +286,16 @@ public class CubeSerializer {
         }
     }
 
-    public static void writeCube(World worldIn, IBigCube icube, Path worldDir) throws IOException {
+    public static void writeCube(Level worldIn, IBigCube icube, Path worldDir) throws IOException {
         CubePos pos = icube.getCubePos();
         Path cubePath = worldDir.resolve("cubes32/" + pos.getX() + "_" + pos.getY() + "_" + pos.getZ() + ".bin");
         if (!Files.exists(cubePath.getParent())) {
             Files.createDirectories(cubePath.getParent());
         }
-        CompoundNBT z = new CompoundNBT();
-        CompoundNBT root = new CompoundNBT();
+        CompoundTag z = new CompoundTag();
+        CompoundTag root = new CompoundTag();
         z.put("", root);
-        CompoundNBT level = new CompoundNBT();
+        CompoundTag level = new CompoundTag();
         root.put("Level", level);
 
         level.putInt("xPos", pos.getX());
@@ -302,21 +306,21 @@ public class CubeSerializer {
         level.putLong("InhabitedTime", icube.getCubeInhabitedTime());
         level.putString("Status", icube.getCubeStatus().getName());
 
-        ChunkSection[] sections = icube.getCubeSections();
-        ListNBT sectionsNBTList = new ListNBT();
-        WorldLightManager worldlightmanager = worldIn.getChunkSource().getLightEngine();
+        LevelChunkSection[] sections = icube.getCubeSections();
+        ListTag sectionsNBTList = new ListTag();
+        LevelLightEngine worldlightmanager = worldIn.getChunkSource().getLightEngine();
         boolean cubeHasLight = icube.hasCubeLight();
 
         for(int i = 0; i < IBigCube.SECTION_COUNT; ++i) {
-            ChunkSection section = sections[i];
+            LevelChunkSection section = sections[i];
 
-            NibbleArray blockData = worldlightmanager.getLayerListener(LightType.BLOCK).getDataLayerData(Coords.sectionPosByIndex(pos, i));
-            NibbleArray skyData = worldlightmanager.getLayerListener(LightType.SKY).getDataLayerData(Coords.sectionPosByIndex(pos, i));
-            CompoundNBT sectionNBT = new CompoundNBT();
-            if (section != Chunk.EMPTY_SECTION || blockData != null || skyData != null) {
+            DataLayer blockData = worldlightmanager.getLayerListener(LightLayer.BLOCK).getDataLayerData(Coords.sectionPosByIndex(pos, i));
+            DataLayer skyData = worldlightmanager.getLayerListener(LightLayer.SKY).getDataLayerData(Coords.sectionPosByIndex(pos, i));
+            CompoundTag sectionNBT = new CompoundTag();
+            if (section != LevelChunk.EMPTY_SECTION || blockData != null || skyData != null) {
 
                 sectionNBT.putShort("i", (byte)(i));
-                if (section != Chunk.EMPTY_SECTION) {
+                if (section != LevelChunk.EMPTY_SECTION) {
                     section.getStates().write(sectionNBT, "Palette", "BlockStates");
                 }
 
@@ -337,15 +341,15 @@ public class CubeSerializer {
             level.putBoolean("isLightOn", true);
         }
 
-        BiomeContainer biomecontainer = icube.getCubeBiomes();
+        ChunkBiomeContainer biomecontainer = icube.getCubeBiomes();
         if (biomecontainer != null) {
             level.putIntArray("Biomes", biomecontainer.writeBiomes());
         }
 
-        ListNBT tileEntitiesNBTList = new ListNBT();
+        ListTag tileEntitiesNBTList = new ListTag();
 
         for(BlockPos blockpos : icube.getCubeTileEntitiesPos()) {
-            CompoundNBT tileEntityNBT = icube.getCubeTileEntityNBT(blockpos);
+            CompoundTag tileEntityNBT = icube.getCubeTileEntityNBT(blockpos);
 //            if (tileEntityNBT != null) {
                 CubicChunks.LOGGER.debug("Saving tile entity at " + blockpos.toString());
                 tileEntitiesNBTList.add(tileEntityNBT);
@@ -353,14 +357,14 @@ public class CubeSerializer {
         }
 
         level.put("TileEntities", tileEntitiesNBTList);
-        ListNBT entitiesNBTList = new ListNBT();
-        if (icube.getCubeStatus().getChunkType() == ChunkStatus.Type.LEVELCHUNK) {//icube.getCubeStatus().getType() == ChunkStatus.Type.LEVELCHUNK) {
+        ListTag entitiesNBTList = new ListTag();
+        if (icube.getCubeStatus().getChunkType() == ChunkStatus.ChunkType.LEVELCHUNK) {//icube.getCubeStatus().getType() == ChunkStatus.Type.LEVELCHUNK) {
             BigCube cube = (BigCube)icube;
             cube.setHasEntities(false);
 
             for(int k = 0; k < cube.getCubeEntityLists().length; ++k) {
                 for(Entity entity : cube.getCubeEntityLists()[k]) {
-                    CompoundNBT entityNBT = new CompoundNBT();
+                    CompoundTag entityNBT = new CompoundTag();
                     try {
                         if (entity.save(entityNBT)) {
                             cube.setHasEntities(true);
@@ -382,7 +386,7 @@ public class CubeSerializer {
             CubePrimer cubePrimer = (CubePrimer)icube;
             entitiesNBTList.addAll(cubePrimer.getCubeEntities());
             //level.put("Lights", toNbt(cubePrimer.getCubePackedLightPositions()));
-            CompoundNBT carvingMasksNBT = new CompoundNBT();
+            CompoundTag carvingMasksNBT = new CompoundTag();
 
             //TODO: reimplement carving masks
 //            for(GenerationStage.Carving generationstage$carving : GenerationStage.Carving.values()) {
@@ -431,14 +435,14 @@ public class CubeSerializer {
         }
     }
 
-    public static ListNBT toNbt(ShortList[] list) {
-        ListNBT listnbt = new ListNBT();
+    public static ListTag toNbt(ShortList[] list) {
+        ListTag listnbt = new ListTag();
 
         for(ShortList shortlist : list) {
-            ListNBT listnbt1 = new ListNBT();
+            ListTag listnbt1 = new ListTag();
             if (shortlist != null) {
                 for(Short oshort : shortlist) {
-                    listnbt1.add(ShortNBT.valueOf(oshort));
+                    listnbt1.add(ShortTag.valueOf(oshort));
                 }
             }
 
@@ -447,7 +451,7 @@ public class CubeSerializer {
 
         return listnbt;
     }
-    public static ChunkStatus.Type getChunkStatus(@Nullable CompoundNBT chunkNBT) {
+    public static ChunkStatus.ChunkType getChunkStatus(@Nullable CompoundTag chunkNBT) {
         if (chunkNBT != null) {
             ChunkStatus chunkstatus = ChunkStatus.byName(chunkNBT.getCompound("Level").getString("Status"));
             if (chunkstatus != null) {
@@ -455,14 +459,14 @@ public class CubeSerializer {
             }
         }
 
-        return ChunkStatus.Type.PROTOCHUNK;
+        return ChunkStatus.ChunkType.PROTOCHUNK;
     }
-    private static void readEntities(CompoundNBT compound, BigCube cube) {
-        ListNBT listnbt = compound.getList("Entities", 10);
-        World world = cube.getWorld();
+    private static void readEntities(CompoundTag compound, BigCube cube) {
+        ListTag listnbt = compound.getList("Entities", 10);
+        Level world = cube.getWorld();
 
         for(int i = 0; i < listnbt.size(); ++i) {
-            CompoundNBT compoundnbt = listnbt.getCompound(i);
+            CompoundTag compoundnbt = listnbt.getCompound(i);
             EntityType.loadEntityRecursive(compoundnbt, world, (p_222655_1_) -> {
                 cube.addEntity(p_222655_1_);
                 return p_222655_1_;
@@ -470,16 +474,16 @@ public class CubeSerializer {
             cube.setHasEntities(true);
         }
 
-        ListNBT listnbt1 = compound.getList("TileEntities", 10);
+        ListTag listnbt1 = compound.getList("TileEntities", 10);
 
         for(int j = 0; j < listnbt1.size(); ++j) {
-            CompoundNBT compoundnbt1 = listnbt1.getCompound(j);
+            CompoundTag compoundnbt1 = listnbt1.getCompound(j);
             boolean flag = compoundnbt1.getBoolean("keepPacked");
             if (flag) {
                 cube.addCubeTileEntity(compoundnbt1);
             } else {
                 BlockPos blockpos = new BlockPos(compoundnbt1.getInt("x"), compoundnbt1.getInt("y"), compoundnbt1.getInt("z"));
-                TileEntity tileentity = TileEntity.loadStatic(cube.getBlockState(blockpos), compoundnbt1);
+                BlockEntity tileentity = BlockEntity.loadStatic(cube.getBlockState(blockpos), compoundnbt1);
                 if (tileentity != null) {
                     cube.addCubeTileEntity(tileentity);
                 }

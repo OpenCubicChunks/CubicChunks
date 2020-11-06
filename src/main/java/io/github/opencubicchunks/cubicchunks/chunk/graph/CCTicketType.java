@@ -1,9 +1,10 @@
 package io.github.opencubicchunks.cubicchunks.chunk.graph;
 
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
-import net.minecraft.world.server.TicketType;
-
 import java.util.Comparator;
+
+import io.github.opencubicchunks.cubicchunks.mixin.access.common.TicketTypeAccess;
+import net.minecraft.server.level.TicketType;
 
 public class CCTicketType {
     public static final TicketType<CubePos> CCPLAYER = create("player", Comparator.comparingLong(CubePos::asLong));
@@ -13,10 +14,10 @@ public class CCTicketType {
 
 
     public static <T> TicketType<T> create(String nameIn, Comparator<T> comparator) {
-        return new TicketType<>(nameIn, comparator, 0L);
+        return TicketTypeAccess.createNew(nameIn, comparator, 0L);
     }
 
     public static <T> TicketType<T> create(String nameIn, Comparator<T> comparator, int lifespanIn) {
-        return new TicketType<>(nameIn, comparator, lifespanIn);
+        return TicketTypeAccess.createNew(nameIn, comparator, lifespanIn);
     }
 }

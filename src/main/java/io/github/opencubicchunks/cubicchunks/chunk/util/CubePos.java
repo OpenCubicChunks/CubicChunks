@@ -5,14 +5,14 @@ import static io.github.opencubicchunks.cubicchunks.utils.Coords.cubeToSection;
 import static io.github.opencubicchunks.cubicchunks.utils.Coords.sectionToCube;
 
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
-import net.minecraft.entity.Entity;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.ChunkPos;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.SectionPos;
-import net.minecraft.util.math.vector.Vector3i;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.SectionPos;
+import net.minecraft.core.Vec3i;
+import net.minecraft.util.Mth;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.level.ChunkPos;
 
-public class CubePos extends Vector3i {
+public class CubePos extends Vec3i {
     private CubePos(int xIn, int yIn, int zIn) {
         super(xIn, yIn, zIn);
     }
@@ -64,9 +64,9 @@ public class CubePos extends Vector3i {
             Coords.sectionToCube(sectionPos.getZ())); }
 
     public static CubePos from(Entity p_218157_0_) {
-        return new CubePos(blockToCube(MathHelper.floor(p_218157_0_.getX())),
-                blockToCube(MathHelper.floor(p_218157_0_.getY())),
-                blockToCube(MathHelper.floor(p_218157_0_.getZ())));
+        return new CubePos(blockToCube(Mth.floor(p_218157_0_.getX())),
+                blockToCube(Mth.floor(p_218157_0_.getY())),
+                blockToCube(Mth.floor(p_218157_0_.getZ())));
     }
 
 

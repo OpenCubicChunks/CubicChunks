@@ -1,64 +1,74 @@
 package io.github.opencubicchunks.cubicchunks.network;
 
-import io.github.opencubicchunks.cubicchunks.CubicChunks;
+import io.netty.buffer.Unpooled;
+import net.fabricmc.fabric.api.network.ClientSidePacketRegistry;
+import net.fabricmc.fabric.api.network.PacketContext;
+import net.fabricmc.fabric.api.network.ServerSidePacketRegistry;
 import net.minecraft.client.Minecraft;
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.world.World;
-import net.minecraftforge.fml.network.NetworkDirection;
-import net.minecraftforge.fml.network.NetworkEvent;
-import net.minecraftforge.fml.network.NetworkRegistry;
-import net.minecraftforge.fml.network.PacketDistributor;
-import net.minecraftforge.fml.network.simple.SimpleChannel;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.level.Level;
 
-import java.util.Optional;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
+import java.util.function.Function;
 
 public class PacketDispatcher {
 
-    private static SimpleChannel CHANNEL = NetworkRegistry.newSimpleChannel(
-            new ResourceLocation("ocbc", "net"),
-            () -> CubicChunks.PROTOCOL_VERSION,
-            CubicChunks.PROTOCOL_VERSION::equals, CubicChunks.PROTOCOL_VERSION::equals);;
+    // TODO: network compatibility check on fabric?
+    //private static SimpleChannel CHANNEL = NetworkRegistry.newSimpleChannel(
+    //        new ResourceLocation("ocbc", "net"),
+    //        () -> CubicChunks.PROTOCOL_VERSION,
+    //        CubicChunks.PROTOCOL_VERSION::equals, CubicChunks.PROTOCOL_VERSION::equals);;
+
+    private static final Map<Class<?>, BiConsumer<?, FriendlyByteBuf>> encoders = new ConcurrentHashMap<>();
+    private static final Map<Class<?>, ResourceLocation> packetIds = new ConcurrentHashMap<>();
 
     public static void register() {
-        CHANNEL.registerMessage(0, PacketCubes.class, PacketCubes::encode,
-                PacketCubes::new, mainThreadHandler(PacketCubes.Handler::handle),
-                Optional.of(NetworkDirection.PLAY_TO_CLIENT));
-        CHANNEL.registerMessage(3, PacketUnloadCube.class, PacketUnloadCube::encode,
-                PacketUnloadCube::new, mainThreadHandler(PacketUnloadCube.Handler::handle),
-                Optional.of(NetworkDirection.PLAY_TO_CLIENT));
-        CHANNEL.registerMessage(4, PacketCubeBlockChanges.class, PacketCubeBlockChanges::encode,
-                PacketCubeBlockChanges::new, mainThreadHandler(PacketCubeBlockChanges.Handler::handle),
-                Optional.of(NetworkDirection.PLAY_TO_CLIENT));
-        CHANNEL.registerMessage(8, PacketUpdateCubePosition.class, PacketUpdateCubePosition::encode,
-                PacketUpdateCubePosition::new, mainThreadHandler(PacketUpdateCubePosition.Handler::handle),
-                Optional.of(NetworkDirection.PLAY_TO_CLIENT));
-        //TODO: what index is this packet:
-        CHANNEL.registerMessage(9, PacketUpdateLight.class, PacketUpdateLight::encode,
-                PacketUpdateLight::new, mainThreadHandler(PacketUpdateLight.Handler::handle),
-                Optional.of(NetworkDirection.PLAY_TO_CLIENT));
-        //        CHANNEL.registerMessage(5, PacketCubicWorldInit.class, PacketCubicWorldInit::encode,
+        registerMessage("cubes", PacketCubes.class, PacketCubes::encode,
+                PacketCubes::new, mainThreadHandler(PacketCubes.Handler::handle));
+        registerMessage("unload", PacketUnloadCube.class, PacketUnloadCube::encode,
+                PacketUnloadCube::new, mainThreadHandler(PacketUnloadCube.Handler::handle));
+        registerMessage("blocks", PacketCubeBlockChanges.class, PacketCubeBlockChanges::encode,
+                PacketCubeBlockChanges::new, mainThreadHandler(PacketCubeBlockChanges.Handler::handle));
+        registerMessage("cubepos", PacketUpdateCubePosition.class, PacketUpdateCubePosition::encode,
+                PacketUpdateCubePosition::new, mainThreadHandler(PacketUpdateCubePosition.Handler::handle));
+        registerMessage("light", PacketUpdateLight.class, PacketUpdateLight::encode,
+                PacketUpdateLight::new, mainThreadHandler(PacketUpdateLight.Handler::handle));
+        //        CHANNEL.registerMessage("init", PacketCubicWorldInit.class, PacketCubicWorldInit::encode,
         //                PacketCubicWorldInit::new, mainThreadHandler(PacketCubicWorldInit::handle));
     }
 
-    public static <MSG> void sendTo(MSG packet, ServerPlayerEntity player) {
-        CHANNEL.send(PacketDistributor.PLAYER.with(() -> player), packet);
+    private static <T> void registerMessage(String id, Class<T> clazz,
+            BiConsumer<T, FriendlyByteBuf> encode,
+            Function<FriendlyByteBuf, T> decode,
+            BiConsumer<T, PacketContext> handler) {
+        encoders.put(clazz, encode);
+        packetIds.put(clazz, new ResourceLocation("ocbc", id));
+        ClientSidePacketRegistry.INSTANCE.register(
+                new ResourceLocation("ocbc", id), (ctx, received) -> {
+                    T packet = decode.apply(received);
+                    handler.accept(packet, ctx);
+                }
+        );
+    }
+    public static <MSG> void sendTo(MSG packet, ServerPlayer player) {
+        ResourceLocation packetId = packetIds.get(packet.getClass());
+        @SuppressWarnings("unchecked")
+        BiConsumer<MSG, FriendlyByteBuf> encoder = (BiConsumer<MSG, FriendlyByteBuf>) encoders.get(packet.getClass());
+        FriendlyByteBuf buf = new FriendlyByteBuf(Unpooled.buffer());
+        encoder.accept(packet, buf);
+        ServerSidePacketRegistry.INSTANCE.sendToPlayer(player, packetId, buf);
     }
 
-    private static <T> BiConsumer<T, Supplier<NetworkEvent.Context>> mainThreadHandler(Consumer<? super T> handler) {
-        return (packet, ctx) -> {
-            ctx.get().enqueueWork(() -> handler.accept(packet));
-            ctx.get().setPacketHandled(true);
-        };
+    private static <T> BiConsumer<T, PacketContext> mainThreadHandler(Consumer<? super T> handler) {
+        return (packet, ctx) -> ctx.getTaskQueue().submit(() -> handler.accept(packet));
     }
 
-    private static <T> BiConsumer<T, Supplier<NetworkEvent.Context>> mainThreadHandler(BiConsumer<? super T, ? super World> handler) {
-        return (packet, ctx) -> {
-            ctx.get().enqueueWork(() -> handler.accept(packet, Minecraft.getInstance().level));
-            ctx.get().setPacketHandled(true);
-        };
+    private static <T> BiConsumer<T, PacketContext> mainThreadHandler(BiConsumer<? super T, ? super Level> handler) {
+        return (packet, ctx) -> ctx.getTaskQueue().submit(() -> handler.accept(packet, Minecraft.getInstance().level));
     }
 }

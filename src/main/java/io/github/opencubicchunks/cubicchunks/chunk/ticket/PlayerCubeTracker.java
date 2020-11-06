@@ -4,7 +4,7 @@ import io.github.opencubicchunks.cubicchunks.chunk.graph.CubeDistanceGraph;
 import it.unimi.dsi.fastutil.longs.Long2ByteMap;
 import it.unimi.dsi.fastutil.longs.Long2ByteOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectSet;
-import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.server.level.ServerPlayer;
 
 public class PlayerCubeTracker extends CubeDistanceGraph {
     public final Long2ByteMap cubesInRange = new Long2ByteOpenHashMap();
@@ -42,7 +42,7 @@ public class PlayerCubeTracker extends CubeDistanceGraph {
     }
 
     private boolean hasPlayerInChunk(long cubePosIn) {
-        ObjectSet<ServerPlayerEntity> objectset = iTicketManager.getPlayersPerCube().get(cubePosIn);
+        ObjectSet<ServerPlayer> objectset = iTicketManager.getPlayersPerCube().get(cubePosIn);
         return objectset != null && !objectset.isEmpty();
     }
 

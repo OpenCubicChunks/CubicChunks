@@ -1,7 +1,5 @@
 package io.github.opencubicchunks.cubicchunks.mixin;
 
-import cpw.mods.modlauncher.Launcher;
-import cpw.mods.modlauncher.api.IEnvironment;
 import org.objectweb.asm.tree.ClassNode;
 import org.spongepowered.asm.mixin.extensibility.IMixinConfigPlugin;
 import org.spongepowered.asm.mixin.extensibility.IMixinInfo;
@@ -17,18 +15,18 @@ public class OptiFineMixinConfig implements IMixinConfigPlugin {
     private boolean hasOptiFine;
 
     @Override public void onLoad(String mixinPackage) {
-        List<Map<String, String>> modlist = Launcher.INSTANCE.environment().getProperty(IEnvironment.Keys.MODLIST.get()).orElseThrow(Error::new);
-        for (Map<String, String> data : modlist) {
-            String type = data.get("type");
-            if (type == null || !type.equals("TRANSFORMATIONSERVICE")) {
-                continue;
-            }
-            String name = data.get("name");
-            if (name == null || !name.equals("OptiFine")) {
-                continue;
-            }
-            hasOptiFine = true;
-        }
+        //List<Map<String, String>> modlist = Launcher.INSTANCE.environment().getProperty(IEnvironment.Keys.MODLIST.get()).orElseThrow(Error::new);
+        //for (Map<String, String> data : modlist) {
+        //    String type = data.get("type");
+        //    if (type == null || !type.equals("TRANSFORMATIONSERVICE")) {
+        //        continue;
+        //    }
+        //    String name = data.get("name");
+        //    if (name == null || !name.equals("OptiFine")) {
+        //        continue;
+        //    }
+        //    hasOptiFine = true;
+        //}
     }
 
     @Nullable

@@ -24,9 +24,8 @@
  */
 package io.github.opencubicchunks.cubicchunks.utils;
 
-import mcp.MethodsReturnNonnullByDefault;
-import net.minecraft.util.math.BlockPos;
-
+import io.github.opencubicchunks.cubicchunks.annotation.MethodsReturnNonnullByDefault;
+import net.minecraft.core.BlockPos;
 import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault

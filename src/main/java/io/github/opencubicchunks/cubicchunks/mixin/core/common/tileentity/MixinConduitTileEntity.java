@@ -1,12 +1,12 @@
 package io.github.opencubicchunks.cubicchunks.mixin.core.common.tileentity;
 
-import net.minecraft.tileentity.ConduitTileEntity;
-import net.minecraft.util.math.AxisAlignedBB;
+import net.minecraft.world.level.block.entity.ConduitBlockEntity;
+import net.minecraft.world.phys.AABB;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
-@Mixin(ConduitTileEntity.class)
+@Mixin(ConduitBlockEntity.class)
 public class MixinConduitTileEntity {
     /**
      * @author NotStirred
@@ -18,9 +18,8 @@ public class MixinConduitTileEntity {
 //    private int on$getHeight(World world) {
 //        return 256;
 //    }
-    @Redirect(method = "applyEffects", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/math/AxisAlignedBB;expandTowards(DDD)"
-            + "Lnet/minecraft/util/math/AxisAlignedBB;"))
-    private AxisAlignedBB on$expand(AxisAlignedBB axisAlignedBB, double x, double y, double z) {
+    @Redirect(method = "applyEffects", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/phys/AABB;expandTowards(DDD)Lnet/minecraft/world/phys/AABB;"))
+    private AABB on$expand(AABB axisAlignedBB, double x, double y, double z) {
         return axisAlignedBB.expandTowards(x, 256, z);
     }
 }

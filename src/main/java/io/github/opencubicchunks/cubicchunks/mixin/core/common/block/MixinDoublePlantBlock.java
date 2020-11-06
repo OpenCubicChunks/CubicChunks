@@ -1,7 +1,7 @@
 package io.github.opencubicchunks.cubicchunks.mixin.core.common.block;
 
 import io.github.opencubicchunks.cubicchunks.CubicChunks;
-import net.minecraft.block.DoublePlantBlock;
+import net.minecraft.world.level.block.DoublePlantBlock;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.Constant;
 import org.spongepowered.asm.mixin.injection.ModifyConstant;

@@ -10,13 +10,6 @@ import io.github.opencubicchunks.cubicchunks.mixin.access.client.ClientChunkProv
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import io.github.opencubicchunks.cubicchunks.world.client.IClientWorld;
 import io.github.opencubicchunks.cubicchunks.world.lighting.IWorldLightManager;
-import net.minecraft.client.multiplayer.ClientChunkProvider;
-import net.minecraft.client.world.ClientWorld;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.network.PacketBuffer;
-import net.minecraft.world.chunk.ChunkSection;
-import net.minecraft.world.chunk.ChunkStatus;
-import net.minecraft.world.lighting.WorldLightManager;
 import org.apache.logging.log4j.Logger;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -27,24 +20,31 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import javax.annotation.Nullable;
+import net.minecraft.client.multiplayer.ClientChunkCache;
+import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.world.level.chunk.ChunkStatus;
+import net.minecraft.world.level.chunk.LevelChunkSection;
+import net.minecraft.world.level.lighting.LevelLightEngine;
 
-@Mixin(ClientChunkProvider.class)
+@Mixin(ClientChunkCache.class)
 public abstract class MixinClientChunkProvider implements IClientCubeProvider {
     private volatile ClientChunkProviderCubeArray cubeArray;
 
     @Shadow @Final private static Logger LOGGER;
 
-    @Shadow @Final private ClientWorld level;
+    @Shadow @Final private ClientLevel level;
     private EmptyCube emptyCube;
 
-    @Shadow private volatile ClientChunkProvider.ChunkArray storage;
+    @Shadow private volatile ClientChunkCache.Storage storage;
 
     @Shadow public abstract int getLoadedChunksCount();
 
-    @Shadow public abstract WorldLightManager getLightEngine();
+    @Shadow public abstract LevelLightEngine getLightEngine();
 
     @Inject(method = "<init>", at = @At("RETURN"))
-    private void onConstruct(ClientWorld clientWorldIn, int viewDistance, CallbackInfo ci) {
+    private void onConstruct(ClientLevel clientWorldIn, int viewDistance, CallbackInfo ci) {
         this.cubeArray = new ClientChunkProviderCubeArray(adjustCubeViewDistance(viewDistance), cube -> {});
         this.emptyCube = new EmptyCube(level);
     }
@@ -91,7 +91,7 @@ public abstract class MixinClientChunkProvider implements IClientCubeProvider {
 
     @Override
     public BigCube replaceWithPacketData(int cubeX, int cubeY, int cubeZ,
-                            @Nullable CubeBiomeContainer biomes, PacketBuffer readBuffer, CompoundNBT nbtTagIn, boolean cubeExists) {
+                            @Nullable CubeBiomeContainer biomes, FriendlyByteBuf readBuffer, CompoundTag nbtTagIn, boolean cubeExists) {
 
         if (!this.cubeArray.inView(cubeX, cubeY, cubeZ)) {
             LOGGER.warn("Ignoring cube since it's not in the view range: {}, {}, {}", cubeX, cubeY, cubeZ);
@@ -112,13 +112,13 @@ public abstract class MixinClientChunkProvider implements IClientCubeProvider {
             cube.read(biomes, readBuffer, nbtTagIn, cubeExists);
         }
 
-        WorldLightManager worldlightmanager = this.getLightEngine();
+        LevelLightEngine worldlightmanager = this.getLightEngine();
         ((IWorldLightManager) worldlightmanager).enableLightSources(CubePos.of(cubeX, cubeY, cubeZ), true);
 
-        ChunkSection[] cubeSections = cube.getCubeSections();
+        LevelChunkSection[] cubeSections = cube.getCubeSections();
         for (int i = 0; i < cubeSections.length; ++i) {
-            ChunkSection chunksection = cubeSections[i];
-            worldlightmanager.updateSectionStatus(Coords.sectionPosByIndex(cube.getCubePos(), i), ChunkSection.isEmpty(chunksection));
+            LevelChunkSection chunksection = cubeSections[i];
+            worldlightmanager.updateSectionStatus(Coords.sectionPosByIndex(cube.getCubePos(), i), LevelChunkSection.isEmpty(chunksection));
         }
 
         ((IClientWorld)this.level).onCubeLoaded(cubeX, cubeY, cubeZ);

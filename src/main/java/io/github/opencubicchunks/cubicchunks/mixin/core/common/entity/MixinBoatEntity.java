@@ -1,11 +1,11 @@
 package io.github.opencubicchunks.cubicchunks.mixin.core.common.entity;
 
-import net.minecraft.entity.item.BoatEntity;
+import net.minecraft.world.entity.vehicle.Boat;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.Constant;
 import org.spongepowered.asm.mixin.injection.ModifyConstant;
 
-@Mixin(BoatEntity.class)
+@Mixin(Boat.class)
 public class MixinBoatEntity {
 
     @ModifyConstant(method = "checkInWater", constant = @Constant(doubleValue = Double.MIN_VALUE))

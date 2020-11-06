@@ -1,7 +1,7 @@
 package io.github.opencubicchunks.cubicchunks.mixin.core.common.block;
 
 import io.github.opencubicchunks.cubicchunks.CubicChunks;
-import net.minecraft.block.FallingBlock;
+import net.minecraft.world.level.block.FallingBlock;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.Constant;
 import org.spongepowered.asm.mixin.injection.ModifyConstant;

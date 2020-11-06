@@ -9,15 +9,6 @@ import io.github.opencubicchunks.cubicchunks.mixin.core.common.world.lighting.Mi
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import io.github.opencubicchunks.cubicchunks.world.server.IServerWorldLightManager;
 import it.unimi.dsi.fastutil.objects.ObjectList;
-import net.minecraft.util.Util;
-import net.minecraft.util.concurrent.ITaskExecutor;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.SectionPos;
-import net.minecraft.world.LightType;
-import net.minecraft.world.chunk.ChunkSection;
-import net.minecraft.world.chunk.NibbleArray;
-import net.minecraft.world.server.ChunkManager;
-import net.minecraft.world.server.ServerWorldLightManager;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
@@ -27,22 +18,31 @@ import java.util.concurrent.CompletableFuture;
 import java.util.function.IntSupplier;
 
 import javax.annotation.Nullable;
+import net.minecraft.Util;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.SectionPos;
+import net.minecraft.server.level.ChunkMap;
+import net.minecraft.server.level.ThreadedLevelLightEngine;
+import net.minecraft.util.thread.ProcessorHandle;
+import net.minecraft.world.level.LightLayer;
+import net.minecraft.world.level.chunk.DataLayer;
+import net.minecraft.world.level.chunk.LevelChunkSection;
 
-@Mixin(ServerWorldLightManager.class)
+@Mixin(ThreadedLevelLightEngine.class)
 public abstract class MixinServerWorldLightManager extends MixinWorldLightManager implements IServerWorldLightManager {
 
-    private ITaskExecutor<CubeTaskPriorityQueueSorter.FunctionEntry<Runnable>> cubeSorterMailbox;
+    private ProcessorHandle<CubeTaskPriorityQueueSorter.FunctionEntry<Runnable>> cubeSorterMailbox;
 
-    @Shadow @Final private ChunkManager chunkMap;
+    @Shadow @Final private ChunkMap chunkMap;
 
-    @Shadow @Final private ObjectList<Pair<ServerWorldLightManager.Phase, Runnable>> lightTasks;
+    @Shadow @Final private ObjectList<Pair<ThreadedLevelLightEngine.TaskType, Runnable>> lightTasks;
 
     @Shadow private volatile int taskPerBatch;
 
     @Shadow protected abstract void runUpdate();
 
     @Override public void postConstructorSetup(CubeTaskPriorityQueueSorter sorter,
-            ITaskExecutor<CubeTaskPriorityQueueSorter.FunctionEntry<Runnable>> taskExecutor) {
+            ProcessorHandle<CubeTaskPriorityQueueSorter.FunctionEntry<Runnable>> taskExecutor) {
         this.cubeSorterMailbox = taskExecutor;
     }
 
@@ -57,20 +57,20 @@ public abstract class MixinServerWorldLightManager extends MixinWorldLightManage
                 Coords.blockToCube(blockPosIn.getX()),
                 Coords.blockToCube(blockPosIn.getY()),
                 Coords.blockToCube(blockPosIn.getZ()),
-                ServerWorldLightManager.Phase.POST_UPDATE,
+                ThreadedLevelLightEngine.TaskType.POST_UPDATE,
                 Util.name(() -> super.checkBlock(blockpos),
                 () -> "checkBlock " + blockpos)
         );
     }
 
     // func_215586_a, addTask
-    private void addTask(int cubePosX, int cubePosY, int cubePosZ, ServerWorldLightManager.Phase phase, Runnable runnable) {
+    private void addTask(int cubePosX, int cubePosY, int cubePosZ, ThreadedLevelLightEngine.TaskType phase, Runnable runnable) {
         this.addTask(cubePosX, cubePosY, cubePosZ, ((IChunkManager)this.chunkMap).getCubeQueueLevel(CubePos.of(cubePosX, cubePosY,
                 cubePosZ).asLong()), phase, runnable);
     }
 
     // func_215600_a, addTask
-    private void addTask(int cubePosX, int cubePosY, int cubePosZ, IntSupplier getCompletedLevel, ServerWorldLightManager.Phase phase,
+    private void addTask(int cubePosX, int cubePosY, int cubePosZ, IntSupplier getCompletedLevel, ThreadedLevelLightEngine.TaskType phase,
             Runnable runnable) {
         this.cubeSorterMailbox.tell(CubeTaskPriorityQueueSorter.createMsg(() -> {
             this.lightTasks.add(Pair.of(phase, runnable));
@@ -85,14 +85,14 @@ public abstract class MixinServerWorldLightManager extends MixinWorldLightManage
     public void setCubeStatusEmpty(CubePos cubePos) {
         this.addTask(cubePos.getX(), cubePos.getY(), cubePos.getZ(), () -> {
             return 0;
-        }, ServerWorldLightManager.Phase.PRE_UPDATE, Util.name(() -> {
+        }, ThreadedLevelLightEngine.TaskType.PRE_UPDATE, Util.name(() -> {
             super.retainData(cubePos, false);
             super.enableLightSources(cubePos, false);
 
 
             for(int i = 0; i < IBigCube.SECTION_COUNT; ++i) {
-                super.queueSectionData(LightType.BLOCK, Coords.sectionPosByIndex(cubePos, i), (NibbleArray)null, true);
-                super.queueSectionData(LightType.SKY, Coords.sectionPosByIndex(cubePos, i), (NibbleArray)null, true);
+                super.queueSectionData(LightLayer.BLOCK, Coords.sectionPosByIndex(cubePos, i), (DataLayer)null, true);
+                super.queueSectionData(LightLayer.SKY, Coords.sectionPosByIndex(cubePos, i), (DataLayer)null, true);
             }
 
             for(int j = 0; j < IBigCube.SECTION_COUNT; ++j) {
@@ -107,10 +107,10 @@ public abstract class MixinServerWorldLightManager extends MixinWorldLightManage
     public CompletableFuture<IBigCube> lightCube(IBigCube icube, boolean flagIn) {
         CubePos cubePos = icube.getCubePos();
         icube.setCubeLight(false);
-        this.addTask(cubePos.getX(), cubePos.getY(), cubePos.getZ(), ServerWorldLightManager.Phase.PRE_UPDATE, Util.name(() -> {
+        this.addTask(cubePos.getX(), cubePos.getY(), cubePos.getZ(), ThreadedLevelLightEngine.TaskType.PRE_UPDATE, Util.name(() -> {
             for(int i = 0; i < IBigCube.SECTION_COUNT; ++i) {
-                ChunkSection chunksection = icube.getCubeSections()[i];
-                if (!ChunkSection.isEmpty(chunksection)) {
+                LevelChunkSection chunksection = icube.getCubeSections()[i];
+                if (!LevelChunkSection.isEmpty(chunksection)) {
                     super.updateSectionStatus(Coords.sectionPosByIndex(cubePos, i), false);
                 }
             }
@@ -129,7 +129,7 @@ public abstract class MixinServerWorldLightManager extends MixinWorldLightManage
             super.retainData(cubePos, false);
             return icube;
         }, (runnable) -> {
-            this.addTask(cubePos.getX(), cubePos.getY(), cubePos.getZ(), ServerWorldLightManager.Phase.POST_UPDATE, runnable);
+            this.addTask(cubePos.getX(), cubePos.getY(), cubePos.getZ(), ThreadedLevelLightEngine.TaskType.POST_UPDATE, runnable);
         });
     }
 
@@ -140,14 +140,14 @@ public abstract class MixinServerWorldLightManager extends MixinWorldLightManage
     @Overwrite
     public void updateSectionStatus(SectionPos pos, boolean isEmpty) {
         CubePos cubePos = CubePos.from(pos);
-        this.addTask(cubePos.getX(), cubePos.getY(), cubePos.getZ(), () -> 0, ServerWorldLightManager.Phase.PRE_UPDATE, Util.name(() -> {
+        this.addTask(cubePos.getX(), cubePos.getY(), cubePos.getZ(), () -> 0, ThreadedLevelLightEngine.TaskType.PRE_UPDATE, Util.name(() -> {
             super.updateSectionStatus(pos, isEmpty);
         }, () -> "updateSectionStatus " + pos + " " + isEmpty));
     }
 
     @Override
     public void enableLightSources(CubePos cubePos, boolean flag) {
-        this.addTask(cubePos.getX(), cubePos.getY(), cubePos.getZ(), ServerWorldLightManager.Phase.PRE_UPDATE, Util.name(() -> {
+        this.addTask(cubePos.getX(), cubePos.getY(), cubePos.getZ(), ThreadedLevelLightEngine.TaskType.PRE_UPDATE, Util.name(() -> {
             super.enableLightSources(cubePos, flag);
         }, () -> "enableLight " + cubePos + " " + flag));
     }
@@ -157,9 +157,9 @@ public abstract class MixinServerWorldLightManager extends MixinWorldLightManage
      * @reason Vanilla lighting is gone
      */
     @Overwrite
-    public void queueSectionData(LightType type, SectionPos pos, @Nullable NibbleArray array, boolean flag) {
+    public void queueSectionData(LightLayer type, SectionPos pos, @Nullable DataLayer array, boolean flag) {
         CubePos cubePos = CubePos.from(pos);
-        this.addTask(cubePos.getX(), cubePos.getY(), cubePos.getZ(), () -> 0, ServerWorldLightManager.Phase.PRE_UPDATE, Util.name(() -> {
+        this.addTask(cubePos.getX(), cubePos.getY(), cubePos.getZ(), () -> 0, ThreadedLevelLightEngine.TaskType.PRE_UPDATE, Util.name(() -> {
             super.queueSectionData(type, pos, array, flag);
         }, () -> "queueData " + pos));
     }
@@ -167,7 +167,7 @@ public abstract class MixinServerWorldLightManager extends MixinWorldLightManage
     //retainData(ChunkPos, bool)
     @Override
     public void retainData(CubePos cubePos, boolean retain) {
-        this.addTask(cubePos.getX(), cubePos.getY(), cubePos.getZ(), () -> 0, ServerWorldLightManager.Phase.PRE_UPDATE, Util.name(() -> {
+        this.addTask(cubePos.getX(), cubePos.getY(), cubePos.getZ(), () -> 0, ThreadedLevelLightEngine.TaskType.PRE_UPDATE, Util.name(() -> {
             super.retainData(cubePos, retain);
         }, () -> "retainData " + cubePos));
     }

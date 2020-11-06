@@ -1,12 +1,12 @@
 package io.github.opencubicchunks.cubicchunks.mixin.core.common.world;
 
 import io.github.opencubicchunks.cubicchunks.CubicChunks;
-import net.minecraft.world.IWorldReader;
+import net.minecraft.world.level.LevelReader;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 
-@Mixin(IWorldReader.class)
-public interface MixinIWorldReader extends IWorldReader {
+@Mixin(LevelReader.class)
+public interface MixinIWorldReader extends LevelReader {
 
     /**
      * @author OverInfrared

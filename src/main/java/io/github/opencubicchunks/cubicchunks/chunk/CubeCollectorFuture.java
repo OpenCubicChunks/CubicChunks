@@ -1,20 +1,19 @@
 package io.github.opencubicchunks.cubicchunks.chunk;
 
 import com.mojang.datafixers.util.Either;
-import net.minecraft.world.server.ChunkHolder;
-
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicInteger;
+import net.minecraft.server.level.ChunkHolder;
 
-public class CubeCollectorFuture extends CompletableFuture<List<Either<IBigCube, ChunkHolder.IChunkLoadingError>>> {
+public class CubeCollectorFuture extends CompletableFuture<List<Either<IBigCube, ChunkHolder.ChunkLoadingFailure>>> {
 
     private final int size;
 
     private AtomicInteger added = new AtomicInteger();
 
-    private final Either<IBigCube, ChunkHolder.IChunkLoadingError>[] results;
+    private final Either<IBigCube, ChunkHolder.ChunkLoadingFailure>[] results;
 
 
     public CubeCollectorFuture(int size) {
@@ -23,7 +22,7 @@ public class CubeCollectorFuture extends CompletableFuture<List<Either<IBigCube,
     }
 
 
-    public void add(int idx, Either<IBigCube, ChunkHolder.IChunkLoadingError> either, Throwable error) {
+    public void add(int idx, Either<IBigCube, ChunkHolder.ChunkLoadingFailure> either, Throwable error) {
         if (error != null) {
             completeExceptionally(error);
         } else {

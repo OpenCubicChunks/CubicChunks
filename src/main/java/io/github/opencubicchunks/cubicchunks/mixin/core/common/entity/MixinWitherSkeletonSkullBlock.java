@@ -1,12 +1,12 @@
 package io.github.opencubicchunks.cubicchunks.mixin.core.common.entity;
 
 import io.github.opencubicchunks.cubicchunks.CubicChunks;
-import net.minecraft.block.WitherSkeletonSkullBlock;
+import net.minecraft.world.level.block.WitherSkullBlock;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.Constant;
 import org.spongepowered.asm.mixin.injection.ModifyConstant;
 
-@Mixin(WitherSkeletonSkullBlock.class)
+@Mixin(WitherSkullBlock.class)
 public class MixinWitherSkeletonSkullBlock {
 
     @ModifyConstant(method = "canSpawnMob", constant = @Constant(intValue = 2))

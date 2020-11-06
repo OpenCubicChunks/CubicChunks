@@ -7,23 +7,23 @@ import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import it.unimi.dsi.fastutil.objects.ObjectIterator;
-import net.minecraft.util.Direction;
-import net.minecraft.util.SectionDistanceGraph;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.SectionPos;
-import net.minecraft.world.chunk.NibbleArray;
-import net.minecraft.world.lighting.LightDataMap;
-import net.minecraft.world.lighting.LightEngine;
-import net.minecraft.world.lighting.SectionLightStorage;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.core.SectionPos;
+import net.minecraft.server.level.SectionTracker;
+import net.minecraft.world.level.chunk.DataLayer;
+import net.minecraft.world.level.lighting.DataLayerStorageMap;
+import net.minecraft.world.level.lighting.LayerLightEngine;
+import net.minecraft.world.level.lighting.LayerLightSectionStorage;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 
-@Mixin(SectionLightStorage.class)
-public abstract class MixinSectionLightStorage <M extends LightDataMap<M>> extends SectionDistanceGraph implements ISectionLightStorage {
+@Mixin(LayerLightSectionStorage.class)
+public abstract class MixinSectionLightStorage <M extends DataLayerStorageMap<M>> extends SectionTracker implements ISectionLightStorage {
 
-    @Shadow @Final protected Long2ObjectMap<NibbleArray> queuedSections;
+    @Shadow @Final protected Long2ObjectMap<DataLayer> queuedSections;
     @Shadow @Final private LongSet toRemove;
     @Shadow @Final protected M updatingSectionData;
     @Shadow protected volatile boolean hasToRemove;
@@ -32,7 +32,7 @@ public abstract class MixinSectionLightStorage <M extends LightDataMap<M>> exten
 
     private final LongSet cubesToRetain = new LongOpenHashSet();
 
-    @Shadow protected abstract void clearQueuedSectionBlocks(LightEngine<?, ?> engine, long sectionPosIn);
+    @Shadow protected abstract void clearQueuedSectionBlocks(LayerLightEngine<?, ?> engine, long sectionPosIn);
 
     @Shadow protected abstract void onNodeRemoved(long p_215523_1_);
 
@@ -58,12 +58,12 @@ public abstract class MixinSectionLightStorage <M extends LightDataMap<M>> exten
      * @reason entire method was chunk based
      */
     @Overwrite
-    protected void markNewInconsistencies(LightEngine<M, ?> engine, boolean updateSkyLight, boolean updateBlockLight) {
+    protected void markNewInconsistencies(LayerLightEngine<M, ?> engine, boolean updateSkyLight, boolean updateBlockLight) {
         if (this.hasInconsistencies() || !this.queuedSections.isEmpty()) {
             for(long noLightPos : this.toRemove) {
                 this.clearQueuedSectionBlocks(engine, noLightPos);
-                NibbleArray nibblearray = this.queuedSections.remove(noLightPos);
-                NibbleArray nibblearray1 = this.updatingSectionData.removeLayer(noLightPos);
+                DataLayer nibblearray = this.queuedSections.remove(noLightPos);
+                DataLayer nibblearray1 = this.updatingSectionData.removeLayer(noLightPos);
                 if (this.cubesToRetain.contains(CubePos.sectionToCubeSectionLong(noLightPos))) {
                     if (nibblearray != null) {
                         this.queuedSections.put(noLightPos, nibblearray);
@@ -83,10 +83,10 @@ public abstract class MixinSectionLightStorage <M extends LightDataMap<M>> exten
             this.toRemove.clear();
             this.hasToRemove = false;
 
-            for(Long2ObjectMap.Entry<NibbleArray> entry : this.queuedSections.long2ObjectEntrySet()) {
+            for(Long2ObjectMap.Entry<DataLayer> entry : this.queuedSections.long2ObjectEntrySet()) {
                 long entryPos = entry.getLongKey();
                 if (this.storingLightForSection(entryPos)) {
-                    NibbleArray nibblearray2 = entry.getValue();
+                    DataLayer nibblearray2 = entry.getValue();
                     if (this.updatingSectionData.getLayer(entryPos) != nibblearray2) {
                         this.clearQueuedSectionBlocks(engine, entryPos);
                         this.updatingSectionData.setLayer(entryPos, nibblearray2);
@@ -150,10 +150,10 @@ public abstract class MixinSectionLightStorage <M extends LightDataMap<M>> exten
                 }
             }
 
-            ObjectIterator<Long2ObjectMap.Entry<NibbleArray>> objectiterator = this.queuedSections.long2ObjectEntrySet().iterator();
+            ObjectIterator<Long2ObjectMap.Entry<DataLayer>> objectiterator = this.queuedSections.long2ObjectEntrySet().iterator();
 
             while(objectiterator.hasNext()) {
-                Long2ObjectMap.Entry<NibbleArray> entry1 = objectiterator.next();
+                Long2ObjectMap.Entry<DataLayer> entry1 = objectiterator.next();
                 long k2 = entry1.getLongKey();
                 if (this.storingLightForSection(k2)) {
                     objectiterator.remove();

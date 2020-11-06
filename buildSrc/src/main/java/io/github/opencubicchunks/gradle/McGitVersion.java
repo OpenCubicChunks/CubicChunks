@@ -107,7 +107,7 @@ public class McGitVersion implements Plugin<Project> {
     }
 
     private String getMcVersion(McGitVersionExtension ext) {
-        return ext.getForgeVersion().split("-")[0];
+        return ext.getMcVersion();
     }
 
     private String getGitBranch(Git git) throws IOException {

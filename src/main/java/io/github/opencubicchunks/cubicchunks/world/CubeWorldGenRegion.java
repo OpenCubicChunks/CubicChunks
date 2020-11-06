@@ -3,39 +3,44 @@ package io.github.opencubicchunks.cubicchunks.world;
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.fluid.Fluid;
-import net.minecraft.fluid.FluidState;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.particles.IParticleData;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.Direction;
-import net.minecraft.util.SoundCategory;
-import net.minecraft.util.SoundEvent;
-import net.minecraft.util.Util;
-import net.minecraft.util.math.AxisAlignedBB;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.SectionPos;
-import net.minecraft.util.registry.DynamicRegistries;
+import net.minecraft.Util;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.core.RegistryAccess;
+import net.minecraft.core.SectionPos;
+import net.minecraft.core.particles.ParticleOptions;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.util.Mth;
 import net.minecraft.world.*;
-import net.minecraft.world.biome.Biome;
-import net.minecraft.world.biome.BiomeManager;
-import net.minecraft.world.border.WorldBorder;
-import net.minecraft.world.chunk.AbstractChunkProvider;
-import net.minecraft.world.chunk.ChunkStatus;
-import net.minecraft.world.chunk.IChunk;
-import net.minecraft.world.gen.Heightmap;
-import net.minecraft.world.gen.feature.structure.Structure;
-import net.minecraft.world.gen.feature.structure.StructureStart;
-import net.minecraft.world.lighting.WorldLightManager;
-import net.minecraft.world.server.ServerWorld;
-import net.minecraft.world.storage.IWorldInfo;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.EmptyTickList;
+import net.minecraft.world.level.TickList;
+import net.minecraft.world.level.WorldGenLevel;
+import net.minecraft.world.level.biome.Biome;
+import net.minecraft.world.level.biome.BiomeManager;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.EntityBlock;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.border.WorldBorder;
+import net.minecraft.world.level.chunk.ChunkAccess;
+import net.minecraft.world.level.chunk.ChunkSource;
+import net.minecraft.world.level.chunk.ChunkStatus;
+import net.minecraft.world.level.dimension.DimensionType;
+import net.minecraft.world.level.levelgen.Heightmap;
+import net.minecraft.world.level.levelgen.feature.StructureFeature;
+import net.minecraft.world.level.levelgen.structure.StructureStart;
+import net.minecraft.world.level.lighting.LevelLightEngine;
+import net.minecraft.world.level.material.Fluid;
+import net.minecraft.world.level.material.FluidState;
+import net.minecraft.world.level.storage.LevelData;
+import net.minecraft.world.phys.AABB;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -48,7 +53,7 @@ import java.util.stream.Stream;
 
 import static io.github.opencubicchunks.cubicchunks.utils.Coords.blockToCube;
 
-public class CubeWorldGenRegion implements ISeedReader {
+public class CubeWorldGenRegion implements WorldGenLevel {
 
     private static final Logger LOGGER = LogManager.getLogger();
     private final List<IBigCube> cubePrimers;
@@ -56,10 +61,10 @@ public class CubeWorldGenRegion implements ISeedReader {
     private final int mainCubeY;
     private final int mainCubeZ;
     private final int diameter;
-    private final ServerWorld world;
+    private final ServerLevel world;
     private final long seed;
     private final int seaLevel;
-    private final IWorldInfo worldInfo;
+    private final LevelData worldInfo;
     private final Random random;
     private final DimensionType dimension;
     //    private final ITickList<Block> pendingBlockTickList = new WorldGenTickList<>((blockPos) -> {
@@ -70,8 +75,8 @@ public class CubeWorldGenRegion implements ISeedReader {
     //    });
     private final BiomeManager biomeManager;
 
-    public CubeWorldGenRegion(ServerWorld worldIn, List<IBigCube> cubesIn) {
-        int i = MathHelper.floor(Math.cbrt(cubesIn.size()));
+    public CubeWorldGenRegion(ServerLevel worldIn, List<IBigCube> cubesIn) {
+        int i = Mth.floor(Math.cbrt(cubesIn.size()));
         if (i * i * i != cubesIn.size()) {
             throw Util.pauseInIde(new IllegalStateException("Cache size is not a square."));
         } else {
@@ -154,19 +159,19 @@ public class CubeWorldGenRegion implements ISeedReader {
         return this.seed;
     }
 
-    @Override public ITickList<Block> getBlockTicks() {
+    @Override public TickList<Block> getBlockTicks() {
         return new EmptyTickList<>();
     }
 
-    @Override public ITickList<Fluid> getLiquidTicks() {
+    @Override public TickList<Fluid> getLiquidTicks() {
         return new EmptyTickList<>();
     }
 
-    @Override public ServerWorld getLevel() {
+    @Override public ServerLevel getLevel() {
         return this.world;
     }
 
-    @Override public IWorldInfo getLevelData() {
+    @Override public LevelData getLevelData() {
         return this.worldInfo;
     }
 
@@ -178,7 +183,7 @@ public class CubeWorldGenRegion implements ISeedReader {
         }
     }
 
-    @Override public AbstractChunkProvider getChunkSource() {
+    @Override public ChunkSource getChunkSource() {
         return world.getChunkSource();
     }
 
@@ -187,15 +192,15 @@ public class CubeWorldGenRegion implements ISeedReader {
     }
 
     @Override
-    public void playSound(@Nullable PlayerEntity player, BlockPos pos, SoundEvent soundIn, SoundCategory category, float volume, float pitch) {
+    public void playSound(@Nullable Player player, BlockPos pos, SoundEvent soundIn, SoundSource category, float volume, float pitch) {
         throw new UnsupportedOperationException("Not implemented yet!");
     }
 
-    @Override public void addParticle(IParticleData particleData, double x, double y, double z, double xSpeed, double ySpeed, double zSpeed) {
+    @Override public void addParticle(ParticleOptions particleData, double x, double y, double z, double xSpeed, double ySpeed, double zSpeed) {
         throw new UnsupportedOperationException("Not implemented yet!");
     }
 
-    @Override public void levelEvent(@Nullable PlayerEntity player, int type, BlockPos pos, int data) {
+    @Override public void levelEvent(@Nullable Player player, int type, BlockPos pos, int data) {
         throw new UnsupportedOperationException("Not implemented yet!");
     }
 
@@ -203,22 +208,22 @@ public class CubeWorldGenRegion implements ISeedReader {
         return world.getWorldBorder();
     }
 
-    @Nullable @Override public TileEntity getBlockEntity(BlockPos pos) {
+    @Nullable @Override public BlockEntity getBlockEntity(BlockPos pos) {
         IBigCube icube = this.getCube(pos);
-        TileEntity tileentity = icube.getBlockEntity(pos);
+        BlockEntity tileentity = icube.getBlockEntity(pos);
         if (tileentity != null) {
             return tileentity;
         } else {
-            CompoundNBT compoundnbt = null;// = icube.getDeferredTileEntity(pos);
+            CompoundTag compoundnbt = null;// = icube.getDeferredTileEntity(pos);
             BlockState state = this.getBlockState(pos);
             if (compoundnbt != null) {
                 if ("DUMMY".equals(compoundnbt.getString("id"))) {
-                    if (!state.hasTileEntity()) {
+                    if (!state.getBlock().isEntityBlock()) {
                         return null;
                     }
-                    tileentity = state.createTileEntity(this.world);
+                    tileentity = ((EntityBlock) state.getBlock()).newBlockEntity(this.world);
                 } else {
-                    tileentity = TileEntity.loadStatic(state, compoundnbt);
+                    tileentity = BlockEntity.loadStatic(state, compoundnbt);
                 }
 
                 if (tileentity != null) {
@@ -227,7 +232,7 @@ public class CubeWorldGenRegion implements ISeedReader {
                 }
             }
 
-            if (icube.getBlockState(pos).hasTileEntity()) {
+            if (icube.getBlockState(pos).getBlock().isEntityBlock()) {
                 LOGGER.warn("Tried to access a block entity before it was created. {}", (Object) pos);
             }
 
@@ -243,26 +248,26 @@ public class CubeWorldGenRegion implements ISeedReader {
         return this.getCube(pos).getFluidState(pos);
     }
 
-    @Override public List<Entity> getEntities(@Nullable Entity entityIn, AxisAlignedBB boundingBox,
+    @Override public List<Entity> getEntities(@Nullable Entity entityIn, AABB boundingBox,
             @Nullable Predicate<? super Entity> predicate) {
         return Collections.emptyList();
     }
 
     @Override
-    public <T extends Entity> List<T> getEntitiesOfClass(Class<? extends T> clazz, AxisAlignedBB aabb, @Nullable Predicate<? super T> filter) {
+    public <T extends Entity> List<T> getEntitiesOfClass(Class<? extends T> clazz, AABB aabb, @Nullable Predicate<? super T> filter) {
         return Collections.emptyList();
     }
 
-    @Override public List<? extends PlayerEntity> players() {
+    @Override public List<? extends Player> players() {
         return world.players();
     }
 
     @Deprecated
-    @Nullable @Override public IChunk getChunk(int x, int z, ChunkStatus requiredStatus, boolean nonnull) {
+    @Nullable @Override public ChunkAccess getChunk(int x, int z, ChunkStatus requiredStatus, boolean nonnull) {
         throw new UnsupportedOperationException("This should never be called!");
     }
 
-    @Override public int getHeight(Heightmap.Type heightmapType, int x, int z) {
+    @Override public int getHeight(Heightmap.Types heightmapType, int x, int z) {
         int yStart = Coords.cubeToMinBlock(mainCubeY + 1);
         int yEnd = Coords.cubeToMinBlock(mainCubeY);
         BlockPos pos = new BlockPos(x, yStart, z);
@@ -307,7 +312,7 @@ public class CubeWorldGenRegion implements ISeedReader {
         return 1f;
     }
 
-    @Override public WorldLightManager getLightEngine() {
+    @Override public LevelLightEngine getLightEngine() {
         return world.getLightEngine();
     }
 
@@ -318,18 +323,18 @@ public class CubeWorldGenRegion implements ISeedReader {
         if (blockstate != null) {
             this.world.onBlockStateChange(pos, blockstate, newState);
         }
-        if (newState.hasTileEntity()) {
-            if (icube.getCubeStatus().getChunkType() == ChunkStatus.Type.LEVELCHUNK) {
-                icube.addCubeTileEntity(pos, newState.createTileEntity(this));
+        if (newState.getBlock().isEntityBlock()) {
+            if (icube.getCubeStatus().getChunkType() == ChunkStatus.ChunkType.LEVELCHUNK) {
+                icube.addCubeTileEntity(pos, ((EntityBlock) newState.getBlock()).newBlockEntity(this));
             } else {
-                CompoundNBT compoundnbt = new CompoundNBT();
+                CompoundTag compoundnbt = new CompoundTag();
                 compoundnbt.putInt("x", pos.getX());
                 compoundnbt.putInt("y", pos.getY());
                 compoundnbt.putInt("z", pos.getZ());
                 compoundnbt.putString("id", "DUMMY");
                 //icube.addTileEntity(compoundnbt);
             }
-        } else if (blockstate != null && blockstate.hasTileEntity()) {
+        } else if (blockstate != null && blockstate.getBlock().isEntityBlock()) {
             icube.removeCubeTileEntity(pos);
         }
 
@@ -348,11 +353,11 @@ public class CubeWorldGenRegion implements ISeedReader {
     // destroyBlock
     @Override public boolean destroyBlock(BlockPos pos, boolean isPlayerInCreative, @Nullable Entity droppedEntities, int recursionLimit) {
         BlockState blockstate = this.getBlockState(pos);
-        if (blockstate.isAir(this, pos)) {
+        if (blockstate.isAir()) {
             return false;
         } else {
             if (isPlayerInCreative) {
-                TileEntity tileentity = blockstate.hasTileEntity() ? this.getBlockEntity(pos) : null;
+                BlockEntity tileentity = blockstate.getBlock().isEntityBlock() ? this.getBlockEntity(pos) : null;
                 Block.dropResources(blockstate, this.world, pos, tileentity, droppedEntities, ItemStack.EMPTY);
             }
 
@@ -367,12 +372,12 @@ public class CubeWorldGenRegion implements ISeedReader {
     //TODO: DOUBLE CHECK THESE
 
     @Override
-    public DynamicRegistries registryAccess() {
+    public RegistryAccess registryAccess() {
         return this.world.registryAccess();
     }
 
     @Override
-    public Stream<? extends StructureStart<?>> startsForFeature(SectionPos sectionPos, Structure<?> structure) {
+    public Stream<? extends StructureStart<?>> startsForFeature(SectionPos sectionPos, StructureFeature<?> structure) {
         return this.world.startsForFeature(sectionPos, structure);
     }
 }

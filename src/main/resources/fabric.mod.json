@@ -1,0 +1,40 @@
+{
+    "schemaVersion": 1,
+    "id": "cubicchunks",
+    "version": "${version}",
+
+    "name": "Cubic Chunks",
+    "description": "CubicChunks mod",
+    "authors": [
+        "Barteks2x"
+    ],
+    "contact": {
+        "homepage": "https://github.com/OpenCubicChunks/CubicChunks",
+        "sources": "https://github.com/OpenCubicChunks/CubicChunks"
+    },
+
+    "license": "MIT",
+    "icon": "assets/cubicchunks/icon.png",
+
+    "environment": "*",
+    "entrypoints": {
+        "main": [
+            "io.github.opencubicchunks.cubicchunks.CubicChunks"
+        ]
+    },
+    "mixins": [
+        "cubicchunks.mixins.access.json",
+        "cubicchunks.mixins.asm.json",
+        "cubicchunks.mixins.core.json",
+        "cubicchunks.mixins.optifine.json"
+    ],
+
+    "depends": {
+        "fabricloader": ">=0.7.4",
+        "fabric": "*",
+        "minecraft": "1.16.x"
+    },
+    "suggests": {
+        "flamingo": "*"
+    }
+}

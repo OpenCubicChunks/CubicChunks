@@ -1,0 +1,10 @@
+accessWidener	v1	named
+accessible class net/minecraft/server/level/DistanceManager$ChunkTicketTracker
+accessible class net/minecraft/server/level/DistanceManager$FixedPlayerDistanceChunkTracker
+accessible class net/minecraft/server/level/DistanceManager$PlayerTicketTracker
+accessible class net/minecraft/client/multiplayer/ClientChunkCache$Storage
+accessible class net/minecraft/server/level/ChunkMap$DistanceManager
+accessible class net/minecraft/server/level/ChunkMap$TrackedEntity
+accessible class net/minecraft/server/level/ServerChunkCache$MainThreadExecutor
+accessible class net/minecraft/server/level/ThreadedLevelLightEngine$TaskType
+extendable class net/minecraft/server/level/Ticket

@@ -2,16 +2,16 @@ package io.github.opencubicchunks.cubicchunks.mixin.core.client;
 
 
 import io.github.opencubicchunks.cubicchunks.CubicChunks;
-import net.minecraft.world.IBlockReader;
-import net.minecraft.world.chunk.ChunkSection;
-import net.minecraft.world.chunk.IChunk;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.chunk.ChunkAccess;
+import net.minecraft.world.level.chunk.LevelChunkSection;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 
-@Mixin(IChunk.class)
-public interface MixinIChunk extends IBlockReader {
-    @Shadow ChunkSection[] getSections();
+@Mixin(ChunkAccess.class)
+public interface MixinIChunk extends BlockGetter {
+    @Shadow LevelChunkSection[] getSections();
 
     /**
      * @author Voronoi
@@ -29,7 +29,7 @@ public interface MixinIChunk extends IBlockReader {
 
         endY = endY >> 4;
         for(int i = startY >> 4; i <= endY; i += 16) {
-            if (!ChunkSection.isEmpty(this.getSections()[i >> 4])) {
+            if (!LevelChunkSection.isEmpty(this.getSections()[i >> 4])) {
                 return false;
             }
         }

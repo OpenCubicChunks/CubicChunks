@@ -5,18 +5,17 @@ import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import io.github.opencubicchunks.cubicchunks.utils.MathUtil;
-import net.minecraft.client.world.ClientWorld;
-import net.minecraft.network.PacketBuffer;
-import net.minecraft.util.math.SectionPos;
-import net.minecraft.world.LightType;
-import net.minecraft.world.World;
-import net.minecraft.world.chunk.NibbleArray;
-import net.minecraft.world.lighting.WorldLightManager;
-
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.Iterator;
 import java.util.List;
+import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.core.SectionPos;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LightLayer;
+import net.minecraft.world.level.chunk.DataLayer;
+import net.minecraft.world.level.lighting.LevelLightEngine;
 
 public class PacketUpdateLight {
 
@@ -28,7 +27,7 @@ public class PacketUpdateLight {
     private final CubePos cubePos;
     private final boolean lightFlag;
 
-    PacketUpdateLight(PacketBuffer buf)
+    PacketUpdateLight(FriendlyByteBuf buf)
     {
         this.lightFlag = buf.readBoolean();
         this.cubePos = CubePos.of(buf.readInt(), buf.readInt(), buf.readInt());
@@ -49,7 +48,7 @@ public class PacketUpdateLight {
         }
     }
 
-    public PacketUpdateLight(CubePos pos, WorldLightManager lightManager, boolean lightFlag) {
+    public PacketUpdateLight(CubePos pos, LevelLightEngine lightManager, boolean lightFlag) {
         this.cubePos = pos;
         this.lightFlag = lightFlag;
         this.skyLightData = Lists.newArrayList();
@@ -58,8 +57,8 @@ public class PacketUpdateLight {
         this.dataExists = new BitSet(IBigCube.SECTION_COUNT*2);
 
         for(int i = 0; i < IBigCube.SECTION_COUNT; ++i) {
-            NibbleArray skyNibbleArray = lightManager.getLayerListener(LightType.SKY).getDataLayerData(Coords.sectionPosByIndex(pos, i));
-            NibbleArray blockNibbleArray = lightManager.getLayerListener(LightType.BLOCK).getDataLayerData(Coords.sectionPosByIndex(pos, i));
+            DataLayer skyNibbleArray = lightManager.getLayerListener(LightLayer.SKY).getDataLayerData(Coords.sectionPosByIndex(pos, i));
+            DataLayer blockNibbleArray = lightManager.getLayerListener(LightLayer.BLOCK).getDataLayerData(Coords.sectionPosByIndex(pos, i));
             if (skyNibbleArray != null) {
                 if (!skyNibbleArray.isEmpty()) {
                     this.dataExists.set(i*2);
@@ -76,7 +75,7 @@ public class PacketUpdateLight {
     }
 
 
-    void encode(PacketBuffer buf) {
+    void encode(FriendlyByteBuf buf) {
         buf.writeBoolean(lightFlag);
         buf.writeInt(this.cubePos.getX());
         buf.writeInt(this.cubePos.getY());
@@ -100,11 +99,11 @@ public class PacketUpdateLight {
     }
 
     public static class Handler {
-        public static void handle(PacketUpdateLight packet, World worldIn) {
-            if(!(worldIn instanceof ClientWorld))
+        public static void handle(PacketUpdateLight packet, Level worldIn) {
+            if(!(worldIn instanceof ClientLevel))
                 throw new Error("PacketUpdateLight handle called on server");
 
-            WorldLightManager worldlightmanager = worldIn.getChunkSource().getLightEngine();
+            LevelLightEngine worldlightmanager = worldIn.getChunkSource().getLightEngine();
 
             Iterator<byte[]> skyIterator = packet.skyLightData.iterator();
             Iterator<byte[]> blockIterator = packet.blockLightData.iterator();
@@ -117,12 +116,12 @@ public class PacketUpdateLight {
                 );
 
                 if(packet.dataExists.get(i * 2)) {
-                    worldlightmanager.queueSectionData(LightType.SKY, sectionPos, new NibbleArray(skyIterator.next()), packet.lightFlag);
-                    ((ClientWorld)worldIn).setSectionDirtyWithNeighbors(sectionPos.getX(), sectionPos.getY(), sectionPos.getZ());
+                    worldlightmanager.queueSectionData(LightLayer.SKY, sectionPos, new DataLayer(skyIterator.next()), packet.lightFlag);
+                    ((ClientLevel)worldIn).setSectionDirtyWithNeighbors(sectionPos.getX(), sectionPos.getY(), sectionPos.getZ());
                 }
                 if(packet.dataExists.get(i * 2 + 1)) {
-                    worldlightmanager.queueSectionData(LightType.BLOCK, sectionPos, new NibbleArray(blockIterator.next()), packet.lightFlag);
-                    ((ClientWorld)worldIn).setSectionDirtyWithNeighbors(sectionPos.getX(), sectionPos.getY(), sectionPos.getZ());
+                    worldlightmanager.queueSectionData(LightLayer.BLOCK, sectionPos, new DataLayer(blockIterator.next()), packet.lightFlag);
+                    ((ClientLevel)worldIn).setSectionDirtyWithNeighbors(sectionPos.getX(), sectionPos.getY(), sectionPos.getZ());
                 }
             }
         }

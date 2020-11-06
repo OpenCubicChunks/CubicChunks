@@ -6,12 +6,12 @@ import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.utils.AddressTools;
 import io.github.opencubicchunks.cubicchunks.utils.BufferUtils;
 import it.unimi.dsi.fastutil.shorts.ShortList;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.client.world.ClientWorld;
-import net.minecraft.network.PacketBuffer;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
 
 public class PacketCubeBlockChanges {
 
@@ -20,7 +20,7 @@ public class PacketCubeBlockChanges {
     BlockState[] blockStates;
 
     @SuppressWarnings("deprecation")
-    public PacketCubeBlockChanges(PacketBuffer in) {
+    public PacketCubeBlockChanges(FriendlyByteBuf in) {
         this.cubePos = CubePos.of(
                 BufferUtils.readSignedVarInt(in),
                 BufferUtils.readSignedVarInt(in),
@@ -50,7 +50,7 @@ public class PacketCubeBlockChanges {
     }
 
     @SuppressWarnings("deprecation")
-    public void encode(PacketBuffer out) {
+    public void encode(FriendlyByteBuf out) {
         BufferUtils.writeSignedVarInt(out, cubePos.getX());
         BufferUtils.writeSignedVarInt(out, cubePos.getY());
         BufferUtils.writeSignedVarInt(out, cubePos.getZ());
@@ -67,8 +67,8 @@ public class PacketCubeBlockChanges {
     }
 
     public static class Handler {
-        public static void handle(PacketCubeBlockChanges packet, World world) {
-            ClientWorld worldClient = (ClientWorld) world;
+        public static void handle(PacketCubeBlockChanges packet, Level world) {
+            ClientLevel worldClient = (ClientLevel) world;
             for (int i = 0; i < packet.localAddresses.length; i++) {
                 worldClient.setKnownState(packet.getPos(i), packet.blockStates[i]);
             }

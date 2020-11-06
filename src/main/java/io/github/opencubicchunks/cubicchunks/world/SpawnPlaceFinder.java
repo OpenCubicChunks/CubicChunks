@@ -1,11 +1,10 @@
 package io.github.opencubicchunks.cubicchunks.world;
 
 import io.github.opencubicchunks.cubicchunks.CubicChunks;
-import mcp.MethodsReturnNonnullByDefault;
+import io.github.opencubicchunks.cubicchunks.annotation.MethodsReturnNonnullByDefault;
+import net.minecraft.core.BlockPos;
 import net.minecraft.tags.BlockTags;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
-
+import net.minecraft.world.level.Level;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -61,7 +60,7 @@ public final class SpawnPlaceFinder {
     }
 */
     @Nullable
-    public static BlockPos getTopBlockBisect(World world, BlockPos pos, boolean checkValid) {
+    public static BlockPos getTopBlockBisect(Level world, BlockPos pos, boolean checkValid) {
         BlockPos minPos, maxPos;
         if (findNonEmpty(world, pos) == null) {
             CubicChunks.LOGGER.trace("Starting bisect with empty space at init {}", pos);
@@ -87,7 +86,7 @@ public final class SpawnPlaceFinder {
     }
 
     @Nullable
-    private static BlockPos bisect(World world, BlockPos min, BlockPos max) {
+    private static BlockPos bisect(Level world, BlockPos min, BlockPos max) {
         while (min.getY() < max.getY() - 1) {
             CubicChunks.LOGGER.trace("Bisect step with min={}, max={}", min, max);
             BlockPos middle = middleY(min, max);
@@ -109,7 +108,7 @@ public final class SpawnPlaceFinder {
     }
 
     @Nullable
-    private static BlockPos findMinPos(World world, BlockPos pos) {
+    private static BlockPos findMinPos(Level world, BlockPos pos) {
         // go down twice as much each time until we hit filled space
         double dy = 16;
         while (findNonEmpty(world, inWorldUp(world, pos, -dy)) == null) {
@@ -123,7 +122,7 @@ public final class SpawnPlaceFinder {
     }
 
     @Nullable
-    private static BlockPos findMaxPos(World world, BlockPos pos) {
+    private static BlockPos findMaxPos(Level world, BlockPos pos) {
         // go up twice as much each time until we hit empty space
         double dy = 16;
         while (findNonEmpty(world, inWorldUp(world, pos, dy)) != null) {
@@ -137,7 +136,7 @@ public final class SpawnPlaceFinder {
     }
 
     @Nullable
-    private static BlockPos findNonEmpty(World world, BlockPos pos) {
+    private static BlockPos findNonEmpty(Level world, BlockPos pos) {
         pos = pos.below(MIN_FREE_SPACE_SPAWN);
         for (int i = 0; i < MIN_FREE_SPACE_SPAWN * 2; i++, pos = pos.above()) {
             if (!world.getBlockState(pos).getCollisionShape(world, pos).isEmpty()) {
@@ -147,7 +146,7 @@ public final class SpawnPlaceFinder {
         return null;
     }
 
-    private static BlockPos inWorldUp(World world, BlockPos original, double up) {
+    private static BlockPos inWorldUp(Level world, BlockPos original, double up) {
         int y = (int) (original.getY() + up);
         //y = MathHelper.clamp(y, ((ICubicWorld) world).getMinHeight(), ((ICubicWorld) world).getMaxHeight());
         return new BlockPos(original.getX(), y, original.getZ());

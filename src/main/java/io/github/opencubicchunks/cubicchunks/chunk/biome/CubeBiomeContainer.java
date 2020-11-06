@@ -1,31 +1,30 @@
 package io.github.opencubicchunks.cubicchunks.chunk.biome;
 
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.BiomeContainerAccess;
-import net.minecraft.util.IObjectIntIterable;
-import net.minecraft.util.math.SectionPos;
-import net.minecraft.util.registry.WorldGenRegistries;
-import net.minecraft.world.biome.Biome;
-import net.minecraft.world.biome.BiomeContainer;
-import net.minecraft.world.biome.provider.BiomeProvider;
-
 import javax.annotation.Nullable;
+import net.minecraft.core.IdMap;
+import net.minecraft.core.SectionPos;
+import net.minecraft.data.BuiltinRegistries;
+import net.minecraft.world.level.biome.Biome;
+import net.minecraft.world.level.biome.BiomeSource;
+import net.minecraft.world.level.chunk.ChunkBiomeContainer;
 
-public class CubeBiomeContainer extends BiomeContainer {
+public class CubeBiomeContainer extends ChunkBiomeContainer {
 
     private static final int SIZE_BITS = (int)Math.round(Math.log(16.0D) / Math.log(2.0D)) - 2;
     public static final int BIOMES_SIZE = 1 << SIZE_BITS + SIZE_BITS + SIZE_BITS;
 
-    private CubeBiomeContainer(IObjectIntIterable<Biome> intIterable)
+    private CubeBiomeContainer(IdMap<Biome> intIterable)
     {
         this(intIterable, new Biome[BIOMES_SIZE]);
     }
 
-    public CubeBiomeContainer(IObjectIntIterable<Biome> indexedIterable, Biome[] biomesIn) {
+    public CubeBiomeContainer(IdMap<Biome> indexedIterable, Biome[] biomesIn) {
         super(indexedIterable, biomesIn);
     }
 
 
-    public CubeBiomeContainer(IObjectIntIterable<Biome> indexedIterable, SectionPos sectionPosIn, BiomeProvider biomeProviderIn) {
+    public CubeBiomeContainer(IdMap<Biome> indexedIterable, SectionPos sectionPosIn, BiomeSource biomeProviderIn) {
         this(indexedIterable);
         int x = sectionPosIn.minBlockX() >> 2;
         int y = sectionPosIn.minBlockY() >> 2;
@@ -40,7 +39,7 @@ public class CubeBiomeContainer extends BiomeContainer {
 
     }
 
-    public CubeBiomeContainer(IObjectIntIterable<Biome> indexedIterable, SectionPos sectionPosIn, BiomeProvider biomeProviderIn, @Nullable int[] biomeIds) {
+    public CubeBiomeContainer(IdMap<Biome> indexedIterable, SectionPos sectionPosIn, BiomeSource biomeProviderIn, @Nullable int[] biomeIds) {
         this(indexedIterable);
         int x = sectionPosIn.minBlockX() >> 2;
         int y = sectionPosIn.minBlockY() >> 2;
@@ -49,7 +48,7 @@ public class CubeBiomeContainer extends BiomeContainer {
         if (biomeIds != null) {
             for(int k = 0; k < biomeIds.length; ++k) {
                 //noinspection deprecation
-                biomes[k] = WorldGenRegistries.BIOME.byId(biomeIds[k]);
+                biomes[k] = BuiltinRegistries.BIOME.byId(biomeIds[k]);
                 if (biomes[k] == null) {
                     int dx = k & HORIZONTAL_MASK;
                     int dy = k >> SIZE_BITS + SIZE_BITS & HORIZONTAL_MASK;

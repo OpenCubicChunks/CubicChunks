@@ -4,31 +4,31 @@ import io.github.opencubicchunks.cubicchunks.chunk.IChunkManager;
 import io.github.opencubicchunks.cubicchunks.chunk.ICubeHolder;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.ChunkManagerAccess;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.util.math.vector.Vector3d;
-import net.minecraft.world.TrackedEntity;
-import net.minecraft.world.server.ChunkHolder;
-import net.minecraft.world.server.ChunkManager;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 
 import java.util.Set;
+import net.minecraft.server.level.ChunkHolder;
+import net.minecraft.server.level.ChunkMap;
+import net.minecraft.server.level.ServerEntity;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.phys.Vec3;
 
 import static io.github.opencubicchunks.cubicchunks.utils.Coords.sectionToCube;
 
-@Mixin(ChunkManager.EntityTracker.class)
+@Mixin(ChunkMap.TrackedEntity.class)
 public abstract class MixinEntityTracker {
 
-    @SuppressWarnings({"target"}) @Shadow(aliases = "this$0", remap = false) ChunkManager syntheticThis;
+    @SuppressWarnings({"target"}) @Shadow(aliases = "this$0", remap = false) ChunkMap syntheticThis;
 
     @Shadow @Final private Entity entity;
 
-    @Shadow @Final private TrackedEntity serverEntity;
+    @Shadow @Final private ServerEntity serverEntity;
 
-    @Shadow @Final private Set<ServerPlayerEntity> seenBy;
+    @Shadow @Final private Set<ServerPlayer> seenBy;
 
     @Shadow protected abstract int getEffectiveRange();
 
@@ -37,9 +37,9 @@ public abstract class MixinEntityTracker {
      * @reason Entire method needs to be rewritten
      */
     @Overwrite
-    public void updatePlayer(ServerPlayerEntity player) {
+    public void updatePlayer(ServerPlayer player) {
         if (player != this.entity) {
-            Vector3d vec3d = player.position().subtract(this.serverEntity.sentPos());
+            Vec3 vec3d = player.position().subtract(this.serverEntity.sentPos());
                             //This function is fine
             int i = Math.min(this.getEffectiveRange(), (((ChunkManagerAccess) syntheticThis).getViewDistance() - 1) * 16);
             boolean flag = vec3d.x >= (double)(-i) && vec3d.x <= (double)i &&

@@ -1,8 +1,7 @@
 package io.github.opencubicchunks.cubicchunks.chunk;
 
-import net.minecraft.world.chunk.ChunkStatus;
-
 import javax.annotation.Nullable;
+import net.minecraft.world.level.chunk.ChunkStatus;
 
 public interface ICubeProvider {
 

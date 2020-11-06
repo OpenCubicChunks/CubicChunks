@@ -3,7 +3,7 @@ package io.github.opencubicchunks.cubicchunks.utils;
 import static org.junit.Assert.assertEquals;
 
 import io.netty.buffer.Unpooled;
-import net.minecraft.network.PacketBuffer;
+import net.minecraft.network.FriendlyByteBuf;
 import org.junit.Test;
 
 public class BufferUtilsTest {
@@ -18,7 +18,7 @@ public class BufferUtilsTest {
     }
 
     private void testValue(int val) {
-        PacketBuffer buf = new PacketBuffer(Unpooled.wrappedBuffer(new byte[8]));
+        FriendlyByteBuf buf = new FriendlyByteBuf(Unpooled.wrappedBuffer(new byte[8]));
         buf.resetWriterIndex();
         buf.resetReaderIndex();
 

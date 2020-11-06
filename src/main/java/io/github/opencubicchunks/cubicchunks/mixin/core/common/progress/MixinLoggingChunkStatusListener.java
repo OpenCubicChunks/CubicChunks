@@ -3,17 +3,17 @@ package io.github.opencubicchunks.cubicchunks.mixin.core.common.progress;
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.ICubeStatusListener;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.world.chunk.ChunkStatus;
-import net.minecraft.world.chunk.listener.LoggingChunkStatusListener;
 import org.spongepowered.asm.mixin.*;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import javax.annotation.Nullable;
+import net.minecraft.server.level.progress.LoggerChunkProgressListener;
+import net.minecraft.util.Mth;
+import net.minecraft.world.level.chunk.ChunkStatus;
 
-@Mixin(LoggingChunkStatusListener.class)
+@Mixin(LoggerChunkProgressListener.class)
 public abstract class MixinLoggingChunkStatusListener implements ICubeStatusListener {
 
     private int loadedCubes;
@@ -53,6 +53,6 @@ public abstract class MixinLoggingChunkStatusListener implements ICubeStatusList
     public int getProgress() {
         int loaded = count + loadedCubes;
         int total = maxCount + totalCubes;
-        return MathHelper.floor(loaded * 100.0F / total);
+        return Mth.floor(loaded * 100.0F / total);
     }
 }

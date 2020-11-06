@@ -9,17 +9,16 @@ import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.utils.MathUtil;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
-import net.minecraft.client.world.ClientWorld;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.network.PacketBuffer;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
-
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.List;
 import java.util.stream.Collectors;
+import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.entity.BlockEntity;
 
 public class PacketCubes {
     // vanilla has max chunk size of 2MB, it works out to be 128kB for a 32^3 cube
@@ -29,7 +28,7 @@ public class PacketCubes {
     private final BigCube[] cubes;
     private final BitSet cubeExists;
     private final byte[] packetData;
-    private final List<CompoundNBT> tileEntityTags;
+    private final List<CompoundTag> tileEntityTags;
 
     public PacketCubes(List<BigCube> cubes) {
         this.cubes = cubes.toArray(new BigCube[0]);
@@ -39,11 +38,11 @@ public class PacketCubes {
         fillDataBuffer(wrapBuffer(this.packetData), cubes, cubeExists);
         this.tileEntityTags = cubes.stream()
                 .flatMap(cube -> cube.getTileEntityMap().values().stream())
-                .map(TileEntity::getUpdateTag)
+                .map(BlockEntity::getUpdateTag)
                 .collect(Collectors.toList());
     }
 
-    PacketCubes(PacketBuffer buf) {
+    PacketCubes(FriendlyByteBuf buf) {
         int count = buf.readVarInt();
         this.cubes = new BigCube[count];
         this.cubePositions = new CubePos[count];
@@ -68,7 +67,7 @@ public class PacketCubes {
         }
     }
 
-    void encode(PacketBuffer buf) {
+    void encode(FriendlyByteBuf buf) {
         buf.writeVarInt(cubes.length);
         for (BigCube cube : cubes) {
             buf.writeInt(cube.getCubePos().getX());
@@ -82,17 +81,17 @@ public class PacketCubes {
         buf.writeBytes(this.packetData);
         buf.writeVarInt(this.tileEntityTags.size());
 
-        for (CompoundNBT compoundnbt : this.tileEntityTags) {
+        for (CompoundTag compoundnbt : this.tileEntityTags) {
             buf.writeNbt(compoundnbt);
         }
     }
 
     public static class Handler {
 
-        public static void handle(PacketCubes packet, World worldIn) {
-            ClientWorld world = (ClientWorld) worldIn;
+        public static void handle(PacketCubes packet, Level worldIn) {
+            ClientLevel world = (ClientLevel) worldIn;
 
-            PacketBuffer dataReader = wrapBuffer(packet.packetData);
+            FriendlyByteBuf dataReader = wrapBuffer(packet.packetData);
             BitSet cubeExists = packet.cubeExists;
             for (int i = 0; i < packet.cubes.length; i++) {
                 CubePos pos = packet.cubePositions[i];
@@ -101,7 +100,7 @@ public class PacketCubes {
                 int z = pos.getZ();
 
                 ((IClientCubeProvider) world.getChunkSource()).replaceWithPacketData(
-                        x, y, z, null, dataReader, new CompoundNBT(), cubeExists.get(i));
+                        x, y, z, null, dataReader, new CompoundTag(), cubeExists.get(i));
 
                 // TODO: full cube info
                 //            if (cube != null /*&&fullCube*/) {
@@ -118,17 +117,17 @@ public class PacketCubes {
                     }
                 }
 
-                for (CompoundNBT nbt : packet.tileEntityTags) {
+                for (CompoundTag nbt : packet.tileEntityTags) {
                     BlockPos tePos = new BlockPos(nbt.getInt("x"), nbt.getInt("y"), nbt.getInt("z"));
-                    TileEntity te = world.getBlockEntity(tePos);
+                    BlockEntity te = world.getBlockEntity(tePos);
                     if (te != null) {
-                        te.handleUpdateTag(world.getBlockState(tePos), nbt);
+                        te.load(world.getBlockState(tePos), nbt);
                     }
                 }
             }
         }
     }
-    private static void fillDataBuffer(PacketBuffer buf, List<BigCube> cubes, BitSet existingChunks) {
+    private static void fillDataBuffer(FriendlyByteBuf buf, List<BigCube> cubes, BitSet existingChunks) {
         buf.writerIndex(0);
         int i = 0;
         for (BigCube cube : cubes) {
@@ -140,9 +139,9 @@ public class PacketCubes {
         }
     }
 
-    private static PacketBuffer wrapBuffer(byte[] packetData) {
+    private static FriendlyByteBuf wrapBuffer(byte[] packetData) {
         ByteBuf bytebuf = Unpooled.wrappedBuffer(packetData);
-        return new PacketBuffer(bytebuf);
+        return new FriendlyByteBuf(bytebuf);
     }
 
     private static int calculateDataSize(List<BigCube> cubes) {

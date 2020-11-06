@@ -28,11 +28,10 @@ package io.github.opencubicchunks.cubicchunks.utils;
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.BigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
-import net.minecraft.entity.Entity;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.SectionPos;
-import net.minecraft.world.chunk.ChunkSection;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.SectionPos;
+import net.minecraft.util.Mth;
+import net.minecraft.world.entity.Entity;
 
 /**
  * A class that contains helper-methods for many CubicChunks related things.
@@ -117,7 +116,7 @@ public class Coords {
 
     /** See {@link Coords#blockToCube(int)} */
     public static int blockToCube(double blockPos) {
-        return blockToCube(MathHelper.floor(blockPos));
+        return blockToCube(Mth.floor(blockPos));
     }
 
     /**
@@ -158,7 +157,7 @@ public class Coords {
      * @return The {@link CubePos} x of the entity
      */
     public static int getCubeXForEntity(Entity entity) {
-        return blockToCube(MathHelper.floor(entity.getX()));
+        return blockToCube(Mth.floor(entity.getX()));
     }
     /**
      * @param entity An entity
@@ -166,14 +165,14 @@ public class Coords {
      */
     public static int getCubeYForEntity(Entity entity) {
         // the entity is in the cube it's inside, not the cube it's standing on
-        return blockToCube(MathHelper.floor(entity.getY()));
+        return blockToCube(Mth.floor(entity.getY()));
     }
     /**
      * @param entity An entity
      * @return The {@link CubePos} z of the entity
      */
     public static int getCubeZForEntity(Entity entity) {
-        return blockToCube(MathHelper.floor(entity.getZ()));
+        return blockToCube(Mth.floor(entity.getZ()));
     }
 
     public static int cubeToCenterBlock(int cubeVal) {

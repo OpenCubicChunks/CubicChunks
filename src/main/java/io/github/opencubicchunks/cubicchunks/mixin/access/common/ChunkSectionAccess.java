@@ -1,12 +1,12 @@
 package io.github.opencubicchunks.cubicchunks.mixin.access.common;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.util.palette.PalettedContainer;
-import net.minecraft.world.chunk.ChunkSection;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.chunk.LevelChunkSection;
+import net.minecraft.world.level.chunk.PalettedContainer;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 
-@Mixin(ChunkSection.class)
+@Mixin(LevelChunkSection.class)
 public interface ChunkSectionAccess {
     @Accessor short getNonEmptyBlockCount();
     @Accessor short getTickingBlockCount();

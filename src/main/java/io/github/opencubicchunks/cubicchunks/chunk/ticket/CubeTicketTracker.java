@@ -2,9 +2,9 @@ package io.github.opencubicchunks.cubicchunks.chunk.ticket;
 
 import io.github.opencubicchunks.cubicchunks.chunk.IChunkManager;
 import io.github.opencubicchunks.cubicchunks.chunk.graph.CubeDistanceGraph;
+import net.minecraft.server.level.ChunkHolder;
+import net.minecraft.server.level.Ticket;
 import net.minecraft.util.SortedArraySet;
-import net.minecraft.world.server.ChunkHolder;
-import net.minecraft.world.server.Ticket;
 
 public class CubeTicketTracker extends CubeDistanceGraph {
     private final ITicketManager iTicketManager;

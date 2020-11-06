@@ -1,9 +1,9 @@
 package io.github.opencubicchunks.cubicchunks.optifine;
 
-import net.minecraft.world.chunk.ChunkSection;
+import net.minecraft.world.level.chunk.LevelChunkSection;
 
 public interface IOptiFineChunkRender {
-    ChunkSection getCube();
+    LevelChunkSection getCube();
 
     int getRegionX();
 

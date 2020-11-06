@@ -6,10 +6,10 @@ import io.github.opencubicchunks.cubicchunks.chunk.cube.EmptyCube;
 import io.github.opencubicchunks.cubicchunks.optifine.IOptiFineChunkRender;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import net.minecraft.client.renderer.chunk.ChunkRenderDispatcher;
-import net.minecraft.util.Direction;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.chunk.ChunkSection;
-import net.minecraft.world.chunk.ChunkStatus;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.world.level.chunk.ChunkStatus;
+import net.minecraft.world.level.chunk.LevelChunkSection;
 import org.spongepowered.asm.mixin.Dynamic;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -19,21 +19,21 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @SuppressWarnings("ShadowTarget")
-@Mixin(ChunkRenderDispatcher.ChunkRender.class)
+@Mixin(ChunkRenderDispatcher.RenderChunk.class)
 public abstract class MixinChunkRender implements IOptiFineChunkRender {
 
-    @Shadow @Final private BlockPos.Mutable origin;
+    @Shadow @Final private BlockPos.MutableBlockPos origin;
     @SuppressWarnings("target") @Shadow(aliases = "this$0", remap = false) @Final ChunkRenderDispatcher syntheticThis;
     @SuppressWarnings("target") @Shadow(remap = false) public int regionX;
     @SuppressWarnings("target") @Shadow(remap = false) public int regionZ;
-    @SuppressWarnings("target") @Dynamic @Shadow(remap = false) private ChunkRenderDispatcher.ChunkRender[] renderChunkNeighboursValid;
-    @SuppressWarnings("target") @Dynamic @Shadow(remap = false) private ChunkRenderDispatcher.ChunkRender[] renderChunkNeighbours;
+    @SuppressWarnings("target") @Dynamic @Shadow(remap = false) private ChunkRenderDispatcher.RenderChunk[] renderChunkNeighboursValid;
+    @SuppressWarnings("target") @Dynamic @Shadow(remap = false) private ChunkRenderDispatcher.RenderChunk[] renderChunkNeighbours;
 
     @Shadow public abstract BlockPos getOrigin();
 
     private BigCube cube;
 
-    @Override public ChunkSection getCube() {
+    @Override public LevelChunkSection getCube() {
         BigCube cube = this.cube;
         if (cube instanceof EmptyCube) {
             return null;

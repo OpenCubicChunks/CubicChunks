@@ -6,17 +6,17 @@ import io.github.opencubicchunks.cubicchunks.chunk.ICubeProvider;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.BigCube;
 import io.github.opencubicchunks.cubicchunks.server.ICubicWorld;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
-import net.minecraft.world.chunk.ChunkStatus;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.chunk.ChunkStatus;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-@Mixin(World.class)
+@Mixin(Level.class)
 public abstract class MixinWorld implements ICubicWorld {
 
     @Inject(at = @At("RETURN"), method = "isOutsideBuildHeight(I)Z", cancellable = true)
@@ -24,8 +24,8 @@ public abstract class MixinWorld implements ICubicWorld {
         cir.setReturnValue(y < CubicChunks.MIN_SUPPORTED_HEIGHT || y >= CubicChunks.MAX_SUPPORTED_HEIGHT);
     }
 
-    @Inject(method = "blockEntityChanged", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/chunk/Chunk;markUnsaved()V"))
-    private void onBlockEntityChanged(BlockPos blockPos, TileEntity tileEntity, CallbackInfo ci) {
+    @Inject(method = "blockEntityChanged", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/chunk/LevelChunk;markUnsaved()V"))
+    private void onBlockEntityChanged(BlockPos blockPos, BlockEntity tileEntity, CallbackInfo ci) {
         this.getCubeAt(blockPos).setDirty(true);
     }
 
@@ -40,7 +40,7 @@ public abstract class MixinWorld implements ICubicWorld {
 
     //The method .getWorld() No longer exists
     public IBigCube getCube(int cubeX, int cubeY, int cubeZ, ChunkStatus requiredStatus, boolean nonnull) {
-        IBigCube icube = ((ICubeProvider)((World)(Object)this).getChunkSource()).getCube(cubeX, cubeY, cubeZ, requiredStatus, nonnull);
+        IBigCube icube = ((ICubeProvider)((Level)(Object)this).getChunkSource()).getCube(cubeX, cubeY, cubeZ, requiredStatus, nonnull);
         if (icube == null && nonnull) {
             throw new IllegalStateException("Should always be able to create a cube!");
         } else {

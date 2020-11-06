@@ -10,7 +10,7 @@ public class McGitVersionExtension {
     private Boolean snapshot;
     private String versionSuffix = "";
     private String forceVersionString;
-    private String forgeVersion;
+    private String mcVersion;
     private final Map<String, String> commitVersions = new HashMap<>();
 
     public void setCommitVersion(String commit, String version) {
@@ -21,12 +21,12 @@ public class McGitVersionExtension {
         return Collections.unmodifiableMap(commitVersions);
     }
 
-    public void setForgeVersion(String forgeVersion) {
-        this.forgeVersion = forgeVersion;
+    public void setMcVersion(String mcVersion) {
+        this.mcVersion = mcVersion;
     }
 
-    public String getForgeVersion() {
-        return this.forgeVersion;
+    public String getMcVersion() {
+        return this.mcVersion;
     }
 
     public boolean isSnapshot() {

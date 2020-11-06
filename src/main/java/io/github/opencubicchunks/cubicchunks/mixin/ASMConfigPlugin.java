@@ -1,6 +1,8 @@
 package io.github.opencubicchunks.cubicchunks.mixin;
 
 import io.github.opencubicchunks.cubicchunks.mixin.transform.MainTransformer;
+import net.fabricmc.loader.api.FabricLoader;
+import net.fabricmc.loader.api.MappingResolver;
 import org.objectweb.asm.tree.ClassNode;
 import org.spongepowered.asm.mixin.extensibility.IMixinConfigPlugin;
 import org.spongepowered.asm.mixin.extensibility.IMixinInfo;
@@ -34,11 +36,16 @@ public class ASMConfigPlugin implements IMixinConfigPlugin {
     }
 
     @Override public void preApply(String targetClassName, ClassNode targetClass, String mixinClassName, IMixinInfo mixinInfo) {
-        if (targetClassName.equals("net.minecraft.world.server.ChunkManager$ProxyTicketManager")) {
+        MappingResolver map = FabricLoader.getInstance().getMappingResolver();
+        String chunkMapDistanceManager = map.mapClassName("intermediary", "net.minecraft.class_3898$class_3216");
+        String chunkMap = map.mapClassName("intermediary", "net.minecraft.class_3898");
+        String chunkHolder = map.mapClassName("intermediary", "net.minecraft.class_3193");
+
+        if (targetClassName.equals(chunkMapDistanceManager)) {
             MainTransformer.transformProxyTicketManager(targetClass);
-        } else if (targetClassName.equals("net.minecraft.world.server.ChunkManager")) {
+        } else if (targetClassName.equals(chunkMap)) {
             MainTransformer.transformChunkManager(targetClass);
-        } else if (targetClassName.equals("net.minecraft.world.server.ChunkHolder")) {
+        } else if (targetClassName.equals(chunkHolder)) {
             MainTransformer.transformChunkHolder(targetClass);
         }
     }

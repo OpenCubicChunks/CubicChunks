@@ -15,11 +15,13 @@
         "common.ChunkTicketTrackerFactoryAccess",
         "common.EntityTrackerAccess",
         "common.LevelBasedGraphAccess",
+        "common.Matrix4fAccess",
         "common.PlayerChunkTrackerFactoryAccess",
         "common.PlayerTicketTrackerFactoryAccess",
         "common.SectionLightStorageAccess",
         "common.TicketAccess",
-        "common.TicketManagerAccess"
+        "common.TicketManagerAccess",
+        "common.TicketTypeAccess"
     ],
     "client": [
         "client.ClientChunkProviderChunkArrayAccess",

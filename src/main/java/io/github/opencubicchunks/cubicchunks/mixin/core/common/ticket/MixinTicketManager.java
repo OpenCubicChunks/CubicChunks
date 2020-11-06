@@ -23,14 +23,14 @@ import it.unimi.dsi.fastutil.longs.LongSet;
 import it.unimi.dsi.fastutil.objects.ObjectIterator;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import it.unimi.dsi.fastutil.objects.ObjectSet;
-import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.server.level.ChunkHolder;
+import net.minecraft.server.level.ChunkMap;
+import net.minecraft.server.level.DistanceManager;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.level.Ticket;
+import net.minecraft.server.level.TicketType;
 import net.minecraft.util.SortedArraySet;
-import net.minecraft.util.concurrent.ITaskExecutor;
-import net.minecraft.world.server.ChunkHolder;
-import net.minecraft.world.server.ChunkManager;
-import net.minecraft.world.server.Ticket;
-import net.minecraft.world.server.TicketManager;
-import net.minecraft.world.server.TicketType;
+import net.minecraft.util.thread.ProcessorHandle;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -44,10 +44,10 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 
-@Mixin(TicketManager.class)
+@Mixin(DistanceManager.class)
 public abstract class MixinTicketManager implements ITicketManager {
     private final Long2ObjectOpenHashMap<SortedArraySet<Ticket<?>>> cubeTickets = new Long2ObjectOpenHashMap<>();
-    private final Long2ObjectMap<ObjectSet<ServerPlayerEntity>> playersPerCube = new Long2ObjectOpenHashMap<>();
+    private final Long2ObjectMap<ObjectSet<ServerPlayer>> playersPerCube = new Long2ObjectOpenHashMap<>();
 
     private final Set<ChunkHolder> cubesToUpdateFutures = new HashSet<>();
     private final LongSet cubeTicketsToRelease = new LongOpenHashSet();
@@ -63,12 +63,12 @@ public abstract class MixinTicketManager implements ITicketManager {
     private final PlayerCubeTracker naturalSpawnCubeCounter = new PlayerCubeTracker(this, 8);
     private final PlayerCubeTicketTracker playerCubeTicketTracker = new PlayerCubeTicketTracker(this, 33);
     private CubeTaskPriorityQueueSorter cubeTicketThrottler;
-    private ITaskExecutor<CubeTaskPriorityQueueSorter.FunctionEntry<Runnable>> cubeTicketThrottlerInput;
-    private ITaskExecutor<CubeTaskPriorityQueueSorter.RunnableEntry> cubeTicketThrottlerReleaser;
+    private ProcessorHandle<CubeTaskPriorityQueueSorter.FunctionEntry<Runnable>> cubeTicketThrottlerInput;
+    private ProcessorHandle<CubeTaskPriorityQueueSorter.RunnableEntry> cubeTicketThrottlerReleaser;
 
     @Inject(method = "<init>", at = @At("RETURN"))
     public void init(Executor executor, Executor executor2, CallbackInfo ci) {
-        ITaskExecutor<Runnable> itaskexecutor = ITaskExecutor.of("player ticket throttler", executor2::execute);
+        ProcessorHandle<Runnable> itaskexecutor = ProcessorHandle.of("player ticket throttler", executor2::execute);
         CubeTaskPriorityQueueSorter throttler = new CubeTaskPriorityQueueSorter(ImmutableList.of(itaskexecutor), executor, 4);
         this.cubeTicketThrottler = throttler;
         this.cubeTicketThrottlerInput = throttler.createExecutor(itaskexecutor, true);
@@ -111,7 +111,7 @@ public abstract class MixinTicketManager implements ITicketManager {
     //BEGIN INJECT
 
     @Inject(method = "runAllUpdates", at = @At("RETURN"), cancellable = true)
-    public void processUpdates(ChunkManager chunkManager, CallbackInfoReturnable<Boolean> callbackInfoReturnable) {
+    public void processUpdates(ChunkMap chunkManager, CallbackInfoReturnable<Boolean> callbackInfoReturnable) {
         // Minecraft.getInstance().getIntegratedServer().getProfiler().startSection("cubeTrackerUpdates");
         this.naturalSpawnCubeCounter.processAllUpdates();
         // Minecraft.getInstance().getIntegratedServer().getProfiler().endStartSection("cubeTicketTrackerUpdates");
@@ -138,7 +138,7 @@ public abstract class MixinTicketManager implements ITicketManager {
                             throw new IllegalStateException();
                         }
 
-                        CompletableFuture<Either<BigCube, ChunkHolder.IChunkLoadingError>> sectionEntityTickingFuture =
+                        CompletableFuture<Either<BigCube, ChunkHolder.ChunkLoadingFailure>> sectionEntityTickingFuture =
                                 ((ICubeHolder)chunkholder).getCubeEntityTickingFuture();
                         sectionEntityTickingFuture.thenAccept((p_219363_3_) -> this.mainThreadExecutor.execute(() -> {
                             this.cubeTicketThrottlerReleaser.tell(CubeTaskPriorityQueueSorter.createSorterMsg(() -> {
@@ -176,30 +176,30 @@ public abstract class MixinTicketManager implements ITicketManager {
     //BEGIN OVERRIDES
     @Override
     public <T> void addCubeTicket(TicketType<T> type, CubePos pos, int level, T value) {
-        this.addCubeTicket(pos.asLong(), new Ticket<>(type, level, value));
+        this.addCubeTicket(pos.asLong(), TicketAccess.createNew(type, level, value));
     }
 
     @Override
     public <T> void removeCubeTicket(TicketType<T> type, CubePos pos, int level, T value) {
-        Ticket<T> ticket = new Ticket<>(type, level, value);
+        Ticket<T> ticket = TicketAccess.createNew(type, level, value);
         this.removeCubeTicket(pos.asLong(), ticket);
     }
 
     @Override
     public <T> void addCubeRegionTicket(TicketType<T> type, CubePos pos, int distance, T value) {
-        this.addCubeTicket(pos.asLong(), new Ticket<>(type, 33 - distance, value));
+        this.addCubeTicket(pos.asLong(), TicketAccess.createNew(type, 33 - distance, value));
     }
 
     @Override
     public <T> void removeCubeRegionTicket(TicketType<T> type, CubePos pos, int distance, T value) {
-        Ticket<T> ticket = new Ticket<>(type, 33 - distance, value);
+        Ticket<T> ticket = TicketAccess.createNew(type, 33 - distance, value);
         this.removeCubeTicket(pos.asLong(), ticket);
     }
 
     // updateChunkForced
     @Override
     public void updateCubeForced(CubePos pos, boolean add) {
-        Ticket<CubePos> ticket = new Ticket<>(CCTicketType.CCFORCED, 31, pos);
+        Ticket<CubePos> ticket = TicketAccess.createNew(CCTicketType.CCFORCED, 31, pos);
         if (add) {
             this.addCubeTicket(pos.asLong(), ticket);
         } else {
@@ -208,7 +208,7 @@ public abstract class MixinTicketManager implements ITicketManager {
     }
 
     @Override
-    public void addCubePlayer(CubePos cubePos, ServerPlayerEntity player) {
+    public void addCubePlayer(CubePos cubePos, ServerPlayer player) {
         long i = cubePos.asLong();
         this.playersPerCube.computeIfAbsent(i, (x) -> new ObjectOpenHashSet<>()).add(player);
         this.naturalSpawnCubeCounter.updateSourceLevel(i, 0, true);
@@ -216,9 +216,9 @@ public abstract class MixinTicketManager implements ITicketManager {
     }
 
     @Override
-    public void removeCubePlayer(CubePos cubePosIn, ServerPlayerEntity player) {
+    public void removeCubePlayer(CubePos cubePosIn, ServerPlayer player) {
         long i = cubePosIn.asLong();
-        ObjectSet<ServerPlayerEntity> objectset = this.playersPerCube.get(i);
+        ObjectSet<ServerPlayer> objectset = this.playersPerCube.get(i);
         objectset.remove(player);
         if (objectset.isEmpty()) {
             this.playersPerCube.remove(i);
@@ -248,12 +248,12 @@ public abstract class MixinTicketManager implements ITicketManager {
     }
 
     @Override
-    public ITaskExecutor<CubeTaskPriorityQueueSorter.FunctionEntry<Runnable>> getCubeTicketThrottlerInput() {
+    public ProcessorHandle<CubeTaskPriorityQueueSorter.FunctionEntry<Runnable>> getCubeTicketThrottlerInput() {
         return cubeTicketThrottlerInput;
     }
 
     @Override
-    public ITaskExecutor<CubeTaskPriorityQueueSorter.RunnableEntry> getCubeTicketThrottlerReleaser() { return cubeTicketThrottlerReleaser; }
+    public ProcessorHandle<CubeTaskPriorityQueueSorter.RunnableEntry> getCubeTicketThrottlerReleaser() { return cubeTicketThrottlerReleaser; }
 
     @Override
     public LongSet getCubeTicketsToRelease() {
@@ -277,7 +277,7 @@ public abstract class MixinTicketManager implements ITicketManager {
     }
 
     @Override
-    public Long2ObjectMap<ObjectSet<ServerPlayerEntity>> getPlayersPerCube()
+    public Long2ObjectMap<ObjectSet<ServerPlayer>> getPlayersPerCube()
     {
         return this.playersPerCube;
     }

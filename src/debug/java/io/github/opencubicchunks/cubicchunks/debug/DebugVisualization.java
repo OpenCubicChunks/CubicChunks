@@ -1,40 +1,32 @@
 package io.github.opencubicchunks.cubicchunks.debug;
 
+import com.mojang.blaze3d.vertex.BufferBuilder;
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.datafixers.util.Pair;
+import com.mojang.math.Matrix4f;
+import com.mojang.math.Vector3f;
+import com.mojang.math.Vector4f;
 import io.github.opencubicchunks.cubicchunks.chunk.ICubeHolder;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
+import io.github.opencubicchunks.cubicchunks.utils.MathUtil;
 import it.unimi.dsi.fastutil.longs.Long2ByteLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.longs.Long2ByteMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
+import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.entity.player.ClientPlayerEntity;
-import net.minecraft.client.gui.screen.WorldLoadProgressScreen;
-import net.minecraft.client.renderer.BufferBuilder;
-import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
-import net.minecraft.client.world.ClientWorld;
-import net.minecraft.util.Direction;
-import net.minecraft.util.RegistryKey;
-import net.minecraft.util.Util;
-import net.minecraft.util.math.vector.Matrix4f;
-import net.minecraft.util.math.vector.Vector3f;
-import net.minecraft.util.math.vector.Vector4f;
-import net.minecraft.util.registry.Registry;
-import net.minecraft.world.DimensionType;
-import net.minecraft.world.IWorld;
-import net.minecraft.world.World;
-import net.minecraft.world.chunk.AbstractChunkProvider;
-import net.minecraft.world.chunk.ChunkStatus;
-import net.minecraft.world.chunk.IChunk;
-import net.minecraft.world.server.ChunkHolder;
-import net.minecraft.world.server.ChunkManager;
-import net.minecraft.world.server.ServerChunkProvider;
-import net.minecraft.world.server.ServerWorld;
-import net.minecraftforge.client.event.RenderWorldLastEvent;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.world.WorldEvent;
-import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
+import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.client.player.AbstractClientPlayer;
+import net.minecraft.core.Direction;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.server.level.ChunkHolder;
+import net.minecraft.server.level.ChunkMap;
+import net.minecraft.server.level.ServerChunkCache;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LevelAccessor;
+import net.minecraft.world.level.chunk.ChunkSource;
+import net.minecraft.world.level.dimension.DimensionType;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.lwjgl.glfw.GLFWErrorCallback;
@@ -81,8 +73,8 @@ public class DebugVisualization {
                     "}";
     private static final Logger LOGGER = LogManager.getLogger();
 
-    private static volatile World clientWorld;
-    private static volatile Map<RegistryKey<?>, World> serverWorlds = new ConcurrentHashMap<>();
+    private static volatile Level clientWorld;
+    private static volatile Map<ResourceKey<?>, Level> serverWorlds = new ConcurrentHashMap<>();
     private static AtomicBoolean initialized = new AtomicBoolean();
     private static boolean shutdown = false;
     private static long window;
@@ -109,9 +101,9 @@ public class DebugVisualization {
     private static final DebugVulkan debugVulkan = new DebugVulkan();
 
     public static void init() {
-        MinecraftForge.EVENT_BUS.addListener(DebugVisualization::onWorldLoad);
-        MinecraftForge.EVENT_BUS.addListener(DebugVisualization::onWorldUnload);
-        MinecraftForge.EVENT_BUS.addListener(DebugVisualization::onRender);
+        // MinecraftForge.EVENT_BUS.addListener(DebugVisualization::onWorldLoad);
+        // MinecraftForge.EVENT_BUS.addListener(DebugVisualization::onWorldUnload);
+        // MinecraftForge.EVENT_BUS.addListener(DebugVisualization::onRender);
     }
 
     private static PerfTimer timer() {
@@ -122,7 +114,7 @@ public class DebugVisualization {
     }
 
 
-    public static void onRender(RenderWorldLastEvent evt) {
+    public static void onRender() {
         if(shutdown)
             return;
         if (IS_LINUX) {
@@ -179,6 +171,7 @@ public class DebugVisualization {
             GL.setCapabilities(capabilities);
         }
     }
+    /*
 
     public static void onWorldLoad(WorldEvent.Load t) {
         if(IS_VULKAN) {
@@ -190,21 +183,21 @@ public class DebugVisualization {
             }
         }
 
-        IWorld w = t.getWorld();
-        if (w instanceof ClientWorld) {
-            clientWorld = (World) w;
+        LevelAccessor w = t.getWorld();
+        if (w instanceof ClientLevel) {
+            clientWorld = (Level) w;
         } else if (w instanceof ServerWorld) {
-            serverWorlds.put(((ServerWorld) w).dimension(), (World) w);
+            serverWorlds.put(((ServerWorld) w).dimension(), (Level) w);
         }
 
     }
 
     public static void onWorldUnload(WorldEvent.Unload t) {
-        IWorld w = t.getWorld();
+        LevelAccessor w = t.getWorld();
         if (w instanceof ServerWorld) {
             serverWorlds.remove(((ServerWorld) w).dimension());
         }
-    }
+    }*/
 
     public static void initializeWindow() {
         GLFWErrorCallback.createPrint(System.err).set();
@@ -390,12 +383,12 @@ public class DebugVisualization {
             bufferBuilder.end();
         }
         bufferBuilder.discard();
-        bufferBuilder.begin(GL_QUADS, DefaultVertexFormats.POSITION_COLOR);
+        bufferBuilder.begin(GL_QUADS, DefaultVertexFormat.POSITION_COLOR);
         timer().bufferReset = System.nanoTime();
     }
 
     private static void drawSelectedWorld(BufferBuilder bufferBuilder) {
-        World w = serverWorlds.get(DimensionType.OVERWORLD_LOCATION);
+        Level w = serverWorlds.get(DimensionType.OVERWORLD_LOCATION);
         if (w == null) {
             return;
         }
@@ -403,15 +396,15 @@ public class DebugVisualization {
         drawWorld(bufferBuilder, w);
     }
 
-    private static void drawWorld(BufferBuilder bufferBuilder, World world) {
-        ClientPlayerEntity player = Minecraft.getInstance().player;
+    private static void drawWorld(BufferBuilder bufferBuilder, Level world) {
+        AbstractClientPlayer player = Minecraft.getInstance().player;
         int playerX = player == null ? 0 : Coords.getCubeXForEntity(player);
         int playerY = player == null ? 0 : Coords.getCubeYForEntity(player);
         int playerZ = player == null ? 0 : Coords.getCubeZForEntity(player);
 
-        AbstractChunkProvider chunkProvider = world.getChunkSource();
-        if (chunkProvider instanceof ServerChunkProvider) {
-            Long2ByteLinkedOpenHashMap cubeMap = buildStatusMaps((ServerChunkProvider) chunkProvider);
+        ChunkSource chunkProvider = world.getChunkSource();
+        if (chunkProvider instanceof ServerChunkCache) {
+            Long2ByteLinkedOpenHashMap cubeMap = buildStatusMaps((ServerChunkCache) chunkProvider);
             timer().buildStatusMap = System.nanoTime();
             buildQuads(bufferBuilder, playerX, playerY, playerZ, cubeMap);
             timer().buildQuads = System.nanoTime();
@@ -419,10 +412,10 @@ public class DebugVisualization {
 
     }
 
-    private static Long2ByteLinkedOpenHashMap buildStatusMaps(ServerChunkProvider chunkProvider) {
-        ChunkManager chunkManager = chunkProvider.chunkMap;
+    private static Long2ByteLinkedOpenHashMap buildStatusMaps(ServerChunkCache chunkProvider) {
+        /*ChunkMap chunkManager = chunkProvider.chunkMap;
         Long2ObjectLinkedOpenHashMap<ChunkHolder> loadedCubes =
-                ObfuscationReflectionHelper.getPrivateValue(ChunkManager.class, chunkManager, "immutableLoadedCubes");
+                ObfuscationReflectionHelper.getPrivateValue(ChunkMap.class, chunkManager, "immutableLoadedCubes");
         Object[] data = ObfuscationReflectionHelper.getPrivateValue(Long2ObjectLinkedOpenHashMap.class, loadedCubes, "value");
         long[] keys = ObfuscationReflectionHelper.getPrivateValue(Long2ObjectLinkedOpenHashMap.class, loadedCubes, "key");
         Long2ByteLinkedOpenHashMap cubeMap = new Long2ByteLinkedOpenHashMap(100000);
@@ -436,12 +429,12 @@ public class DebugVisualization {
             IChunk chunk = holder == null ? null : holder.getChunkToSave().getNow(null);
             ChunkStatus realStatus = chunk == null ? null : chunk.getStatus();
             cubeMap.put(pos, realStatus == null ? (byte) 255 : (byte) Registry.CHUNK_STATUS.getId(realStatus));
-        }
-        return cubeMap;
+        }*/
+        return new Long2ByteLinkedOpenHashMap(1);
     }
 
     private static void buildQuads(BufferBuilder bufferBuilder, int playerX, int playerY, int playerZ, Long2ByteLinkedOpenHashMap cubeMap) {
-        Object2IntMap<ChunkStatus> colors = ObfuscationReflectionHelper.getPrivateValue(
+        /*Object2IntMap<ChunkStatus> colors = ObfuscationReflectionHelper.getPrivateValue(
                 WorldLoadProgressScreen.class, null, "field_213042_c"
         );
         int[] colorsArray = new int[256];
@@ -486,7 +479,7 @@ public class DebugVisualization {
 
             }
             drawCube(bufferBuilder, posX - playerX, posY - playerY, posZ - playerZ, 7, c, renderFaces);
-        }
+        }*/
     }
 
     private static void sortQuads() {
@@ -595,7 +588,7 @@ public class DebugVisualization {
                 0x808000, //
                 0xB8860B
         };
-        perfGraphBuilder.begin(GL_QUADS, DefaultVertexFormats.POSITION_COLOR);
+        perfGraphBuilder.begin(GL_QUADS, DefaultVertexFormat.POSITION_COLOR);
         for (int i = 0; i < perfTimer.length; i++) {
             int x = perfTimer.length - 1 - i;
             PerfTimer timer = perfTimer[(i + perfTimerIdx) % perfTimer.length];
@@ -614,7 +607,7 @@ public class DebugVisualization {
 
         glUseProgram(shaderProgram);
 
-        Matrix4f ortho = new Matrix4f(new float[]{
+        Matrix4f ortho = MathUtil.createMatrix(new float[]{
                 2f / 854f, 0, 0, -1f,
                 0, 2f / 480f, 0, -1f,
                 0, 0, -2f / 2000f, 0,

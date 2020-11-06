@@ -1,11 +1,11 @@
 package io.github.opencubicchunks.cubicchunks.mixin.core.common.world;
 
 import io.github.opencubicchunks.cubicchunks.CubicChunks;
-import net.minecraft.world.IBlockReader;
+import net.minecraft.world.level.BlockGetter;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 
-@Mixin(IBlockReader.class)
+@Mixin(BlockGetter.class)
 public interface IBlockReaderMixin {
     /**
      * @author Voronoi

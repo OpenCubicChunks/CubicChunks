@@ -6,16 +6,6 @@ import io.github.opencubicchunks.cubicchunks.mixin.access.common.SectionLightSto
 import io.github.opencubicchunks.cubicchunks.world.lighting.ICubeLightProvider;
 import io.github.opencubicchunks.cubicchunks.world.lighting.ILightEngine;
 import io.github.opencubicchunks.cubicchunks.world.lighting.ISectionLightStorage;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.ChunkPos;
-import net.minecraft.util.math.SectionPos;
-import net.minecraft.world.IBlockReader;
-import net.minecraft.world.chunk.IChunkLightProvider;
-import net.minecraft.world.lighting.LightDataMap;
-import net.minecraft.world.lighting.LightEngine;
-import net.minecraft.world.lighting.SectionLightStorage;
 import org.apache.commons.lang3.mutable.MutableInt;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -23,19 +13,29 @@ import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 
 import javax.annotation.Nullable;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.SectionPos;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.chunk.LightChunkGetter;
+import net.minecraft.world.level.lighting.DataLayerStorageMap;
+import net.minecraft.world.level.lighting.LayerLightEngine;
+import net.minecraft.world.level.lighting.LayerLightSectionStorage;
 
-@Mixin(LightEngine.class)
-public class MixinLightEngine <M extends LightDataMap<M>, S extends SectionLightStorage<M>> implements ILightEngine {
+@Mixin(LayerLightEngine.class)
+public class MixinLightEngine <M extends DataLayerStorageMap<M>, S extends LayerLightSectionStorage<M>> implements ILightEngine {
 
     @Shadow @Final protected S storage;
 
-    @Shadow @Final protected BlockPos.Mutable pos;
+    @Shadow @Final protected BlockPos.MutableBlockPos pos;
 
-    @Shadow @Final protected IChunkLightProvider chunkSource;
+    @Shadow @Final protected LightChunkGetter chunkSource;
 
     @Shadow @Final private long[] lastChunkPos;
 
-    @Shadow @Final private IBlockReader[] lastChunk;
+    @Shadow @Final private BlockGetter[] lastChunk;
 
     @Override
     public void retainCubeData(CubePos pos, boolean retain) {
@@ -71,7 +71,7 @@ public class MixinLightEngine <M extends LightDataMap<M>, S extends SectionLight
             int sectionX = SectionPos.blockToSectionCoord(BlockPos.getX(blockPosLong));
             int sectionY = SectionPos.blockToSectionCoord(BlockPos.getY(blockPosLong));
             int sectionZ = SectionPos.blockToSectionCoord(BlockPos.getZ(blockPosLong));
-            IBlockReader iblockreader = this.getCubeReader(sectionX, sectionY, sectionZ);
+            BlockGetter iblockreader = this.getCubeReader(sectionX, sectionY, sectionZ);
             if (iblockreader == null) {
                 if (opacity != null) {
                     opacity.setValue(16);
@@ -92,7 +92,7 @@ public class MixinLightEngine <M extends LightDataMap<M>, S extends SectionLight
     }
 
     @Nullable
-    private IBlockReader getCubeReader(int sectionX, int sectionY, int sectionZ) {
+    private BlockGetter getCubeReader(int sectionX, int sectionY, int sectionZ) {
         long i = SectionPos.asLong(sectionX, sectionY, sectionZ);
 
         for(int j = 0; j < 2; ++j) {
@@ -101,7 +101,7 @@ public class MixinLightEngine <M extends LightDataMap<M>, S extends SectionLight
             }
         }
 
-        IBlockReader iblockreader = ((ICubeLightProvider)this.chunkSource).getCubeForLighting(sectionX, sectionY, sectionZ);
+        BlockGetter iblockreader = ((ICubeLightProvider)this.chunkSource).getCubeForLighting(sectionX, sectionY, sectionZ);
 
         for(int k = 1; k > 0; --k) {
             this.lastChunkPos[k] = this.lastChunkPos[k - 1];

@@ -2,10 +2,10 @@ package io.github.opencubicchunks.cubicchunks.world;
 
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.world.storage.WorldSavedData;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.level.saveddata.SavedData;
 
-public class ForcedCubesSaveData extends WorldSavedData {
+public class ForcedCubesSaveData extends SavedData {
     private LongSet cubes = new LongOpenHashSet();
 
     public ForcedCubesSaveData() {
@@ -15,11 +15,11 @@ public class ForcedCubesSaveData extends WorldSavedData {
     /**
      * reads in data from the NBTTagCompound into this MapDataBase
      */
-    public void load(CompoundNBT nbt) {
+    public void load(CompoundTag nbt) {
         this.cubes = new LongOpenHashSet(nbt.getLongArray("Forced"));
     }
 
-    public CompoundNBT save(CompoundNBT compound) {
+    public CompoundTag save(CompoundTag compound) {
         compound.putLongArray("Forced", this.cubes.toLongArray());
         return compound;
     }

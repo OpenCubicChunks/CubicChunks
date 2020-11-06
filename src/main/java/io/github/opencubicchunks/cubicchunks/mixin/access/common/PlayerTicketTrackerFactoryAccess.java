@@ -1,14 +1,14 @@
 package io.github.opencubicchunks.cubicchunks.mixin.access.common;
 
-import net.minecraft.world.server.TicketManager;
+import net.minecraft.server.level.DistanceManager;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Invoker;
 
-@Mixin(TicketManager.PlayerTicketTracker.class)
+@Mixin(DistanceManager.PlayerTicketTracker.class)
 public interface PlayerTicketTrackerFactoryAccess {
 
     @Invoker("<init>")
-    static TicketManager.PlayerTicketTracker construct(TicketManager ticketManager, int p_i50684_2_) {
+    static DistanceManager.PlayerTicketTracker construct(DistanceManager ticketManager, int p_i50684_2_) {
        throw new Error("Mixin did not apply.");
     }
 }

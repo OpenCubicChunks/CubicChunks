@@ -1,11 +1,11 @@
 package io.github.opencubicchunks.cubicchunks.mixin.core.client;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.ViewFrustum;
+import net.minecraft.client.renderer.ViewArea;
 import net.minecraft.client.renderer.chunk.ChunkRenderDispatcher;
-import net.minecraft.entity.Entity;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.MathHelper;
+import net.minecraft.core.BlockPos;
+import net.minecraft.util.Mth;
+import net.minecraft.world.entity.Entity;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
@@ -14,9 +14,9 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-@Mixin(ViewFrustum.class)
+@Mixin(ViewArea.class)
 public abstract class MixinViewFrustum {
-    @Shadow public ChunkRenderDispatcher.ChunkRender[] chunks;
+    @Shadow public ChunkRenderDispatcher.RenderChunk[] chunks;
     @Shadow protected int chunkGridSizeY;
     @Shadow protected int chunkGridSizeX;
     @Shadow protected int chunkGridSizeZ;
@@ -41,9 +41,9 @@ public abstract class MixinViewFrustum {
         double x = view.getX();
         double y = view.getY();
         double z = view.getZ();
-        int viewX = MathHelper.floor(x);
-        int viewZ = MathHelper.floor(z);
-        int viewY = MathHelper.floor(y);
+        int viewX = Mth.floor(x);
+        int viewZ = Mth.floor(z);
+        int viewY = Mth.floor(y);
 
         for (int xIndex = 0; xIndex < this.chunkGridSizeX; ++xIndex) {
             int xBase = this.chunkGridSizeX * 16;
@@ -59,7 +59,7 @@ public abstract class MixinViewFrustum {
                     int yBase = this.chunkGridSizeY * 16;
                     int yTemp = viewY - 8 - yBase / 2;
                     int posY = yTemp + Math.floorMod(yIndex * 16 - yTemp, yBase);
-                    ChunkRenderDispatcher.ChunkRender chunkrenderdispatcher$chunkrender = this.chunks[this.getChunkIndex(xIndex, yIndex, zIndex)];
+                    ChunkRenderDispatcher.RenderChunk chunkrenderdispatcher$chunkrender = this.chunks[this.getChunkIndex(xIndex, yIndex, zIndex)];
                     chunkrenderdispatcher$chunkrender.setOrigin(posX, posY, posZ);
                 }
             }
@@ -68,14 +68,14 @@ public abstract class MixinViewFrustum {
     }
 
     @Inject(method = "getRenderChunkAt", at = @At(value = "HEAD"), cancellable = true)
-    private void getRenderChunkAt(BlockPos pos, CallbackInfoReturnable<ChunkRenderDispatcher.ChunkRender> cbi) {
-        int x = MathHelper.intFloorDiv(pos.getX(), 16);
-        int y = MathHelper.intFloorDiv(pos.getY(), 16);
-        int z = MathHelper.intFloorDiv(pos.getZ(), 16);
-        x = MathHelper.positiveModulo(x, this.chunkGridSizeX);
-        y = MathHelper.positiveModulo(y, this.chunkGridSizeY);
-        z = MathHelper.positiveModulo(z, this.chunkGridSizeZ);
-        ChunkRenderDispatcher.ChunkRender renderChunk = this.chunks[this.getChunkIndex(x, y, z)];
+    private void getRenderChunkAt(BlockPos pos, CallbackInfoReturnable<ChunkRenderDispatcher.RenderChunk> cbi) {
+        int x = Mth.intFloorDiv(pos.getX(), 16);
+        int y = Mth.intFloorDiv(pos.getY(), 16);
+        int z = Mth.intFloorDiv(pos.getZ(), 16);
+        x = Mth.positiveModulo(x, this.chunkGridSizeX);
+        y = Mth.positiveModulo(y, this.chunkGridSizeY);
+        z = Mth.positiveModulo(z, this.chunkGridSizeZ);
+        ChunkRenderDispatcher.RenderChunk renderChunk = this.chunks[this.getChunkIndex(x, y, z)];
         cbi.cancel();
         cbi.setReturnValue(renderChunk);
     }

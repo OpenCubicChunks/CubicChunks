@@ -1,9 +1,9 @@
 package io.github.opencubicchunks.cubicchunks.chunk.graph;
 
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
-import net.minecraft.world.lighting.LevelBasedGraph;
+import net.minecraft.world.level.lighting.DynamicGraphMinFixedPoint;
 
-public abstract class CubeDistanceGraph  extends LevelBasedGraph {
+public abstract class CubeDistanceGraph  extends DynamicGraphMinFixedPoint {
     protected CubeDistanceGraph(int levelCount, int expectedUpdatesByLevel, int expectedPropagationLevels) {
         super(levelCount, expectedUpdatesByLevel, expectedPropagationLevels);
     }

@@ -33,7 +33,6 @@
         "common.MixinMinecraftServer",
         "common.MixinServerChunkProvider",
         "common.progress.MixinLoggingChunkStatusListener",
-        "common.progress.MixinNoopChunkStatusListener",
         "common.save.MixinRegionSectionCache",
         "common.ticket.MixinProxyTicketManager",
         "common.ticket.MixinTicketManager",

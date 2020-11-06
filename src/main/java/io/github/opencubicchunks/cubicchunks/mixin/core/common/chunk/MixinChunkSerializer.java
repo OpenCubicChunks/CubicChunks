@@ -1,26 +1,28 @@
 package io.github.opencubicchunks.cubicchunks.mixin.core.common.chunk;
 
-import net.minecraft.fluid.Fluids;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.LongArrayNBT;
-import net.minecraft.util.SharedConstants;
-import net.minecraft.util.math.ChunkPos;
-import net.minecraft.util.palette.UpgradeData;
-import net.minecraft.util.registry.Registry;
-import net.minecraft.util.registry.WorldGenRegistries;
-import net.minecraft.village.PointOfInterestManager;
-import net.minecraft.world.SerializableTickList;
-import net.minecraft.world.biome.Biome;
-import net.minecraft.world.biome.BiomeContainer;
-import net.minecraft.world.biome.Biomes;
-import net.minecraft.world.chunk.*;
-import net.minecraft.world.chunk.storage.ChunkSerializer;
-import net.minecraft.world.gen.Heightmap;
-import net.minecraft.world.gen.feature.template.TemplateManager;
-import net.minecraft.world.server.ServerWorld;
-import net.minecraftforge.common.util.Constants;
-import net.minecraftforge.registries.ForgeRegistries;
-import org.apache.logging.log4j.LogManager;
+import net.minecraft.SharedConstants;
+import net.minecraft.core.Registry;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.LongArrayTag;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.ai.village.poi.PoiManager;
+import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.ChunkTickList;
+import net.minecraft.world.level.biome.Biome;
+import net.minecraft.world.level.biome.Biomes;
+import net.minecraft.world.level.chunk.ChunkAccess;
+import net.minecraft.world.level.chunk.ChunkBiomeContainer;
+import net.minecraft.world.level.chunk.ChunkStatus;
+import net.minecraft.world.level.chunk.ImposterProtoChunk;
+import net.minecraft.world.level.chunk.LevelChunk;
+import net.minecraft.world.level.chunk.LevelChunkSection;
+import net.minecraft.world.level.chunk.ProtoChunk;
+import net.minecraft.world.level.chunk.ProtoTickList;
+import net.minecraft.world.level.chunk.UpgradeData;
+import net.minecraft.world.level.chunk.storage.ChunkSerializer;
+import net.minecraft.world.level.levelgen.Heightmap;
+import net.minecraft.world.level.levelgen.structure.templatesystem.StructureManager;
+import net.minecraft.world.level.material.Fluids;
 import org.apache.logging.log4j.Logger;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -30,14 +32,15 @@ import org.spongepowered.asm.mixin.Shadow;
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
-@Mixin(ChunkSerializer.class)
+@Mixin(value = ChunkSerializer.class, priority = 900)
 public abstract class MixinChunkSerializer {
     @Shadow @Final private static Logger LOGGER;
 
-    @Shadow public static ChunkStatus.Type getChunkTypeFromTag(@Nullable CompoundNBT chunkNBT) {
+    @Shadow public static ChunkStatus.ChunkType getChunkTypeFromTag(@Nullable CompoundTag chunkNBT) {
         throw new Error("Mixin didn't apply");
     }
 
@@ -46,29 +49,29 @@ public abstract class MixinChunkSerializer {
      * @reason CubicChunks doesn't need much real data in columns
      */
     @Overwrite
-    public static ChunkPrimer read(ServerWorld worldIn, TemplateManager templateManagerIn, PointOfInterestManager poiManager, ChunkPos pos, CompoundNBT compound) {
-        CompoundNBT level = compound.getCompound("Level");
+    public static ProtoChunk read(ServerLevel worldIn, StructureManager templateManagerIn, PoiManager poiManager, ChunkPos pos, CompoundTag compound) {
+        CompoundTag level = compound.getCompound("Level");
         ChunkPos loadedPos = new ChunkPos(level.getInt("xPos"), level.getInt("zPos"));
         if (!Objects.equals(pos, loadedPos)) {
             LOGGER.error("Chunk file at {} is in the wrong location; relocating. (Expected {}, got {})", pos, pos, loadedPos);
         }
         long inhabitedTime = level.getLong("InhabitedTime");
-        ChunkStatus.Type statusType = getChunkTypeFromTag(compound);
-        IChunk newChunk;
-        Biome[] biomesIn = new Biome[BiomeContainer.BIOMES_SIZE];
-        Arrays.fill(biomesIn, ForgeRegistries.BIOMES.getValue(Biomes.FOREST.location()));
+        ChunkStatus.ChunkType statusType = getChunkTypeFromTag(compound);
+        ChunkAccess newChunk;
+        Biome[] biomesIn = new Biome[ChunkBiomeContainer.BIOMES_SIZE];
+        // TODO: is there a simpler way?
+        Arrays.fill(biomesIn, worldIn.registryAccess().registryOrThrow(Registry.BIOME_REGISTRY).get(Biomes.FOREST.location()));
         //TODO: Double Check that this is proper
-        BiomeContainer biomeContainerIn = new BiomeContainer(worldIn.registryAccess().registryOrThrow(Registry.BIOME_REGISTRY), biomesIn);
-        if (statusType == ChunkStatus.Type.LEVELCHUNK) {
-            newChunk = new Chunk(worldIn.getLevel(), pos, biomeContainerIn, UpgradeData.EMPTY,
-                    new SerializableTickList<>(Registry.BLOCK::getKey, new ArrayList<>(), 0), // TODO: supply game time
-                    new SerializableTickList<>(Registry.FLUID::getKey, new ArrayList<>(), 0),
-                    inhabitedTime, new ChunkSection[16], (chunk) -> { });
-            if (level.contains("ForgeCaps")) ((Chunk)newChunk).readCapsFromNBT(level.getCompound("ForgeCaps"));
+        ChunkBiomeContainer biomeContainerIn = new ChunkBiomeContainer(worldIn.registryAccess().registryOrThrow(Registry.BIOME_REGISTRY), biomesIn);
+        if (statusType == ChunkStatus.ChunkType.LEVELCHUNK) {
+            newChunk = new LevelChunk(worldIn.getLevel(), pos, biomeContainerIn, UpgradeData.EMPTY,
+                    new ChunkTickList<>(Registry.BLOCK::getKey, new ArrayList<>(), 0), // TODO: supply game time
+                    new ChunkTickList<>(Registry.FLUID::getKey, new ArrayList<>(), 0),
+                    inhabitedTime, new LevelChunkSection[16], (chunk) -> { });
         } else {
-            ChunkPrimer chunkprimer = new ChunkPrimer(pos, UpgradeData.EMPTY, new ChunkSection[16],
-                    new ChunkPrimerTickList<>((block) -> block == null || block.defaultBlockState().isAir(), pos),
-                    new ChunkPrimerTickList<>((fluid) -> fluid == null || fluid == Fluids.EMPTY, pos));
+            ProtoChunk chunkprimer = new ProtoChunk(pos, UpgradeData.EMPTY, new LevelChunkSection[16],
+                    new ProtoTickList<>((block) -> block == null || block.defaultBlockState().isAir(), pos),
+                    new ProtoTickList<>((fluid) -> fluid == null || fluid == Fluids.EMPTY, pos));
 
             chunkprimer.setBiomes(biomeContainerIn); // setBiomes
             newChunk = chunkprimer;
@@ -79,23 +82,23 @@ public abstract class MixinChunkSerializer {
             }
         }
         newChunk.setLightCorrect(true);
-        CompoundNBT heightmaps = level.getCompound("Heightmaps");
+        CompoundTag heightmaps = level.getCompound("Heightmaps");
 
-        for(Heightmap.Type heightmapType : newChunk.getStatus().heightmapsAfter()) {
+        for(Heightmap.Types heightmapType : newChunk.getStatus().heightmapsAfter()) {
             String s = heightmapType.getSerializationKey();
-            if (heightmaps.contains(s, Constants.NBT.TAG_LONG_ARRAY)) {
+            if (heightmaps.contains(s, 12)) { // nbt long array
                 newChunk.setHeightmap(heightmapType, heightmaps.getLongArray(s));
             }
         }
+        // for ChunkSerializerMixin from fabric-structure-api-v1.mixins to target
+        newChunk.setAllReferences(new HashMap<>());
         if (level.getBoolean("shouldSave")) {
             newChunk.setUnsaved(true);
         }
-        if (statusType == ChunkStatus.Type.LEVELCHUNK) {
-            net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.event.world.ChunkDataEvent.Load(newChunk, level, statusType));
-            return new ChunkPrimerWrapper((Chunk)newChunk);
+        if (statusType == ChunkStatus.ChunkType.LEVELCHUNK) {
+            return new ImposterProtoChunk((LevelChunk)newChunk);
         } else {
-            ChunkPrimer primer = (ChunkPrimer)newChunk;
-            net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.event.world.ChunkDataEvent.Load(newChunk, level, statusType));
+            ProtoChunk primer = (ProtoChunk)newChunk;
             return primer;
         }
     }
@@ -105,10 +108,10 @@ public abstract class MixinChunkSerializer {
      * @reason Save only columns
      */
     @Overwrite
-    public static CompoundNBT write(ServerWorld worldIn, IChunk chunkIn) {
+    public static CompoundTag write(ServerLevel worldIn, ChunkAccess chunkIn) {
         ChunkPos chunkpos = chunkIn.getPos();
-        CompoundNBT compoundnbt = new CompoundNBT();
-        CompoundNBT level = new CompoundNBT();
+        CompoundTag compoundnbt = new CompoundTag();
+        CompoundTag level = new CompoundTag();
         compoundnbt.putInt("DataVersion", SharedConstants.getCurrentVersion().getWorldVersion());
         compoundnbt.put("Level", level);
         level.putInt("xPos", chunkpos.x);
@@ -116,21 +119,15 @@ public abstract class MixinChunkSerializer {
         level.putLong("InhabitedTime", chunkIn.getInhabitedTime());
         level.putString("Status", chunkIn.getStatus().getName());
 
-        if (chunkIn.getStatus().getChunkType() == ChunkStatus.Type.LEVELCHUNK) {
-            Chunk chunk = (Chunk)chunkIn;
+        if (chunkIn.getStatus().getChunkType() == ChunkStatus.ChunkType.LEVELCHUNK) {
+            LevelChunk chunk = (LevelChunk)chunkIn;
             chunk.setLastSaveHadEntities(false);
-            try {
-                final CompoundNBT capTag = chunk.writeCapsToNBT();
-                if (capTag != null) level.put("ForgeCaps", capTag);
-            } catch (Exception exception) {
-                LogManager.getLogger().error("A capability provider has thrown an exception trying to write state. It will not persist. Report this to the mod author", exception);
-            }
         }
 
-        CompoundNBT heightmaps = new CompoundNBT();
-        for(Map.Entry<Heightmap.Type, Heightmap> entry : chunkIn.getHeightmaps()) {
+        CompoundTag heightmaps = new CompoundTag();
+        for(Map.Entry<Heightmap.Types, Heightmap> entry : chunkIn.getHeightmaps()) {
             if (chunkIn.getStatus().heightmapsAfter().contains(entry.getKey())) {
-                heightmaps.put(entry.getKey().getSerializationKey(), new LongArrayNBT(entry.getValue().getRawData()));
+                heightmaps.put(entry.getKey().getSerializationKey(), new LongArrayTag(entry.getValue().getRawData()));
             }
         }
         level.put("Heightmaps", heightmaps);

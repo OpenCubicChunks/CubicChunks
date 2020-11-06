@@ -4,22 +4,22 @@ import io.github.opencubicchunks.cubicchunks.chunk.biome.CubeBiomeContainer;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.meta.EarlyConfig;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
-import net.minecraft.block.BlockState;
-import net.minecraft.entity.Entity;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.IBlockReader;
-import net.minecraft.world.chunk.ChunkSection;
-import net.minecraft.world.chunk.ChunkStatus;
 import org.apache.logging.log4j.LogManager;
 
 import java.util.Set;
 import java.util.stream.Stream;
 
 import javax.annotation.Nullable;
+import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.chunk.ChunkStatus;
+import net.minecraft.world.level.chunk.LevelChunkSection;
 
-public interface IBigCube extends IBlockReader {
+public interface IBigCube extends BlockGetter {
 
     int SECTION_DIAMETER = 16;
     int DIAMETER_IN_SECTIONS = EarlyConfig.getDiameterInSections();
@@ -30,7 +30,7 @@ public interface IBigCube extends IBlockReader {
     int BLOCK_COLUMNS_PER_SECTION = SECTION_DIAMETER * SECTION_DIAMETER;
 
     CubePos getCubePos();
-    ChunkSection[] getCubeSections();
+    LevelChunkSection[] getCubeSections();
 
     //STATUS
     //TODO: remove setCubeStatus from IBigCube to match IChunk
@@ -52,17 +52,17 @@ public interface IBigCube extends IBlockReader {
 
     //TILE ENTITY
     // can't be add/removeTileEntity due to obfuscation issues with IChunk
-    default void addCubeTileEntity(CompoundNBT nbt) {
+    default void addCubeTileEntity(CompoundTag nbt) {
         LogManager.getLogger().warn("Trying to set a BlockEntity, but this operation is not supported.");
     }
-    void addCubeTileEntity(BlockPos pos, TileEntity tileEntity);
+    void addCubeTileEntity(BlockPos pos, BlockEntity tileEntity);
     void removeCubeTileEntity(BlockPos pos);
 
     Set<BlockPos> getCubeTileEntitiesPos();
 
-    @Nullable CompoundNBT getCubeTileEntityNBT(BlockPos pos);
+    @Nullable CompoundTag getCubeTileEntityNBT(BlockPos pos);
 
-    @Nullable CompoundNBT getCubeDeferredTileEntity(BlockPos pos);
+    @Nullable CompoundTag getCubeDeferredTileEntity(BlockPos pos);
 
     //LIGHTING
     //can't be set/hasLight due to obfuscation issues with IChunk

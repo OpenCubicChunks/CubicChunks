@@ -3,30 +3,30 @@ package io.github.opencubicchunks.cubicchunks.mixin.core.common.world.lighting;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.world.lighting.ILightEngine;
 import io.github.opencubicchunks.cubicchunks.world.lighting.IWorldLightManager;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.SectionPos;
-import net.minecraft.world.LightType;
-import net.minecraft.world.chunk.NibbleArray;
-import net.minecraft.world.lighting.ILightListener;
-import net.minecraft.world.lighting.LightEngine;
-import net.minecraft.world.lighting.WorldLightManager;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 
 import javax.annotation.Nullable;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.SectionPos;
+import net.minecraft.world.level.LightLayer;
+import net.minecraft.world.level.chunk.DataLayer;
+import net.minecraft.world.level.lighting.LayerLightEngine;
+import net.minecraft.world.level.lighting.LevelLightEngine;
+import net.minecraft.world.level.lighting.LightEventListener;
 
-@Mixin(WorldLightManager.class)
-public abstract class MixinWorldLightManager implements IWorldLightManager, ILightListener {
+@Mixin(LevelLightEngine.class)
+public abstract class MixinWorldLightManager implements IWorldLightManager, LightEventListener {
 
     @Shadow public void checkBlock(BlockPos pos) { throw new Error("Mixin failed to apply correctly"); }
 
-    @Shadow public void queueSectionData(LightType type, SectionPos pos, @Nullable NibbleArray array, boolean flag) { throw new Error("Mixin failed to apply "
+    @Shadow public void queueSectionData(LightLayer type, SectionPos pos, @Nullable DataLayer array, boolean flag) { throw new Error("Mixin failed to apply "
             + "correctly"); }
 
-    @Shadow @Final @Nullable private LightEngine<?, ?> blockEngine;
+    @Shadow @Final @Nullable private LayerLightEngine<?, ?> blockEngine;
 
-    @Shadow @Final @Nullable private LightEngine<?, ?> skyEngine;
+    @Shadow @Final @Nullable private LayerLightEngine<?, ?> skyEngine;
 
     @Shadow public void updateSectionStatus(SectionPos pos, boolean isEmpty) { }
 

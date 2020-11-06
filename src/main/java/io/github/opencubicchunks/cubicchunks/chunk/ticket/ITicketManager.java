@@ -6,15 +6,14 @@ import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import it.unimi.dsi.fastutil.objects.ObjectSet;
-import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.server.level.ChunkHolder;
+import net.minecraft.server.level.ChunkMap;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.level.Ticket;
+import net.minecraft.server.level.TicketType;
 import net.minecraft.util.SortedArraySet;
-import net.minecraft.util.concurrent.ITaskExecutor;
-import net.minecraft.world.chunk.ChunkStatus;
-import net.minecraft.world.server.ChunkHolder;
-import net.minecraft.world.server.ChunkManager;
-import net.minecraft.world.server.Ticket;
-import net.minecraft.world.server.TicketType;
-
+import net.minecraft.util.thread.ProcessorHandle;
+import net.minecraft.world.level.chunk.ChunkStatus;
 import java.util.Set;
 import java.util.concurrent.Executor;
 
@@ -23,7 +22,7 @@ import javax.annotation.Nullable;
 public interface ITicketManager {
     int PLAYER_CUBE_TICKET_LEVEL = 33 + CubeStatus.getDistance(ChunkStatus.FULL) - 2;
 
-    boolean processUpdates(ChunkManager chunkManager);
+    boolean processUpdates(ChunkMap chunkManager);
 
     <T> void addCubeTicket(TicketType<T> type, CubePos pos, int level, T value);
 
@@ -40,9 +39,9 @@ public interface ITicketManager {
     // forceChunk
     void updateCubeForced(CubePos pos, boolean add);
 
-    void addCubePlayer(CubePos cubePos, ServerPlayerEntity player);
+    void addCubePlayer(CubePos cubePos, ServerPlayer player);
 
-    void removeCubePlayer(CubePos cubePosIn, ServerPlayerEntity player);
+    void removeCubePlayer(CubePos cubePosIn, ServerPlayer player);
 
     int getNaturalSpawnCubeCount();
 
@@ -50,11 +49,11 @@ public interface ITicketManager {
 
     Long2ObjectOpenHashMap<SortedArraySet<Ticket<?>>> getCubeTickets();
 
-    Long2ObjectMap<ObjectSet<ServerPlayerEntity>> getPlayersPerCube();
+    Long2ObjectMap<ObjectSet<ServerPlayer>> getPlayersPerCube();
 
-    ITaskExecutor<CubeTaskPriorityQueueSorter.FunctionEntry<Runnable>> getCubeTicketThrottlerInput();
+    ProcessorHandle<CubeTaskPriorityQueueSorter.FunctionEntry<Runnable>> getCubeTicketThrottlerInput();
 
-    ITaskExecutor<CubeTaskPriorityQueueSorter.RunnableEntry> getCubeTicketThrottlerReleaser();
+    ProcessorHandle<CubeTaskPriorityQueueSorter.RunnableEntry> getCubeTicketThrottlerReleaser();
 
     LongSet getCubeTicketsToRelease();
 

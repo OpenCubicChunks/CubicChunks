@@ -3,8 +3,8 @@ package io.github.opencubicchunks.cubicchunks.utils;
 import static org.junit.Assert.assertEquals;
 
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
-import net.minecraft.util.math.ChunkPos;
-import net.minecraft.util.math.SectionPos;
+import net.minecraft.core.SectionPos;
+import net.minecraft.world.level.ChunkPos;
 import org.junit.Test;
 
 public class CubePosTest {

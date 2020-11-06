@@ -1,23 +1,24 @@
 package io.github.opencubicchunks.cubicchunks.client;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.BufferBuilder;
+import com.mojang.blaze3d.vertex.BufferUploader;
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.Tesselator;
+import com.mojang.math.Matrix4f;
+import com.mojang.math.Transformation;
+import com.mojang.math.Vector4f;
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.ITrackingCubeStatusListener;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
+import io.github.opencubicchunks.cubicchunks.utils.MathUtil;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.AbstractGui;
-import net.minecraft.client.renderer.BufferBuilder;
-import net.minecraft.client.renderer.Tessellator;
-import net.minecraft.client.renderer.WorldVertexBufferUploader;
-import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
-import net.minecraft.util.Direction;
-import net.minecraft.util.math.vector.Matrix4f;
-import net.minecraft.util.math.vector.TransformationMatrix;
-import net.minecraft.util.math.vector.Vector4f;
-import net.minecraft.world.chunk.ChunkStatus;
-import net.minecraft.world.chunk.listener.TrackingChunkStatusListener;
+import net.minecraft.client.gui.GuiComponent;
+import net.minecraft.core.Direction;
+import net.minecraft.server.level.progress.StoringChunkProgressListener;
+import net.minecraft.world.level.chunk.ChunkStatus;
 import org.lwjgl.opengl.GL11;
 
 import java.util.ArrayList;
@@ -29,14 +30,14 @@ import java.util.Map;
 
 public class CubicWorldLoadScreen {
 
-    public static void doRender(MatrixStack mStack, TrackingChunkStatusListener trackerParam, int xBase, int yBase, int scale, int spacing,
+    public static void doRender(PoseStack mStack, StoringChunkProgressListener trackerParam, int xBase, int yBase, int scale, int spacing,
             Object2IntMap<ChunkStatus> colors) {
         render3d(trackerParam, xBase, yBase, scale, spacing, colors);
         // TODO: config option
         // render2d(mStack, trackerParam, xBase, yBase, scale, spacing, colors);
     }
 
-    private static void render3d(TrackingChunkStatusListener trackerParam, int xBase, int yBase, int scale, int spacing,
+    private static void render3d(StoringChunkProgressListener trackerParam, int xBase, int yBase, int scale, int spacing,
             Object2IntMap<ChunkStatus> colors) {
         float aspectRatio = Minecraft.getInstance().screen.width / (float) Minecraft.getInstance().screen.height;
 
@@ -69,15 +70,15 @@ public class CubicWorldLoadScreen {
         RenderSystem.matrixMode(GL11.GL_MODELVIEW);
     }
 
-    private static void render3dDrawCubes(TrackingChunkStatusListener trackerParam, int xBase, int yBase, float scale, int spacing,
+    private static void render3dDrawCubes(StoringChunkProgressListener trackerParam, int xBase, int yBase, float scale, int spacing,
             Object2IntMap<ChunkStatus> colors) {
         RenderSystem.disableTexture();
         RenderSystem.enableBlend();
         RenderSystem.enableAlphaTest();
 
-        BufferBuilder buffer = Tessellator.getInstance().getBuilder();
+        BufferBuilder buffer = Tesselator.getInstance().getBuilder();
 
-        buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_COLOR);
+        buffer.begin(GL11.GL_QUADS, DefaultVertexFormat.POSITION_COLOR);
 
         int sectionRenderRadius = trackerParam.getDiameter();
 
@@ -124,7 +125,7 @@ public class CubicWorldLoadScreen {
 
         float[] modelviewMatrix = new float[16];
         GL11.glGetFloatv(GL11.GL_MODELVIEW_MATRIX, modelviewMatrix);
-        Matrix4f m = new Matrix4f(modelviewMatrix);
+        Matrix4f m = MathUtil.createMatrix(modelviewMatrix);
         m.transpose();
         m.invert();
         Vector4f vec = new Vector4f(0, 0, 0, 1);
@@ -132,7 +133,7 @@ public class CubicWorldLoadScreen {
 
         buffer.sortQuads(vec.x(), vec.y(), vec.z());
         buffer.end();
-        WorldVertexBufferUploader.end(buffer);
+        BufferUploader.end(buffer);
 
         RenderSystem.enableTexture();
         RenderSystem.disableBlend();
@@ -217,7 +218,7 @@ public class CubicWorldLoadScreen {
     }
 
 
-    private static void render2d(MatrixStack mStack, TrackingChunkStatusListener trackerParam, int xBase, int yBase, int scale, int spacing,
+    private static void render2d(PoseStack mStack, StoringChunkProgressListener trackerParam, int xBase, int yBase, int scale, int spacing,
             Object2IntMap<ChunkStatus> colors) {
         int squareScale = scale + spacing;
         int loadDiameter = trackerParam.getFullDiameter();
@@ -232,10 +233,10 @@ public class CubicWorldLoadScreen {
 
         int color = 0xff001ff;
         if (spacing != 0) {
-            AbstractGui.fill(mStack, xBase - radiusPixels, yBase - radiusPixels, xBase - radiusPixels + 1, yBase + radiusPixels, color);
-            AbstractGui.fill(mStack, xBase + radiusPixels - 1, yBase - radiusPixels, xBase + radiusPixels, yBase + radiusPixels, color);
-            AbstractGui.fill(mStack, xBase - radiusPixels, yBase - radiusPixels, xBase + radiusPixels, yBase - radiusPixels + 1, color);
-            AbstractGui.fill(mStack, xBase - radiusPixels, yBase + radiusPixels - 1, xBase + radiusPixels, yBase + radiusPixels, color);
+            GuiComponent.fill(mStack, xBase - radiusPixels, yBase - radiusPixels, xBase - radiusPixels + 1, yBase + radiusPixels, color);
+            GuiComponent.fill(mStack, xBase + radiusPixels - 1, yBase - radiusPixels, xBase + radiusPixels, yBase + radiusPixels, color);
+            GuiComponent.fill(mStack, xBase - radiusPixels, yBase - radiusPixels, xBase + radiusPixels, yBase - radiusPixels + 1, color);
+            GuiComponent.fill(mStack, xBase - radiusPixels, yBase + radiusPixels - 1, xBase + radiusPixels, yBase + radiusPixels, color);
         }
 
         final List<ChunkStatus> statuses = ChunkStatus.getStatusList();
@@ -266,7 +267,7 @@ public class CubicWorldLoadScreen {
                     squareSizes.put(status, radius);
                 }
 
-                fillFloat(TransformationMatrix.identity().getMatrix(),
+                fillFloat(Transformation.identity().getMatrix(),
                         centerX, centerZ, centerX + squareScale, centerZ +  squareScale, colors.getInt(null) | 0xff000000);
 
                 for (ChunkStatus status : statusesReverse) {
@@ -278,7 +279,7 @@ public class CubicWorldLoadScreen {
                     float screenX = centerX - radius;
                     float screenY = centerZ - radius;
 
-                    fillFloat(TransformationMatrix.identity().getMatrix(),
+                    fillFloat(Transformation.identity().getMatrix(),
                             screenX, screenY, screenX + radius * 2, screenY + radius * 2, colors.getInt(status) | 0xff000000);
                 }
             }
@@ -303,18 +304,18 @@ public class CubicWorldLoadScreen {
         float green = (float) (color >> 8 & 255) / 255.0F;
         float blue = (float) (color & 255) / 255.0F;
 
-        BufferBuilder buffer = Tessellator.getInstance().getBuilder();
+        BufferBuilder buffer = Tesselator.getInstance().getBuilder();
         RenderSystem.enableBlend();
         RenderSystem.disableTexture();
         RenderSystem.defaultBlendFunc();
-        buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_COLOR);
+        buffer.begin(GL11.GL_QUADS, DefaultVertexFormat.POSITION_COLOR);
         buffer.vertex(transform, x1, y2, 0.0F).color(red, green, blue, alpha).endVertex();
         buffer.vertex(transform, x2, y2, 0.0F).color(red, green, blue, alpha).endVertex();
         buffer.vertex(transform, x2, y1, 0.0F).color(red, green, blue, alpha).endVertex();
         buffer.vertex(transform, x1, y1, 0.0F).color(red, green, blue, alpha).endVertex();
         buffer.end();
 
-        WorldVertexBufferUploader.end(buffer);
+        BufferUploader.end(buffer);
         RenderSystem.enableTexture();
         RenderSystem.disableBlend();
     }

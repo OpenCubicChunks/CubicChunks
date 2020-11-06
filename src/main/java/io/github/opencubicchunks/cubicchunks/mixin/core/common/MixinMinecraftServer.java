@@ -7,18 +7,18 @@ import io.github.opencubicchunks.cubicchunks.server.IServerChunkProvider;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import io.github.opencubicchunks.cubicchunks.world.ForcedCubesSaveData;
 import it.unimi.dsi.fastutil.longs.LongIterator;
+import net.minecraft.Util;
+import net.minecraft.core.BlockPos;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.util.RegistryKey;
+import net.minecraft.server.level.ServerChunkCache;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.TicketType;
+import net.minecraft.server.level.progress.ChunkProgressListener;
 import net.minecraft.util.Unit;
-import net.minecraft.util.Util;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.ChunkPos;
-import net.minecraft.world.ForcedChunksSaveData;
-import net.minecraft.world.World;
-import net.minecraft.world.chunk.listener.IChunkStatusListener;
-import net.minecraft.world.server.ServerChunkProvider;
-import net.minecraft.world.server.ServerWorld;
-import net.minecraft.world.server.TicketType;
+import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.ForcedChunksSavedData;
+import net.minecraft.world.level.Level;
 import org.apache.logging.log4j.Logger;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -32,9 +32,9 @@ public abstract class MixinMinecraftServer {
 
     @Shadow @Final private static Logger LOGGER;
     @Shadow protected long nextTickTime;
-    @Shadow @Final private Map<RegistryKey<World>, ServerWorld> levels;
+    @Shadow @Final private Map<ResourceKey<Level>, ServerLevel> levels;
     @Shadow protected abstract void waitUntilNextTick();
-    @Shadow public abstract ServerWorld overworld();
+    @Shadow public abstract ServerLevel overworld();
     @Shadow public abstract boolean isRunning();
 
     /**
@@ -42,8 +42,8 @@ public abstract class MixinMinecraftServer {
      * @reason Additional CC functionality and logging.
      */
     @Overwrite
-    private void prepareLevels(IChunkStatusListener statusListener) {
-        ServerWorld serverworld = this.overworld();
+    private void prepareLevels(ChunkProgressListener statusListener) {
+        ServerLevel serverworld = this.overworld();
         LOGGER.info("Preparing start region for dimension {}", serverworld.dimension().location());
         BlockPos spawnPos = serverworld.getSharedSpawnPos();
         CubePos spawnPosCube = CubePos.from(spawnPos);
@@ -51,7 +51,7 @@ public abstract class MixinMinecraftServer {
         statusListener.updateSpawnPos(new ChunkPos(spawnPos));
         ((ICubeStatusListener) statusListener).startCubes(spawnPosCube);
 
-        ServerChunkProvider serverchunkprovider = serverworld.getChunkSource();
+        ServerChunkCache serverchunkprovider = serverworld.getChunkSource();
         serverchunkprovider.getLightEngine().setTaskPerBatch(500);
         this.nextTickTime = Util.getMillis();
         int radius = (int) Math.ceil(10 * (16 / (float) IBigCube.DIAMETER_IN_BLOCKS)); //vanilla is 10, 32: 5, 64: 3
@@ -69,8 +69,8 @@ public abstract class MixinMinecraftServer {
         this.nextTickTime = Util.getMillis() + 10L;
         this.waitUntilNextTick();
 
-        for(ServerWorld serverworld1 : this.levels.values()) {
-            ForcedChunksSaveData forcedchunkssavedata = serverworld1.getDataStorage().get(ForcedChunksSaveData::new, "chunks");
+        for(ServerLevel serverworld1 : this.levels.values()) {
+            ForcedChunksSavedData forcedchunkssavedata = serverworld1.getDataStorage().get(ForcedChunksSavedData::new, "chunks");
             ForcedCubesSaveData forcedcubessavedata = serverworld1.getDataStorage().get(ForcedCubesSaveData::new, "cubes");
             if (forcedchunkssavedata != null) {
                 LongIterator longiteratorChunks = forcedchunkssavedata.getChunks().iterator();

@@ -1,12 +1,12 @@
 package io.github.opencubicchunks.cubicchunks.mixin.core.common.entity;
 
 import io.github.opencubicchunks.cubicchunks.CubicChunks;
-import net.minecraft.entity.passive.BatEntity;
+import net.minecraft.world.entity.ambient.Bat;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.Constant;
 import org.spongepowered.asm.mixin.injection.ModifyConstant;
 
-@Mixin(BatEntity.class)
+@Mixin(Bat.class)
 public class MixinBatEntity {
 
     @ModifyConstant(method = "customServerAiStep", constant = @Constant(intValue = 1, ordinal = 0))

@@ -6,10 +6,9 @@ import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
-import net.minecraft.util.Util;
-import net.minecraft.world.chunk.ChunkStatus;
-
 import java.util.List;
+import net.minecraft.Util;
+import net.minecraft.world.level.chunk.ChunkStatus;
 
 public class CubeStatus {
     private static final Object2IntOpenHashMap<ChunkStatus> CUBE_TASK_RANGE_XZ = new Object2IntOpenHashMap<>();
