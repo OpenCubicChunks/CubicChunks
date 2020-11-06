@@ -175,6 +175,9 @@ public class MixinChunkStatus {
             CallbackInfoReturnable<CompletableFuture<Either<ChunkAccess, ChunkHolder.ChunkLoadingFailure>>> cir) {
 
         if (!(chunk instanceof CubePrimer)) {
+            // cancel column population for now
+            ((ProtoChunk) chunk).setStatus(status);
+            cir.setReturnValue(CompletableFuture.completedFuture(Either.left(chunk)));
             return;
         }
         CubePrimer cubePrimer = (CubePrimer) chunk;
