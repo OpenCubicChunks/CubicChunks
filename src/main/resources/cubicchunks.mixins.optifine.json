@@ -10,7 +10,6 @@
     },
     "mixins": [],
     "client": [
-        "client.common.MixinWorldRenderer_Common",
         "client.optifine.ChunkRenderDispatcherAccess",
         "client.optifine.MixinChunkRender",
         "client.optifine.MixinChunkVisibility",

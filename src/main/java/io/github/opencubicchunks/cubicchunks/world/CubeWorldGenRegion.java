@@ -33,6 +33,7 @@ import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.ChunkSource;
 import net.minecraft.world.level.chunk.ChunkStatus;
 import net.minecraft.world.level.dimension.DimensionType;
+import net.minecraft.world.level.entity.EntityTypeTest;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.levelgen.feature.StructureFeature;
 import net.minecraft.world.level.levelgen.structure.StructureStart;
@@ -61,7 +62,7 @@ public class CubeWorldGenRegion implements WorldGenLevel {
     private final int mainCubeY;
     private final int mainCubeZ;
     private final int diameter;
-    private final ServerLevel world;
+    private final ServerLevel level;
     private final long seed;
     private final int seaLevel;
     private final LevelData worldInfo;
@@ -86,7 +87,7 @@ public class CubeWorldGenRegion implements WorldGenLevel {
             this.mainCubeY = cubePos.getY();
             this.mainCubeZ = cubePos.getZ();
             this.diameter = i;
-            this.world = worldIn;
+            this.level = worldIn;
             this.seed = worldIn.getSeed();
             this.seaLevel = worldIn.getSeaLevel();
             this.worldInfo = worldIn.getLevelData();
@@ -168,7 +169,7 @@ public class CubeWorldGenRegion implements WorldGenLevel {
     }
 
     @Override public ServerLevel getLevel() {
-        return this.world;
+        return this.level;
     }
 
     @Override public LevelData getLevelData() {
@@ -179,12 +180,12 @@ public class CubeWorldGenRegion implements WorldGenLevel {
         if (!this.cubeExists(blockToCube(pos.getX()), blockToCube(pos.getY()), blockToCube(pos.getZ()))) {
             throw new RuntimeException("We are asking a region for a chunk out of bound");
         } else {
-            return new DifficultyInstance(this.world.getDifficulty(), this.world.getDayTime(), 0L, this.world.getMoonBrightness());
+            return new DifficultyInstance(this.level.getDifficulty(), this.level.getDayTime(), 0L, this.level.getMoonBrightness());
         }
     }
 
     @Override public ChunkSource getChunkSource() {
-        return world.getChunkSource();
+        return level.getChunkSource();
     }
 
     @Override public Random getRandom() {
@@ -205,7 +206,7 @@ public class CubeWorldGenRegion implements WorldGenLevel {
     }
 
     @Override public WorldBorder getWorldBorder() {
-        return world.getWorldBorder();
+        return level.getWorldBorder();
     }
 
     @Nullable @Override public BlockEntity getBlockEntity(BlockPos pos) {
@@ -218,21 +219,21 @@ public class CubeWorldGenRegion implements WorldGenLevel {
             BlockState state = this.getBlockState(pos);
             if (compoundnbt != null) {
                 if ("DUMMY".equals(compoundnbt.getString("id"))) {
-                    if (!state.getBlock().isEntityBlock()) {
+                    if (!state.hasBlockEntity()) {
                         return null;
                     }
-                    tileentity = ((EntityBlock) state.getBlock()).newBlockEntity(this.world);
+                    tileentity = ((EntityBlock) state.getBlock()).newBlockEntity(pos, state);
                 } else {
-                    tileentity = BlockEntity.loadStatic(state, compoundnbt);
+                    tileentity = BlockEntity.loadStatic(pos, state, compoundnbt);
                 }
 
                 if (tileentity != null) {
-                    icube.addCubeTileEntity(pos, tileentity);
+                    icube.setCubeBlockEntity(tileentity);
                     return tileentity;
                 }
             }
 
-            if (icube.getBlockState(pos).getBlock().isEntityBlock()) {
+            if (icube.getBlockState(pos).hasBlockEntity()) {
                 LOGGER.warn("Tried to access a block entity before it was created. {}", (Object) pos);
             }
 
@@ -253,13 +254,17 @@ public class CubeWorldGenRegion implements WorldGenLevel {
         return Collections.emptyList();
     }
 
+    @Override public <T extends Entity> List<T> getEntities(EntityTypeTest<Entity, T> entityTypeTest, AABB aABB, Predicate<? super T> predicate) {
+        return Collections.emptyList();
+    }
+
     @Override
-    public <T extends Entity> List<T> getEntitiesOfClass(Class<? extends T> clazz, AABB aabb, @Nullable Predicate<? super T> filter) {
+    public <T extends Entity> List<T> getEntitiesOfClass(Class<T> clazz, AABB aabb, @Nullable Predicate<? super T> filter) {
         return Collections.emptyList();
     }
 
     @Override public List<? extends Player> players() {
-        return world.players();
+        return level.players();
     }
 
     @Deprecated
@@ -293,7 +298,7 @@ public class CubeWorldGenRegion implements WorldGenLevel {
     }
 
     @Override public Biome getUncachedNoiseBiome(int x, int y, int z) {
-        return this.world.getUncachedNoiseBiome(x, y, z);
+        return this.level.getUncachedNoiseBiome(x, y, z);
     }
 
     @Override public boolean isClientSide() {
@@ -313,7 +318,7 @@ public class CubeWorldGenRegion implements WorldGenLevel {
     }
 
     @Override public LevelLightEngine getLightEngine() {
-        return world.getLightEngine();
+        return level.getLightEngine();
     }
 
     // setBlockState
@@ -321,11 +326,11 @@ public class CubeWorldGenRegion implements WorldGenLevel {
         IBigCube icube = this.getCube(pos);
         BlockState blockstate = icube.setBlock(pos, newState, false);
         if (blockstate != null) {
-            this.world.onBlockStateChange(pos, blockstate, newState);
+            this.level.onBlockStateChange(pos, blockstate, newState);
         }
-        if (newState.getBlock().isEntityBlock()) {
+        if (newState.hasBlockEntity()) {
             if (icube.getCubeStatus().getChunkType() == ChunkStatus.ChunkType.LEVELCHUNK) {
-                icube.addCubeTileEntity(pos, ((EntityBlock) newState.getBlock()).newBlockEntity(this));
+                icube.setCubeBlockEntity(((EntityBlock) newState.getBlock()).newBlockEntity(pos, newState));
             } else {
                 CompoundTag compoundnbt = new CompoundTag();
                 compoundnbt.putInt("x", pos.getX());
@@ -334,8 +339,8 @@ public class CubeWorldGenRegion implements WorldGenLevel {
                 compoundnbt.putString("id", "DUMMY");
                 //icube.addTileEntity(compoundnbt);
             }
-        } else if (blockstate != null && blockstate.getBlock().isEntityBlock()) {
-            icube.removeCubeTileEntity(pos);
+        } else if (blockstate != null && blockstate.hasBlockEntity()) {
+            icube.removeCubeBlockEntity(pos);
         }
 
         if (newState.hasPostProcess(this, pos)) {
@@ -357,8 +362,8 @@ public class CubeWorldGenRegion implements WorldGenLevel {
             return false;
         } else {
             if (isPlayerInCreative) {
-                BlockEntity tileentity = blockstate.getBlock().isEntityBlock() ? this.getBlockEntity(pos) : null;
-                Block.dropResources(blockstate, this.world, pos, tileentity, droppedEntities, ItemStack.EMPTY);
+                BlockEntity tileentity = blockstate.hasBlockEntity() ? this.getBlockEntity(pos) : null;
+                Block.dropResources(blockstate, this.level, pos, tileentity, droppedEntities, ItemStack.EMPTY);
             }
 
             return this.setBlock(pos, Blocks.AIR.defaultBlockState(), 3, recursionLimit);
@@ -373,11 +378,19 @@ public class CubeWorldGenRegion implements WorldGenLevel {
 
     @Override
     public RegistryAccess registryAccess() {
-        return this.world.registryAccess();
+        return this.level.registryAccess();
     }
 
     @Override
     public Stream<? extends StructureStart<?>> startsForFeature(SectionPos sectionPos, StructureFeature<?> structure) {
-        return this.world.startsForFeature(sectionPos, structure);
+        return this.level.startsForFeature(sectionPos, structure);
+    }
+
+    @Override public int getSectionsCount() {
+        return this.level.getSectionsCount();
+    }
+
+    @Override public int getMinSection() {
+        return this.level.getMinSection();
     }
 }

@@ -10,6 +10,7 @@ import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.ChunkTickList;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.biome.Biomes;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.ChunkBiomeContainer;
 import net.minecraft.world.level.chunk.ChunkStatus;
@@ -22,6 +23,7 @@ import net.minecraft.world.level.chunk.UpgradeData;
 import net.minecraft.world.level.chunk.storage.ChunkSerializer;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureManager;
+import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.Fluids;
 import org.apache.logging.log4j.Logger;
 import org.spongepowered.asm.mixin.Final;
@@ -70,8 +72,8 @@ public abstract class MixinChunkSerializer {
                     inhabitedTime, new LevelChunkSection[16], (chunk) -> { });
         } else {
             ProtoChunk chunkprimer = new ProtoChunk(pos, UpgradeData.EMPTY, new LevelChunkSection[16],
-                    new ProtoTickList<>((block) -> block == null || block.defaultBlockState().isAir(), pos),
-                    new ProtoTickList<>((fluid) -> fluid == null || fluid == Fluids.EMPTY, pos));
+                    new ProtoTickList<>((block) -> block == null || block.defaultBlockState().isAir(), pos, worldIn),
+                    new ProtoTickList<>((fluid) -> fluid == null || fluid == Fluids.EMPTY, pos, worldIn), worldIn);
 
             chunkprimer.setBiomes(biomeContainerIn); // setBiomes
             newChunk = chunkprimer;
@@ -118,11 +120,6 @@ public abstract class MixinChunkSerializer {
         level.putInt("zPos", chunkpos.z);
         level.putLong("InhabitedTime", chunkIn.getInhabitedTime());
         level.putString("Status", chunkIn.getStatus().getName());
-
-        if (chunkIn.getStatus().getChunkType() == ChunkStatus.ChunkType.LEVELCHUNK) {
-            LevelChunk chunk = (LevelChunk)chunkIn;
-            chunk.setLastSaveHadEntities(false);
-        }
 
         CompoundTag heightmaps = new CompoundTag();
         for(Map.Entry<Heightmap.Types, Heightmap> entry : chunkIn.getHeightmaps()) {

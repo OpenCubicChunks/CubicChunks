@@ -47,20 +47,17 @@ public interface IBigCube extends BlockGetter {
     //TODO: remove this getBlockState from IBigCube to match IChunk
     BlockState getBlockState(int x, int y, int z);
 
-    //ENTITY
-    void addCubeEntity(Entity entityIn);
-
     //TILE ENTITY
     // can't be add/removeTileEntity due to obfuscation issues with IChunk
-    default void addCubeTileEntity(CompoundTag nbt) {
+    default void setCubeBlockEntity(CompoundTag nbt) {
         LogManager.getLogger().warn("Trying to set a BlockEntity, but this operation is not supported.");
     }
-    void addCubeTileEntity(BlockPos pos, BlockEntity tileEntity);
-    void removeCubeTileEntity(BlockPos pos);
+    void setCubeBlockEntity(BlockEntity tileEntity);
+    void removeCubeBlockEntity(BlockPos pos);
 
     Set<BlockPos> getCubeTileEntitiesPos();
 
-    @Nullable CompoundTag getCubeTileEntityNBT(BlockPos pos);
+    @Nullable CompoundTag getCubeBlockEntityNbtForSaving(BlockPos pos);
 
     @Nullable CompoundTag getCubeDeferredTileEntity(BlockPos pos);
 

@@ -1,11 +1,21 @@
 package io.github.opencubicchunks.cubicchunks.mixin.core.common.chunk;
 
-import io.github.opencubicchunks.cubicchunks.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.ICubeProvider;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.BigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.EmptyCube;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
+import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LevelHeightAccessor;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.chunk.ChunkAccess;
+import net.minecraft.world.level.chunk.ChunkStatus;
+import net.minecraft.world.level.chunk.LevelChunk;
+import net.minecraft.world.level.chunk.LevelChunkSection;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -18,18 +28,6 @@ import java.util.Map;
 import java.util.concurrent.CompletionException;
 
 import javax.annotation.Nullable;
-import net.minecraft.core.BlockPos;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.util.ClassInstanceMultiMap;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.level.ChunkPos;
-import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.chunk.ChunkAccess;
-import net.minecraft.world.level.chunk.ChunkStatus;
-import net.minecraft.world.level.chunk.LevelChunk;
-import net.minecraft.world.level.chunk.LevelChunkSection;
 
 @Mixin(LevelChunk.class)
 public abstract class MixinChunk implements ChunkAccess {
@@ -50,19 +48,26 @@ public abstract class MixinChunk implements ChunkAccess {
         return false;
     }
 
+    @Redirect(method = "<init>(Lnet/minecraft/world/level/Level;Lnet/minecraft/world/level/ChunkPos;Lnet/minecraft/world/level/chunk/ChunkBiomeContainer;Lnet/minecraft/world/level/chunk/UpgradeData;Lnet/minecraft/world/level/TickList;Lnet/minecraft/world/level/TickList;J[Lnet/minecraft/world/level/chunk/LevelChunkSection;Ljava/util/function/Consumer;)V",
+            at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;getSectionsCount()I"))
+    private int getFakeSectionCount(Level accessor) {
+        return 16; // TODO: properly handle Chunk
+    }
+
     @Redirect(method = {"getBlockState", "getFluidState(III)Lnet/minecraft/world/level/material/FluidState;", "setBlockState"},
             at = @At(
                     value = "FIELD",
                     target = "Lnet/minecraft/world/level/chunk/LevelChunk;sections:[Lnet/minecraft/world/level/chunk/LevelChunkSection;",
                     args = "array=get"
             ))
-    private LevelChunkSection getStorage(LevelChunkSection[] array, int y) {
-        IBigCube cube = this.getCube(y);
+    private LevelChunkSection getStorage(LevelChunkSection[] array, int sectionIndex) {
+        int sectionY = getSectionYFromSectionIndex(sectionIndex);
+        IBigCube cube = this.getCube(sectionY);
         if (cube instanceof EmptyCube) {
             return null;
         }
         LevelChunkSection[] cubeSections = cube.getCubeSections();
-        return cubeSections[Coords.sectionToIndex(chunkPos.x, y, chunkPos.z)];
+        return cubeSections[Coords.sectionToIndex(chunkPos.x, sectionY, chunkPos.z)];
     }
 
     @SuppressWarnings("ConstantConditions")
@@ -106,12 +111,13 @@ public abstract class MixinChunk implements ChunkAccess {
                     target = "Lnet/minecraft/world/level/chunk/LevelChunk;sections:[Lnet/minecraft/world/level/chunk/LevelChunkSection;",
                     args = "array=set"
             ))
-    private void setStorage(LevelChunkSection[] array, int y, LevelChunkSection newVal) {
-        IBigCube cube = this.getCube(y);
+    private void setStorage(LevelChunkSection[] array, int sectionIndex, LevelChunkSection newVal) {
+        int sectionY = getSectionYFromSectionIndex(sectionIndex);
+        IBigCube cube = this.getCube(sectionY);
         if (cube instanceof EmptyCube) {
             return;
         }
-        cube.getCubeSections()[Coords.sectionToIndex(chunkPos.x, y, chunkPos.z)] = newVal;
+        cube.getCubeSections()[Coords.sectionToIndex(chunkPos.x, sectionY, chunkPos.z)] = newVal;
     }
 
     @Redirect(method = "setBlockState", at = @At(value = "FIELD", target = "Lnet/minecraft/world/level/chunk/LevelChunk;unsaved:Z"))
@@ -121,52 +127,6 @@ public abstract class MixinChunk implements ChunkAccess {
 //        } else {
 //            dirty = isModifiedIn;
 //        }
-    }
-
-    // Entities
-
-    @Redirect(method = {
-            "removeEntity(Lnet/minecraft/world/entity/Entity;I)V",
-            "addEntity",
-            "getEntities(Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/phys/AABB;Ljava/util/List;Ljava/util/function/Predicate;)V",
-            "getEntities(Lnet/minecraft/world/entity/EntityType;Lnet/minecraft/world/phys/AABB;Ljava/util/List;Ljava/util/function/Predicate;)V",
-            "getEntitiesOfClass"
-    }, at = @At(value = "FIELD", target = "Lnet/minecraft/world/level/chunk/LevelChunk;entitySections:[Lnet/minecraft/util/ClassInstanceMultiMap;",
-            args = "array=get"))
-    public ClassInstanceMultiMap<Entity> getEntityList(ClassInstanceMultiMap<Entity>[] entityLists, int y) {
-        BigCube cube = (BigCube) this.getCube(y);
-
-        if (!(cube instanceof EmptyCube)) {
-            return cube.getEntityLists()[Coords.sectionToIndex(this.chunkPos.x, y, this.chunkPos.z)];
-        }
-        return new ClassInstanceMultiMap<>(Entity.class);
-    }
-
-    @Redirect(method = {
-            "removeEntity(Lnet/minecraft/world/entity/Entity;I)V",
-            "addEntity",
-            "getEntities(Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/phys/AABB;Ljava/util/List;Ljava/util/function/Predicate;)V",
-            "getEntities(Lnet/minecraft/world/entity/EntityType;Lnet/minecraft/world/phys/AABB;Ljava/util/List;Ljava/util/function/Predicate;)V",
-            "getEntitiesOfClass"
-    }, at = @At(value = "FIELD", target = "Lnet/minecraft/world/level/chunk/LevelChunk;entitySections:[Lnet/minecraft/util/ClassInstanceMultiMap;",
-            args = "array=length"))
-    public int getEntityListsLength(ClassInstanceMultiMap<Entity>[] entityLists) {
-        return CubicChunks.MAX_SUPPORTED_HEIGHT / 16;
-    }
-
-    @ModifyConstant(method = {"addEntity", "removeEntity(Lnet/minecraft/world/entity/Entity;I)V"},
-            constant = @Constant(expandZeroConditions = Constant.Condition.LESS_THAN_ZERO, intValue = 0))
-    public int getLowerHeightLimit(int _0) {
-        return CubicChunks.MIN_SUPPORTED_HEIGHT / 16;
-    }
-
-    @ModifyConstant(method = {
-            "getEntities(Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/phys/AABB;Ljava/util/List;Ljava/util/function/Predicate;)V",
-            "getEntities(Lnet/minecraft/world/entity/EntityType;Lnet/minecraft/world/phys/AABB;Ljava/util/List;Ljava/util/function/Predicate;)V",
-            "getEntitiesOfClass"
-    }, constant = {@Constant(intValue = 0, ordinal = 0), @Constant(intValue = 0, ordinal = 1)})
-    public int getLowerClampLimit(int _0) {
-        return CubicChunks.MIN_SUPPORTED_HEIGHT / 16;
     }
 
     //This should return object because Hashmap.get also does
@@ -213,13 +173,13 @@ public abstract class MixinChunk implements ChunkAccess {
         return map.put(key, value);
     }
 
-    @Redirect(method = "addBlockEntity(Lnet/minecraft/world/level/block/entity/BlockEntity;)V",
-            at = @At(value = "FIELD", target = "Lnet/minecraft/world/level/chunk/LevelChunk;loaded:Z"))
+    @Redirect(method = "addAndRegisterBlockEntity",
+            at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/chunk/LevelChunk;isInLevel()Z"))
     private boolean getLoadedFromBlockEntity(LevelChunk chunk, BlockEntity tileEntity) {
-        return ((BigCube)this.getCube(Coords.blockToSection(tileEntity.getBlockPos().getY()))).getLoaded();
+        return ((BigCube)this.getCube(Coords.blockToSection(tileEntity.getBlockPos().getY()))).isInLevel();
     }
-    @Redirect(method = "removeBlockEntity", at = @At(value = "FIELD", target = "Lnet/minecraft/world/level/chunk/LevelChunk;loaded:Z"))
+    @Redirect(method = "removeBlockEntity", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/chunk/LevelChunk;isInLevel()Z"))
     private boolean getLoadedFromBlockPos(LevelChunk chunk, BlockPos pos) {
-        return ((BigCube)this.getCube(Coords.blockToSection(pos.getY()))).getLoaded();
+        return ((BigCube)this.getCube(Coords.blockToSection(pos.getY()))).isInLevel();
     }
 }

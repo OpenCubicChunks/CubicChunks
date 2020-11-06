@@ -43,12 +43,13 @@ public class MainTransformer {
         vanillaToCubic.put(new ClassMethod(getObjectType("net/minecraft/class_3193"), // ChunkHolder
                         getMethod("void <init>("
                                 + "net.minecraft.class_1923, " // ChunkPos
-                                + "int, net.minecraft.class_3568, " // LightingProvider
+                                + "int, net.minecraft.class_5539, " // LevelHeightAccessor
+                                + "net.minecraft.class_3568, " // LightingProvider
                                 + "net.minecraft.class_3193$class_3896, " // ChunkHolder$LevelChangeListener
                                 + "net.minecraft.class_3193$class_3897)")), // ChunkHolder$PlayerProvider
                 "<init>");
         vanillaToCubic.put(new ClassMethod(getObjectType("net/minecraft/class_3193"),// ChunkHolder
-                        getMethod("void method_14007(net.minecraft.class_3898)")), // updateFutures(ChunkMap)
+                        getMethod("void method_14007(net.minecraft.class_3898, java.util.concurrent.Executor)")), // updateFutures(ChunkMap)
                 "updateCubeFutures");
 
         Map<ClassMethod, String> methods = new HashMap<>();
@@ -58,11 +59,11 @@ public class MainTransformer {
         ), "getCubeStatus");
         methods.put(new ClassMethod(
                 getObjectType("net/minecraft/class_3898"), // ChunkMap
-                getMethod("java.util.concurrent.CompletableFuture method_20580(net.minecraft.class_3193)") // unpackTicks(ChunkHolder)
+                getMethod("java.util.concurrent.CompletableFuture method_31417(net.minecraft.class_3193)") // prepareAccessibleChunks(ChunkHolder)
         ), "unpackCubeTicks");
         methods.put(new ClassMethod(
                 getObjectType("net/minecraft/class_3898"), // ChunkMap
-                getMethod("java.util.concurrent.CompletableFuture method_17235(net.minecraft.class_3193)") // postProcess(ChunkHolder)
+                getMethod("java.util.concurrent.CompletableFuture method_17235(net.minecraft.class_3193)") // prepareTickingChunk(ChunkHolder)
         ), "postProcessCube");
         methods.put(new ClassMethod(
                 getObjectType("net/minecraft/class_3898"), // ChunkMap

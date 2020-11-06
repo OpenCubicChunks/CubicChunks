@@ -29,6 +29,7 @@ import it.unimi.dsi.fastutil.longs.Long2ObjectLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.longs.LongIterator;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
+import net.minecraft.world.level.entity.ChunkStatusUpdateListener;
 import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.apache.logging.log4j.Logger;
 import org.spongepowered.asm.mixin.Final;
@@ -163,6 +164,7 @@ public abstract class MixinChunkManager implements IChunkManager {
             LightChunkGetter p_i51538_7_,
             ChunkGenerator generatorIn,
             ChunkProgressListener p_i51538_9_,
+            ChunkStatusUpdateListener chunkStatusUpdateListener,
             Supplier<DimensionDataStorage> p_i51538_10_,
             int p_i51538_11_,
             boolean p_i232602_12_,
@@ -593,44 +595,19 @@ public abstract class MixinChunkManager implements IChunkManager {
                 CubePos cubePos = ((ICubeHolder) holder).getCubePos();
                 BigCube cube;
                 if (prevCube instanceof CubePrimerWrapper) {
-                        cube = ((CubePrimerWrapper)prevCube).getCube();
+                    cube = ((CubePrimerWrapper)prevCube).getCube();
                 } else {
                     cube = new BigCube(this.level, (CubePrimer) prevCube);
-                    ((ICubeHolder) holder).replaceProtoCube(new CubePrimerWrapper(cube));
+                    ((ICubeHolder) holder).replaceProtoCube(new CubePrimerWrapper(cube, level));
                 }
 
-                // TODO: reimplement
-                //chunkSection.setLocationType(() -> {
-                //    return ChunkHolder.getLocationTypeFromLevel(holder.getChunkLevel());
-                //});
+                cube.setFullStatus(() -> ChunkHolder.getFullChunkStatus(holder.getTicketLevel()));
                 cube.postLoad();
                 if (this.cubeEntitiesInLevel.add(cubePos.asLong())) {
                     cube.setLoaded(true);
-                    this.level.addAllPendingBlockEntities(cube.getTileEntityMap().values());
-                    List<Entity> entities = null;
-                    ClassInstanceMultiMap<Entity>[] entityLists = cube.getEntityLists();
-
-                    for(int idxList = 0; idxList < entityLists.length; ++idxList) {
-                        //TODO: reimplement forge ChunkEvent#Load
-                        //net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.event.world.ChunkEvent.Load(chunk));
-                        for (Entity entity : entityLists[idxList]) {
-                            if (entity instanceof Player || this.level.loadFromChunk(entity)) {
-                                continue;
-                            }
-                            if (entities == null) {
-                                entities = Lists.newArrayList(entity);
-                            } else {
-                                entities.add(entity);
-                            }
-                        }
-                    }
-                    if (entities != null) {
-                        entities.forEach(cube::removeEntity);
-                    }
-                    // TODO: reimplement forge ChunkEvent#Load
-                    // net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.event.world.ChunkEvent.Load(chunkSection));
+                    cube.registerAllBlockEntitiesAfterLevelLoad();
                 }
-                return (IBigCube) cube;
+                return cube;
             });
         }, (runnable) -> {
             this.cubeMainThreadMailbox.tell(CubeTaskPriorityQueueSorter.createMsg(
@@ -708,7 +685,7 @@ public abstract class MixinChunkManager implements IChunkManager {
                 LOGGER.error("Couldn't load cube {}", cubePos, exception);
             }
 
-            return Either.left(new CubePrimer(cubePos, null, null, null, null));
+            return Either.left(new CubePrimer(cubePos, null, null, null, null, level));
         }, this.mainThreadExecutor);
     }
 
@@ -1038,8 +1015,7 @@ public abstract class MixinChunkManager implements IChunkManager {
 
         for (ChunkMap.TrackedEntity entityTracker : this.entityMap.values()) {
             Entity entity = ((EntityTrackerAccess) entityTracker).getEntity();
-            if ((entity != player) && (sectionToCube(entity.xChunk) == pos.getX()) && (sectionToCube(entity.yChunk) == pos.getY()) && (
-                    sectionToCube(entity.zChunk) == pos.getZ())) {
+            if (entity != player && CubePos.from(entity).equals(pos)) {
                 entityTracker.updatePlayer(player);
                 if (entity instanceof Mob && ((Mob) entity).getLeashHolder() != null) {
                     leashedEntities.add(entity);

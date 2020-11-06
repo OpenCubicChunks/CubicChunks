@@ -9,6 +9,7 @@ import io.github.opencubicchunks.cubicchunks.chunk.cube.CubeStatus;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.ChunkHolderAccess;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
 import java.util.function.BiConsumer;
 
 import javax.annotation.Nullable;
@@ -58,7 +59,7 @@ public interface ICubeHolder {
     CompletableFuture<IBigCube> getCubeToSave();
 
     // added with ASM, can't be shadow because mixin validates shadows before preApply runs
-    void updateCubeFutures(ChunkMap chunkManagerIn);
+    void updateCubeFutures(ChunkMap chunkManagerIn, Executor executor);
 
     class CubeLoadingError implements ChunkHolder.ChunkLoadingFailure {
         private final ChunkHolder holder;

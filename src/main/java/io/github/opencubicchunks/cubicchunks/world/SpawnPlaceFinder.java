@@ -63,15 +63,15 @@ public final class SpawnPlaceFinder {
     public static BlockPos getTopBlockBisect(Level world, BlockPos pos, boolean checkValid) {
         BlockPos minPos, maxPos;
         if (findNonEmpty(world, pos) == null) {
-            CubicChunks.LOGGER.trace("Starting bisect with empty space at init {}", pos);
+            CubicChunks.LOGGER.debug("Starting bisect with empty space at init {}", pos);
             maxPos = pos;
             minPos = findMinPos(world, pos);
-            CubicChunks.LOGGER.trace("Found minPos {} and maxPos {}", minPos, maxPos);
+            CubicChunks.LOGGER.debug("Found minPos {} and maxPos {}", minPos, maxPos);
         } else {
-            CubicChunks.LOGGER.trace("Starting bisect without empty space at init {}", pos);
+            CubicChunks.LOGGER.debug("Starting bisect without empty space at init {}", pos);
             minPos = pos;
             maxPos = findMaxPos(world, pos);
-            CubicChunks.LOGGER.trace("Found minPos {} and maxPos {}", minPos, maxPos);
+            CubicChunks.LOGGER.debug("Found minPos {} and maxPos {}", minPos, maxPos);
         }
         if (minPos == null || maxPos == null) {
             CubicChunks.LOGGER.error("No suitable spawn found, using original input {} (min={}, max={})", pos, minPos, maxPos);
@@ -79,7 +79,7 @@ public final class SpawnPlaceFinder {
         }
         assert findNonEmpty(world, maxPos) == null && findNonEmpty(world, minPos) != null;
         BlockPos foundPos = bisect(world, minPos.below(MIN_FREE_SPACE_SPAWN), maxPos.above(MIN_FREE_SPACE_SPAWN));
-        if (foundPos != null && checkValid && !world.getBlockState(foundPos).getBlock().is(BlockTags.VALID_SPAWN)) {
+        if (foundPos != null && checkValid && !world.getBlockState(foundPos).is(BlockTags.VALID_SPAWN)) {
             return null;
         }
         return foundPos;
@@ -88,7 +88,7 @@ public final class SpawnPlaceFinder {
     @Nullable
     private static BlockPos bisect(Level world, BlockPos min, BlockPos max) {
         while (min.getY() < max.getY() - 1) {
-            CubicChunks.LOGGER.trace("Bisect step with min={}, max={}", min, max);
+            CubicChunks.LOGGER.debug("Bisect step with min={}, max={}", min, max);
             BlockPos middle = middleY(min, max);
             if (findNonEmpty(world, middle) != null) {
                 // middle has solid space, so it can be used as new minimum
@@ -113,7 +113,7 @@ public final class SpawnPlaceFinder {
         double dy = 16;
         while (findNonEmpty(world, inWorldUp(world, pos, -dy)) == null) {
             if (dy > Integer.MAX_VALUE) {
-                CubicChunks.LOGGER.trace("Error finding spawn point: can't find solid start height at {}", pos);
+                CubicChunks.LOGGER.debug("Error finding spawn point: can't find solid start height at {}", pos);
                 return null;
             }
             dy *= 2;
@@ -127,7 +127,7 @@ public final class SpawnPlaceFinder {
         double dy = 16;
         while (findNonEmpty(world, inWorldUp(world, pos, dy)) != null) {
             if (dy > Integer.MAX_VALUE) {
-                CubicChunks.LOGGER.trace("Error finding spawn point: can't find non-solid end height at {}", pos);
+                CubicChunks.LOGGER.debug("Error finding spawn point: can't find non-solid end height at {}", pos);
                 return null;
             }
             dy *= 2;

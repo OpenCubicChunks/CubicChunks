@@ -2,6 +2,7 @@ package io.github.opencubicchunks.cubicchunks.debug;
 
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import com.mojang.blaze3d.vertex.VertexFormat;
 import com.mojang.datafixers.util.Pair;
 import com.mojang.math.Matrix4f;
 import com.mojang.math.Vector3f;
@@ -383,7 +384,7 @@ public class DebugVisualization {
             bufferBuilder.end();
         }
         bufferBuilder.discard();
-        bufferBuilder.begin(GL_QUADS, DefaultVertexFormat.POSITION_COLOR);
+        bufferBuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
         timer().bufferReset = System.nanoTime();
     }
 
@@ -485,7 +486,7 @@ public class DebugVisualization {
     private static void sortQuads() {
         Vector4f vec = new Vector4f(0, 0, 0, 1);
         vec.transform(inverseMatrix);
-        bufferBuilder.sortQuads(vec.x(), vec.y(), vec.z());
+        bufferBuilder.setQuadSortOrigin(vec.x(), vec.y(), vec.z());
 
         bufferBuilder.end();
         timer().sortQuads = System.nanoTime();
@@ -588,7 +589,7 @@ public class DebugVisualization {
                 0x808000, //
                 0xB8860B
         };
-        perfGraphBuilder.begin(GL_QUADS, DefaultVertexFormat.POSITION_COLOR);
+        perfGraphBuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
         for (int i = 0; i < perfTimer.length; i++) {
             int x = perfTimer.length - 1 - i;
             PerfTimer timer = perfTimer[(i + perfTimerIdx) % perfTimer.length];

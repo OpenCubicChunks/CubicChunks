@@ -121,7 +121,7 @@ public abstract class MixinTicketManager implements ITicketManager {
         // Minecraft.getInstance().getIntegratedServer().getProfiler().endStartSection("cubeHolderTick");
         boolean flag = i != 0;
         if (!this.cubesToUpdateFutures.isEmpty()) {
-            this.cubesToUpdateFutures.forEach((cubeHolder) -> ((ChunkHolderAccess) cubeHolder).invokeUpdateFutures(chunkManager));
+            this.cubesToUpdateFutures.forEach((cubeHolder) -> ((ChunkHolderAccess) cubeHolder).invokeUpdateFutures(chunkManager, this.mainThreadExecutor));
             this.cubesToUpdateFutures.clear();
             callbackInfoReturnable.setReturnValue(true);
             //Minecraft.getInstance().getIntegratedServer().getProfiler().endSection();// cubeHolderTick

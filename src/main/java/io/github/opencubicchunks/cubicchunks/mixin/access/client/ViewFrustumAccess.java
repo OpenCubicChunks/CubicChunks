@@ -1,6 +1,5 @@
 package io.github.opencubicchunks.cubicchunks.mixin.access.client;
 
-import io.github.opencubicchunks.cubicchunks.mixin.optifine.client.common.MixinWorldRenderer_Common;
 import net.minecraft.client.renderer.ViewArea;
 import net.minecraft.client.renderer.chunk.ChunkRenderDispatcher;
 import net.minecraft.core.BlockPos;

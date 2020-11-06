@@ -17,8 +17,6 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.phys.Vec3;
 
-import static io.github.opencubicchunks.cubicchunks.utils.Coords.sectionToCube;
-
 @Mixin(ChunkMap.TrackedEntity.class)
 public abstract class MixinEntityTracker {
 
@@ -49,8 +47,7 @@ public abstract class MixinEntityTracker {
             if (flag) {
                 boolean spawn = this.entity.forcedLoading;
                 if (!spawn) {
-                    CubePos cubePos = CubePos.of(sectionToCube(this.entity.xChunk), sectionToCube(this.entity.yChunk),
-                            sectionToCube(this.entity.zChunk));
+                    CubePos cubePos = CubePos.from(this.entity);
                     ChunkHolder chunkholder = ((IChunkManager) syntheticThis).getImmutableCubeHolder(cubePos.asLong());
                     if (chunkholder != null && ((ICubeHolder) chunkholder).getCubeIfComplete() != null) {
                         spawn = IChunkManager.getCubeChebyshevDistance(cubePos, player, false) <= ((ChunkManagerAccess) syntheticThis).getViewDistance();

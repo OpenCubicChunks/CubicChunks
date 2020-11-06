@@ -13,6 +13,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.LevelHeightAccessor;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.ChunkBiomeContainer;
@@ -29,8 +30,8 @@ public class CubePrimerWrapper extends CubePrimer {
 
     private final BigCube cube;
 
-    public CubePrimerWrapper(BigCube cubeIn) {
-        super(cubeIn.getCubePos(), null, cubeIn.getCubeSections(), null, null);
+    public CubePrimerWrapper(BigCube cubeIn, LevelHeightAccessor accessor) {
+        super(cubeIn.getCubePos(), null, cubeIn.getCubeSections(), null, null, accessor);
         this.cube = cubeIn;
     }
 
@@ -74,21 +75,21 @@ public class CubePrimerWrapper extends CubePrimer {
 
     //TILE ENTITY
     @Deprecated @Override public void setBlockEntityNbt(CompoundTag nbt) { }
-    @Override public void addCubeTileEntity(CompoundTag nbt) { }
+    @Override public void setCubeBlockEntity(CompoundTag nbt) { }
 
     @Deprecated @Override public void removeBlockEntity(BlockPos pos) { }
-    @Override public void removeCubeTileEntity(BlockPos pos) { }
+    @Override public void removeCubeBlockEntity(BlockPos pos) { }
 
-    @Deprecated @Override public void setBlockEntity(BlockPos pos, BlockEntity tileEntity) { }
-    @Override public void addCubeTileEntity(BlockPos pos, BlockEntity tileEntityIn) { }
+    @Deprecated @Override public void setBlockEntity(BlockEntity tileEntity) { }
+    @Override public void setCubeBlockEntity(BlockEntity tileEntityIn) { }
 
     @Override @Nullable public BlockEntity getBlockEntity(BlockPos pos) {
         return this.cube.getBlockEntity(pos);
     }
 
-    @Deprecated @Override @Nullable public CompoundTag getBlockEntityNbtForSaving(BlockPos pos) { return this.getCubeTileEntityNBT(pos); }
-    @Override @Nullable public CompoundTag getCubeTileEntityNBT(BlockPos pos) {
-        return this.cube.getCubeTileEntityNBT(pos);
+    @Deprecated @Override @Nullable public CompoundTag getBlockEntityNbtForSaving(BlockPos pos) { return this.getCubeBlockEntityNbtForSaving(pos); }
+    @Override @Nullable public CompoundTag getCubeBlockEntityNbtForSaving(BlockPos pos) {
+        return this.cube.getCubeBlockEntityNbtForSaving(pos);
     }
 
     @Deprecated @Override @Nullable public CompoundTag getBlockEntityNbt(BlockPos pos) { return this.getCubeDeferredTileEntity(pos); }
@@ -150,9 +151,6 @@ public class CubePrimerWrapper extends CubePrimer {
 
     @Override public int getHeight(Heightmap.Types heightmapType, int x, int z) {
         return this.cube.getHeight(this.fixType(heightmapType), x, z);
-    }
-
-    @Override public void setLastSaveTime(long saveTime) {
     }
 
     // getStructureStart

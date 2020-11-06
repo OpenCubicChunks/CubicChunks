@@ -11,12 +11,17 @@ import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import io.github.opencubicchunks.cubicchunks.utils.MathUtil;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import it.unimi.dsi.fastutil.shorts.ShortList;
+import net.minecraft.CrashReport;
+import net.minecraft.CrashReportCategory;
+import net.minecraft.ReportedException;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.SectionPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.server.level.ChunkHolder;
 import net.minecraft.util.ClassInstanceMultiMap;
 import net.minecraft.util.Mth;
+import net.minecraft.util.profiling.ProfilerFiller;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.level.ChunkPos;
@@ -27,6 +32,9 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.EntityBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityTicker;
+import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.world.level.block.entity.TickingBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.ChunkStatus;
@@ -39,25 +47,45 @@ import net.minecraft.world.level.levelgen.structure.StructureStart;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.FluidState;
 import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import javax.annotation.Nullable;
 import java.util.*;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
-import static io.github.opencubicchunks.cubicchunks.utils.Coords.blockToCube;
 import static io.github.opencubicchunks.cubicchunks.utils.Coords.cubeToSection;
 import static net.minecraft.world.level.chunk.LevelChunk.EMPTY_SECTION;
 
 public class BigCube implements ChunkAccess, IBigCube {
 
+    private static final TickingBlockEntity NULL_TICKER = new TickingBlockEntity() {
+        public void tick() {
+        }
+
+        public boolean isRemoved() {
+            return true;
+        }
+
+        public BlockPos getPos() {
+            return BlockPos.ZERO;
+        }
+
+        public String getType() {
+            return "<null>";
+        }
+    };
+    private static final Logger LOGGER = LogManager.getLogger(BigCube.class);
+
     private final CubePos cubePos;
     private final LevelChunkSection[] sections = new LevelChunkSection[SECTION_COUNT];
 
-    private final HashMap<BlockPos, BlockEntity> tileEntities = new HashMap<>();
+    private final HashMap<BlockPos, BlockEntity> blockEntities = new HashMap<>();
+    private final Map<BlockPos, RebindableTickingBlockEntityWrapper> tickersInLevel = new HashMap<>();
     private final ClassInstanceMultiMap<Entity>[] entityLists;
-    private final Level world;
+    private final Level level;
 
     private CubeBiomeContainer cubeBiomeContainer;
 
@@ -73,13 +101,16 @@ public class BigCube implements ChunkAccess, IBigCube {
     @Nullable
     private Consumer<BigCube> postLoadConsumer;
 
+    @Nullable
+    private Supplier<ChunkHolder.FullChunkStatus> fullStatus;
+
     public BigCube(Level worldIn, CubePos cubePosIn, CubeBiomeContainer biomeContainerIn) {
         this(worldIn, cubePosIn, biomeContainerIn, UpgradeData.EMPTY, EmptyTickList.empty(), EmptyTickList.empty(), 0L, null, null);
     }
 
     public BigCube(Level worldIn, CubePos cubePosIn, CubeBiomeContainer biomeContainerIn, UpgradeData upgradeDataIn, TickList<Block> tickBlocksIn,
                    TickList<Fluid> tickFluidsIn, long inhabitedTimeIn, @Nullable LevelChunkSection[] sectionsIn, @Nullable Consumer<BigCube> postLoadConsumerIn) {
-        this.world = worldIn;
+        this.level = worldIn;
         this.cubePos = cubePosIn;
 //        this.upgradeData = upgradeDataIn;
 //
@@ -138,7 +169,7 @@ public class BigCube implements ChunkAccess, IBigCube {
         }
 
         for(BlockEntity tileentity : cubePrimerIn.getCubeTileEntities().values()) {
-            this.addCubeTileEntity(tileentity);
+            this.setBlockEntity(tileentity);
         }
 
         this.deferredTileEntities.putAll(cubePrimerIn.getDeferredTileEntities());
@@ -183,6 +214,14 @@ public class BigCube implements ChunkAccess, IBigCube {
         return ChunkStatus.FULL;
     }
 
+    public ChunkHolder.FullChunkStatus getFullStatus() {
+        return this.fullStatus == null ? ChunkHolder.FullChunkStatus.BORDER : this.fullStatus.get();
+    }
+
+    public void setFullStatus(Supplier<ChunkHolder.FullChunkStatus> supplier) {
+        this.fullStatus = supplier;
+    }
+
     //BLOCK
     @Deprecated @Nullable @Override public BlockState setBlockState(BlockPos pos, BlockState state, boolean isMoving) {
         return setBlock(pos, state, isMoving);
@@ -190,57 +229,56 @@ public class BigCube implements ChunkAccess, IBigCube {
     @Override @Nullable public BlockState setBlock(BlockPos pos, BlockState state, boolean isMoving) {
         return this.setBlock(Coords.blockToIndex(pos.getX(), pos.getY(), pos.getZ()), pos, state, isMoving);
     }
-    @Nullable public BlockState setBlock(int sectionIndex, BlockPos pos, BlockState state, boolean isMoving) {
+    @Nullable public BlockState setBlock(int sectionIndex, BlockPos pos, BlockState newState, boolean isMoving) {
         int i = pos.getX() & 15;
         int j = pos.getY() & 15;
         int k = pos.getZ() & 15;
         LevelChunkSection chunksection = sections[sectionIndex];
 
-        BlockState blockstate = chunksection.setBlockState(i, j, k, state);
-        if (blockstate == state) {
+        BlockState oldState = chunksection.setBlockState(i, j, k, newState);
+        if (oldState == newState) {
             return null;
         }
-        Block block = state.getBlock();
-        Block block1 = blockstate.getBlock();
+        Block newBlock = newState.getBlock();
         //            this.heightMap.get(Heightmap.Type.MOTION_BLOCKING).update(i, j, k, state);
         //            this.heightMap.get(Heightmap.Type.MOTION_BLOCKING_NO_LEAVES).update(i, j, k, state);
         //            this.heightMap.get(Heightmap.Type.OCEAN_FLOOR).update(i, j, k, state);
         //            this.heightMap.get(Heightmap.Type.WORLD_SURFACE).update(i, j, k, state);
 
-        if (!this.world.isClientSide) {
-            blockstate.onRemove(this.world, pos, state, isMoving);
-        } else if ((block1 != block || !block.isEntityBlock()) && block1.isEntityBlock()) {
-            this.world.removeBlockEntity(pos);
+        boolean hadBlockEntity = oldState.hasBlockEntity();
+        if (!this.level.isClientSide) {
+            oldState.onRemove(this.level, pos, newState, isMoving);
+        } else if (!oldState.is(newBlock) && hadBlockEntity) {
+            this.removeBlockEntity(pos);
         }
 
-        if (chunksection.getBlockState(i, j, k).getBlock() != block) {
+        if (chunksection.getBlockState(i, j, k).getBlock() != newBlock) {
             return null;
         }
-        if (block1.isEntityBlock()) {
-            BlockEntity tileentity = this.getTileEntity(pos, LevelChunk.EntityCreationType.CHECK);
-            if (tileentity != null) {
-                tileentity.clearCache();
-            }
+
+        if (!this.level.isClientSide) {
+            newState.onPlace(this.level, pos, oldState, isMoving);
         }
 
-        if (!this.world.isClientSide) {
-            state.onPlace(this.world, pos, blockstate, isMoving);
-        }
-
-        if (block.isEntityBlock()) {
-            BlockEntity tileentity1 = this.getTileEntity(pos, LevelChunk.EntityCreationType.CHECK);
-            if (tileentity1 == null) {
-                tileentity1 = ((EntityBlock) block).newBlockEntity(this.world);
-                this.world.setBlockEntity(pos, tileentity1);
+        if (newState.hasBlockEntity()) {
+            BlockEntity blockEntity = this.getBlockEntity(pos, LevelChunk.EntityCreationType.CHECK);
+            if (blockEntity == null) {
+                blockEntity = ((EntityBlock) newBlock).newBlockEntity(pos, newState);
+                if (blockEntity != null) {
+                    this.addAndRegisterBlockEntity(blockEntity);
+                }
             } else {
-                tileentity1.clearCache();
+                blockEntity.setBlockState(newState);
+                this.updateBlockEntityTicker(blockEntity);
             }
         }
 
         this.dirty = true;
-        return blockstate;
+        return oldState;
     }
+
     @Override public BlockState getBlockState(int x, int y, int z) {
+        // TODO: crash report generation
         int index = Coords.blockToIndex(x, y, z);
         return LevelChunkSection.isEmpty(this.sections[index]) ?
                 Blocks.AIR.defaultBlockState() :
@@ -248,30 +286,8 @@ public class BigCube implements ChunkAccess, IBigCube {
     }
 
     //ENTITY
-    @Deprecated @Override public void addEntity(Entity entityIn) { this.addCubeEntity(entityIn); }
-    @Override public void addCubeEntity(Entity entityIn) {
-        this.hasEntities = true;
-        //This needs to be blockToCube instead of getCubeXForEntity because of the `/ 16`
-        int xFloor = blockToCube(Mth.floor(entityIn.getX() / 16.0D));
-        int yFloor = blockToCube(Mth.floor(entityIn.getY() / 16.0D));
-        int zFloor = blockToCube(Mth.floor(entityIn.getZ() / 16.0D));
-        if (xFloor != this.cubePos.getX() || yFloor != this.cubePos.getY() || zFloor != this.cubePos.getZ()) {
-            CubicChunks.LOGGER.warn("Wrong location! ({}, {}, {}) should be ({}, {}, {}), {}", xFloor, yFloor, zFloor, this.cubePos.getX(),
-                    this.cubePos.getY(), this.cubePos.getZ(), entityIn);
-            //noinspection deprecation
-            entityIn.removed = true;
-        }
-
-        int idx = this.getIndexFromEntity(entityIn);
-
-        //TODO: reimplement forge EntityEvent#EnteringChunk
-        //net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.event.entity.EntityEvent.EnteringChunk(entityIn, this.pos.x, this.pos.z, entityIn.chunkCoordX, entityIn.chunkCoordZ));
-        entityIn.inChunk = true;
-        entityIn.xChunk = cubeToSection(this.cubePos.getX(), 0);
-        entityIn.yChunk = cubeToSection(this.cubePos.getY(), 0);
-        entityIn.zChunk = cubeToSection(this.cubePos.getZ(), 0);
-        this.entityLists[idx].add(entityIn);
-        this.setDirty(true); // Forge - ensure chunks are marked to save after an entity add
+    @Deprecated @Override public void addEntity(Entity entityIn) {
+        // empty in vanilla too
     }
 
     public ClassInstanceMultiMap<Entity>[] getCubeEntityLists() {
@@ -309,55 +325,93 @@ public class BigCube implements ChunkAccess, IBigCube {
 
     //TILEENTITY
     @Deprecated @Override public void setBlockEntityNbt(CompoundTag nbt) {
-        this.addCubeTileEntity(nbt);
+        this.setCubeBlockEntity(nbt);
     }
-    @Override public void addCubeTileEntity(CompoundTag nbt) {
+    @Override public void setCubeBlockEntity(CompoundTag nbt) {
         this.deferredTileEntities.put(new BlockPos(nbt.getInt("x"), nbt.getInt("y"), nbt.getInt("z")), nbt);
     }
 
-    @Deprecated @Override public void setBlockEntity(BlockPos pos, BlockEntity tileEntityIn) { this.addCubeTileEntity(pos, tileEntityIn); }
-    @Override public void addCubeTileEntity(BlockPos pos, BlockEntity tileEntityIn) {
-        if (this.getBlockState(pos).getBlock().isEntityBlock()) {
-            tileEntityIn.setLevelAndPosition(this.world, pos);
+    @Deprecated @Override public void setBlockEntity(BlockEntity tileEntityIn) { this.setCubeBlockEntity(tileEntityIn); }
+    @Override public void setCubeBlockEntity(BlockEntity tileEntityIn) {
+        BlockPos pos = tileEntityIn.getBlockPos();
+        if (this.getBlockState(pos).hasBlockEntity()) {
+            tileEntityIn.setLevel(this.level);
             tileEntityIn.clearRemoved();
-            BlockEntity tileentity = this.tileEntities.put(pos.immutable(), tileEntityIn);
+            BlockEntity tileentity = this.blockEntities.put(pos.immutable(), tileEntityIn);
             if (tileentity != null && tileentity != tileEntityIn) {
                 tileentity.setRemoved();
             }
         }
     }
 
-    public void addCubeTileEntity(BlockEntity tileEntityIn) {
-        this.setBlockEntity(tileEntityIn.getBlockPos(), tileEntityIn);
-        if (this.loaded || this.world.isClientSide()) {
-            this.world.setBlockEntity(tileEntityIn.getBlockPos(), tileEntityIn);
+    public void addAndRegisterBlockEntity(BlockEntity tileEntityIn) {
+        this.setBlockEntity(tileEntityIn);
+        if (isInLevel()) {
+            this.updateBlockEntityTicker(tileEntityIn);
         }
     }
 
-    @Deprecated @Override public void removeBlockEntity(BlockPos pos) { this.removeCubeTileEntity(pos); }
-    @Override public void removeCubeTileEntity(BlockPos pos) {
-        if (this.loaded || this.world.isClientSide()) {
-            BlockEntity tileentity = this.tileEntities.remove(pos);
+    public void registerAllBlockEntitiesAfterLevelLoad() {
+        this.blockEntities.values().forEach(this::updateBlockEntityTicker);
+    }
+
+    private <T extends BlockEntity> void updateBlockEntityTicker(T blockEntity) {
+        BlockState blockState = blockEntity.getBlockState();
+        @SuppressWarnings("unchecked")
+        BlockEntityTicker<T> blockEntityTicker = (BlockEntityTicker<T>) blockState.getTicker(this.level, blockEntity.getType());
+        if (blockEntityTicker == null) {
+            this.removeBlockEntityTicker(blockEntity.getBlockPos());
+        } else {
+            this.tickersInLevel.compute(blockEntity.getBlockPos(), (blockPos, wrapper) -> {
+                TickingBlockEntity tickingBlockEntity = this.createTicker(blockEntity, blockEntityTicker);
+                if (wrapper != null) {
+                    wrapper.rebind(tickingBlockEntity);
+                    return wrapper;
+                } else if (this.isInLevel()) {
+                    RebindableTickingBlockEntityWrapper newWrapper = new RebindableTickingBlockEntityWrapper(tickingBlockEntity);
+                    this.level.addBlockEntityTicker(newWrapper);
+                    return newWrapper;
+                } else {
+                    return null;
+                }
+            });
+        }
+
+    }
+
+    private <T extends BlockEntity> TickingBlockEntity createTicker(T blockEntity, BlockEntityTicker<T> blockEntityTicker) {
+        return new BoundTickingBlockEntity(blockEntity, blockEntityTicker);
+    }
+
+    private void removeBlockEntityTicker(BlockPos blockPos) {
+        RebindableTickingBlockEntityWrapper wrapper = this.tickersInLevel.remove(blockPos);
+        if (wrapper != null) {
+            wrapper.rebind(NULL_TICKER);
+        }
+
+    }
+
+    @Deprecated @Override public void removeBlockEntity(BlockPos pos) { this.removeCubeBlockEntity(pos); }
+    @Override public void removeCubeBlockEntity(BlockPos pos) {
+        if (isInLevel()) {
+            BlockEntity tileentity = this.blockEntities.remove(pos);
             if (tileentity != null) {
                 tileentity.setRemoved();
             }
         }
+        this.removeBlockEntityTicker(pos);
     }
 
     @Nullable @Override public BlockEntity getBlockEntity(BlockPos pos) {
-        return getTileEntity(pos, LevelChunk.EntityCreationType.CHECK);
+        return getBlockEntity(pos, LevelChunk.EntityCreationType.CHECK);
     }
 
-    @Nullable public BlockEntity getTileEntity(BlockPos pos, LevelChunk.EntityCreationType creationMode) {
-        BlockEntity tileentity = this.tileEntities.get(pos);
-        if (tileentity != null && tileentity.isRemoved()) {
-            tileEntities.remove(pos);
-            tileentity = null;
-        }
+    @Nullable public BlockEntity getBlockEntity(BlockPos pos, LevelChunk.EntityCreationType creationMode) {
+        BlockEntity tileentity = this.blockEntities.get(pos);
         if (tileentity == null) {
             CompoundTag compoundnbt = this.deferredTileEntities.remove(pos);
             if (compoundnbt != null) {
-                BlockEntity tileentity1 = this.setDeferredTileEntity(pos, compoundnbt);
+                BlockEntity tileentity1 = this.promotePendingBlockEntity(pos, compoundnbt);
                 if (tileentity1 != null) {
                     return tileentity1;
                 }
@@ -367,35 +421,40 @@ public class BigCube implements ChunkAccess, IBigCube {
         if (tileentity == null) {
             if (creationMode == LevelChunk.EntityCreationType.IMMEDIATE) {
                 tileentity = this.createNewTileEntity(pos);
-                this.world.setBlockEntity(pos, tileentity);
+                if (tileentity != null) {
+                    this.addAndRegisterBlockEntity(tileentity);
+                }
             }
+        } else if (tileentity.isRemoved()) {
+            blockEntities.remove(pos);
+            return null;
         }
 
         return tileentity;
     }
 
     @Nullable private BlockEntity createNewTileEntity(BlockPos pos) {
-        BlockState blockstate = this.getBlockState(pos);
-        return !blockstate.getBlock().isEntityBlock() ? null : ((EntityBlock) blockstate.getBlock()).newBlockEntity(this.world);
+        BlockState state = this.getBlockState(pos);
+        return !state.hasBlockEntity() ? null : ((EntityBlock) state.getBlock()).newBlockEntity(pos, state);
     }
 
-    @Nullable private BlockEntity setDeferredTileEntity(BlockPos pos, CompoundTag compound) {
+    @Nullable private BlockEntity promotePendingBlockEntity(BlockPos pos, CompoundTag compound) {
         BlockEntity tileentity;
         BlockState state = this.getBlockState(pos);
         if ("DUMMY".equals(compound.getString("id"))) {
-            if (state.getBlock().isEntityBlock()) {
-                tileentity = ((EntityBlock) state.getBlock()).newBlockEntity(this.world);
+            if (state.hasBlockEntity()) {
+                tileentity = ((EntityBlock) state.getBlock()).newBlockEntity(pos, state);
             } else {
                 tileentity = null;
                 CubicChunks.LOGGER.warn("Tried to load a DUMMY block entity @ {} but found not block entity block {} at location", pos, this.getBlockState(pos));
             }
         } else {
-            tileentity = BlockEntity.loadStatic(state, compound);
+            tileentity = BlockEntity.loadStatic(pos, state, compound);
         }
 
         if (tileentity != null) {
-            tileentity.setLevelAndPosition(this.world, pos);
-            this.addCubeTileEntity(tileentity);
+            tileentity.setLevel(this.level);
+            this.addAndRegisterBlockEntity(tileentity);
         } else {
             CubicChunks.LOGGER.warn("Tried to load a block entity for block {} but failed at location {}", state, pos);
         }
@@ -404,7 +463,7 @@ public class BigCube implements ChunkAccess, IBigCube {
     }
 
     public Map<BlockPos, BlockEntity> getTileEntityMap() {
-        return tileEntities;
+        return blockEntities;
     }
     public Map<BlockPos, CompoundTag> getDeferredTileEntityMap() {
         return this.deferredTileEntities;
@@ -415,22 +474,17 @@ public class BigCube implements ChunkAccess, IBigCube {
     }
     @Override public Set<BlockPos> getCubeTileEntitiesPos() {
         Set<BlockPos> set = Sets.newHashSet(this.deferredTileEntities.keySet());
-        set.addAll(this.tileEntities.keySet());
+        set.addAll(this.blockEntities.keySet());
         return set;
     }
 
-    @Deprecated @Nullable @Override public CompoundTag getBlockEntityNbtForSaving(BlockPos pos) { return this.getCubeTileEntityNBT(pos); }
-    @Nullable @Override public CompoundTag getCubeTileEntityNBT(BlockPos pos) {
+    @Deprecated @Nullable @Override public CompoundTag getBlockEntityNbtForSaving(BlockPos pos) { return this.getCubeBlockEntityNbtForSaving(pos); }
+    @Nullable @Override public CompoundTag getCubeBlockEntityNbtForSaving(BlockPos pos) {
         BlockEntity tileentity = this.getBlockEntity(pos);
         if (tileentity != null && !tileentity.isRemoved()) {
-            try {
-                CompoundTag compoundnbt1 = tileentity.save(new CompoundTag());
-                compoundnbt1.putBoolean("keepPacked", false);
-                return compoundnbt1;
-            } catch (Exception e) {
-                LogManager.getLogger().error("A TileEntity type {} has thrown an exception trying to write state. It will not persist, Report this to the mod author", tileentity.getClass().getName(), e);
-                return null;
-            }
+            CompoundTag compoundnbt1 = tileentity.save(new CompoundTag());
+            compoundnbt1.putBoolean("keepPacked", false);
+            return compoundnbt1;
         } else {
             CompoundTag compoundnbt = this.deferredTileEntities.get(pos);
             if (compoundnbt != null) {
@@ -468,6 +522,14 @@ public class BigCube implements ChunkAccess, IBigCube {
     }
 
     //MISC
+    public boolean isInLevel() {
+        return this.loaded || this.level.isClientSide();
+    }
+
+    private boolean isTicking(BlockPos blockPos) {
+        return (this.level.isClientSide() || this.getFullStatus().isOrAfter(ChunkHolder.FullChunkStatus.TICKING)) && this.level.getWorldBorder().isWithinBounds(blockPos);
+    }
+
     @Deprecated @Override public void setUnsaved(boolean modified) { setDirty(modified); }
     @Override public void setDirty(boolean modified) {
         this.dirty = modified;
@@ -541,7 +603,10 @@ public class BigCube implements ChunkAccess, IBigCube {
 
         this.cubeBiomeContainer = biomes;
 
-        Sets.newHashSet(this.tileEntities.keySet()).forEach(this.world::removeBlockEntity);
+        // TODO: support partial updates
+        this.blockEntities.values().forEach(this::onBlockEntityRemove);
+        this.blockEntities.clear();
+        
         for (int i = 0; i < IBigCube.SECTION_COUNT; i++) {
             boolean exists = emptyFlags.get(i);
 
@@ -568,13 +633,13 @@ public class BigCube implements ChunkAccess, IBigCube {
         }
     }
 
+    private void onBlockEntityRemove(BlockEntity blockEntity) {
+        blockEntity.setRemoved();
+        this.tickersInLevel.remove(blockEntity.getBlockPos());
+    }
+
     private void readSection(int sectionIdx, int sectionY, @Nullable CubeBiomeContainer biomeContainerIn, FriendlyByteBuf packetBufferIn, CompoundTag nbtIn,
                              boolean sectionExists) {
-
-        for (BlockEntity tileEntity : tileEntities.values()) {
-            tileEntity.clearCache();
-            tileEntity.getBlockState();
-        }
 
         LevelChunkSection section = this.sections[sectionIdx];
         if (section == EMPTY_SECTION) {
@@ -595,10 +660,6 @@ public class BigCube implements ChunkAccess, IBigCube {
                 this.setHeightmap(type, nbtIn.getLongArray(typeId));
             }
         }
-
-        for (BlockEntity tileentity : this.tileEntities.values()) {
-            tileentity.clearCache();
-        }
     }
 
     public void setCubeBiomeContainer(CubeBiomeContainer biomes) {
@@ -617,8 +678,8 @@ public class BigCube implements ChunkAccess, IBigCube {
     }
 
 
-    public Level getWorld() {
-        return world;
+    public Level getLevel() {
+        return level;
     }
 
     @Override public Collection<Map.Entry<Heightmap.Types, Heightmap>> getHeightmaps() {
@@ -635,10 +696,6 @@ public class BigCube implements ChunkAccess, IBigCube {
 
     @Override public int getHeight(Heightmap.Types heightmapType, int x, int z) {
         return 0;
-    }
-
-    @Override public void setLastSaveTime(long saveTime) {
-
     }
 
     @Deprecated @Override public Map<StructureFeature<?>, StructureStart<?>> getAllStarts() {
@@ -710,4 +767,106 @@ public class BigCube implements ChunkAccess, IBigCube {
             this.postLoadConsumer = null;
         }
     }
+
+    @Override public int getSectionsCount() {
+        return this.level.getSectionsCount();
+    }
+
+    @Override public int getMinSection() {
+        return this.level.getMinSection();
+    }
+
+    public void invalidateAllBlockEntities() {
+        this.blockEntities.values().forEach(this::onBlockEntityRemove);
+    }
+
+    public static class RebindableTickingBlockEntityWrapper implements TickingBlockEntity {
+        private TickingBlockEntity ticker;
+
+        private RebindableTickingBlockEntityWrapper(TickingBlockEntity tickingBlockEntity) {
+            this.ticker = tickingBlockEntity;
+        }
+
+        private void rebind(TickingBlockEntity tickingBlockEntity) {
+            this.ticker = tickingBlockEntity;
+        }
+
+        public void tick() {
+            this.ticker.tick();
+        }
+
+        public boolean isRemoved() {
+            return this.ticker.isRemoved();
+        }
+
+        public BlockPos getPos() {
+            return this.ticker.getPos();
+        }
+
+        public String getType() {
+            return this.ticker.getType();
+        }
+
+        public String toString() {
+            return this.ticker.toString() + " <wrapped>";
+        }
+    }
+
+    public class BoundTickingBlockEntity<T extends BlockEntity> implements TickingBlockEntity {
+        private final T blockEntity;
+        private final BlockEntityTicker<T> ticker;
+        private boolean loggedInvalidBlockState;
+
+        private BoundTickingBlockEntity(T blockEntity, BlockEntityTicker<T> blockEntityTicker) {
+            this.blockEntity = blockEntity;
+            this.ticker = blockEntityTicker;
+        }
+
+        public void tick() {
+            if (!this.blockEntity.isRemoved() && this.blockEntity.hasLevel()) {
+                BlockPos blockPos = this.blockEntity.getBlockPos();
+                if (BigCube.this.isTicking(blockPos)) {
+                    try {
+                        ProfilerFiller profilerFiller = BigCube.this.level.getProfiler();
+                        profilerFiller.push(this::getType);
+                        BlockState blockState = BigCube.this.getBlockState(blockPos);
+                        if (this.blockEntity.getType().isValid(blockState)) {
+                            this.ticker.tick(BigCube.this.level, this.blockEntity.getBlockPos(), blockState, this.blockEntity);
+                            this.loggedInvalidBlockState = false;
+                        } else if (!this.loggedInvalidBlockState) {
+                            this.loggedInvalidBlockState = true;
+                            BigCube.LOGGER.warn("Block entity {} @ {} state {} invalid for ticking:", new org.apache.logging.log4j.util.Supplier[]{this::getType, this::getPos, () -> {
+                                return blockState;
+                            }});
+                        }
+
+                        profilerFiller.pop();
+                    } catch (Throwable var5) {
+                        CrashReport crashReport = CrashReport.forThrowable(var5, "Ticking block entity");
+                        CrashReportCategory crashReportCategory = crashReport.addCategory("Block entity being ticked");
+                        this.blockEntity.fillCrashReportCategory(crashReportCategory);
+                        throw new ReportedException(crashReport);
+                    }
+                }
+            }
+
+        }
+
+        public boolean isRemoved() {
+            return this.blockEntity.isRemoved();
+        }
+
+        public BlockPos getPos() {
+            return this.blockEntity.getBlockPos();
+        }
+
+        public String getType() {
+            return BlockEntityType.getKey(this.blockEntity.getType()).toString();
+        }
+
+        public String toString() {
+            return "Level ticker for " + this.getType() + "@" + this.getPos();
+        }
+    }
+
 }

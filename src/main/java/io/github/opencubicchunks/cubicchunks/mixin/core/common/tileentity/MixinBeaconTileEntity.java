@@ -20,7 +20,7 @@ public abstract class MixinBeaconTileEntity {
 //        return 256;
 //    }
     @Redirect(method = "applyEffects", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/phys/AABB;expandTowards(DDD)Lnet/minecraft/world/phys/AABB;"))
-    private AABB on$expand(AABB axisAlignedBB, double x, double y, double z) {
+    private static AABB on$expand(AABB axisAlignedBB, double x, double y, double z) {
         CubicChunks.LOGGER.warn("on$expand called");
         return axisAlignedBB.expandTowards(x, 256, z);
     }

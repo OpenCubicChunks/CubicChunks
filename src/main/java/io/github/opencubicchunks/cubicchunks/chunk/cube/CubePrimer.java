@@ -16,6 +16,7 @@ import net.minecraft.core.SectionPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.LevelHeightAccessor;
 import net.minecraft.world.level.TickList;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
@@ -43,6 +44,7 @@ public class CubePrimer implements IBigCube, ChunkAccess {
 
     private final CubePos cubePos;
     private final LevelChunkSection[] sections;
+    private final LevelHeightAccessor levelHeightAccessor;
     private ChunkStatus status = ChunkStatus.EMPTY;
 
     @Nullable
@@ -60,9 +62,12 @@ public class CubePrimer implements IBigCube, ChunkAccess {
     private long inhabitedTime;
 
     //TODO: add TickList<Block> and TickList<Fluid>
-    public CubePrimer(CubePos cubePosIn, UpgradeData p_i49941_2_, @Nullable LevelChunkSection[] sectionsIn, ProtoTickList<Block> blockTickListIn, ProtoTickList<Fluid> p_i49941_5_) {
+    public CubePrimer(CubePos cubePosIn, UpgradeData p_i49941_2_, @Nullable LevelChunkSection[] sectionsIn, ProtoTickList<Block> blockTickListIn,
+            ProtoTickList<Fluid> p_i49941_5_, LevelHeightAccessor levelHeightAccessor) {
         this.cubePos = cubePosIn;
-//        this.upgradeData = p_i49941_2_;
+        this.levelHeightAccessor = levelHeightAccessor;
+
+        //        this.upgradeData = p_i49941_2_;
 //        this.pendingBlockTicks = blockTickListIn;
 //        this.pendingFluidTicks = p_i49941_5_;
         if(sectionsIn == null) {
@@ -168,7 +173,7 @@ public class CubePrimer implements IBigCube, ChunkAccess {
 
     //ENTITY
     @Deprecated @Override public void addEntity(Entity entityIn) { this.addCubeEntity(entityIn); }
-    @Override public void addCubeEntity(Entity entityIn) {
+    public void addCubeEntity(Entity entityIn) {
         CompoundTag compoundnbt = new CompoundTag();
         entityIn.save(compoundnbt);
         this.addCubeEntity(compoundnbt);
@@ -183,19 +188,18 @@ public class CubePrimer implements IBigCube, ChunkAccess {
 
     //TILE ENTITY
 
-    @Deprecated @Override public void setBlockEntityNbt(CompoundTag nbt) { this.addCubeTileEntity(nbt); }
-    @Override public void addCubeTileEntity(CompoundTag nbt) {
+    @Deprecated @Override public void setBlockEntityNbt(CompoundTag nbt) { this.setCubeBlockEntity(nbt); }
+    @Override public void setCubeBlockEntity(CompoundTag nbt) {
         this.deferredTileEntities.put(new BlockPos(nbt.getInt("x"), nbt.getInt("y"), nbt.getInt("z")), nbt);
     }
 
-    @Deprecated @Override public void setBlockEntity(BlockPos pos, BlockEntity tileEntityIn) { this.addCubeTileEntity(pos, tileEntityIn); }
-    @Override public void addCubeTileEntity(BlockPos pos, BlockEntity tileEntityIn) {
-        tileEntityIn.setPosition(pos);
-        this.tileEntities.put(pos, tileEntityIn);
+    @Deprecated @Override public void setBlockEntity(BlockEntity tileEntityIn) { this.setCubeBlockEntity(tileEntityIn); }
+    @Override public void setCubeBlockEntity(BlockEntity tileEntityIn) {
+        this.tileEntities.put(tileEntityIn.getBlockPos(), tileEntityIn);
     }
 
-    @Deprecated @Override public void removeBlockEntity(BlockPos pos) { this.removeCubeTileEntity(pos); }
-    @Override public void removeCubeTileEntity(BlockPos pos) {
+    @Deprecated @Override public void removeBlockEntity(BlockPos pos) { this.removeCubeBlockEntity(pos); }
+    @Override public void removeCubeBlockEntity(BlockPos pos) {
         this.tileEntities.remove(pos);
         this.deferredTileEntities.remove(pos);
     }
@@ -211,8 +215,8 @@ public class CubePrimer implements IBigCube, ChunkAccess {
         return set;
     }
 
-    @Deprecated @Nullable @Override public CompoundTag getBlockEntityNbtForSaving(BlockPos pos) { return this.getCubeTileEntityNBT(pos); }
-    @Nullable @Override public CompoundTag getCubeTileEntityNBT(BlockPos pos) {
+    @Deprecated @Nullable @Override public CompoundTag getBlockEntityNbtForSaving(BlockPos pos) { return this.getCubeBlockEntityNbtForSaving(pos); }
+    @Nullable @Override public CompoundTag getCubeBlockEntityNbtForSaving(BlockPos pos) {
         BlockEntity tileEntity = this.getBlockEntity(pos);
         return tileEntity != null ? tileEntity.save(new CompoundTag()) : this.deferredTileEntities.get(pos);
     }
@@ -327,10 +331,6 @@ public class CubePrimer implements IBigCube, ChunkAccess {
         throw new UnsupportedOperationException("For later implementation");
     }
 
-    @Override public void setLastSaveTime(long saveTime) {
-        throw new UnsupportedOperationException("For later implementation");
-    }
-
     @Deprecated @Override public Map<StructureFeature<?>, StructureStart<?>> getAllStarts() {
         throw new UnsupportedOperationException("For later implementation");
     }
@@ -402,5 +402,13 @@ public class CubePrimer implements IBigCube, ChunkAccess {
 
     public void setCarvingMask(GenerationStep.Carving type, BitSet mask) {
         throw new UnsupportedOperationException("Not implemented");
+    }
+
+    @Override public int getSectionsCount() {
+        return this.levelHeightAccessor.getSectionsCount();
+    }
+
+    @Override public int getMinSection() {
+        return this.levelHeightAccessor.getMinSection();
     }
 }

@@ -21,36 +21,13 @@ import net.minecraft.world.level.storage.WritableLevelData;
 
 @Mixin(ServerLevel.class)
 public abstract class MixinServerWorld extends Level implements IServerWorld {
-
-    @Shadow private boolean tickingEntities;
-
-    @Shadow @Final private Int2ObjectMap<Entity> entitiesById;
-
     protected MixinServerWorld(WritableLevelData p_i231617_1_, ResourceKey<Level> p_i231617_2_, DimensionType p_i231617_4_,
             Supplier<ProfilerFiller> p_i231617_5_, boolean p_i231617_6_, boolean p_i231617_7_, long p_i231617_8_) {
         super(p_i231617_1_, p_i231617_2_, p_i231617_4_, p_i231617_5_, p_i231617_6_, p_i231617_7_, p_i231617_8_);
     }
 
-    @Shadow @Deprecated public abstract void onEntityRemoved(Entity entityIn);
-
-
     @Override
     public void onCubeUnloading(BigCube cubeIn) {
-        this.blockEntitiesToUnload.addAll(cubeIn.getTileEntityMap().values());
-        ClassInstanceMultiMap<Entity>[] aclassinheritancemultimap = cubeIn.getEntityLists();
-        int i = aclassinheritancemultimap.length;
-
-        for(int j = 0; j < i; ++j) {
-            for(Entity entity : aclassinheritancemultimap[j]) {
-                if (!(entity instanceof ServerPlayer)) {
-                    if (this.tickingEntities) {
-                        throw (IllegalStateException) Util.pauseInIde(new IllegalStateException("Removing entity while ticking!"));
-                    }
-
-                    this.entitiesById.remove(entity.getId());
-                    this.onEntityRemoved(entity);
-                }
-            }
-        }
+        cubeIn.invalidateAllBlockEntities();
     }
 }

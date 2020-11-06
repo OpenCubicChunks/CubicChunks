@@ -6,6 +6,7 @@ import com.mojang.blaze3d.vertex.BufferUploader;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.Tesselator;
+import com.mojang.blaze3d.vertex.VertexFormat;
 import com.mojang.math.Matrix4f;
 import com.mojang.math.Transformation;
 import com.mojang.math.Vector4f;
@@ -78,7 +79,7 @@ public class CubicWorldLoadScreen {
 
         BufferBuilder buffer = Tesselator.getInstance().getBuilder();
 
-        buffer.begin(GL11.GL_QUADS, DefaultVertexFormat.POSITION_COLOR);
+        buffer.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
 
         int sectionRenderRadius = trackerParam.getDiameter();
 
@@ -131,7 +132,7 @@ public class CubicWorldLoadScreen {
         Vector4f vec = new Vector4f(0, 0, 0, 1);
         vec.transform(m);
 
-        buffer.sortQuads(vec.x(), vec.y(), vec.z());
+        buffer.setQuadSortOrigin(vec.x(), vec.y(), vec.z());
         buffer.end();
         BufferUploader.end(buffer);
 
@@ -308,7 +309,7 @@ public class CubicWorldLoadScreen {
         RenderSystem.enableBlend();
         RenderSystem.disableTexture();
         RenderSystem.defaultBlendFunc();
-        buffer.begin(GL11.GL_QUADS, DefaultVertexFormat.POSITION_COLOR);
+        buffer.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
         buffer.vertex(transform, x1, y2, 0.0F).color(red, green, blue, alpha).endVertex();
         buffer.vertex(transform, x2, y2, 0.0F).color(red, green, blue, alpha).endVertex();
         buffer.vertex(transform, x2, y1, 0.0F).color(red, green, blue, alpha).endVertex();

@@ -121,7 +121,7 @@ public class PacketCubes {
                     BlockPos tePos = new BlockPos(nbt.getInt("x"), nbt.getInt("y"), nbt.getInt("z"));
                     BlockEntity te = world.getBlockEntity(tePos);
                     if (te != null) {
-                        te.load(world.getBlockState(tePos), nbt);
+                        te.load(nbt);
                     }
                 }
             }

@@ -75,9 +75,9 @@ public class MixinChunkGenerator implements ICubeGenerator {
             for (int dz = 0; dz < IBigCube.DIAMETER_IN_BLOCKS; dz++) {
                 int blockZ = cube.getCubePos().minCubeZ() + dz;
 
-                double v1 = gen1.getSurfaceNoiseValue(blockX * 0.004567, blockZ * 0.004567, 0, 0) * 400;
-                double v2 = gen2.getSurfaceNoiseValue(blockX * 0.004567, blockZ * 0.004567, 0, 0) * 400;
-                double v3 = gen3.getSurfaceNoiseValue(blockX * 0.008567, blockZ * 0.008567, 0, 0) * 20 + 0.5;
+                double v1 = gen1.getSurfaceNoiseValue(blockX * 0.0004567, blockZ * 0.0004567, 0, 0) * 4000;
+                double v2 = gen2.getSurfaceNoiseValue(blockX * 0.0004567, blockZ * 0.0004567, 0, 0) * 4000;
+                double v3 = gen3.getSurfaceNoiseValue(blockX * 0.0008567, blockZ * 0.0008567, 0, 0) * 20 + 0.5;
                 int height = (int) Mth.clampedLerp(v1, v2, v3);
                 for (int dy = 0; dy < IBigCube.DIAMETER_IN_BLOCKS; dy++) {
                     int blockY = cube.getCubePos().minCubeY() + dy;

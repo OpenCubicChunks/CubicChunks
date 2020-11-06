@@ -79,4 +79,16 @@ public abstract class MixinViewFrustum {
         cbi.cancel();
         cbi.setReturnValue(renderChunk);
     }
+
+    /**
+     * @author Barteks2x
+     */
+    @Overwrite
+    public void setDirty(int i, int j, int k, boolean bl) {
+        int l = Math.floorMod(i, this.chunkGridSizeX);
+        int m = Math.floorMod(j, this.chunkGridSizeY);
+        int n = Math.floorMod(k, this.chunkGridSizeZ);
+        ChunkRenderDispatcher.RenderChunk renderChunk = this.chunks[this.getChunkIndex(l, m, n)];
+        renderChunk.setDirty(bl);
+    }
 }

@@ -141,7 +141,7 @@ public class CubeSerializer {
 //                if (level.contains("ForgeCaps")) ((Chunk)icube).readCapsFromNBT(level.getCompound("ForgeCaps"));
             } else {
 //                CubePrimer cubePrimer = new CubePrimer(pos, upgradedata, sections, chunkprimerticklist, chunkprimerticklist1);
-                CubePrimer cubePrimer = new CubePrimer(pos, null, sections, null, null);
+                CubePrimer cubePrimer = new CubePrimer(pos, null, sections, null, null, worldIn);
                 cubePrimer.setCubeBiomes(biomecontainer);
                 icube = cubePrimer;
                 cubePrimer.setInhabitedTime(inhabitedTime);
@@ -195,7 +195,7 @@ public class CubeSerializer {
             if (chunkstatus$type == ChunkStatus.ChunkType.LEVELCHUNK) {
                 //TODO: reimplement forge chunk load event
 //                net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.event.world.ChunkDataEvent.Load(icube, level, chunkstatus$type));
-                return new CubePrimerWrapper((BigCube) icube);
+                return new CubePrimerWrapper((BigCube) icube, worldIn);
             } else {
                 CubePrimer cubePrimer = (CubePrimer)icube;
                 ListTag entitiesNBT = level.getList("Entities", 10);
@@ -208,7 +208,7 @@ public class CubeSerializer {
 
                 for(int i1 = 0; i1 < tileEntitiesNBTList.size(); ++i1) {
                     CompoundTag tileEntityNBT = tileEntitiesNBTList.getCompound(i1);
-                    icube.addCubeTileEntity(tileEntityNBT);
+                    icube.setCubeBlockEntity(tileEntityNBT);
                 }
 
                 ListTag lightsNBTList = level.getList("Lights", 9);
@@ -271,7 +271,7 @@ public class CubeSerializer {
 
             IBigCube cube;
             if (status.getChunkType() == ChunkStatus.ChunkType.PROTOCHUNK) {
-                cube = new CubePrimer(pos, null, sections, null, null);
+                cube = new CubePrimer(pos, null, sections, null, null, world);
                 cube.setCubeStatus(status);
 
                 if (cube.getCubeStatus().isOrAfter(ChunkStatus.FEATURES)) {
@@ -280,7 +280,7 @@ public class CubeSerializer {
 
             } else {
                 BigCube cubeIn = new BigCube(world, pos, null, UpgradeData.EMPTY, EmptyTickList.empty(), EmptyTickList.empty(), 0L, sections, null);
-                cube = new CubePrimerWrapper(cubeIn);
+                cube = new CubePrimerWrapper(cubeIn, world);
             }
             return cube;
         }
@@ -349,7 +349,7 @@ public class CubeSerializer {
         ListTag tileEntitiesNBTList = new ListTag();
 
         for(BlockPos blockpos : icube.getCubeTileEntitiesPos()) {
-            CompoundTag tileEntityNBT = icube.getCubeTileEntityNBT(blockpos);
+            CompoundTag tileEntityNBT = icube.getCubeBlockEntityNbtForSaving(blockpos);
 //            if (tileEntityNBT != null) {
                 CubicChunks.LOGGER.debug("Saving tile entity at " + blockpos.toString());
                 tileEntitiesNBTList.add(tileEntityNBT);
@@ -463,7 +463,7 @@ public class CubeSerializer {
     }
     private static void readEntities(CompoundTag compound, BigCube cube) {
         ListTag listnbt = compound.getList("Entities", 10);
-        Level world = cube.getWorld();
+        Level world = cube.getLevel();
 
         for(int i = 0; i < listnbt.size(); ++i) {
             CompoundTag compoundnbt = listnbt.getCompound(i);
@@ -480,12 +480,12 @@ public class CubeSerializer {
             CompoundTag compoundnbt1 = listnbt1.getCompound(j);
             boolean flag = compoundnbt1.getBoolean("keepPacked");
             if (flag) {
-                cube.addCubeTileEntity(compoundnbt1);
+                cube.setCubeBlockEntity(compoundnbt1);
             } else {
                 BlockPos blockpos = new BlockPos(compoundnbt1.getInt("x"), compoundnbt1.getInt("y"), compoundnbt1.getInt("z"));
-                BlockEntity tileentity = BlockEntity.loadStatic(cube.getBlockState(blockpos), compoundnbt1);
+                BlockEntity tileentity = BlockEntity.loadStatic(blockpos, cube.getBlockState(blockpos), compoundnbt1);
                 if (tileentity != null) {
-                    cube.addCubeTileEntity(tileentity);
+                    cube.addAndRegisterBlockEntity(tileentity);
                 }
             }
         }
