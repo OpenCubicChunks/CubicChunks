@@ -39,6 +39,7 @@
         "common.world.MixinAbstractChunkProvider",
         "common.world.MixinIWorld",
         "common.world.MixinIWorldReader",
+        "common.world.MixinNaturalSpawner",
         "common.world.MixinServerWorld",
         "common.world.MixinSpawnLocationHelper",
         "common.world.MixinWorld",
