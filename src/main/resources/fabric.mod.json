@@ -29,7 +29,6 @@
         "cubicchunks.mixins.core.json",
         "cubicchunks.mixins.optifine.json"
     ],
-    "accessWidener": "cubicchunks.accesswidener",
 
     "depends": {
         "fabricloader": ">=0.7.4"
