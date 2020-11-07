@@ -112,7 +112,10 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
+import java.util.ArrayList;
 import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
@@ -464,6 +467,11 @@ public class DebugVisualization {
         Direction[] directions = Direction.values();
         float ratioFactor =  1/(float) ChunkStatus.FULL.getIndex();
         final boolean drawNull = false;
+
+        Map<ChunkStatus, List<Vertex>> verts = new HashMap<>();
+        for (ChunkStatus chunkStatus : ChunkStatus.getStatusList()) {
+            verts.put(chunkStatus, new ArrayList<>());
+        }
         for (Long2ByteMap.Entry e : cubeMap.long2ByteEntrySet()) {
             long posLong = e.getLongKey();
             int posX = CubePos.extractX(posLong);
@@ -493,7 +501,16 @@ public class DebugVisualization {
                 }
 
             }
-            drawCube(bufferBuilder, posX - playerX, posY - playerY, posZ - playerZ, 7, c, renderFaces);
+            List<Vertex> buffer = verts.get(statusObj);
+            if(buffer!=null)
+            drawCube(buffer, posX - playerX, posY - playerY, posZ - playerZ, 7, c, renderFaces);
+        }
+        List<ChunkStatus> statusList = ChunkStatus.getStatusList();
+        for (int i = statusList.size() - 1; i >= 0; i--) {
+            ChunkStatus chunkStatus = statusList.get(i);
+            for (Vertex v : verts.get(chunkStatus)) {
+                vertex(bufferBuilder, v.x, v.y, v.z, v.nx, v.ny, v.nz, v.rgba);
+            }
         }
     }
 
@@ -655,7 +672,7 @@ public class DebugVisualization {
         vertex(buf, x2, y1, 1,  0, 0, 0, color);
     }
 
-    private static void drawCube(BufferBuilder buffer, int x, int y, int z, float scale, int color, EnumSet<Direction> renderFaces) {
+    private static void drawCube(List<Vertex> buffer, int x, int y, int z, float scale, int color, EnumSet<Direction> renderFaces) {
         float x0 = x * scale;
         float x1 = x0 + scale;
         float y0 = y * scale;
@@ -664,50 +681,50 @@ public class DebugVisualization {
         float z1 = z0 + scale;
         if (renderFaces.contains(Direction.UP)) {
             // up face
-            vertex(buffer, x0, y1, z0, 0, 1, 0, color);
-            vertex(buffer, x0, y1, z1, 0, 1, 0, color);
-            vertex(buffer, x1, y1, z1, 0, 1, 0, color);
-            vertex(buffer, x1, y1, z0, 0, 1, 0, color);
+            buffer.add(new Vertex(x0, y1, z0, 0, 1, 0, color));
+            buffer.add(new Vertex(x0, y1, z1, 0, 1, 0, color));
+            buffer.add(new Vertex(x1, y1, z1, 0, 1, 0, color));
+            buffer.add(new Vertex(x1, y1, z0, 0, 1, 0, color));
         }
         if (renderFaces.contains(Direction.DOWN)) {
             int c = darken(color, 40);
             // down face
-            vertex(buffer, x0, y0, z0, 0, 1, 0, color);
-            vertex(buffer, x0, y0, z1, 0, 1, 0, color);
-            vertex(buffer, x1, y0, z1, 0, 1, 0, color);
-            vertex(buffer, x1, y0, z0, 0, 1, 0, color);
+            buffer.add(new Vertex(x0, y0, z0, 0, 1, 0, color));
+            buffer.add(new Vertex(x0, y0, z1, 0, 1, 0, color));
+            buffer.add(new Vertex(x1, y0, z1, 0, 1, 0, color));
+            buffer.add(new Vertex(x1, y0, z0, 0, 1, 0, color));
         }
         if (renderFaces.contains(Direction.EAST)) {
             int c = darken(color, 30);
             // right face
-            vertex(buffer, x1, y1, z0, 1, 0, 0, c);
-            vertex(buffer, x1, y1, z1, 1, 0, 0, c);
-            vertex(buffer, x1, y0, z1, 1, 0, 0, c);
-            vertex(buffer, x1, y0, z0, 1, 0, 0, c);
+            buffer.add(new Vertex(x1, y1, z0, 1, 0, 0, c));
+            buffer.add(new Vertex(x1, y1, z1, 1, 0, 0, c));
+            buffer.add(new Vertex(x1, y0, z1, 1, 0, 0, c));
+            buffer.add(new Vertex(x1, y0, z0, 1, 0, 0, c));
         }
         if (renderFaces.contains(Direction.WEST)) {
             int c = darken(color, 30);
             // left face
-            vertex(buffer, x0, y1, z0, 1, 0, 0, c);
-            vertex(buffer, x0, y1, z1, 1, 0, 0, c);
-            vertex(buffer, x0, y0, z1, 1, 0, 0, c);
-            vertex(buffer, x0, y0, z0, 1, 0, 0, c);
+            buffer.add(new Vertex(x0, y1, z0, 1, 0, 0, c));
+            buffer.add(new Vertex(x0, y1, z1, 1, 0, 0, c));
+            buffer.add(new Vertex(x0, y0, z1, 1, 0, 0, c));
+            buffer.add(new Vertex(x0, y0, z0, 1, 0, 0, c));
         }
         if (renderFaces.contains(Direction.NORTH)) {
             int c = darken(color, 20);
             // front face (facing camera)
-            vertex(buffer, x0, y1, z0, 0, 0, -1, c);
-            vertex(buffer, x1, y1, z0, 0, 0, -1, c);
-            vertex(buffer, x1, y0, z0, 0, 0, -1, c);
-            vertex(buffer, x0, y0, z0, 0, 0, -1, c);
+            buffer.add(new Vertex(x0, y1, z0, 0, 0, -1, c));
+            buffer.add(new Vertex(x1, y1, z0, 0, 0, -1, c));
+            buffer.add(new Vertex(x1, y0, z0, 0, 0, -1, c));
+            buffer.add(new Vertex(x0, y0, z0, 0, 0, -1, c));
         }
         if (renderFaces.contains(Direction.SOUTH)) {
             int c = darken(color, 20);
             // back face
-            vertex(buffer, x0, y1, z1, 0, 0, -1, c);
-            vertex(buffer, x1, y1, z1, 0, 0, -1, c);
-            vertex(buffer, x1, y0, z1, 0, 0, -1, c);
-            vertex(buffer, x0, y0, z1, 0, 0, -1, c);
+            buffer.add(new Vertex(x0, y1, z1, 0, 0, -1, c));
+            buffer.add(new Vertex(x1, y1, z1, 0, 0, -1, c));
+            buffer.add(new Vertex(x1, y0, z1, 0, 0, -1, c));
+            buffer.add(new Vertex(x0, y0, z1, 0, 0, -1, c));
         }
     }
 
@@ -731,6 +748,22 @@ public class DebugVisualization {
         buffer.vertex(x, y, z);
         buffer.color(r, g, b, a);
         buffer.endVertex();
+    }
+
+    static class Vertex {
+        float x, y, z;
+        int nx, ny, nz;
+        int rgba;
+
+        public Vertex(float x, float y, float z, int nx, int ny, int nz, int rgba) {
+            this.x = x;
+            this.y = y;
+            this.z = z;
+            this.nx = nx;
+            this.ny = ny;
+            this.nz = nz;
+            this.rgba = rgba;
+        }
     }
 
     public static class PerfTimer {
