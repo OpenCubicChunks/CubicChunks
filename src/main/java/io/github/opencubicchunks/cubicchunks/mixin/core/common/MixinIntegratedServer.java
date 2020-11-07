@@ -11,6 +11,6 @@ public class MixinIntegratedServer {
     //Sets the new height and removes the warning players recieve when attempting to place blocks beyond 256.
     @ModifyConstant(method = "<init>", constant = @Constant(intValue = 256))
     private int setCCHeightLimit(int orig) {
-        return 512; // TODO: change max height
+        return 20000000; // TODO: change max height
     }
 }
