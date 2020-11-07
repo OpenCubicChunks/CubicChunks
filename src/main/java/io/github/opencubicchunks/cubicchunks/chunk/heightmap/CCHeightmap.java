@@ -1,38 +1,45 @@
 package io.github.opencubicchunks.cubicchunks.chunk.heightmap;
 
 import net.minecraft.util.BitStorage;
-import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.chunk.ChunkAccess;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.function.Predicate;
 
 public class CCHeightmap {
-	private static final Predicate<BlockState> NOT_AIR = (blockState) -> !blockState.isAir();
-	private static final Predicate<BlockState> MATERIAL_MOTION_BLOCKING = (blockState) -> blockState.getMaterial().blocksMotion();
-	private final BitStorage data;
-	private final Predicate<BlockState> isOpaque;
-	private final ChunkAccess chunk;
-	public static final int BLOCK_COLUMNS_PER_COLUMN = 16 * 16; //Always needs to be a power of 2.
+	// Always needs to be a power of 2.
+	public static final int BLOCK_COLUMN_WIDTH = 16;
+	public static final int BLOCK_COLUMNS_PER_COLUMN = BLOCK_COLUMN_WIDTH * BLOCK_COLUMN_WIDTH;
+
+	/**
+	 * Stores the relative position of the highest block within this heightmap region for each x,z position.
+	 * A highest bit of 1 indicates a null value (i.e. no blocks)
+	 */
+	private final BitStorage heightData;
+	/**
+	 * Indicates whether the height for a given x,z position is dirty and needs to be recomputed.
+	 */
+	private final BitStorage dirty;
 
 	int scale;
 
-	private boolean isDirty = false;
+	public static int getIndexForCoords(int x, int z) {
+		return z * BLOCK_COLUMN_WIDTH + x;
+	}
 
 	public CCHeightmap(int scale) {
-		this.isOpaque = null;
-		this.chunk = null;
 		this.scale = scale;
-		this.data = new BitStorage((4 + scale) + 1, BLOCK_COLUMNS_PER_COLUMN); // If the highest bit is 1, the value is null.
+		// 4 for log2(BLOCK_COLUMN_WIDTH), +1 for null values
+		this.heightData = new BitStorage((4 + scale) + 1, BLOCK_COLUMNS_PER_COLUMN);
+		this.dirty = new BitStorage(1, BLOCK_COLUMNS_PER_COLUMN);
 	}
 
-	public BitStorage getData() {
-		return data;
+//	public BitStorage getData() {
+//		return data;
+//	}
+
+	public void setDirty(int x, int z) {
+		this.dirty.set(getIndexForCoords(x, z), 1);
 	}
 
-	public void setDirty() {
-		isDirty = true;
+	public void setHeight(int x, int z, int relativeHeight) {
+		this.heightData.set(getIndexForCoords(x, z), relativeHeight);
 	}
 
 	public int getScale() {
