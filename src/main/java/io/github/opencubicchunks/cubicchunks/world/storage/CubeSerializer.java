@@ -287,6 +287,7 @@ public class CubeSerializer {
     }
 
     public static void writeCube(Level worldIn, IBigCube icube, Path worldDir) throws IOException {
+        if(icube instanceof CubePrimerWrapper) return;//  todo fix correctly
         CubePos pos = icube.getCubePos();
         Path cubePath = worldDir.resolve("cubes32/" + pos.getX() + "_" + pos.getY() + "_" + pos.getZ() + ".bin");
         if (!Files.exists(cubePath.getParent())) {

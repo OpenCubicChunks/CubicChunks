@@ -45,6 +45,10 @@
         "common.world.server.MixinServerWorldLightManager"
     ],
     "client": [
+        "client.debug.MixinClientWorld",
+        "client.debug.MixinGameRenderer",
+        "client.debug.MixinMinecraft",
+        "client.debug.MixinMinecraftServer",
         "client.MixinClientPacketListener",
         "client.MixinDebugOverlayGui",
         "client.MixinIChunk",

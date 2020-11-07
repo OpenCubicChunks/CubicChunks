@@ -1,5 +1,72 @@
 package io.github.opencubicchunks.cubicchunks.debug;
 
+import static org.lwjgl.glfw.GLFW.GLFW_CONTEXT_VERSION_MAJOR;
+import static org.lwjgl.glfw.GLFW.GLFW_CONTEXT_VERSION_MINOR;
+import static org.lwjgl.glfw.GLFW.GLFW_OPENGL_CORE_PROFILE;
+import static org.lwjgl.glfw.GLFW.GLFW_OPENGL_FORWARD_COMPAT;
+import static org.lwjgl.glfw.GLFW.GLFW_OPENGL_PROFILE;
+import static org.lwjgl.glfw.GLFW.GLFW_TRUE;
+import static org.lwjgl.glfw.GLFW.glfwCreateWindow;
+import static org.lwjgl.glfw.GLFW.glfwGetCurrentContext;
+import static org.lwjgl.glfw.GLFW.glfwGetMonitorPos;
+import static org.lwjgl.glfw.GLFW.glfwGetPrimaryMonitor;
+import static org.lwjgl.glfw.GLFW.glfwGetVideoMode;
+import static org.lwjgl.glfw.GLFW.glfwGetWindowSize;
+import static org.lwjgl.glfw.GLFW.glfwInit;
+import static org.lwjgl.glfw.GLFW.glfwMakeContextCurrent;
+import static org.lwjgl.glfw.GLFW.glfwSetWindowPos;
+import static org.lwjgl.glfw.GLFW.glfwShowWindow;
+import static org.lwjgl.glfw.GLFW.glfwSwapBuffers;
+import static org.lwjgl.glfw.GLFW.glfwWindowHint;
+import static org.lwjgl.opengl.GL11.GL_BLEND;
+import static org.lwjgl.opengl.GL11.GL_COLOR_BUFFER_BIT;
+import static org.lwjgl.opengl.GL11.GL_CULL_FACE;
+import static org.lwjgl.opengl.GL11.GL_DEPTH_BUFFER_BIT;
+import static org.lwjgl.opengl.GL11.GL_DEPTH_TEST;
+import static org.lwjgl.opengl.GL11.GL_FLOAT;
+import static org.lwjgl.opengl.GL11.GL_ONE_MINUS_SRC_ALPHA;
+import static org.lwjgl.opengl.GL11.GL_SRC_ALPHA;
+import static org.lwjgl.opengl.GL11.GL_TRIANGLES;
+import static org.lwjgl.opengl.GL11.GL_TRUE;
+import static org.lwjgl.opengl.GL11.GL_UNSIGNED_BYTE;
+import static org.lwjgl.opengl.GL11.glBlendFunc;
+import static org.lwjgl.opengl.GL11.glClear;
+import static org.lwjgl.opengl.GL11.glClearColor;
+import static org.lwjgl.opengl.GL11.glDisable;
+import static org.lwjgl.opengl.GL11.glDrawArrays;
+import static org.lwjgl.opengl.GL11.glEnable;
+import static org.lwjgl.opengl.GL11.glFinish;
+import static org.lwjgl.opengl.GL11.glGetError;
+import static org.lwjgl.opengl.GL20.GL_ARRAY_BUFFER;
+import static org.lwjgl.opengl.GL20.GL_COMPILE_STATUS;
+import static org.lwjgl.opengl.GL20.GL_FRAGMENT_SHADER;
+import static org.lwjgl.opengl.GL20.GL_INFO_LOG_LENGTH;
+import static org.lwjgl.opengl.GL20.GL_LINK_STATUS;
+import static org.lwjgl.opengl.GL20.GL_STREAM_DRAW;
+import static org.lwjgl.opengl.GL20.GL_VERTEX_SHADER;
+import static org.lwjgl.opengl.GL20.glAttachShader;
+import static org.lwjgl.opengl.GL20.glBindBuffer;
+import static org.lwjgl.opengl.GL20.glBufferData;
+import static org.lwjgl.opengl.GL20.glCompileShader;
+import static org.lwjgl.opengl.GL20.glCreateProgram;
+import static org.lwjgl.opengl.GL20.glCreateShader;
+import static org.lwjgl.opengl.GL20.glDeleteShader;
+import static org.lwjgl.opengl.GL20.glEnableVertexAttribArray;
+import static org.lwjgl.opengl.GL20.glGenBuffers;
+import static org.lwjgl.opengl.GL20.glGetAttribLocation;
+import static org.lwjgl.opengl.GL20.glGetProgramInfoLog;
+import static org.lwjgl.opengl.GL20.glGetProgrami;
+import static org.lwjgl.opengl.GL20.glGetShaderInfoLog;
+import static org.lwjgl.opengl.GL20.glGetShaderi;
+import static org.lwjgl.opengl.GL20.glGetUniformLocation;
+import static org.lwjgl.opengl.GL20.glLinkProgram;
+import static org.lwjgl.opengl.GL20.glShaderSource;
+import static org.lwjgl.opengl.GL20.glUniformMatrix4fv;
+import static org.lwjgl.opengl.GL20.glUseProgram;
+import static org.lwjgl.opengl.GL20.glVertexAttribPointer;
+import static org.lwjgl.opengl.GL30.glBindVertexArray;
+import static org.lwjgl.opengl.GL30.glGenVertexArrays;
+
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.VertexFormat;
@@ -15,19 +82,22 @@ import it.unimi.dsi.fastutil.longs.Long2ByteLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.longs.Long2ByteMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
-import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.LevelLoadingScreen;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.core.Direction;
+import net.minecraft.core.Registry;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ChunkHolder;
 import net.minecraft.server.level.ChunkMap;
 import net.minecraft.server.level.ServerChunkCache;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.LevelAccessor;
+import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.ChunkSource;
-import net.minecraft.world.level.dimension.DimensionType;
+import net.minecraft.world.level.chunk.ChunkStatus;
+import net.minecraft.world.level.dimension.LevelStem;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.lwjgl.glfw.GLFWErrorCallback;
@@ -37,7 +107,9 @@ import org.lwjgl.opengl.GLCapabilities;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.system.MemoryUtil;
 
+import java.lang.reflect.Field;
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.util.EnumSet;
@@ -46,12 +118,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
-
-import static org.lwjgl.glfw.GLFW.*;
-import static org.lwjgl.opengl.GL11.*;
-import static org.lwjgl.opengl.GL20.*;
-import static org.lwjgl.opengl.GL30.glBindVertexArray;
-import static org.lwjgl.opengl.GL30.glGenVertexArrays;
 
 public class DebugVisualization {
 
@@ -94,18 +160,7 @@ public class DebugVisualization {
     private static int perfTimerIdx = 0;
     private static float screenWidth = 854.0f;
     private static float screenHeight = 480f;
-    private static final boolean IS_LINUX = Util.getPlatform() == Util.OS.LINUX;
     private static GLCapabilities debugGlCapabilities;
-
-    private static final boolean IS_VULKAN = false;
-
-    private static final DebugVulkan debugVulkan = new DebugVulkan();
-
-    public static void init() {
-        // MinecraftForge.EVENT_BUS.addListener(DebugVisualization::onWorldLoad);
-        // MinecraftForge.EVENT_BUS.addListener(DebugVisualization::onWorldUnload);
-        // MinecraftForge.EVENT_BUS.addListener(DebugVisualization::onRender);
-    }
 
     private static PerfTimer timer() {
         if (perfTimer[perfTimerIdx] == null) {
@@ -118,34 +173,8 @@ public class DebugVisualization {
     public static void onRender() {
         if(shutdown)
             return;
-        if (IS_LINUX) {
-            return;
-        }
+
         long ctx = glfwGetCurrentContext();
-
-        if(IS_VULKAN) {
-            if(!initialized.getAndSet(true)) {
-                debugVulkan.initWindow();
-                debugVulkan.initVulkan();
-            }
-            try {
-                if(glfwWindowShouldClose(debugVulkan.window)) {
-                    debugVulkan.cleanup();
-                    shutdown = true;
-                }
-
-                debugVulkan.drawAndWait();
-
-            } catch (Exception e) {
-                e.printStackTrace();
-                try {
-                    Thread.sleep(1000);
-                } catch (InterruptedException interruptedException) {
-                    return;
-                }
-            }
-            return;
-        }
 
         GLCapabilities capabilities = GL.getCapabilities();
         if (!initialized.getAndSet(true)) {
@@ -172,33 +201,22 @@ public class DebugVisualization {
             GL.setCapabilities(capabilities);
         }
     }
-    /*
 
-    public static void onWorldLoad(WorldEvent.Load t) {
-        if(IS_VULKAN) {
 
-        }
-        else {
-            if (IS_LINUX && !initialized.getAndSet(true)) {
-                initializeWindow();
-            }
-        }
-
-        LevelAccessor w = t.getWorld();
+    public static void onWorldLoad(Level w) {
         if (w instanceof ClientLevel) {
-            clientWorld = (Level) w;
-        } else if (w instanceof ServerWorld) {
-            serverWorlds.put(((ServerWorld) w).dimension(), (Level) w);
+            clientWorld =  w;
+        } else if (w instanceof ServerLevel) {
+            serverWorlds.put(w.dimension(), w);
         }
 
     }
 
-    public static void onWorldUnload(WorldEvent.Unload t) {
-        LevelAccessor w = t.getWorld();
-        if (w instanceof ServerWorld) {
-            serverWorlds.remove(((ServerWorld) w).dimension());
+    public static void onWorldUnload(Level w) {
+        if (w instanceof ServerLevel) {
+            serverWorlds.remove(w.dimension());
         }
-    }*/
+    }
 
     public static void initializeWindow() {
         GLFWErrorCallback.createPrint(System.err).set();
@@ -212,7 +230,7 @@ public class DebugVisualization {
         glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GLFW_TRUE);
         glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-        window = glfwCreateWindow(854, 480, "CubicChunks debug", 0L, 0L);
+        window = glfwCreateWindow(854, 480, "CubicChunks io.github.opencubicchunks.cubicchunks.debug", 0L, 0L);
         if (window == 0L) {
             throw new RuntimeException("Failed to create the GLFW window");
         }
@@ -228,42 +246,13 @@ public class DebugVisualization {
                     (vidmode.height() - pHeight.get(0)) / 2 + monPosTop.get(0));
         }
 
-        if (!IS_LINUX) {
-            initWindow();
-            return;
-        }
-
-        Thread thread = new Thread(() -> {
-            initWindow();
-            while (true) {
-                try {
-                    render();
-                    glfwPollEvents();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    try {
-                        Thread.sleep(1000);
-                    } catch (InterruptedException interruptedException) {
-                        return;
-                    }
-                    try {
-                        bufferBuilder.end();
-                    } catch (Throwable t) {
-                        t.printStackTrace();
-                    }
-                }
-            }
-        });
-        thread.setDaemon(true);
-        thread.start();
+        initWindow();
     }
 
     private static void initWindow() {
         glfwShowWindow(window);
         glfwMakeContextCurrent(window);
-        if (IS_LINUX) {
-            glfwSetErrorCallback(GLFWErrorCallback.createPrint());
-        }
+
         debugGlCapabilities = GL.createCapabilities();
         initialize();
         glfwSwapBuffers(window);
@@ -271,22 +260,30 @@ public class DebugVisualization {
 
     private static void initialize() {
         int vert = glCreateShader(GL_VERTEX_SHADER);
+        System.out.println("E0=" + glGetError());
         compileShader(vert, VERT_SHADER);
+        System.out.println("E1=" + glGetError());
         int frag = glCreateShader(GL_FRAGMENT_SHADER);
+        System.out.println("E2=" + glGetError());
         compileShader(frag, FRAG_SHADER);
+        System.out.println("E3=" + glGetError());
         int program = glCreateProgram();
+        System.out.println("E4=" + glGetError());
         linkShader(program, vert, frag);
+        System.out.println("E5=" + glGetError());
         shaderProgram = program;
         posAttrib = glGetAttribLocation(shaderProgram, "posIn");
         colAttrib = glGetAttribLocation(shaderProgram, "colorIn");
+        System.out.println("E6=" + glGetError());
         matrixLocation = glGetUniformLocation(shaderProgram, "mvpMatrix");
-
+        System.out.println("E7=" + glGetError());
         vao = glGenVertexArrays();
+        System.out.println("E8=" + glGetError());
         glBindVertexArray(vao);
-
+        System.out.println("E9=" + glGetError());
         glBuffer = glGenBuffers();
         glBindBuffer(GL_ARRAY_BUFFER, glBuffer);
-
+        System.out.println("E10=" + glGetError());
         bufferBuilder = new BufferBuilder(4096);
         perfGraphBuilder = new BufferBuilder(4096);
     }
@@ -306,11 +303,18 @@ public class DebugVisualization {
     }
 
     private static void linkShader(int program, int vert, int frag) {
+        System.out.println("E5a=" + glGetError());
         glAttachShader(program, vert);
+        System.out.println("E5b=" + glGetError());
         glAttachShader(program, frag);
+        System.out.println("E5c=" + glGetError());
         glLinkProgram(program);
-        int status = glGetProgrami(program, GL_COMPILE_STATUS);
+        System.out.println("p=" + program + ", v=" + vert + ", f=" + frag);
+        System.out.println("E5d=" + glGetError());
+        int status = glGetProgrami(program, GL_LINK_STATUS);
+        System.out.println("E5e=" + glGetError() + " status=" + status);
         int length = glGetProgrami(program, GL_INFO_LOG_LENGTH);
+        System.out.println("E5f=" + glGetError());
         if (length > 0) {
             String log = glGetProgramInfoLog(program);
             LOGGER.error(log);
@@ -320,6 +324,7 @@ public class DebugVisualization {
         }
         glDeleteShader(vert);
         glDeleteShader(frag);
+        System.out.println("E5g=" + glGetError());
     }
 
     public static void render() {
@@ -389,7 +394,7 @@ public class DebugVisualization {
     }
 
     private static void drawSelectedWorld(BufferBuilder bufferBuilder) {
-        Level w = serverWorlds.get(DimensionType.OVERWORLD_LOCATION);
+        Level w = serverWorlds.get(LevelStem.OVERWORLD);
         if (w == null) {
             return;
         }
@@ -414,11 +419,10 @@ public class DebugVisualization {
     }
 
     private static Long2ByteLinkedOpenHashMap buildStatusMaps(ServerChunkCache chunkProvider) {
-        /*ChunkMap chunkManager = chunkProvider.chunkMap;
-        Long2ObjectLinkedOpenHashMap<ChunkHolder> loadedCubes =
-                ObfuscationReflectionHelper.getPrivateValue(ChunkMap.class, chunkManager, "immutableLoadedCubes");
-        Object[] data = ObfuscationReflectionHelper.getPrivateValue(Long2ObjectLinkedOpenHashMap.class, loadedCubes, "value");
-        long[] keys = ObfuscationReflectionHelper.getPrivateValue(Long2ObjectLinkedOpenHashMap.class, loadedCubes, "key");
+        ChunkMap chunkManager = chunkProvider.chunkMap;
+        Long2ObjectLinkedOpenHashMap<ChunkHolder> loadedCubes = getField(ChunkMap.class, chunkManager, "visibleCubeMap");;
+        Object[] data = getField(Long2ObjectLinkedOpenHashMap.class, loadedCubes, "value");
+        long[] keys = getField(Long2ObjectLinkedOpenHashMap.class, loadedCubes, "key");
         Long2ByteLinkedOpenHashMap cubeMap = new Long2ByteLinkedOpenHashMap(100000);
         for (int i = 0, keysLength = keys.length; i < keysLength; i++) {
             long pos = keys[i];
@@ -427,16 +431,26 @@ public class DebugVisualization {
             }
             ChunkHolder holder = (ChunkHolder) data[i];
             ChunkStatus status = holder == null ? null : ICubeHolder.getCubeStatusFromLevel(holder.getTicketLevel());
-            IChunk chunk = holder == null ? null : holder.getChunkToSave().getNow(null);
+            ChunkAccess chunk = holder == null ? null : holder.getChunkToSave().getNow(null);
             ChunkStatus realStatus = chunk == null ? null : chunk.getStatus();
             cubeMap.put(pos, realStatus == null ? (byte) 255 : (byte) Registry.CHUNK_STATUS.getId(realStatus));
-        }*/
-        return new Long2ByteLinkedOpenHashMap(1);
+        }
+        return cubeMap;
+    }
+
+    private static <T> T getField(Class<?> cl, Object obj, String name) {
+        try {
+            Field f = cl.getDeclaredField(name);
+            f.setAccessible(true);
+            return (T) f.get(obj);
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private static void buildQuads(BufferBuilder bufferBuilder, int playerX, int playerY, int playerZ, Long2ByteLinkedOpenHashMap cubeMap) {
-        /*Object2IntMap<ChunkStatus> colors = ObfuscationReflectionHelper.getPrivateValue(
-                WorldLoadProgressScreen.class, null, "field_213042_c"
+        Object2IntMap<ChunkStatus> colors = getField(
+                LevelLoadingScreen.class, null, "COLORS" // TODO: intermediary name
         );
         int[] colorsArray = new int[256];
         ChunkStatus[] statusLookup = new ChunkStatus[256];
@@ -480,13 +494,13 @@ public class DebugVisualization {
 
             }
             drawCube(bufferBuilder, posX - playerX, posY - playerY, posZ - playerZ, 7, c, renderFaces);
-        }*/
+        }
     }
 
     private static void sortQuads() {
         Vector4f vec = new Vector4f(0, 0, 0, 1);
         vec.transform(inverseMatrix);
-        bufferBuilder.setQuadSortOrigin(vec.x(), vec.y(), vec.z());
+        //bufferBuilder.setQuadSortOrigin(vec.x(), vec.y(), vec.z());
 
         bufferBuilder.end();
         timer().sortQuads = System.nanoTime();
@@ -494,6 +508,7 @@ public class DebugVisualization {
 
     private static Pair<Integer, FloatBuffer> quadsToTriangles() {
         Pair<BufferBuilder.DrawState, ByteBuffer> stateBuffer = bufferBuilder.popNextBuffer();
+        stateBuffer.getSecond().order(ByteOrder.nativeOrder());
         Pair<Integer, FloatBuffer> integerFloatBufferPair = toTriangles(stateBuffer);
         timer().toTriangles = System.nanoTime();
         return integerFloatBufferPair;
@@ -505,7 +520,9 @@ public class DebugVisualization {
         int quadCount = stateBuffer.getFirst().vertexCount() / 4;
         int triangleCount = quadCount * 2;
         int floatsPerVertex = stateBuffer.getFirst().format().getIntegerSize();
-        FloatBuffer out = MemoryUtil.memAllocFloat(triangleCount * 3 * floatsPerVertex);
+        ByteBuffer outBytes = MemoryUtil.memAlloc(Float.BYTES * triangleCount * 3 * floatsPerVertex);
+        outBytes.order(ByteOrder.nativeOrder());
+        FloatBuffer out = outBytes.asFloatBuffer();
         for (int i = 0; i < quadCount; i++) {
             int startPos = i * 4 * floatsPerVertex;
             int endPos = startPos + floatsPerVertex * 3;
@@ -716,7 +733,7 @@ public class DebugVisualization {
         buffer.endVertex();
     }
 
-    private static class PerfTimer {
+    public static class PerfTimer {
 
         private long beginFrame;
         private long glStateSetup;

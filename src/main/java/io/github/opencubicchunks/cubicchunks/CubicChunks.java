@@ -17,7 +17,7 @@ import java.lang.reflect.InvocationTargetException;
 // The value here should match an entry in the META-INF/mods.toml file
 public class CubicChunks implements ModInitializer {
 
-    // TODO: debug and fix optimized cubeload
+    // TODO: io.github.opencubicchunks.cubicchunks.debug and fix optimized cubeload
     public static final boolean OPTIMIZED_CUBELOAD = false;
 
     public static long SECTIONPOS_SENTINEL = -1;
@@ -36,9 +36,9 @@ public class CubicChunks implements ModInitializer {
         }
         EarlyConfig.getDiameterInSections();
 
-        if (System.getProperty("cubicchunks.debug", "false").equalsIgnoreCase("true")) {
+        if (System.getProperty("cubicchunks.io.github.opencubicchunks.cubicchunks.debug", "false").equalsIgnoreCase("true")) {
             try {
-                Class.forName("io.github.opencubicchunks.cubicchunks.debug.DebugVisualization").getMethod("init").invoke(null);
+                Class.forName("io.github.opencubicchunks.cubicchunks.io.github.opencubicchunks.cubicchunks.debug.DebugVisualization").getMethod("init").invoke(null);
             } catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException | ClassNotFoundException e) {
                 LOGGER.catching(e);
             }

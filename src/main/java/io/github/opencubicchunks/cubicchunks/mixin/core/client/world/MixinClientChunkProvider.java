@@ -161,7 +161,7 @@ public abstract class MixinClientChunkProvider implements IClientCubeProvider {
 
     /**
      * @author Barteks2x
-     * @reason Change the debug string
+     * @reason Change the io.github.opencubicchunks.cubicchunks.debug string
      */
     @Overwrite
     public String gatherStats() {
