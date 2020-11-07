@@ -155,7 +155,7 @@ public class MainTransformer {
                 new ClassMethod(
                         getObjectType("net/minecraft/class_3898"), // ChunkMap
                         getMethod("net.minecraft.class_3193 " // ChunkHolder
-                                + "access$400(" // was access$700 on forge?
+                                + "method_17240(" // access$400
                                 + "net.minecraft.class_3898, " // ChunkMap
                                 + "long, int, "
                                 + "net.minecraft.class_3193, int)") // ChunkHolder

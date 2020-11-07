@@ -50,7 +50,7 @@ public class MixinChunkStatus {
     //(Lnet/minecraft/world/chunk/ChunkStatus;Lnet/minecraft/world/server/ServerWorld;Lnet/minecraft/world/gen/feature/template/TemplateManager;Lnet/minecraft/world/server/ServerWorldLightManager;Ljava/util/function/Function;Lnet/minecraft/world/chunk/IChunk;Lorg/spongepowered/asm/mixin/injection/callback/CallbackInfoReturnable;)V
 
     @Inject(method = "lambda$static$0(Lnet/minecraft/world/level/chunk/ChunkStatus;Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/level/levelgen/structure/templatesystem/StructureManager;Lnet/minecraft/server/level/ThreadedLevelLightEngine;Ljava/util/function/Function;Lnet/minecraft/world/level/chunk/ChunkAccess;)Ljava/util/concurrent/CompletableFuture;",
-            at = @At("HEAD"), remap = false
+            at = @At("HEAD")
     )
     private static void noopLoadingWorker(
             ChunkStatus status, ServerLevel world, StructureManager templateManager,
@@ -69,7 +69,7 @@ public class MixinChunkStatus {
     // structure starts - replace setStatus, handled by MixinChunkGenerator
     @SuppressWarnings({"UnresolvedMixinReference", "target"})
     @Inject(method = "lambda$static$2(Lnet/minecraft/world/level/chunk/ChunkStatus;Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/level/chunk/ChunkGenerator;Lnet/minecraft/world/level/levelgen/structure/templatesystem/StructureManager;Lnet/minecraft/server/level/ThreadedLevelLightEngine;Ljava/util/function/Function;Ljava/util/List;Lnet/minecraft/world/level/chunk/ChunkAccess;)Ljava/util/concurrent/CompletableFuture;",
-            at = @At("HEAD"), cancellable = true, remap = false
+            at = @At("HEAD"), cancellable = true
     )
     private static void generateStructureStatus(
             ChunkStatus status, ServerLevel world, ChunkGenerator generator,
@@ -98,7 +98,7 @@ public class MixinChunkStatus {
 
     @SuppressWarnings({"UnresolvedMixinReference", "target"})
     @Inject(method = "lambda$static$3(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/level/chunk/ChunkGenerator;Ljava/util/List;Lnet/minecraft/world/level/chunk/ChunkAccess;)V",
-            at = @At("HEAD"), cancellable = true, remap = false
+            at = @At("HEAD"), cancellable = true
     )
     private static void cubicChunksStructureReferences(ServerLevel world, ChunkGenerator generator, List<ChunkAccess> neighbors, ChunkAccess chunk,
             CallbackInfo ci) {
@@ -111,7 +111,7 @@ public class MixinChunkStatus {
     // biomes -> handled by MixinChunkGenerator
     @SuppressWarnings({"UnresolvedMixinReference", "target"})
     @Inject(method = "lambda$static$5(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/level/chunk/ChunkGenerator;Ljava/util/List;Lnet/minecraft/world/level/chunk/ChunkAccess;)V",
-            at = @At("HEAD"), cancellable = true, remap = false
+            at = @At("HEAD"), cancellable = true
     )
     private static void cubicChunksNoise(ServerLevel world, ChunkGenerator generator, List<ChunkAccess> neighbors, ChunkAccess chunk,
             CallbackInfo ci) {
@@ -126,7 +126,7 @@ public class MixinChunkStatus {
 
     @SuppressWarnings({"UnresolvedMixinReference", "target"})
     @Inject(method = "lambda$static$6(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/level/chunk/ChunkGenerator;Ljava/util/List;Lnet/minecraft/world/level/chunk/ChunkAccess;)V",
-            at = @At("HEAD"), cancellable = true, remap = false
+            at = @At("HEAD"), cancellable = true
     )
     private static void cubicChunksSurface(ServerLevel world, ChunkGenerator generator, List<ChunkAccess> neighbors, ChunkAccess chunk,
             CallbackInfo ci) {
@@ -139,7 +139,7 @@ public class MixinChunkStatus {
 
     @SuppressWarnings({"UnresolvedMixinReference", "target"})
     @Inject(method = "lambda$static$7(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/level/chunk/ChunkGenerator;Ljava/util/List;Lnet/minecraft/world/level/chunk/ChunkAccess;)V",
-            at = @At("HEAD"), cancellable = true, remap = false
+            at = @At("HEAD"), cancellable = true
     )
     private static void cubicChunksCarvers(ServerLevel world, ChunkGenerator generator, List<ChunkAccess> neighbors, ChunkAccess chunk,
             CallbackInfo ci) {
@@ -152,7 +152,7 @@ public class MixinChunkStatus {
 
     @SuppressWarnings({"UnresolvedMixinReference", "target"})
     @Inject(method = "lambda$static$8(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/level/chunk/ChunkGenerator;Ljava/util/List;Lnet/minecraft/world/level/chunk/ChunkAccess;)V",
-            at = @At("HEAD"), cancellable = true, remap = false
+            at = @At("HEAD"), cancellable = true
     )
     private static void cubicChunksLiquidCarvers(ServerLevel world, ChunkGenerator generator, List<ChunkAccess> neighbors, ChunkAccess chunk,
             CallbackInfo ci) {
@@ -165,7 +165,7 @@ public class MixinChunkStatus {
 
     @SuppressWarnings({"UnresolvedMixinReference", "target"})
     @Inject(method = "lambda$static$9(Lnet/minecraft/world/level/chunk/ChunkStatus;Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/level/chunk/ChunkGenerator;Lnet/minecraft/world/level/levelgen/structure/templatesystem/StructureManager;Lnet/minecraft/server/level/ThreadedLevelLightEngine;Ljava/util/function/Function;Ljava/util/List;Lnet/minecraft/world/level/chunk/ChunkAccess;)Ljava/util/concurrent/CompletableFuture;",
-            at = @At(value = "HEAD"), cancellable = true, remap = false
+            at = @At(value = "HEAD"), cancellable = true
     )
     private static void featuresSetStatus(
             ChunkStatus status, ServerLevel world, ChunkGenerator generator,
@@ -215,7 +215,7 @@ public class MixinChunkStatus {
     //lambda$static$12
     @SuppressWarnings({"UnresolvedMixinReference", "target"})
     @Inject(method = "lambda$static$12(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/level/chunk/ChunkGenerator;Ljava/util/List;Lnet/minecraft/world/level/chunk/ChunkAccess;)V",
-            at = @At("HEAD"), cancellable = true, remap = false
+            at = @At("HEAD"), cancellable = true
     )
     private static void cubicChunksSpawnMobs(ServerLevel world, ChunkGenerator generator, List<ChunkAccess> neighbors, ChunkAccess chunk,
             CallbackInfo ci) {

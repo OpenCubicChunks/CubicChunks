@@ -175,7 +175,7 @@ public class DebugVulkan {
 
     public DebugVulkan()
     {
-        this.enableValidationLayers = System.getProperty("cubicchunks.io.github.opencubicchunks.cubicchunks.debug.validation", "false").equalsIgnoreCase("true");
+        this.enableValidationLayers = System.getProperty("cubicchunks.debug.validation", "false").equalsIgnoreCase("true");
     }
 
     public void run() {

@@ -164,6 +164,7 @@ public class DebugVisualization {
     private static float screenWidth = 854.0f;
     private static float screenHeight = 480f;
     private static GLCapabilities debugGlCapabilities;
+    private static boolean enabled;
 
     private static PerfTimer timer() {
         if (perfTimer[perfTimerIdx] == null) {
@@ -173,7 +174,14 @@ public class DebugVisualization {
     }
 
 
+    public static void enable() {
+        enabled = true;
+    }
+
     public static void onRender() {
+        if (!enabled) {
+            return;
+        }
         if(shutdown)
             return;
 
@@ -205,8 +213,10 @@ public class DebugVisualization {
         }
     }
 
-
     public static void onWorldLoad(Level w) {
+        if (!enabled) {
+            return;
+        }
         if (w instanceof ClientLevel) {
             clientWorld =  w;
         } else if (w instanceof ServerLevel) {
@@ -216,6 +226,9 @@ public class DebugVisualization {
     }
 
     public static void onWorldUnload(Level w) {
+        if (!enabled) {
+            return;
+        }
         if (w instanceof ServerLevel) {
             serverWorlds.remove(w.dimension());
         }
@@ -233,7 +246,7 @@ public class DebugVisualization {
         glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GLFW_TRUE);
         glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-        window = glfwCreateWindow(854, 480, "CubicChunks io.github.opencubicchunks.cubicchunks.debug", 0L, 0L);
+        window = glfwCreateWindow(854, 480, "CubicChunks debug", 0L, 0L);
         if (window == 0L) {
             throw new RuntimeException("Failed to create the GLFW window");
         }

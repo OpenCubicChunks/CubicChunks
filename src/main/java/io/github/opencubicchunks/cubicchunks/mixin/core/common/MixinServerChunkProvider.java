@@ -278,7 +278,7 @@ public abstract class MixinServerChunkProvider implements IServerChunkProvider, 
 
     /**
      * @author Barteks2x
-     * @reason io.github.opencubicchunks.cubicchunks.debug string
+     * @reason debug string
      */
     @Overwrite
     public String gatherStats() {

@@ -31,7 +31,10 @@
     ],
 
     "depends": {
-        "fabricloader": ">=0.7.4"
+        "fabricloader": ">=0.7.4",
+        "fabric-networking-v0": ">=0.1.10",
+        "fabric-command-api-v1": ">=1.0.9",
+        "fabric-api-base": ">=0.2.0"
     },
     "suggests": {
         "flamingo": "*"

@@ -11,17 +11,17 @@ import net.minecraft.server.level.ChunkMap;
 @Mixin(ChunkMap.DistanceManager.class)
 public abstract class MixinProxyTicketManager extends MixinTicketManager {
 
-    // this$0 has an SRG name, but it's not actually used at runtime, but FG will remap it anyway. This alias gets around that remapping.
-    @SuppressWarnings({"target"}) @Shadow(aliases = "this$0", remap = false) ChunkMap syntheticThis;
+    // Mixin AP doesn't see the field, we need to provide intermediary name explicitly
+    @SuppressWarnings("target") @Shadow(aliases = "field_17443", remap = false) ChunkMap this$0;
 
     @Override
     public boolean containsCubes(long cubePosIn) {
-        return ((IChunkManager) syntheticThis).getCubesToDrop().contains(cubePosIn);
+        return ((IChunkManager) this$0).getCubesToDrop().contains(cubePosIn);
     }
 
     @Override
     @Nullable
     public ChunkHolder getCubeHolder(long cubePosIn) {
-        return ((IChunkManager) syntheticThis).getCubeHolder(cubePosIn);
+        return ((IChunkManager) this$0).getCubeHolder(cubePosIn);
     }
 }

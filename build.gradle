@@ -19,7 +19,7 @@ mcGitVersion {
 
 mixinGen {
     filePattern = "cubicchunks.mixins.%s.json"
-    defaultRefmap = "cubicchunks.refmap.json"
+    defaultRefmap = "CubicChunks-refmap.json"
     defaultPackagePrefix = "io.github.opencubicchunks.cubicchunks.mixin"
     defaultCompatibilityLevel = "JAVA_8"
     defaultMinVersion = "0.8"
@@ -83,9 +83,9 @@ minecraft {
             "-XX:G1ReservePercent=20",
             "-XX:MaxGCPauseMillis=50",
             "-XX:G1HeapRegionSize=32M",
-            "-Dmixin.io.github.opencubicchunks.cubicchunks.debug.verbose=true",
-            "-Dmixin.io.github.opencubicchunks.cubicchunks.debug.export=true",
-            "-Dcubicchunks.io.github.opencubicchunks.cubicchunks.debug=true",
+            "-Dmixin.debug.verbose=true",
+            "-Dmixin.debug.export=true",
+            "-Dcubicchunks.debug=true",
             "-XX:-OmitStackTraceInFastThrow",
             "-Dmixin.checks.interfaces=true"
     ]

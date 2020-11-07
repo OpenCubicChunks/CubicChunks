@@ -20,7 +20,8 @@ import net.minecraft.world.phys.Vec3;
 @Mixin(ChunkMap.TrackedEntity.class)
 public abstract class MixinEntityTracker {
 
-    @SuppressWarnings({"target"}) @Shadow(aliases = "this$0", remap = false) ChunkMap syntheticThis;
+    // Mixin AP doesn't see the field, we need to provide intermediary name explicitly
+    @SuppressWarnings("target") @Shadow(aliases = "field_18245", remap = false) ChunkMap this$0;
 
     @Shadow @Final private Entity entity;
 
@@ -39,7 +40,7 @@ public abstract class MixinEntityTracker {
         if (player != this.entity) {
             Vec3 vec3d = player.position().subtract(this.serverEntity.sentPos());
                             //This function is fine
-            int i = Math.min(this.getEffectiveRange(), (((ChunkManagerAccess) syntheticThis).getViewDistance() - 1) * 16);
+            int i = Math.min(this.getEffectiveRange(), (((ChunkManagerAccess) this$0).getViewDistance() - 1) * 16);
             boolean flag = vec3d.x >= (double)(-i) && vec3d.x <= (double)i &&
                     vec3d.y >= (double)(-i) && vec3d.y <= (double)i && //Added y comparisons
                     vec3d.z >= (double)(-i) && vec3d.z <= (double)i &&
@@ -48,9 +49,9 @@ public abstract class MixinEntityTracker {
                 boolean spawn = this.entity.forcedLoading;
                 if (!spawn) {
                     CubePos cubePos = CubePos.from(this.entity);
-                    ChunkHolder chunkholder = ((IChunkManager) syntheticThis).getImmutableCubeHolder(cubePos.asLong());
+                    ChunkHolder chunkholder = ((IChunkManager) this$0).getImmutableCubeHolder(cubePos.asLong());
                     if (chunkholder != null && ((ICubeHolder) chunkholder).getCubeIfComplete() != null) {
-                        spawn = IChunkManager.getCubeChebyshevDistance(cubePos, player, false) <= ((ChunkManagerAccess) syntheticThis).getViewDistance();
+                        spawn = IChunkManager.getCubeChebyshevDistance(cubePos, player, false) <= ((ChunkManagerAccess) this$0).getViewDistance();
                     }
                 }
 

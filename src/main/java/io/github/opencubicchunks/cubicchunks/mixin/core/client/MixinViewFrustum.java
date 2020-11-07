@@ -82,6 +82,7 @@ public abstract class MixinViewFrustum {
 
     /**
      * @author Barteks2x
+     * @reason correctly use y position
      */
     @Overwrite
     public void setDirty(int i, int j, int k, boolean bl) {
