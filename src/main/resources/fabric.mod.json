@@ -22,6 +22,7 @@
             "io.github.opencubicchunks.cubicchunks.CubicChunks"
         ]
     },
+    "accessWidener": "cubicchunks.accesswidener",
     "mixins": [
         "cubicchunks.mixins.access.json",
         "cubicchunks.mixins.asm.json",

@@ -9,6 +9,9 @@ import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.io.UncheckedIOException;
 import java.nio.file.Path;
 import java.util.Map;
@@ -20,12 +23,12 @@ public class McGitVersion implements Plugin<Project> {
         McGitVersionExtension extension = new McGitVersionExtension();
         target.getExtensions().add("mcGitVersion", extension);
         extension.configured = true;
-        target.setVersion(lazyString(() -> {
-            String version = getVersion(extension, target, false);
-            target.getLogger().lifecycle("Auto-detected version {} for project(\"{}\")", version, target.getPath());
-            return version;
+        target.setVersion(new LazyString(() -> {
+            String version1 = getVersion(extension, target, false);
+            target.getLogger().lifecycle("Auto-detected version {} for project(\"{}\")", version1, target.getPath());
+            return version1;
         }));
-        target.getExtensions().getExtraProperties().set("mavenProjectVersion", lazyString(() -> {
+        target.getExtensions().getExtraProperties().set("mavenProjectVersion", new LazyString(() -> {
             String version = getVersion(extension, target, true);
             target.getLogger().lifecycle("Auto-detected version for maven {} for project(\"{}\")", version, target.getPath());
             return version;
@@ -163,17 +166,29 @@ public class McGitVersion implements Plugin<Project> {
         throw exception.get();
     }
 
-    private Object lazyString(Supplier<String> getString) {
-        return new Object() {
-            private String cached;
+    // loom needs version property in processResources to be serializable
+    static class LazyString implements Serializable {
+        private final transient Supplier<String> getString;
+        private String cached;
 
-            @Override public String toString() {
-                if (cached == null) {
-                    cached = getString.get();
-                }
-                return cached;
+        LazyString(Supplier<String> getString) {
+            this.getString = getString;
+        }
+
+        @Override public String toString() {
+            if (cached == null) {
+                cached = getString.get();
             }
-        };
+            return cached;
+        }
+
+        private void writeObject(ObjectOutputStream out) throws IOException {
+            out.writeUTF(this.toString());
+        }
+
+        private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
+            this.cached = in.readUTF();
+        }
     }
 
     private static class GitVersionInfo {
