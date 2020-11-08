@@ -1,7 +1,5 @@
 package io.github.opencubicchunks.cubicchunks.chunk.cube;
 
-import static net.minecraft.world.chunk.Chunk.EMPTY_SECTION;
-
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -32,10 +30,11 @@ import net.minecraft.world.gen.feature.structure.Structure;
 import net.minecraft.world.gen.feature.structure.StructureStart;
 import net.minecraft.world.lighting.WorldLightManager;
 
+import javax.annotation.Nullable;
 import java.util.*;
 import java.util.stream.Stream;
 
-import javax.annotation.Nullable;
+import static net.minecraft.world.chunk.Chunk.EMPTY_SECTION;
 
 public class CubePrimer implements IBigCube, IChunk {
 
@@ -57,12 +56,21 @@ public class CubePrimer implements IBigCube, IChunk {
 
     private long inhabitedTime;
 
+    public CubePrimer(CubePos cubePos, UpgradeData upgradeData) {
+//        this(cubePos, upgradeData, (ChunkSection[])null, new ChunkPrimerTickList<>((p_205332_0_) -> {
+//            return p_205332_0_ == null || p_205332_0_.defaultBlockState().isAir();
+//        }, cubePos), new ChunkPrimerTickList<>((p_205766_0_) -> {
+//            return p_205766_0_ == null || p_205766_0_ == Fluids.EMPTY;
+//        }, cubePos));
+        this(cubePos, upgradeData, null, null, null);
+    }
+
     //TODO: add TickList<Block> and TickList<Fluid>
-    public CubePrimer(CubePos cubePosIn, UpgradeData p_i49941_2_, @Nullable ChunkSection[] sectionsIn, ChunkPrimerTickList<Block> blockTickListIn, ChunkPrimerTickList<Fluid> p_i49941_5_) {
+    public CubePrimer(CubePos cubePosIn, UpgradeData upgradeData, @Nullable ChunkSection[] sectionsIn, ChunkPrimerTickList<Block> blockTickListIn, ChunkPrimerTickList<Fluid> fluidTickListIn) {
         this.cubePos = cubePosIn;
-//        this.upgradeData = p_i49941_2_;
+//        this.upgradeData = upgradeData;
 //        this.pendingBlockTicks = blockTickListIn;
-//        this.pendingFluidTicks = p_i49941_5_;
+//        this.pendingFluidTicks = fluidTickListIn;
         if(sectionsIn == null) {
             this.sections = new ChunkSection[IBigCube.SECTION_COUNT];
             for(int i = 0; i < IBigCube.SECTION_COUNT; i++) {
