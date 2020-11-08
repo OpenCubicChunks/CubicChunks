@@ -13,7 +13,6 @@ import net.minecraft.util.Util;
 import net.minecraft.util.concurrent.DelegatedTaskExecutor;
 import net.minecraft.util.concurrent.ITaskQueue;
 import net.minecraft.util.math.ChunkPos;
-import net.minecraft.world.DimensionType;
 import net.minecraft.world.World;
 import net.minecraft.world.server.ServerWorld;
 import org.apache.logging.log4j.Logger;
@@ -60,7 +59,7 @@ public class RegionCubeIO {
 
         File file;
         if (world instanceof ServerWorld) {
-            file = DimensionType.getStorageFolder(world.dimension(), storageFolder);
+            file = storageFolder;
         } else {
             //TODO: implement client world
             throw new IOException("NOT IMPLEMENTED");
