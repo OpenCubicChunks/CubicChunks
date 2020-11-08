@@ -21,10 +21,8 @@ import net.minecraft.world.chunk.IChunk;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Constant;
-import org.spongepowered.asm.mixin.injection.ModifyConstant;
-import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.*;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.Map;
 import java.util.concurrent.CompletionException;
@@ -140,6 +138,26 @@ public abstract class MixinChunk implements IChunk {
             return cube.getEntityLists()[Coords.sectionToIndex(this.chunkPos.x, y, this.chunkPos.z)];
         }
         return new ClassInheritanceMultiMap<>(Entity.class);
+    }
+    @Inject(method = {
+        "removeEntity(Lnet/minecraft/entity/Entity;I)V"
+    }, at = @At("RETURN"))
+    public void setDirty$removeEntity(Entity entity, int p_76608_2_, CallbackInfo ci) {
+        BigCube cube = (BigCube) this.getCube(entity.yChunk);
+
+        if (!(cube instanceof EmptyCube)) {
+            cube.setDirty(true);
+        }
+    }
+    @Inject(method = {
+        "addEntity"
+    }, at = @At("RETURN"))
+    public void setDirty$addEntity(Entity entity, CallbackInfo ci) {
+        BigCube cube = (BigCube) this.getCube(entity.yChunk);
+
+        if (!(cube instanceof EmptyCube)) {
+            cube.setDirty(true);
+        }
     }
 
     @Redirect(method = {
