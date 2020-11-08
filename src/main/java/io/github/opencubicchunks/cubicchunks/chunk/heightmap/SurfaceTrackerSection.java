@@ -8,31 +8,41 @@ import net.minecraft.world.level.levelgen.Heightmap;
 
 import java.util.BitSet;
 
-public class SurfaceTracker {
+public class SurfaceTrackerSection {
 	public static final int MAX_SCALE = 10; // TODO: set real value
+	/** Number of bits needed to represent the children nodes (i.e. log2(NODE_COUNT)) */
 	private static final int NODE_COUNT_BITS = 1;
+	/** Number of children nodes */
 	public static final int NODE_COUNT = 1 << NODE_COUNT_BITS;
+
+	/** Number of bits needed to represent height (excluding null) at scale zero (i.e. log2(scale0 height)) */
+	private static final int BASE_SIZE_BITS = 5;
 
 	private final BitStorage heights;
 	private final BitSet dirtyPositions;
-	private final int scale, scaledY;
-	private SurfaceTracker parent;
-	private final SurfaceTracker[] nodes = new SurfaceTracker[NODE_COUNT];
-	private final IBigCube cube; // null if not cube scale
+	private final int scale;
+	/**
+	 * Position of this section, within all sections of this size
+	 * e.g. with 64-block sections, y=0-63 would be section 0, y=64-127 would be section 1, etc.
+	 */
+	private final int scaledY;
+	private SurfaceTrackerSection parent;
+	private final SurfaceTrackerSection[] nodes = new SurfaceTrackerSection[NODE_COUNT];
+	private final IBigCube cube; // null if not cube scale (i.e. scale != 0)
 	private boolean hasLoadedCubes = false;
 	private final Heightmap.Types types;
 
-	public SurfaceTracker(Heightmap.Types types) {
+	public SurfaceTrackerSection(Heightmap.Types types) {
 		this(MAX_SCALE, 0, null, types);
 	}
 
-	public SurfaceTracker(int scale, int scaledY, SurfaceTracker parent, Heightmap.Types types) {
+	public SurfaceTrackerSection(int scale, int scaledY, SurfaceTrackerSection parent, Heightmap.Types types) {
 		this(scale, scaledY, parent, null, types);
 	}
 
-	public SurfaceTracker(int scale, int scaledY, SurfaceTracker parent, IBigCube cube, Heightmap.Types types) {
+	public SurfaceTrackerSection(int scale, int scaledY, SurfaceTrackerSection parent, IBigCube cube, Heightmap.Types types) {
 //		super((ChunkAccess) cube, types);
-		this.heights = new BitStorage(6 + scale * NODE_COUNT_BITS, IBigCube.DIAMETER_IN_BLOCKS * IBigCube.DIAMETER_IN_BLOCKS);
+		this.heights = new BitStorage(BASE_SIZE_BITS + 1 + scale * NODE_COUNT_BITS, IBigCube.DIAMETER_IN_BLOCKS * IBigCube.DIAMETER_IN_BLOCKS);
 		this.dirtyPositions = new BitSet(IBigCube.DIAMETER_IN_BLOCKS * IBigCube.DIAMETER_IN_BLOCKS);
 		this.scale = scale;
 		this.scaledY = scaledY;
@@ -41,14 +51,12 @@ public class SurfaceTracker {
 		this.types = types;
 	}
 
+	/** Get the height for a given position. Recomputes the height if the column is marked dirty in this section. */
 	public int getHeight(int x, int z) {
 		int idx = index(x, z);
 		if (!dirtyPositions.get(idx)) {
-			int rawY = heights.get(idx);
-			if (rawY == 0) {
-				return Integer.MIN_VALUE;
-			}
-			return rawY - 1 + scaledYBottomY(scaledY, scale);
+			int relativeY = heights.get(idx);
+			return relToAbsY(relativeY, scaledY, scale);
 		}
 
 		int maxY = Integer.MIN_VALUE;
@@ -57,13 +65,12 @@ public class SurfaceTracker {
 				if (!cube.getBlockState(x, dy, z).isAir()) { // TODO: use test predicates
 					int minY = scaledY * IBigCube.DIAMETER_IN_BLOCKS;
 					maxY = minY + dy;
-					;
 					break;
 				}
 			}
 		} else {
 			for (int i = nodes.length - 1; i >= 0; i--) {
-				SurfaceTracker node = nodes[i];
+				SurfaceTrackerSection node = nodes[i];
 				if (node == null) {
 					continue;
 				}
@@ -103,22 +110,22 @@ public class SurfaceTracker {
 				continue;
 			}
 			int newScaledY = indexToScaledY(i, scale, scaledY);
-			SurfaceTracker newMap = loadNode(newScaledY, scale - 1, newCube);
+			SurfaceTrackerSection newMap = loadNode(newScaledY, scale - 1, newCube);
 			nodes[i] = newMap;
 		}
 		int idx = indexOfRawHeightNode(newCube.getCubePos().getY(), scale, scaledY);
 		nodes[idx].loadCube(newCube, markDirty);
 	}
 
-	public SurfaceTracker getParent() {
+	public SurfaceTrackerSection getParent() {
 		return parent;
 	}
 
-	public SurfaceTracker getChild(int i) {
+	public SurfaceTrackerSection getChild(int i) {
 		return nodes[i];
 	}
 
-	public SurfaceTracker getCubeNode(int y) {
+	public SurfaceTrackerSection getCubeNode(int y) {
 		if (scale == 0) {
 			if (y != scaledY) {
 				throw new IllegalArgumentException("Invalid Y: " + y + ", expected " + scaledY);
@@ -126,7 +133,7 @@ public class SurfaceTracker {
 			return this;
 		}
 		int idx = indexOfRawHeightNode(y, scale, scaledY);
-		SurfaceTracker node = nodes[idx];
+		SurfaceTrackerSection node = nodes[idx];
 		if (node == null) {
 			return null;
 		}
@@ -137,12 +144,12 @@ public class SurfaceTracker {
 		return cube;
 	}
 
-	private SurfaceTracker loadNode(int newScaledY, int scale, IBigCube newCube) {
+	private SurfaceTrackerSection loadNode(int newScaledY, int scale, IBigCube newCube) {
 		// TODO: loading from disk
 		if (scale == 0) {
-			return new SurfaceTracker(scale, newScaledY, this, newCube, this.types);
+			return new SurfaceTrackerSection(scale, newScaledY, this, newCube, this.types);
 		}
-		return new SurfaceTracker(scale, newScaledY, this, this.types);
+		return new SurfaceTrackerSection(scale, newScaledY, this, this.types);
 	}
 
 	private int index(int x, int z) {
@@ -172,11 +179,22 @@ public class SurfaceTracker {
 		return (nodeScaledY << NODE_COUNT_BITS) + index;
 	}
 
+	/** Get the lowest world y coordinate for a given scaledY and scale */
 	@VisibleForTesting
 	static int scaledYBottomY(int scaledY, int scale) {
 		if (scale == MAX_SCALE) {
 			return -(1 << ((scale - 1) * NODE_COUNT_BITS));
 		}
 		return scaledY << (scale * NODE_COUNT_BITS);
+	}
+
+	// TODO might want to make the reverse of this into a helper function too?
+	/** Get the world y coordinate for a given relativeY, scaledY and scale */
+	@VisibleForTesting
+	static int relToAbsY(int relativeY, int scaledY, int scale) {
+		if (relativeY == 0) {
+			return Integer.MIN_VALUE;
+		}
+		return relativeY - 1 + scaledYBottomY(scaledY, scale);
 	}
 }
