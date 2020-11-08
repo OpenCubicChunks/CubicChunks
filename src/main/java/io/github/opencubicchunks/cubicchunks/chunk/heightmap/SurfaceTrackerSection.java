@@ -4,9 +4,11 @@ import com.google.common.annotations.VisibleForTesting;
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.utils.AddressTools;
 import net.minecraft.util.BitStorage;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.Heightmap;
 
 import java.util.BitSet;
+import java.util.function.Predicate;
 
 public class SurfaceTrackerSection {
 	public static final int MAX_SCALE = 10; // TODO: set real value
@@ -30,7 +32,9 @@ public class SurfaceTrackerSection {
 	private final SurfaceTrackerSection[] nodes = new SurfaceTrackerSection[NODE_COUNT];
 	private final IBigCube cube; // null if not cube scale (i.e. scale != 0)
 	private boolean hasLoadedCubes = false;
+	// TODO do we need this for anything?
 	private final Heightmap.Types types;
+	private final Predicate<BlockState> isOpaque;
 
 	public SurfaceTrackerSection(Heightmap.Types types) {
 		this(MAX_SCALE, 0, null, types);
@@ -49,6 +53,7 @@ public class SurfaceTrackerSection {
 		this.cube = cube;
 		this.parent = parent;
 		this.types = types;
+		this.isOpaque = types.isOpaque();
 	}
 
 	/** Get the height for a given position. Recomputes the height if the column is marked dirty in this section. */
@@ -62,7 +67,7 @@ public class SurfaceTrackerSection {
 		int maxY = Integer.MIN_VALUE;
 		if (scale == 0) {
 			for (int dy = IBigCube.DIAMETER_IN_BLOCKS; dy > 0; dy--) {
-				if (!cube.getBlockState(x, dy, z).isAir()) { // TODO: use test predicates
+				if (isOpaque.test(cube.getBlockState(x, dy, z))) {
 					int minY = scaledY * IBigCube.DIAMETER_IN_BLOCKS;
 					maxY = minY + dy;
 					break;
