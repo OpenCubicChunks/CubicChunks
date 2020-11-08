@@ -29,7 +29,34 @@ import it.unimi.dsi.fastutil.longs.Long2ObjectLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.longs.LongIterator;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
+import net.minecraft.CrashReport;
+import net.minecraft.CrashReportCategory;
+import net.minecraft.ReportedException;
+import net.minecraft.Util;
+import net.minecraft.core.SectionPos;
+import net.minecraft.network.protocol.Packet;
+import net.minecraft.network.protocol.game.ClientboundLightUpdatePacket;
+import net.minecraft.network.protocol.game.ClientboundSetChunkCacheCenterPacket;
+import net.minecraft.network.protocol.game.ClientboundSetEntityLinkPacket;
+import net.minecraft.network.protocol.game.ClientboundSetPassengersPacket;
+import net.minecraft.server.level.*;
+import net.minecraft.server.level.progress.ChunkProgressListener;
+import net.minecraft.util.Mth;
+import net.minecraft.util.thread.BlockableEventLoop;
+import net.minecraft.util.thread.ProcessorHandle;
+import net.minecraft.util.thread.ProcessorMailbox;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.chunk.ChunkAccess;
+import net.minecraft.world.level.chunk.ChunkGenerator;
+import net.minecraft.world.level.chunk.ChunkStatus;
+import net.minecraft.world.level.chunk.LightChunkGetter;
 import net.minecraft.world.level.entity.ChunkStatusUpdateListener;
+import net.minecraft.world.level.levelgen.structure.templatesystem.StructureManager;
+import net.minecraft.world.level.lighting.LevelLightEngine;
+import net.minecraft.world.level.storage.DimensionDataStorage;
+import net.minecraft.world.level.storage.LevelStorageSource;
 import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.apache.logging.log4j.Logger;
 import org.spongepowered.asm.mixin.Final;
@@ -45,46 +72,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 import javax.annotation.Nullable;
-import net.minecraft.CrashReport;
-import net.minecraft.CrashReportCategory;
-import net.minecraft.ReportedException;
-import net.minecraft.Util;
-import net.minecraft.core.SectionPos;
-import net.minecraft.network.protocol.Packet;
-import net.minecraft.network.protocol.game.ClientboundLightUpdatePacket;
-import net.minecraft.network.protocol.game.ClientboundSetChunkCacheCenterPacket;
-import net.minecraft.network.protocol.game.ClientboundSetEntityLinkPacket;
-import net.minecraft.network.protocol.game.ClientboundSetPassengersPacket;
-import net.minecraft.server.level.ChunkHolder;
-import net.minecraft.server.level.ChunkMap;
-import net.minecraft.server.level.PlayerMap;
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.server.level.ThreadedLevelLightEngine;
-import net.minecraft.server.level.progress.ChunkProgressListener;
-import net.minecraft.util.ClassInstanceMultiMap;
-import net.minecraft.util.Mth;
-import net.minecraft.util.thread.BlockableEventLoop;
-import net.minecraft.util.thread.ProcessorHandle;
-import net.minecraft.util.thread.ProcessorMailbox;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.Mob;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.level.ChunkPos;
-import net.minecraft.world.level.chunk.ChunkAccess;
-import net.minecraft.world.level.chunk.ChunkGenerator;
-import net.minecraft.world.level.chunk.ChunkStatus;
-import net.minecraft.world.level.chunk.LightChunkGetter;
-import net.minecraft.world.level.levelgen.structure.templatesystem.StructureManager;
-import net.minecraft.world.level.lighting.LevelLightEngine;
-import net.minecraft.world.level.storage.DimensionDataStorage;
-import net.minecraft.world.level.storage.LevelStorageSource;
 import java.io.File;
 import java.io.IOException;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-import java.util.Queue;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.Executor;
@@ -96,6 +86,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static io.github.opencubicchunks.cubicchunks.utils.Coords.cubeToSection;
 import static io.github.opencubicchunks.cubicchunks.utils.Coords.sectionToCube;
 
 @Mixin(ChunkMap.class)
@@ -105,6 +96,7 @@ public abstract class MixinChunkManager implements IChunkManager {
 
     private final Long2ObjectLinkedOpenHashMap<ChunkHolder> updatingCubeMap = new Long2ObjectLinkedOpenHashMap<>();
     private volatile Long2ObjectLinkedOpenHashMap<ChunkHolder> visibleCubeMap = this.updatingCubeMap.clone();
+    private volatile Long2ObjectLinkedOpenHashMap<Set<ChunkHolder>> visibleColumnMap = new Long2ObjectLinkedOpenHashMap<>();
 
     private final LongSet cubesToDrop = new LongOpenHashSet();
     private final LongSet cubeEntitiesInLevel = new LongOpenHashSet();
@@ -390,12 +382,21 @@ public abstract class MixinChunkManager implements IChunkManager {
             )
     )
     private void onPromoteChunkMap(CallbackInfoReturnable<Boolean> cir) {
+        Long2ObjectLinkedOpenHashMap<Set<ChunkHolder>> newColumnMap = new Long2ObjectLinkedOpenHashMap<>();
+        for (ChunkHolder chunkHolder : updatingCubeMap.values()) {
+            newColumnMap.computeIfAbsent(chunkHolder.getPos().toLong(), x -> new HashSet<>()).add(chunkHolder);
+        }
+        this.visibleColumnMap = newColumnMap;
         this.visibleCubeMap = updatingCubeMap.clone();
     }
 
     @Override
     public Iterable<ChunkHolder> getCubes() {
         return Iterables.unmodifiableIterable(this.visibleCubeMap.values());
+    }
+
+    public Set<ChunkHolder> getColumnMap(ChunkPos pos) {
+        return Collections.unmodifiableSet(visibleColumnMap.get(ChunkPos.asLong(cubeToSection(sectionToCube(pos.x), 0), cubeToSection(sectionToCube(pos.z), 0))));
     }
 
     // func_219244_a, schedule

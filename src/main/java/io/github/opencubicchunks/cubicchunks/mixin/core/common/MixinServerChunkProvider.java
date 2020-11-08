@@ -263,7 +263,6 @@ public abstract class MixinServerChunkProvider implements IServerChunkProvider, 
     @Inject(method = "tickChunks",
             at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ChunkMap;getChunks()Ljava/lang/Iterable;"))
     private void tickSections(CallbackInfo ci) {
-
         ((IChunkManager) this.chunkMap).getCubes().forEach((cubeHolder) -> {
             Optional<BigCube> optional =
                     ((ICubeHolder) cubeHolder).getCubeEntityTickingFuture().getNow(ICubeHolder.UNLOADED_CUBE).left();

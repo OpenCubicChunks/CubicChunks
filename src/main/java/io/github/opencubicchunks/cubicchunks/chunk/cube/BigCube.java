@@ -5,6 +5,7 @@ import com.google.common.collect.Sets;
 import io.github.opencubicchunks.cubicchunks.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.biome.CubeBiomeContainer;
+import io.github.opencubicchunks.cubicchunks.chunk.heightmap.CCHeightmap;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.ChunkSectionAccess;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
@@ -36,11 +37,7 @@ import net.minecraft.world.level.block.entity.BlockEntityTicker;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.entity.TickingBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.chunk.ChunkAccess;
-import net.minecraft.world.level.chunk.ChunkStatus;
-import net.minecraft.world.level.chunk.LevelChunk;
-import net.minecraft.world.level.chunk.LevelChunkSection;
-import net.minecraft.world.level.chunk.UpgradeData;
+import net.minecraft.world.level.chunk.*;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.levelgen.feature.StructureFeature;
 import net.minecraft.world.level.levelgen.structure.StructureStart;
@@ -87,6 +84,10 @@ public class BigCube implements ChunkAccess, IBigCube {
     private final ClassInstanceMultiMap<Entity>[] entityLists;
     private final Level level;
 
+    private final Map<Heightmap.Types, CCHeightmap> heightmaps;
+
+    private final BitSet pendingHeightmapUpdates = new BitSet(DIAMETER_IN_BLOCKS * DIAMETER_IN_BLOCKS);
+
     private CubeBiomeContainer cubeBiomeContainer;
 
     private boolean dirty = true; // todo: change back to false?
@@ -112,8 +113,9 @@ public class BigCube implements ChunkAccess, IBigCube {
                    TickList<Fluid> tickFluidsIn, long inhabitedTimeIn, @Nullable LevelChunkSection[] sectionsIn, @Nullable Consumer<BigCube> postLoadConsumerIn) {
         this.level = worldIn;
         this.cubePos = cubePosIn;
+        this.heightmaps = Maps.newEnumMap(Heightmap.Types.class);
 //        this.upgradeData = upgradeDataIn;
-//
+
 //        for(Heightmap.Type heightmap$type : Heightmap.Type.values()) {
 //            if (ChunkStatus.FULL.getHeightMaps().contains(heightmap$type)) {
 //                this.heightMap.put(heightmap$type, new Heightmap(this, heightmap$type));
@@ -230,20 +232,28 @@ public class BigCube implements ChunkAccess, IBigCube {
         return this.setBlock(Coords.blockToIndex(pos.getX(), pos.getY(), pos.getZ()), pos, state, isMoving);
     }
     @Nullable public BlockState setBlock(int sectionIndex, BlockPos pos, BlockState newState, boolean isMoving) {
-        int i = pos.getX() & 15;
-        int j = pos.getY() & 15;
-        int k = pos.getZ() & 15;
+        int x = pos.getX() & 15;
+        int y = pos.getY() & 15;
+        int z = pos.getZ() & 15;
         LevelChunkSection chunksection = sections[sectionIndex];
 
-        BlockState oldState = chunksection.setBlockState(i, j, k, newState);
+        BlockState oldState = chunksection.setBlockState(
+                x, y, z, newState);
         if (oldState == newState) {
             return null;
         }
         Block newBlock = newState.getBlock();
-        //            this.heightMap.get(Heightmap.Type.MOTION_BLOCKING).update(i, j, k, state);
-        //            this.heightMap.get(Heightmap.Type.MOTION_BLOCKING_NO_LEAVES).update(i, j, k, state);
-        //            this.heightMap.get(Heightmap.Type.OCEAN_FLOOR).update(i, j, k, state);
-        //            this.heightMap.get(Heightmap.Type.WORLD_SURFACE).update(i, j, k, state);
+        int localX = Coords.blockToLocal(pos.getX());
+        int localZ = Coords.blockToLocal(pos.getZ());
+
+
+
+        if (!this.heightmaps.isEmpty()) {
+            this.heightmaps.get(Heightmap.Types.MOTION_BLOCKING).markDirty(localX, localZ);
+            this.heightmaps.get(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES).markDirty(localX, localZ);
+            this.heightmaps.get(Heightmap.Types.OCEAN_FLOOR).markDirty(localX, localZ);
+            this.heightmaps.get(Heightmap.Types.WORLD_SURFACE).markDirty(localX, localZ);
+        }
 
         boolean hadBlockEntity = oldState.hasBlockEntity();
         if (!this.level.isClientSide) {
@@ -252,7 +262,7 @@ public class BigCube implements ChunkAccess, IBigCube {
             this.removeBlockEntity(pos);
         }
 
-        if (chunksection.getBlockState(i, j, k).getBlock() != newBlock) {
+        if (chunksection.getBlockState(x, y, z).getBlock() != newBlock) {
             return null;
         }
 
