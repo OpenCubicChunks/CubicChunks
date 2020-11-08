@@ -15,7 +15,6 @@ import net.minecraft.util.concurrent.ITaskQueue;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.DimensionType;
 import net.minecraft.world.World;
-import net.minecraft.world.chunk.storage.IOWorker;
 import net.minecraft.world.server.ServerWorld;
 import org.apache.logging.log4j.Logger;
 
@@ -43,12 +42,10 @@ public class RegionCubeIO {
     private static final long MB = kB * 1024;
     private static final Logger LOGGER = CubicChunks.LOGGER;
 
-    @Nonnull private World world;
-    @Nonnull private final File storageFolder;
-    private SaveCubeColumns save;
+    @Nonnull private final World world;
+    private SaveCubeColumns saveCubeColumns;
     private final Map<ChunkPos, SaveEntry> pendingChunkWrites = Maps.newLinkedHashMap();
     private final Map<CubePos, SaveEntry> pendingCubeWrites = Maps.newLinkedHashMap();
-
 
     private final DelegatedTaskExecutor<ITaskQueue.RunnableWithPriority> chunkExecutor;
     private final DelegatedTaskExecutor<ITaskQueue.RunnableWithPriority> cubeExecutor;
@@ -57,24 +54,10 @@ public class RegionCubeIO {
 
     public RegionCubeIO(World world, File storageFolder) throws IOException {
         this.world = world;
-        this.storageFolder = storageFolder;
 
         this.chunkExecutor = new DelegatedTaskExecutor<>(new ITaskQueue.Priority(Priority.values().length), Util.ioPool(), "RegionCubeIO-chunk");
         this.cubeExecutor = new DelegatedTaskExecutor<>(new ITaskQueue.Priority(Priority.values().length), Util.ioPool(), "RegionCubeIO-cube");
 
-        initSave();
-    }
-
-    @Nonnull
-    private synchronized SaveCubeColumns getSave() throws IOException {
-        if (save == null) {
-            initSave();
-        }
-        return save;
-    }
-
-    private void initSave() throws IOException {
-        // TODO: make path a constructor argument
         File file;
         if (world instanceof ServerWorld) {
             file = DimensionType.getStorageFolder(world.dimension(), storageFolder);
@@ -83,17 +66,16 @@ public class RegionCubeIO {
             throw new IOException("NOT IMPLEMENTED");
 //            Path path = Paths.get(".").toAbsolutePath().resolve("clientCache").resolve("DIM" + world.dimension());
         }
-
-        this.save = SaveCubeColumns.create(file.toPath());
+        this.saveCubeColumns = SaveCubeColumns.create(file.toPath());
     }
     
     private synchronized void closeSave() throws IOException {
         try {
-            if (save != null) {
-                this.save.close();
+            if (saveCubeColumns != null) {
+                this.saveCubeColumns.close();
             }
         } finally {
-            this.save = null;
+            this.saveCubeColumns = null;
         }
     }
 
@@ -124,7 +106,7 @@ public class RegionCubeIO {
                 return Either.left(entry.data);
             } else {
                 try {
-                    SaveCubeColumns save = this.getSave();
+                    SaveCubeColumns save = saveCubeColumns;
 
                     Optional<ByteBuffer> buf = save.load(new EntryLocation3D(cubePos.getX(), cubePos.getY(), cubePos.getZ()), true);
                     if(!buf.isPresent())
@@ -151,7 +133,7 @@ public class RegionCubeIO {
     }
 
     public CompletableFuture<Void> saveChunkNBT(ChunkPos chunkPos, CompoundNBT cubeNBT) {
-        return this.submitCubeTask(() -> {
+        return this.submitChunkTask(() -> {
             SaveEntry entry = this.pendingChunkWrites.computeIfAbsent(chunkPos, (pos) -> new SaveEntry(cubeNBT));
             entry.data = cubeNBT;
             return Either.left(entry.result);
@@ -159,14 +141,14 @@ public class RegionCubeIO {
     }
 
     @Nullable public CompoundNBT loadChunkNBT(ChunkPos chunkPos) throws IOException {
-        CompletableFuture<CompoundNBT> cubeReadFuture = this.submitCubeTask(() -> {
-            SaveEntry entry = this.pendingCubeWrites.get(chunkPos);
+        CompletableFuture<CompoundNBT> cubeReadFuture = this.submitChunkTask(() -> {
+            SaveEntry entry = this.pendingChunkWrites.get(chunkPos);
 
             if (entry != null) {
                 return Either.left(entry.data);
             } else {
                 try {
-                    SaveCubeColumns save = this.getSave();
+                    SaveCubeColumns save = saveCubeColumns;
 
                     Optional<ByteBuffer> buf = save.load(new EntryLocation2D(chunkPos.x, chunkPos.z), true);
                     if(!buf.isPresent())
@@ -194,7 +176,7 @@ public class RegionCubeIO {
 
     private void storeCube(CubePos cubePos, SaveEntry entry) {
         try {
-            SaveCubeColumns save = this.getSave();
+            SaveCubeColumns save = saveCubeColumns;
 
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
             writeCompressed(entry.data, outputStream);
@@ -211,7 +193,7 @@ public class RegionCubeIO {
 
     private void storeChunk(ChunkPos chunkPos, SaveEntry entry) {
         try {
-            SaveCubeColumns save = this.getSave();
+            SaveCubeColumns save = saveCubeColumns;
 
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
             writeCompressed(entry.data, outputStream);
@@ -275,6 +257,6 @@ public class RegionCubeIO {
 
     private enum Priority {
         HIGH,
-        LOW;
+        LOW
     }
 }

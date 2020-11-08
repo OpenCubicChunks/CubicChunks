@@ -274,7 +274,7 @@ public class BigCube implements IChunk, IBigCube {
         entityIn.yChunk = cubeToSection(this.cubePos.getY(), 0);
         entityIn.zChunk = cubeToSection(this.cubePos.getZ(), 0);
         this.entityLists[idx].add(entityIn);
-        this.setDirty(true); // Forge - ensure chunks are marked to save after an entity add
+        this.setDirty(true);
     }
 
     public ClassInheritanceMultiMap<Entity>[] getCubeEntityLists() {
