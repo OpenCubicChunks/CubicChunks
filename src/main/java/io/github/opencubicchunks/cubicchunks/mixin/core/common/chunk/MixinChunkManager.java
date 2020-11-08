@@ -746,7 +746,6 @@ public abstract class MixinChunkManager implements IChunkManager {
                     boolean flag = compoundnbt.contains("Level", 10) && compoundnbt.getCompound("Level").contains("Status", 8);
                     if (flag) {
                         IBigCube iBigCube = CubeSerializer.read(this.level, this.structureManager, null, cubePos, compoundnbt);
-                        //TODO: reimplement
                         this.markCubePosition(cubePos, iBigCube.getCubeStatus().getChunkType());
                         return Either.left(iBigCube);
                     }

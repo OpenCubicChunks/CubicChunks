@@ -160,9 +160,9 @@ public class BigCube implements ChunkAccess, IBigCube {
                 null, cubePrimerIn.getInhabitedTime(), cubePrimerIn.getCubeSections(), null);
 
         for(CompoundTag compoundnbt : cubePrimerIn.getCubeEntities()) {
-            EntityType.loadEntityRecursive(compoundnbt, worldIn, (p_217325_1_) -> {
-                this.addEntity(p_217325_1_);
-                return p_217325_1_;
+            EntityType.loadEntityRecursive(compoundnbt, worldIn, (entity) -> {
+                this.addEntity(entity);
+                return entity;
             });
         }
 
