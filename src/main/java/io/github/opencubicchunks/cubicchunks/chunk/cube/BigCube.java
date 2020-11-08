@@ -133,9 +133,9 @@ public class BigCube implements IChunk, IBigCube {
                 null, cubePrimerIn.getInhabitedTime(), cubePrimerIn.getCubeSections(), null);
 
         for(CompoundNBT compoundnbt : cubePrimerIn.getCubeEntities()) {
-            EntityType.loadEntityRecursive(compoundnbt, worldIn, (p_217325_1_) -> {
-                this.addEntity(p_217325_1_);
-                return p_217325_1_;
+            EntityType.loadEntityRecursive(compoundnbt, worldIn, (entity) -> {
+                this.addCubeEntity(entity);
+                return entity;
             });
         }
 

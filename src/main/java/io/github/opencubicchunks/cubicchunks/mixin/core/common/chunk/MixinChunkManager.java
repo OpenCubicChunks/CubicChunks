@@ -685,7 +685,7 @@ public abstract class MixinChunkManager implements IChunkManager {
                     // TODO: reimplement forge ChunkEvent#Load
                     // net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.event.world.ChunkEvent.Load(chunkSection));
                 }
-                return (IBigCube) cube;
+                return cube;
             });
         }, (runnable) -> {
             this.cubeMainThreadMailbox.tell(CubeTaskPriorityQueueSorter.createMsg(
@@ -771,7 +771,6 @@ public abstract class MixinChunkManager implements IChunkManager {
                     boolean flag = compoundnbt.contains("Level", 10) && compoundnbt.getCompound("Level").contains("Status", 8);
                     if (flag) {
                         IBigCube iBigCube = CubeSerializer.read(this.level, this.structureManager, null, cubePos, compoundnbt);
-                        //TODO: reimplement
                         iBigCube.setCubeLastSaveTime(this.level.getGameTime());
                         this.markCubePosition(cubePos, iBigCube.getCubeStatus().getChunkType());
                         return Either.left(iBigCube);
