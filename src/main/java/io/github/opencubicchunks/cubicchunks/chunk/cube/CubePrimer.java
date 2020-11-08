@@ -1,12 +1,11 @@
 package io.github.opencubicchunks.cubicchunks.chunk.cube;
 
-import static net.minecraft.world.level.chunk.LevelChunk.EMPTY_SECTION;
-
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.biome.CubeBiomeContainer;
+import io.github.opencubicchunks.cubicchunks.chunk.heightmap.CCHeightmap;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import it.unimi.dsi.fastutil.longs.LongSet;
@@ -22,12 +21,7 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.chunk.ChunkAccess;
-import net.minecraft.world.level.chunk.ChunkBiomeContainer;
-import net.minecraft.world.level.chunk.ChunkStatus;
-import net.minecraft.world.level.chunk.LevelChunkSection;
-import net.minecraft.world.level.chunk.ProtoTickList;
-import net.minecraft.world.level.chunk.UpgradeData;
+import net.minecraft.world.level.chunk.*;
 import net.minecraft.world.level.levelgen.GenerationStep;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.levelgen.feature.StructureFeature;
@@ -35,17 +29,23 @@ import net.minecraft.world.level.levelgen.structure.StructureStart;
 import net.minecraft.world.level.lighting.LevelLightEngine;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.FluidState;
+
+import javax.annotation.Nullable;
 import java.util.*;
 import java.util.stream.Stream;
 
-import javax.annotation.Nullable;
+import static net.minecraft.world.level.chunk.LevelChunk.EMPTY_SECTION;
 
+//ProtoChunk
 public class CubePrimer implements IBigCube, ChunkAccess {
 
     private final CubePos cubePos;
     private final LevelChunkSection[] sections;
     private final LevelHeightAccessor levelHeightAccessor;
     private ChunkStatus status = ChunkStatus.EMPTY;
+
+    private final Map<Heightmap.Types, CCHeightmap> heightmaps;
+
 
     @Nullable
     private CubeBiomeContainer biomes;
@@ -66,6 +66,7 @@ public class CubePrimer implements IBigCube, ChunkAccess {
             ProtoTickList<Fluid> p_i49941_5_, LevelHeightAccessor levelHeightAccessor) {
         this.cubePos = cubePosIn;
         this.levelHeightAccessor = levelHeightAccessor;
+        this.heightmaps = Maps.newEnumMap(Heightmap.Types.class);
 
         //        this.upgradeData = p_i49941_2_;
 //        this.pendingBlockTicks = blockTickListIn;
@@ -137,29 +138,31 @@ public class CubePrimer implements IBigCube, ChunkAccess {
             }
 
             //TODO: implement heightmaps
-            /*
-            EnumSet<Heightmap.Type> enumset1 = this.getStatus().getHeightMaps();
-            EnumSet<Heightmap.Type> enumset = null;
 
-            for(Heightmap.Type heightmap$type : enumset1) {
-                Heightmap heightmap = this.heightmaps.get(heightmap$type);
-                if (heightmap == null) {
-                    if (enumset == null) {
-                        enumset = EnumSet.noneOf(Heightmap.Type.class);
-                    }
+//            EnumSet<Heightmap.Types> enumset1 = this.getStatus().getHeightMaps();
+//            EnumSet<Heightmap.Types> enumset = null;
+//
+//            for(Heightmap.Types heightmap$type : enumset1) {
+//                CCHeightmap heightmap = this.heightmaps.get(heightmap$type);
+//                if (heightmap == null) {
+//                    if (enumset == null) {
+//                        enumset = EnumSet.noneOf(Heightmap.Types.class);
+//                    }
+//
+//                    enumset.add(heightmap$type);
+//                }
+//            }
+//
+//            if (enumset != null) {
+//                Heightmap.primeHeightmaps(this, enumset);
+//            }
+//
+//            for(Heightmap.Types heightmap$type1 : enumset1) {
+//                this.heightmaps.get(heightmap$type1).markDirty(x, z);
+//            }
 
-                    enumset.add(heightmap$type);
-                }
-            }
 
-            if (enumset != null) {
-                Heightmap.updateChunkHeightmaps(this, enumset);
-            }
 
-            for(Heightmap.Type heightmap$type1 : enumset1) {
-                this.heightmaps.get(heightmap$type1).update(x, y, z, state);
-            }
-            */
             return blockstate;
         }
     }
