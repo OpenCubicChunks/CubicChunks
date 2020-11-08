@@ -293,6 +293,16 @@ public class Coords {
         return blockToIndex(sectionX << 4, sectionY << 4, sectionZ << 4);
     }
 
+    public static int indexToSectionX(int idx) {
+        return indexToX(idx << 4);
+    }
+    public static int indexToSectionY(int idx) {
+        return indexToY(idx << 4);
+    }
+    public static int indexToSectionZ(int idx) {
+        return indexToZ(idx << 4);
+    }
+
     /**
      * @param cubeVal A single dimension of the {@link CubePos}
      * @param sectionOffset The {@link SectionPos} offset from the {@link CubePos} as a {@link SectionPos}. Suggest you use {@link Coords#indexToX, Coords#indexToY, Coords#indexToZ} to get this offset
