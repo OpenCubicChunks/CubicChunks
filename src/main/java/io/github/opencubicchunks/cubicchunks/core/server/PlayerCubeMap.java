@@ -406,10 +406,10 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
         }
         if (!this.cubesToSendToClients.isEmpty()) {
             getWorldServer().profiler.startSection("cubes");
-            int toSend = 81 * 8;//sending cubes, so send 8x more at once
+            int toSend = CubicChunksConfig.cubesToSendPerTick;//sending cubes, so send 8x more at once
             Iterator<CubeWatcher> it = this.cubesToSendToClients.iterator();
 
-            while (it.hasNext() && toSend >= 0) {
+            while (it.hasNext() && toSend > 0) {
                 CubeWatcher playerInstance = it.next();
 
                 CubeWatcher.SendToPlayersResult state = playerInstance.sendToPlayers();
@@ -488,7 +488,7 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
                 this.cubesToGenerate.appendToEnd(cubeWatcher);
             }
             // vanilla has the below check, which causes the cubes to be sent to client too early and sometimes in too big amounts
-            // if they are sent too earlu, client won't have the right player position and renderer positions are wrong
+            // if they are sent too early, client won't have the right player position and renderer positions are wrong
             // which cause some cubes to not be rendered
             // DO NOT make it the same as vanilla until it's confirmed that Mojang fixed MC-120079
             //if (!cubeWatcher.sendToPlayers()) {

@@ -184,6 +184,10 @@ public class CubicChunksConfig {
             + "You can enable it if you don't need normal skylight values but want extra performance for worldgen and block updates")
     public static boolean fastSimplifiedSkyLight = false;
 
+    @Config.LangKey("cubicchunks.config.cubesToSendPerTick")
+    @Config.Comment("Max amount of cubes sent to client per tick to players")
+    public static int cubesToSendPerTick = 81 * 8 + 1;
+
     @Config.LangKey("cubicchunks.config.vanillaClients")
     @Config.Comment("Options relating to support for vanilla clients.")
     public static VanillaClients vanillaClients = new VanillaClients();
