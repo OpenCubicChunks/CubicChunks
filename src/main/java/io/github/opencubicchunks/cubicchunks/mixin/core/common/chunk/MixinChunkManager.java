@@ -26,11 +26,9 @@ import io.github.opencubicchunks.cubicchunks.world.server.IServerWorld;
 import io.github.opencubicchunks.cubicchunks.world.server.IServerWorldLightManager;
 import io.github.opencubicchunks.cubicchunks.world.storage.CubeSerializer;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
-import it.unimi.dsi.fastutil.longs.Long2ObjectLinkedOpenHashMap;
-import it.unimi.dsi.fastutil.longs.LongIterator;
-import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
-import it.unimi.dsi.fastutil.longs.LongSet;
+import it.unimi.dsi.fastutil.longs.*;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.level.chunk.storage.ChunkSerializer;
 import net.minecraft.world.level.entity.ChunkStatusUpdateListener;
 import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.spongepowered.asm.mixin.*;
@@ -117,7 +115,8 @@ public abstract class MixinChunkManager implements IChunkManager {
 
     private final AtomicInteger tickingGeneratedCubes = new AtomicInteger();
 
-    private final Queue<Runnable> saveCubeTasks = Queues.newConcurrentLinkedQueue();
+    private final Long2ByteMap cubeTypeCache = new Long2ByteOpenHashMap();
+    private final Queue<Runnable> cubeUnloadQueue = Queues.newConcurrentLinkedQueue();
 
     private RegionCubeIO regionCubeIO;
 
@@ -222,8 +221,8 @@ public abstract class MixinChunkManager implements IChunkManager {
             } while (savedAny.isTrue());
 
             this.processCubeUnloads(() -> true);
-            //this.flushWorker();
-            LOGGER.info("ThreadedAnvilChunkStorage ({}): All cubes are saved", this.storageFolder.getName());
+            regionCubeIO.flush();
+            LOGGER.info("Cube Storage ({}): All cubes are saved", this.storageFolder.getName());
         } else {
             this.visibleCubeMap.values().stream().filter(ChunkHolder::wasAccessibleSinceLastSave).forEach((cubeHolder) -> {
                 IBigCube cube = ((ICubeHolder) cubeHolder).getCubeToSave().getNow(null);
@@ -248,18 +247,17 @@ public abstract class MixinChunkManager implements IChunkManager {
             try {
                 //TODO: implement isExistingCubeFull and by extension cubeTypeCache
                 ChunkStatus status = cube.getCubeStatus();
-//                if (status.getChunkType() != ChunkStatus.ChunkType.LEVELCHUNK) {
-//                    if (this.isExistingChunkFull(cubePos)) {
-//                        return false;
-//                    }
-//
+                if (status.getChunkType() != ChunkStatus.ChunkType.LEVELCHUNK) {
+                    if (isExistingCubeFull(cubePos)) {
+                        return false;
+                    }
 //                    if (status == ChunkStatus.EMPTY && p_219229_1_.getAllStarts().values().stream().noneMatch(StructureStart::isValid)) {
 //                        return false;
 //                    }
-//                }
+                }
 
                 if (status.getChunkType() != ChunkStatus.ChunkType.LEVELCHUNK) {
-                    CompoundTag compoundnbt = this.regionCubeIO.loadCubeNBT(cubePos);
+                    CompoundTag compoundnbt = regionCubeIO.loadCubeNBT(cubePos);
                     if (compoundnbt != null && CubeSerializer.getChunkStatus(compoundnbt) == ChunkStatus.ChunkType.LEVELCHUNK) {
                         return false;
                     }
@@ -273,14 +271,37 @@ public abstract class MixinChunkManager implements IChunkManager {
                 CompoundTag compoundnbt = CubeSerializer.write(this.level, cube);
                 //TODO: FORGE EVENT : reimplement ChunkDataEvent#Save
 //                net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.event.world.ChunkDataEvent.Save(p_219229_1_, p_219229_1_.getWorldForge() != null ? p_219229_1_.getWorldForge() : this.level, compoundnbt));
-                this.regionCubeIO.saveCubeNBT(cubePos, compoundnbt);
-//                this.markPosition(cubePos, status.getChunkType());
+                regionCubeIO.saveCubeNBT(cubePos, compoundnbt);
+                this.markCubePosition(cubePos, status.getChunkType());
                 return true;
 
             } catch (Exception exception) {
                 LOGGER.error("Failed to save chunk {},{},{}", cubePos.getX(), cubePos.getY(), cubePos.getZ(), exception);
                 return false;
             }
+        }
+    }
+
+    private boolean isExistingCubeFull(CubePos cubePos) {
+        byte b0 = cubeTypeCache.get(cubePos.asLong());
+        if (b0 != 0) {
+            return b0 == 1;
+        } else {
+            CompoundTag compoundnbt;
+            try {
+                compoundnbt = regionCubeIO.loadCubeNBT(cubePos);
+                if (compoundnbt == null) {
+                    this.markCubePositionReplaceable(cubePos);
+                    return false;
+                }
+            } catch (Exception exception) {
+                LOGGER.error("Failed to read chunk {}", cubePos, exception);
+                this.markCubePositionReplaceable(cubePos);
+                return false;
+            }
+
+            ChunkStatus.ChunkType status = ChunkSerializer.getChunkTypeFromTag(compoundnbt);
+            return this.markCubePosition(cubePos, status) == 1;
         }
     }
 
@@ -300,7 +321,7 @@ public abstract class MixinChunkManager implements IChunkManager {
         }
 
         Runnable runnable;
-        while((hasMoreTime.getAsBoolean() || this.saveCubeTasks.size() > 2000) && (runnable = this.saveCubeTasks.poll()) != null) {
+        while((hasMoreTime.getAsBoolean() || this.cubeUnloadQueue.size() > 2000) && (runnable = this.cubeUnloadQueue.poll()) != null) {
             runnable.run();
         }
     }
@@ -327,15 +348,23 @@ public abstract class MixinChunkManager implements IChunkManager {
 
                     ((IServerWorldLightManager)this.lightEngine).setCubeStatusEmpty(icube.getCubePos());
                     this.lightEngine.tryScheduleUpdate();
-                    ((ICubeStatusListener) this.progressListener).onCubeStatusChange(icube.getCubePos(), (ChunkStatus)null);
+                    ((ICubeStatusListener) this.progressListener).onCubeStatusChange(icube.getCubePos(), null);
                 }
 
             }
-        }, this.saveCubeTasks::add).whenComplete((p_223171_1_, p_223171_2_) -> {
+        }, this.cubeUnloadQueue::add).whenComplete((p_223171_1_, p_223171_2_) -> {
             if (p_223171_2_ != null) {
-                LOGGER.error("Failed to save chunk " + ((ICubeHolder) chunkHolderIn).getCubePos(), p_223171_2_);
+                LOGGER.error("Failed to save cube " + ((ICubeHolder) chunkHolderIn).getCubePos(), p_223171_2_);
             }
         });
+    }
+
+    private void markCubePositionReplaceable(CubePos cubePos) {
+        this.cubeTypeCache.put(cubePos.asLong(), (byte)-1);
+    }
+
+    private byte markCubePosition(CubePos cubePos, ChunkStatus.ChunkType status) {
+        return this.cubeTypeCache.put(cubePos.asLong(), (byte)(status == ChunkStatus.ChunkType.PROTOCHUNK ? -1 : 1));
     }
 
     @Override
@@ -686,7 +715,7 @@ public abstract class MixinChunkManager implements IChunkManager {
 
     @Redirect(method = "save", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/server/ChunkManager;write(Lnet/minecraft/util/math/ChunkPos;Lnet/minecraft/nbt/CompoundTag;)V"))
     private void on$writeChunk(ChunkMap chunkManager, ChunkPos chunkPos, CompoundTag chunkNBT) {
-        this.regionCubeIO.saveChunkNBT(chunkPos, chunkNBT);
+        regionCubeIO.saveChunkNBT(chunkPos, chunkNBT);
     }
 
     @SuppressWarnings("UnresolvedMixinReference")
@@ -694,7 +723,7 @@ public abstract class MixinChunkManager implements IChunkManager {
     private CompoundTag on$readChunk(ChunkMap chunkManager, ChunkPos chunkPos) {
         try {
             //noinspection ConstantConditions
-            return this.regionCubeIO.loadChunkNBT(chunkPos);
+            return regionCubeIO.loadChunkNBT(chunkPos);
         } catch(IOException e) {
             LOGGER.error("Couldn't load chunk {}", chunkPos, e);
             //noinspection ConstantConditions
@@ -715,24 +744,17 @@ public abstract class MixinChunkManager implements IChunkManager {
             try {
                 this.level.getProfiler().incrementCounter("cubeLoad");
 
-                CompoundTag compoundnbt = this.regionCubeIO.loadCubeNBT(cubePos);
+                CompoundTag compoundnbt = regionCubeIO.loadCubeNBT(cubePos);
                 if (compoundnbt != null) {
                     boolean flag = compoundnbt.contains("Level", 10) && compoundnbt.getCompound("Level").contains("Status", 8);
                     if (flag) {
                         IBigCube iBigCube = CubeSerializer.read(this.level, this.structureManager, null, cubePos, compoundnbt);
                         //TODO: reimplement
-//                        iBigCube.setLastSaveTime(this.level.getGameTime());
-//                        this.markPosition(p_223172_1_, iBigCube.getStatus().getChunkType());
+                        this.markCubePosition(cubePos, iBigCube.getCubeStatus().getChunkType());
                         return Either.left(iBigCube);
                     }
-
-                    LOGGER.error("Chunk file at {} is missing level data, skipping", cubePos);
+                    LOGGER.error("Cube file at {} is missing level data, skipping", cubePos);
                 }
-
-//                IBigCube icube = CubeSerializer.loadCube(level, cubePos, this.storageFolder.toPath());
-//                if(icube != null)
-//                    return Either.left(icube);
-
             } catch (ReportedException reportedexception) {
                 Throwable throwable = reportedexception.getCause();
                 if (!(throwable instanceof IOException)) {
