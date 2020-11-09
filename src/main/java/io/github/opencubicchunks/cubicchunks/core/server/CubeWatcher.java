@@ -327,11 +327,29 @@ public class CubeWatcher implements ITicket, ICubeWatcher {
     
     boolean hasPlayerMatchingInRange(Predicate<EntityPlayerMP> predicate, int range) {
         double d = range*range;
+        double cx = cubePos.getXCenter();
+        double cy = cubePos.getYCenter();
+        double cz = cubePos.getZCenter();
         for (EntityPlayerMP e : players.elements()) {
             if (e == null) {
                 break;
             }
-            if (predicate.apply(e) && getDistanceSq(cubePos, e) <= d) {
+            if (predicate.apply(e)) {
+                double dist = cx - e.posX;
+                dist *= dist;
+                if (dist > d) {
+                    continue;
+                }
+                double dy = cy - e.posY;
+                dist += dy * dy;
+                if (dist > d) {
+                    continue;
+                }
+                double dz = cz - e.posZ;
+                dist += dz * dz;
+                if (dist > d) {
+                    continue;
+                }
                 return true;
             }
         }

@@ -319,11 +319,15 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
 
 
         //process instances to update
-        this.cubeWatchersToUpdate.forEach(CubeWatcher::update);
-        this.cubeWatchersToUpdate.clear();
+        if (!cubeWatchersToUpdate.isEmpty()) {
+            this.cubeWatchersToUpdate.forEach(CubeWatcher::update);
+            this.cubeWatchersToUpdate.clear();
+        }
 
-        this.columnWatchersToUpdate.forEach(ColumnWatcher::update);
-        this.columnWatchersToUpdate.clear();
+        if (!columnWatchersToUpdate.isEmpty()) {
+            this.columnWatchersToUpdate.forEach(ColumnWatcher::update);
+            this.columnWatchersToUpdate.clear();
+        }
 
         getWorldServer().profiler.endStartSection("sortToGenerate");
         //sort toLoadPending if needed, but at most every 4 ticks
@@ -438,23 +442,25 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
             }
         }
         getWorldServer().profiler.endStartSection("sendCubes");//unload
-        for (EntityPlayerMP player : cubesToSend.keySet()) {
-            Collection<Cube> cubes = cubesToSend.get(player);
-            if (vanillaNetworkHandler.hasCubicChunks(player)) {
-                PacketCubes packet = new PacketCubes(new ArrayList<>(cubes));
-                PacketDispatcher.sendTo(packet, player);
-            } else {
-                vanillaNetworkHandler.sendCubeLoadPackets(cubes, player);
+        if (!cubesToSend.isEmpty()) {
+            for (EntityPlayerMP player : cubesToSend.keySet()) {
+                Collection<Cube> cubes = cubesToSend.get(player);
+                if (vanillaNetworkHandler.hasCubicChunks(player)) {
+                    PacketCubes packet = new PacketCubes(new ArrayList<>(cubes));
+                    PacketDispatcher.sendTo(packet, player);
+                } else {
+                    vanillaNetworkHandler.sendCubeLoadPackets(cubes, player);
+                }
+                //Sending entities per cube.
+                for (Cube cube : cubes) {
+                    ((ICubicEntityTracker) getWorldServer().getEntityTracker()).sendLeashedEntitiesInCube(player, cube);
+                    CubeWatcher watcher = getCubeWatcher(cube.getCoords());
+                    assert watcher != null;
+                    MinecraftForge.EVENT_BUS.post(new CubeWatchEvent(cube, cube.getCoords(), watcher, player));
+                }
             }
-            //Sending entities per cube.
-            for (Cube cube : cubes) {
-                ((ICubicEntityTracker) getWorldServer().getEntityTracker()).sendLeashedEntitiesInCube(player, cube);
-                CubeWatcher watcher = getCubeWatcher(cube.getCoords());
-                assert watcher != null;
-                MinecraftForge.EVENT_BUS.post(new CubeWatchEvent(cube, cube.getCoords(), watcher, player));
-            }
+            cubesToSend.clear();
         }
-        cubesToSend.clear();
         getWorldServer().profiler.endSection();//sendCubes
         getWorldServer().profiler.endSection();//playerCubeMapTick
     }
@@ -938,6 +944,8 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
         world.profiler.endSection();
         
         return new AbstractIterator<Cube>() {
+
+            Iterator<Cube> persistentCubes = persistentCubesIterator;
             
             boolean shouldSkip(Cube cube){
                 if (cube == null) 
@@ -949,9 +957,12 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
                 return false;
             }
 
-            protected Cube computeNext() {
-                while(persistentCubesIterator.hasNext()){
-                    Cube cube = persistentCubesIterator.next();
+            @Override protected Cube computeNext() {
+                while(persistentCubes != null && persistentCubes.hasNext()){
+                    Cube cube = persistentCubes.next();
+                    if (!persistentCubes.hasNext()) {
+                        persistentCubes = null;
+                    }
                     if(shouldSkip(cube))
                         continue;
                     return cube;
