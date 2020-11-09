@@ -72,7 +72,7 @@ public class CubicChunksConfig {
 
     @Config.LangKey("cubicchunks.config.max_cube_generation_time_millis")
     @Config.Comment("Maximum amount of time spent on generating chunks per dimension.")
-    public static long maxCubeGenerationTimeMillis = 50;
+    public static int maxCubeGenerationTimeMillis = 50;
 
     @Config.LangKey("cubicchunks.config.use_vanilla_world_generators")
     @Config.Comment("Enabling this option will force cubic chunks to use world generators designed for two dimensional chunks, which are often used "
