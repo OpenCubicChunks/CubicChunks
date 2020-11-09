@@ -299,17 +299,17 @@ public class CubeSerializer {
             level.put("Entities", listTag3);
 //            level.put("Lights", packOffsets(cubePrimer.getPackedLights()));
 
-            CompoundTag carvingMasksNBT = new CompoundTag();
-            GenerationStep.Carving[] carvingSteps = GenerationStep.Carving.values();
-
-            for (GenerationStep.Carving carving : carvingSteps) {
-                BitSet bitSet = cubePrimer.getCarvingMask(carving);
-                if (bitSet != null) {
-                    carvingMasksNBT.putByteArray(carving.toString(), bitSet.toByteArray());
-                }
-            }
-
-            level.put("CarvingMasks", carvingMasksNBT);
+//            CompoundTag carvingMasksNBT = new CompoundTag();
+//            GenerationStep.Carving[] carvingSteps = GenerationStep.Carving.values();
+//
+//            for (GenerationStep.Carving carving : carvingSteps) {
+//                BitSet bitSet = cubePrimer.getCarvingMask(carving);
+//                if (bitSet != null) {
+//                    carvingMasksNBT.putByteArray(carving.toString(), bitSet.toByteArray());
+//                }
+//            }
+//
+//            level.put("CarvingMasks", carvingMasksNBT);
         }
 
         //TODO: implement missing cube methods and save format

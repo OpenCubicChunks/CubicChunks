@@ -710,13 +710,13 @@ public abstract class MixinChunkManager implements IChunkManager {
         return completablefuture1;
     }
 
-    @Redirect(method = "save", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/server/ChunkManager;write(Lnet/minecraft/util/math/ChunkPos;Lnet/minecraft/nbt/CompoundTag;)V"))
+    @Redirect(method = "save", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ChunkMap;write(Lnet/minecraft/world/level/ChunkPos;Lnet/minecraft/nbt/CompoundTag;)V"))
     private void on$writeChunk(ChunkMap chunkManager, ChunkPos chunkPos, CompoundTag chunkNBT) {
         regionCubeIO.saveChunkNBT(chunkPos, chunkNBT);
     }
 
     @SuppressWarnings("UnresolvedMixinReference")
-    @Redirect(method = "lambda$scheduleChunkLoad$14", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/server/ChunkManager;readChunk(Lnet/minecraft/util/math/ChunkPos;)Lnet/minecraft/nbt/CompoundTag;"))
+    @Redirect(method = "lambda$scheduleChunkLoad$14", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ChunkMap;readChunk(Lnet/minecraft/world/level/ChunkPos;)Lnet/minecraft/nbt/CompoundTag;"))
     private CompoundTag on$readChunk(ChunkMap chunkManager, ChunkPos chunkPos) {
         try {
             //noinspection ConstantConditions
