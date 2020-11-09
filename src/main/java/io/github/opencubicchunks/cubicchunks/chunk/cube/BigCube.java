@@ -92,8 +92,6 @@ public class BigCube implements ChunkAccess, IBigCube {
     private boolean dirty = true; // todo: change back to false?
     private boolean loaded = false;
 
-    private boolean hasEntities;
-
     private volatile boolean lightCorrect;
     private final Map<BlockPos, CompoundTag> deferredTileEntities = Maps.newHashMap();
 
@@ -319,10 +317,6 @@ public class BigCube implements ChunkAccess, IBigCube {
         this.setDirty(true);
     }
 
-    public void setHasEntities(boolean hasEntitiesIn) {
-        this.hasEntities = hasEntitiesIn;
-    }
-
     //TILEENTITY
     @Deprecated @Override public void setBlockEntityNbt(CompoundTag nbt) {
         this.setCubeBlockEntity(nbt);
@@ -537,7 +531,7 @@ public class BigCube implements ChunkAccess, IBigCube {
 
     @Deprecated @Override public boolean isUnsaved() { return isDirty(); }
     @Override public boolean isDirty() {
-        return dirty || this.hasEntities; //return this.dirty || this.hasEntities && this.world.getGameTime() != this.lastSaveTime;
+        return this.dirty;
     }
 
     @Override public boolean isEmptyCube() {
@@ -606,7 +600,7 @@ public class BigCube implements ChunkAccess, IBigCube {
         // TODO: support partial updates
         this.blockEntities.values().forEach(this::onBlockEntityRemove);
         this.blockEntities.clear();
-        
+
         for (int i = 0; i < IBigCube.SECTION_COUNT; i++) {
             boolean exists = emptyFlags.get(i);
 

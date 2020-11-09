@@ -221,9 +221,7 @@ public abstract class MixinChunkManager implements IChunkManager {
 
                     return cubeFuture.join();
                 }).filter((cube) -> cube instanceof CubePrimerWrapper || cube instanceof BigCube)
-                    .filter(this::cubeSave).forEach((unsavedCube) -> {
-                        savedAny.setTrue();
-                });
+                    .filter(this::cubeSave).forEach((unsavedCube) -> savedAny.setTrue());
             } while (savedAny.isTrue());
 
             this.processCubeUnloads(() -> true);
@@ -243,11 +241,10 @@ public abstract class MixinChunkManager implements IChunkManager {
 
     // chunkSave
     private boolean cubeSave(IBigCube cube) {
+//        this.poiManager.flush(cube.getCubePos());
         if (!cube.isDirty()) {
             return false;
         } else {
-
-            // cube.setLastSaveTime(this.world.getGameTime());
             cube.setDirty(false);
             CubePos cubePos = cube.getCubePos();
 
@@ -281,6 +278,7 @@ public abstract class MixinChunkManager implements IChunkManager {
 //                net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.event.world.ChunkDataEvent.Save(p_219229_1_, p_219229_1_.getWorldForge() != null ? p_219229_1_.getWorldForge() : this.level, compoundnbt));
                 this.regionCubeIO.storeCubeNBT(cubePos, compoundnbt);
 //                this.markPosition(cubePos, status.getChunkType());
+//                LOGGER.info("Saving cube {}", cubePos);
                 return true;
 
             } catch (Exception exception) {

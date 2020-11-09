@@ -71,7 +71,6 @@ public interface IBigCube extends BlockGetter {
     //MISC
     // can't be isModified due to obfuscation issues with IChunk
     void setDirty(boolean modified);
-
     boolean isDirty();
 
     //TODO: remove isEmptyCube from IBigCube to match IChunk

@@ -23,6 +23,7 @@ import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.level.biome.BiomeSource;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.chunk.*;
+import net.minecraft.world.level.levelgen.GenerationStep;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureManager;
 import net.minecraft.world.level.lighting.LevelLightEngine;
 import org.apache.logging.log4j.LogManager;
@@ -31,6 +32,7 @@ import javax.annotation.Nullable;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.BitSet;
 import java.util.Objects;
 import java.util.zip.GZIPInputStream;
 
@@ -125,7 +127,7 @@ public class CubeSerializer {
 //                    readEntities(level, p_222648_1_);
 //                });
             icube = new BigCube(worldIn.getLevel(), cubePos, biomecontainer, null, null, null, inhabitedTime, sections, (p_222648_1_) -> {
-                readEntities(level, p_222648_1_);
+                readEntities(worldIn, level, p_222648_1_);
             });
             //TODO: reimplement forge capabilities in save format
 //                if (level.contains("ForgeCaps")) ((LevelChunk)icube).readCapsFromNBT(level.getCompound("ForgeCaps"));
@@ -290,45 +292,25 @@ public class CubeSerializer {
         }
 
         level.put("TileEntities", tileEntitiesNBTList);
-        ListTag entitiesNBTList = new ListTag();
-        if (icube.getCubeStatus().getChunkType() == ChunkStatus.ChunkType.LEVELCHUNK) {//icube.getCubeStatus().getType() == ChunkStatus.ChunkType.LEVELCHUNK) {
-            BigCube cube = (BigCube)icube;
-            cube.setHasEntities(false);
+        if (icube.getCubeStatus().getChunkType() == ChunkStatus.ChunkType.PROTOCHUNK) {
+            CubePrimer cubePrimer = (CubePrimer)icube;
+            ListTag listTag3 = new ListTag();
+            listTag3.addAll(cubePrimer.getCubeEntities());
+            level.put("Entities", listTag3);
+//            level.put("Lights", packOffsets(cubePrimer.getPackedLights()));
 
-            for(int k = 0; k < cube.getCubeEntityLists().length; ++k) {
-                for(Entity entity : cube.getCubeEntityLists()[k]) {
-                    CompoundTag entityNBT = new CompoundTag();
-                    try {
-                        if (entity.save(entityNBT)) {
-                            cube.setHasEntities(true);
-                            entitiesNBTList.add(entityNBT);
-                        }
-                    } catch (Exception e) {
-                        LogManager.getLogger().error("An Entity type {} has thrown an exception trying to write state. It will not persist. Report this to the mod author", entity.getType(), e);
-                    }
+            CompoundTag carvingMasksNBT = new CompoundTag();
+            GenerationStep.Carving[] carvingSteps = GenerationStep.Carving.values();
+
+            for (GenerationStep.Carving carving : carvingSteps) {
+                BitSet bitSet = cubePrimer.getCarvingMask(carving);
+                if (bitSet != null) {
+                    carvingMasksNBT.putByteArray(carving.toString(), bitSet.toByteArray());
                 }
             }
-            //TODO: reimplement forge capabilities
-//            try {
-//                final CompoundTag capTag = cube.writeCapsToNBT();
-//                if (capTag != null) level.put("ForgeCaps", capTag);
-//            } catch (Exception exception) {
-//                LogManager.getLogger().error("A capability provider has thrown an exception trying to write state. It will not persist. Report this to the mod author", exception);
-//            }
-        } else {
-            CubePrimer cubePrimer = (CubePrimer)icube;
-            entitiesNBTList.addAll(cubePrimer.getCubeEntities());
-//            level.put("Lights", toNbt(cubePrimer.getCubePackedLightPositions()));
-            CompoundTag carvingMasksNBT = new CompoundTag();
-
-            //TODO: reimplement carving masks
-//            for(GenerationStage.Carving generationstage$carving : GenerationStage.Carving.values()) {
-//                carvingMasksNBT.putByteArray(generationstage$carving.toString(), icube.getCarvingMask(generationstage$carving).toByteArray());
-//            }
 
             level.put("CarvingMasks", carvingMasksNBT);
         }
-        level.put("Entities", entitiesNBTList);
 
         //TODO: implement missing cube methods and save format
 //        ITickList<Block> iticklist = icube.getBlocksToBeTicked();
@@ -438,14 +420,14 @@ public class CubeSerializer {
         ListTag entitiesNBTList = new ListTag();
         if (icube.getCubeStatus().getChunkType() == ChunkStatus.ChunkType.LEVELCHUNK) {//icube.getCubeStatus().getType() == ChunkStatus.ChunkType.LEVELCHUNK) {
             BigCube cube = (BigCube)icube;
-            cube.setHasEntities(false);
+//            cube.setHasEntities(false);
 
             for(int k = 0; k < cube.getCubeEntityLists().length; ++k) {
                 for(Entity entity : cube.getCubeEntityLists()[k]) {
                     CompoundTag entityNBT = new CompoundTag();
                     try {
                         if (entity.save(entityNBT)) {
-                            cube.setHasEntities(true);
+//                            cube.setHasEntities(true);
                             entitiesNBTList.add(entityNBT);
                         }
                     } catch (Exception e) {
@@ -539,23 +521,17 @@ public class CubeSerializer {
 
         return ChunkStatus.ChunkType.PROTOCHUNK;
     }
-    private static void readEntities(CompoundTag compound, BigCube cube) {
-        ListTag ListTag = compound.getList("Entities", 10);
-        Level world = cube.getLevel();
-
-        for(int i = 0; i < ListTag.size(); ++i) {
-            CompoundTag compoundnbt = ListTag.getCompound(i);
-            EntityType.loadEntityRecursive(compoundnbt, world, (p_222655_1_) -> {
-                cube.addEntity(p_222655_1_);
-                return p_222655_1_;
-            });
-            cube.setHasEntities(true);
+    private static void readEntities(ServerLevel serverLevel, CompoundTag compound, BigCube cube) {
+        if (compound.contains("Entities", 9)) {
+            ListTag entitiesTag = compound.getList("Entities", 10);
+            if (!entitiesTag.isEmpty()) {
+                serverLevel.addLegacyChunkEntities(EntityType.loadEntitiesRecursive(entitiesTag, serverLevel));
+            }
         }
 
-        ListTag ListTag1 = compound.getList("TileEntities", 10);
-
-        for(int j = 0; j < ListTag1.size(); ++j) {
-            CompoundTag compoundnbt1 = ListTag1.getCompound(j);
+        ListTag tileEntitiesNBT = compound.getList("TileEntities", 10);
+        for(int j = 0; j < tileEntitiesNBT.size(); ++j) {
+            CompoundTag compoundnbt1 = tileEntitiesNBT.getCompound(j);
             boolean flag = compoundnbt1.getBoolean("keepPacked");
             if (flag) {
                 cube.setCubeBlockEntity(compoundnbt1);

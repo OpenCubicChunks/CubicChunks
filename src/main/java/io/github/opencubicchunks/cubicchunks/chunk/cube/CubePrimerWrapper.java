@@ -119,14 +119,16 @@ public class CubePrimerWrapper extends CubePrimer {
     }
 
     //MISC
-    @Deprecated @Override public void setUnsaved(boolean modified) { this.setDirty(modified); }
+    @Deprecated @Override public void setUnsaved(boolean modified) {
+
+    }
     @Override public void setDirty(boolean modified) {
-        this.cube.setDirty(modified);
+
     }
 
-    @Deprecated @Override public boolean isUnsaved() { return this.isDirty(); }
+    @Deprecated @Override public boolean isUnsaved() { return false; }
     @Override public boolean isDirty() {
-        return this.cube.isDirty();
+        return false;
     }
 
     @Override public boolean isEmptyCube() {
