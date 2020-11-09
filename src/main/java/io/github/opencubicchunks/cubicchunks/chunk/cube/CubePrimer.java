@@ -35,10 +35,10 @@ import net.minecraft.world.level.levelgen.structure.StructureStart;
 import net.minecraft.world.level.lighting.LevelLightEngine;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.FluidState;
-import java.util.*;
-import java.util.stream.Stream;
 
 import javax.annotation.Nullable;
+import java.util.*;
+import java.util.stream.Stream;
 
 public class CubePrimer implements IBigCube, ChunkAccess {
 
@@ -61,15 +61,24 @@ public class CubePrimer implements IBigCube, ChunkAccess {
 
     private long inhabitedTime;
 
+    public CubePrimer(CubePos cubePos, UpgradeData upgradeData, LevelHeightAccessor levelHeightAccessor) {
+//        this(cubePos, upgradeData, (ChunkSection[])null, new ChunkPrimerTickList<>((p_205332_0_) -> {
+//            return p_205332_0_ == null || p_205332_0_.defaultBlockState().isAir();
+//        }, cubePos), new ChunkPrimerTickList<>((p_205766_0_) -> {
+//            return p_205766_0_ == null || p_205766_0_ == Fluids.EMPTY;
+//        }, cubePos));
+        this(cubePos, upgradeData, null, null, null, levelHeightAccessor);
+    }
+
     //TODO: add TickList<Block> and TickList<Fluid>
     public CubePrimer(CubePos cubePosIn, UpgradeData p_i49941_2_, @Nullable LevelChunkSection[] sectionsIn, ProtoTickList<Block> blockTickListIn,
-            ProtoTickList<Fluid> p_i49941_5_, LevelHeightAccessor levelHeightAccessor) {
+                      ProtoTickList<Fluid> p_i49941_5_, LevelHeightAccessor levelHeightAccessor) {
         this.cubePos = cubePosIn;
         this.levelHeightAccessor = levelHeightAccessor;
 
-        //        this.upgradeData = p_i49941_2_;
+        //        this.upgradeData = upgradeData;
 //        this.pendingBlockTicks = blockTickListIn;
-//        this.pendingFluidTicks = p_i49941_5_;
+//        this.pendingFluidTicks = fluidTickListIn;
         if(sectionsIn == null) {
             this.sections = new LevelChunkSection[IBigCube.SECTION_COUNT];
             for(int i = 0; i < IBigCube.SECTION_COUNT; i++) {

@@ -28,6 +28,7 @@ import io.github.opencubicchunks.cubicchunks.world.storage.CubeSerializer;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.longs.*;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.level.chunk.*;
 import net.minecraft.world.level.chunk.storage.ChunkSerializer;
 import net.minecraft.world.level.entity.ChunkStatusUpdateListener;
 import org.apache.commons.lang3.mutable.MutableBoolean;
@@ -67,10 +68,6 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.ChunkPos;
-import net.minecraft.world.level.chunk.ChunkAccess;
-import net.minecraft.world.level.chunk.ChunkGenerator;
-import net.minecraft.world.level.chunk.ChunkStatus;
-import net.minecraft.world.level.chunk.LightChunkGetter;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureManager;
 import net.minecraft.world.level.lighting.LevelLightEngine;
 import net.minecraft.world.level.storage.DimensionDataStorage;
@@ -766,7 +763,7 @@ public abstract class MixinChunkManager implements IChunkManager {
                 LOGGER.error("Couldn't load cube {}", cubePos, exception);
             }
 
-            return Either.left(new CubePrimer(cubePos, null, null, null, null, level));
+            return Either.left(new CubePrimer(cubePos, UpgradeData.EMPTY, level));
         }, this.mainThreadExecutor);
     }
 
