@@ -33,10 +33,7 @@ import it.unimi.dsi.fastutil.longs.LongSet;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.entity.ChunkStatusUpdateListener;
 import org.apache.commons.lang3.mutable.MutableBoolean;
-import org.spongepowered.asm.mixin.Final;
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
-import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.*;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Group;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -262,7 +259,7 @@ public abstract class MixinChunkManager implements IChunkManager {
 //                }
 
                 if (status.getChunkType() != ChunkStatus.ChunkType.LEVELCHUNK) {
-                    CompoundTag compoundnbt = this.readCube(cubePos);
+                    CompoundTag compoundnbt = this.regionCubeIO.loadCubeNBT(cubePos);
                     if (compoundnbt != null && CubeSerializer.getChunkStatus(compoundnbt) == ChunkStatus.ChunkType.LEVELCHUNK) {
                         return false;
                     }
@@ -276,9 +273,8 @@ public abstract class MixinChunkManager implements IChunkManager {
                 CompoundTag compoundnbt = CubeSerializer.write(this.level, cube);
                 //TODO: FORGE EVENT : reimplement ChunkDataEvent#Save
 //                net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.event.world.ChunkDataEvent.Save(p_219229_1_, p_219229_1_.getWorldForge() != null ? p_219229_1_.getWorldForge() : this.level, compoundnbt));
-                this.regionCubeIO.storeCubeNBT(cubePos, compoundnbt);
+                this.regionCubeIO.saveCubeNBT(cubePos, compoundnbt);
 //                this.markPosition(cubePos, status.getChunkType());
-//                LOGGER.info("Saving cube {}", cubePos);
                 return true;
 
             } catch (Exception exception) {
@@ -688,6 +684,24 @@ public abstract class MixinChunkManager implements IChunkManager {
         return completablefuture1;
     }
 
+    @Redirect(method = "save", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/server/ChunkManager;write(Lnet/minecraft/util/math/ChunkPos;Lnet/minecraft/nbt/CompoundTag;)V"))
+    private void on$writeChunk(ChunkMap chunkManager, ChunkPos chunkPos, CompoundTag chunkNBT) {
+        this.regionCubeIO.saveChunkNBT(chunkPos, chunkNBT);
+    }
+
+    @SuppressWarnings("UnresolvedMixinReference")
+    @Redirect(method = "lambda$scheduleChunkLoad$14", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/server/ChunkManager;readChunk(Lnet/minecraft/util/math/ChunkPos;)Lnet/minecraft/nbt/CompoundTag;"))
+    private CompoundTag on$readChunk(ChunkMap chunkManager, ChunkPos chunkPos) {
+        try {
+            //noinspection ConstantConditions
+            return this.regionCubeIO.loadChunkNBT(chunkPos);
+        } catch(IOException e) {
+            LOGGER.error("Couldn't load chunk {}", chunkPos, e);
+            //noinspection ConstantConditions
+            return null;
+        }
+    }
+
     //readChunk
     @Nullable
     private CompoundTag readCube(CubePos cubePos) throws IOException {
@@ -701,7 +715,7 @@ public abstract class MixinChunkManager implements IChunkManager {
             try {
                 this.level.getProfiler().incrementCounter("cubeLoad");
 
-                CompoundTag compoundnbt = this.readCube(cubePos);
+                CompoundTag compoundnbt = this.regionCubeIO.loadCubeNBT(cubePos);
                 if (compoundnbt != null) {
                     boolean flag = compoundnbt.contains("Level", 10) && compoundnbt.getCompound("Level").contains("Status", 8);
                     if (flag) {
@@ -1103,5 +1117,10 @@ public abstract class MixinChunkManager implements IChunkManager {
             return chunkholder == null ? CubeTaskPriorityQueue.levelCount - 1 : Math.min(chunkholder.getQueueLevel(),
                     CubeTaskPriorityQueue.levelCount - 1);
         };
+    }
+
+    @Inject(method = "close", at = @At("HEAD"))
+    public void on$close(CallbackInfo ci) {
+        regionCubeIO.flush();
     }
 }
