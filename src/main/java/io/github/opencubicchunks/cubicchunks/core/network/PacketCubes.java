@@ -24,9 +24,9 @@
  */
 package io.github.opencubicchunks.cubicchunks.core.network;
 
+import io.github.opencubicchunks.cubicchunks.api.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.core.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.core.client.CubeProviderClient;
-import io.github.opencubicchunks.cubicchunks.api.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.core.util.PacketUtils;
 import io.github.opencubicchunks.cubicchunks.core.world.cube.Cube;
 import io.netty.buffer.ByteBuf;
@@ -43,11 +43,11 @@ import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 
 @MethodsReturnNonnullByDefault
@@ -62,6 +62,9 @@ public class PacketCubes implements IMessage {
     }
 
     public PacketCubes(List<Cube> cubes) {
+        cubes.sort(Comparator.<Cube>comparingInt(c -> c.getCoords().getY())
+                .thenComparingInt(c -> c.getCoords().getX())
+                .thenComparingInt(c -> c.getCoords().getZ()));
         this.cubePos = new CubePos[cubes.size()];
         for (int i = 0; i < cubes.size(); i++) {
             cubePos[i] = cubes.get(i).getCoords();
