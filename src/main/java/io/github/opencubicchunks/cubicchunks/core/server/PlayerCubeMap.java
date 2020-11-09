@@ -79,6 +79,7 @@ import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -368,7 +369,7 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
         if (!this.cubesToGenerate.isEmpty()) {
             getWorldServer().profiler.startSection("cubes");
 
-            long stopTime = System.nanoTime() + 50000000L;
+            long stopTime = System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(CubicChunksConfig.maxCubeGenerationTimeMillis);
             int chunksToGenerate = CubicChunksConfig.maxGeneratedCubesPerTick;
             Iterator<CubeWatcher> iterator = this.cubesToGenerate.iterator();
 
@@ -376,6 +377,7 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
                 CubeWatcher watcher = iterator.next();
                 boolean success = watcher.getCube() != null && watcher.getCube().isFullyPopulated() && watcher.getCube().isInitialLightingDone() &&
                         !watcher.getCube().hasLightUpdates();
+                boolean alreadyLoaded = success;
                 if (!success) {
                     boolean canGenerate = watcher.hasPlayerMatching(CAN_GENERATE_CHUNKS);
                     getWorldServer().profiler.startSection("generate");
@@ -390,8 +392,9 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
                         iterator.remove();
                         this.cubesToSendToClients.remove(watcher);
                     }
-
-                    --chunksToGenerate;
+                    if (!alreadyLoaded) {
+                        --chunksToGenerate;
+                    }
                 }
             }
 

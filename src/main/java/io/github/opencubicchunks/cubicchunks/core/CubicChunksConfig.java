@@ -70,6 +70,10 @@ public class CubicChunksConfig {
     @Config.Comment("The maximum number of cubic chunks to generate per tick.")
     public static int maxGeneratedCubesPerTick = 49 * 16;
 
+    @Config.LangKey("cubicchunks.config.max_cube_generation_time_millis")
+    @Config.Comment("Maximum amount of time spent on generating chunks per dimension.")
+    public static long maxCubeGenerationTimeMillis = 50;
+
     @Config.LangKey("cubicchunks.config.use_vanilla_world_generators")
     @Config.Comment("Enabling this option will force cubic chunks to use world generators designed for two dimensional chunks, which are often used "
             + "for custom ore generators added by mods. To do so cubic chunks will pregenerate cubes in a range of height from 0 to 255. This is "
@@ -158,52 +162,52 @@ public class CubicChunksConfig {
     @Config.RangeInt(min = 16, max = CubicChunks.MAX_SUPPORTED_BLOCK_Y)
     public static int defaultMaxHeight = 1 << 30;
 
-    @Config.LangKey("cubicchunks.config.replaceLightRecheck")
+    @Config.LangKey("cubicchunks.config.replace_light_recheck")
     @Config.Comment("Replaces vanilla light check code with cubic chunks code for cubic chunks worlds.\n"
             + "Cubic chunks version keeps track of light changes on the server and sends them to client\n"
             + "and handles the edge of the world by scheduling chunk edge updates instead of failing.")
     public static boolean replaceLightRecheck = false;
 
-    @Config.LangKey("cubicchunks.config.updateKnownBrokenLightingOnLoad")
+    @Config.LangKey("cubicchunks.config.update_known_broken_lighting_on_load")
     @Config.Comment("Attempts to detect worlds saved with cubic chunks versions with lighting glitches, and fix them on world load.")
     public static boolean updateKnownBrokenLightingOnLoad = true;
 
-    @Config.LangKey("cubicchunks.config.worldgenWatchdogTimeLimit")
+    @Config.LangKey("cubicchunks.config.worldgen_watchdog_time_limit")
     @Config.Comment("Maximum amount of time (milliseconds) generating a single chunk can take in vanilla compatibility generator before forcing a "
             + "crash.")
     public static int worldgenWatchdogTimeLimit = 10000;
 
-    @Config.LangKey("cubicchunks.config.allowVanillaClients")
+    @Config.LangKey("cubicchunks.config.allow_vanilla_clients")
     @Config.Comment("Allows clients without cubic chunks to join. "
             + "THIS IS INTENDED FOR VANILLA CLIENTS. "
             + "This is VERY likely to break when used with other mods")
     public static boolean allowVanillaClients = false;
 
-    @Config.LangKey("cubicchunks.config.fastSimplifiedSkyLight")
+    @Config.LangKey("cubicchunks.config.fast_simplified_sky_light")
     @Config.Comment("Forces an MC-classic-like skylight propagation algorithm. It's much faster and doesn't look too bad. "
             + "You can enable it if you don't need normal skylight values but want extra performance for worldgen and block updates")
     public static boolean fastSimplifiedSkyLight = false;
 
-    @Config.LangKey("cubicchunks.config.cubesToSendPerTick")
+    @Config.LangKey("cubicchunks.config.cubes_to_send_per_tick")
     @Config.Comment("Max amount of cubes sent to client per tick to players")
     public static int cubesToSendPerTick = 81 * 8 + 1;
 
-    @Config.LangKey("cubicchunks.config.vanillaClients")
+    @Config.LangKey("cubicchunks.config.vanilla_clients")
     @Config.Comment("Options relating to support for vanilla clients.")
     public static VanillaClients vanillaClients = new VanillaClients();
 
     public static final class VanillaClients {
-        @Config.LangKey("cubicchunks.config.vanillaClients.horizontalSlices")
+        @Config.LangKey("cubicchunks.config.vanilla_clients.horizontal_slices")
         @Config.Comment("Enables horizontal slices for vanilla clients. "
                         + "This will cause coordinates to wrap around on the X and Z axes in the same way as on Y.")
         public boolean horizontalSlices = true;
 
-        @Config.LangKey("cubicchunks.config.vanillaClients.horizontalSlicesBedrockOnly")
+        @Config.LangKey("cubicchunks.config.vanilla_clients.horizontal_slices_bedrock_only")
         @Config.Comment("If horizontal slices is enabled, restricts horizontal slices to Bedrock edition clients.\n"
                         + "Note that Bedrock clients are not supported directly, but only when connecting through a proxy such as Geyser.")
         public boolean horizontalSlicesBedrockOnly = true;
 
-        @Config.LangKey("cubicchunks.config.vanillaClients.horizontalSliceSize")
+        @Config.LangKey("cubicchunks.config.vanilla_clients.horizontal_slice_size")
         @Config.Comment("The size (radius) of a horizontal slice.")
         public int horizontalSliceSize = 65536;
     }
