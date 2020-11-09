@@ -12,13 +12,20 @@ import java.util.function.Predicate;
 
 public class SurfaceTrackerSection {
 	public static final int MAX_SCALE = 10; // TODO: set real value
-	/** Number of bits needed to represent the children nodes (i.e. log2(NODE_COUNT)) */
+	/**
+	 * Number of bits needed to represent the children nodes (i.e. log2(NODE_COUNT))
+	 * This is also the number of bits that are added on each scale increase.
+	 */
 	private static final int NODE_COUNT_BITS = 1;
 	/** Number of children nodes */
 	public static final int NODE_COUNT = 1 << NODE_COUNT_BITS;
 
 	/** Number of bits needed to represent height (excluding null) at scale zero (i.e. log2(scale0 height)) */
+	// FIXME make this change based on IBigCube height
 	private static final int BASE_SIZE_BITS = 5;
+
+	// Use width of 16 to match columns.
+	private static final int WIDTH_BLOCKS = 16;
 
 	private final BitStorage heights;
 	private final BitSet dirtyPositions;
@@ -46,8 +53,9 @@ public class SurfaceTrackerSection {
 
 	public SurfaceTrackerSection(int scale, int scaledY, SurfaceTrackerSection parent, IBigCube cube, Heightmap.Types types) {
 //		super((ChunkAccess) cube, types);
-		this.heights = new BitStorage(BASE_SIZE_BITS + 1 + scale * NODE_COUNT_BITS, IBigCube.DIAMETER_IN_BLOCKS * IBigCube.DIAMETER_IN_BLOCKS);
-		this.dirtyPositions = new BitSet(IBigCube.DIAMETER_IN_BLOCKS * IBigCube.DIAMETER_IN_BLOCKS);
+		// +1 in bit size to make room for null values
+		this.heights = new BitStorage(BASE_SIZE_BITS + 1 + scale * NODE_COUNT_BITS, WIDTH_BLOCKS * WIDTH_BLOCKS);
+		this.dirtyPositions = new BitSet(WIDTH_BLOCKS * WIDTH_BLOCKS);
 		this.scale = scale;
 		this.scaledY = scaledY;
 		this.cube = cube;
@@ -158,7 +166,7 @@ public class SurfaceTrackerSection {
 	}
 
 	private int index(int x, int z) {
-		return AddressTools.getLocalAddress(x, z);
+		return z * WIDTH_BLOCKS + x;
 	}
 
 	@VisibleForTesting
