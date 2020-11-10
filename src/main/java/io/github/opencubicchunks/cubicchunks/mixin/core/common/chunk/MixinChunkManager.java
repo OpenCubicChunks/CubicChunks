@@ -716,7 +716,7 @@ public abstract class MixinChunkManager implements IChunkManager {
     }
 
     @SuppressWarnings("UnresolvedMixinReference")
-    @Redirect(method = "lambda$scheduleChunkLoad$14", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ChunkMap;readChunk(Lnet/minecraft/world/level/ChunkPos;)Lnet/minecraft/nbt/CompoundTag;"))
+    @Redirect(method = "lambda$scheduleChunkLoad$14(Lnet/minecraft/world/level/ChunkPos;)Lcom/mojang/datafixers/util/Either;", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ChunkMap;readChunk(Lnet/minecraft/world/level/ChunkPos;)Lnet/minecraft/nbt/CompoundTag;"))
     private CompoundTag on$readChunk(ChunkMap chunkManager, ChunkPos chunkPos) {
         try {
             //noinspection ConstantConditions

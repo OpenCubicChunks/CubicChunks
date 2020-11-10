@@ -3,7 +3,6 @@ import org.gradle.internal.os.OperatingSystem
 plugins {
     id 'fabric-loom' version '0.5-SNAPSHOT'
     id 'maven-publish'
-    id 'com.github.johnrengelman.shadow' version '5.2.0'
 }
 
 sourceCompatibility = JavaVersion.VERSION_1_8
@@ -11,13 +10,6 @@ targetCompatibility = JavaVersion.VERSION_1_8
 
 apply plugin: "io.github.opencubicchunks.gradle.mcGitVersion"
 apply plugin: "io.github.opencubicchunks.gradle.mixingen"
-
-build.dependsOn(tasks.findByName("shadowJar"))
-
-configurations {
-    shadow
-    implementation.extendsFrom(shadow)
-}
 
 mcGitVersion {
     snapshot = true
@@ -57,15 +49,6 @@ mixinGen {
 
 group = "io.github.opencubicchunks" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
 archivesBaseName = "CubicChunks"
-
-shadowJar {
-    configurations = [project.configurations.shadow]
-    relocate 'cubicchunks.regionlib', 'io.github.opencubicchunks.regionlib'
-}
-remapJar {
-    shadowJar {
-    }
-}
 
 configurations {
     debugCompile
@@ -166,7 +149,7 @@ dependencies {
     debugCompile "org.lwjgl:lwjgl-vulkan:$lwjglVersion"
     debugRuntime "org.lwjgl:lwjgl::$lwjglNatives"
 
-    shadow('io.github.opencubicchunks:regionlib:0.63.0-SNAPSHOT')
+    include implementation('io.github.opencubicchunks:regionlib:0.63.0-SNAPSHOT')
 }
 
 processResources {
