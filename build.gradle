@@ -58,6 +58,15 @@ mixinGen {
 group = "io.github.opencubicchunks" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
 archivesBaseName = "CubicChunks"
 
+shadowJar {
+    configurations = [project.configurations.shadow]
+    relocate 'cubicchunks.regionlib', 'io.github.opencubicchunks.regionlib'
+}
+remapJar {
+    shadowJar {
+    }
+}
+
 configurations {
     debugCompile
     debugRuntime {
