@@ -77,6 +77,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -150,6 +151,12 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
      * All columnWatchers that have pending height updates to send.
      */
     private final Set<ColumnWatcher> columnWatchersToUpdate = new HashSet<>();
+
+    /**
+     * A queue of cubes to add a player to, this limits the amount of cubes sent to a player per tick to the set limit
+     * even when joining an area with already existing cube watchers
+     */
+    private final Map<EntityPlayerMP, WatchersSortingList<CubeWatcher>> cubesToAddPlayerTo = new IdentityHashMap<>();
 
     /**
      * Contains all CubeWatchers that need to be sent to clients,
@@ -342,6 +349,7 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
             this.toSendToClientNeedSort = false;
             this.cubesToSendToClients.sort();
             this.columnsToSendToClients.sort();
+            this.cubesToAddPlayerTo.forEach((p, set) -> set.sort());
         }
 
         getWorldServer().profiler.endStartSection("generate");
@@ -413,7 +421,7 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
         }
         if (!this.cubesToSendToClients.isEmpty()) {
             getWorldServer().profiler.startSection("cubes");
-            int toSend = CubicChunksConfig.cubesToSendPerTick;//sending cubes, so send 8x more at once
+            int toSend = CubicChunksConfig.cubesToSendPerTick;
             Iterator<CubeWatcher> it = this.cubesToSendToClients.iterator();
 
             while (it.hasNext() && toSend > 0) {
@@ -432,6 +440,29 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
             getWorldServer().profiler.endSection(); // cubes
         }
 
+        if (!cubesToAddPlayerTo.isEmpty()) {
+            for (Iterator<EntityPlayerMP> iterator = cubesToAddPlayerTo.keySet().iterator(); iterator.hasNext(); ) {
+                EntityPlayerMP entityPlayerMP = iterator.next();
+                WatchersSortingList<CubeWatcher> watchers = cubesToAddPlayerTo.get(entityPlayerMP);
+                int toSend = CubicChunksConfig.cubesToSendPerTick;
+                Iterator<CubeWatcher> iter;
+                for (iter = watchers.iterator(); toSend > 0 && iter.hasNext(); ) {
+                    CubeWatcher watcher = iter.next();
+                    watcher.addPlayer(entityPlayerMP);
+                    CubeWatcher.SendToPlayersResult state = watcher.sendToPlayers();
+                    if (state == CubeWatcher.SendToPlayersResult.WAITING_LIGHT || state == CubeWatcher.SendToPlayersResult.WAITING) {
+                        if (!cubesToGenerate.contains(watcher)) {
+                            cubesToGenerate.appendToStart(watcher);
+                        }
+                    }
+                    toSend--;
+                    iter.remove();
+                }
+                if (!iter.hasNext()) {
+                    iterator.remove();
+                }
+            }
+        }
         getWorldServer().profiler.endStartSection("unload");
         //if there are no players - unload everything
         if (this.players.isEmpty()) {
@@ -581,7 +612,7 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
             }
             CubeWatcher cubeWatcher = getOrCreateCubeWatcher(currentPos);
 
-            cubeWatcher.addPlayer(player);
+            scheduleAddPlayerToWatcher(cubeWatcher, player);
         });
         this.players.put(player.getEntityId(), playerWrapper);
         this.setNeedSort();
@@ -606,7 +637,7 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
             CubeWatcher watcher = getCubeWatcher(cubePos);
             if (watcher != null) {
                 // remove from the watcher, it also removes the watcher if it becomes empty
-                watcher.removePlayer(player);
+                removePlayerFromCubeWatcher(watcher, player);
             }
 
             // remove column watchers if needed
@@ -690,14 +721,14 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
         cubesToLoad.forEach(pos -> {
             CubeWatcher cubeWatcher = this.getOrCreateCubeWatcher(pos);
             assert cubeWatcher.getCubePos().equals(pos);
-            cubeWatcher.addPlayer(entry.playerEntity);
+            scheduleAddPlayerToWatcher(cubeWatcher, entry.playerEntity);
         });
         getWorldServer().profiler.endStartSection("removeCubes");
         cubesToRemove.forEach(pos -> {
             CubeWatcher cubeWatcher = this.getCubeWatcher(pos);
             if (cubeWatcher != null) {
                 assert cubeWatcher.getCubePos().equals(pos);
-                cubeWatcher.removePlayer(entry.playerEntity);
+                removePlayerFromCubeWatcher(cubeWatcher, entry.playerEntity);
             }
         });
         getWorldServer().profiler.endStartSection("removeColumns");
@@ -710,6 +741,26 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
         });
         getWorldServer().profiler.endSection();//removeColumns
         getWorldServer().profiler.endSection();//updateMovedPlayer
+        setNeedSort();
+    }
+
+    private void removePlayerFromCubeWatcher(CubeWatcher cubeWatcher, EntityPlayerMP playerEntity) {
+        if (!cubeWatcher.containsPlayer(playerEntity)) {
+            WatchersSortingList<CubeWatcher> cubeWatchers = cubesToAddPlayerTo.get(playerEntity);
+            if (cubeWatchers != null) {
+                cubeWatchers.remove(cubeWatcher);
+            }
+        }
+        cubeWatcher.removePlayer(playerEntity);
+    }
+
+    private void scheduleAddPlayerToWatcher(CubeWatcher cubeWatcher, EntityPlayerMP playerEntity) {
+        cubesToAddPlayerTo.computeIfAbsent(playerEntity, p -> new WatchersSortingList<>(Comparator.comparingDouble(w -> {
+            double dx = w.getCubePos().getXCenter() - playerEntity.posX;
+            double dy = w.getCubePos().getYCenter() - playerEntity.posY;
+            double dz = w.getCubePos().getZCenter() - playerEntity.posZ;
+            return dx*dx + dy*dy + dz*dz;
+        }))).appendToEnd(cubeWatcher);
     }
 
     // CHECKED: 1.10.2-12.18.1.2092
@@ -776,7 +827,7 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
                     }
                     CubeWatcher cubeWatcher = this.getOrCreateCubeWatcher(pos);
                     if (!cubeWatcher.containsPlayer(player)) {
-                        cubeWatcher.addPlayer(player);
+                        scheduleAddPlayerToWatcher(cubeWatcher, player);
                     }
                 });
                 // either both got smaller or only one of them changed
@@ -790,10 +841,10 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
 
                 cubesToUnload.forEach(pos -> {
                     CubeWatcher cubeWatcher = this.getCubeWatcher(pos);
-                    if (cubeWatcher != null && cubeWatcher.containsPlayer(player)) {
-                        cubeWatcher.removePlayer(player);
+                    if (cubeWatcher != null) {
+                        removePlayerFromCubeWatcher(cubeWatcher, player);
                     } else {
-                        CubicChunks.LOGGER.warn("cubeWatcher null or doesn't contain player on render distance change");
+                        CubicChunks.LOGGER.warn("cubeWatcher null on render distance change");
                     }
                 });
                 columnsToUnload.forEach(pos -> {
@@ -837,6 +888,14 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
 
     // CHECKED: 1.10.2-12.18.1.2092
     void removeEntry(CubeWatcher cubeWatcher) {
+        if (!cubesToAddPlayerTo.isEmpty()) {
+            for (WatchersSortingList<CubeWatcher> value : cubesToAddPlayerTo.values()) {
+                if (value.contains(cubeWatcher)) {
+                    return;
+                }
+            }
+        }
+        cubeWatcher.invalidate();
         CubePos cubePos = cubeWatcher.getCubePos();
         cubeWatcher.updateInhabitedTime();
         CubeWatcher removed = this.cubeWatchers.remove(cubePos.getX(), cubePos.getY(), cubePos.getZ());
@@ -846,6 +905,15 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
         this.cubesToSendToClients.remove(cubeWatcher);
         if (cubeWatcher.getCube() != null) {
             cubeWatcher.getCube().getTickets().remove(cubeWatcher); // remove the ticket, so this Cube can unload
+        }
+        if (!cubesToAddPlayerTo.isEmpty()) {
+            for (Iterator<WatchersSortingList<CubeWatcher>> iterator = cubesToAddPlayerTo.values().iterator(); iterator.hasNext(); ) {
+                WatchersSortingList<CubeWatcher> value = iterator.next();
+                value.remove(cubeWatcher);
+                if (value.isEmpty()) {
+                    iterator.remove();
+                }
+            }
         }
         //don't unload, ChunkGc unloads chunks
     }

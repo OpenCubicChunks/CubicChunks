@@ -119,6 +119,9 @@ public class CubeWatcher implements ITicket, ICubeWatcher {
     // CHECKED: 1.10.2-12.18.1.2092
     void removePlayer(EntityPlayerMP player) {
         if (!this.players.contains(player)) {
+            if (this.players.isEmpty()) {
+                playerCubeMap.removeEntry(this);
+            }
             return;
         }
         // If we haven't loaded yet don't load the chunk just so we can clean it up
@@ -126,12 +129,6 @@ public class CubeWatcher implements ITicket, ICubeWatcher {
             this.players.remove(player);
 
             if (this.players.isEmpty()) {
-                if (loading) {
-                    AsyncWorldIOExecutor.dropQueuedCubeLoad(this.playerCubeMap.getWorldServer(),
-                            cubePos.getX(), cubePos.getY(), cubePos.getZ(),
-                            c -> this.cube = c);
-                }
-                invalid = true;
                 playerCubeMap.removeEntry(this);
             }
             return;
@@ -146,9 +143,17 @@ public class CubeWatcher implements ITicket, ICubeWatcher {
         MinecraftForge.EVENT_BUS.post(new CubeUnWatchEvent(cube, cubePos, this, player));
 
         if (this.players.isEmpty()) {
-            invalid = true;
             playerCubeMap.removeEntry(this);
         }
+    }
+
+    void invalidate() {
+        if (loading) {
+            AsyncWorldIOExecutor.dropQueuedCubeLoad(this.playerCubeMap.getWorldServer(),
+                    cubePos.getX(), cubePos.getY(), cubePos.getZ(),
+                    c -> this.cube = c);
+        }
+        invalid = true;
     }
 
     // CHECKED: 1.10.2-12.18.1.2092
