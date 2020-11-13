@@ -70,8 +70,8 @@ public abstract class MixinMinecraftServer {
         this.waitUntilNextTick();
 
         for(ServerLevel serverworld1 : this.levels.values()) {
-            ForcedChunksSavedData forcedchunkssavedata = serverworld1.getDataStorage().get(ForcedChunksSavedData::new, "chunks");
-            ForcedCubesSaveData forcedcubessavedata = serverworld1.getDataStorage().get(ForcedCubesSaveData::new, "cubes");
+            ForcedChunksSavedData forcedchunkssavedata = serverworld1.getDataStorage().get(ForcedChunksSavedData::load, "chunks");
+            ForcedCubesSaveData forcedcubessavedata = serverworld1.getDataStorage().get(ForcedCubesSaveData::load, "cubes");
             if (forcedchunkssavedata != null) {
                 LongIterator longiteratorChunks = forcedchunkssavedata.getChunks().iterator();
                 LongIterator longiteratorCubes = forcedcubessavedata.getCubes().iterator();

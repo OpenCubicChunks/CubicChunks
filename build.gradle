@@ -148,6 +148,8 @@ dependencies {
 
     debugCompile "org.lwjgl:lwjgl-vulkan:$lwjglVersion"
     debugRuntime "org.lwjgl:lwjgl::$lwjglNatives"
+
+    include implementation('io.github.opencubicchunks:regionlib:0.63.0-SNAPSHOT')
 }
 
 processResources {

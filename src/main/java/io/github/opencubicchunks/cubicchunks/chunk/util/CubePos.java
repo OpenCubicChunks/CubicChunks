@@ -131,6 +131,26 @@ public class CubePos extends Vec3i {
         return Coords.localToBlock(getZ(), localZ);
     }
 
+    public int getRegionX() {
+        return getX() >> 3;
+    }
+    public int getRegionY() {
+        return getY() >> 3;
+    }
+    public int getRegionZ() {
+        return getZ() >> 3;
+    }
+
+    public int getLocalRegionX() {
+        return getX() & 15;
+    }
+    public int getLocalRegionY() {
+        return getY() & 15;
+    }
+    public int getLocalRegionZ() {
+        return getZ() & 15;
+    }
+
     public static long sectionToCubeSectionLong(long sectionPosIn)
     {
         return CubePos.from(SectionPos.of(sectionPosIn)).asSectionPos().asLong();

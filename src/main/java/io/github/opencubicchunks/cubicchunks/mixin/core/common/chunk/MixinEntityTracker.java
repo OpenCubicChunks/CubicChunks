@@ -4,6 +4,7 @@ import io.github.opencubicchunks.cubicchunks.chunk.IChunkManager;
 import io.github.opencubicchunks.cubicchunks.chunk.ICubeHolder;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.ChunkManagerAccess;
+import net.minecraft.server.network.ServerPlayerConnection;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
@@ -27,7 +28,7 @@ public abstract class MixinEntityTracker {
 
     @Shadow @Final private ServerEntity serverEntity;
 
-    @Shadow @Final private Set<ServerPlayer> seenBy;
+    @Shadow @Final private Set<ServerPlayerConnection> seenBy;
 
     @Shadow protected abstract int getEffectiveRange();
 
@@ -55,10 +56,10 @@ public abstract class MixinEntityTracker {
                     }
                 }
 
-                if (spawn && this.seenBy.add(player)) {
+                if (spawn && this.seenBy.add(player.connection)) {
                     this.serverEntity.addPairing(player);
                 }
-            } else if (this.seenBy.remove(player)) {
+            } else if (this.seenBy.remove(player.connection)) {
                 this.serverEntity.removePairing(player);
             }
 

@@ -93,8 +93,6 @@ public class BigCube implements ChunkAccess, IBigCube {
     private boolean dirty = true; // todo: change back to false?
     private boolean loaded = false;
 
-    private boolean hasEntities;
-
     private volatile boolean lightCorrect;
     private final Map<BlockPos, CompoundTag> deferredTileEntities = Maps.newHashMap();
 
@@ -164,9 +162,9 @@ public class BigCube implements ChunkAccess, IBigCube {
                 null, cubePrimerIn.getInhabitedTime(), cubePrimerIn.getCubeSections(), null);
 
         for(CompoundTag compoundnbt : cubePrimerIn.getCubeEntities()) {
-            EntityType.loadEntityRecursive(compoundnbt, worldIn, (p_217325_1_) -> {
-                this.addEntity(p_217325_1_);
-                return p_217325_1_;
+            EntityType.loadEntityRecursive(compoundnbt, worldIn, (entity) -> {
+                this.addEntity(entity);
+                return entity;
             });
         }
 
@@ -308,9 +306,7 @@ public class BigCube implements ChunkAccess, IBigCube {
     }
 
     private int getIndexFromEntity(Entity entityIn) {
-        return (Mth.floor(entityIn.getX() / 16.0D) * IBigCube.DIAMETER_IN_SECTIONS * IBigCube.DIAMETER_IN_SECTIONS) +
-                (Mth.floor(entityIn.getY() / 16.0D) * IBigCube.DIAMETER_IN_SECTIONS) +
-                Mth.floor(entityIn.getZ() / 16.0D);
+        return Coords.blockToIndex((int)entityIn.getX(), (int)entityIn.getY(), (int)entityIn.getZ());
     }
 
     public void removeEntity(Entity entityIn) {
@@ -327,10 +323,6 @@ public class BigCube implements ChunkAccess, IBigCube {
 
         this.entityLists[index].remove(entityIn);
         this.setDirty(true);
-    }
-
-    public void setHasEntities(boolean hasEntitiesIn) {
-        this.hasEntities = hasEntitiesIn;
     }
 
     //TILEENTITY
@@ -547,7 +539,7 @@ public class BigCube implements ChunkAccess, IBigCube {
 
     @Deprecated @Override public boolean isUnsaved() { return isDirty(); }
     @Override public boolean isDirty() {
-        return dirty || this.hasEntities; //return this.dirty || this.hasEntities && this.world.getGameTime() != this.lastSaveTime;
+        return this.dirty;
     }
 
     @Override public boolean isEmptyCube() {
@@ -616,7 +608,7 @@ public class BigCube implements ChunkAccess, IBigCube {
         // TODO: support partial updates
         this.blockEntities.values().forEach(this::onBlockEntityRemove);
         this.blockEntities.clear();
-        
+
         for (int i = 0; i < IBigCube.SECTION_COUNT; i++) {
             boolean exists = emptyFlags.get(i);
 
