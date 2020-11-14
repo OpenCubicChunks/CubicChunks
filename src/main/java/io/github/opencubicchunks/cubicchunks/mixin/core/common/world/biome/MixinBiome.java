@@ -1,12 +1,12 @@
 package io.github.opencubicchunks.cubicchunks.mixin.core.common.world.biome;
 
+import io.github.opencubicchunks.cubicchunks.world.CubeWorldGenRegion;
 import io.github.opencubicchunks.cubicchunks.world.biome.BiomeGetter;
 import net.minecraft.CrashReport;
 import net.minecraft.ReportedException;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Registry;
 import net.minecraft.world.level.StructureFeatureManager;
-import net.minecraft.world.level.WorldGenLevel;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.biome.BiomeGenerationSettings;
 import net.minecraft.world.level.chunk.ChunkGenerator;
@@ -22,15 +22,16 @@ import java.util.function.Supplier;
 
 @Mixin(Biome.class)
 public class MixinBiome implements BiomeGetter {
-    @Shadow @Final private BiomeGenerationSettings generationSettings;
+    @Shadow
+    @Final
+    private BiomeGenerationSettings generationSettings;
 
     @Override
-    public void generate(StructureFeatureManager structureFeatureManager, ChunkGenerator chunkGenerator, WorldGenLevel worldGenRegion, long seed, WorldgenRandom worldgenRandom, BlockPos blockPos) {
+    public void generate(StructureFeatureManager structureFeatureManager, ChunkGenerator chunkGenerator, CubeWorldGenRegion worldGenRegion, long seed, WorldgenRandom worldgenRandom, BlockPos blockPos) {
         List<List<Supplier<ConfiguredFeature<?, ?>>>> list = this.generationSettings.features();
         int i = GenerationStep.Decoration.values().length;
-        System.out.println(i);
 
-        for(int j = 0; j < i; ++j) {
+        for (int j = 0; j < i; ++j) {
             int k = 0;
 //            if (structureFeatureManager.shouldGenerateFeatures()) {
 //                List<StructureFeature<?>> list2 = (List)this.structuresByStep.getOrDefault(j, Collections.emptyList());
@@ -57,21 +58,33 @@ public class MixinBiome implements BiomeGetter {
 //                }
 //            }
 
-            if (list.size() > j) {
+//            final Set<String> featureIDWhitelist = new HashSet<>(Arrays.asList(
+//                    new ResourceLocation("forest_flower_trees"),
+//                    new ResourceLocation("taiga_vegetation"),
+//                    new ResourceLocation("trees_shattered_savanna"),
+//                    new ResourceLocation("trees_savanna"),
+//                    new ResourceLocation("birch_tall"),
+//                    new ResourceLocation("trees_birch"),
+//                    new ResourceLocation("trees_mountain_edge"),
+//                    new ResourceLocation("taiga_vegetation"),
+//                    new ResourceLocation("taiga_vegetation").toString()
+//            ));
 
-                for (Supplier<ConfiguredFeature<?, ?>> configuredFeatureSupplier : list.get(8)) {
+            if (list.size() > j) {
+                for (Supplier<ConfiguredFeature<?, ?>> configuredFeatureSupplier : list.get(GenerationStep.Decoration.VEGETAL_DECORATION.ordinal())) {
                     ConfiguredFeature<?, ?> configuredFeature = configuredFeatureSupplier.get();
 
-                    try {
-                        configuredFeature.place(worldGenRegion, chunkGenerator, worldgenRandom, blockPos);
-                    } catch (Exception var22) {
-                        CrashReport crashReport2 = CrashReport.forThrowable(var22, "Feature placement");
-                        crashReport2.addCategory("Feature").setDetail("Id", Registry.FEATURE.getKey(configuredFeature.feature)).setDetail("Config", configuredFeature.config).setDetail("Description", () -> {
-                            return configuredFeature.feature.toString();
-                        });
-                        throw new ReportedException(crashReport2);
+//                    ResourceLocation key = BuiltinRegistries.CONFIGURED_FEATURE.getKey(configuredFeature);
+                        try {
+                            configuredFeature.place(worldGenRegion, chunkGenerator, worldgenRandom, blockPos);
+                        } catch (Exception e) {
+                            CrashReport crashReport2 = CrashReport.forThrowable(e, "Feature placement");
+                            crashReport2.addCategory("Feature").setDetail("Id", Registry.FEATURE.getKey(configuredFeature.feature)).setDetail("Config", configuredFeature.config).setDetail("Description", () -> {
+                                return configuredFeature.feature.toString();
+                            });
+                            throw new ReportedException(crashReport2);
+                        }
                     }
-                }
 
 //                for(Iterator<Supplier<ConfiguredFeature<?, ?>>> var23 = (list.get(8)).iterator(); var23.hasNext(); ++k) {
 //                    Supplier<ConfiguredFeature<?, ?>> supplier = var23.next();
