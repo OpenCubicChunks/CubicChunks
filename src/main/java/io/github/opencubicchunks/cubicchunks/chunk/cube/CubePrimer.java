@@ -5,7 +5,6 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.biome.CubeBiomeContainer;
-import io.github.opencubicchunks.cubicchunks.chunk.heightmap.CCHeightmap;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import it.unimi.dsi.fastutil.longs.LongSet;
@@ -44,8 +43,6 @@ public class CubePrimer implements IBigCube, ChunkAccess {
     private final LevelHeightAccessor levelHeightAccessor;
     private ChunkStatus status = ChunkStatus.EMPTY;
 
-    private final Map<Heightmap.Types, CCHeightmap> heightmaps;
-
 
     @Nullable
     private CubeBiomeContainer biomes;
@@ -75,7 +72,6 @@ public class CubePrimer implements IBigCube, ChunkAccess {
                       ProtoTickList<Fluid> p_i49941_5_, LevelHeightAccessor levelHeightAccessor) {
         this.cubePos = cubePosIn;
         this.levelHeightAccessor = levelHeightAccessor;
-        this.heightmaps = Maps.newEnumMap(Heightmap.Types.class);
 
         //        this.upgradeData = upgradeData;
 //        this.pendingBlockTicks = blockTickListIn;

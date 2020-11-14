@@ -1,12 +1,12 @@
 package io.github.opencubicchunks.cubicchunks.chunk.heightmap;
 
+import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.levelgen.Heightmap;
 
 public class SurfaceTrackerWrapper extends Heightmap {
 	private final SurfaceTrackerSection surfaceTracker;
-	// TODO how do we deal with having multiple columns per SurfaceTracker?
 //	private final ChunkAccess chunk;
 
 	// TODO use mixin sorcery to nullify the private fields of superclass
@@ -32,11 +32,17 @@ public class SurfaceTrackerWrapper extends Heightmap {
 	// TODO not sure what to do about these methods
 	@Override
 	public void setRawData(long[] ls) {
-		throw new UnsupportedOperationException();
+//		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public long[] getRawData() {
-		throw new UnsupportedOperationException();
+//		throw new UnsupportedOperationException();
+		return new long[]{};
+	}
+
+	public void loadCube(IBigCube cube) {
+		// TODO loading should only cause marking as dirty if not loading from save file
+		this.surfaceTracker.loadCube(cube, true);
 	}
 }

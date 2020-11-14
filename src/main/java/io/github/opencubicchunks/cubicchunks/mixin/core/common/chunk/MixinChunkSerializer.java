@@ -84,14 +84,14 @@ public abstract class MixinChunkSerializer {
             }
         }
         newChunk.setLightCorrect(true);
-        CompoundTag heightmaps = level.getCompound("Heightmaps");
-
-        for(Heightmap.Types heightmapType : newChunk.getStatus().heightmapsAfter()) {
-            String s = heightmapType.getSerializationKey();
-            if (heightmaps.contains(s, 12)) { // nbt long array
-                newChunk.setHeightmap(heightmapType, heightmaps.getLongArray(s));
-            }
-        }
+//        CompoundTag heightmaps = level.getCompound("Heightmaps");
+//
+//        for(Heightmap.Types heightmapType : newChunk.getStatus().heightmapsAfter()) {
+//            String s = heightmapType.getSerializationKey();
+//            if (heightmaps.contains(s, 12)) { // nbt long array
+//                newChunk.setHeightmap(heightmapType, heightmaps.getLongArray(s));
+//            }
+//        }
         // for ChunkSerializerMixin from fabric-structure-api-v1.mixins to target
         newChunk.setAllReferences(new HashMap<>());
         if (level.getBoolean("shouldSave")) {
@@ -121,13 +121,13 @@ public abstract class MixinChunkSerializer {
         level.putLong("InhabitedTime", chunkIn.getInhabitedTime());
         level.putString("Status", chunkIn.getStatus().getName());
 
-        CompoundTag heightmaps = new CompoundTag();
-        for(Map.Entry<Heightmap.Types, Heightmap> entry : chunkIn.getHeightmaps()) {
-            if (chunkIn.getStatus().heightmapsAfter().contains(entry.getKey())) {
-                heightmaps.put(entry.getKey().getSerializationKey(), new LongArrayTag(entry.getValue().getRawData()));
-            }
-        }
-        level.put("Heightmaps", heightmaps);
+//        CompoundTag heightmaps = new CompoundTag();
+//        for(Map.Entry<Heightmap.Types, Heightmap> entry : chunkIn.getHeightmaps()) {
+//            if (chunkIn.getStatus().heightmapsAfter().contains(entry.getKey())) {
+//                heightmaps.put(entry.getKey().getSerializationKey(), new LongArrayTag(entry.getValue().getRawData()));
+//            }
+//        }
+//        level.put("Heightmaps", heightmaps);
         return compoundnbt;
     }
 }

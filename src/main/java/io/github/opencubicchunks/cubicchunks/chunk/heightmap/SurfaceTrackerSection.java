@@ -94,7 +94,7 @@ public class SurfaceTrackerSection {
 				}
 			}
 		}
-		heights.set(idx, maxY == Integer.MIN_VALUE ? 0 : maxY + 1 - scaledYBottomY(scaledY, scale) * IBigCube.DIAMETER_IN_BLOCKS);
+		heights.set(idx, absToRelY(maxY, scaledY, scale));
 		dirtyPositions.clear(idx);
 		return maxY;
 	}
@@ -119,7 +119,7 @@ public class SurfaceTrackerSection {
 			return;
 		}
 		for (int i = 0; i < nodes.length; i++) {
-			if (nodes[1] != null) {
+			if (nodes[i] != null) {
 				continue;
 			}
 			int newScaledY = indexToScaledY(i, scale, scaledY);
@@ -192,7 +192,7 @@ public class SurfaceTrackerSection {
 		return (nodeScaledY << NODE_COUNT_BITS) + index;
 	}
 
-	/** Get the lowest world y coordinate for a given scaledY and scale */
+	/** Get the lowest cube y coordinate for a given scaledY and scale */
 	@VisibleForTesting
 	static int scaledYBottomY(int scaledY, int scale) {
 		if (scale == MAX_SCALE) {
@@ -201,13 +201,21 @@ public class SurfaceTrackerSection {
 		return scaledY << (scale * NODE_COUNT_BITS);
 	}
 
-	// TODO might want to make the reverse of this into a helper function too?
 	/** Get the world y coordinate for a given relativeY, scaledY and scale */
 	@VisibleForTesting
 	static int relToAbsY(int relativeY, int scaledY, int scale) {
 		if (relativeY == 0) {
 			return Integer.MIN_VALUE;
 		}
-		return relativeY - 1 + scaledYBottomY(scaledY, scale);
+		return relativeY - 1 + scaledYBottomY(scaledY, scale) * IBigCube.DIAMETER_IN_BLOCKS;
+	}
+
+	/** Get the relative y coordinate for a given absoluteY, scaledY and scale */
+	@VisibleForTesting
+	static int absToRelY(int absoluteY, int scaledY, int scale) {
+		if (absoluteY == Integer.MIN_VALUE) {
+			return 0;
+		}
+		return absoluteY + 1 - scaledYBottomY(scaledY, scale) * IBigCube.DIAMETER_IN_BLOCKS;
 	}
 }

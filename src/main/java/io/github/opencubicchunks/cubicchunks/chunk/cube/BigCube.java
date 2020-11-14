@@ -5,7 +5,8 @@ import com.google.common.collect.Sets;
 import io.github.opencubicchunks.cubicchunks.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.biome.CubeBiomeContainer;
-import io.github.opencubicchunks.cubicchunks.chunk.heightmap.CCHeightmap;
+import io.github.opencubicchunks.cubicchunks.chunk.heightmap.SurfaceTrackerSection;
+import io.github.opencubicchunks.cubicchunks.chunk.heightmap.SurfaceTrackerWrapper;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.ChunkSectionAccess;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
@@ -84,7 +85,7 @@ public class BigCube implements ChunkAccess, IBigCube {
     private final ClassInstanceMultiMap<Entity>[] entityLists;
     private final Level level;
 
-    private final Map<Heightmap.Types, CCHeightmap> heightmaps;
+    private final Map<Heightmap.Types, SurfaceTrackerSection> heightmaps;
 
     private final BitSet pendingHeightmapUpdates = new BitSet(DIAMETER_IN_BLOCKS * DIAMETER_IN_BLOCKS);
 
@@ -767,6 +768,20 @@ public class BigCube implements ChunkAccess, IBigCube {
         if (this.postLoadConsumer != null) {
             this.postLoadConsumer.accept(this);
             this.postLoadConsumer = null;
+        }
+        // TODO heightmap stuff should probably be elsewhere rather than here.
+        ChunkPos pos = this.cubePos.asChunkPos();
+        for (int x = 0; x < IBigCube.DIAMETER_IN_SECTIONS; x++) {
+            for (int z = 0; z < IBigCube.DIAMETER_IN_SECTIONS; z++) {
+                // TODO we really, *really* shouldn't be force-loading columns here.
+                //      probably the easiest approach until we get a "columns before cubes" invariant though.
+                LevelChunk chunk = this.level.getChunk(pos.x + x, pos.z + z);
+                for (Map.Entry<Heightmap.Types, Heightmap> entry : chunk.getHeightmaps()) {
+                    Heightmap heightmap = entry.getValue();
+                    SurfaceTrackerWrapper tracker = (SurfaceTrackerWrapper) heightmap;
+                    tracker.loadCube(this);
+                }
+            }
         }
     }
 
