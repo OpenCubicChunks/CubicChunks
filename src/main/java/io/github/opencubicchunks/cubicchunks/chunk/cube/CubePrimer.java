@@ -9,6 +9,9 @@ import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import it.unimi.dsi.fastutil.shorts.ShortList;
+import net.minecraft.CrashReport;
+import net.minecraft.CrashReportCategory;
+import net.minecraft.ReportedException;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.SectionPos;
 import net.minecraft.nbt.CompoundTag;
@@ -28,6 +31,7 @@ import net.minecraft.world.level.levelgen.structure.StructureStart;
 import net.minecraft.world.level.lighting.LevelLightEngine;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.FluidState;
+import net.minecraft.world.level.material.Fluids;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -320,7 +324,23 @@ public class CubePrimer implements IBigCube, ChunkAccess {
     }
 
     @Override public FluidState getFluidState(BlockPos pos) {
-        throw new UnsupportedOperationException("Not implemented");
+        int x = pos.getX();
+        int y = pos.getY();
+        int z = pos.getZ();
+        try {
+            int index = Coords.blockToIndex(x, y, z);
+            if (!LevelChunkSection.isEmpty(this.sections[index])) {
+                return this.sections[index].getFluidState(x & 15, y & 15, z & 15);
+            }
+            return Fluids.EMPTY.defaultFluidState();
+        } catch (Throwable var7) {
+            CrashReport crashReport = CrashReport.forThrowable(var7, "Getting fluid state");
+            CrashReportCategory crashReportCategory = crashReport.addCategory("Block being got");
+            crashReportCategory.setDetail("Location", () -> {
+                return CrashReportCategory.formatLocation(this, x, y, z);
+            });
+            throw new ReportedException(crashReport);
+        }
     }
 
     @Override public Collection<Map.Entry<Heightmap.Types, Heightmap>> getHeightmaps() {

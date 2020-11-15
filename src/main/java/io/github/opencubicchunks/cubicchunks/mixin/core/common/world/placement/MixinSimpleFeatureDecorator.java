@@ -30,7 +30,7 @@ public abstract class MixinSimpleFeatureDecorator <DC extends DecoratorConfigura
     }
 
     @Override
-    public Stream<BlockPos> placeCubic(Random rand, DC config, BlockPos pos) {
-        return place(rand, config, pos);
+    public Stream<BlockPos> placeCubic(Random rand, DC config, BlockPos minCubePos) {
+        return place(rand, config, minCubePos);
     }
 }

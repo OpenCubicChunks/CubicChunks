@@ -14,10 +14,10 @@ import java.util.stream.Stream;
 public abstract class MixinSquareDecorator implements CubicSimpleFeatureDecorator {
 
     @Override
-    public Stream<BlockPos> placeCubic(Random rand, DecoratorConfiguration config, BlockPos pos) {
-        int x = rand.nextInt(IBigCube.DIAMETER_IN_BLOCKS) + pos.getX();
-        int y = pos.getY();
-        int z = rand.nextInt(IBigCube.DIAMETER_IN_BLOCKS) + pos.getZ();
+    public Stream<BlockPos> placeCubic(Random rand, DecoratorConfiguration config, BlockPos minCubePos) {
+        int x = rand.nextInt(IBigCube.DIAMETER_IN_BLOCKS) + minCubePos.getX();
+        int y = minCubePos.getY();
+        int z = rand.nextInt(IBigCube.DIAMETER_IN_BLOCKS) + minCubePos.getZ();
         return Stream.of(new BlockPos(x, y, z));
     }
 }

@@ -8,7 +8,7 @@ import java.util.stream.Stream;
 
 public interface CubicSimpleFeatureDecorator<DC extends DecoratorConfiguration> {
 
-    default Stream<BlockPos> placeCubic(Random rand, DC config, BlockPos pos) {
+    default Stream<BlockPos> placeCubic(Random rand, DC config, BlockPos minCubePos) {
         throw new UnsupportedOperationException("Not Implemented for " + this.getClass());
     }
 }

@@ -43,6 +43,7 @@ import net.minecraft.world.level.levelgen.feature.StructureFeature;
 import net.minecraft.world.level.levelgen.structure.StructureStart;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.FluidState;
+import net.minecraft.world.level.material.Fluids;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -723,8 +724,26 @@ public class BigCube implements ChunkAccess, IBigCube {
     }
 
     @Override public FluidState getFluidState(BlockPos pos) {
-        throw new UnsupportedOperationException("Not implemented");
+        return this.getFluidState(pos.getX(), pos.getY(), pos.getZ());
     }
+
+    public FluidState getFluidState(int x, int y, int z) {
+        try {
+            int index = Coords.blockToIndex(x, y, z);
+            if (!LevelChunkSection.isEmpty(this.sections[index])) {
+                return this.sections[index].getFluidState(x & 15, y & 15, z & 15);
+            }
+            return Fluids.EMPTY.defaultFluidState();
+        } catch (Throwable var7) {
+            CrashReport crashReport = CrashReport.forThrowable(var7, "Getting fluid state");
+            CrashReportCategory crashReportCategory = crashReport.addCategory("Block being got");
+            crashReportCategory.setDetail("Location", () -> {
+                return CrashReportCategory.formatLocation(this, x, y, z);
+            });
+            throw new ReportedException(crashReport);
+        }
+    }
+
 
     // getStructureStart
     @Nullable @Override public StructureStart<?> getStartForFeature(StructureFeature<?> var1) {
