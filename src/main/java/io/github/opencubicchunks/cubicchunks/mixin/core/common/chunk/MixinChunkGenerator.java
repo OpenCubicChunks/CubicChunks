@@ -8,6 +8,7 @@ import io.github.opencubicchunks.cubicchunks.chunk.cube.CubePrimer;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.OverworldBiomeSourceAccess;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
+import io.github.opencubicchunks.cubicchunks.world.CubeWorldGenRandom;
 import io.github.opencubicchunks.cubicchunks.world.CubeWorldGenRegion;
 import io.github.opencubicchunks.cubicchunks.world.biome.BiomeGetter;
 import io.github.opencubicchunks.cubicchunks.world.biome.StripedBiomeSource;
@@ -222,7 +223,7 @@ public class MixinChunkGenerator implements ICubeGenerator {
         int zStart = Coords.cubeToMinBlock(mainCubeZ);
 
         //Y value stays 32
-        WorldgenRandom worldgenRandom = new WorldgenRandom();
+        CubeWorldGenRandom worldgenRandom = new CubeWorldGenRandom();
 
         //Get each individual column from a given cube no matter the size. Where y height is the same per column.
         //Feed the given columnMinPos into the feature decorators.
@@ -230,7 +231,7 @@ public class MixinChunkGenerator implements ICubeGenerator {
             for (int columnZ = 0; columnZ < IBigCube.DIAMETER_IN_SECTIONS; columnZ++) {
                 BlockPos columnMinPos = new BlockPos(xStart + (Coords.sectionToMinBlock(columnX)), yStart, zStart + (Coords.sectionToMinBlock(columnZ)));
 
-                long seed = worldgenRandom.setDecorationSeed(region.getSeed(), columnMinPos.getX(), columnMinPos.getZ());
+                long seed = worldgenRandom.setDecorationSeed(region.getSeed(), columnMinPos.getX(), columnMinPos.getY(), columnMinPos.getZ());
 
                 Biome biome = ((ChunkGenerator) (Object) this).getBiomeSource().getPrimaryBiome(Coords.cubeToSection(mainCubeX, columnX), Coords.cubeToSection(mainCubeZ, columnZ));
                 try {
