@@ -5,9 +5,11 @@ import io.github.opencubicchunks.cubicchunks.chunk.ICubeGenerator;
 import io.github.opencubicchunks.cubicchunks.chunk.biome.CubeBiomeContainer;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.CubePrimer;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
+import io.github.opencubicchunks.cubicchunks.mixin.access.common.OverworldBiomeSourceAccess;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import io.github.opencubicchunks.cubicchunks.world.CubeWorldGenRegion;
 import io.github.opencubicchunks.cubicchunks.world.biome.BiomeGetter;
+import io.github.opencubicchunks.cubicchunks.world.biome.StripedBiomeSource;
 import net.minecraft.CrashReport;
 import net.minecraft.ReportedException;
 import net.minecraft.Util;
@@ -20,14 +22,16 @@ import net.minecraft.world.level.StructureFeatureManager;
 import net.minecraft.world.level.WorldGenLevel;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.biome.BiomeSource;
+import net.minecraft.world.level.biome.OverworldBiomeSource;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.ChunkGenerator;
+import net.minecraft.world.level.levelgen.StructureSettings;
 import net.minecraft.world.level.levelgen.WorldgenRandom;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureManager;
-import net.minecraft.world.level.levelgen.synth.PerlinNoise;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Mutable;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -40,20 +44,29 @@ import java.util.List;
 @Mixin(ChunkGenerator.class)
 public class MixinChunkGenerator implements ICubeGenerator {
 
+    @Mutable
+    @Shadow @Final protected BiomeSource biomeSource;
+    @Mutable
     @Shadow @Final protected BiomeSource runtimeBiomeSource;
-
-    private final PerlinNoise gen1 = new PerlinNoise(new WorldgenRandom(42), createOctaveList());
-    private final PerlinNoise gen2 = new PerlinNoise(new WorldgenRandom(4242), createOctaveList());
-    private final PerlinNoise gen3 = new PerlinNoise(new WorldgenRandom(424242), createOctaveList());
 
     private static List<Integer> createOctaveList() {
         return Arrays.asList(3, 2, 1, 0);
     }
 
+    @Inject(at = @At("RETURN"), method = "<init>(Lnet/minecraft/world/level/biome/BiomeSource;Lnet/minecraft/world/level/biome/BiomeSource;Lnet/minecraft/world/level/levelgen/StructureSettings;J)V")
+    private void switchBiomeSource(BiomeSource biomeSource, BiomeSource biomeSource2, StructureSettings structureSettings, long l, CallbackInfo ci) {
+        if (System.getProperty("cubicchunks.debug.biomes", "false").equalsIgnoreCase("true")) {
+            if (this.biomeSource instanceof OverworldBiomeSource)
+                this.biomeSource = new StripedBiomeSource(((OverworldBiomeSourceAccess) this.biomeSource).getBiomes());
+            if (this.runtimeBiomeSource instanceof OverworldBiomeSource)
+                this.runtimeBiomeSource = new StripedBiomeSource(((OverworldBiomeSourceAccess) this.runtimeBiomeSource).getBiomes());
+        }
+    }
+
+
     // TODO: check which one is which
     @Inject(method = "createStructures", at = @At("HEAD"), cancellable = true)
     public void onGenerateStructures(RegistryAccess p_242707_1_, StructureFeatureManager p_242707_2_, ChunkAccess p_242707_3_, StructureManager p_242707_4_, long p_242707_5_, CallbackInfo ci) {
-
         ci.cancel();
     }
 
@@ -218,8 +231,8 @@ public class MixinChunkGenerator implements ICubeGenerator {
         Biome biome = ((ChunkGenerator) (Object) this).getBiomeSource().getPrimaryBiome(Coords.cubeToSection(mainCubeX, 0), Coords.cubeToSection(mainCubeZ, 0));
         try {
             ((BiomeGetter) (Object) biome).generate(structureManager, ((ChunkGenerator) (Object) this), region, seed, worldgenRandom, blockPos);
-        } catch (Exception var14) {
-            CrashReport crashReport = CrashReport.forThrowable(var14, "Biome decoration");
+        } catch (Exception e) {
+            CrashReport crashReport = CrashReport.forThrowable(e, "Biome decoration");
             crashReport.addCategory("Generation").setDetail("CubeX", mainCubeX).setDetail("CubeY", mainCubeY).setDetail("CubeZ", mainCubeZ).setDetail("Seed", seed).setDetail("Biome", biome);
             throw new ReportedException(crashReport);
         }

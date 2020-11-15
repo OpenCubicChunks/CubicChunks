@@ -3,7 +3,10 @@ package io.github.opencubicchunks.cubicchunks;
 import io.github.opencubicchunks.cubicchunks.chunk.IChunkManager;
 import io.github.opencubicchunks.cubicchunks.meta.EarlyConfig;
 import io.github.opencubicchunks.cubicchunks.network.PacketDispatcher;
+import io.github.opencubicchunks.cubicchunks.world.biome.StripedBiomeSource;
 import net.fabricmc.api.ModInitializer;
+import net.minecraft.core.Registry;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ChunkMap;
 import net.minecraft.world.level.biome.Biome;
 import org.apache.logging.log4j.LogManager;
@@ -51,12 +54,10 @@ public class CubicChunks implements ModInitializer {
         //}
     }
 
-    @Override public void onInitialize() {
+    @Override
+    public void onInitialize() {
         PacketDispatcher.register();
 
-        // for (Biome biome : BuiltinRegistries.BIOME) {
-        //     convertImmutableFeatures(biome);
-        //     biome.getGenerationSettings().features.clear();
-        // }
+        Registry.register(Registry.BIOME_SOURCE, new ResourceLocation(MODID, "stripes"), StripedBiomeSource.CODEC);
     }
 }

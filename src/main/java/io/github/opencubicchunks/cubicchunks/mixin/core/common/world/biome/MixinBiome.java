@@ -70,8 +70,19 @@ public class MixinBiome implements BiomeGetter {
                     new ResourceLocation("birch_tall"),
                     new ResourceLocation("trees_birch"),
                     new ResourceLocation("trees_mountain_edge"),
-                    new ResourceLocation("taiga_vegetation"),
-                    new ResourceLocation("taiga_vegetation")));
+                    new ResourceLocation("trees_mountain"),
+                    new ResourceLocation("trees_water"),
+                    new ResourceLocation("birch_other"),
+                    new ResourceLocation("plain_vegetation"),
+                    new ResourceLocation("trees_jungle_edge"),
+                    new ResourceLocation("trees_giant_spruce"),
+                    new ResourceLocation("trees_giant"),
+                    new ResourceLocation("trees_jungle"),
+                    new ResourceLocation("dark_forest_vegetation_brown"),
+                    new ResourceLocation("dark_forest_vegetation_red"),
+                    new ResourceLocation("warm_ocean_vegetation"),
+                    new ResourceLocation("forest_flower_vegetation_common"),
+                    new ResourceLocation("mushroom_field_vegetation")));
 
             if (list.size() > j) {
                 for (Supplier<ConfiguredFeature<?, ?>> configuredFeatureSupplier : list.get(GenerationStep.Decoration.VEGETAL_DECORATION.ordinal())) {
