@@ -27,8 +27,8 @@ public class MixinEmeraldPlacementDecorator <DC extends DecoratorConfiguration> 
             double bottomOffset = Double.NEGATIVE_INFINITY;
             int topOffset = 4;
 
-            int x = minCubePos.getX() + rand.nextInt(IBigCube.DIAMETER_IN_BLOCKS);
-            int z = minCubePos.getZ() + rand.nextInt(IBigCube.DIAMETER_IN_BLOCKS);
+            int x = minCubePos.getX() + rand.nextInt(16);
+            int z = minCubePos.getZ() + rand.nextInt(16);
 
             double probability = 1.0 / ((maximum - topOffset) / (256.0 / IBigCube.DIAMETER_IN_BLOCKS));
 

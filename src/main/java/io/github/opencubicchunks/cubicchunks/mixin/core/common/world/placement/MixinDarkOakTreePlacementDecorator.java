@@ -28,10 +28,10 @@ public abstract class MixinDarkOakTreePlacementDecorator {
         if (!cubicLevelHeightAccessor.isCubicWorld())
             return;
 
-        int blockMaxRange = IBigCube.DIAMETER_IN_BLOCKS / 4;
-        cir.setReturnValue(IntStream.range(0, blockMaxRange * blockMaxRange).mapToObj((idx) -> {
-            int dx = idx / blockMaxRange;
-            int dz = idx % blockMaxRange;
+        //TODO: Optimize
+        cir.setReturnValue(IntStream.range(0, 16).mapToObj((idx) -> {
+            int dx = idx / 4;
+            int dz = idx % 4;
             int blockX = dx * 4 + 1 + random.nextInt(3) + blockPos.getX();
             int blockZ = dz * 4 + 1 + random.nextInt(3) + blockPos.getZ();
             int heightMapY = decorationContext.getHeight(this.type(noneDecoratorConfiguration), blockX, blockZ);

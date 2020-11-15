@@ -39,20 +39,17 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.noise.module.source.Perlin;
 
-import java.util.Arrays;
-import java.util.List;
-
 @Mixin(ChunkGenerator.class)
 public class MixinChunkGenerator implements ICubeGenerator {
 
     @Mutable
-    @Shadow @Final protected BiomeSource biomeSource;
+    @Shadow
+    @Final
+    protected BiomeSource biomeSource;
     @Mutable
-    @Shadow @Final protected BiomeSource runtimeBiomeSource;
-
-    private static List<Integer> createOctaveList() {
-        return Arrays.asList(3, 2, 1, 0);
-    }
+    @Shadow
+    @Final
+    protected BiomeSource runtimeBiomeSource;
 
     @Inject(at = @At("RETURN"), method = "<init>(Lnet/minecraft/world/level/biome/BiomeSource;Lnet/minecraft/world/level/biome/BiomeSource;Lnet/minecraft/world/level/levelgen/StructureSettings;J)V")
     private void switchBiomeSource(BiomeSource biomeSource, BiomeSource biomeSource2, StructureSettings structureSettings, long l, CallbackInfo ci) {
@@ -89,7 +86,7 @@ public class MixinChunkGenerator implements ICubeGenerator {
     private Perlin perlin1 = null;
     private Perlin perlin2 = null;
     private Perlin perlin3 = null;
-    private double frequencyDivisor = 1;
+    private final double frequencyDivisor = 1;
 
     private void setSeed(long seed) {
         if (perlin1 == null) {
@@ -110,7 +107,7 @@ public class MixinChunkGenerator implements ICubeGenerator {
     }
 
 
-    private static final float[] BIOME_WEIGHTS = (float[]) Util.make(new float[25], (fs) -> {
+    private static final float[] BIOME_WEIGHTS = Util.make(new float[25], (fs) -> {
         for (int i = -2; i <= 2; ++i) {
             for (int j = -2; j <= 2; ++j) {
                 float f = 10.0F / Mth.sqrt((float) (i * i + j * j) + 0.2F);
@@ -224,18 +221,26 @@ public class MixinChunkGenerator implements ICubeGenerator {
         int yStart = Coords.cubeToMinBlock(mainCubeY);
         int zStart = Coords.cubeToMinBlock(mainCubeZ);
 
-
-        BlockPos blockPos = new BlockPos(xStart, yStart, zStart);
+        //Y value stays 32
         WorldgenRandom worldgenRandom = new WorldgenRandom();
-        long seed = worldgenRandom.setDecorationSeed(region.getSeed(), xStart, zStart);
 
-        Biome biome = ((ChunkGenerator) (Object) this).getBiomeSource().getPrimaryBiome(Coords.cubeToSection(mainCubeX, 0), Coords.cubeToSection(mainCubeZ, 0));
-        try {
-            ((BiomeGetter) (Object) biome).generate(structureManager, ((ChunkGenerator) (Object) this), region, seed, worldgenRandom, blockPos);
-        } catch (Exception e) {
-            CrashReport crashReport = CrashReport.forThrowable(e, "Biome decoration");
-            crashReport.addCategory("Generation").setDetail("CubeX", mainCubeX).setDetail("CubeY", mainCubeY).setDetail("CubeZ", mainCubeZ).setDetail("Seed", seed).setDetail("Biome", biome);
-            throw new ReportedException(crashReport);
+        //Get each individual column from a given cube no matter the size. Where y height is the same per column.
+        //Feed the given columnMinPos into the feature decorators.
+        for (int columnX = 0; columnX < IBigCube.DIAMETER_IN_SECTIONS; columnX++) {
+            for (int columnZ = 0; columnZ < IBigCube.DIAMETER_IN_SECTIONS; columnZ++) {
+                BlockPos columnMinPos = new BlockPos(xStart + (Coords.sectionToMinBlock(columnX)), yStart, zStart + (Coords.sectionToMinBlock(columnZ)));
+
+                long seed = worldgenRandom.setDecorationSeed(region.getSeed(), columnMinPos.getX(), columnMinPos.getZ());
+
+                Biome biome = ((ChunkGenerator) (Object) this).getBiomeSource().getPrimaryBiome(Coords.cubeToSection(mainCubeX, columnX), Coords.cubeToSection(mainCubeZ, columnZ));
+                try {
+                    ((BiomeGetter) (Object) biome).generate(structureManager, ((ChunkGenerator) (Object) this), region, seed, worldgenRandom, columnMinPos);
+                } catch (Exception e) {
+                    CrashReport crashReport = CrashReport.forThrowable(e, "Biome decoration");
+                    crashReport.addCategory("Generation").setDetail("CubeX", mainCubeX).setDetail("CubeY", mainCubeY).setDetail("CubeZ", mainCubeZ).setDetail("Seed", seed).setDetail("Biome", biome);
+                    throw new ReportedException(crashReport);
+                }
+            }
         }
     }
 }
