@@ -156,19 +156,6 @@ public class MixinChunkGenerator implements ICubeGenerator {
                     height = (height - biomeBaseHeight) * 0.25F + biomeBaseHeight;
 
                 densities[dx + dz * size] = height;
-
-//                for (int dy = 0; dy < IBigCube.DIAMETER_IN_BLOCKS; dy++) {
-//                    int blockY = cube.getCubePos().minCubeY() + dy;
-//                    if (blockY == height) {
-//                        cube.setBlock(new BlockPos(dx, dy, dz), biome.getGenerationSettings().getSurfaceBuilderConfig().getTopMaterial(), false);
-//                    } else if (blockY >= height - 4 && blockY < height) {
-//                        cube.setBlock(new BlockPos(dx, dy, dz), biome.getGenerationSettings().getSurfaceBuilderConfig().getUnderMaterial(), false);
-//                    } else if (blockY < height) {
-//                        cube.setBlock(new BlockPos(dx, dy, dz), Blocks.STONE.defaultBlockState(), false);
-//                    } else if (blockY < 0) {
-//                        cube.setBlock(new BlockPos(dx, dy, dz), Blocks.WATER.defaultBlockState(), false);
-//                    }
-//                }
             }
         }
 
@@ -212,7 +199,6 @@ public class MixinChunkGenerator implements ICubeGenerator {
         }
     }
 
-
     @Override
     public void decorate(CubeWorldGenRegion region, StructureFeatureManager structureManager) {
         int mainCubeX = region.getMainCubeX();
@@ -238,46 +224,4 @@ public class MixinChunkGenerator implements ICubeGenerator {
             throw new ReportedException(crashReport);
         }
     }
-
-    //    @Override public void decorate(CubeWorldGenRegion region, StructureFeatureManager structureManager) {
-//        int mainCubeX = region.getMainCubeX();
-//        int mainCubeY = region.getMainCubeY();
-//        int mainCubeZ = region.getMainCubeZ();
-//
-//        int yStart = Coords.cubeToMinBlock(mainCubeY + 1);
-//        int yEnd = Coords.cubeToMinBlock(mainCubeY);
-//
-//        Random r = new Random(mainCubeX * 678321 + mainCubeZ * 56392 + mainCubeY * 32894345);
-//        int treeCount = Math.abs((int) (gen1.getValue(mainCubeX * 0.00354, 8765, mainCubeZ * 0.00354, 0, 0, false) * 12*50));
-//        for (int i = 0; i < treeCount; i++) {
-//            int x = Coords.cubeToMinBlock(mainCubeX) + r.nextInt(IBigCube.DIAMETER_IN_BLOCKS);
-//            int z = Coords.cubeToMinBlock(mainCubeZ) + r.nextInt(IBigCube.DIAMETER_IN_BLOCKS);
-//            BlockPos pos = new BlockPos(x, yStart, z);
-//            if (!region.getBlockState(pos).isAir()) {
-//                continue;
-//            }
-//            for (int y = yStart - 1; y >= yEnd; y--) {
-//                pos = new BlockPos(x, y, z);
-//                if (!region.getBlockState(pos).isAir()) {
-//                    //Removed bc 1.16.2 has removed the config fields and creates them within the configuration instead
-////                    BaseTreeFeatureConfig[] configs = {
-////                            DefaultBiomeFeatures.OAK_TREE_CONFIG,
-////                            DefaultBiomeFeatures.OAK_TREE_CONFIG,
-////                            DefaultBiomeFeatures.OAK_TREE_CONFIG,
-////                            DefaultBiomeFeatures.OAK_TREE_CONFIG,
-////                            DefaultBiomeFeatures.OAK_TREE_CONFIG,
-////                            DefaultBiomeFeatures.OAK_TREE_CONFIG,
-////                            DefaultBiomeFeatures.field_230132_o_,
-////                            DefaultBiomeFeatures.field_230133_p_,
-////                            DefaultBiomeFeatures.BIRCH_TREE_CONFIG,
-////                            DefaultBiomeFeatures.SWAMP_TREE_CONFIG,
-////                            DefaultBiomeFeatures.SPRUCE_TREE_CONFIG,
-////                            DefaultBiomeFeatures.FANCY_TREE_WITH_MORE_BEEHIVES_CONFIG,
-////                    };
-//                    Feature.TREE.configured(((new TreeConfiguration.TreeConfigurationBuilder(new SimpleStateProvider(Blocks.DARK_OAK_LOG.defaultBlockState()), new SimpleStateProvider(Blocks.DARK_OAK_LEAVES.defaultBlockState()), new DarkOakFoliagePlacer(UniformInt.fixed(0), UniformInt.fixed(0)), new DarkOakTrunkPlacer(6, 2, 1), new ThreeLayersFeatureSize(1, 1, 0, 1, 2, OptionalInt.empty()))).maxWaterDepth(Integer.MAX_VALUE).heightmap(Heightmap.Types.MOTION_BLOCKING).ignoreVines().build())).place(region,
-//                            (ChunkGenerator) (Object) this, r, pos.above());
-//                }
-//            }
-//        }
-//    }
 }
