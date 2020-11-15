@@ -51,6 +51,7 @@
         "common.world.MixinWorld",
         "common.world.placement.MixinDarkOakTreePlacementDecorator",
         "common.world.placement.MixinDepthAverageDecorator",
+        "common.world.placement.MixinEmeraldPlacementDecorator",
         "common.world.placement.MixinHeightMapDoubleDecorator",
         "common.world.placement.MixinRangeDecorator",
         "common.world.placement.MixinSimpleFeatureDecorator",

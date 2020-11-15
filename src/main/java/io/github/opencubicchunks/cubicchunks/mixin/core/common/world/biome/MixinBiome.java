@@ -178,7 +178,7 @@ public class MixinBiome implements BiomeGetter {
                     new ResourceLocation("ore_diamond"),
                     new ResourceLocation("ore_lapis"),
                     new ResourceLocation("ore_infested"),
-//                    new ResourceLocation("ore_emerald"),
+                    new ResourceLocation("ore_emerald"),
                     new ResourceLocation("ore_debris_large"),
                     new ResourceLocation("ore_debris_small"),
                     new ResourceLocation("ore_copper")
