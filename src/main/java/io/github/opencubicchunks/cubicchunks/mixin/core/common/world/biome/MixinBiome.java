@@ -35,8 +35,7 @@ public class MixinBiome implements BiomeGetter {
         List<List<Supplier<ConfiguredFeature<?, ?>>>> list = this.generationSettings.features();
         int i = GenerationStep.Decoration.values().length;
 
-        for (int j = 0; j < i; ++j) {
-            int k = 0;
+        for (int genStepIDX = 0; genStepIDX < i; ++genStepIDX) {
 //            if (structureFeatureManager.shouldGenerateFeatures()) {
 //                List<StructureFeature<?>> list2 = (List)this.structuresByStep.getOrDefault(j, Collections.emptyList());
 
@@ -63,6 +62,7 @@ public class MixinBiome implements BiomeGetter {
 //            }
 
             final Set<ResourceLocation> featureIDWhitelist = new HashSet<>(Arrays.asList(
+                    //Trees
                     new ResourceLocation("forest_flower_trees"),
                     new ResourceLocation("taiga_vegetation"),
                     new ResourceLocation("trees_shattered_savanna"),
@@ -82,10 +82,25 @@ public class MixinBiome implements BiomeGetter {
                     new ResourceLocation("dark_forest_vegetation_red"),
                     new ResourceLocation("warm_ocean_vegetation"),
                     new ResourceLocation("forest_flower_vegetation_common"),
-                    new ResourceLocation("mushroom_field_vegetation")));
+                    new ResourceLocation("mushroom_field_vegetation"),
 
-            if (list.size() > j) {
-                for (Supplier<ConfiguredFeature<?, ?>> configuredFeatureSupplier : list.get(GenerationStep.Decoration.VEGETAL_DECORATION.ordinal())) {
+                    //Ores
+                    new ResourceLocation("ore_diamond"),
+                    new ResourceLocation("ore_redstone"),
+                    new ResourceLocation("ore_gold"),
+                    new ResourceLocation("ore_gold_extra"),
+                    new ResourceLocation("ore_iron"),
+                    new ResourceLocation("ore_coal"),
+                    new ResourceLocation("ore_dirt"),
+                    new ResourceLocation("ore_gravel"),
+                    new ResourceLocation("ore_granite"),
+                    new ResourceLocation("ore_andesite"),
+                    new ResourceLocation("ore_diorite")
+
+            ));
+
+            if (list.size() > genStepIDX) {
+                for (Supplier<ConfiguredFeature<?, ?>> configuredFeatureSupplier : list.get(genStepIDX)) {
                     ConfiguredFeature<?, ?> configuredFeature = configuredFeatureSupplier.get();
 
                     ResourceLocation key = worldGenRegion.getLevel().getServer().registryAccess().registry(Registry.CONFIGURED_FEATURE_REGISTRY).get().getKey(configuredFeature);

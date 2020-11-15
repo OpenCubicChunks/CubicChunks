@@ -217,14 +217,14 @@ public class MixinChunkGenerator implements ICubeGenerator {
         int mainCubeX = region.getMainCubeX();
         int mainCubeY = region.getMainCubeY();
         int mainCubeZ = region.getMainCubeZ();
-        int yStart = Coords.cubeToMinBlock(mainCubeY + 1);
         int yEnd = Coords.cubeToMinBlock(mainCubeY);
 
         int xStart = Coords.cubeToMinBlock(mainCubeX);
+        int yStart = Coords.cubeToMinBlock(mainCubeY);
         int zStart = Coords.cubeToMinBlock(mainCubeZ);
 
 
-        BlockPos blockPos = new BlockPos(xStart, 0, zStart);
+        BlockPos blockPos = new BlockPos(xStart, yStart, zStart);
         WorldgenRandom worldgenRandom = new WorldgenRandom();
         long seed = worldgenRandom.setDecorationSeed(region.getSeed(), xStart, zStart);
 

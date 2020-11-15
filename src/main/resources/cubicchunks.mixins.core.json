@@ -51,6 +51,7 @@
         "common.world.MixinWorld",
         "common.world.placement.MixinDarkOakTreePlacementDecorator",
         "common.world.placement.MixinHeightMapDoubleDecorator",
+        "common.world.placement.MixinRangeDecorator",
         "common.world.placement.MixinSimpleFeatureDecorator",
         "common.world.placement.MixinSquareDecorator",
         "common.world.server.MixinServerWorldLightManager"
