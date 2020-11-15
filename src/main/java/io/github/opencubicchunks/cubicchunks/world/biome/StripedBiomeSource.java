@@ -6,9 +6,7 @@ import net.minecraft.core.Registry;
 import net.minecraft.resources.RegistryLookupCodec;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.biome.BiomeSource;
-import net.minecraft.world.level.biome.TheEndBiomeSource;
 
-import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 public class StripedBiomeSource extends BiomeSource {

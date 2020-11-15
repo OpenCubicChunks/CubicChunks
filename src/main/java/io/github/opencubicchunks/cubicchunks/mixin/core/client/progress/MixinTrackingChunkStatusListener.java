@@ -5,6 +5,10 @@ import io.github.opencubicchunks.cubicchunks.chunk.ITrackingCubeStatusListener;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
+import net.minecraft.server.level.progress.LoggerChunkProgressListener;
+import net.minecraft.server.level.progress.StoringChunkProgressListener;
+import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.chunk.ChunkStatus;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -13,10 +17,6 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import javax.annotation.Nullable;
-import net.minecraft.server.level.progress.LoggerChunkProgressListener;
-import net.minecraft.server.level.progress.StoringChunkProgressListener;
-import net.minecraft.world.level.ChunkPos;
-import net.minecraft.world.level.chunk.ChunkStatus;
 
 @Mixin(StoringChunkProgressListener.class)
 public abstract class MixinTrackingChunkStatusListener implements ICubeStatusListener, ITrackingCubeStatusListener {

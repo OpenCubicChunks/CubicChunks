@@ -3,8 +3,9 @@ package io.github.opencubicchunks.cubicchunks.world.server;
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.ticket.CubeTaskPriorityQueueSorter;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
-import java.util.concurrent.CompletableFuture;
 import net.minecraft.util.thread.ProcessorHandle;
+
+import java.util.concurrent.CompletableFuture;
 
 public interface IServerWorldLightManager {
     void postConstructorSetup(CubeTaskPriorityQueueSorter sorter,

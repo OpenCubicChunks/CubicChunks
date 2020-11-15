@@ -1,37 +1,24 @@
 package io.github.opencubicchunks.cubicchunks.mixin.transform;
 
-import static org.objectweb.asm.Type.ARRAY;
-import static org.objectweb.asm.Type.OBJECT;
-import static org.objectweb.asm.Type.getObjectType;
-import static org.objectweb.asm.Type.getType;
-import static org.objectweb.asm.commons.Method.getMethod;
-
 import com.google.common.collect.Sets;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.MappingResolver;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
-import org.objectweb.asm.Handle;
-import org.objectweb.asm.Label;
-import org.objectweb.asm.MethodVisitor;
-import org.objectweb.asm.Opcodes;
-import org.objectweb.asm.Type;
+import org.objectweb.asm.*;
 import org.objectweb.asm.commons.Method;
 import org.objectweb.asm.commons.MethodRemapper;
 import org.objectweb.asm.commons.Remapper;
-import org.objectweb.asm.tree.AbstractInsnNode;
-import org.objectweb.asm.tree.ClassNode;
-import org.objectweb.asm.tree.InsnNode;
-import org.objectweb.asm.tree.InvokeDynamicInsnNode;
-import org.objectweb.asm.tree.MethodInsnNode;
-import org.objectweb.asm.tree.MethodNode;
-import org.objectweb.asm.tree.VarInsnNode;
+import org.objectweb.asm.tree.*;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+
+import static org.objectweb.asm.Type.*;
+import static org.objectweb.asm.commons.Method.getMethod;
 
 public class MainTransformer {
     private static final Logger LOGGER = LogManager.getLogger();

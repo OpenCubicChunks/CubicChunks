@@ -6,13 +6,6 @@ import io.github.opencubicchunks.cubicchunks.mixin.access.common.SectionLightSto
 import io.github.opencubicchunks.cubicchunks.world.lighting.ICubeLightProvider;
 import io.github.opencubicchunks.cubicchunks.world.lighting.ILightEngine;
 import io.github.opencubicchunks.cubicchunks.world.lighting.ISectionLightStorage;
-import org.apache.commons.lang3.mutable.MutableInt;
-import org.spongepowered.asm.mixin.Final;
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
-import org.spongepowered.asm.mixin.Shadow;
-
-import javax.annotation.Nullable;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.SectionPos;
 import net.minecraft.world.level.BlockGetter;
@@ -23,6 +16,13 @@ import net.minecraft.world.level.chunk.LightChunkGetter;
 import net.minecraft.world.level.lighting.DataLayerStorageMap;
 import net.minecraft.world.level.lighting.LayerLightEngine;
 import net.minecraft.world.level.lighting.LayerLightSectionStorage;
+import org.apache.commons.lang3.mutable.MutableInt;
+import org.spongepowered.asm.mixin.Final;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Overwrite;
+import org.spongepowered.asm.mixin.Shadow;
+
+import javax.annotation.Nullable;
 
 @Mixin(LayerLightEngine.class)
 public class MixinLightEngine <M extends DataLayerStorageMap<M>, S extends LayerLightSectionStorage<M>> implements ILightEngine {

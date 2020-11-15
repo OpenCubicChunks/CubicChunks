@@ -1,6 +1,5 @@
 package io.github.opencubicchunks.cubicchunks.mixin.core.common.world.placement;
 
-import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.levelgen.Heightmap;

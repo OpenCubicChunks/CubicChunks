@@ -1,9 +1,10 @@
 package io.github.opencubicchunks.cubicchunks.chunk;
 
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
-import javax.annotation.Nullable;
 import net.minecraft.server.level.progress.ChunkProgressListener;
 import net.minecraft.world.level.chunk.ChunkStatus;
+
+import javax.annotation.Nullable;
 
 public interface ICubeStatusListener extends ChunkProgressListener {
     void startCubes(CubePos center);

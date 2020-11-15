@@ -1,7 +1,8 @@
 package io.github.opencubicchunks.cubicchunks.chunk;
 
-import javax.annotation.Nullable;
 import net.minecraft.world.level.chunk.ChunkStatus;
+
+import javax.annotation.Nullable;
 
 public interface ITrackingCubeStatusListener {
 

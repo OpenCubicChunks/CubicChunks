@@ -2,15 +2,15 @@ package io.github.opencubicchunks.cubicchunks.mixin.core.client.progress;
 
 import io.github.opencubicchunks.cubicchunks.chunk.ICubeStatusListener;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
+import net.minecraft.server.level.progress.ChunkProgressListener;
+import net.minecraft.server.level.progress.ProcessorChunkProgressListener;
+import net.minecraft.util.thread.ProcessorMailbox;
+import net.minecraft.world.level.chunk.ChunkStatus;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 
 import javax.annotation.Nullable;
-import net.minecraft.server.level.progress.ChunkProgressListener;
-import net.minecraft.server.level.progress.ProcessorChunkProgressListener;
-import net.minecraft.util.thread.ProcessorMailbox;
-import net.minecraft.world.level.chunk.ChunkStatus;
 
 @Mixin(ProcessorChunkProgressListener.class)
 public abstract class MixinChainedChunkStatusListener implements ICubeStatusListener {

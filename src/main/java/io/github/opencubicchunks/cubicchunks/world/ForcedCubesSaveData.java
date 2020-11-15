@@ -3,7 +3,6 @@ package io.github.opencubicchunks.cubicchunks.world;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.world.level.ForcedChunksSavedData;
 import net.minecraft.world.level.saveddata.SavedData;
 
 public class ForcedCubesSaveData extends SavedData {

@@ -11,7 +11,6 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.ChunkStatus;
 import net.minecraft.world.level.chunk.LevelChunkSection;
-import net.minecraft.world.level.material.FluidState;
 import org.apache.logging.log4j.LogManager;
 
 import javax.annotation.Nullable;
