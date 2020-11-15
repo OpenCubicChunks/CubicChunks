@@ -151,8 +151,8 @@ public class CubePrimerWrapper extends CubePrimer {
         }
     }
 
-    @Override public int getHeight(Heightmap.Types heightmapType, int x, int z) {
-        return this.cube.getHeight(this.fixType(heightmapType), x, z);
+    @Override public int getHeight(Heightmap.Types types, int x, int z) {
+        return this.cube.getHeight(this.fixType(types), x, z);
     }
 
     // getStructureStart

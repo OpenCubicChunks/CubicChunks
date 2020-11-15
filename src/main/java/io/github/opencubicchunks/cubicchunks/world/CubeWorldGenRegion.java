@@ -145,10 +145,9 @@ public class CubeWorldGenRegion implements WorldGenLevel {
     public IBigCube getCube(int x, int y, int z, ChunkStatus requiredStatus, boolean nonnull) {
         IBigCube icube;
         if (this.cubeExists(x, y, z)) {
-            CubePos cubePos = this.cubePrimers.get(0).getCubePos();
-            int dx = x - cubePos.getX();
-            int dy = y - cubePos.getY();
-            int dz = z - cubePos.getZ();
+            int dx = x - this.minCubeX;
+            int dy = y - this.minCubeY;
+            int dz = z - this.minCubeZ;
             icube = this.cubePrimers.get(dx * this.diameter * this.diameter + dy * this.diameter + dz);
             if (icube.getCubeStatus().isOrAfter(requiredStatus)) {
                 return icube;
@@ -307,20 +306,18 @@ public class CubeWorldGenRegion implements WorldGenLevel {
     @Override public int getHeight(Heightmap.Types heightmapType, int x, int z) {
         int yStart = Coords.cubeToMinBlock(mainCubeY + 1);
         int yEnd = Coords.cubeToMinBlock(mainCubeY);
-        BlockPos pos = new BlockPos(x, yStart, z);
-
-        if (heightmapType.isOpaque().test(getBlockState(pos))) {
+        IBigCube cube1 = getCube(new BlockPos(x, yStart, z));
+        if (((ChunkAccess) cube1).getHeight(heightmapType, x, z) >= yStart) {
             return yStart + 2;
         }
+        IBigCube cube2 = getCube(new BlockPos(x, yEnd, z));
+        int height = ((ChunkAccess) cube2).getHeight(heightmapType, x, z);
 
-        IBigCube cube = getCube(new BlockPos(x, yStart, z));
-        for (int y = yStart - 1; y >= yEnd; y--) {
-            pos = new BlockPos(x, y, z);
-            if (heightmapType.isOpaque().test(cube.getBlockState(pos))) {
-                return y + 1;
-            }
+        //Check whether or not height was found for this cube. If height wasn't found, move to the next cube under the current cube
+        if (height <= getMinBuildHeight()) {
+            return yEnd - 1;
         }
-        return yEnd - 1;
+        return height;
     }
 
     @Override public int getSkyDarken() {

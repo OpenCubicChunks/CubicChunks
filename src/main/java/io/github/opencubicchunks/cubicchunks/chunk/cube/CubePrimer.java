@@ -5,6 +5,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.biome.CubeBiomeContainer;
+import io.github.opencubicchunks.cubicchunks.chunk.heightmap.SurfaceTrackerSection;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import it.unimi.dsi.fastutil.longs.LongSet;
@@ -47,9 +48,11 @@ public class CubePrimer implements IBigCube, ChunkAccess {
     private final LevelHeightAccessor levelHeightAccessor;
     private ChunkStatus status = ChunkStatus.EMPTY;
 
-
     @Nullable
     private CubeBiomeContainer biomes;
+
+    private final Map<Heightmap.Types, SurfaceTrackerSection[]> heightmaps;
+
 
     private final List<CompoundTag> entities = Lists.newArrayList();
     private final Map<BlockPos, BlockEntity> tileEntities = Maps.newHashMap();
@@ -72,8 +75,11 @@ public class CubePrimer implements IBigCube, ChunkAccess {
     }
 
     //TODO: add TickList<Block> and TickList<Fluid>
-    public CubePrimer(CubePos cubePosIn, UpgradeData p_i49941_2_, @Nullable LevelChunkSection[] sectionsIn, ProtoTickList<Block> blockTickListIn,
-                      ProtoTickList<Fluid> p_i49941_5_, LevelHeightAccessor levelHeightAccessor) {
+    public CubePrimer(CubePos cubePosIn, UpgradeData p_i49941_2_, @Nullable LevelChunkSection[] sectionsIn, ProtoTickList<Block> blockTickListIn, ProtoTickList<Fluid> p_i49941_5_, LevelHeightAccessor levelHeightAccessor) {
+        this.heightmaps = Maps.newEnumMap(Heightmap.Types.class);
+
+
+
         this.cubePos = cubePosIn;
         this.levelHeightAccessor = levelHeightAccessor;
 
@@ -117,7 +123,10 @@ public class CubePrimer implements IBigCube, ChunkAccess {
     }
 
     //BLOCK
-    @Deprecated @Nullable @Override public BlockState setBlockState(BlockPos pos, BlockState state, boolean isMoving) { return setBlock(pos, state, isMoving); }
+    @Deprecated @Nullable @Override public BlockState setBlockState(BlockPos pos, BlockState state, boolean isMoving) {
+        return setBlock(pos, state, isMoving);
+    }
+
     @Override @Nullable public BlockState setBlock(BlockPos pos, BlockState state, boolean isMoving) {
         int x = pos.getX() & 0xF;
         int y = pos.getY() & 0xF;
@@ -148,29 +157,49 @@ public class CubePrimer implements IBigCube, ChunkAccess {
 
             //TODO: implement heightmaps
 
-//            EnumSet<Heightmap.Types> enumset1 = this.getStatus().getHeightMaps();
-//            EnumSet<Heightmap.Types> enumset = null;
-//
-//            for(Heightmap.Types heightmap$type : enumset1) {
-//                CCHeightmap heightmap = this.heightmaps.get(heightmap$type);
-//                if (heightmap == null) {
-//                    if (enumset == null) {
-//                        enumset = EnumSet.noneOf(Heightmap.Types.class);
-//                    }
-//
-//                    enumset.add(heightmap$type);
-//                }
-//            }
-//
-//            if (enumset != null) {
-//                Heightmap.primeHeightmaps(this, enumset);
-//            }
-//
-//            for(Heightmap.Types heightmap$type1 : enumset1) {
-//                this.heightmaps.get(heightmap$type1).markDirty(x, z);
-//            }
+            EnumSet<Heightmap.Types> heightMapsAfter = this.getStatus().heightmapsAfter();
+            EnumSet<Heightmap.Types> toInitialize = null;
 
 
+
+            for(Heightmap.Types heightmap$type : heightMapsAfter) {
+                SurfaceTrackerSection[] heightmapArray = this.heightmaps.get(heightmap$type);
+
+
+                if (heightmapArray == null) {
+                    if (toInitialize == null) {
+                        toInitialize = EnumSet.noneOf(Heightmap.Types.class);
+                    }
+
+                    toInitialize.add(heightmap$type);
+                }
+            }
+
+            if (toInitialize != null) {
+                for (Heightmap.Types type : toInitialize) {
+                    SurfaceTrackerSection[] surfaceTrackerSections = new SurfaceTrackerSection[IBigCube.DIAMETER_IN_SECTIONS * IBigCube.DIAMETER_IN_SECTIONS];
+
+                    for (int dx = 0; dx < IBigCube.DIAMETER_IN_SECTIONS; dx++) {
+                        for (int dz = 0; dz < IBigCube.DIAMETER_IN_SECTIONS; dz++) {
+                            int idx = dx + dz * IBigCube.DIAMETER_IN_SECTIONS;
+                            surfaceTrackerSections[idx] = new SurfaceTrackerSection(0, cubePos.getY(), null, this, type);
+                            surfaceTrackerSections[idx].loadCube(this, true);
+                        }
+                    }
+                    this.heightmaps.put(type, surfaceTrackerSections);
+                }
+            }
+
+            for(Heightmap.Types types : heightMapsAfter) {
+
+                int xSection = Coords.blockToSection(x);
+                int zSection = Coords.blockToSection(z);
+
+                int idx = xSection + zSection * DIAMETER_IN_SECTIONS;
+
+                SurfaceTrackerSection surfaceTrackerSection = this.heightmaps.get(types)[Coords.blockToLocalSection(idx)];
+                surfaceTrackerSection.markDirty(Coords.blockToLocal(x), Coords.blockToLocal(z));
+            }
 
             return blockstate;
         }
@@ -355,8 +384,18 @@ public class CubePrimer implements IBigCube, ChunkAccess {
         throw new UnsupportedOperationException("For later implementation");
     }
 
-    @Override public int getHeight(Heightmap.Types heightmapType, int x, int z) {
-        throw new UnsupportedOperationException("For later implementation");
+    @Override public int getHeight(Heightmap.Types types, int x, int z) {
+        SurfaceTrackerSection[] surfaceTrackerSections = this.heightmaps.get(types);
+        if (surfaceTrackerSections != null) {
+            int xSection = Coords.blockToSection(x);
+            int zSection = Coords.blockToSection(z);
+
+            int idx = xSection + zSection * DIAMETER_IN_SECTIONS;
+
+            SurfaceTrackerSection surfaceTrackerSection = surfaceTrackerSections[Coords.blockToLocalSection(idx)];
+            return surfaceTrackerSection.getHeight(Coords.blockToLocal(x), Coords.blockToLocal(z));
+        }
+        return getMinBuildHeight();
     }
 
     @Deprecated @Override public Map<StructureFeature<?>, StructureStart<?>> getAllStarts() {
