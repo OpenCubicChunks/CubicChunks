@@ -6,6 +6,7 @@ import net.minecraft.CrashReport;
 import net.minecraft.ReportedException;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Registry;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.StructureFeatureManager;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.biome.BiomeGenerationSettings;
@@ -17,7 +18,10 @@ import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Supplier;
 
 @Mixin(Biome.class)
@@ -58,23 +62,24 @@ public class MixinBiome implements BiomeGetter {
 //                }
 //            }
 
-//            final Set<String> featureIDWhitelist = new HashSet<>(Arrays.asList(
-//                    new ResourceLocation("forest_flower_trees"),
-//                    new ResourceLocation("taiga_vegetation"),
-//                    new ResourceLocation("trees_shattered_savanna"),
-//                    new ResourceLocation("trees_savanna"),
-//                    new ResourceLocation("birch_tall"),
-//                    new ResourceLocation("trees_birch"),
-//                    new ResourceLocation("trees_mountain_edge"),
-//                    new ResourceLocation("taiga_vegetation"),
-//                    new ResourceLocation("taiga_vegetation").toString()
-//            ));
+            final Set<ResourceLocation> featureIDWhitelist = new HashSet<>(Arrays.asList(
+                    new ResourceLocation("forest_flower_trees"),
+                    new ResourceLocation("taiga_vegetation"),
+                    new ResourceLocation("trees_shattered_savanna"),
+                    new ResourceLocation("trees_savanna"),
+                    new ResourceLocation("birch_tall"),
+                    new ResourceLocation("trees_birch"),
+                    new ResourceLocation("trees_mountain_edge"),
+                    new ResourceLocation("taiga_vegetation"),
+                    new ResourceLocation("taiga_vegetation")));
 
             if (list.size() > j) {
                 for (Supplier<ConfiguredFeature<?, ?>> configuredFeatureSupplier : list.get(GenerationStep.Decoration.VEGETAL_DECORATION.ordinal())) {
                     ConfiguredFeature<?, ?> configuredFeature = configuredFeatureSupplier.get();
 
-//                    ResourceLocation key = BuiltinRegistries.CONFIGURED_FEATURE.getKey(configuredFeature);
+                    ResourceLocation key = worldGenRegion.getLevel().getServer().registryAccess().registry(Registry.CONFIGURED_FEATURE_REGISTRY).get().getKey(configuredFeature);
+
+                    if (featureIDWhitelist.contains(key)) {
                         try {
                             configuredFeature.place(worldGenRegion, chunkGenerator, worldgenRandom, blockPos);
                         } catch (Exception e) {
@@ -85,6 +90,7 @@ public class MixinBiome implements BiomeGetter {
                             throw new ReportedException(crashReport2);
                         }
                     }
+                }
 
 //                for(Iterator<Supplier<ConfiguredFeature<?, ?>>> var23 = (list.get(8)).iterator(); var23.hasNext(); ++k) {
 //                    Supplier<ConfiguredFeature<?, ?>> supplier = var23.next();

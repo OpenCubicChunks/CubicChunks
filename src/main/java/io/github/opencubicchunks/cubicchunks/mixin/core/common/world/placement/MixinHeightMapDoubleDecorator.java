@@ -25,7 +25,7 @@ public abstract class MixinHeightMapDoubleDecorator<DC extends DecoratorConfigur
     private void allowNegativeCoords(DecorationContext decorationContext, Random random, DC decoratorConfiguration, BlockPos blockPos, CallbackInfoReturnable<Stream<BlockPos>> cir) {
         CubicLevelHeightAccessor context = (CubicLevelHeightAccessor) decorationContext;
 
-        cir.setReturnValue(Stream.of());
+//        cir.setReturnValue(Stream.of());
 
         if (!context.isCubicWorld())
             return;

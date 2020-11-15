@@ -50,6 +50,8 @@
         "common.world.MixinSpawnLocationHelper",
         "common.world.MixinWorld",
         "common.world.placement.MixinHeightMapDoubleDecorator",
+        "common.world.placement.MixinSimpleFeatureDecorator",
+        "common.world.placement.MixinSquareDecorator",
         "common.world.server.MixinServerWorldLightManager"
     ],
     "client": [

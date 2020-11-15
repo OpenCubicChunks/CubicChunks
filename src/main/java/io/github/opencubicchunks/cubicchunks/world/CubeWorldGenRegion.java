@@ -310,6 +310,12 @@ public class CubeWorldGenRegion implements WorldGenLevel {
         return this.level.getUncachedNoiseBiome(x, y, z);
     }
 
+    //TODO: Cube Biome Storage
+    @Override
+    public Biome getNoiseBiome(int x, int y, int z) {
+        return getUncachedNoiseBiome(x, y, z);
+    }
+
     @Override public boolean isClientSide() {
         return false;
     }
