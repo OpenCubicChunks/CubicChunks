@@ -1,5 +1,6 @@
 package io.github.opencubicchunks.cubicchunks.mixin.core.common.chunk;
 
+import io.github.opencubicchunks.cubicchunks.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.ICubeGenerator;
 import io.github.opencubicchunks.cubicchunks.chunk.biome.CubeBiomeContainer;
@@ -156,7 +157,7 @@ public class MixinChunkGenerator implements ICubeGenerator {
                 }
 
                 float biomeHeightVariation = totalScale / totalWeight * 2.4F * 64 + 32;
-                float biomeBaseHeight = totalDepth / totalWeight * 17;
+                float biomeBaseHeight = totalDepth / totalWeight * 17 + CubicChunks.SEA_LEVEL;
 
 
                 double v1 = (perlin1.getValue(blockX, blockZ, 0) * 2 - perlin1Max) * biomeHeightVariation + biomeBaseHeight;
@@ -202,7 +203,7 @@ public class MixinChunkGenerator implements ICubeGenerator {
                                 cube.setBlock(new BlockPos(dx, dy, dz), biome.getGenerationSettings().getSurfaceBuilderConfig().getUnderMaterial(), false);
                             } else if (blockY < height) {
                                 cube.setBlock(new BlockPos(dx, dy, dz), Blocks.STONE.defaultBlockState(), false);
-                            } else if (blockY < 0) {
+                            } else if (blockY <= CubicChunks.SEA_LEVEL) {
                                 cube.setBlock(new BlockPos(dx, dy, dz), Blocks.WATER.defaultBlockState(), false);
                             }
                         }
