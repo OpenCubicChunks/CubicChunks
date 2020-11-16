@@ -8,6 +8,7 @@ import io.github.opencubicchunks.cubicchunks.chunk.biome.CubeBiomeContainer;
 import io.github.opencubicchunks.cubicchunks.chunk.heightmap.SurfaceTrackerSection;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
+import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import it.unimi.dsi.fastutil.shorts.ShortList;
 import net.minecraft.CrashReport;
@@ -57,6 +58,13 @@ public class CubePrimer implements IBigCube, ChunkAccess {
     private final List<CompoundTag> entities = Lists.newArrayList();
     private final Map<BlockPos, BlockEntity> tileEntities = Maps.newHashMap();
     private final Map<BlockPos, CompoundTag> deferredTileEntities = Maps.newHashMap();
+
+    //Structures
+    private final Map<StructureFeature<?>, StructureStart<?>> structureStarts;
+    private final Map<StructureFeature<?>, LongSet> structuresRefences;
+    private volatile boolean isDirty;
+
+
     private volatile boolean modified = true;
 
     private final List<BlockPos> lightPositions = Lists.newArrayList();
@@ -78,7 +86,8 @@ public class CubePrimer implements IBigCube, ChunkAccess {
     public CubePrimer(CubePos cubePosIn, UpgradeData p_i49941_2_, @Nullable LevelChunkSection[] sectionsIn, ProtoTickList<Block> blockTickListIn, ProtoTickList<Fluid> p_i49941_5_, LevelHeightAccessor levelHeightAccessor) {
         this.heightmaps = Maps.newEnumMap(Heightmap.Types.class);
 
-
+        this.structureStarts = Maps.newHashMap();
+        this.structuresRefences = Maps.newHashMap();
 
         this.cubePos = cubePosIn;
         this.levelHeightAccessor = levelHeightAccessor;
@@ -102,7 +111,9 @@ public class CubePrimer implements IBigCube, ChunkAccess {
         }
     }
 
-    @Deprecated @Override public ChunkPos getPos() { throw new UnsupportedOperationException("This should never be called!"); }
+    @Deprecated @Override public ChunkPos getPos() {
+        throw new UnsupportedOperationException("This should never be called!");
+    }
     @Override public CubePos getCubePos() {
         return this.cubePos;
     }
@@ -398,12 +409,41 @@ public class CubePrimer implements IBigCube, ChunkAccess {
         return getMinBuildHeight();
     }
 
-    @Deprecated @Override public Map<StructureFeature<?>, StructureStart<?>> getAllStarts() {
-        throw new UnsupportedOperationException("For later implementation");
+    @org.jetbrains.annotations.Nullable
+    public StructureStart<?> getStartForFeature(StructureFeature<?> structureFeature) {
+        return this.structureStarts.get(structureFeature);
     }
 
-    @Deprecated @Override public void setAllStarts(Map<StructureFeature<?>, StructureStart<?>> structureStartsIn) {
-        throw new UnsupportedOperationException("For later implementation");
+    public void setStartForFeature(StructureFeature<?> structureFeature, StructureStart<?> structureStart) {
+        this.structureStarts.put(structureFeature, structureStart);
+        this.isDirty = true;
+    }
+
+    public Map<StructureFeature<?>, StructureStart<?>> getAllStarts() {
+        return Collections.unmodifiableMap(this.structureStarts);
+    }
+
+    public void setAllStarts(Map<StructureFeature<?>, StructureStart<?>> map) {
+        this.structureStarts.clear();
+        this.structureStarts.putAll(map);
+        this.isDirty = true;
+    }
+
+    public LongSet getReferencesForFeature(StructureFeature<?> structureFeature) {
+        return (LongSet)this.structuresRefences.computeIfAbsent(structureFeature, (structureFeaturex) -> {
+            return new LongOpenHashSet();
+        });
+    }
+
+    public void addReferenceForFeature(StructureFeature<?> structureFeature, long l) {
+        ((LongSet)this.structuresRefences.computeIfAbsent(structureFeature, (structureFeaturex) -> {
+            return new LongOpenHashSet();
+        })).add(l);
+        this.isDirty = true;
+    }
+
+    public Map<StructureFeature<?>, LongSet> getAllReferences() {
+        return Collections.unmodifiableMap(this.structuresRefences);
     }
 
     @Override public ShortList[] getPostProcessing() {
@@ -430,32 +470,11 @@ public class CubePrimer implements IBigCube, ChunkAccess {
         return new BlockPos(xPos, yPos, zPos);
     }
 
-    // getStructureStart
-    @Nullable @Override public StructureStart<?> getStartForFeature(StructureFeature<?> var1) {
-        throw new UnsupportedOperationException("For later implementation");
-    }
-
-    // putStructureStart
-    @Override public void setStartForFeature(StructureFeature<?> structureIn, StructureStart<?> structureStartIn) {
-        throw new UnsupportedOperationException("For later implementation");
-    }
-
-    // getStructureReferences
-    @Override public LongSet getReferencesForFeature(StructureFeature<?> structureIn) {
-        throw new UnsupportedOperationException("For later implementation");
-    }
-
-    // addStructureReference
-    @Override public void addReferenceForFeature(StructureFeature<?> structure, long reference) {
-        throw new UnsupportedOperationException("For later implementation");
-    }
-
-    @Override public Map<StructureFeature<?>, LongSet> getAllReferences() {
-        throw new UnsupportedOperationException("For later implementation");
-    }
-
-    @Override public void setAllReferences(Map<StructureFeature<?>, LongSet> p_201606_1_) {
-        throw new UnsupportedOperationException("For later implementation");
+    @Override
+    public void setAllReferences(Map<StructureFeature<?>, LongSet> map) {
+        this.structuresRefences.clear();
+        this.structuresRefences.putAll(map);
+        this.isDirty = true;
     }
 
     @Nullable

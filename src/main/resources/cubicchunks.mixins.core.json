@@ -56,7 +56,8 @@
         "common.world.placement.MixinRangeDecorator",
         "common.world.placement.MixinSimpleFeatureDecorator",
         "common.world.placement.MixinSpread32Decorator",
-        "common.world.server.MixinServerWorldLightManager"
+        "common.world.server.MixinServerWorldLightManager",
+        "common.world.structure.MixinStart"
     ],
     "client": [
         "client.debug.MixinClientWorld",

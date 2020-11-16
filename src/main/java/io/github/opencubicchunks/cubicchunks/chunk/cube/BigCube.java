@@ -11,6 +11,7 @@ import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.ChunkSectionAccess;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import io.github.opencubicchunks.cubicchunks.utils.MathUtil;
+import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import it.unimi.dsi.fastutil.shorts.ShortList;
 import net.minecraft.CrashReport;
@@ -85,6 +86,9 @@ public class BigCube implements ChunkAccess, IBigCube {
     private final ClassInstanceMultiMap<Entity>[] entityLists;
     private final Level level;
 
+    private final Map<StructureFeature<?>, StructureStart<?>> structureStarts;
+    private final Map<StructureFeature<?>, LongSet> structuresRefences;
+
     private final Map<Heightmap.Types, SurfaceTrackerSection> heightmaps;
 
     private final BitSet pendingHeightmapUpdates = new BitSet(DIAMETER_IN_BLOCKS * DIAMETER_IN_BLOCKS);
@@ -120,6 +124,9 @@ public class BigCube implements ChunkAccess, IBigCube {
 //                this.heightMap.put(heightmap$type, new Heightmap(this, heightmap$type));
 //            }
 //        }
+
+        this.structureStarts = Maps.newHashMap();
+        this.structuresRefences = Maps.newHashMap();
 
         //noinspection unchecked
         this.entityLists = new ClassInstanceMultiMap[IBigCube.SECTION_COUNT];
@@ -177,18 +184,13 @@ public class BigCube implements ChunkAccess, IBigCube {
         this.deferredTileEntities.putAll(cubePrimerIn.getDeferredTileEntities());
 
         //TODO: reimplement missing BigCube methods
-//        for(int i = 0; i < cubePrimerIn.getPackedPositions().length; ++i) {
-//            this.packedBlockPositions[i] = cubePrimerIn.getPackedPositions()[i];
+//        for(int i = 0; i < protoChunk.getPostProcessing().length; ++i) {
+//            this.postProcessing[i] = protoChunk.getPostProcessing()[i];
 //        }
 
-        //this.setStructureStarts(cubePrimerIn.getStructureStarts());
-        //this.setStructureReferences(cubePrimerIn.getStructureReferences());
-
-//        for(Map.Entry<Heightmap.Type, Heightmap> entry : cubePrimerIn.getHeightmaps()) {
-//            if (ChunkStatus.FULL.getHeightMaps().contains(entry.getKey())) {
-//                this.getHeightmap(entry.getKey()).setDataArray(entry.getValue().getDataArray());
-//            }
-//        }
+        this.setAllStarts(cubePrimerIn.getAllStarts());
+        this.setAllReferences(cubePrimerIn.getAllReferences());
+//        var4 = protoChunk.getHeightmaps().iterator();
 
         this.setCubeLight(cubePrimerIn.hasCubeLight());
         this.dirty = true;
@@ -699,14 +701,6 @@ public class BigCube implements ChunkAccess, IBigCube {
         return 0;
     }
 
-    @Deprecated @Override public Map<StructureFeature<?>, StructureStart<?>> getAllStarts() {
-        throw new UnsupportedOperationException("Not implemented");
-    }
-
-    @Deprecated @Override public void setAllStarts(Map<StructureFeature<?>, StructureStart<?>> structureStartsIn) {
-
-    }
-
     @Override public ShortList[] getPostProcessing() {
         throw new UnsupportedOperationException("Not implemented");
     }
@@ -745,32 +739,44 @@ public class BigCube implements ChunkAccess, IBigCube {
     }
 
 
-    // getStructureStart
-    @Nullable @Override public StructureStart<?> getStartForFeature(StructureFeature<?> var1) {
-        throw new UnsupportedOperationException("Not implemented");
+    @org.jetbrains.annotations.Nullable
+    public StructureStart<?> getStartForFeature(StructureFeature<?> structureFeature) {
+        return this.structureStarts.get(structureFeature);
     }
 
-    // putStructureStart
-    @Override public void setStartForFeature(StructureFeature<?> structureIn, StructureStart<?> structureStartIn) {
-
+    public void setStartForFeature(StructureFeature<?> structureFeature, StructureStart<?> structureStart) {
+        this.structureStarts.put(structureFeature, structureStart);
     }
 
-    // getStructureReferences
-    @Override public LongSet getReferencesForFeature(StructureFeature<?> structureIn) {
-        throw new UnsupportedOperationException("Not implemented");
+    public Map<StructureFeature<?>, StructureStart<?>> getAllStarts() {
+        return this.structureStarts;
     }
 
-    // addStructureReference
-    @Override public void addReferenceForFeature(StructureFeature<?> structure, long reference) {
-
+    public void setAllStarts(Map<StructureFeature<?>, StructureStart<?>> map) {
+        this.structureStarts.clear();
+        this.structureStarts.putAll(map);
     }
 
-    @Override public Map<StructureFeature<?>, LongSet> getAllReferences() {
-        throw new UnsupportedOperationException("Not implemented");
+    public LongSet getReferencesForFeature(StructureFeature<?> structureFeature) {
+        return (LongSet)this.structuresRefences.computeIfAbsent(structureFeature, (structureFeaturex) -> {
+            return new LongOpenHashSet();
+        });
     }
 
-    @Override public void setAllReferences(Map<StructureFeature<?>, LongSet> p_201606_1_) {
+    public void addReferenceForFeature(StructureFeature<?> structureFeature, long l) {
+        ((LongSet)this.structuresRefences.computeIfAbsent(structureFeature, (structureFeaturex) -> {
+            return new LongOpenHashSet();
+        })).add(l);
+    }
 
+    public Map<StructureFeature<?>, LongSet> getAllReferences() {
+        return this.structuresRefences;
+    }
+
+    @Override
+    public void setAllReferences(Map<StructureFeature<?>, LongSet> map) {
+        this.structuresRefences.clear();
+        this.structuresRefences.putAll(map);
     }
 
     public void setLoaded(boolean loaded) {

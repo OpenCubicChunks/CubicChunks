@@ -108,7 +108,7 @@ public class MixinChunkStatus {
 
         ci.cancel();
         if (chunk instanceof IBigCube) {
-            // generator.generateStructureStarts(new CubeWorldGenRegion(world, unsafeCast(neighbors)), chunk);
+             generator.createReferences(new CubeWorldGenRegion(world, unsafeCast(neighbors)), world.structureFeatureManager(), chunk);
         }
     }
 

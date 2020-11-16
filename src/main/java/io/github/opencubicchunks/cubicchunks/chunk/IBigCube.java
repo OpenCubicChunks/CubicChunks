@@ -10,14 +10,18 @@ import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.ChunkStatus;
+import net.minecraft.world.level.chunk.FeatureAccess;
 import net.minecraft.world.level.chunk.LevelChunkSection;
+import net.minecraft.world.level.levelgen.feature.StructureFeature;
+import net.minecraft.world.level.levelgen.structure.StructureStart;
 import org.apache.logging.log4j.LogManager;
 
 import javax.annotation.Nullable;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Stream;
 
-public interface IBigCube extends BlockGetter {
+public interface IBigCube extends BlockGetter, FeatureAccess {
 
     int SECTION_DIAMETER = 16;
     int DIAMETER_IN_SECTIONS = EarlyConfig.getDiameterInSections();
@@ -58,6 +62,8 @@ public interface IBigCube extends BlockGetter {
     @Nullable CompoundTag getCubeBlockEntityNbtForSaving(BlockPos pos);
 
     @Nullable CompoundTag getCubeDeferredTileEntity(BlockPos pos);
+
+    Map<StructureFeature<?>, StructureStart<?>> getAllStarts();
 
     //LIGHTING
     //can't be set/hasLight due to obfuscation issues with IChunk
