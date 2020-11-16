@@ -99,7 +99,7 @@ public abstract class MixinChunkGenerator implements ICubeGenerator {
         int i = structureStart != null ? structureStart.getReferences() : 0;
         StructureFeatureConfiguration structureFeatureConfiguration = this.settings.getConfig(configuredStructureFeature.feature);
         if (structureFeatureConfiguration != null) {
-            StructureStart<?> structureStart2 = configuredStructureFeature.generate(registryAccess, ((ChunkGenerator) (Object) this), this.biomeSource, structureManager, seed, null, biome, i, structureFeatureConfiguration);
+            StructureStart<?> structureStart2 = configuredStructureFeature.generate(registryAccess, ((ChunkGenerator) (Object) this), this.biomeSource, structureManager, seed, chunkPos.asChunkPos(), biome, i, structureFeatureConfiguration);
             structureFeatureManager.setStartForFeature(/* SectionPos.of(cube.getPos(), 0) We return null as a sectionPos Arg is not used in the method*/null, configuredStructureFeature.feature, structureStart2, (FeatureAccess) cube);
         }
 
