@@ -36,7 +36,7 @@ public abstract class MixinStructureFeatureManager {
         cir.setReturnValue(((ICubicWorld) this.level).getCube(sectionToCube(sectionPos.x()), sectionToCube(sectionPos.y()), sectionToCube(sectionPos.z()), ChunkStatus.STRUCTURE_REFERENCES).getReferencesForFeature(structureFeature).stream().map((seed) -> {
             return CubePos.from(seed);
         }).map((cubePos) -> {
-            return this.getStartForFeature(null, structureFeature, ((ICubicWorld) this.level).getCube(cubePos));
+            return this.getStartForFeature(null, structureFeature, ((ICubicWorld) this.level).getCube(cubePos, ChunkStatus.STRUCTURE_STARTS));
         }).filter((structureStart) -> {
             return structureStart != null && structureStart.isValid();
         }));

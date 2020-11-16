@@ -58,6 +58,7 @@
         "common.world.placement.MixinSpread32Decorator",
         "common.world.server.MixinServerWorldLightManager",
         "common.world.structure.MixinStructureFeatureManager",
+        "common.world.structure.MixinStructurePiece",
         "common.world.structure.MixinStructureStart"
     ],
     "client": [

@@ -97,9 +97,6 @@ public class CubePrimer implements IBigCube, ChunkAccess {
 //        this.pendingFluidTicks = fluidTickListIn;
         if(sectionsIn == null) {
             this.sections = new LevelChunkSection[IBigCube.SECTION_COUNT];
-            for(int i = 0; i < IBigCube.SECTION_COUNT; i++) {
-                this.sections[i] = new LevelChunkSection(cubePos.getY(), (short) 0, (short) 0, (short) 0);
-            }
         }
         else {
             if(sectionsIn.length == IBigCube.SECTION_COUNT)
@@ -430,7 +427,7 @@ public class CubePrimer implements IBigCube, ChunkAccess {
     }
 
     public LongSet getReferencesForFeature(StructureFeature<?> structureFeature) {
-        return (LongSet)this.structuresRefences.computeIfAbsent(structureFeature, (structureFeaturex) -> {
+        return this.structuresRefences.computeIfAbsent(structureFeature, (structureFeaturex) -> {
             return new LongOpenHashSet();
         });
     }

@@ -19,6 +19,7 @@ import net.minecraft.Util;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Registry;
 import net.minecraft.core.RegistryAccess;
+import net.minecraft.core.SectionPos;
 import net.minecraft.data.worldgen.StructureFeatures;
 import net.minecraft.network.protocol.game.DebugPackets;
 import net.minecraft.server.level.ServerLevel;
@@ -53,6 +54,8 @@ import org.spongepowered.noise.module.source.Perlin;
 import java.util.List;
 import java.util.function.Supplier;
 
+import static io.github.opencubicchunks.cubicchunks.utils.Coords.*;
+
 @Mixin(ChunkGenerator.class)
 public abstract class MixinChunkGenerator implements ICubeGenerator {
 
@@ -70,6 +73,7 @@ public abstract class MixinChunkGenerator implements ICubeGenerator {
     @Shadow protected abstract void generateStrongholds();
 
     @Shadow @Final private List<ChunkPos> strongholdPositions;
+
 
     @Inject(at = @At("RETURN"), method = "<init>(Lnet/minecraft/world/level/biome/BiomeSource;Lnet/minecraft/world/level/biome/BiomeSource;Lnet/minecraft/world/level/levelgen/StructureSettings;J)V")
     private void switchBiomeSource(BiomeSource biomeSource, BiomeSource biomeSource2, StructureSettings structureSettings, long l, CallbackInfo ci) {
@@ -129,6 +133,10 @@ public abstract class MixinChunkGenerator implements ICubeGenerator {
         int cubeY = world.getMainCubeY();
         int cubeZ = world.getMainCubeZ();
 
+        int blockX = cubeToMinBlock(cubeX);
+        int blockY = cubeToMinBlock(cubeY);
+        int blockZ = cubeToMinBlock(cubeZ);
+
         for (int x = cubeX - 8 / IBigCube.DIAMETER_IN_SECTIONS; x <= cubeX + 8 / IBigCube.DIAMETER_IN_SECTIONS; ++x) {
             for (int y = cubeY - 8 / IBigCube.DIAMETER_IN_SECTIONS; y <= cubeY + 8 / IBigCube.DIAMETER_IN_SECTIONS; ++y) {
                 for (int z = cubeZ - 8 / IBigCube.DIAMETER_IN_SECTIONS; z <= cubeZ + 8 / IBigCube.DIAMETER_IN_SECTIONS; ++z) {
@@ -138,9 +146,10 @@ public abstract class MixinChunkGenerator implements ICubeGenerator {
                         try {
                             if (structureStart != StructureStart.INVALID_START && structureStart.getBoundingBox().intersects(
                                     //We use a new Bounding Box and check if it intersects a given cube.
-                                    new BoundingBox(cubeX, cubeX + IBigCube.DIAMETER_IN_BLOCKS - 1,
-                                            cubeZ, cubeZ + IBigCube.DIAMETER_IN_BLOCKS - 1,
-                                            cubeY, cubeY + IBigCube.DIAMETER_IN_BLOCKS - 1))) {
+                                    new BoundingBox(blockX, blockY, blockZ,
+                                            blockX + IBigCube.DIAMETER_IN_BLOCKS - 1,
+                                            blockY + IBigCube.DIAMETER_IN_BLOCKS - 1,
+                                            blockZ + IBigCube.DIAMETER_IN_BLOCKS - 1))) {
                                 //The First Param is a SectionPos arg that is not used anywhere so we make it null.
                                 featureManager.addReferenceForFeature(null, structureStart.getFeature(), cubePosAsLong, cube);
                                 DebugPackets.sendStructurePacket(world, structureStart);
@@ -160,7 +169,32 @@ public abstract class MixinChunkGenerator implements ICubeGenerator {
     }
 
     @Inject(at = @At("HEAD"), method = "findNearestMapFeature(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/level/levelgen/feature/StructureFeature;Lnet/minecraft/core/BlockPos;IZ)Lnet/minecraft/core/BlockPos;", cancellable = true)
-    private void do3DLocateStructure(ServerLevel serverLevel, StructureFeature<?> structureFeature, BlockPos blockPos, int radius, boolean skipExistingCubes, CallbackInfoReturnable<BlockPos> cir) {
+    private void do3DLocateStructure(ServerLevel serverLevel, StructureFeature<?> structureFeature, BlockPos blockPos, int radius, boolean skipExistingChunks, CallbackInfoReturnable<BlockPos> cir) {
+        if (!this.biomeSource.canGenerateStructure(structureFeature)) {
+            cir.setReturnValue(null);
+        } else if (structureFeature == StructureFeature.STRONGHOLD) {
+            this.generateStrongholds();
+            BlockPos blockPos2 = null;
+            double d = Double.MAX_VALUE;
+            BlockPos.MutableBlockPos mutable = new BlockPos.MutableBlockPos();
+
+            for (ChunkPos chunkPos : this.strongholdPositions) {
+                mutable.set(SectionPos.sectionToBlockCoord(chunkPos.x, 8), 32, SectionPos.sectionToBlockCoord(chunkPos.z, 8));
+                double e = mutable.distSqr(blockPos);
+                if (blockPos2 == null) {
+                    blockPos2 = new BlockPos(mutable);
+                    d = e;
+                } else if (e < d) {
+                    blockPos2 = new BlockPos(mutable);
+                    d = e;
+                }
+            }
+
+            cir.setReturnValue(blockPos2);
+        } else {
+            StructureFeatureConfiguration structureFeatureConfiguration = this.settings.getConfig(structureFeature);
+            cir.setReturnValue(structureFeatureConfiguration == null ? null : structureFeature.getNearestGeneratedFeature(serverLevel, serverLevel.structureFeatureManager(), blockPos, radius, skipExistingChunks, serverLevel.getSeed(), structureFeatureConfiguration));
+        }
     }
 
     @Inject(method = "createBiomes", at = @At("HEAD"), cancellable = true)
@@ -305,9 +339,9 @@ public abstract class MixinChunkGenerator implements ICubeGenerator {
         int mainCubeY = region.getMainCubeY();
         int mainCubeZ = region.getMainCubeZ();
 
-        int xStart = Coords.cubeToMinBlock(mainCubeX);
-        int yStart = Coords.cubeToMinBlock(mainCubeY);
-        int zStart = Coords.cubeToMinBlock(mainCubeZ);
+        int xStart = cubeToMinBlock(mainCubeX);
+        int yStart = cubeToMinBlock(mainCubeY);
+        int zStart = cubeToMinBlock(mainCubeZ);
 
         //Y value stays 32
         CubeWorldGenRandom worldgenRandom = new CubeWorldGenRandom();
@@ -316,11 +350,11 @@ public abstract class MixinChunkGenerator implements ICubeGenerator {
         //Feed the given columnMinPos into the feature decorators.
         for (int columnX = 0; columnX < IBigCube.DIAMETER_IN_SECTIONS; columnX++) {
             for (int columnZ = 0; columnZ < IBigCube.DIAMETER_IN_SECTIONS; columnZ++) {
-                BlockPos columnMinPos = new BlockPos(xStart + (Coords.sectionToMinBlock(columnX)), yStart, zStart + (Coords.sectionToMinBlock(columnZ)));
+                BlockPos columnMinPos = new BlockPos(xStart + (sectionToMinBlock(columnX)), yStart, zStart + (sectionToMinBlock(columnZ)));
 
                 long seed = worldgenRandom.setDecorationSeed(region.getSeed(), columnMinPos.getX(), columnMinPos.getY(), columnMinPos.getZ());
 
-                Biome biome = ((ChunkGenerator) (Object) this).getBiomeSource().getPrimaryBiome(Coords.cubeToSection(mainCubeX, columnX), Coords.cubeToSection(mainCubeZ, columnZ));
+                Biome biome = ((ChunkGenerator) (Object) this).getBiomeSource().getPrimaryBiome(cubeToSection(mainCubeX, columnX), cubeToSection(mainCubeZ, columnZ));
                 try {
                     ((BiomeGetter) (Object) biome).generate(structureManager, ((ChunkGenerator) (Object) this), region, seed, worldgenRandom, columnMinPos);
                 } catch (Exception e) {
