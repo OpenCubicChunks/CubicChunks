@@ -21,7 +21,9 @@ import net.minecraft.core.Registry;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.data.worldgen.StructureFeatures;
 import net.minecraft.network.protocol.game.DebugPackets;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.Mth;
+import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.StructureFeatureManager;
 import net.minecraft.world.level.WorldGenLevel;
@@ -31,9 +33,9 @@ import net.minecraft.world.level.biome.OverworldBiomeSource;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.ChunkGenerator;
-import net.minecraft.world.level.chunk.FeatureAccess;
 import net.minecraft.world.level.levelgen.StructureSettings;
 import net.minecraft.world.level.levelgen.feature.ConfiguredStructureFeature;
+import net.minecraft.world.level.levelgen.feature.StructureFeature;
 import net.minecraft.world.level.levelgen.feature.configurations.StructureFeatureConfiguration;
 import net.minecraft.world.level.levelgen.structure.BoundingBox;
 import net.minecraft.world.level.levelgen.structure.StructureStart;
@@ -45,8 +47,10 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.noise.module.source.Perlin;
 
+import java.util.List;
 import java.util.function.Supplier;
 
 @Mixin(ChunkGenerator.class)
@@ -62,6 +66,10 @@ public abstract class MixinChunkGenerator implements ICubeGenerator {
     protected BiomeSource runtimeBiomeSource;
 
     @Shadow @Final private StructureSettings settings;
+
+    @Shadow protected abstract void generateStrongholds();
+
+    @Shadow @Final private List<ChunkPos> strongholdPositions;
 
     @Inject(at = @At("RETURN"), method = "<init>(Lnet/minecraft/world/level/biome/BiomeSource;Lnet/minecraft/world/level/biome/BiomeSource;Lnet/minecraft/world/level/levelgen/StructureSettings;J)V")
     private void switchBiomeSource(BiomeSource biomeSource, BiomeSource biomeSource2, StructureSettings structureSettings, long l, CallbackInfo ci) {
@@ -95,12 +103,12 @@ public abstract class MixinChunkGenerator implements ICubeGenerator {
     }
 
     private void createCCStructure(ConfiguredStructureFeature<?, ?> configuredStructureFeature, RegistryAccess registryAccess, StructureFeatureManager structureFeatureManager, IBigCube cube, StructureManager structureManager, long seed, CubePos chunkPos, Biome biome) {
-        StructureStart<?> structureStart = structureFeatureManager.getStartForFeature(/*SectionPos.of(cube.getPos(), 0) We return null as a sectionPos Arg is not used in the method*/null, configuredStructureFeature.feature,(FeatureAccess) cube);
+        StructureStart<?> structureStart = structureFeatureManager.getStartForFeature(/*SectionPos.of(cube.getPos(), 0) We return null as a sectionPos Arg is not used in the method*/null, configuredStructureFeature.feature, cube);
         int i = structureStart != null ? structureStart.getReferences() : 0;
         StructureFeatureConfiguration structureFeatureConfiguration = this.settings.getConfig(configuredStructureFeature.feature);
         if (structureFeatureConfiguration != null) {
             StructureStart<?> structureStart2 = configuredStructureFeature.generate(registryAccess, ((ChunkGenerator) (Object) this), this.biomeSource, structureManager, seed, chunkPos.asChunkPos(), biome, i, structureFeatureConfiguration);
-            structureFeatureManager.setStartForFeature(/* SectionPos.of(cube.getPos(), 0) We return null as a sectionPos Arg is not used in the method*/null, configuredStructureFeature.feature, structureStart2, (FeatureAccess) cube);
+            structureFeatureManager.setStartForFeature(/* SectionPos.of(cube.getPos(), 0) We return null as a sectionPos Arg is not used in the method*/null, configuredStructureFeature.feature, structureStart2, cube);
         }
 
     }
@@ -134,7 +142,7 @@ public abstract class MixinChunkGenerator implements ICubeGenerator {
                                             cubeZ, cubeZ + IBigCube.DIAMETER_IN_BLOCKS - 1,
                                             cubeY, cubeY + IBigCube.DIAMETER_IN_BLOCKS - 1))) {
                                 //The First Param is a SectionPos arg that is not used anywhere so we make it null.
-                                featureManager.addReferenceForFeature(null, structureStart.getFeature(), cubePosAsLong, (FeatureAccess) cube);
+                                featureManager.addReferenceForFeature(null, structureStart.getFeature(), cubePosAsLong, cube);
                                 DebugPackets.sendStructurePacket(world, structureStart);
                             }
                         } catch (Exception e) {
@@ -149,6 +157,10 @@ public abstract class MixinChunkGenerator implements ICubeGenerator {
                 }
             }
         }
+    }
+
+    @Inject(at = @At("HEAD"), method = "findNearestMapFeature(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/level/levelgen/feature/StructureFeature;Lnet/minecraft/core/BlockPos;IZ)Lnet/minecraft/core/BlockPos;", cancellable = true)
+    private void do3DLocateStructure(ServerLevel serverLevel, StructureFeature<?> structureFeature, BlockPos blockPos, int radius, boolean skipExistingCubes, CallbackInfoReturnable<BlockPos> cir) {
     }
 
     @Inject(method = "createBiomes", at = @At("HEAD"), cancellable = true)

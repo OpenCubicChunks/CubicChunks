@@ -758,15 +758,15 @@ public class BigCube implements ChunkAccess, IBigCube {
     }
 
     public LongSet getReferencesForFeature(StructureFeature<?> structureFeature) {
-        return (LongSet)this.structuresRefences.computeIfAbsent(structureFeature, (structureFeaturex) -> {
+        return this.structuresRefences.computeIfAbsent(structureFeature, (structureFeaturex) -> {
             return new LongOpenHashSet();
         });
     }
 
-    public void addReferenceForFeature(StructureFeature<?> structureFeature, long l) {
+    public void addReferenceForFeature(StructureFeature<?> structureFeature, long cubeLong) {
         ((LongSet)this.structuresRefences.computeIfAbsent(structureFeature, (structureFeaturex) -> {
             return new LongOpenHashSet();
-        })).add(l);
+        })).add(cubeLong);
     }
 
     public Map<StructureFeature<?>, LongSet> getAllReferences() {

@@ -1,5 +1,6 @@
 package io.github.opencubicchunks.cubicchunks.mixin.core.common.world.biome;
 
+import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import io.github.opencubicchunks.cubicchunks.world.CubeWorldGenRandom;
 import io.github.opencubicchunks.cubicchunks.world.CubeWorldGenRegion;
@@ -46,11 +47,12 @@ public class MixinBiome implements BiomeGetter {
                 for(StructureFeature<?> structure : this.structuresByStep.getOrDefault(genStepIDX, Collections.emptyList())) {
                     worldgenRandom.setDecorationSeed(seed, k, genStepIDX);
                     int minSectionX = Coords.sectionToMinBlock(Coords.blockToSection(blockPos.getX()));
+                    int minSectionY = Coords.sectionToMinBlock(Coords.blockToSection(blockPos.getY()));
                     int minSectionZ = Coords.sectionToMinBlock(Coords.blockToSection(blockPos.getZ()));
 
                     try {
                         structureFeatureManager.startsForFeature(SectionPos.of(blockPos), structure).forEach((structureStart) -> {
-                            ((SetupCubeStructureStart)structureStart).placeInCube(worldGenRegion, structureFeatureManager, chunkGenerator, worldgenRandom, new BoundingBox(minSectionX, worldGenRegion.getMinBuildHeight() + 1, minSectionZ, minSectionX + 15, worldGenRegion.getMaxBuildHeight(), minSectionZ + 15), blockPos);
+                            ((SetupCubeStructureStart)structureStart).placeInCube(worldGenRegion, structureFeatureManager, chunkGenerator, worldgenRandom, new BoundingBox(minSectionX, minSectionY, minSectionZ, minSectionX + 15, minSectionY + IBigCube.DIAMETER_IN_BLOCKS - 1, minSectionZ + 15), blockPos);
                         });
                     } catch (Exception e) {
                         CrashReport crashReport = CrashReport.forThrowable(e, "Structure Feature placement");
@@ -157,7 +159,7 @@ public class MixinBiome implements BiomeGetter {
                     new ResourceLocation("patch_sugar_cane_badlands"),
                     new ResourceLocation("patch_sugar_cane"),
 
-                    //Ores
+                    //Ores //TODO: OPTIMIZE ORE GEN
                     new ResourceLocation("ore_magma"),
                     new ResourceLocation("ore_soul_sand"),
                     new ResourceLocation("ore_gold_deltas"),

@@ -2,6 +2,7 @@ package io.github.opencubicchunks.cubicchunks.world;
 
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
+import io.github.opencubicchunks.cubicchunks.server.ICubicWorld;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import net.minecraft.Util;
 import net.minecraft.core.BlockPos;
@@ -54,7 +55,7 @@ import java.util.stream.Stream;
 
 import static io.github.opencubicchunks.cubicchunks.utils.Coords.blockToCube;
 
-public class CubeWorldGenRegion implements WorldGenLevel {
+public class CubeWorldGenRegion implements WorldGenLevel, ICubicWorld {
 
     private static final Logger LOGGER = LogManager.getLogger();
     private final List<IBigCube> cubePrimers;
@@ -126,6 +127,10 @@ public class CubeWorldGenRegion implements WorldGenLevel {
 
     public int getMainCubeZ() {
         return this.mainCubeZ;
+    }
+
+    public IBigCube getCube(int cubeX, int cubeY, int cubeZ) {
+        return this.getCube(cubeX, cubeY, cubeZ, ChunkStatus.EMPTY, true);
     }
 
     public IBigCube getCube(BlockPos blockPos) {

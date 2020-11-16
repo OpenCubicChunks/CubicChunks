@@ -18,7 +18,7 @@ import java.util.List;
 import java.util.Random;
 
 @Mixin(StructureStart.class)
-public abstract class MixinStart implements SetupCubeStructureStart {
+public abstract class MixinStructureStart implements SetupCubeStructureStart {
 
 
     @Shadow @Final protected List<StructurePiece> pieces;
@@ -30,8 +30,8 @@ public abstract class MixinStart implements SetupCubeStructureStart {
         synchronized(this.pieces) {
             if (!this.pieces.isEmpty()) {
                 BoundingBox firstPieceBoundingBox = this.pieces.get(0).getBoundingBox();
-                Vec3i centerPosFrom1stPieceBoundingBox = firstPieceBoundingBox.getCenter();                   //Divide by 8 here i.e a y of 64 is now 8.
-                BlockPos blockPos = new BlockPos(centerPosFrom1stPieceBoundingBox.getX(), cubePos.getY() + (firstPieceBoundingBox.y0 / 8)/*Add to the original y value from the cube section/column corner pos*/, centerPosFrom1stPieceBoundingBox.getZ());
+                Vec3i centerPos = firstPieceBoundingBox.getCenter();
+                BlockPos blockPos = new BlockPos(centerPos.getX(), firstPieceBoundingBox.y0, centerPos.getZ());
                 Iterator<StructurePiece> iterator = this.pieces.iterator();
 
                 while(iterator.hasNext()) {

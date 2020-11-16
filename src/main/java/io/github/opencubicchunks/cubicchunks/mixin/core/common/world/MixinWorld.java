@@ -30,13 +30,18 @@ public abstract class MixinWorld implements ICubicWorld, LevelHeightAccessor {
         this.getCubeAt(blockPos).setDirty(true);
     }
 
-    public BigCube getCubeAt(BlockPos pos) {
+    public IBigCube getCubeAt(BlockPos pos) {
         return this.getCube(Coords.blockToCube(pos.getX()), Coords.blockToCube(pos.getY()), Coords.blockToCube(pos.getZ()));
     }
 
     @Override
-    public BigCube getCube(int cubeX, int cubeY, int cubeZ) {
-        return (BigCube)this.getCube(cubeX, cubeY, cubeZ, ChunkStatus.FULL, true);
+    public IBigCube getCube(int cubeX, int cubeY, int cubeZ) {
+        return this.getCube(cubeX, cubeY, cubeZ, ChunkStatus.FULL, true);
+    }
+
+    @Override
+    public IBigCube getCube(int cubeX, int cubeY, int cubeZ, ChunkStatus status) {
+        return this.getCube(cubeX, cubeY, cubeZ, status, true);
     }
 
     //The method .getWorld() No longer exists
