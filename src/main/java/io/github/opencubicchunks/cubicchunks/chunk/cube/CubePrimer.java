@@ -10,6 +10,7 @@ import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
+import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap;
 import it.unimi.dsi.fastutil.shorts.ShortList;
 import net.minecraft.CrashReport;
 import net.minecraft.CrashReportCategory;
@@ -62,6 +63,8 @@ public class CubePrimer implements IBigCube, ChunkAccess {
     //Structures
     private final Map<StructureFeature<?>, StructureStart<?>> structureStarts;
     private final Map<StructureFeature<?>, LongSet> structuresRefences;
+    private final Map<GenerationStep.Carving, BitSet> carvingMasks;
+
     private volatile boolean isDirty;
 
 
@@ -85,6 +88,7 @@ public class CubePrimer implements IBigCube, ChunkAccess {
     //TODO: add TickList<Block> and TickList<Fluid>
     public CubePrimer(CubePos cubePosIn, UpgradeData p_i49941_2_, @Nullable LevelChunkSection[] sectionsIn, ProtoTickList<Block> blockTickListIn, ProtoTickList<Fluid> p_i49941_5_, LevelHeightAccessor levelHeightAccessor) {
         this.heightmaps = Maps.newEnumMap(Heightmap.Types.class);
+        this.carvingMasks = new Object2ObjectArrayMap<>();
 
         this.structureStarts = Maps.newHashMap();
         this.structuresRefences = Maps.newHashMap();
@@ -476,15 +480,17 @@ public class CubePrimer implements IBigCube, ChunkAccess {
 
     @Nullable
     public BitSet getCarvingMask(GenerationStep.Carving type) {
-        throw new UnsupportedOperationException("Not implemented");
+        return this.carvingMasks.get(type);
     }
 
-    public BitSet setCarvingMask(GenerationStep.Carving type) {
-        throw new UnsupportedOperationException("Not implemented");
+    public BitSet getOrSetCarvingMask(GenerationStep.Carving type) {
+        return this.carvingMasks.computeIfAbsent(type, (carvingx) -> {
+            return new BitSet(IBigCube.BLOCK_COUNT);
+        });
     }
 
     public void setCarvingMask(GenerationStep.Carving type, BitSet mask) {
-        throw new UnsupportedOperationException("Not implemented");
+        this.carvingMasks.put(type, mask);
     }
 
     @Override public int getSectionsCount() {

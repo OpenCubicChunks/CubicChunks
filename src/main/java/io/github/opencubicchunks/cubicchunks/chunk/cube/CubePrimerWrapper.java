@@ -204,7 +204,14 @@ public class CubePrimerWrapper extends CubePrimer {
     @Override public BitSet getCarvingMask(GenerationStep.Carving type) {
         throw Util.pauseInIde(new UnsupportedOperationException("Meaningless in this context"));
     }
-    @Override public BitSet setCarvingMask(GenerationStep.Carving type) {
+
+    @Override
+    public BitSet getOrSetCarvingMask(GenerationStep.Carving type) {
+        throw Util.pauseInIde(new UnsupportedOperationException("Meaningless in this context"));
+    }
+
+    @Override
+    public void setCarvingMask(GenerationStep.Carving type, BitSet mask) {
         throw Util.pauseInIde(new UnsupportedOperationException("Meaningless in this context"));
     }
 }
