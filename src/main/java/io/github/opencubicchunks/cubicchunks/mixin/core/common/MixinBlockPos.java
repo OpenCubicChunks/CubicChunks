@@ -2,9 +2,7 @@ package io.github.opencubicchunks.cubicchunks.mixin.core.common;
 
 import net.minecraft.core.BlockPos;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Constant;
-import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyConstant;
 
 @Mixin(BlockPos.class)

@@ -2,9 +2,7 @@ package io.github.opencubicchunks.cubicchunks.mixin.core.common.world.structure;
 
 import io.github.opencubicchunks.cubicchunks.world.SetupCubeStructureStart;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Registry;
 import net.minecraft.core.Vec3i;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.StructureFeatureManager;
 import net.minecraft.world.level.WorldGenLevel;
 import net.minecraft.world.level.chunk.ChunkGenerator;
