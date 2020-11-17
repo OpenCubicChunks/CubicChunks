@@ -152,12 +152,12 @@ public class BigCube implements ChunkAccess, IBigCube {
 //        this.gatherCapabilities();
     }
 
-    public BigCube(Level worldIn, CubePrimer cubePrimerIn) {
+    public BigCube(Level worldIn, CubePrimer cubePrimerIn, @Nullable Consumer<BigCube> consumer) {
         //TODO: reimplement full BigCube constructor from CubePrimer
 //        this(worldIn, cubePrimerIn.getCubePos(), cubePrimerIn.getCubeBiomes(), cubePrimerIn.getUpgradeData(), cubePrimerIn.getBlocksToBeTicked(),
 //            cubePrimerIn.getFluidsToBeTicked(), cubePrimerIn.getInhabitedTime(), cubePrimerIn.getSections(), (Consumer<BigCube>)null);
         this(worldIn, cubePrimerIn.getCubePos(), cubePrimerIn.getCubeBiomes(), null, null,
-                null, cubePrimerIn.getInhabitedTime(), cubePrimerIn.getCubeSections(), null);
+                null, cubePrimerIn.getCubeInhabitedTime(), cubePrimerIn.getCubeSections(), consumer);
 
         for(CompoundTag compoundnbt : cubePrimerIn.getCubeEntities()) {
             EntityType.loadEntityRecursive(compoundnbt, worldIn, (entity) -> {

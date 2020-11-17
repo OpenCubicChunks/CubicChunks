@@ -39,19 +39,11 @@ import java.util.zip.GZIPInputStream;
 public class CubeSerializer {
 
     public static IBigCube read(ServerLevel worldIn, StructureManager structureManager, PoiManager poiManager, CubePos expectedCubePos, CompoundTag root) {
-//        Path cubePath = worldDir.resolve("cubes32/" + cubePos.getX() + "_" + cubePos.getY() + "_" + cubePos.getZ() + ".bin");
-//        if (!Files.exists(cubePath)) {
-//            return null;
-//        }
-//        InputStream input = new FileInputStream(cubePath.toString());
-//        DataInputStream datainputstream = new DataInputStream(input);
-//
-        IBigCube cube = null;
         CompoundTag level = root.getCompound("Level");
 
         CubePos cubePos = CubePos.of(level.getInt("xPos"), level.getInt("yPos"), level.getInt("zPos"));
         if (!Objects.equals(cubePos, expectedCubePos)) {
-            CubicChunks.LOGGER.error("LevelChunk file at {} is in the wrong location; relocating. (Expected {}, got {})", cubePos, cubePos, cubePos);
+            CubicChunks.LOGGER.error("LevelCube file at {} is in the wrong location; relocating. (Expected {}, got {})", cubePos, expectedCubePos, cubePos);
         }
 
         ChunkGenerator chunkgenerator = worldIn.getChunkSource().getGenerator();
@@ -59,6 +51,7 @@ public class CubeSerializer {
 
         CubeBiomeContainer biomecontainer = new CubeBiomeContainer(worldIn.registryAccess().registryOrThrow(Registry.BIOME_REGISTRY), cubePos.asSectionPos(), biomeprovider, level.contains("Biomes", 11) ? level.getIntArray("Biomes") : null);
 //            UpgradeData upgradedata = level.contains("UpgradeData", 10) ? new UpgradeData(level.getCompound("UpgradeData")) : UpgradeData.EMPTY;
+        //TODO: reimplement ticklists
 //            ChunkPrimerTickList<Block> chunkprimerticklist = new ChunkPrimerTickList<>((p_222652_0_) -> {
 //                return p_222652_0_ == null || p_222652_0_.getDefaultState().isAir();
 //            }, cubePos, level.getList("ToBeTicked", 9));
@@ -109,6 +102,7 @@ public class CubeSerializer {
         ChunkStatus.ChunkType chunkstatus$type = getChunkStatus(root);
         IBigCube icube;
         if (chunkstatus$type == ChunkStatus.ChunkType.LEVELCHUNK) {
+            //TODO: reimplement ticklists
 //                ITickList<Block> iticklist;
 //                if (level.contains("TileTicks", 9)) {
 //                    iticklist = SerializableTickList.create(level.getList("TileTicks", 10), Registry.BLOCK::getKey, Registry.BLOCK::getOrDefault);
@@ -132,6 +126,7 @@ public class CubeSerializer {
             //TODO: reimplement forge capabilities in save format
 //                if (level.contains("ForgeCaps")) ((LevelChunk)icube).readCapsFromNBT(level.getCompound("ForgeCaps"));
         } else {
+            //TODO: reimplement ticklists, updatedata
 //                CubePrimer cubePrimer = new CubePrimer(cubePos, upgradedata, sections, chunkprimerticklist, chunkprimerticklist1);
             CubePrimer cubePrimer = new CubePrimer(cubePos, null, sections, null, null, worldIn);
             cubePrimer.setCubeBiomes(biomecontainer);
@@ -312,7 +307,7 @@ public class CubeSerializer {
 //            level.put("CarvingMasks", carvingMasksNBT);
         }
 
-        //TODO: implement missing cube methods and save format
+        //TODO: reimplement ticklists
 //        ITickList<Block> iticklist = icube.getBlocksToBeTicked();
 //        if (iticklist instanceof ChunkPrimerTickList) {
 //            level.put("ToBeTicked", ((ChunkPrimerTickList)iticklist).write());
@@ -334,6 +329,7 @@ public class CubeSerializer {
 //        level.put("PostProcessing", toNbt(icube.getPackedPositions()));
 //        CompoundTag compoundnbt6 = new CompoundTag();
 //
+        //TODO: reimplement heightmaps
 //        for(Map.Entry<Heightmap.Type, Heightmap> entry : icube.getHeightmaps()) {
 //            if (icube.getCubeStatus().getHeightMaps().contains(entry.getKey())) {
 //                compoundnbt6.put(entry.getKey().getId(), new LongArrayNBT(entry.getValue().getDataArray()));

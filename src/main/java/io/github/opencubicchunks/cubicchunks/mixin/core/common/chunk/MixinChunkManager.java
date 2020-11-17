@@ -643,7 +643,10 @@ public abstract class MixinChunkManager implements IChunkManager {
                 if (prevCube instanceof CubePrimerWrapper) {
                     cube = ((CubePrimerWrapper)prevCube).getCube();
                 } else {
-                    cube = new BigCube(this.level, (CubePrimer) prevCube);
+                    cube = new BigCube(this.level, (CubePrimer) prevCube, (bigCube) -> {
+                        //TODO: implement new entities consumer for cube
+//                        postLoadProtoChunk(this.level, protoChunk.getEntities());
+                    });
                     ((ICubeHolder) holder).replaceProtoCube(new CubePrimerWrapper(cube, level));
                 }
 
