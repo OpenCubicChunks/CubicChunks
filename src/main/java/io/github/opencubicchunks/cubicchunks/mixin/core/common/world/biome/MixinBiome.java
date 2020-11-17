@@ -36,15 +36,15 @@ public class MixinBiome implements BiomeGetter {
     @Shadow @Final private Map<Integer, List<StructureFeature<?>>> structuresByStep;
 
     @Override
-    public void generate(StructureFeatureManager structureFeatureManager, ChunkGenerator chunkGenerator, CubeWorldGenRegion worldGenRegion, long seed, CubeWorldGenRandom worldgenRandom, BlockPos blockPos) {
+    public void generate(StructureFeatureManager structureFeatureManager, ChunkGenerator chunkGenerator, CubeWorldGenRegion cubeWorldGenRegion, long seed, CubeWorldGenRandom worldgenRandom, BlockPos blockPos) {
         List<List<Supplier<ConfiguredFeature<?, ?>>>> list = this.generationSettings.features();
-        int i = GenerationStep.Decoration.values().length;
 
-        for (int genStepIDX = 0; genStepIDX < i; ++genStepIDX) {
+        for (int genStepIDX = 0; genStepIDX < GenerationStep.Decoration.values().length; ++genStepIDX) {
             int k = 0;
             if (structureFeatureManager.shouldGenerateFeatures()) {
 
                 for(StructureFeature<?> structure : this.structuresByStep.getOrDefault(genStepIDX, Collections.emptyList())) {
+
                     worldgenRandom.setDecorationSeed(seed, k, genStepIDX);
                     int minSectionX = Coords.sectionToMinBlock(Coords.blockToSection(blockPos.getX()));
                     int minSectionY = Coords.sectionToMinBlock(Coords.blockToSection(blockPos.getY()));
@@ -52,7 +52,7 @@ public class MixinBiome implements BiomeGetter {
 
                     try {
                         structureFeatureManager.startsForFeature(SectionPos.of(blockPos), structure).forEach((structureStart) -> {
-                            ((SetupCubeStructureStart)structureStart).placeInCube(worldGenRegion, structureFeatureManager, chunkGenerator, worldgenRandom, new BoundingBox(minSectionX, minSectionY, minSectionZ, minSectionX + 15, minSectionY + IBigCube.DIAMETER_IN_BLOCKS - 1, minSectionZ + 15), blockPos);
+                            ((SetupCubeStructureStart)structureStart).placeInCube(cubeWorldGenRegion, structureFeatureManager, chunkGenerator, worldgenRandom, new BoundingBox(minSectionX, minSectionY, minSectionZ, minSectionX + 15, minSectionY + IBigCube.DIAMETER_IN_BLOCKS - 1, minSectionZ + 15), blockPos);
                         });
                     } catch (Exception e) {
                         CrashReport crashReport = CrashReport.forThrowable(e, "Structure Feature placement");
@@ -192,11 +192,11 @@ public class MixinBiome implements BiomeGetter {
                 for (Supplier<ConfiguredFeature<?, ?>> configuredFeatureSupplier : list.get(genStepIDX)) {
                     ConfiguredFeature<?, ?> configuredFeature = configuredFeatureSupplier.get();
 
-                    ResourceLocation key = worldGenRegion.getLevel().getServer().registryAccess().registry(Registry.CONFIGURED_FEATURE_REGISTRY).get().getKey(configuredFeature);
+                    ResourceLocation key = cubeWorldGenRegion.getLevel().getServer().registryAccess().registry(Registry.CONFIGURED_FEATURE_REGISTRY).get().getKey(configuredFeature);
 
                     if (featureIDWhitelist.contains(key)) {
                         try {
-                            configuredFeature.place(worldGenRegion, chunkGenerator, worldgenRandom, blockPos);
+                            configuredFeature.place(cubeWorldGenRegion, chunkGenerator, worldgenRandom, blockPos);
                         } catch (Exception e) {
                             CrashReport crashReport2 = CrashReport.forThrowable(e, "Feature placement");
                             crashReport2.addCategory("Feature").setDetail("Id", Registry.FEATURE.getKey(configuredFeature.feature)).setDetail("Config", configuredFeature.config).setDetail("Description", () -> {
@@ -206,22 +206,6 @@ public class MixinBiome implements BiomeGetter {
                         }
                     }
                 }
-
-//                for(Iterator<Supplier<ConfiguredFeature<?, ?>>> var23 = (list.get(8)).iterator(); var23.hasNext(); ++k) {
-//                    Supplier<ConfiguredFeature<?, ?>> supplier = var23.next();
-//                    ConfiguredFeature<?, ?> configuredFeature = supplier.get();
-//                    worldgenRandom.setFeatureSeed(seed, k, j);
-//
-//                    try {
-//                        configuredFeature.place(worldGenRegion, chunkGenerator, worldgenRandom, blockPos);
-//                    } catch (Exception var22) {
-//                        CrashReport crashReport2 = CrashReport.forThrowable(var22, "Feature placement");
-//                        crashReport2.addCategory("Feature").setDetail("Id", Registry.FEATURE.getKey(configuredFeature.feature)).setDetail("Config", configuredFeature.config).setDetail("Description", () -> {
-//                            return configuredFeature.feature.toString();
-//                        });
-//                        throw new ReportedException(crashReport2);
-//                    }
-//                }
             }
         }
     }

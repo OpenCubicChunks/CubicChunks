@@ -24,6 +24,7 @@
         "common.chunk.MixinProtoTickList",
         "common.entity.MixinBoatEntity",
         "common.entity.MixinServerPlayerEntity",
+        "common.MixinBlockPos",
         "common.MixinIntegratedServer",
         "common.MixinMinecraftServer",
         "common.MixinServerChunkProvider",
@@ -57,6 +58,7 @@
         "common.world.placement.MixinSimpleFeatureDecorator",
         "common.world.placement.MixinSpread32Decorator",
         "common.world.server.MixinServerWorldLightManager",
+        "common.world.structure.MixinStructureFeature",
         "common.world.structure.MixinStructureFeatureManager",
         "common.world.structure.MixinStructurePiece",
         "common.world.structure.MixinStructureStart"

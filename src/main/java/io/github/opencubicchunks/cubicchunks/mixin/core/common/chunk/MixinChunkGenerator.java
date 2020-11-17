@@ -22,6 +22,7 @@ import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.SectionPos;
 import net.minecraft.data.worldgen.StructureFeatures;
 import net.minecraft.network.protocol.game.DebugPackets;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.ChunkPos;
@@ -36,6 +37,7 @@ import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.ChunkGenerator;
 import net.minecraft.world.level.levelgen.StructureSettings;
 import net.minecraft.world.level.levelgen.feature.ConfiguredStructureFeature;
+import net.minecraft.world.level.levelgen.feature.RuinedPortalFeature;
 import net.minecraft.world.level.levelgen.feature.StructureFeature;
 import net.minecraft.world.level.levelgen.feature.configurations.StructureFeatureConfiguration;
 import net.minecraft.world.level.levelgen.structure.BoundingBox;
@@ -51,7 +53,10 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.noise.module.source.Perlin;
 
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Supplier;
 
 import static io.github.opencubicchunks.cubicchunks.utils.Coords.*;
@@ -91,8 +96,19 @@ public abstract class MixinChunkGenerator implements ICubeGenerator {
     public void onGenerateStructures(RegistryAccess registry, StructureFeatureManager featureManager, ChunkAccess chunkAccess, StructureManager manager, long seed, CallbackInfo ci) {
         if (!(chunkAccess instanceof IBigCube))
             return;
-
         ci.cancel();
+
+        final Set<ResourceLocation> featureIDWhitelist = new HashSet<>(Arrays.asList(
+//                new ResourceLocation("mineshaft")
+//                new ResourceLocation("mineshaft_mesa"),
+//                new ResourceLocation("mansion")
+//                new ResourceLocation("village_plains"),
+//                new ResourceLocation("village_desert"),
+//                new ResourceLocation("village_savanna"),
+//                new ResourceLocation("village_snowy"),
+//                new ResourceLocation("village_taiga")
+        ));
+
 
         IBigCube cube = (IBigCube) chunkAccess;
 
@@ -102,7 +118,10 @@ public abstract class MixinChunkGenerator implements ICubeGenerator {
         this.createCCStructure(StructureFeatures.STRONGHOLD, registry, featureManager, cube, manager, seed, cubePos, biome);
 
         for (Supplier<ConfiguredStructureFeature<?, ?>> configuredStructureFeatureSupplier : biome.getGenerationSettings().structures()) {
-            this.createCCStructure(configuredStructureFeatureSupplier.get(), registry, featureManager, cube, manager, seed, cubePos, biome);
+            ResourceLocation key = registry.registry(Registry.CONFIGURED_STRUCTURE_FEATURE_REGISTRY).get().getKey(configuredStructureFeatureSupplier.get());
+
+            if(featureIDWhitelist.contains(key))
+                this.createCCStructure(configuredStructureFeatureSupplier.get(), registry, featureManager, cube, manager, seed, cubePos, biome);
         }
     }
 
@@ -140,7 +159,7 @@ public abstract class MixinChunkGenerator implements ICubeGenerator {
         for (int x = cubeX - 8 / IBigCube.DIAMETER_IN_SECTIONS; x <= cubeX + 8 / IBigCube.DIAMETER_IN_SECTIONS; ++x) {
             for (int y = cubeY - 8 / IBigCube.DIAMETER_IN_SECTIONS; y <= cubeY + 8 / IBigCube.DIAMETER_IN_SECTIONS; ++y) {
                 for (int z = cubeZ - 8 / IBigCube.DIAMETER_IN_SECTIONS; z <= cubeZ + 8 / IBigCube.DIAMETER_IN_SECTIONS; ++z) {
-                    long cubePosAsLong = CubePos.asLong(cubeX, cubeY, cubeZ);
+                    long cubePosAsLong = CubePos.asLong(x, y, z);
 
                     for (StructureStart<?> structureStart : world.getCube(CubePos.of(x, y, z)).getAllStarts().values()) {
                         try {
@@ -172,7 +191,8 @@ public abstract class MixinChunkGenerator implements ICubeGenerator {
     private void do3DLocateStructure(ServerLevel serverLevel, StructureFeature<?> structureFeature, BlockPos blockPos, int radius, boolean skipExistingChunks, CallbackInfoReturnable<BlockPos> cir) {
         if (!this.biomeSource.canGenerateStructure(structureFeature)) {
             cir.setReturnValue(null);
-        } else if (structureFeature == StructureFeature.STRONGHOLD) {
+        }
+        else if (structureFeature == StructureFeature.STRONGHOLD) {
             this.generateStrongholds();
             BlockPos blockPos2 = null;
             double d = Double.MAX_VALUE;
@@ -191,7 +211,8 @@ public abstract class MixinChunkGenerator implements ICubeGenerator {
             }
 
             cir.setReturnValue(blockPos2);
-        } else {
+        }
+        else {
             StructureFeatureConfiguration structureFeatureConfiguration = this.settings.getConfig(structureFeature);
             cir.setReturnValue(structureFeatureConfiguration == null ? null : structureFeature.getNearestGeneratedFeature(serverLevel, serverLevel.structureFeatureManager(), blockPos, radius, skipExistingChunks, serverLevel.getSeed(), structureFeatureConfiguration));
         }
