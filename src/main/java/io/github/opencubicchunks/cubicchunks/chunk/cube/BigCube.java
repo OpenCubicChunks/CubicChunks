@@ -22,7 +22,6 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ChunkHolder;
 import net.minecraft.util.ClassInstanceMultiMap;
-import net.minecraft.util.Mth;
 import net.minecraft.util.profiling.ProfilerFiller;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
@@ -89,7 +88,7 @@ public class BigCube implements ChunkAccess, IBigCube {
 
     private final BitSet pendingHeightmapUpdates = new BitSet(DIAMETER_IN_BLOCKS * DIAMETER_IN_BLOCKS);
 
-    private CubeBiomeContainer cubeBiomeContainer;
+    private CubeBiomeContainer biomes;
 
     private boolean dirty = true; // todo: change back to false?
     private boolean loaded = false;
@@ -127,6 +126,7 @@ public class BigCube implements ChunkAccess, IBigCube {
             this.entityLists[i] = new ClassInstanceMultiMap<>(Entity.class);
         }
 
+        this.biomes = biomeContainerIn;
 //        this.blockBiomeArray = biomeContainerIn;
 //        this.blocksToBeTicked = tickBlocksIn;
 //        this.fluidsToBeTicked = tickFluidsIn;
@@ -562,9 +562,9 @@ public class BigCube implements ChunkAccess, IBigCube {
         this.inhabitedTime = newInhabitedTime;
     }
 
-    @Deprecated @Nullable @Override public CubeBiomeContainer getBiomes() { return this.getCubeBiomes(); }
+    @Deprecated @Nullable @Override public ChunkBiomeContainer getBiomes() { throw new UnsupportedOperationException("Chunk method called on a cube"); }
     @Nullable @Override public CubeBiomeContainer getCubeBiomes() {
-        return this.cubeBiomeContainer;
+        return this.biomes;
     }
 
     public int getSize() {
@@ -604,7 +604,8 @@ public class BigCube implements ChunkAccess, IBigCube {
         readBuffer.readBytes(emptyFlagsBytes);
         BitSet emptyFlags = BitSet.valueOf(emptyFlagsBytes);
 
-        this.cubeBiomeContainer = biomes;
+        if(biomes != null)
+            this.biomes = biomes;
 
         // TODO: support partial updates
         this.blockEntities.values().forEach(this::onBlockEntityRemove);
@@ -654,7 +655,7 @@ public class BigCube implements ChunkAccess, IBigCube {
         }
 
         if (biomeContainerIn != null) {
-            this.cubeBiomeContainer = biomeContainerIn;
+            this.biomes = biomeContainerIn;
         }
 
         for (Heightmap.Types type : Heightmap.Types.values()) {
@@ -663,10 +664,6 @@ public class BigCube implements ChunkAccess, IBigCube {
                 this.setHeightmap(type, nbtIn.getLongArray(typeId));
             }
         }
-    }
-
-    public void setCubeBiomeContainer(CubeBiomeContainer biomes) {
-        this.cubeBiomeContainer = biomes;
     }
 
     @Deprecated

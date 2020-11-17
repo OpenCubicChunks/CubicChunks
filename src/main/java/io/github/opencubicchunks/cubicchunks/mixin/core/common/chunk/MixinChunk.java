@@ -1,7 +1,9 @@
 package io.github.opencubicchunks.cubicchunks.mixin.core.common.chunk;
 
+import io.github.opencubicchunks.cubicchunks.chunk.ColumnAccess;
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.ICubeProvider;
+import io.github.opencubicchunks.cubicchunks.chunk.biome.ColumnBiomeContainer;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.BigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.EmptyCube;
 import io.github.opencubicchunks.cubicchunks.chunk.heightmap.ClientSurfaceTracker;
@@ -13,23 +15,20 @@ import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.chunk.ChunkAccess;
-import net.minecraft.world.level.chunk.ChunkStatus;
-import net.minecraft.world.level.chunk.LevelChunk;
-import net.minecraft.world.level.chunk.LevelChunkSection;
+import net.minecraft.world.level.chunk.*;
 import net.minecraft.world.level.levelgen.Heightmap;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.*;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import javax.annotation.Nullable;
 import java.util.Map;
 import java.util.concurrent.CompletionException;
 
 @Mixin(LevelChunk.class)
-public abstract class MixinChunk implements ChunkAccess {
+public abstract class MixinChunk implements ChunkAccess, ColumnAccess {
 
     @Shadow @Final private Level level;
 
@@ -42,6 +41,8 @@ public abstract class MixinChunk implements ChunkAccess {
     @Shadow @Final private Map<BlockPos, BlockEntity> blockEntities;
 
     @Shadow @Final private Map<BlockPos, CompoundTag> pendingBlockEntities;
+
+    @Shadow private ChunkBiomeContainer biomes;
 
     @Override public boolean isYSpaceEmpty(int startY, int endY) {
         return false;
@@ -80,7 +81,8 @@ public abstract class MixinChunk implements ChunkAccess {
     }
 
     @SuppressWarnings("ConstantConditions")
-    private IBigCube getCube(int y) {
+    @Override
+    public IBigCube getCube(int y) {
         try {
             return ((ICubeProvider) level.getChunkSource()).getCube(
                     Coords.sectionToCube(chunkPos.x),
@@ -190,5 +192,12 @@ public abstract class MixinChunk implements ChunkAccess {
     @Redirect(method = "removeBlockEntity", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/chunk/LevelChunk;isInLevel()Z"))
     private boolean getLoadedFromBlockPos(LevelChunk chunk, BlockPos pos) {
         return ((BigCube)this.getCube(Coords.blockToSection(pos.getY()))).isInLevel();
+    }
+
+    @Inject(method = "getBiomes", at = @At("HEAD"), cancellable = true)
+    public void getBiomes(CallbackInfoReturnable<ChunkBiomeContainer> cir) {
+        //TODO: IF cubicworld don't cancel
+        ((ColumnBiomeContainer)this.biomes).setColumn(this);
+        cir.setReturnValue(this.biomes);
     }
 }

@@ -309,12 +309,12 @@ public class CubePrimer implements IBigCube, ChunkAccess {
         return this.inhabitedTime;
     }
 
-    @Deprecated public void setBiomes(ChunkBiomeContainer biomes) { this.setCubeBiomes((CubeBiomeContainer) biomes); }
+    @Deprecated public void setBiomes(ChunkBiomeContainer biomes) { throw new UnsupportedOperationException("Chunk method called on a cube"); }
     public void setCubeBiomes(CubeBiomeContainer biomesIn) {
         this.biomes = biomesIn;
     }
 
-    @Deprecated @Nullable @Override public ChunkBiomeContainer getBiomes() { return this.getCubeBiomes(); }
+    @Deprecated @Nullable @Override public ChunkBiomeContainer getBiomes() { throw new UnsupportedOperationException("Chunk method called on a cube"); }
     @Nullable @Override public CubeBiomeContainer getCubeBiomes() {
         return this.biomes;
     }
