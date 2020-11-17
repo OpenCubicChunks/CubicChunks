@@ -98,6 +98,9 @@ public abstract class MixinChunkGenerator implements ICubeGenerator {
             return;
         ci.cancel();
 
+
+        //TODO: Figure out and patch the light manager crashes when generating structures.
+        //TODO: Patch entity game crashes in order to spawn villages(village pieces spawn villagers)
         final Set<ResourceLocation> featureIDWhitelist = new HashSet<>(Arrays.asList(
 //                new ResourceLocation("mineshaft")
 //                new ResourceLocation("mineshaft_mesa"),
