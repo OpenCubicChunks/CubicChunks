@@ -11,12 +11,13 @@ import java.util.BitSet;
 import java.util.function.Predicate;
 
 public class SurfaceTrackerSection {
-	public static final int MAX_SCALE = 10; // TODO: set real value
+	// TODO: This currently covers y = -2^28 to 2^28 or so. One more would allow us to cover the entire integer block range
+	public static final int MAX_SCALE = 6;
 	/**
 	 * Number of bits needed to represent the children nodes (i.e. log2(NODE_COUNT))
 	 * This is also the number of bits that are added on each scale increase.
 	 */
-	private static final int NODE_COUNT_BITS = 1;
+	private static final int NODE_COUNT_BITS = 4;
 	/** Number of children nodes */
 	public static final int NODE_COUNT = 1 << NODE_COUNT_BITS;
 
