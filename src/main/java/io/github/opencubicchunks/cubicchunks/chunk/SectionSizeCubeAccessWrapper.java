@@ -39,6 +39,7 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
+//used only in Surface Builders
 public class SectionSizeCubeAccessWrapper implements ChunkAccess, IBigCube {
     private final ChunkAccess delegate;
     private final IBigCube delegateCube;

@@ -101,10 +101,11 @@ public abstract class MixinChunkGenerator implements ICubeGenerator {
 
         //TODO: Figure out and patch the light manager crashes when generating structures.
         //TODO: Patch entity game crashes in order to spawn villages(village pieces spawn villagers)
+        //TODO: Setup a 2D and 3D placement.
         final Set<ResourceLocation> featureIDWhitelist = new HashSet<>(Arrays.asList(
 //                new ResourceLocation("mineshaft")
 //                new ResourceLocation("mineshaft_mesa"),
-//                new ResourceLocation("mansion")
+//                new ResourceLocation("mansion"),
 //                new ResourceLocation("village_plains"),
 //                new ResourceLocation("village_desert"),
 //                new ResourceLocation("village_savanna"),

@@ -268,7 +268,10 @@ public class CubePrimer implements IBigCube, ChunkAccess {
         return set;
     }
 
-    @Deprecated @Nullable @Override public CompoundTag getBlockEntityNbtForSaving(BlockPos pos) { return this.getCubeBlockEntityNbtForSaving(pos); }
+    @Deprecated @Nullable @Override public CompoundTag getBlockEntityNbtForSaving(BlockPos pos) {
+        return this.getCubeBlockEntityNbtForSaving(pos);
+    }
+
     @Nullable @Override public CompoundTag getCubeBlockEntityNbtForSaving(BlockPos pos) {
         BlockEntity tileEntity = this.getBlockEntity(pos);
         return tileEntity != null ? tileEntity.save(new CompoundTag()) : this.deferredTileEntities.get(pos);
@@ -282,6 +285,7 @@ public class CubePrimer implements IBigCube, ChunkAccess {
     public Map<BlockPos, BlockEntity> getTileEntities() {
         return this.getCubeTileEntities();
     }
+
     public Map<BlockPos, BlockEntity> getCubeTileEntities() {
         return this.tileEntities;
     }
@@ -291,7 +295,10 @@ public class CubePrimer implements IBigCube, ChunkAccess {
     }
 
     //LIGHTING
-    @Deprecated @Override public boolean isLightCorrect() { throw new UnsupportedOperationException("Chunk method called on a cube!"); }
+    @Deprecated @Override public boolean isLightCorrect() {
+        throw new UnsupportedOperationException("Chunk method called on a cube!");
+    }
+
     @Override public boolean hasCubeLight() {
         return this.hasLight;
     }
@@ -320,17 +327,24 @@ public class CubePrimer implements IBigCube, ChunkAccess {
     public void setCubeLightManager(LevelLightEngine lightManager) {
         this.lightManager = lightManager;
     }
+
     @Nullable private LevelLightEngine getCubeWorldLightManager() {
         return this.lightManager;
     }
 
     //MISC
-    @Deprecated @Override public void setUnsaved(boolean modified) { setDirty(modified); }
+    @Deprecated @Override public void setUnsaved(boolean modified) {
+        setDirty(modified);
+    }
+
     @Override public void setDirty(boolean modified) {
         this.modified = modified;
     }
 
-    @Deprecated @Override public boolean isUnsaved() { return isDirty(); }
+    @Deprecated @Override public boolean isUnsaved() {
+        return isDirty();
+    }
+
     @Override public boolean isDirty() {
         return modified;
     }
@@ -344,12 +358,18 @@ public class CubePrimer implements IBigCube, ChunkAccess {
         return true;
     }
 
-    @Override public void setInhabitedTime(long newInhabitedTime) { this.setCubeInhabitedTime(newInhabitedTime); }
+    @Override public void setInhabitedTime(long newInhabitedTime) {
+        this.setCubeInhabitedTime(newInhabitedTime);
+    }
+
     @Override public void setCubeInhabitedTime(long newInhabitedTime) {
         this.inhabitedTime = newInhabitedTime;
     }
 
-    @Deprecated @Override public long getInhabitedTime() { return this.getCubeInhabitedTime(); }
+    @Deprecated @Override public long getInhabitedTime() {
+        return this.getCubeInhabitedTime();
+    }
+
     @Override public long getCubeInhabitedTime() {
         return this.inhabitedTime;
     }
