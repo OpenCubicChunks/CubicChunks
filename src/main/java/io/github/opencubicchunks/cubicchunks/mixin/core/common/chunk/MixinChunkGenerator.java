@@ -5,6 +5,7 @@ import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.ICubeGenerator;
 import io.github.opencubicchunks.cubicchunks.chunk.biome.CubeBiomeContainer;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.CubePrimer;
+import io.github.opencubicchunks.cubicchunks.chunk.SectionSizeCubeAccessWrapper;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.OverworldBiomeSourceAccess;
 import io.github.opencubicchunks.cubicchunks.world.CubeWorldGenRandom;
@@ -41,6 +42,7 @@ import net.minecraft.world.level.levelgen.feature.configurations.StructureFeatur
 import net.minecraft.world.level.levelgen.structure.BoundingBox;
 import net.minecraft.world.level.levelgen.structure.StructureStart;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureManager;
+import net.minecraft.world.level.levelgen.surfacebuilders.ConfiguredSurfaceBuilder;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Mutable;
@@ -269,6 +271,8 @@ public abstract class MixinChunkGenerator implements ICubeGenerator {
         int size = IBigCube.DIAMETER_IN_BLOCKS / 4 + 1;
         float[] densities = new float[size * size];
 
+        SectionSizeCubeAccessWrapper cubeWrapper = new SectionSizeCubeAccessWrapper((ChunkAccess) cube);
+
         for (int dx = 0; dx < size; dx++) {
             int blockX = cube.getCubePos().minCubeX() + (dx * 4);
             for (int dz = 0; dz < size; dz++) {
@@ -336,15 +340,23 @@ public abstract class MixinChunkGenerator implements ICubeGenerator {
 
                         for (int dy = 0; dy < IBigCube.DIAMETER_IN_BLOCKS; dy++) {
                             int blockY = cube.getCubePos().minCubeY() + dy;
-                            if (blockY == height) {
-                                cube.setBlock(new BlockPos(dx, dy, dz), biome.getGenerationSettings().getSurfaceBuilderConfig().getTopMaterial(), false);
-                            } else if (blockY >= height - 4 && blockY < height) {
-                                cube.setBlock(new BlockPos(dx, dy, dz), biome.getGenerationSettings().getSurfaceBuilderConfig().getUnderMaterial(), false);
-                            } else if (blockY < height) {
+                            if (blockY < height) {
                                 cube.setBlock(new BlockPos(dx, dy, dz), Blocks.STONE.defaultBlockState(), false);
                             } else if (blockY <= CubicChunks.SEA_LEVEL) {
                                 cube.setBlock(new BlockPos(dx, dy, dz), Blocks.WATER.defaultBlockState(), false);
                             }
+
+                        }
+                        cubeWrapper.setLocalSectionPos(blockToSection(dx), blockToSection(dz));
+
+
+                        if (height > cubeToMinBlock(cube.getCubePos().getY()) - 10) {
+                            ConfiguredSurfaceBuilder<?> configuredSurfaceBuilder = biome.getGenerationSettings().getSurfaceBuilder().get();
+                            configuredSurfaceBuilder.initNoise(1000);
+                            configuredSurfaceBuilder.apply(worldIn.getRandom(), cubeWrapper, biome, dx, dz,
+                                    height - cubeToMinBlock(cube.getCubePos().getY()) + 1, 1,
+                                    Blocks.STONE.defaultBlockState(), Blocks.WATER.defaultBlockState(), CubicChunks.SEA_LEVEL - cubeToMinBlock(cube.getCubePos().getY()),
+                                    1000);
                         }
                     }
                 }
