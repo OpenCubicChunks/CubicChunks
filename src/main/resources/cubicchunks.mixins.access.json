@@ -21,6 +21,7 @@
         "common.PlayerChunkTrackerFactoryAccess",
         "common.PlayerTicketTrackerFactoryAccess",
         "common.SectionLightStorageAccess",
+        "common.StructureFeatureManagerAccess",
         "common.TicketAccess",
         "common.TicketManagerAccess",
         "common.TicketTypeAccess"

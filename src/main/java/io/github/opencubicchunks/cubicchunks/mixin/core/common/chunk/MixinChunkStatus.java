@@ -5,12 +5,14 @@ import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.ICubeGenerator;
 import io.github.opencubicchunks.cubicchunks.chunk.biome.ColumnBiomeContainer;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.CubePrimer;
+import io.github.opencubicchunks.cubicchunks.mixin.access.common.StructureFeatureManagerAccess;
 import io.github.opencubicchunks.cubicchunks.world.CubeWorldGenRegion;
 import io.github.opencubicchunks.cubicchunks.world.server.IServerWorldLightManager;
 import net.minecraft.core.Registry;
 import net.minecraft.server.level.ChunkHolder;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ThreadedLevelLightEngine;
+import net.minecraft.world.level.StructureFeatureManager;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.ChunkGenerator;
 import net.minecraft.world.level.chunk.ChunkStatus;
@@ -206,9 +208,12 @@ public class MixinChunkStatus {
             //Heightmap.updateChunkHeightmaps(chunk, EnumSet
             //        .of(Heightmap.Type.MOTION_BLOCKING, Heightmap.Type.MOTION_BLOCKING_NO_LEAVES, Heightmap.Type.OCEAN_FLOOR,
             //        Heightmap.Type.WORLD_SURFACE));
-            // TODO: reimplement worldgen
-            // generator.decorate(new WorldGenRegion(world, chunks));
-            ((ICubeGenerator) generator).decorate(new CubeWorldGenRegion(world, unsafeCast(chunks)), world.structureFeatureManager());
+
+            CubeWorldGenRegion cubeWorldGenRegion = new CubeWorldGenRegion(world, unsafeCast(chunks));
+            StructureFeatureManager structureFeatureManager = new StructureFeatureManager(cubeWorldGenRegion, ((StructureFeatureManagerAccess) world.structureFeatureManager()).getWorldGenSettings());
+
+//            if (cubePrimer.getCubePos().getY() >= 0)
+            ((ICubeGenerator) generator).decorate(cubeWorldGenRegion, structureFeatureManager);
             cubePrimer.setCubeStatus(status);
         }
         cir.setReturnValue(CompletableFuture.completedFuture(Either.left(chunk)));
