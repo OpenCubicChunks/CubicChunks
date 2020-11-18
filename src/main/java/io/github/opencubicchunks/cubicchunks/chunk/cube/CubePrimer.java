@@ -35,6 +35,7 @@ import net.minecraft.world.level.lighting.LevelLightEngine;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.material.Fluids;
+import org.apache.logging.log4j.LogManager;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -155,9 +156,9 @@ public class CubePrimer implements IBigCube, ChunkAccess {
             if (state.getLightEmission() > 0) {
                 SectionPos sectionPosAtIndex = Coords.sectionPosByIndex(this.cubePos, index);
                 this.lightPositions.add(new BlockPos(
-                        x + sectionPosAtIndex.getX(),
-                        y + sectionPosAtIndex.getY(),
-                        z + sectionPosAtIndex.getZ())
+                        x + Coords.sectionToMinBlock(sectionPosAtIndex.getX()),
+                        y + Coords.sectionToMinBlock(sectionPosAtIndex.getY()),
+                        z + Coords.sectionToMinBlock(sectionPosAtIndex.getZ()))
                 );
             }
 
@@ -519,5 +520,13 @@ public class CubePrimer implements IBigCube, ChunkAccess {
 
     @Override public int getMinSection() {
         return this.levelHeightAccessor.getMinSection();
+    }
+
+    @Override
+    public void markPosForPostprocessing(BlockPos blockPos) {
+        if (System.currentTimeMillis() % 15000 == 0) {
+            LogManager.getLogger().warn("Trying to mark a block for PostProcessing @ {}, but this operation is not supported.", blockPos);
+
+        }
     }
 }
