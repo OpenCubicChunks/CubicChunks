@@ -175,7 +175,7 @@ public class CubeWorldGenRegion implements WorldGenLevel, ICubicWorld {
                         + "| %s %s %s", requiredStatus, icube.getCubeStatus(), x, y, z)));
             } else {
                 throw Util.pauseInIde(new RuntimeException(String.format("We are asking a region for a section out of bound | "
-                        + "%s %s %s", x, y, z)));
+                        + "%s %s %s", x, y, z) + "\n" + String.format("Bound | " + "%s %s %s", this.minCubeX, this.minCubeY, this.minCubeZ)));
             }
         }
     }

@@ -819,6 +819,14 @@ public class BigCube implements ChunkAccess, IBigCube {
         this.blockEntities.values().forEach(this::onBlockEntityRemove);
     }
 
+    @Override
+    public void markPosForPostprocessing(BlockPos blockPos) {
+        if (System.currentTimeMillis() % 15000 == 0) {
+            LogManager.getLogger().warn("Trying to mark a block for PostProcessing @ {}, but this operation is not supported.", blockPos);
+
+        }
+    }
+
     public static class RebindableTickingBlockEntityWrapper implements TickingBlockEntity {
         private TickingBlockEntity ticker;
 

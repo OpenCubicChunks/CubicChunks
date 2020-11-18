@@ -7,8 +7,7 @@ import net.minecraft.server.level.progress.LoggerChunkProgressListener;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.chunk.ChunkStatus;
 import org.spongepowered.asm.mixin.*;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.*;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import javax.annotation.Nullable;
@@ -43,6 +42,11 @@ public abstract class MixinLoggingChunkStatusListener implements ICubeStatusList
         if (newStatus == ChunkStatus.FULL) {
             this.loadedCubes++;
         }
+    }
+
+    @ModifyConstant(constant = @Constant(longValue = 500L), method = "onStatusChange")
+    private long getLogInterval(long arg) {
+        return 5000;
     }
 
     /**
