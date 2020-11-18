@@ -75,7 +75,7 @@ public class SurfaceTrackerSection {
 
 		int maxY = Integer.MIN_VALUE;
 		if (scale == 0) {
-			for (int dy = IBigCube.DIAMETER_IN_BLOCKS; dy > 0; dy--) {
+			for (int dy = IBigCube.DIAMETER_IN_BLOCKS - 1; dy >= 0; dy--) {
 				if (isOpaque.test(cube.getBlockState(x, dy, z))) {
 					int minY = scaledY * IBigCube.DIAMETER_IN_BLOCKS;
 					maxY = minY + dy;
