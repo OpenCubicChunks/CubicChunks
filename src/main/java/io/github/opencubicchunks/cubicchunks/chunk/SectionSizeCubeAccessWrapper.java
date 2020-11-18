@@ -44,8 +44,8 @@ public class SectionSizeCubeAccessWrapper implements ChunkAccess {
 
     public SectionSizeCubeAccessWrapper(IBigCube delegate, IBigCube above) {
         this.delegates = new ChunkAccess[2];
-        this.delegates[delegate.getCubePos().getY() & 1] = (ChunkAccess) delegate;
-        this.delegates[above.getCubePos().getY() & 1] = (ChunkAccess) above;
+        this.delegates[0] = (ChunkAccess) delegate;
+        this.delegates[1] = (ChunkAccess) above;
         this.pos = delegate.getCubePos();
     }
 
