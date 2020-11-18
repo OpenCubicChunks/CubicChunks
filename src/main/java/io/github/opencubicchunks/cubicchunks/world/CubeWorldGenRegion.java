@@ -1,5 +1,6 @@
 package io.github.opencubicchunks.cubicchunks.world;
 
+import io.github.opencubicchunks.cubicchunks.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.server.ICubicWorld;
@@ -267,7 +268,7 @@ public class CubeWorldGenRegion implements WorldGenLevel, ICubicWorld {
             }
 
             if (icube.getBlockState(pos).hasBlockEntity()) {
-                LOGGER.warn("Tried to access a block entity before it was created. {}", (Object) pos);
+//                LOGGER.warn("Tried to access a block entity before it was created. {}", (Object) pos); //TODO:Re-enable warning
             }
 
             return null;
@@ -324,7 +325,7 @@ public class CubeWorldGenRegion implements WorldGenLevel, ICubicWorld {
         if (height <= getMinBuildHeight()) {
             return yEnd - 1;
         }
-        return height;
+        return height + 1;
     }
 
     @Override public int getSkyDarken() {

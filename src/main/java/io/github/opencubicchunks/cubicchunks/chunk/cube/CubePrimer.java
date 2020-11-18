@@ -3,6 +3,7 @@ package io.github.opencubicchunks.cubicchunks.chunk.cube;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import io.github.opencubicchunks.cubicchunks.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.biome.CubeBiomeContainer;
 import io.github.opencubicchunks.cubicchunks.chunk.heightmap.SurfaceTrackerSection;
@@ -67,7 +68,6 @@ public class CubePrimer implements IBigCube, ChunkAccess {
     private final Map<GenerationStep.Carving, BitSet> carvingMasks;
 
     private volatile boolean isDirty;
-
 
     private volatile boolean modified = true;
 
@@ -171,8 +171,6 @@ public class CubePrimer implements IBigCube, ChunkAccess {
             EnumSet<Heightmap.Types> heightMapsAfter = this.getStatus().heightmapsAfter();
             EnumSet<Heightmap.Types> toInitialize = null;
 
-
-
             for(Heightmap.Types heightmap$type : heightMapsAfter) {
                 SurfaceTrackerSection[] heightmapArray = this.heightmaps.get(heightmap$type);
 
@@ -186,32 +184,36 @@ public class CubePrimer implements IBigCube, ChunkAccess {
             }
 
             if (toInitialize != null) {
-                for (Heightmap.Types type : toInitialize) {
-                    SurfaceTrackerSection[] surfaceTrackerSections = new SurfaceTrackerSection[IBigCube.DIAMETER_IN_SECTIONS * IBigCube.DIAMETER_IN_SECTIONS];
-
-                    for (int dx = 0; dx < IBigCube.DIAMETER_IN_SECTIONS; dx++) {
-                        for (int dz = 0; dz < IBigCube.DIAMETER_IN_SECTIONS; dz++) {
-                            int idx = dx + dz * IBigCube.DIAMETER_IN_SECTIONS;
-                            surfaceTrackerSections[idx] = new SurfaceTrackerSection(0, cubePos.getY(), null, this, type);
-                            surfaceTrackerSections[idx].loadCube(this, true);
-                        }
-                    }
-                    this.heightmaps.put(type, surfaceTrackerSections);
-                }
+                primeHeightMaps(toInitialize);
             }
 
             for(Heightmap.Types types : heightMapsAfter) {
 
-                int xSection = Coords.blockToSection(x);
-                int zSection = Coords.blockToSection(z);
+                int xSection = Coords.blockToLocalSection(pos.getX());
+                int zSection = Coords.blockToLocalSection(pos.getZ());
 
                 int idx = xSection + zSection * DIAMETER_IN_SECTIONS;
 
-                SurfaceTrackerSection surfaceTrackerSection = this.heightmaps.get(types)[Coords.blockToLocalSection(idx)];
-                surfaceTrackerSection.markDirty(Coords.blockToLocal(x), Coords.blockToLocal(z));
+                SurfaceTrackerSection surfaceTrackerSection = this.heightmaps.get(types)[idx];
+                surfaceTrackerSection.markDirty(x, z);
             }
 
             return blockstate;
+        }
+    }
+
+    private void primeHeightMaps(EnumSet<Heightmap.Types> toInitialize) {
+        for (Heightmap.Types type : toInitialize) {
+            SurfaceTrackerSection[] surfaceTrackerSections = new SurfaceTrackerSection[IBigCube.DIAMETER_IN_SECTIONS * IBigCube.DIAMETER_IN_SECTIONS];
+
+            for (int dx = 0; dx < IBigCube.DIAMETER_IN_SECTIONS; dx++) {
+                for (int dz = 0; dz < IBigCube.DIAMETER_IN_SECTIONS; dz++) {
+                    int idx = dx + dz * IBigCube.DIAMETER_IN_SECTIONS;
+                    surfaceTrackerSections[idx] = new SurfaceTrackerSection(0, cubePos.getY(), null, this, type);
+                    surfaceTrackerSections[idx].loadCube(this, true);
+                }
+            }
+            this.heightmaps.put(type, surfaceTrackerSections);
         }
     }
 
@@ -416,16 +418,17 @@ public class CubePrimer implements IBigCube, ChunkAccess {
 
     @Override public int getHeight(Heightmap.Types types, int x, int z) {
         SurfaceTrackerSection[] surfaceTrackerSections = this.heightmaps.get(types);
-        if (surfaceTrackerSections != null) {
-            int xSection = Coords.blockToSection(x);
-            int zSection = Coords.blockToSection(z);
-
-            int idx = xSection + zSection * DIAMETER_IN_SECTIONS;
-
-            SurfaceTrackerSection surfaceTrackerSection = surfaceTrackerSections[Coords.blockToLocalSection(idx)];
-            return surfaceTrackerSection.getHeight(Coords.blockToLocal(x), Coords.blockToLocal(z));
+        if (surfaceTrackerSections == null) {
+            primeHeightMaps(EnumSet.of(types));
+            surfaceTrackerSections = this.heightmaps.get(types);
         }
-        return getMinBuildHeight();
+        int xSection = Coords.blockToLocalSection(x);
+        int zSection = Coords.blockToLocalSection(z);
+
+        int idx = xSection + zSection * DIAMETER_IN_SECTIONS;
+
+        SurfaceTrackerSection surfaceTrackerSection = surfaceTrackerSections[idx];
+        return surfaceTrackerSection.getHeight(Coords.blockToLocal(x), Coords.blockToLocal(z));
     }
 
     @org.jetbrains.annotations.Nullable
