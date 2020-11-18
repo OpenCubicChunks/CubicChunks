@@ -1,5 +1,6 @@
 package io.github.opencubicchunks.cubicchunks.mixin.core.common.world.structure.pieces;
 
+import io.github.opencubicchunks.cubicchunks.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.world.CubeWorldGenRegion;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.ChunkPos;
@@ -42,7 +43,6 @@ public abstract class MixinOceanRuinPieces extends TemplateStructurePiece {
             this.placeSettings.clearProcessors().addProcessor(new BlockRotProcessor(this.integrity)).addProcessor(BlockIgnoreProcessor.STRUCTURE_AND_AIR);
             int i = worldGenLevel.getHeight(Heightmap.Types.OCEAN_FLOOR_WG, this.templatePosition.getX(), this.templatePosition.getZ());
             this.templatePosition = new BlockPos(this.templatePosition.getX(), i, this.templatePosition.getZ());
-            this.templatePosition = new BlockPos(this.templatePosition.getX(), worldGenLevel.getHeight(Heightmap.Types.OCEAN_FLOOR_WG, this.templatePosition.getX(), this.templatePosition.getZ()), this.templatePosition.getZ());
             cir.setReturnValue(super.postProcess(worldGenLevel, structureFeatureManager, chunkGenerator, random, boundingBox, chunkPos, blockPos));
     }
 }

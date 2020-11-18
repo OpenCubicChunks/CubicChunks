@@ -26,8 +26,10 @@ public class MixinSpread32Decorator {
         if (!context.isCubicWorld())
             return;
 
-        if (random.nextFloat() >= (0.125F * IBigCube.DIAMETER_IN_SECTIONS))
+        if (random.nextFloat() >= (0.125F * IBigCube.DIAMETER_IN_SECTIONS)) {
             cir.setReturnValue(Stream.of());
+            return;
+        }
         int x = blockPos.getX();
         int z = blockPos.getZ();
 
