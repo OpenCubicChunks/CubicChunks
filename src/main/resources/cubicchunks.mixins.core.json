@@ -61,7 +61,8 @@
         "common.world.structure.MixinStructureFeature",
         "common.world.structure.MixinStructureFeatureManager",
         "common.world.structure.MixinStructurePiece",
-        "common.world.structure.MixinStructureStart"
+        "common.world.structure.MixinStructureStart",
+        "common.world.structure.pieces.MixinOceanRuinPieces"
     ],
     "client": [
         "client.debug.MixinClientWorld",
