@@ -9,7 +9,6 @@ import io.github.opencubicchunks.cubicchunks.chunk.SectionSizeCubeAccessWrapper;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.CubePrimer;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.OverworldBiomeSourceAccess;
-import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import io.github.opencubicchunks.cubicchunks.world.CubeWorldGenRandom;
 import io.github.opencubicchunks.cubicchunks.world.CubeWorldGenRegion;
 import io.github.opencubicchunks.cubicchunks.world.biome.BiomeGetter;
@@ -298,12 +297,12 @@ public abstract class MixinChunkGenerator implements ICubeGenerator {
     private void buildSurface(LevelAccessor worldIn, IBigCube cube, SectionSizeCubeAccessWrapper cubeWrapper, int[] storedHeights) {
         for (int x = 0; x < IBigCube.DIAMETER_IN_BLOCKS; x++) {
             for (int z = 0; z < IBigCube.DIAMETER_IN_BLOCKS; z++) {
-                int blockX = cube.getCubePos().minCubeX() + (x);
-                int blockZ = cube.getCubePos().minCubeZ() + (z);
+                int realX = cube.getCubePos().minCubeX() + (x);
+                int realZ = cube.getCubePos().minCubeZ() + (z);
 
                 int height = storedHeights[x + z * IBigCube.DIAMETER_IN_BLOCKS];
 
-                Biome biome = worldIn.getBiome(new BlockPos(blockX, 0, blockZ));
+                Biome biome = worldIn.getBiome(new BlockPos(realX, 0, realZ));
 
                 cubeWrapper.setLocalSectionPos(blockToSection(x), blockToSection(z));
 
@@ -311,9 +310,9 @@ public abstract class MixinChunkGenerator implements ICubeGenerator {
                 configuredSurfaceBuilder.initNoise(1000);
                 int surfaceHeight = height - cubeToMinBlock(cube.getCubePos().getY()) + 1;
                 if (surfaceHeight >= 0 && surfaceHeight < 2 * IBigCube.DIAMETER_IN_BLOCKS)
-                    configuredSurfaceBuilder.apply(worldIn.getRandom(), cubeWrapper, biome, x, z,
+                    configuredSurfaceBuilder.apply(worldIn.getRandom(), cubeWrapper, biome, realX, realZ,
                             surfaceHeight + 1, 1,
-                            Blocks.STONE.defaultBlockState(), Blocks.WATER.defaultBlockState(), CubicChunks.SEA_LEVEL - cubeToMinBlock(cube.getCubePos().getY()),
+                            Blocks.STONE.defaultBlockState(), Blocks.WATER.defaultBlockState(), CubicChunks.SEA_LEVEL - cubeToMinBlock(cube.getCubePos().getY()) + 1,
                             1000);
             }
         }

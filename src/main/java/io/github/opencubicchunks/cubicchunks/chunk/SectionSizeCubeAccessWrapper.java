@@ -42,10 +42,10 @@ public class SectionSizeCubeAccessWrapper implements ChunkAccess {
     private int dx;
     private int dz;
 
-    public SectionSizeCubeAccessWrapper(IBigCube delegate, IBigCube above) {
+    public SectionSizeCubeAccessWrapper(IBigCube delegate, IBigCube delegateAbove) {
         this.delegates = new ChunkAccess[2];
         this.delegates[0] = (ChunkAccess) delegate;
-        this.delegates[1] = (ChunkAccess) above;
+        this.delegates[1] = (ChunkAccess) delegateAbove;
         this.pos = delegate.getCubePos();
     }
 
@@ -88,15 +88,15 @@ public class SectionSizeCubeAccessWrapper implements ChunkAccess {
     }
 
     @Override public void setHeightmap(Heightmap.Types types, long[] ls) {
-        throw new UnsupportedOperationException();
+        throw new UnsupportedOperationException("Why are we setting heightmaps here?");
     }
 
     @Override public Heightmap getOrCreateHeightmapUnprimed(Heightmap.Types types) {
         throw new UnsupportedOperationException();
     }
 
-    @Override public int getHeight(Heightmap.Types types, int i, int j) {
-        throw new UnsupportedOperationException(); // TODO: getHeight
+    @Override public int getHeight(Heightmap.Types types, int x, int z) {
+        return delegates[1].getHeight(types, dx, dz) == getMinBuildHeight() ? delegates[0].getHeight(types, dx, dz) : delegates[1].getHeight(types, dx, dz);
     }
 
     @Override public ChunkPos getPos() {
@@ -108,7 +108,7 @@ public class SectionSizeCubeAccessWrapper implements ChunkAccess {
     }
 
     @Override public void setAllStarts(Map<StructureFeature<?>, StructureStart<?>> map) {
-        throw new UnsupportedOperationException();
+        throw new UnsupportedOperationException("Why are we setting structure starts here?");
     }
 
     @Override public boolean isYSpaceEmpty(int i, int j) {
@@ -278,14 +278,12 @@ public class SectionSizeCubeAccessWrapper implements ChunkAccess {
         return delegates[0].getSectionYFromSectionIndex(i);
     }
 
-    @Override @Nullable public StructureStart<?> getStartForFeature(
-            StructureFeature<?> structureFeature) {
+    @Override @Nullable public StructureStart<?> getStartForFeature(StructureFeature<?> structureFeature) {
         throw new UnsupportedOperationException();
     }
 
-    @Override public void setStartForFeature(StructureFeature<?> structureFeature,
-                                             StructureStart<?> structureStart) {
-        throw new UnsupportedOperationException();
+    @Override public void setStartForFeature(StructureFeature<?> structureFeature, StructureStart<?> structureStart) {
+        throw new UnsupportedOperationException("Why are we setting structure starts here?");
     }
 
     @Override public LongSet getReferencesForFeature(StructureFeature<?> structureFeature) {
@@ -293,7 +291,7 @@ public class SectionSizeCubeAccessWrapper implements ChunkAccess {
     }
 
     @Override public void addReferenceForFeature(StructureFeature<?> structureFeature, long l) {
-        throw new UnsupportedOperationException();
+        throw new UnsupportedOperationException("Why are we adding structure references here?");
     }
 
     @Override public Map<StructureFeature<?>, LongSet> getAllReferences() {

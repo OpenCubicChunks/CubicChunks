@@ -188,11 +188,15 @@ public class MixinBiome implements BiomeGetter {
 
             ));
 
+            for(ResourceLocation keyFromRegistry :  cubeWorldGenRegion.getLevel().getServer().registryAccess().registry(Registry.CONFIGURED_FEATURE_REGISTRY).get().keySet())
+                if (keyFromRegistry.toString().contains("tree"))
+                    featureIDWhitelist.add(keyFromRegistry);
+
             if (list.size() > genStepIDX) {
                 for (Supplier<ConfiguredFeature<?, ?>> configuredFeatureSupplier : list.get(genStepIDX)) {
                     ConfiguredFeature<?, ?> configuredFeature = configuredFeatureSupplier.get();
-
                     ResourceLocation key = cubeWorldGenRegion.getLevel().getServer().registryAccess().registry(Registry.CONFIGURED_FEATURE_REGISTRY).get().getKey(configuredFeature);
+
 
                     if (featureIDWhitelist.contains(key)) {
                         try {
