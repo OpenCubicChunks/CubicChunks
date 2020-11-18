@@ -71,5 +71,5 @@ public interface ITicketManager {
 
     CubeTaskPriorityQueueSorter getCubeTicketThrottler();
 
-    boolean hasPlayersNearby(long cubePos);
+    boolean hasCubePlayersNearby(long cubePos);
 }

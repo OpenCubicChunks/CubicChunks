@@ -283,7 +283,7 @@ public abstract class MixinTicketManager implements ITicketManager {
     }
 
     @Override
-    public boolean hasPlayersNearby(long cubePos) {
+    public boolean hasCubePlayersNearby(long cubePos) {
         this.naturalSpawnCubeCounter.processAllUpdates();
         return this.naturalSpawnCubeCounter.cubesInRange.containsKey(cubePos);
     }
