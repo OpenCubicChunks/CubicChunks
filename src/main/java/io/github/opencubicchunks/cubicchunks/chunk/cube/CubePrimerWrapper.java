@@ -163,8 +163,13 @@ public class CubePrimerWrapper extends CubePrimer {
     @Override public void setStartForFeature(StructureFeature<?> structureIn, StructureStart<?> structureStartIn) {
     }
 
-    @Override public Map<StructureFeature<?>, StructureStart<?>> getAllStarts() {
-        return this.cube.getAllStarts();
+    @Override public Map<StructureFeature<?>, StructureStart<?>> getAllCubeStructureStarts() {
+        return this.cube.getAllCubeStructureStarts();
+    }
+
+    @Override
+    public Map<StructureFeature<?>, StructureStart<?>> getAllStarts() {
+        return this.getAllCubeStructureStarts();
     }
 
     @Override public void setAllStarts(Map<StructureFeature<?>, StructureStart<?>> structureStartsIn) {

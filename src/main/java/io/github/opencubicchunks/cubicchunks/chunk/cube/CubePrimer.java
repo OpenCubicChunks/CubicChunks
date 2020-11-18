@@ -116,6 +116,7 @@ public class CubePrimer implements IBigCube, ChunkAccess {
     @Deprecated @Override public ChunkPos getPos() {
         throw new UnsupportedOperationException("This should never be called!");
     }
+
     @Override public CubePos getCubePos() {
         return this.cubePos;
     }
@@ -436,21 +437,30 @@ public class CubePrimer implements IBigCube, ChunkAccess {
         return this.structureStarts.get(structureFeature);
     }
 
+    @Override
     public void setStartForFeature(StructureFeature<?> structureFeature, StructureStart<?> structureStart) {
         this.structureStarts.put(structureFeature, structureStart);
         this.isDirty = true;
     }
 
-    public Map<StructureFeature<?>, StructureStart<?>> getAllStarts() {
+    @Override
+    public Map<StructureFeature<?>, StructureStart<?>> getAllCubeStructureStarts() {
         return Collections.unmodifiableMap(this.structureStarts);
     }
 
+    @Override
+    public Map<StructureFeature<?>, StructureStart<?>> getAllStarts() {
+        return getAllCubeStructureStarts();
+    }
+
+    @Override
     public void setAllStarts(Map<StructureFeature<?>, StructureStart<?>> map) {
         this.structureStarts.clear();
         this.structureStarts.putAll(map);
         this.isDirty = true;
     }
 
+    @Override
     public LongSet getReferencesForFeature(StructureFeature<?> structureFeature) {
         return this.structuresRefences.computeIfAbsent(structureFeature, (structureFeaturex) -> {
             return new LongOpenHashSet();

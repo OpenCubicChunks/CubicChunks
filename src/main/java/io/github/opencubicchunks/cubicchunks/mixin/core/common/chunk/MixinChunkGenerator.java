@@ -173,7 +173,7 @@ public abstract class MixinChunkGenerator implements ICubeGenerator {
                 for (int z = cubeZ - 8 / IBigCube.DIAMETER_IN_SECTIONS; z <= cubeZ + 8 / IBigCube.DIAMETER_IN_SECTIONS; ++z) {
                     long cubePosAsLong = CubePos.asLong(x, y, z);
 
-                    for (StructureStart<?> structureStart : world.getCube(CubePos.of(x, y, z)).getAllStarts().values()) {
+                    for (StructureStart<?> structureStart : world.getCube(CubePos.of(x, y, z)).getAllCubeStructureStarts().values()) {
                         try {
                             if (structureStart != StructureStart.INVALID_START && structureStart.getBoundingBox().intersects(
                                     //We use a new Bounding Box and check if it intersects a given cube.

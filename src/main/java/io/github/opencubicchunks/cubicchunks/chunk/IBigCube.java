@@ -63,7 +63,7 @@ public interface IBigCube extends BlockGetter, FeatureAccess {
 
     @Nullable CompoundTag getCubeDeferredTileEntity(BlockPos pos);
 
-    Map<StructureFeature<?>, StructureStart<?>> getAllStarts();
+    Map<StructureFeature<?>, StructureStart<?>> getAllCubeStructureStarts();
 
     //LIGHTING
     //can't be set/hasLight due to obfuscation issues with IChunk

@@ -188,7 +188,7 @@ public class BigCube implements ChunkAccess, IBigCube {
 //            this.postProcessing[i] = protoChunk.getPostProcessing()[i];
 //        }
 
-        this.setAllStarts(cubePrimerIn.getAllStarts());
+        this.setAllStarts(cubePrimerIn.getAllCubeStructureStarts());
         this.setAllReferences(cubePrimerIn.getAllReferences());
 //        var4 = protoChunk.getHeightmaps().iterator();
 
@@ -199,6 +199,7 @@ public class BigCube implements ChunkAccess, IBigCube {
     @Deprecated @Override public ChunkPos getPos() {
         throw new UnsupportedOperationException("Not implemented");
     }
+
     @Override public CubePos getCubePos()
     {
         return this.cubePos;
@@ -748,7 +749,12 @@ public class BigCube implements ChunkAccess, IBigCube {
         this.structureStarts.put(structureFeature, structureStart);
     }
 
+    @Override
     public Map<StructureFeature<?>, StructureStart<?>> getAllStarts() {
+        return getAllCubeStructureStarts();
+    }
+
+    public Map<StructureFeature<?>, StructureStart<?>> getAllCubeStructureStarts() {
         return this.structureStarts;
     }
 
