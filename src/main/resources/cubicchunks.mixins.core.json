@@ -71,7 +71,6 @@
         "client.debug.MixinMinecraftServer",
         "client.MixinClientPacketListener",
         "client.MixinDebugOverlayGui",
-        "client.MixinIChunk",
         "client.MixinRenderChunk",
         "client.MixinViewFrustum",
         "client.progress.MixinChainedChunkStatusListener",
