@@ -33,6 +33,7 @@ import net.minecraft.world.level.border.WorldBorder;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.ChunkSource;
 import net.minecraft.world.level.chunk.ChunkStatus;
+import net.minecraft.world.level.chunk.LevelChunkSection;
 import net.minecraft.world.level.dimension.DimensionType;
 import net.minecraft.world.level.entity.EntityTypeTest;
 import net.minecraft.world.level.levelgen.Heightmap;
@@ -58,7 +59,7 @@ import static io.github.opencubicchunks.cubicchunks.utils.Coords.blockToCube;
 public class CubeWorldGenRegion implements WorldGenLevel, ICubicWorld {
 
     private static final Logger LOGGER = LogManager.getLogger();
-    private final List<IBigCube> cubePrimers;
+    private final IBigCube[] cubePrimers;
     private final int mainCubeX;
     private final int mainCubeY;
     private final int mainCubeZ;
@@ -94,7 +95,8 @@ public class CubeWorldGenRegion implements WorldGenLevel, ICubicWorld {
             throw Util.pauseInIde(new IllegalStateException("Cache size is not a square."));
         } else {
             CubePos cubePos = cubesIn.get(cubesIn.size() / 2).getCubePos();
-            this.cubePrimers = cubesIn;
+            this.cubePrimers = cubesIn.toArray(new IBigCube[0]);
+
             this.mainCubeX = cubePos.getX();
             this.mainCubeY = cubePos.getY();
             this.mainCubeZ = cubePos.getZ();
@@ -106,8 +108,8 @@ public class CubeWorldGenRegion implements WorldGenLevel, ICubicWorld {
             this.random = worldIn.getRandom();
             this.dimension = worldIn.dimensionType();
             this.biomeManager = new BiomeManager(this, BiomeManager.obfuscateSeed(this.seed), worldIn.dimensionType().getBiomeZoomer());
-            IBigCube minCube = this.cubePrimers.get(0);
-            IBigCube maxCube = this.cubePrimers.get(this.cubePrimers.size() - 1);
+            IBigCube minCube = this.cubePrimers[0];
+            IBigCube maxCube = this.cubePrimers[this.cubePrimers.length - 1];
             this.minCubeX = minCube.getCubePos().getX();
             this.minCubeY= minCube.getCubePos().getY();
             this.minCubeZ = minCube.getCubePos().getZ();
@@ -153,7 +155,7 @@ public class CubeWorldGenRegion implements WorldGenLevel, ICubicWorld {
             int dx = x - this.minCubeX;
             int dy = y - this.minCubeY;
             int dz = z - this.minCubeZ;
-            icube = this.cubePrimers.get(dx * this.diameter * this.diameter + dy * this.diameter + dz);
+            icube = this.cubePrimers[dx * this.diameter * this.diameter + dy * this.diameter + dz];
             if (icube.getCubeStatus().isOrAfter(requiredStatus)) {
                 return icube;
             }
@@ -164,8 +166,8 @@ public class CubeWorldGenRegion implements WorldGenLevel, ICubicWorld {
         if (!nonnull) {
             return null;
         } else {
-            IBigCube cornerCube1 = this.cubePrimers.get(0);
-            IBigCube cornerCube2 = this.cubePrimers.get(this.cubePrimers.size() - 1);
+            IBigCube cornerCube1 = this.cubePrimers[0];
+            IBigCube cornerCube2 = this.cubePrimers[this.cubePrimers.length - 1];
             LOGGER.error("Requested section : {} {} {}", x, y, z);
             LOGGER.error("Region bounds : {} {} {} | {} {} {}",
                     cornerCube1.getCubePos().getX(), cornerCube1.getCubePos().getY(), cornerCube1.getCubePos().getZ(),
@@ -286,7 +288,7 @@ public class CubeWorldGenRegion implements WorldGenLevel, ICubicWorld {
     }
 
     @Override public List<Entity> getEntities(@Nullable Entity entityIn, AABB boundingBox,
-            @Nullable Predicate<? super Entity> predicate) {
+                                              @Nullable Predicate<? super Entity> predicate) {
         return Collections.emptyList();
     }
 
