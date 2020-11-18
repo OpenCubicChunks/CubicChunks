@@ -9,6 +9,7 @@ import io.github.opencubicchunks.cubicchunks.chunk.SectionSizeCubeAccessWrapper;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.CubePrimer;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.OverworldBiomeSourceAccess;
+import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import io.github.opencubicchunks.cubicchunks.world.CubeWorldGenRandom;
 import io.github.opencubicchunks.cubicchunks.world.CubeWorldGenRegion;
 import io.github.opencubicchunks.cubicchunks.world.biome.BiomeGetter;
@@ -36,6 +37,7 @@ import net.minecraft.world.level.biome.OverworldBiomeSource;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.ChunkGenerator;
+import net.minecraft.world.level.chunk.LevelChunkSection;
 import net.minecraft.world.level.chunk.UpgradeData;
 import net.minecraft.world.level.levelgen.StructureSettings;
 import net.minecraft.world.level.levelgen.feature.ConfiguredStructureFeature;
@@ -124,7 +126,7 @@ public abstract class MixinChunkGenerator implements ICubeGenerator {
 
         CubePos cubePos = cube.getCubePos();
 
-        Biome biome = this.biomeSource.getPrimaryBiome(cube.getCubePos().getX(), cube.getCubePos().getZ());
+        Biome biome = this.biomeSource.getPrimaryBiome(cube.getCubePos().asSectionPos().getX(), cube.getCubePos().asSectionPos().getZ());
         this.createCCStructure(StructureFeatures.STRONGHOLD, registry, featureManager, cube, manager, seed, cubePos, biome);
 
         for (Supplier<ConfiguredStructureFeature<?, ?>> configuredStructureFeatureSupplier : biome.getGenerationSettings().structures()) {
@@ -134,6 +136,7 @@ public abstract class MixinChunkGenerator implements ICubeGenerator {
                 this.createCCStructure(configuredStructureFeatureSupplier.get(), registry, featureManager, cube, manager, seed, cubePos, biome);
         }
     }
+
 
     private void createCCStructure(ConfiguredStructureFeature<?, ?> configuredStructureFeature, RegistryAccess registryAccess, StructureFeatureManager structureFeatureManager, IBigCube cube, StructureManager structureManager, long seed, CubePos cubePos, Biome biome) {
         StructureStart<?> structureStart = structureFeatureManager.getStartForFeature(/*SectionPos.of(cube.getPos(), 0) We return null as a sectionPos Arg is not used in the method*/null, configuredStructureFeature.feature, cube);
@@ -309,7 +312,7 @@ public abstract class MixinChunkGenerator implements ICubeGenerator {
                 int surfaceHeight = height - cubeToMinBlock(cube.getCubePos().getY()) + 1;
                 if (surfaceHeight >= 0 && surfaceHeight < 2 * IBigCube.DIAMETER_IN_BLOCKS)
                     configuredSurfaceBuilder.apply(worldIn.getRandom(), cubeWrapper, biome, x, z,
-                            surfaceHeight, 1,
+                            surfaceHeight + 1, 1,
                             Blocks.STONE.defaultBlockState(), Blocks.WATER.defaultBlockState(), CubicChunks.SEA_LEVEL - cubeToMinBlock(cube.getCubePos().getY()),
                             1000);
             }
@@ -342,12 +345,18 @@ public abstract class MixinChunkGenerator implements ICubeGenerator {
                         for (int dy = 0; dy < IBigCube.DIAMETER_IN_BLOCKS; dy++) {
                             int blockY = cube.getCubePos().minCubeY() + dy;
 
-                            if (blockY < height) {
-                                cube.setBlock(new BlockPos(dx, dy, dz), Blocks.STONE.defaultBlockState(), false);
-                            } else if (blockY <= CubicChunks.SEA_LEVEL) {
-                                cube.setBlock(new BlockPos(dx, dy, dz), Blocks.WATER.defaultBlockState(), false);
+                            LevelChunkSection cubeSection = cube.getCubeSections()[blockToIndex(dx, dy, dz)];
+                            if (cubeSection == null) {
+                                cube.getCubeSections()[blockToIndex(dx, dy, dz)] = cubeSection = new LevelChunkSection(blockToSection(blockY));
                             }
 
+                            if (blockY < height) {
+                                cubeSection.setBlockState(dx & 0xF, dy & 0xF, dz & 0xF,
+                                        Blocks.STONE.defaultBlockState(), false);
+                            } else if (blockY <= CubicChunks.SEA_LEVEL) {
+                                cubeSection.setBlockState(dx & 0xF, dy & 0xF, dz & 0xF,
+                                        Blocks.WATER.defaultBlockState(), false);
+                            }
                         }
                     }
                 }

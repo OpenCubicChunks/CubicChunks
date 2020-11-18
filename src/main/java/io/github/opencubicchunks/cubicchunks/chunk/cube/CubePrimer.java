@@ -163,12 +163,10 @@ public class CubePrimer implements IBigCube, ChunkAccess {
             }
 
             LevelChunkSection chunksection = this.sections[index];
-            BlockState blockstate = chunksection.setBlockState(x, y, z, state);
+            BlockState blockstate = chunksection.setBlockState(x, y, z, state , false);
             if (this.status.isOrAfter(ChunkStatus.FEATURES) && state != blockstate && (state.getLightBlock(this, pos) != blockstate.getLightBlock(this, pos) || state.getLightEmission() != blockstate.getLightEmission() || state.useShapeForLightOcclusion() || blockstate.useShapeForLightOcclusion())) {
                 lightManager.checkBlock(pos);
             }
-
-            //TODO: implement heightmaps
 
             EnumSet<Heightmap.Types> heightMapsAfter = this.getStatus().heightmapsAfter();
             EnumSet<Heightmap.Types> toInitialize = null;
@@ -177,7 +175,6 @@ public class CubePrimer implements IBigCube, ChunkAccess {
 
             for(Heightmap.Types heightmap$type : heightMapsAfter) {
                 SurfaceTrackerSection[] heightmapArray = this.heightmaps.get(heightmap$type);
-
 
                 if (heightmapArray == null) {
                     if (toInitialize == null) {
