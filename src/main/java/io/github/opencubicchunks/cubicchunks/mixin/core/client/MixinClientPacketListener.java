@@ -47,7 +47,9 @@ public abstract class MixinClientPacketListener {
         int chunkZ = clientboundLevelChunkPacket.getZ();
 
         //For a cc world we will always get null biomes
-        ColumnBiomeContainer biomeContainer = new ColumnBiomeContainer(this.registryAccess.registryOrThrow(Registry.BIOME_REGISTRY), new Biome[ChunkBiomeContainer.BIOMES_SIZE]);
+//        ColumnBiomeContainer biomeContainer = new ColumnBiomeContainer(this.registryAccess.registryOrThrow(Registry.BIOME_REGISTRY), new int[ColumnBiomeContainer.BIOMES_SIZE]);
+        @SuppressWarnings("ConstantConditions") //Not an NPE because this method is client-side.
+        ColumnBiomeContainer biomeContainer = new ColumnBiomeContainer(minecraft.level.registryAccess().registryOrThrow(Registry.BIOME_REGISTRY), new int[ColumnBiomeContainer.BIOMES_SIZE]);
         LevelChunk levelChunk = this.level.getChunkSource().replaceWithPacketData(chunkX, chunkZ, biomeContainer, clientboundLevelChunkPacket.getReadBuffer(), clientboundLevelChunkPacket.getHeightmaps(), clientboundLevelChunkPacket.getAvailableSections());
 
         for (int k = this.level.getMinSection(); k < this.level.getMinSection() - 1; ++k) {

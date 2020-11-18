@@ -20,6 +20,7 @@ import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.biome.BiomeSource;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.chunk.ChunkAccess;
+import net.minecraft.world.level.chunk.ChunkBiomeContainer;
 import net.minecraft.world.level.chunk.ChunkGenerator;
 import net.minecraft.world.level.chunk.ProtoChunk;
 import net.minecraft.world.level.levelgen.Heightmap;
@@ -79,7 +80,7 @@ public class MixinChunkGenerator implements ICubeGenerator {
         } else {
             //if (!((CubicLevelHeightAccessor) ((ChunkAccessMixin) chunkIn).getLevel()).isCubicWorld())
             //    return;
-            ((ProtoChunk) chunkIn).setBiomes(new ColumnBiomeContainer(registry, chunkIn.getPos(), this.runtimeBiomeSource));
+            ((ProtoChunk) chunkIn).setBiomes(new ChunkBiomeContainer(registry, chunkIn.getPos(), this.runtimeBiomeSource));
             ci.cancel();
         }
     }

@@ -1,8 +1,8 @@
 package io.github.opencubicchunks.cubicchunks.chunk.biome;
 
 import io.github.opencubicchunks.cubicchunks.CubicChunks;
-import io.github.opencubicchunks.cubicchunks.chunk.ColumnAccess;
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
+import io.github.opencubicchunks.cubicchunks.chunk.ICubeProvider;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import net.minecraft.core.IdMap;
 import net.minecraft.data.BuiltinRegistries;
@@ -10,14 +10,15 @@ import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.biome.BiomeSource;
 import net.minecraft.world.level.biome.Biomes;
-import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.ChunkBiomeContainer;
+import net.minecraft.world.level.chunk.ChunkSource;
+import net.minecraft.world.level.chunk.ChunkStatus;
 import org.jetbrains.annotations.Nullable;
 
 public class ColumnBiomeContainer extends ChunkBiomeContainer {
     private static final Biome DUMMY_BIOME = BuiltinRegistries.BIOME.get(Biomes.FOREST.location());
 
-    private ChunkAccess column;
+    private ChunkSource chunkSource;
 
     public ColumnBiomeContainer(IdMap<Biome> idMap, Biome[] biomes) {
         super(idMap, biomes);
@@ -35,15 +36,15 @@ public class ColumnBiomeContainer extends ChunkBiomeContainer {
         super(idMap, chunkPos, biomeSource, is);
     }
 
-    public void setColumn(ChunkAccess column) {
-        this.column = column;
+    public void setChunkSource(ChunkSource chunkSource) {
+        this.chunkSource = chunkSource;
     }
 
     public Biome getNoiseBiome(int x, int y, int z) {
-        if(this.column == null) {
+        if(this.chunkSource == null) {
             return DUMMY_BIOME;
         }
-        IBigCube icube = ((ColumnAccess) column).getCube(Coords.blockToSection(y));
+        IBigCube icube = ((ICubeProvider) chunkSource).getCube(Coords.blockToCube(x), Coords.blockToCube(y), Coords.blockToCube(z), ChunkStatus.BIOMES, true);
         CubeBiomeContainer cubeBiomes = icube.getCubeBiomes();
         if(cubeBiomes != null) {
             return cubeBiomes.getNoiseBiome(x, y, z);
