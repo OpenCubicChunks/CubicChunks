@@ -117,6 +117,8 @@ public abstract class MixinChunkManager implements IChunkManager {
 
     private RegionCubeIO regionCubeIO;
 
+    private static final double tickUpdateDistance = 128.0;
+
     @Shadow @Final private ThreadedLevelLightEngine lightEngine;
 
     @Shadow private boolean modified;
@@ -1115,6 +1117,23 @@ public abstract class MixinChunkManager implements IChunkManager {
                 player.connection.send(new ClientboundSetPassengersPacket(entity2));
             }
         }
+    }
+
+    @Override
+    public boolean noPlayersCloseForSpawning(CubePos cubePos) {
+        long cubePosAsLong = cubePos.asLong();
+        return !((ITicketManager) this.distanceManager).hasPlayersNearby(cubePosAsLong) || this.playerMap.getPlayers(cubePosAsLong).noneMatch(
+            (serverPlayer) -> !serverPlayer.isSpectator() && euclideanDistanceSquared(cubePos, serverPlayer) < (tickUpdateDistance*tickUpdateDistance));
+    }
+
+    private static double euclideanDistanceSquared(CubePos cubePos, Entity entity) {
+        double x = Coords.cubeToCenterBlock(cubePos.getX());
+        double y = Coords.cubeToCenterBlock(cubePos.getZ());
+        double z = SectionPos.sectionToBlockCoord(cubePos.getZ());
+        double dX = x - entity.getX();
+        double dY = y - entity.getY();
+        double dZ = z - entity.getZ();
+        return dX * dX + dY * dY + dZ * dZ;
     }
 
     // func_219174_c, getTickingGenerated

@@ -70,4 +70,6 @@ public interface ITicketManager {
     Executor getMainThreadExecutor();
 
     CubeTaskPriorityQueueSorter getCubeTicketThrottler();
+
+    boolean hasPlayersNearby(long cubePos);
 }
