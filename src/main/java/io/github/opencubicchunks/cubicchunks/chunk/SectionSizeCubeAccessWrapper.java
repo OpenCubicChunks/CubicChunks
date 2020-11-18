@@ -1,6 +1,5 @@
 package io.github.opencubicchunks.cubicchunks.chunk;
 
-import io.github.opencubicchunks.cubicchunks.chunk.biome.CubeBiomeContainer;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import it.unimi.dsi.fastutil.longs.LongSet;
@@ -8,7 +7,6 @@ import it.unimi.dsi.fastutil.shorts.ShortList;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.TickList;
@@ -34,21 +32,21 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.BiFunction;
-import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 //used only in Surface Builders
-public class SectionSizeCubeAccessWrapper implements ChunkAccess, IBigCube {
-    private final ChunkAccess delegate;
-    private final IBigCube delegateCube;
+public class SectionSizeCubeAccessWrapper implements ChunkAccess {
+    private final ChunkAccess[] delegates;
+    private final CubePos pos;
     private int dx;
     private int dz;
 
-    public SectionSizeCubeAccessWrapper(ChunkAccess delegate) {
-        this.delegate = delegate;
-        this.delegateCube = (IBigCube) delegate;
+    public SectionSizeCubeAccessWrapper(IBigCube delegate, IBigCube above) {
+        this.delegates = new ChunkAccess[2];
+        this.delegates[delegate.getCubePos().getY() & 1] = (ChunkAccess) delegate;
+        this.delegates[above.getCubePos().getY() & 1] = (ChunkAccess) above;
+        this.pos = delegate.getCubePos();
     }
 
     public void setLocalSectionPos(int sectionX, int sectionZ) {
@@ -56,348 +54,261 @@ public class SectionSizeCubeAccessWrapper implements ChunkAccess, IBigCube {
         this.dz = Coords.sectionToMinBlock(sectionZ);
     }
 
-    @Override public CubePos getCubePos() {
-        return delegateCube.getCubePos();
-    }
 
-    @Override public LevelChunkSection[] getCubeSections() {
-        return delegateCube.getCubeSections();
-    }
-
-    @Override public void setCubeStatus(ChunkStatus status) {
-        delegateCube.setCubeStatus(status);
-    }
-
-    @Override public ChunkStatus getCubeStatus() {
-        return delegateCube.getCubeStatus();
-    }
-
-    @Override @javax.annotation.Nullable public BlockState setBlock(BlockPos pos, BlockState state, boolean isMoving) {
-        return delegateCube.setBlock(pos.offset(dx, 0, dz), state, isMoving);
-    }
-
-    @Override public BlockState getBlockState(int x, int y, int z) {
-        return delegateCube.getBlockState(x + dx, y, z + dz);
-    }
-
-    @Override public void setCubeBlockEntity(CompoundTag nbt) {
-        delegateCube.setCubeBlockEntity(nbt);
-    }
-
-    @Override public void setCubeBlockEntity(BlockEntity tileEntity) {
-        delegateCube.setCubeBlockEntity(tileEntity);
-    }
-
-    @Override public void removeCubeBlockEntity(BlockPos pos) {
-        delegateCube.removeCubeBlockEntity(pos.offset(dx, 0, dz));
-    }
-
-    @Override public Set<BlockPos> getCubeTileEntitiesPos() {
-        return delegateCube.getCubeTileEntitiesPos();
-    }
-
-    @Override @javax.annotation.Nullable public CompoundTag getCubeBlockEntityNbtForSaving(BlockPos pos) {
-        return delegateCube.getCubeBlockEntityNbtForSaving(pos.offset(dx, 0, dz));
-    }
-
-    @Override @javax.annotation.Nullable public CompoundTag getCubeDeferredTileEntity(BlockPos pos) {
-        return delegateCube.getCubeDeferredTileEntity(pos.offset(dx, 0, dz));
-    }
-
-    @Override public boolean hasCubeLight() {
-        return delegateCube.hasCubeLight();
-    }
-
-    @Override public void setCubeLight(boolean lightCorrectIn) {
-        delegateCube.setCubeLight(lightCorrectIn);
-    }
-
-    @Override public Stream<BlockPos> getCubeLightSources() {
-        return delegateCube.getCubeLightSources();
-    }
-
-    @Override public void setDirty(boolean modified) {
-        delegateCube.setDirty(modified);
-    }
-
-    @Override public boolean isDirty() {
-        return delegateCube.isDirty();
-    }
-
-    @Override public boolean isEmptyCube() {
-        return delegateCube.isEmptyCube();
-    }
-
-    @Override public void setCubeInhabitedTime(long newCubeInhabitedTime) {
-        delegateCube.setCubeInhabitedTime(newCubeInhabitedTime);
-    }
-
-    @Override public long getCubeInhabitedTime() {
-        return delegateCube.getCubeInhabitedTime();
-    }
-
-    @Override @javax.annotation.Nullable public CubeBiomeContainer getCubeBiomes() {
-        return delegateCube.getCubeBiomes();
-    }
-
-    @Override @Nullable public BlockState setBlockState(BlockPos blockPos,
-                                                        BlockState blockState, boolean bl) {
-        return delegate.setBlockState(blockPos.offset(dx, 0, dz), blockState, bl);
+    @Nullable @Override public BlockState setBlockState(BlockPos blockPos, BlockState blockState, boolean bl) {
+        return getDelegate(blockPos.getY()).setBlockState(blockPos.offset(dx, 0, dz), blockState, bl);
     }
 
     @Override public void setBlockEntity(BlockEntity blockEntity) {
-        delegate.setBlockEntity(blockEntity);
+        getDelegate(blockEntity.getBlockPos().getY()).setBlockEntity(blockEntity);
     }
 
     @Override public void addEntity(Entity entity) {
-        delegate.addEntity(entity);
+        getDelegate(entity.getBlockY()).addEntity(entity);
     }
 
     @Override @Nullable public LevelChunkSection getHighestSection() {
-        return delegate.getHighestSection();
+        throw new UnsupportedOperationException();
     }
 
     @Override public int getHighestSectionPosition() {
-        return delegate.getHighestSectionPosition();
+        throw new UnsupportedOperationException();
     }
 
     @Override public Set<BlockPos> getBlockEntitiesPos() {
-        return delegate.getBlockEntitiesPos();
+        throw new UnsupportedOperationException();
     }
 
     @Override public LevelChunkSection[] getSections() {
-        return delegate.getSections();
+        throw new UnsupportedOperationException();
     }
 
     @Override public Collection<Map.Entry<Heightmap.Types, Heightmap>> getHeightmaps() {
-        return delegate.getHeightmaps();
+        throw new UnsupportedOperationException();
     }
 
     @Override public void setHeightmap(Heightmap.Types types, long[] ls) {
-        delegate.setHeightmap(types, ls);
+        throw new UnsupportedOperationException();
     }
 
     @Override public Heightmap getOrCreateHeightmapUnprimed(Heightmap.Types types) {
-        return delegate.getOrCreateHeightmapUnprimed(types);
+        throw new UnsupportedOperationException();
     }
 
     @Override public int getHeight(Heightmap.Types types, int i, int j) {
-        return delegate.getHeight(types, i + dx, j + dz);
+        throw new UnsupportedOperationException(); // TODO: getHeight
     }
 
     @Override public ChunkPos getPos() {
-        return delegate.getPos();
+        throw new UnsupportedOperationException();
     }
 
     @Override public Map<StructureFeature<?>, StructureStart<?>> getAllStarts() {
-        return delegate.getAllStarts();
+        throw new UnsupportedOperationException();
     }
 
-    @Override public void setAllStarts(
-            Map<StructureFeature<?>, StructureStart<?>> map) {
-        delegate.setAllStarts(map);
+    @Override public void setAllStarts(Map<StructureFeature<?>, StructureStart<?>> map) {
+        throw new UnsupportedOperationException();
     }
 
     @Override public boolean isYSpaceEmpty(int i, int j) {
-        return delegate.isYSpaceEmpty(i + dx, j + dz);
+        throw new UnsupportedOperationException();
     }
 
     @Override @Nullable public ChunkBiomeContainer getBiomes() {
-        return delegate.getBiomes();
+        throw new UnsupportedOperationException();
     }
 
     @Override public void setUnsaved(boolean bl) {
-        delegate.setUnsaved(bl);
+        throw new UnsupportedOperationException();
     }
 
     @Override public boolean isUnsaved() {
-        return delegate.isUnsaved();
+        throw new UnsupportedOperationException();
     }
 
     @Override public ChunkStatus getStatus() {
-        return delegate.getStatus();
+        return getDelegateCube(pos.getY()).getStatus();
     }
 
     @Override public void removeBlockEntity(BlockPos blockPos) {
-        delegate.removeBlockEntity(blockPos.offset(dx, 0, dz));
+        getDelegate(blockPos.getY()).removeBlockEntity(blockPos.offset(dx, 0, dz));
     }
 
     @Override public void markPosForPostprocessing(BlockPos blockPos) {
-        delegate.markPosForPostprocessing(blockPos.offset(dx, 0, dz));
+        getDelegate(blockPos.getY()).markPosForPostprocessing(blockPos.offset(dx, 0, dz));
     }
 
     @Override public ShortList[] getPostProcessing() {
-        return delegate.getPostProcessing();
+        throw new UnsupportedOperationException();
     }
 
     @Override public void addPackedPostProcess(short s, int i) {
-        delegate.addPackedPostProcess(s, i);
+        throw new UnsupportedOperationException();
     }
 
     @Override public void setBlockEntityNbt(CompoundTag compoundTag) {
-        delegate.setBlockEntityNbt(compoundTag);
+        throw new UnsupportedOperationException();
     }
 
     @Override @Nullable public CompoundTag getBlockEntityNbt(BlockPos blockPos) {
-        return delegate.getBlockEntityNbt(blockPos);
+        throw new UnsupportedOperationException();
     }
 
     @Override @Nullable public CompoundTag getBlockEntityNbtForSaving(BlockPos blockPos) {
-        return delegate.getBlockEntityNbtForSaving(blockPos);
+        throw new UnsupportedOperationException();
     }
 
     @Override public Stream<BlockPos> getLights() {
-        return delegate.getLights();
+        throw new UnsupportedOperationException();
     }
 
     @Override public TickList<Block> getBlockTicks() {
-        return delegate.getBlockTicks();
+        throw new UnsupportedOperationException();
     }
 
     @Override public TickList<Fluid> getLiquidTicks() {
-        return delegate.getLiquidTicks();
+        throw new UnsupportedOperationException();
     }
 
     @Override public UpgradeData getUpgradeData() {
-        return delegate.getUpgradeData();
+        throw new UnsupportedOperationException();
     }
 
     @Override public void setInhabitedTime(long l) {
-        delegate.setInhabitedTime(l);
+        throw new UnsupportedOperationException();
     }
 
     @Override public long getInhabitedTime() {
-        return delegate.getInhabitedTime();
-    }
-
-    public static ShortList getOrCreateOffsetList(ShortList[] shortLists, int i) {
-        return ChunkAccess.getOrCreateOffsetList(shortLists, i);
+        throw new UnsupportedOperationException();
     }
 
     @Override public boolean isLightCorrect() {
-        return delegate.isLightCorrect();
+        throw new UnsupportedOperationException();
     }
 
     @Override public void setLightCorrect(boolean bl) {
-        delegate.setLightCorrect(bl);
+        throw new UnsupportedOperationException();
     }
 
     @Override @Nullable public BlockEntity getBlockEntity(BlockPos blockPos) {
-        return delegate.getBlockEntity(blockPos.offset(dx, 0, dz));
+        return getDelegate(blockPos.getY()).getBlockEntity(blockPos.offset(dx, 0, dz));
     }
 
     @Override public BlockState getBlockState(BlockPos blockPos) {
-        return delegate.getBlockState(blockPos.offset(dx, 0, dz));
+        return getDelegate(blockPos.getY()).getBlockState(blockPos.offset(dx, 0, dz));
     }
 
     @Override public FluidState getFluidState(BlockPos blockPos) {
-        return delegate.getFluidState(blockPos.offset(dx, 0, dz));
+        return getDelegate(blockPos.getY()).getFluidState(blockPos.offset(dx, 0, dz));
     }
 
     @Override public int getLightEmission(BlockPos blockPos) {
-        return delegate.getLightEmission(blockPos.offset(dx, 0, dz));
+        return getDelegate(blockPos.getY()).getLightEmission(blockPos.offset(dx, 0, dz));
     }
 
     @Override public int getMaxLightLevel() {
-        return delegate.getMaxLightLevel();
+        throw new UnsupportedOperationException();
     }
 
     @Override public Stream<BlockState> getBlockStates(AABB aABB) {
-        return delegate.getBlockStates(aABB);
+        throw new UnsupportedOperationException();
     }
 
     @Override public BlockHitResult clip(ClipContext clipContext) {
-        return delegate.clip(clipContext);
+        throw new UnsupportedOperationException();
     }
 
     @Override @Nullable public BlockHitResult clipWithInteractionOverride(Vec3 vec3, Vec3 vec32,
                                                                           BlockPos blockPos, VoxelShape voxelShape,
                                                                           BlockState blockState) {
-        return delegate.clipWithInteractionOverride(vec3, vec32, blockPos, voxelShape, blockState);
+        throw new UnsupportedOperationException();
     }
 
     @Override public double getBlockFloorHeight(VoxelShape voxelShape,
                                                 Supplier<VoxelShape> supplier) {
-        return delegate.getBlockFloorHeight(voxelShape, supplier);
+        throw new UnsupportedOperationException();
     }
 
     @Override public double getBlockFloorHeight(BlockPos blockPos) {
-        return delegate.getBlockFloorHeight(blockPos.offset(dx, 0, dz));
-    }
-
-    public static <T> T traverseBlocks(ClipContext clipContext,
-                                       BiFunction<ClipContext, BlockPos, T> biFunction,
-                                       Function<ClipContext, T> function) {
-        return BlockGetter.traverseBlocks(clipContext, biFunction, function);
+        throw new UnsupportedOperationException();
     }
 
     @Override public int getSectionsCount() {
-        return delegate.getSectionsCount();
+        return delegates[0].getSectionsCount();
     }
 
     @Override public int getMinSection() {
-        return delegate.getMinSection();
+        return delegates[0].getMinSection();
     }
 
     @Override public int getMaxSection() {
-        return delegate.getMaxSection();
+        return delegates[0].getMaxSection();
     }
 
     @Override public int getHeight() {
-        return delegate.getHeight();
+        return delegates[0].getHeight();
     }
 
     @Override public int getMinBuildHeight() {
-        return delegate.getMinBuildHeight();
+        return delegates[0].getMinBuildHeight();
     }
 
     @Override public int getMaxBuildHeight() {
-        return delegate.getMaxBuildHeight();
+        return delegates[0].getMaxBuildHeight();
     }
 
     @Override public boolean isOutsideBuildHeight(BlockPos blockPos) {
-        return delegate.isOutsideBuildHeight(blockPos);
+        return delegates[0].isOutsideBuildHeight(blockPos);
     }
 
     @Override public boolean isOutsideBuildHeight(int i) {
-        return delegate.isOutsideBuildHeight(i);
+        return delegates[0].isOutsideBuildHeight(i);
     }
 
     @Override public int getSectionIndex(int i) {
-        return delegate.getSectionIndex(i);
+        return delegates[0].getSectionIndex(i);
     }
 
     @Override public int getSectionIndexFromSectionY(int i) {
-        return delegate.getSectionIndexFromSectionY(i);
+        return delegates[0].getSectionIndexFromSectionY(i);
     }
 
     @Override public int getSectionYFromSectionIndex(int i) {
-        return delegate.getSectionYFromSectionIndex(i);
+        return delegates[0].getSectionYFromSectionIndex(i);
     }
 
     @Override @Nullable public StructureStart<?> getStartForFeature(
             StructureFeature<?> structureFeature) {
-        return delegate.getStartForFeature(structureFeature);
+        throw new UnsupportedOperationException();
     }
 
     @Override public void setStartForFeature(StructureFeature<?> structureFeature,
                                              StructureStart<?> structureStart) {
-        delegate.setStartForFeature(structureFeature, structureStart);
+        throw new UnsupportedOperationException();
     }
 
     @Override public LongSet getReferencesForFeature(StructureFeature<?> structureFeature) {
-        return delegate.getReferencesForFeature(structureFeature);
+        throw new UnsupportedOperationException();
     }
 
     @Override public void addReferenceForFeature(StructureFeature<?> structureFeature, long l) {
-        delegate.addReferenceForFeature(structureFeature, l);
+        throw new UnsupportedOperationException();
     }
 
     @Override public Map<StructureFeature<?>, LongSet> getAllReferences() {
-        return delegate.getAllReferences();
+        throw new UnsupportedOperationException();
     }
 
     @Override public void setAllReferences(Map<StructureFeature<?>, LongSet> map) {
-        delegate.setAllReferences(map);
+        throw new UnsupportedOperationException();
+    }
+
+    public ChunkAccess getDelegateCube(int y) {
+        return delegates[y & 1];
+    }
+
+    public ChunkAccess getDelegate(int blockY) {
+        return getDelegateCube(Coords.blockToCube(blockY));
     }
 }
