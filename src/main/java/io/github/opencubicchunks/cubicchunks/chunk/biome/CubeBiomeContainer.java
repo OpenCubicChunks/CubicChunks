@@ -75,7 +75,7 @@ public class CubeBiomeContainer {
         int z = cubePos.minCubeZ();
         if (biomeIds != null) {
             for(int k = 0; k < biomeIds.length; ++k) {
-                biomes[k] = BuiltinRegistries.BIOME.byId(biomeIds[k]);
+                biomes[k] = indexedIterable.byId(biomeIds[k]);
                 if (biomes[k] == null) {
                     int dx = k & CUBE_HORIZONTAL_MASK;
                     int dy = k >> SIZE_BITS + SIZE_BITS & CUBE_HORIZONTAL_MASK;
