@@ -273,20 +273,19 @@ public abstract class MixinServerChunkProvider implements IServerChunkProvider, 
             Optional<BigCube> optional =
                     ((ICubeHolder) cubeHolder).getCubeEntityTickingFuture().getNow(ICubeHolder.UNLOADED_CUBE).left();
             if (optional.isPresent()) {
-                BigCube section = optional.get();
+                BigCube cube = optional.get();
                 this.level.getProfiler().push("broadcast");
-                ((ICubeHolder) cubeHolder).broadcastChanges(section);
+                ((ICubeHolder) cubeHolder).broadcastChanges(cube);
                 this.level.getProfiler().pop();
 
-                // TODO do spawn radius check - need a cubic equivalent to `!this.chunkMap.noPlayersCloseForSpawning(chunkPos)`
-//                if (!this.chunkMap.noPlayersCloseForSpawning(chunkPos)) {
-                // TODO probably want to make sure column-based inhabited time works too
-                section.setCubeInhabitedTime(section.getCubeInhabitedTime() + timePassed);
+                if (!((IChunkManager) this.chunkMap).noPlayersCloseForSpawning(cube.getCubePos())) {
+                    // TODO probably want to make sure column-based inhabited time works too
+                    cube.setCubeInhabitedTime(cube.getCubeInhabitedTime() + timePassed);
 
-                // TODO mob spawning - refer to tickChunks implementation
+                    // TODO mob spawning - refer to tickChunks implementation
 
-                ((IServerWorld) this.level).tickCube(section, randomTicks);
-//                }
+                    ((IServerWorld) this.level).tickCube(cube, randomTicks);
+                }
             }
         });
     }

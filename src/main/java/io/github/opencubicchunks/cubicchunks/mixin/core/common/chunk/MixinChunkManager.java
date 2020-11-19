@@ -1125,8 +1125,8 @@ public abstract class MixinChunkManager implements IChunkManager {
 
     private static double euclideanDistanceSquared(CubePos cubePos, Entity entity) {
         double x = Coords.cubeToCenterBlock(cubePos.getX());
-        double y = Coords.cubeToCenterBlock(cubePos.getZ());
-        double z = SectionPos.sectionToBlockCoord(cubePos.getZ());
+        double y = Coords.cubeToCenterBlock(cubePos.getY());
+        double z = Coords.cubeToCenterBlock(cubePos.getZ());
         double dX = x - entity.getX();
         double dY = y - entity.getY();
         double dZ = z - entity.getZ();
