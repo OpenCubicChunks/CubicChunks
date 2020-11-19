@@ -20,7 +20,7 @@ public class StripedBiomeSource extends BiomeSource {
     public StripedBiomeSource(Registry<Biome> registry) {
         super(Stream.of());
         this.biomeRegistry = registry;
-        this.biomeArray = registry.stream().toArray(Biome[]::new);
+        this.biomeArray = registry.stream().filter(biome -> biome.getBiomeCategory() != Biome.BiomeCategory.NETHER && biome.getBiomeCategory() != Biome.BiomeCategory.THEEND).toArray(Biome[]::new);
     }
 
     @Override
