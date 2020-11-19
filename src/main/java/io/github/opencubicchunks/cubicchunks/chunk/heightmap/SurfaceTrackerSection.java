@@ -24,8 +24,7 @@ public class SurfaceTrackerSection {
 	public static final int NODE_COUNT = 1 << NODE_COUNT_BITS;
 
 	/** Number of bits needed to represent height (excluding null) at scale zero (i.e. log2(scale0 height)) */
-	// FIXME make this change based on IBigCube height
-	private static final int BASE_SIZE_BITS = 5;
+	private static final int BASE_SIZE_BITS = IBigCube.SIZE_BITS;
 
 	// Use width of 16 to match columns.
 	private static final int WIDTH_BLOCKS = 16;
