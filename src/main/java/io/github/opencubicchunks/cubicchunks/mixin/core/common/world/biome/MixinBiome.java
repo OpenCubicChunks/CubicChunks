@@ -1,5 +1,6 @@
 package io.github.opencubicchunks.cubicchunks.mixin.core.common.world.biome;
 
+import io.github.opencubicchunks.cubicchunks.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.CubePrimer;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
@@ -25,6 +26,7 @@ import org.jetbrains.annotations.NotNull;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import sun.security.krb5.Config;
 
 import java.util.*;
 import java.util.function.Supplier;
@@ -77,17 +79,18 @@ public class MixinBiome implements BiomeGetter {
             if (list.size() > genStepIDX) {
                 for (Supplier<ConfiguredFeature<?, ?>> configuredFeatureSupplier : list.get(genStepIDX)) {
                     ConfiguredFeature<?, ?> configuredFeature = configuredFeatureSupplier.get();
+
                     ResourceLocation key = cubeWorldGenRegion.getLevel().getServer().registryAccess().registry(Registry.CONFIGURED_FEATURE_REGISTRY).get().getKey(configuredFeature);
 
-
-                    if (featureIDWhitelist.contains(key) || genStepIDX == GenerationStep.Decoration.VEGETAL_DECORATION.ordinal() || genStepIDX == GenerationStep.Decoration.UNDERGROUND_DECORATION.ordinal() || genStepIDX == GenerationStep.Decoration.TOP_LAYER_MODIFICATION.ordinal()) {
+                    if (featureIDWhitelist.contains(key) || genStepIDX == GenerationStep.Decoration.VEGETAL_DECORATION.ordinal() || genStepIDX == GenerationStep.Decoration.TOP_LAYER_MODIFICATION.ordinal()) {
                         try {
                             configuredFeature.place(cubeWorldGenRegion, chunkGenerator, worldgenRandom, blockPos);
                         } catch (Exception e) {
                             CrashReport crashReport2 = CrashReport.forThrowable(e, "Feature placement");
-                            crashReport2.addCategory("Feature").setDetail("Id", Registry.FEATURE.getKey(configuredFeature.feature)).setDetail("Config", configuredFeature.config).setDetail("Description", () -> {
+                            crashReport2.addCategory("Feature").setDetail("Id", key).setDetail("Config", configuredFeature.config).setDetail("Description", () -> {
                                 return configuredFeature.feature.toString();
                             });
+                            CubicChunks.LOGGER.fatal(crashReport2.getFriendlyReport());
                             throw new ReportedException(crashReport2);
                         }
                     }
@@ -222,9 +225,14 @@ public class MixinBiome implements BiomeGetter {
 
         );
 
-        for (ResourceLocation keyFromRegistry : cubeWorldGenRegion.getLevel().getServer().registryAccess().registry(Registry.CONFIGURED_FEATURE_REGISTRY).get().keySet())
+        for (ResourceLocation keyFromRegistry : cubeWorldGenRegion.getLevel().getServer().registryAccess().registry(Registry.CONFIGURED_FEATURE_REGISTRY).get().keySet()) {
+            if (keyFromRegistry.getNamespace().equals("byg"))
+                CubicChunks.LOGGER.info("BYG: " + keyFromRegistry);
+
             if (keyFromRegistry.toString().contains("tree"))
                 featureIDWhitelist.add(keyFromRegistry);
+        }
+        CubicChunks.LOGGER.info("==================================Finished----------------================--");
 
 
         featureIDWhitelist.addAll(resourceLocationList);
