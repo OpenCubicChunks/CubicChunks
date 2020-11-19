@@ -59,6 +59,7 @@ public class Coords {
     private static final int INDEX_TO_N_Y = LOG2_BLOCK_SIZE - 4;
     private static final int INDEX_TO_N_Z = INDEX_TO_N_Y * 2;
 
+    private static final int BLOCK_TO_BIOME_SHIFT = MathUtil.log2(IBigCube.DIAMETER_IN_BLOCKS) - (MathUtil.log2(IBigCube.DIAMETER_IN_BLOCKS) - 2);
 
     /**
      * <it><b>CC INTERNAL</b></it> | Mask used for converting BlockPos to ChunkSection index within a {@link BigCube}.
@@ -345,5 +346,23 @@ public class Coords {
     public static SectionPos sectionPosByIndex(CubePos cubePos, int i) {
         return SectionPos.of(cubeToSection(cubePos.getX(), indexToX(i)), cubeToSection(cubePos.getY(), indexToY(i)), cubeToSection(cubePos.getZ(),
                 indexToZ(i)));
+    }
+
+    /**
+     * Converts block pos to a biome pos
+     * @param blockVal a single dimension of a {@link BlockPos}
+     * @return The biome pos
+     */
+    public static int blockToBiomePos(int blockVal) {
+        return blockVal >> BLOCK_TO_BIOME_SHIFT;
+    }
+
+    /**
+     * Converts a single dimension of a biome pos to a {@link BlockPos}
+     * @param biomeVal a single dimension of a biome pos
+     * @return The block pos
+     */
+    public static int biomeToBlockPos(int biomeVal) {
+        return biomeVal << BLOCK_TO_BIOME_SHIFT;
     }
 }

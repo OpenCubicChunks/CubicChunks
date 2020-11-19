@@ -12,7 +12,6 @@ import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.biome.BiomeSource;
 import net.minecraft.world.level.biome.Biomes;
 import net.minecraft.world.level.chunk.ChunkBiomeContainer;
-import net.minecraft.world.level.chunk.ChunkSource;
 import net.minecraft.world.level.chunk.ChunkStatus;
 import org.jetbrains.annotations.Nullable;
 
@@ -45,10 +44,10 @@ public class ColumnBiomeContainer extends ChunkBiomeContainer {
         if(this.level == null) {
             return DUMMY_BIOME;
         }
-        int blockX = Coords.blockToCube(biomeX) << 2;
-        int blockY = Coords.blockToCube(biomeY) << 2;
-        int blockZ = Coords.blockToCube(biomeZ) << 2;
-        IBigCube icube = ((ICubeProvider) level.getChunkSource()).getCube(blockX, blockY, blockZ, ChunkStatus.BIOMES, false);
+        int blockX = biomeX << 2;
+        int blockY = biomeY << 2;
+        int blockZ = biomeZ << 2;
+        IBigCube icube = ((ICubeProvider) level.getChunkSource()).getCube(Coords.blockToCube(blockX), Coords.blockToCube(blockY), Coords.blockToCube(blockZ), ChunkStatus.BIOMES, false);
         if(icube == null) {
             if(!level.isClientSide())
                 CubicChunks.LOGGER.warn("Tried to get biome at BLOCK pos {} {} {}, but cube isn't loaded. Returning dummy biome", blockX, blockY, blockZ);
@@ -56,7 +55,7 @@ public class ColumnBiomeContainer extends ChunkBiomeContainer {
         }
 
         CubeBiomeContainer cubeBiomes = icube.getCubeBiomes();
-        if(cubeBiomes != null) { //noice
+        if(cubeBiomes != null) {
             return cubeBiomes.getNoiseBiome(biomeX, biomeY, biomeZ);
         }
         CubicChunks.LOGGER.error("Tried to get biome at BLOCK pos {} {} {}, Cube didn't contain a Biome Container", blockX, blockY, blockZ);

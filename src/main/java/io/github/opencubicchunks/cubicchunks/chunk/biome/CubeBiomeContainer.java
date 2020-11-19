@@ -3,15 +3,15 @@ package io.github.opencubicchunks.cubicchunks.chunk.biome;
 import io.github.opencubicchunks.cubicchunks.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
-import io.github.opencubicchunks.cubicchunks.utils.MathUtil;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.core.IdMap;
-import net.minecraft.data.BuiltinRegistries;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.biome.BiomeSource;
 
 import javax.annotation.Nullable;
+
+import static io.github.opencubicchunks.cubicchunks.utils.Coords.blockToBiomePos;
 
 public class CubeBiomeContainer {
 
@@ -33,7 +33,6 @@ public class CubeBiomeContainer {
         this(intIterable, new Biome[CUBE_BIOMES_SIZE]);
     }
 
-    private static int n = 0;
     @Environment(EnvType.CLIENT)
     public CubeBiomeContainer(IdMap<Biome> idMap, int[] is) {
         this(idMap);
@@ -42,9 +41,7 @@ public class CubeBiomeContainer {
             int j = is[i];
             Biome biome = idMap.byId(j);
             if (biome == null) {
-                if(n % 10000 == 0)
-                    CubicChunks.LOGGER.warn("Received invalid biome id: {}", j);
-                n++;
+                CubicChunks.LOGGER.warn("Received invalid biome id: {}", j);
                 this.biomes[i] = idMap.byId(0);
             } else {
                 this.biomes[i] = biome;
@@ -54,10 +51,9 @@ public class CubeBiomeContainer {
 
     public CubeBiomeContainer(IdMap<Biome> indexedIterable, CubePos cubePos, BiomeSource biomeProviderIn) {
         this(indexedIterable);
-        int biomeNodeShift = MathUtil.log2(IBigCube.DIAMETER_IN_BLOCKS) - 2;
-        int x = cubePos.minCubeX() >> biomeNodeShift;
-        int y = cubePos.minCubeY() >> biomeNodeShift;
-        int z = cubePos.minCubeZ() >> biomeNodeShift;
+        int x = blockToBiomePos(cubePos.minCubeX());
+        int y = blockToBiomePos(cubePos.minCubeY());
+        int z = blockToBiomePos(cubePos.minCubeZ());
 
         for(int k = 0; k < biomes.length; ++k) {
             int dx = k & CUBE_HORIZONTAL_MASK;
@@ -70,9 +66,10 @@ public class CubeBiomeContainer {
 
     public CubeBiomeContainer(IdMap<Biome> indexedIterable, CubePos cubePos, BiomeSource biomeProviderIn, @Nullable int[] biomeIds) {
         this(indexedIterable);
-        int x = cubePos.minCubeX();
-        int y = cubePos.minCubeY();
-        int z = cubePos.minCubeZ();
+        int x = blockToBiomePos(cubePos.minCubeX());
+        int y = blockToBiomePos(cubePos.minCubeY());
+        int z = blockToBiomePos(cubePos.minCubeZ());
+
         if (biomeIds != null) {
             for(int k = 0; k < biomeIds.length; ++k) {
                 biomes[k] = indexedIterable.byId(biomeIds[k]);
