@@ -38,6 +38,7 @@
         "common.world.biome.MixinBiomeDefaultFeatures",
         "common.world.feature.MixinBlockBlobFeature",
         "common.world.feature.MixinOreFeature",
+        "common.world.feature.MixinSpringFeature",
         "common.world.feature.MixinVineFeature",
         "common.world.lighting.MixinBlockLightEngine",
         "common.world.lighting.MixinLightEngine",
