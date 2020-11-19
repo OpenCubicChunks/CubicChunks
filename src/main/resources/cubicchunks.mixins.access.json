@@ -25,6 +25,7 @@
         "common.TicketTypeAccess"
     ],
     "client": [
+        "client.ChunkRenderDispatcherAccess",
         "client.ClientChunkProviderChunkArrayAccess",
         "client.ViewFrustumAccess"
     ],

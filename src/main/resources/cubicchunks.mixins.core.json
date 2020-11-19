@@ -55,6 +55,7 @@
         "client.MixinClientPacketListener",
         "client.MixinDebugOverlayGui",
         "client.MixinIChunk",
+        "client.MixinRenderChunk",
         "client.MixinViewFrustum",
         "client.progress.MixinChainedChunkStatusListener",
         "client.progress.MixinTrackingChunkStatusListener",

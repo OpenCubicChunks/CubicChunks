@@ -47,12 +47,17 @@ public class ColumnBiomeContainer extends ChunkBiomeContainer {
         int blockX = Coords.blockToCube(biomeX) << 2;
         int blockY = Coords.blockToCube(biomeY) << 2;
         int blockZ = Coords.blockToCube(biomeZ) << 2;
-        IBigCube icube = ((ICubeProvider) chunkSource).getCube(blockX, blockY, blockZ, ChunkStatus.BIOMES, true);
+        IBigCube icube = ((ICubeProvider) chunkSource).getCube(blockX, blockY, blockZ, ChunkStatus.BIOMES, false);
+        if(icube == null) {
+            CubicChunks.LOGGER.warn("Tried to get biome at BLOCK pos {} {} {}, but cube isn't loaded. Returning dummy biome", blockX, blockY, blockZ);
+            return DUMMY_BIOME;
+        }
+
         CubeBiomeContainer cubeBiomes = icube.getCubeBiomes();
-        if(cubeBiomes != null) {
+        if(cubeBiomes != null) { //noice
             return cubeBiomes.getNoiseBiome(biomeX, biomeY, biomeZ);
         }
-        CubicChunks.LOGGER.warn("Tried to get biome at BLOCK pos {} {} {}, but cube isn't loaded. Returning dummy biome", blockX, blockY, blockZ);
+        CubicChunks.LOGGER.error("Tried to get biome at BLOCK pos {} {} {}, Cube didn't contain a Biome Container", blockX, blockY, blockZ);
         return DUMMY_BIOME;
     }
 }
