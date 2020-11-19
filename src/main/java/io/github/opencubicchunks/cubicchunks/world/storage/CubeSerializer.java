@@ -48,7 +48,9 @@ public class CubeSerializer {
         ChunkGenerator chunkgenerator = worldIn.getChunkSource().getGenerator();
         BiomeSource biomeprovider = chunkgenerator.getBiomeSource();
 
-        CubeBiomeContainer biomecontainer = new CubeBiomeContainer(worldIn.registryAccess().registryOrThrow(Registry.BIOME_REGISTRY), cubePos, biomeprovider, level.contains("Biomes", 11) ? level.getIntArray("Biomes") : null);
+        boolean biomes = level.contains("Biomes", 11);
+        int[] biomes1 = level.getIntArray("Biomes");
+        CubeBiomeContainer biomecontainer = new CubeBiomeContainer(worldIn.registryAccess().registryOrThrow(Registry.BIOME_REGISTRY), cubePos, biomeprovider, biomes ? biomes1 : null);
 //            UpgradeData upgradedata = level.contains("UpgradeData", 10) ? new UpgradeData(level.getCompound("UpgradeData")) : UpgradeData.EMPTY;
         //TODO: reimplement ticklists
 //            ChunkPrimerTickList<Block> chunkprimerticklist = new ChunkPrimerTickList<>((p_222652_0_) -> {

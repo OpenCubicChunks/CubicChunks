@@ -20,7 +20,6 @@ import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.biome.BiomeSource;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.chunk.ChunkAccess;
-import net.minecraft.world.level.chunk.ChunkBiomeContainer;
 import net.minecraft.world.level.chunk.ChunkGenerator;
 import net.minecraft.world.level.chunk.ProtoChunk;
 import net.minecraft.world.level.levelgen.Heightmap;
@@ -72,15 +71,15 @@ public class MixinChunkGenerator implements ICubeGenerator {
 
     @Inject(method = "createBiomes", at = @At("HEAD"), cancellable = true)
     public void generateBiomes(Registry<Biome> registry, ChunkAccess chunkIn, CallbackInfo ci) {
+        //if (!((CubicLevelHeightAccessor) ((ChunkAccessMixin) chunkIn).getLevel()).isCubicWorld())
+        //    return;
         if (chunkIn instanceof IBigCube) {
             IBigCube iCube = (IBigCube)chunkIn;
             CubePos cubePos = ((IBigCube) chunkIn).getCubePos();
             ((CubePrimer)iCube).setCubeBiomes(new CubeBiomeContainer(registry, cubePos, this.runtimeBiomeSource));
             ci.cancel();
         } else {
-            //if (!((CubicLevelHeightAccessor) ((ChunkAccessMixin) chunkIn).getLevel()).isCubicWorld())
-            //    return;
-            ((ProtoChunk) chunkIn).setBiomes(new ChunkBiomeContainer(registry, chunkIn.getPos(), this.runtimeBiomeSource));
+            ((ProtoChunk) chunkIn).setBiomes(new ColumnBiomeContainer(registry, chunkIn.getPos(), this.runtimeBiomeSource));
             ci.cancel();
         }
     }

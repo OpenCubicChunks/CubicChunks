@@ -59,7 +59,7 @@ public abstract class MixinChunk implements ChunkAccess {
         //TODO: is cubicworld
         if(!(biomes instanceof ColumnBiomeContainer)) //Client will already supply a ColumnBiomeContainer, server will not
             this.biomes = new ColumnBiomeContainer(level.registryAccess().registryOrThrow(Registry.BIOME_REGISTRY), new Biome[ColumnBiomeContainer.BIOMES_SIZE]);
-        ((ColumnBiomeContainer) biomes).setChunkSource(level.getChunkSource());
+        ((ColumnBiomeContainer) biomes).setLevel(level);
     }
 
     @Redirect(method = "<init>(Lnet/minecraft/world/level/Level;Lnet/minecraft/world/level/ChunkPos;Lnet/minecraft/world/level/chunk/ChunkBiomeContainer;Lnet/minecraft/world/level/chunk/UpgradeData;Lnet/minecraft/world/level/TickList;Lnet/minecraft/world/level/TickList;J[Lnet/minecraft/world/level/chunk/LevelChunkSection;Ljava/util/function/Consumer;)V",
