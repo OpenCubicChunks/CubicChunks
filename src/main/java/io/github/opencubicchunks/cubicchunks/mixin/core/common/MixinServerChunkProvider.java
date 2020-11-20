@@ -14,6 +14,7 @@ import io.github.opencubicchunks.cubicchunks.mixin.access.common.ChunkManagerAcc
 import io.github.opencubicchunks.cubicchunks.server.IServerChunkProvider;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import io.github.opencubicchunks.cubicchunks.world.lighting.ICubeLightProvider;
+import io.github.opencubicchunks.cubicchunks.world.server.IServerWorld;
 import net.minecraft.Util;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ChunkHolder;
@@ -24,7 +25,9 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.TicketType;
 import net.minecraft.util.profiling.ProfilerFiller;
 import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.NaturalSpawner;
 import net.minecraft.world.level.chunk.ChunkStatus;
+import net.minecraft.world.level.storage.LevelData;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
@@ -33,6 +36,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 import javax.annotation.Nullable;
 import java.util.Arrays;
@@ -261,17 +265,27 @@ public abstract class MixinServerChunkProvider implements IServerChunkProvider, 
     }
 
     @Inject(method = "tickChunks",
-            at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ChunkMap;getChunks()Ljava/lang/Iterable;"))
-    private void tickSections(CallbackInfo ci) {
+            at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ChunkMap;getChunks()Ljava/lang/Iterable;"),
+            locals = LocalCapture.CAPTURE_FAILHARD)
+    private void tickSections(CallbackInfo ci, long l, long timePassed, LevelData levelData, boolean bl, boolean doMobSpawning, int randomTicks, boolean bl3, int j, NaturalSpawner.SpawnState spawnState) {
 
         ((IChunkManager) this.chunkMap).getCubes().forEach((cubeHolder) -> {
             Optional<BigCube> optional =
                     ((ICubeHolder) cubeHolder).getCubeEntityTickingFuture().getNow(ICubeHolder.UNLOADED_CUBE).left();
             if (optional.isPresent()) {
-                BigCube section = optional.get();
+                BigCube cube = optional.get();
                 this.level.getProfiler().push("broadcast");
-                ((ICubeHolder) cubeHolder).broadcastChanges(section);
+                ((ICubeHolder) cubeHolder).broadcastChanges(cube);
                 this.level.getProfiler().pop();
+
+                if (!((IChunkManager) this.chunkMap).noPlayersCloseForSpawning(cube.getCubePos())) {
+                    // TODO probably want to make sure column-based inhabited time works too
+                    cube.setCubeInhabitedTime(cube.getCubeInhabitedTime() + timePassed);
+
+                    // TODO mob spawning - refer to tickChunks implementation
+
+                    ((IServerWorld) this.level).tickCube(cube, randomTicks);
+                }
             }
         });
     }
@@ -284,5 +298,4 @@ public abstract class MixinServerChunkProvider implements IServerChunkProvider, 
     public String gatherStats() {
         return "ServerChunkCache: " + this.getLoadedChunksCount() + " | " + ((IChunkManager) chunkMap).sizeCubes();
     }
-
 }

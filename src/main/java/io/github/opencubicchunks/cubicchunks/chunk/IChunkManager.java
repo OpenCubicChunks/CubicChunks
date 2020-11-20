@@ -81,4 +81,6 @@ public interface IChunkManager {
     IntSupplier getCubeQueueLevel(long cubePosIn);
 
     void releaseLightTicket(CubePos cubePos);
+
+    boolean noPlayersCloseForSpawning(CubePos cubePos);
 }
