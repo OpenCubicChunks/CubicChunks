@@ -4,6 +4,8 @@ import io.github.opencubicchunks.cubicchunks.chunk.IChunkManager;
 import io.github.opencubicchunks.cubicchunks.meta.EarlyConfig;
 import io.github.opencubicchunks.cubicchunks.network.PacketDispatcher;
 import io.github.opencubicchunks.cubicchunks.world.biome.StripedBiomeSource;
+import io.github.opencubicchunks.cubicchunks.world.gen.feature.CCFeatures;
+import io.github.opencubicchunks.cubicchunks.world.gen.placement.CCPlacement;
 import net.fabricmc.api.ModInitializer;
 import net.minecraft.core.Registry;
 import net.minecraft.resources.ResourceLocation;
@@ -47,6 +49,10 @@ public class CubicChunks implements ModInitializer {
                 LOGGER.catching(e);
             }
         }
+
+        //Custom CC Features
+        CCPlacement.init();
+        CCFeatures.init();
     }
 
     private static void convertImmutableFeatures(Biome biome) {

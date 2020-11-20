@@ -7,11 +7,13 @@ import io.github.opencubicchunks.cubicchunks.world.CubeWorldGenRandom;
 import io.github.opencubicchunks.cubicchunks.world.CubeWorldGenRegion;
 import io.github.opencubicchunks.cubicchunks.world.SetupCubeStructureStart;
 import io.github.opencubicchunks.cubicchunks.world.biome.BiomeGetter;
+import io.github.opencubicchunks.cubicchunks.world.gen.feature.CCFeatures;
 import net.minecraft.CrashReport;
 import net.minecraft.ReportedException;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Registry;
 import net.minecraft.core.SectionPos;
+import net.minecraft.data.BuiltinRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.StructureFeatureManager;
 import net.minecraft.world.level.biome.Biome;
@@ -73,11 +75,20 @@ public class MixinBiome implements BiomeGetter {
             if (featureIDWhitelist.isEmpty())
                 getWhitelist(cubeWorldGenRegion);
 
+
             if (list.size() > genStepIDX) {
                 for (Supplier<ConfiguredFeature<?, ?>> configuredFeatureSupplier : list.get(genStepIDX)) {
                     ConfiguredFeature<?, ?> configuredFeature = configuredFeatureSupplier.get();
 
                     ResourceLocation key = cubeWorldGenRegion.getLevel().getServer().registryAccess().registry(Registry.CONFIGURED_FEATURE_REGISTRY).get().getKey(configuredFeature);
+                    if (key != null) {
+                        if (key.equals(new ResourceLocation("lake_lava")))
+                            configuredFeature = CCFeatures.CC_LAVA_LAKE;
+                        else if (key.equals(new ResourceLocation("lake_water")))
+                            configuredFeature = CCFeatures.CC_WATER_LAKE;
+                    }
+
+                    ConfiguredFeature<?, ?> configuredFeature1 = configuredFeature;
 
                     if (featureIDWhitelist.contains(key) || genStepIDX == GenerationStep.Decoration.VEGETAL_DECORATION.ordinal() || genStepIDX == GenerationStep.Decoration.TOP_LAYER_MODIFICATION.ordinal()) {
                         try {
@@ -85,7 +96,7 @@ public class MixinBiome implements BiomeGetter {
                         } catch (Exception e) {
                             CrashReport crashReport2 = CrashReport.forThrowable(e, "Feature placement");
                             crashReport2.addCategory("Feature").setDetail("Id", key).setDetail("Config", configuredFeature.config).setDetail("Description", () -> {
-                                return configuredFeature.feature.toString();
+                                return configuredFeature1.feature.toString();
                             });
                             CubicChunks.LOGGER.fatal(crashReport2.getFriendlyReport());
                             throw new ReportedException(crashReport2);
@@ -191,7 +202,11 @@ public class MixinBiome implements BiomeGetter {
                 new ResourceLocation("patch_sugar_cane_swamp"),
                 new ResourceLocation("patch_sugar_cane_desert"),
                 new ResourceLocation("patch_sugar_cane_badlands"),
-                new ResourceLocation("patch_sugar_cane")
+                new ResourceLocation("patch_sugar_cane"),
+
+                //Lakes
+                new ResourceLocation("lake_lava"),
+                new ResourceLocation("lake_water")
 
 //                    Ores //TODO: OPTIMIZE ORE GEN
 //                    new ResourceLocation("ore_magma"),
