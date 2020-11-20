@@ -108,7 +108,29 @@ public class SurfaceTrackerSection {
 	}
 
 	public void unloadCube(IBigCube cube) {
-
+		if (this.scale == 0) {
+			parent.unloadCube(cube);
+			this.parent = null;
+			return;
+		}
+		int idx = indexOfRawHeightNode(cube.getCubePos().getY(), scale, scaledY);
+		nodes[idx] = null;
+		if (this.scale == MAX_SCALE) {
+			// TODO special-case root unloading during column unload - will probably need a "cubes unload before columns" invariant.
+			return;
+		}
+		// If this node has no children, remove it as well
+		boolean hasChild = false;
+		for (SurfaceTrackerSection node : nodes) {
+			if (node != null) {
+				hasChild = true;
+				break;
+			}
+		}
+		if (!hasChild) {
+			parent.unloadCube(cube);
+		}
+		this.parent = null;
 	}
 
 	public void loadCube(IBigCube newCube, boolean markDirty) {

@@ -45,4 +45,8 @@ public class SurfaceTrackerWrapper extends Heightmap {
 		// TODO loading should only cause marking as dirty if not loading from save file
 		this.surfaceTracker.loadCube(cube, true);
 	}
+
+	public void unloadCube(IBigCube cube) {
+		this.surfaceTracker.getCubeNode(cube.getCubePos().getY()).unloadCube(cube);
+	}
 }
