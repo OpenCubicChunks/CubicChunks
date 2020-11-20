@@ -6,10 +6,8 @@ import io.github.opencubicchunks.cubicchunks.chunk.ICubeProvider;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import net.minecraft.core.IdMap;
 import net.minecraft.data.BuiltinRegistries;
-import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.biome.Biome;
-import net.minecraft.world.level.biome.BiomeSource;
 import net.minecraft.world.level.biome.Biomes;
 import net.minecraft.world.level.chunk.ChunkBiomeContainer;
 import net.minecraft.world.level.chunk.ChunkStatus;
@@ -20,20 +18,9 @@ public class ColumnBiomeContainer extends ChunkBiomeContainer {
 
     private Level level;
 
-    public ColumnBiomeContainer(IdMap<Biome> idMap, Biome[] biomes) {
-        super(idMap, biomes);
-    }
-
-    public ColumnBiomeContainer(IdMap<Biome> idMap, int[] is) {
-        super(idMap, is);
-    }
-
-    public ColumnBiomeContainer(IdMap<Biome> idMap, ChunkPos chunkPos, BiomeSource biomeSource) {
-        super(idMap, chunkPos, biomeSource);
-    }
-
-    public ColumnBiomeContainer(IdMap<Biome> idMap, ChunkPos chunkPos, BiomeSource biomeSource, @Nullable int[] is) {
-        super(idMap, chunkPos, biomeSource, is);
+    public ColumnBiomeContainer(IdMap<Biome> idMap, @Nullable Level level) {
+        super(idMap, new Biome[0]);
+        this.level = level;
     }
 
     public void setLevel(Level level) {

@@ -39,23 +39,8 @@ public abstract class MixinClientPacketListener {
         int chunkZ = clientboundLevelChunkPacket.getZ();
 
         @SuppressWarnings("ConstantConditions") //Not an NPE because this method is client-side.
-        ColumnBiomeContainer biomeContainer = new ColumnBiomeContainer(minecraft.level.registryAccess().registryOrThrow(Registry.BIOME_REGISTRY), new int[ColumnBiomeContainer.BIOMES_SIZE]);
-        biomeContainer.setLevel(minecraft.level);
-        LevelChunk levelChunk = this.level.getChunkSource().replaceWithPacketData(chunkX, chunkZ, biomeContainer, clientboundLevelChunkPacket.getReadBuffer(), clientboundLevelChunkPacket.getHeightmaps(), clientboundLevelChunkPacket.getAvailableSections());
-
-        for (int k = this.level.getMinSection(); k < this.level.getMinSection() - 1; ++k) {
-            this.level.setSectionDirtyWithNeighbors(chunkX, k, chunkZ);
-        }
-
-        if (levelChunk != null) {
-            for (CompoundTag compoundTag : clientboundLevelChunkPacket.getBlockEntitiesTags()) {
-                BlockPos blockPos = new BlockPos(compoundTag.getInt("x"), compoundTag.getInt("y"), compoundTag.getInt("z"));
-                BlockEntity blockEntity = levelChunk.getBlockEntity(blockPos, LevelChunk.EntityCreationType.IMMEDIATE);
-                if (blockEntity != null) {
-                    blockEntity.load(compoundTag);
-                }
-            }
-        }
+        ColumnBiomeContainer biomeContainer = new ColumnBiomeContainer(minecraft.level.registryAccess().registryOrThrow(Registry.BIOME_REGISTRY), level);
+        this.level.getChunkSource().replaceWithPacketData(chunkX, chunkZ, biomeContainer, clientboundLevelChunkPacket.getReadBuffer(), clientboundLevelChunkPacket.getHeightmaps(), clientboundLevelChunkPacket.getAvailableSections());
     }
 
 

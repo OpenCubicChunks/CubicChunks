@@ -3,9 +3,19 @@ package io.github.opencubicchunks.cubicchunks.mixin.core.common.chunk;
 import com.mojang.datafixers.util.Either;
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.ICubeGenerator;
+import io.github.opencubicchunks.cubicchunks.chunk.biome.ColumnBiomeContainer;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.CubePrimer;
 import io.github.opencubicchunks.cubicchunks.world.CubeWorldGenRegion;
 import io.github.opencubicchunks.cubicchunks.world.server.IServerWorldLightManager;
+import net.minecraft.core.Registry;
+import net.minecraft.server.level.ChunkHolder;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ThreadedLevelLightEngine;
+import net.minecraft.world.level.chunk.ChunkAccess;
+import net.minecraft.world.level.chunk.ChunkGenerator;
+import net.minecraft.world.level.chunk.ChunkStatus;
+import net.minecraft.world.level.chunk.ProtoChunk;
+import net.minecraft.world.level.levelgen.structure.templatesystem.StructureManager;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -15,16 +25,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
-import net.minecraft.server.level.ChunkHolder;
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.server.level.ThreadedLevelLightEngine;
-import net.minecraft.world.level.chunk.ChunkAccess;
-import net.minecraft.world.level.chunk.ChunkGenerator;
-import net.minecraft.world.level.chunk.ChunkStatus;
-import net.minecraft.world.level.chunk.ProtoChunk;
-import net.minecraft.world.level.levelgen.structure.templatesystem.StructureManager;
 
 import static io.github.opencubicchunks.cubicchunks.chunk.util.Utils.unsafeCast;
+import static net.minecraft.core.Registry.BIOME_REGISTRY;
 
 @Mixin(ChunkStatus.class)
 public class MixinChunkStatus {
@@ -108,6 +111,22 @@ public class MixinChunkStatus {
             // generator.generateStructureStarts(new CubeWorldGenRegion(world, unsafeCast(neighbors)), chunk);
         }
     }
+
+    @SuppressWarnings({"UnresolvedMixinReference", "target"})
+    @Inject(method = "lambda$static$4(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/level/chunk/ChunkGenerator;Ljava/util/List;Lnet/minecraft/world/level/chunk/ChunkAccess;)V",
+            at = @At("HEAD"), cancellable = true
+    )
+    private static void cubicChunksBiome(ServerLevel serverLevel, ChunkGenerator chunkGenerator, List<ChunkAccess> neighbors, ChunkAccess chunkAccess, CallbackInfo ci) {
+        if (chunkAccess instanceof IBigCube) {
+            chunkGenerator.createBiomes(serverLevel.registryAccess().registryOrThrow(Registry.BIOME_REGISTRY), chunkAccess);
+            return;
+        }
+        ci.cancel();
+        //noinspection ConstantConditions
+        ColumnBiomeContainer biomeContainer = new ColumnBiomeContainer(serverLevel.registryAccess().registryOrThrow(BIOME_REGISTRY), serverLevel);
+        ((ProtoChunk) chunkAccess).setBiomes(biomeContainer);
+    }
+
     // biomes -> handled by MixinChunkGenerator
     @SuppressWarnings({"UnresolvedMixinReference", "target"})
     @Inject(method = "lambda$static$5(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/level/chunk/ChunkGenerator;Ljava/util/List;Lnet/minecraft/world/level/chunk/ChunkAccess;)V",
