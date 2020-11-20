@@ -1,33 +1,30 @@
 package io.github.opencubicchunks.cubicchunks.network;
 
-import static io.github.opencubicchunks.cubicchunks.utils.Coords.cubeToSection;
-
 import com.google.common.primitives.Ints;
 import io.github.opencubicchunks.cubicchunks.CubicChunks;
-import io.github.opencubicchunks.cubicchunks.chunk.IClientCubeProvider;
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
+import io.github.opencubicchunks.cubicchunks.chunk.IClientCubeProvider;
 import io.github.opencubicchunks.cubicchunks.chunk.biome.CubeBiomeContainer;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.BigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.utils.MathUtil;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
-
-import java.nio.ByteBuffer;
-import java.nio.IntBuffer;
-import java.util.*;
-import java.util.stream.Collectors;
-
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Registry;
-import net.minecraft.core.RegistryAccess;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
+
+import java.util.ArrayList;
+import java.util.BitSet;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import static io.github.opencubicchunks.cubicchunks.utils.Coords.cubeToSection;
 
 public class PacketCubes {
     // vanilla has max chunk size of 2MB, it works out to be 128kB for a 32^3 cube
@@ -65,12 +62,7 @@ public class PacketCubes {
         int length = MathUtil.ceilDiv(cubes.length, 64);
         this.cubeExists = BitSet.valueOf(buf.readLongArray(new long[length]));
 
-        ByteBuffer biomeBuffer = ByteBuffer.allocate(count * CubeBiomeContainer.CUBE_BIOMES_SIZE * 4);
-        buf.readBytes(biomeBuffer.array());
-        IntBuffer intBuf = biomeBuffer.asIntBuffer();
-
-        biomes = new int[intBuf.remaining()];
-        intBuf.get(biomes);
+        biomes = buf.readVarIntArray();
 
         int packetLength = buf.readVarInt();
         if (packetLength > MAX_CUBE_SIZE * cubes.length) {
@@ -96,10 +88,7 @@ public class PacketCubes {
 
         buf.writeLongArray(cubeExists.toLongArray());
 
-        ByteBuffer biomeBuffer = ByteBuffer.allocate(biomes.length * 4);
-        IntBuffer intBiomeBuffer = biomeBuffer.asIntBuffer();
-        intBiomeBuffer.put(biomes);
-        buf.writeBytes(biomeBuffer.array());
+        buf.writeVarIntArray(biomes);
 
         buf.writeVarInt(this.packetData.length);
         buf.writeBytes(this.packetData);
@@ -125,8 +114,7 @@ public class PacketCubes {
 
 
                 int[] cubeBiomes = new int[CubeBiomeContainer.CUBE_BIOMES_SIZE];
-                if (cubeBiomes.length >= 0)
-                    System.arraycopy(packet.biomes, i * CubeBiomeContainer.CUBE_BIOMES_SIZE, cubeBiomes, 0, cubeBiomes.length);
+                System.arraycopy(packet.biomes, i * CubeBiomeContainer.CUBE_BIOMES_SIZE, cubeBiomes, 0, cubeBiomes.length);
                 CubeBiomeContainer cubeBiomeContainer = new CubeBiomeContainer(Minecraft.getInstance().level.registryAccess().registryOrThrow(Registry.BIOME_REGISTRY), cubeBiomes);
 
                 ((IClientCubeProvider) world.getChunkSource()).replaceWithPacketData(

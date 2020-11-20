@@ -26,16 +26,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public abstract class MixinClientPacketListener {
     @Shadow @Final private Minecraft minecraft;
     @Shadow private ClientLevel level;
-    @Shadow private RegistryAccess registryAccess;
 
     @Shadow public abstract ClientLevel getLevel();
-
-//    private static final ChunkBiomeContainer dummyContainer = new ChunkBiomeContainer(new IdMapper<>(), new Biome[ChunkBiomeContainer.BIOMES_SIZE]);
-//    @Nullable
-//    @Redirect(method = "handleLevelChunk", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/multiplayer/ClientChunkCache;replaceWithPacketData(IILnet/minecraft/world/level/chunk/ChunkBiomeContainer;Lnet/minecraft/network/FriendlyByteBuf;Lnet/minecraft/nbt/CompoundTag;I)Lnet/minecraft/world/level/chunk/LevelChunk;"))
-//    private LevelChunk on$handleLevelChunk(ClientChunkCache clientChunkCache, int i, int j, ChunkBiomeContainer chunkBiomeContainer, FriendlyByteBuf friendlyByteBuf, CompoundTag compoundTag, int k) {
-//        return clientChunkCache.replaceWithPacketData(i, j, dummyContainer, friendlyByteBuf, compoundTag, k);
-//    }
 
     @Inject(method = "handleLevelChunk", at = @At("HEAD"), cancellable = true)
     public void handleLevelChunk(ClientboundLevelChunkPacket clientboundLevelChunkPacket, CallbackInfo ci) {
@@ -46,8 +38,6 @@ public abstract class MixinClientPacketListener {
         int chunkX = clientboundLevelChunkPacket.getX();
         int chunkZ = clientboundLevelChunkPacket.getZ();
 
-        //For a cc world we will always get null biomes
-//        ColumnBiomeContainer biomeContainer = new ColumnBiomeContainer(this.registryAccess.registryOrThrow(Registry.BIOME_REGISTRY), new int[ColumnBiomeContainer.BIOMES_SIZE]);
         @SuppressWarnings("ConstantConditions") //Not an NPE because this method is client-side.
         ColumnBiomeContainer biomeContainer = new ColumnBiomeContainer(minecraft.level.registryAccess().registryOrThrow(Registry.BIOME_REGISTRY), new int[ColumnBiomeContainer.BIOMES_SIZE]);
         biomeContainer.setLevel(minecraft.level);

@@ -11,8 +11,6 @@ import net.minecraft.world.level.biome.BiomeSource;
 
 import javax.annotation.Nullable;
 
-import static io.github.opencubicchunks.cubicchunks.utils.Coords.blockToBiomePos;
-
 public class CubeBiomeContainer {
 
     private static final int SIZE_BITS = (int)Math.round(Math.log(IBigCube.DIAMETER_IN_BLOCKS) / Math.log(2.0D)) - 2;
@@ -51,9 +49,9 @@ public class CubeBiomeContainer {
 
     public CubeBiomeContainer(IdMap<Biome> indexedIterable, CubePos cubePos, BiomeSource biomeProviderIn) {
         this(indexedIterable);
-        int x = blockToBiomePos(cubePos.minCubeX());
-        int y = blockToBiomePos(cubePos.minCubeY());
-        int z = blockToBiomePos(cubePos.minCubeZ());
+        int x = cubePos.minCubeX() >> 2;
+        int y = cubePos.minCubeY() >> 2;
+        int z = cubePos.minCubeZ() >> 2;
 
         for(int k = 0; k < biomes.length; ++k) {
             int dx = k & CUBE_HORIZONTAL_MASK;
@@ -66,9 +64,9 @@ public class CubeBiomeContainer {
 
     public CubeBiomeContainer(IdMap<Biome> indexedIterable, CubePos cubePos, BiomeSource biomeProviderIn, @Nullable int[] biomeIds) {
         this(indexedIterable);
-        int x = blockToBiomePos(cubePos.minCubeX());
-        int y = blockToBiomePos(cubePos.minCubeY());
-        int z = blockToBiomePos(cubePos.minCubeZ());
+        int x = cubePos.minCubeX() >> 2;
+        int y = cubePos.minCubeY() >> 2;
+        int z = cubePos.minCubeZ() >> 2;
 
         if (biomeIds != null) {
             for(int k = 0; k < biomeIds.length; ++k) {

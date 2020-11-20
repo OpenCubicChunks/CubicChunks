@@ -12,7 +12,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(FuzzyOffsetConstantColumnBiomeZoomer.class)
 public class MixinFuzzyOffsetConstantColumnBiomeZoomer {
     @Inject(method = "getBiome", at = @At("HEAD"), cancellable = true)
-    private void on$getBiome(long l, int i, int j, int k, BiomeManager.NoiseBiomeSource noiseBiomeSource, CallbackInfoReturnable<Biome> cir) {
+    private void replaceGetBiome(long l, int i, int j, int k, BiomeManager.NoiseBiomeSource noiseBiomeSource, CallbackInfoReturnable<Biome> cir) {
         cir.setReturnValue(FuzzyOffsetBiomeZoomer.INSTANCE.getBiome(l, i, j, k, noiseBiomeSource));
     }
 

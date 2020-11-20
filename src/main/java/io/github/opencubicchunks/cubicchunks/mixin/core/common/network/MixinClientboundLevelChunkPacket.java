@@ -14,7 +14,7 @@ public class MixinClientboundLevelChunkPacket {
      * @reason CC doesn't need to send chunk biome data, as it's in cubes.
      */
     @Redirect(method = "<init>(Lnet/minecraft/world/level/chunk/LevelChunk;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/chunk/ChunkBiomeContainer;writeBiomes()[I"))
-    public int[] on$writeBiomes(ChunkBiomeContainer chunkBiomeContainer) {
+    public int[] nullWriteBiomes(ChunkBiomeContainer chunkBiomeContainer) {
         return null;
     }
 

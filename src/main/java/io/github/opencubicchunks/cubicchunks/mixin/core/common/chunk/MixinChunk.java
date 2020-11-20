@@ -55,7 +55,7 @@ public abstract class MixinChunk implements ChunkAccess {
     }
 
     @Inject(method = "<init>(Lnet/minecraft/world/level/Level;Lnet/minecraft/world/level/ChunkPos;Lnet/minecraft/world/level/chunk/ChunkBiomeContainer;Lnet/minecraft/world/level/chunk/UpgradeData;Lnet/minecraft/world/level/TickList;Lnet/minecraft/world/level/TickList;J[Lnet/minecraft/world/level/chunk/LevelChunkSection;Ljava/util/function/Consumer;)V", at = @At("RETURN"))
-    private void on$init(Level level, ChunkPos chunkPos, ChunkBiomeContainer chunkBiomeContainer, UpgradeData upgradeData, TickList<Block> tickList, TickList<Fluid> tickList2, long l, LevelChunkSection[] levelChunkSections, Consumer<LevelChunk> consumer, CallbackInfo ci) {
+    private void onInit(Level level, ChunkPos chunkPos, ChunkBiomeContainer chunkBiomeContainer, UpgradeData upgradeData, TickList<Block> tickList, TickList<Fluid> tickList2, long l, LevelChunkSection[] levelChunkSections, Consumer<LevelChunk> consumer, CallbackInfo ci) {
         //TODO: is cubicworld
         if(!(biomes instanceof ColumnBiomeContainer)) //Client will already supply a ColumnBiomeContainer, server will not
             this.biomes = new ColumnBiomeContainer(level.registryAccess().registryOrThrow(Registry.BIOME_REGISTRY), new Biome[ColumnBiomeContainer.BIOMES_SIZE]);
@@ -205,11 +205,5 @@ public abstract class MixinChunk implements ChunkAccess {
     @Redirect(method = "removeBlockEntity", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/chunk/LevelChunk;isInLevel()Z"))
     private boolean getLoadedFromBlockPos(LevelChunk chunk, BlockPos pos) {
         return ((BigCube)this.getCube(Coords.blockToSection(pos.getY()))).isInLevel();
-    }
-
-    @Inject(method = "getBiomes", at = @At("HEAD"), cancellable = true)
-    public void getBiomes(CallbackInfoReturnable<ChunkBiomeContainer> cir) {
-        //TODO: IF cubicworld don't cancel
-        cir.setReturnValue(this.biomes);
     }
 }

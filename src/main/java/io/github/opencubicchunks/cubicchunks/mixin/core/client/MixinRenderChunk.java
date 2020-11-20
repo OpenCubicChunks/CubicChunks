@@ -25,18 +25,31 @@ public abstract class MixinRenderChunk {
 
     @SuppressWarnings("target") @Shadow(aliases = "field_20833", remap = false) ChunkRenderDispatcher this$0;
 
+    /**
+     * Add checks for the cube at that pos
+     */
     @Inject(method = "doesChunkExistAt", at = @At("HEAD"), cancellable = true)
-    private void on$doesChunkExists(BlockPos blockPos, CallbackInfoReturnable<Boolean> cir) {
-        cir.setReturnValue(((ICubicWorld) ((ChunkRenderDispatcherAccess) this$0).getLevel()).getCube(
-            Coords.blockToCube(blockPos.getX()),
-            Coords.blockToCube(blockPos.getY()),
-            Coords.blockToCube(blockPos.getZ()),
-            ChunkStatus.FULL,
-            false) != null);
+    private void doesChunkAndCubeExistAt(BlockPos blockPos, CallbackInfoReturnable<Boolean> cir) {
+        cir.setReturnValue(
+            ((ChunkRenderDispatcherAccess) this$0).getLevel().getChunk(
+                Coords.blockToSection(blockPos.getX()),
+                Coords.blockToSection(blockPos.getZ()),
+                ChunkStatus.FULL,
+                false) != null &&
+            ((ICubicWorld) ((ChunkRenderDispatcherAccess) this$0).getLevel()).getCube(
+                Coords.blockToCube(blockPos.getX()),
+                Coords.blockToCube(blockPos.getY()),
+                Coords.blockToCube(blockPos.getZ()),
+                ChunkStatus.FULL,
+                false) != null
+        );
     }
 
+    /**
+     * Add checks for above and below neighbors
+     */
     @Inject(method = "hasAllNeighbors", at = @At("HEAD"), cancellable = true)
-    private void on$hasAllNeighbors(CallbackInfoReturnable<Boolean> cir) {
+    private void onHasAllNeighbors(CallbackInfoReturnable<Boolean> cir) {
         if (!(this.getDistToPlayerSqr() > 576.0D)) {
             cir.setReturnValue(true);
         } else {

@@ -135,7 +135,7 @@ public class CubePrimerWrapper extends CubePrimer {
         return this.cube.isEmptyCube();
     }
 
-    @Deprecated @Override public ChunkBiomeContainer getBiomes() { throw new UnsupportedOperationException("Chunk method called on a cube"); }
+    @Deprecated @Override public ChunkBiomeContainer getBiomes() { return this.cube.getBiomes(); }
     @Override public CubeBiomeContainer getCubeBiomes() {
         return this.cube.getCubeBiomes();
     }
