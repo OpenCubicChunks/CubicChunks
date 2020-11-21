@@ -1,6 +1,5 @@
 package io.github.opencubicchunks.cubicchunks.network;
 
-import com.google.common.primitives.Ints;
 import io.github.opencubicchunks.cubicchunks.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.IClientCubeProvider;
@@ -33,7 +32,7 @@ public class PacketCubes {
     private final CubePos[] cubePositions;
     private final BigCube[] cubes;
     private final BitSet cubeExists;
-    private final int[] biomes;
+    private final List<int[]> biomeDataArrays;
     private final byte[] packetData;
     private final List<CompoundTag> tileEntityTags;
 
@@ -41,7 +40,7 @@ public class PacketCubes {
         this.cubes = cubes.toArray(new BigCube[0]);
         this.cubePositions = new CubePos[this.cubes.length];
         this.cubeExists = new BitSet(cubes.size());
-        this.biomes = fillBiomeData();
+        this.biomeDataArrays = fillBiomeData();
         this.packetData = new byte[calculateDataSize(cubes)];
         fillDataBuffer(wrapBuffer(this.packetData), cubes, cubeExists);
         this.tileEntityTags = cubes.stream()
@@ -62,7 +61,10 @@ public class PacketCubes {
         int length = MathUtil.ceilDiv(cubes.length, 64);
         this.cubeExists = BitSet.valueOf(buf.readLongArray(new long[length]));
 
-        biomes = buf.readVarIntArray();
+        biomeDataArrays = new ArrayList<>();
+        for (int i = 0; i < count; i++) {
+            biomeDataArrays.add(buf.readVarIntArray());
+        }
 
         int packetLength = buf.readVarInt();
         if (packetLength > MAX_CUBE_SIZE * cubes.length) {
@@ -88,7 +90,7 @@ public class PacketCubes {
 
         buf.writeLongArray(cubeExists.toLongArray());
 
-        buf.writeVarIntArray(biomes);
+        biomeDataArrays.forEach(buf::writeVarIntArray);
 
         buf.writeVarInt(this.packetData.length);
         buf.writeBytes(this.packetData);
@@ -112,10 +114,7 @@ public class PacketCubes {
                 int y = pos.getY();
                 int z = pos.getZ();
 
-
-                int[] cubeBiomes = new int[CubeBiomeContainer.CUBE_BIOMES_SIZE];
-                System.arraycopy(packet.biomes, i * CubeBiomeContainer.CUBE_BIOMES_SIZE, cubeBiomes, 0, cubeBiomes.length);
-                CubeBiomeContainer cubeBiomeContainer = new CubeBiomeContainer(Minecraft.getInstance().level.registryAccess().registryOrThrow(Registry.BIOME_REGISTRY), cubeBiomes);
+                CubeBiomeContainer cubeBiomeContainer = new CubeBiomeContainer(Minecraft.getInstance().level.registryAccess().registryOrThrow(Registry.BIOME_REGISTRY), packet.biomeDataArrays.get(i));
 
                 ((IClientCubeProvider) world.getChunkSource()).replaceWithPacketData(
                         x, y, z, cubeBiomeContainer, dataReader, new CompoundTag(), cubeExists.get(i));
@@ -166,22 +165,17 @@ public class PacketCubes {
         return cubes.stream().filter(c -> !c.isEmptyCube()).mapToInt(BigCube::getSize).sum();
     }
 
-    private int[] fillBiomeData() {
-        List<Integer> biomeList = new ArrayList<>();
-        for(BigCube cube : cubes) {
+    private List<int[]> fillBiomeData() {
+        List<int[]> dataArrays = new ArrayList<>(cubes.length);
+        for (BigCube cube : cubes) {
             CubeBiomeContainer cubeBiomeContainer = cube.getCubeBiomes();
-            if(cubeBiomeContainer != null) {
-                int[] cubeBiomes = cubeBiomeContainer.writeBiomes();
-                for (int i : cubeBiomes) {
-                    biomeList.add(i);
-                }
-            } else {
+            if (cubeBiomeContainer != null)
+                dataArrays.add(cubeBiomeContainer.writeBiomes());
+            else {
                 CubicChunks.LOGGER.error("Cube had null biomes! Sending empty array");
-                for(int i = 0; i < CubeBiomeContainer.CUBE_BIOMES_SIZE; i++) {
-                    biomeList.add(0);
-                }
+                dataArrays.add(new int[]{ 1 });
             }
         }
-        return Ints.toArray(biomeList);
+        return dataArrays;
     }
 }

@@ -21,19 +21,14 @@ public class CubeBiomeContainer {
     private final IdMap<Biome> biomeRegistry;
     private final Biome[] biomes;
 
-    public CubeBiomeContainer(IdMap<Biome> indexedIterable, Biome[] biomesIn) {
-        this.biomeRegistry = indexedIterable;
-        this.biomes = biomesIn;
-    }
-
-    private CubeBiomeContainer(IdMap<Biome> intIterable)
-    {
-        this(intIterable, new Biome[CUBE_BIOMES_SIZE]);
-    }
-
     @Environment(EnvType.CLIENT)
     public CubeBiomeContainer(IdMap<Biome> idMap, int[] is) {
-        this(idMap);
+        this.biomeRegistry = idMap;
+        if(is.length == 1)
+            this.biomes = new Biome[1];
+        else
+            this.biomes = new Biome[CUBE_BIOMES_SIZE];
+
 
         for(int i = 0; i < this.biomes.length; ++i) {
             int j = is[i];
@@ -47,45 +42,71 @@ public class CubeBiomeContainer {
         }
     }
 
-    public CubeBiomeContainer(IdMap<Biome> indexedIterable, CubePos cubePos, BiomeSource biomeProviderIn) {
-        this(indexedIterable);
+    public CubeBiomeContainer(IdMap<Biome> idMap, CubePos cubePos, BiomeSource biomeProviderIn) {
+        this.biomeRegistry = idMap;
+        Biome[] tempBiomes = new Biome[CUBE_BIOMES_SIZE];
+
         int x = cubePos.minCubeX() >> 2;
         int y = cubePos.minCubeY() >> 2;
         int z = cubePos.minCubeZ() >> 2;
 
-        for(int k = 0; k < biomes.length; ++k) {
+        boolean allBiomesIdentical = true;
+        Biome firstBiome = biomeProviderIn.getNoiseBiome(x, y, z);
+        for(int k = 0; k < tempBiomes.length; ++k) {
             int dx = k & CUBE_HORIZONTAL_MASK;
             int dy = k >> SIZE_BITS + SIZE_BITS & CUBE_HORIZONTAL_MASK;
             int dz = k >> SIZE_BITS & CUBE_HORIZONTAL_MASK;
-            biomes[k] = biomeProviderIn.getNoiseBiome(x + dx, y + dy, z + dz);
+            Biome biome = biomeProviderIn.getNoiseBiome(x + dx, y + dy, z + dz);
+            if(biome != firstBiome)
+                allBiomesIdentical = false;
+            tempBiomes[k] = biome;
         }
 
+        if(allBiomesIdentical)
+            this.biomes = new Biome[] { firstBiome };
+        else
+            this.biomes = tempBiomes;
     }
 
-    public CubeBiomeContainer(IdMap<Biome> indexedIterable, CubePos cubePos, BiomeSource biomeProviderIn, @Nullable int[] biomeIds) {
-        this(indexedIterable);
+    public CubeBiomeContainer(IdMap<Biome> idMap, CubePos cubePos, BiomeSource biomeProviderIn, @Nullable int[] biomeIds) {
+        this.biomeRegistry = idMap;
+        Biome[] tempBiomes = new Biome[CUBE_BIOMES_SIZE];
+
         int x = cubePos.minCubeX() >> 2;
         int y = cubePos.minCubeY() >> 2;
         int z = cubePos.minCubeZ() >> 2;
 
+        boolean allBiomesIdentical = true;
+        Biome firstBiome = biomeProviderIn.getNoiseBiome(x, y, z);
         if (biomeIds != null) {
             for(int k = 0; k < biomeIds.length; ++k) {
-                biomes[k] = indexedIterable.byId(biomeIds[k]);
-                if (biomes[k] == null) {
+                tempBiomes[k] = idMap.byId(biomeIds[k]);
+                if (tempBiomes[k] == null) {
                     int dx = k & CUBE_HORIZONTAL_MASK;
                     int dy = k >> SIZE_BITS + SIZE_BITS & CUBE_HORIZONTAL_MASK;
                     int dz = k >> SIZE_BITS & CUBE_HORIZONTAL_MASK;
-                    biomes[k] = biomeProviderIn.getNoiseBiome(x + dx, y + dy, z + dz);
+                    Biome biome = biomeProviderIn.getNoiseBiome(x + dx, y + dy, z + dz);
+                    if(biome != firstBiome)
+                        allBiomesIdentical = false;
+                    tempBiomes[k] = biome;
                 }
             }
         } else {
-            for(int k1 = 0; k1 < biomes.length; ++k1) {
+            for(int k1 = 0; k1 < tempBiomes.length; ++k1) {
                 int dx = k1 & CUBE_HORIZONTAL_MASK;
                 int dy = k1 >> SIZE_BITS + SIZE_BITS & CUBE_HORIZONTAL_MASK;
                 int dz = k1 >> SIZE_BITS & CUBE_HORIZONTAL_MASK;
-                biomes[k1] = biomeProviderIn.getNoiseBiome(x + dx, y + dy, z + dz);
+                Biome biome = biomeProviderIn.getNoiseBiome(x + dx, y + dy, z + dz);
+                if(biome != firstBiome)
+                    allBiomesIdentical = false;
+                tempBiomes[k1] = biome;
             }
         }
+
+        if(allBiomesIdentical)
+            this.biomes = new Biome[] { firstBiome };
+        else
+            this.biomes = tempBiomes;
     }
 
     public int[] writeBiomes() {
@@ -94,11 +115,13 @@ public class CubeBiomeContainer {
         for(int i = 0; i < this.biomes.length; ++i) {
             is[i] = this.biomeRegistry.getId(this.biomes[i]);
         }
-
         return is;
     }
 
     public Biome getNoiseBiome(int x, int y, int z) {
+        if(biomes.length == 1)
+            return biomes[0];
+
         int localX = x & CUBE_HORIZONTAL_MASK;
         int localY = y & CUBE_HORIZONTAL_MASK;
         int localZ = z & CUBE_HORIZONTAL_MASK;
