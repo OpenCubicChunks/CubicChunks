@@ -99,6 +99,9 @@ repositories{
         url "https://oss.sonatype.org/content/repositories/snapshots/"
     }
     maven {
+        url 'https://repo.spongepowered.org/maven/'
+    }
+    maven {
         name = "JitPack"
         url = "https://jitpack.io"
     }
@@ -150,6 +153,8 @@ dependencies {
     debugRuntime "org.lwjgl:lwjgl::$lwjglNatives"
 
     include implementation('io.github.opencubicchunks:regionlib:0.63.0-SNAPSHOT')
+    include implementation('org.spongepowered:noise:2.0.0-SNAPSHOT')
+
 }
 
 processResources {

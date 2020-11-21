@@ -2,6 +2,7 @@ package io.github.opencubicchunks.cubicchunks.world;
 
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
+import io.github.opencubicchunks.cubicchunks.server.ICubicWorld;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import net.minecraft.Util;
 import net.minecraft.core.BlockPos;
@@ -14,7 +15,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Mth;
-import net.minecraft.world.*;
+import net.minecraft.world.DifficultyInstance;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -54,13 +55,24 @@ import java.util.stream.Stream;
 
 import static io.github.opencubicchunks.cubicchunks.utils.Coords.blockToCube;
 
-public class CubeWorldGenRegion implements WorldGenLevel {
+public class CubeWorldGenRegion implements WorldGenLevel, ICubicWorld {
 
     private static final Logger LOGGER = LogManager.getLogger();
-    private final List<IBigCube> cubePrimers;
+    private final IBigCube[] cubePrimers;
     private final int mainCubeX;
     private final int mainCubeY;
     private final int mainCubeZ;
+
+
+    private final int minCubeX;
+    private final int minCubeY;
+    private final int minCubeZ;
+
+    private final int maxCubeX;
+    private final int maxCubeY;
+    private final int maxCubeZ;
+
+
     private final int diameter;
     private final ServerLevel level;
     private final long seed;
@@ -82,7 +94,8 @@ public class CubeWorldGenRegion implements WorldGenLevel {
             throw Util.pauseInIde(new IllegalStateException("Cache size is not a square."));
         } else {
             CubePos cubePos = cubesIn.get(cubesIn.size() / 2).getCubePos();
-            this.cubePrimers = cubesIn;
+            this.cubePrimers = cubesIn.toArray(new IBigCube[0]);
+
             this.mainCubeX = cubePos.getX();
             this.mainCubeY = cubePos.getY();
             this.mainCubeZ = cubePos.getZ();
@@ -94,6 +107,14 @@ public class CubeWorldGenRegion implements WorldGenLevel {
             this.random = worldIn.getRandom();
             this.dimension = worldIn.dimensionType();
             this.biomeManager = new BiomeManager(this, BiomeManager.obfuscateSeed(this.seed), worldIn.dimensionType().getBiomeZoomer());
+            IBigCube minCube = this.cubePrimers[0];
+            IBigCube maxCube = this.cubePrimers[this.cubePrimers.length - 1];
+            this.minCubeX = minCube.getCubePos().getX();
+            this.minCubeY= minCube.getCubePos().getY();
+            this.minCubeZ = minCube.getCubePos().getZ();
+            this.maxCubeX = maxCube.getCubePos().getX();
+            this.maxCubeY= maxCube.getCubePos().getY();
+            this.maxCubeZ = maxCube.getCubePos().getZ();
         }
     }
 
@@ -107,6 +128,10 @@ public class CubeWorldGenRegion implements WorldGenLevel {
 
     public int getMainCubeZ() {
         return this.mainCubeZ;
+    }
+
+    public IBigCube getCube(int cubeX, int cubeY, int cubeZ) {
+        return this.getCube(cubeX, cubeY, cubeZ, ChunkStatus.EMPTY, true);
     }
 
     public IBigCube getCube(BlockPos blockPos) {
@@ -126,11 +151,10 @@ public class CubeWorldGenRegion implements WorldGenLevel {
     public IBigCube getCube(int x, int y, int z, ChunkStatus requiredStatus, boolean nonnull) {
         IBigCube icube;
         if (this.cubeExists(x, y, z)) {
-            CubePos cubePos = this.cubePrimers.get(0).getCubePos();
-            int dx = x - cubePos.getX();
-            int dy = y - cubePos.getY();
-            int dz = z - cubePos.getZ();
-            icube = this.cubePrimers.get(dx * this.diameter * this.diameter + dy * this.diameter + dz);
+            int dx = x - this.minCubeX;
+            int dy = y - this.minCubeY;
+            int dz = z - this.minCubeZ;
+            icube = this.cubePrimers[dx * this.diameter * this.diameter + dy * this.diameter + dz];
             if (icube.getCubeStatus().isOrAfter(requiredStatus)) {
                 return icube;
             }
@@ -141,29 +165,28 @@ public class CubeWorldGenRegion implements WorldGenLevel {
         if (!nonnull) {
             return null;
         } else {
-            IBigCube icube1 = this.cubePrimers.get(0);
-            IBigCube icube2 = this.cubePrimers.get(this.cubePrimers.size() - 1);
+            IBigCube cornerCube1 = this.cubePrimers[0];
+            IBigCube cornerCube2 = this.cubePrimers[this.cubePrimers.length - 1];
             LOGGER.error("Requested section : {} {} {}", x, y, z);
             LOGGER.error("Region bounds : {} {} {} | {} {} {}",
-                    icube1.getCubePos().getX(), icube1.getCubePos().getY(), icube1.getCubePos().getZ(),
-                    icube2.getCubePos().getX(), icube2.getCubePos().getY(), icube2.getCubePos().getZ());
+                    cornerCube1.getCubePos().getX(), cornerCube1.getCubePos().getY(), cornerCube1.getCubePos().getZ(),
+                    cornerCube2.getCubePos().getX(), cornerCube2.getCubePos().getY(), cornerCube2.getCubePos().getZ());
             if (icube != null) {
                 throw Util.pauseInIde(new RuntimeException(String.format("Section is not of correct status. Expecting %s, got %s "
                         + "| %s %s %s", requiredStatus, icube.getCubeStatus(), x, y, z)));
             } else {
                 throw Util.pauseInIde(new RuntimeException(String.format("We are asking a region for a section out of bound | "
-                        + "%s %s %s", x, y, z)));
+                        + "%s %s %s", x, y, z) + "\n" + String.format("Bound | " + "%s %s %s", this.minCubeX, this.minCubeY, this.minCubeZ)));
             }
         }
     }
 
     public boolean cubeExists(int x, int y, int z) {
-        IBigCube isection = this.cubePrimers.get(0);
-        IBigCube isection2 = this.cubePrimers.get(this.cubePrimers.size() - 1);
-        return x >= isection.getCubePos().getX() && x <= isection2.getCubePos().getX() &&
-                y >= isection.getCubePos().getY() && y <= isection2.getCubePos().getY() &&
-                z >= isection.getCubePos().getZ() && z <= isection2.getCubePos().getZ();
+        return x >= this.minCubeX && x <= this.maxCubeX &&
+                y >= this.minCubeY && y <= this.maxCubeY &&
+                z >= this.minCubeZ && z <= this.maxCubeZ;
     }
+
 
     @Override public long getSeed() {
         return this.seed;
@@ -243,7 +266,7 @@ public class CubeWorldGenRegion implements WorldGenLevel {
             }
 
             if (icube.getBlockState(pos).hasBlockEntity()) {
-                LOGGER.warn("Tried to access a block entity before it was created. {}", (Object) pos);
+//                LOGGER.warn("Tried to access a block entity before it was created. {}", (Object) pos); //TODO:Re-enable warning
             }
 
             return null;
@@ -254,12 +277,17 @@ public class CubeWorldGenRegion implements WorldGenLevel {
         return this.getCube(pos).getBlockState(pos);
     }
 
+    @Override
+    public boolean isEmptyBlock(BlockPos pos) {
+        return this.getCube(pos).getBlockState(pos).isAir();
+    }
+
     @Override public FluidState getFluidState(BlockPos pos) {
         return this.getCube(pos).getFluidState(pos);
     }
 
     @Override public List<Entity> getEntities(@Nullable Entity entityIn, AABB boundingBox,
-            @Nullable Predicate<? super Entity> predicate) {
+                                              @Nullable Predicate<? super Entity> predicate) {
         return Collections.emptyList();
     }
 
@@ -284,18 +312,18 @@ public class CubeWorldGenRegion implements WorldGenLevel {
     @Override public int getHeight(Heightmap.Types heightmapType, int x, int z) {
         int yStart = Coords.cubeToMinBlock(mainCubeY + 1);
         int yEnd = Coords.cubeToMinBlock(mainCubeY);
-        BlockPos pos = new BlockPos(x, yStart, z);
-
-        if (heightmapType.isOpaque().test(getBlockState(pos))) {
+        IBigCube cube1 = getCube(new BlockPos(x, yStart, z));
+        if (((ChunkAccess) cube1).getHeight(heightmapType, x, z) >= yStart) {
             return yStart + 2;
         }
-        for (int y = yStart - 1; y >= yEnd; y--) {
-            pos = new BlockPos(x, y, z);
-            if (heightmapType.isOpaque().test(getBlockState(pos))) {
-                return y + 1;
-            }
+        IBigCube cube2 = getCube(new BlockPos(x, yEnd, z));
+        int height = ((ChunkAccess) cube2).getHeight(heightmapType, x, z);
+
+        //Check whether or not height was found for this cube. If height wasn't found, move to the next cube under the current cube
+        if (height <= getMinBuildHeight()) {
+            return yEnd - 1;
         }
-        return yEnd - 1;
+        return height + 1;
     }
 
     @Override public int getSkyDarken() {
@@ -308,6 +336,12 @@ public class CubeWorldGenRegion implements WorldGenLevel {
 
     @Override public Biome getUncachedNoiseBiome(int x, int y, int z) {
         return this.level.getUncachedNoiseBiome(x, y, z);
+    }
+
+    //TODO: Cube Biome Storage
+    @Override
+    public Biome getNoiseBiome(int x, int y, int z) {
+        return getUncachedNoiseBiome(x, y, z);
     }
 
     @Override public boolean isClientSide() {

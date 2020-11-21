@@ -33,4 +33,13 @@ public class MathUtil {
         m.setM33(data[15]);
         return (Matrix4f) (Object) m;
     }
+
+
+    public static float unlerp(final float v, final float min, final float max) {
+        return (v - min) / (max - min);
+    }
+
+    public static float lerp(final float a, final float min, final float max) {
+        return min + a * (max - min);
+    }
 }

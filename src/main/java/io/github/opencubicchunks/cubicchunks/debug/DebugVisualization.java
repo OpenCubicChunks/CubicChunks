@@ -516,7 +516,7 @@ public class DebugVisualization {
             }
             List<Vertex> buffer = verts.get(statusObj);
             if(buffer!=null)
-            drawCube(buffer, posX - playerX, posY - playerY, posZ - playerZ, 7, c, renderFaces);
+                drawCube(buffer, posX - playerX, posY - playerY, posZ - playerZ, 7, c, renderFaces);
         }
         List<ChunkStatus> statusList = ChunkStatus.getStatusList();
         for (int i = statusList.size() - 1; i >= 0; i--) {

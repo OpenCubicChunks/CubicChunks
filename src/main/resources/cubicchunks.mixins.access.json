@@ -17,9 +17,11 @@
         "common.HeightmapAccess",
         "common.LevelBasedGraphAccess",
         "common.Matrix4fAccess",
+        "common.OverworldBiomeSourceAccess",
         "common.PlayerChunkTrackerFactoryAccess",
         "common.PlayerTicketTrackerFactoryAccess",
         "common.SectionLightStorageAccess",
+        "common.StructureFeatureManagerAccess",
         "common.TicketAccess",
         "common.TicketManagerAccess",
         "common.TicketTypeAccess"

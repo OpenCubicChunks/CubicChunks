@@ -11,6 +11,7 @@ import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.ChunkSectionAccess;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import io.github.opencubicchunks.cubicchunks.utils.MathUtil;
+import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import it.unimi.dsi.fastutil.shorts.ShortList;
 import net.minecraft.CrashReport;
@@ -43,6 +44,7 @@ import net.minecraft.world.level.levelgen.feature.StructureFeature;
 import net.minecraft.world.level.levelgen.structure.StructureStart;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.FluidState;
+import net.minecraft.world.level.material.Fluids;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -84,6 +86,9 @@ public class BigCube implements ChunkAccess, IBigCube {
     private final ClassInstanceMultiMap<Entity>[] entityLists;
     private final Level level;
 
+    private final Map<StructureFeature<?>, StructureStart<?>> structureStarts;
+    private final Map<StructureFeature<?>, LongSet> structuresRefences;
+
     private final Map<Heightmap.Types, SurfaceTrackerSection> heightmaps;
 
     private final BitSet pendingHeightmapUpdates = new BitSet(DIAMETER_IN_BLOCKS * DIAMETER_IN_BLOCKS);
@@ -119,6 +124,9 @@ public class BigCube implements ChunkAccess, IBigCube {
 //                this.heightMap.put(heightmap$type, new Heightmap(this, heightmap$type));
 //            }
 //        }
+
+        this.structureStarts = Maps.newHashMap();
+        this.structuresRefences = Maps.newHashMap();
 
         //noinspection unchecked
         this.entityLists = new ClassInstanceMultiMap[IBigCube.SECTION_COUNT];
@@ -176,18 +184,13 @@ public class BigCube implements ChunkAccess, IBigCube {
         this.deferredTileEntities.putAll(cubePrimerIn.getDeferredTileEntities());
 
         //TODO: reimplement missing BigCube methods
-//        for(int i = 0; i < cubePrimerIn.getPackedPositions().length; ++i) {
-//            this.packedBlockPositions[i] = cubePrimerIn.getPackedPositions()[i];
+//        for(int i = 0; i < protoChunk.getPostProcessing().length; ++i) {
+//            this.postProcessing[i] = protoChunk.getPostProcessing()[i];
 //        }
 
-        //this.setStructureStarts(cubePrimerIn.getStructureStarts());
-        //this.setStructureReferences(cubePrimerIn.getStructureReferences());
-
-//        for(Map.Entry<Heightmap.Type, Heightmap> entry : cubePrimerIn.getHeightmaps()) {
-//            if (ChunkStatus.FULL.getHeightMaps().contains(entry.getKey())) {
-//                this.getHeightmap(entry.getKey()).setDataArray(entry.getValue().getDataArray());
-//            }
-//        }
+        this.setAllStarts(cubePrimerIn.getAllCubeStructureStarts());
+        this.setAllReferences(cubePrimerIn.getAllReferences());
+//        var4 = protoChunk.getHeightmaps().iterator();
 
         this.setCubeLight(cubePrimerIn.hasCubeLight());
         this.dirty = true;
@@ -196,6 +199,7 @@ public class BigCube implements ChunkAccess, IBigCube {
     @Deprecated @Override public ChunkPos getPos() {
         throw new UnsupportedOperationException("Not implemented");
     }
+
     @Override public CubePos getCubePos()
     {
         return this.cubePos;
@@ -698,14 +702,6 @@ public class BigCube implements ChunkAccess, IBigCube {
         return 0;
     }
 
-    @Deprecated @Override public Map<StructureFeature<?>, StructureStart<?>> getAllStarts() {
-        throw new UnsupportedOperationException("Not implemented");
-    }
-
-    @Deprecated @Override public void setAllStarts(Map<StructureFeature<?>, StructureStart<?>> structureStartsIn) {
-
-    }
-
     @Override public ShortList[] getPostProcessing() {
         throw new UnsupportedOperationException("Not implemented");
     }
@@ -723,35 +719,70 @@ public class BigCube implements ChunkAccess, IBigCube {
     }
 
     @Override public FluidState getFluidState(BlockPos pos) {
-        throw new UnsupportedOperationException("Not implemented");
+        return this.getFluidState(pos.getX(), pos.getY(), pos.getZ());
     }
 
-    // getStructureStart
-    @Nullable @Override public StructureStart<?> getStartForFeature(StructureFeature<?> var1) {
-        throw new UnsupportedOperationException("Not implemented");
+    public FluidState getFluidState(int x, int y, int z) {
+        try {
+            int index = Coords.blockToIndex(x, y, z);
+            if (!LevelChunkSection.isEmpty(this.sections[index])) {
+                return this.sections[index].getFluidState(x & 15, y & 15, z & 15);
+            }
+            return Fluids.EMPTY.defaultFluidState();
+        } catch (Throwable var7) {
+            CrashReport crashReport = CrashReport.forThrowable(var7, "Getting fluid state");
+            CrashReportCategory crashReportCategory = crashReport.addCategory("Block being got");
+            crashReportCategory.setDetail("Location", () -> {
+                return CrashReportCategory.formatLocation(this, x, y, z);
+            });
+            throw new ReportedException(crashReport);
+        }
     }
 
-    // putStructureStart
-    @Override public void setStartForFeature(StructureFeature<?> structureIn, StructureStart<?> structureStartIn) {
 
+    @org.jetbrains.annotations.Nullable
+    public StructureStart<?> getStartForFeature(StructureFeature<?> structureFeature) {
+        return this.structureStarts.get(structureFeature);
     }
 
-    // getStructureReferences
-    @Override public LongSet getReferencesForFeature(StructureFeature<?> structureIn) {
-        throw new UnsupportedOperationException("Not implemented");
+    public void setStartForFeature(StructureFeature<?> structureFeature, StructureStart<?> structureStart) {
+        this.structureStarts.put(structureFeature, structureStart);
     }
 
-    // addStructureReference
-    @Override public void addReferenceForFeature(StructureFeature<?> structure, long reference) {
-
+    @Override
+    public Map<StructureFeature<?>, StructureStart<?>> getAllStarts() {
+        return getAllCubeStructureStarts();
     }
 
-    @Override public Map<StructureFeature<?>, LongSet> getAllReferences() {
-        throw new UnsupportedOperationException("Not implemented");
+    public Map<StructureFeature<?>, StructureStart<?>> getAllCubeStructureStarts() {
+        return this.structureStarts;
     }
 
-    @Override public void setAllReferences(Map<StructureFeature<?>, LongSet> p_201606_1_) {
+    public void setAllStarts(Map<StructureFeature<?>, StructureStart<?>> map) {
+        this.structureStarts.clear();
+        this.structureStarts.putAll(map);
+    }
 
+    public LongSet getReferencesForFeature(StructureFeature<?> structureFeature) {
+        return this.structuresRefences.computeIfAbsent(structureFeature, (structureFeaturex) -> {
+            return new LongOpenHashSet();
+        });
+    }
+
+    public void addReferenceForFeature(StructureFeature<?> structureFeature, long cubeLong) {
+        ((LongSet)this.structuresRefences.computeIfAbsent(structureFeature, (structureFeaturex) -> {
+            return new LongOpenHashSet();
+        })).add(cubeLong);
+    }
+
+    public Map<StructureFeature<?>, LongSet> getAllReferences() {
+        return this.structuresRefences;
+    }
+
+    @Override
+    public void setAllReferences(Map<StructureFeature<?>, LongSet> map) {
+        this.structuresRefences.clear();
+        this.structuresRefences.putAll(map);
     }
 
     public void setLoaded(boolean loaded) {
@@ -792,6 +823,14 @@ public class BigCube implements ChunkAccess, IBigCube {
 
     public void invalidateAllBlockEntities() {
         this.blockEntities.values().forEach(this::onBlockEntityRemove);
+    }
+
+    @Override
+    public void markPosForPostprocessing(BlockPos blockPos) {
+        if (System.currentTimeMillis() % 15000 == 0) {
+            LogManager.getLogger().warn("Trying to mark a block for PostProcessing @ {}, but this operation is not supported.", blockPos);
+
+        }
     }
 
     public static class RebindableTickingBlockEntityWrapper implements TickingBlockEntity {

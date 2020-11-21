@@ -1,9 +1,5 @@
 package io.github.opencubicchunks.cubicchunks.chunk.util;
 
-import static io.github.opencubicchunks.cubicchunks.utils.Coords.blockToCube;
-import static io.github.opencubicchunks.cubicchunks.utils.Coords.cubeToSection;
-import static io.github.opencubicchunks.cubicchunks.utils.Coords.sectionToCube;
-
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.SectionPos;
@@ -11,6 +7,8 @@ import net.minecraft.core.Vec3i;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.ChunkPos;
+
+import static io.github.opencubicchunks.cubicchunks.utils.Coords.*;
 
 public class CubePos extends Vec3i {
     private CubePos(int xIn, int yIn, int zIn) {

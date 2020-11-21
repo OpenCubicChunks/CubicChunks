@@ -1,10 +1,10 @@
 package io.github.opencubicchunks.cubicchunks.chunk.graph;
 
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
-import java.util.Comparator;
-
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.TicketTypeAccess;
 import net.minecraft.server.level.TicketType;
+
+import java.util.Comparator;
 
 public class CCTicketType {
     public static final TicketType<CubePos> CCPLAYER = create("player", Comparator.comparingLong(CubePos::asLong));

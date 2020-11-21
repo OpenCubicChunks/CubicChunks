@@ -2,9 +2,10 @@ package io.github.opencubicchunks.cubicchunks.chunk;
 
 import io.github.opencubicchunks.cubicchunks.chunk.biome.CubeBiomeContainer;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.BigCube;
-import javax.annotation.Nullable;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
+
+import javax.annotation.Nullable;
 
 public interface IClientCubeProvider extends ICubeProvider {
 

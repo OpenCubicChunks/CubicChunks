@@ -1,13 +1,13 @@
 package io.github.opencubicchunks.cubicchunks.mixin.core.common.world;
 
 import io.github.opencubicchunks.cubicchunks.world.SpawnPlaceFinder;
+import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.PlayerRespawnLogic;
+import net.minecraft.server.level.ServerLevel;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 
 import javax.annotation.Nullable;
-import net.minecraft.core.BlockPos;
-import net.minecraft.server.level.PlayerRespawnLogic;
-import net.minecraft.server.level.ServerLevel;
 
 @Mixin(PlayerRespawnLogic.class)
 public abstract class MixinSpawnLocationHelper {

@@ -345,4 +345,9 @@ public class Coords {
         return SectionPos.of(cubeToSection(cubePos.getX(), indexToX(i)), cubeToSection(cubePos.getY(), indexToY(i)), cubeToSection(cubePos.getZ(),
                 indexToZ(i)));
     }
+
+    public static int blockToLocalSection(int x) {
+        return (x >> 4) & (IBigCube.DIAMETER_IN_SECTIONS - 1);
+
+    }
 }

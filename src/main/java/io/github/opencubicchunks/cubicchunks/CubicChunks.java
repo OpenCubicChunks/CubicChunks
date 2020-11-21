@@ -3,7 +3,12 @@ package io.github.opencubicchunks.cubicchunks;
 import io.github.opencubicchunks.cubicchunks.chunk.IChunkManager;
 import io.github.opencubicchunks.cubicchunks.meta.EarlyConfig;
 import io.github.opencubicchunks.cubicchunks.network.PacketDispatcher;
+import io.github.opencubicchunks.cubicchunks.world.biome.StripedBiomeSource;
+import io.github.opencubicchunks.cubicchunks.world.gen.feature.CCFeatures;
+import io.github.opencubicchunks.cubicchunks.world.gen.placement.CCPlacement;
 import net.fabricmc.api.ModInitializer;
+import net.minecraft.core.Registry;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ChunkMap;
 import net.minecraft.world.level.biome.Biome;
 import org.apache.logging.log4j.LogManager;
@@ -24,6 +29,7 @@ public class CubicChunks implements ModInitializer {
 
     public static int MAX_SUPPORTED_HEIGHT = Integer.MAX_VALUE / 2;
     public static int MIN_SUPPORTED_HEIGHT = -MAX_SUPPORTED_HEIGHT;
+    public static int SEA_LEVEL = 64;
 
     public static final String MODID = "cubicchunks";
     public static final Logger LOGGER = LogManager.getLogger();
@@ -43,6 +49,10 @@ public class CubicChunks implements ModInitializer {
                 LOGGER.catching(e);
             }
         }
+
+        //Custom CC Features
+        CCPlacement.init();
+        CCFeatures.init();
     }
 
     private static void convertImmutableFeatures(Biome biome) {
@@ -51,12 +61,10 @@ public class CubicChunks implements ModInitializer {
         //}
     }
 
-    @Override public void onInitialize() {
+    @Override
+    public void onInitialize() {
         PacketDispatcher.register();
 
-        // for (Biome biome : BuiltinRegistries.BIOME) {
-        //     convertImmutableFeatures(biome);
-        //     biome.getGenerationSettings().features.clear();
-        // }
+        Registry.register(Registry.BIOME_SOURCE, new ResourceLocation(MODID, "stripes"), StripedBiomeSource.CODEC);
     }
 }

@@ -10,14 +10,18 @@ import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.ChunkStatus;
+import net.minecraft.world.level.chunk.FeatureAccess;
 import net.minecraft.world.level.chunk.LevelChunkSection;
+import net.minecraft.world.level.levelgen.feature.StructureFeature;
+import net.minecraft.world.level.levelgen.structure.StructureStart;
 import org.apache.logging.log4j.LogManager;
 
 import javax.annotation.Nullable;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Stream;
 
-public interface IBigCube extends BlockGetter {
+public interface IBigCube extends BlockGetter, FeatureAccess {
 
     int SECTION_DIAMETER = 16;
     int DIAMETER_IN_SECTIONS = EarlyConfig.getDiameterInSections();
@@ -26,6 +30,7 @@ public interface IBigCube extends BlockGetter {
     int DIAMETER_IN_BLOCKS = SECTION_DIAMETER * DIAMETER_IN_SECTIONS;
     int BLOCK_COUNT = DIAMETER_IN_BLOCKS * DIAMETER_IN_BLOCKS * DIAMETER_IN_BLOCKS;
     int BLOCK_COLUMNS_PER_SECTION = SECTION_DIAMETER * SECTION_DIAMETER;
+    int SIZE_BITS = (int)Math.round(Math.log(DIAMETER_IN_BLOCKS) / Math.log(2.0D));
 
     CubePos getCubePos();
     LevelChunkSection[] getCubeSections();
@@ -58,6 +63,8 @@ public interface IBigCube extends BlockGetter {
     @Nullable CompoundTag getCubeBlockEntityNbtForSaving(BlockPos pos);
 
     @Nullable CompoundTag getCubeDeferredTileEntity(BlockPos pos);
+
+    Map<StructureFeature<?>, StructureStart<?>> getAllCubeStructureStarts();
 
     //LIGHTING
     //can't be set/hasLight due to obfuscation issues with IChunk

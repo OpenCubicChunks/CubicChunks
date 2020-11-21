@@ -2,10 +2,9 @@ package io.github.opencubicchunks.cubicchunks.chunk;
 
 import io.github.opencubicchunks.cubicchunks.chunk.cube.BigCube;
 
+import javax.annotation.Nullable;
 import java.util.concurrent.atomic.AtomicReferenceArray;
 import java.util.function.Consumer;
-
-import javax.annotation.Nullable;
 
 public class ClientChunkProviderCubeArray {
 

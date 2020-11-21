@@ -4,12 +4,12 @@ import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.ICubeProvider;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import io.github.opencubicchunks.cubicchunks.world.lighting.ICubeLightProvider;
-import org.spongepowered.asm.mixin.Mixin;
-
-import javax.annotation.Nullable;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.chunk.ChunkSource;
 import net.minecraft.world.level.chunk.ChunkStatus;
+import org.spongepowered.asm.mixin.Mixin;
+
+import javax.annotation.Nullable;
 
 @Mixin(ChunkSource.class)
 public abstract class MixinAbstractChunkProvider implements ICubeLightProvider, ICubeProvider {

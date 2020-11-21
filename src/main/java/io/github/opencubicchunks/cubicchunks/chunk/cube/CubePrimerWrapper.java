@@ -3,11 +3,6 @@ package io.github.opencubicchunks.cubicchunks.chunk.cube;
 import io.github.opencubicchunks.cubicchunks.chunk.biome.CubeBiomeContainer;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import it.unimi.dsi.fastutil.longs.LongSet;
-import java.util.BitSet;
-import java.util.Map;
-import java.util.stream.Stream;
-
-import javax.annotation.Nullable;
 import net.minecraft.Util;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
@@ -24,6 +19,11 @@ import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.levelgen.feature.StructureFeature;
 import net.minecraft.world.level.levelgen.structure.StructureStart;
 import net.minecraft.world.level.material.FluidState;
+
+import javax.annotation.Nullable;
+import java.util.BitSet;
+import java.util.Map;
+import java.util.stream.Stream;
 
 @SuppressWarnings("deprecation")
 public class CubePrimerWrapper extends CubePrimer {
@@ -151,8 +151,8 @@ public class CubePrimerWrapper extends CubePrimer {
         }
     }
 
-    @Override public int getHeight(Heightmap.Types heightmapType, int x, int z) {
-        return this.cube.getHeight(this.fixType(heightmapType), x, z);
+    @Override public int getHeight(Heightmap.Types types, int x, int z) {
+        return this.cube.getHeight(this.fixType(types), x, z);
     }
 
     // getStructureStart
@@ -163,8 +163,13 @@ public class CubePrimerWrapper extends CubePrimer {
     @Override public void setStartForFeature(StructureFeature<?> structureIn, StructureStart<?> structureStartIn) {
     }
 
-    @Override public Map<StructureFeature<?>, StructureStart<?>> getAllStarts() {
-        return this.cube.getAllStarts();
+    @Override public Map<StructureFeature<?>, StructureStart<?>> getAllCubeStructureStarts() {
+        return this.cube.getAllCubeStructureStarts();
+    }
+
+    @Override
+    public Map<StructureFeature<?>, StructureStart<?>> getAllStarts() {
+        return this.getAllCubeStructureStarts();
     }
 
     @Override public void setAllStarts(Map<StructureFeature<?>, StructureStart<?>> structureStartsIn) {
@@ -204,7 +209,14 @@ public class CubePrimerWrapper extends CubePrimer {
     @Override public BitSet getCarvingMask(GenerationStep.Carving type) {
         throw Util.pauseInIde(new UnsupportedOperationException("Meaningless in this context"));
     }
-    @Override public BitSet setCarvingMask(GenerationStep.Carving type) {
+
+    @Override
+    public BitSet getOrSetCarvingMask(GenerationStep.Carving type) {
+        throw Util.pauseInIde(new UnsupportedOperationException("Meaningless in this context"));
+    }
+
+    @Override
+    public void setCarvingMask(GenerationStep.Carving type, BitSet mask) {
         throw Util.pauseInIde(new UnsupportedOperationException("Meaningless in this context"));
     }
 }
