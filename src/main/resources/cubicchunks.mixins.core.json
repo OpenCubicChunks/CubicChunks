@@ -70,7 +70,6 @@
     ],
     "client": [
         "client.debug.MixinClientWorld",
-        "client.debug.MixinDebugRenderer",
         "client.debug.MixinGameRenderer",
         "client.debug.MixinMinecraft",
         "client.debug.MixinMinecraftServer",
