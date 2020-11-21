@@ -37,6 +37,7 @@
         "common.world.biome.MixinBiome",
         "common.world.biome.MixinBiomeDefaultFeatures",
         "common.world.feature.MixinBlockBlobFeature",
+        "common.world.feature.MixinIcebergFeature",
         "common.world.feature.MixinLakeFeature",
         "common.world.feature.MixinOreFeature",
         "common.world.feature.MixinSpringFeature",
