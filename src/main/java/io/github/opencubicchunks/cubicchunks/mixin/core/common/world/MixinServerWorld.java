@@ -1,31 +1,29 @@
 package io.github.opencubicchunks.cubicchunks.mixin.core.common.world;
 
+import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.BigCube;
+import io.github.opencubicchunks.cubicchunks.chunk.heightmap.SurfaceTrackerWrapper;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import io.github.opencubicchunks.cubicchunks.world.server.IServerWorld;
-import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.SectionPos;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.util.profiling.ProfilerFiller;
+import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.chunk.LevelChunkSection;
-import net.minecraft.world.level.material.FluidState;
-import org.spongepowered.asm.mixin.Final;
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
-
-import java.util.function.Supplier;
-import net.minecraft.Util;
-import net.minecraft.resources.ResourceKey;
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.util.ClassInstanceMultiMap;
-import net.minecraft.util.profiling.ProfilerFiller;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.level.Level;
 import net.minecraft.world.level.dimension.DimensionType;
+import net.minecraft.world.level.levelgen.Heightmap;
+import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.storage.WritableLevelData;
+import org.spongepowered.asm.mixin.Mixin;
+
+import java.util.Map;
+import java.util.function.Supplier;
 
 @Mixin(ServerLevel.class)
 public abstract class MixinServerWorld extends Level implements IServerWorld {
@@ -35,8 +33,21 @@ public abstract class MixinServerWorld extends Level implements IServerWorld {
     }
 
     @Override
-    public void onCubeUnloading(BigCube cubeIn) {
-        cubeIn.invalidateAllBlockEntities();
+    public void onCubeUnloading(BigCube cube) {
+        cube.invalidateAllBlockEntities();
+
+        ChunkPos pos = cube.getCubePos().asChunkPos();
+        for (int x = 0; x < IBigCube.DIAMETER_IN_SECTIONS; x++) {
+            for (int z = 0; z < IBigCube.DIAMETER_IN_SECTIONS; z++) {
+                // TODO this might cause columns to reload after they've already been unloaded
+                LevelChunk chunk = this.getChunk(pos.x + x, pos.z + z);
+                for (Map.Entry<Heightmap.Types, Heightmap> entry : chunk.getHeightmaps()) {
+                    Heightmap heightmap = entry.getValue();
+                    SurfaceTrackerWrapper tracker = (SurfaceTrackerWrapper) heightmap;
+                    tracker.unloadCube(cube);
+                }
+            }
+        }
     }
 
     @Override

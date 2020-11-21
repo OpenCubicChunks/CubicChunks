@@ -255,8 +255,8 @@ public abstract class MixinServerChunkProvider implements IServerChunkProvider, 
      * @author Barteks2x
      * @reason sections
      */
-    @Overwrite
-    public void blockChanged(BlockPos pos) {
+    @Inject(method = "blockChanged", at = @At("RETURN"))
+    public void onBlockChanged(BlockPos pos, CallbackInfo ci) {
         ChunkHolder chunkholder = ((IChunkManager) this.chunkMap).getCubeHolder(CubePos.from(pos).asLong());
         if (chunkholder != null) {
             // markBlockChanged
@@ -268,7 +268,6 @@ public abstract class MixinServerChunkProvider implements IServerChunkProvider, 
             at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ChunkMap;getChunks()Ljava/lang/Iterable;"),
             locals = LocalCapture.CAPTURE_FAILHARD)
     private void tickSections(CallbackInfo ci, long l, long timePassed, LevelData levelData, boolean bl, boolean doMobSpawning, int randomTicks, boolean bl3, int j, NaturalSpawner.SpawnState spawnState) {
-
         ((IChunkManager) this.chunkMap).getCubes().forEach((cubeHolder) -> {
             Optional<BigCube> optional =
                     ((ICubeHolder) cubeHolder).getCubeEntityTickingFuture().getNow(ICubeHolder.UNLOADED_CUBE).left();

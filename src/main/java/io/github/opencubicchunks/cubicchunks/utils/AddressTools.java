@@ -38,6 +38,12 @@ public class AddressTools {
                 | Bits.packUnsignedToInt(localY, 5, 10));
     }
 
+    public static int getLocalAddress(int localX, int localZ) {
+        return (Bits.packUnsignedToInt(localX, 5, 0)
+                | Bits.packUnsignedToInt(localZ, 5, 5));
+    }
+
+
     /**
      * Unpacks localX from packed address. Works for both, x/y/z and x/z version
      *

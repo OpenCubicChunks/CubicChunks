@@ -4,20 +4,18 @@ import io.github.opencubicchunks.cubicchunks.chunk.biome.CubeBiomeContainer;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.meta.EarlyConfig;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
-import org.apache.logging.log4j.LogManager;
-
-import java.util.Set;
-import java.util.stream.Stream;
-
-import javax.annotation.Nullable;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.ChunkStatus;
 import net.minecraft.world.level.chunk.LevelChunkSection;
+import org.apache.logging.log4j.LogManager;
+
+import javax.annotation.Nullable;
+import java.util.Set;
+import java.util.stream.Stream;
 
 public interface IBigCube extends BlockGetter {
 

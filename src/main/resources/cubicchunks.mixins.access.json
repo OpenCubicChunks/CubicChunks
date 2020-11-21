@@ -14,6 +14,7 @@
         "common.ChunkSectionAccess",
         "common.ChunkTicketTrackerFactoryAccess",
         "common.EntityTrackerAccess",
+        "common.HeightmapAccess",
         "common.LevelBasedGraphAccess",
         "common.Matrix4fAccess",
         "common.PlayerChunkTrackerFactoryAccess",

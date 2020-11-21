@@ -38,6 +38,10 @@ public class PacketDispatcher {
                 PacketUpdateCubePosition::new, mainThreadHandler(PacketUpdateCubePosition.Handler::handle));
         registerMessage("light", PacketUpdateLight.class, PacketUpdateLight::encode,
                 PacketUpdateLight::new, mainThreadHandler(PacketUpdateLight.Handler::handle));
+        registerMessage("heightmap", PacketHeightmap.class, PacketHeightmap::encode,
+                PacketHeightmap::new, mainThreadHandler(PacketHeightmap.Handler::handle));
+        registerMessage("heights", PacketHeightmapChanges.class, PacketHeightmapChanges::encode,
+                PacketHeightmapChanges::new, mainThreadHandler(PacketHeightmapChanges.Handler::handle));
         //        CHANNEL.registerMessage("init", PacketCubicWorldInit.class, PacketCubicWorldInit::encode,
         //                PacketCubicWorldInit::new, mainThreadHandler(PacketCubicWorldInit::handle));
     }

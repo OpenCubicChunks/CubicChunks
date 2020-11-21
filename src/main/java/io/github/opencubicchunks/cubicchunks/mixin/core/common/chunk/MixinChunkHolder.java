@@ -12,6 +12,7 @@ import io.github.opencubicchunks.cubicchunks.chunk.cube.CubePrimerWrapper;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.network.PacketCubeBlockChanges;
 import io.github.opencubicchunks.cubicchunks.network.PacketDispatcher;
+import io.github.opencubicchunks.cubicchunks.network.PacketHeightmapChanges;
 import io.github.opencubicchunks.cubicchunks.utils.AddressTools;
 import it.unimi.dsi.fastutil.shorts.ShortArrayList;
 import it.unimi.dsi.fastutil.shorts.ShortArraySet;
@@ -24,6 +25,7 @@ import net.minecraft.world.level.LevelHeightAccessor;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.ChunkStatus;
 import net.minecraft.world.level.chunk.LevelChunk;
+import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.lighting.LevelLightEngine;
 import org.spongepowered.asm.mixin.Dynamic;
 import org.spongepowered.asm.mixin.Final;
@@ -77,13 +79,17 @@ public abstract class MixinChunkHolder implements ICubeHolder {
         throw new Error("Mixin failed to apply");
     }
 
-    @Shadow public abstract CompletableFuture<Either<ChunkAccess, ChunkHolder.ChunkLoadingFailure>> getFutureIfPresentUnchecked(ChunkStatus p_219301_1_);
+    @Shadow
+    public abstract CompletableFuture<Either<ChunkAccess, ChunkHolder.ChunkLoadingFailure>> getFutureIfPresentUnchecked(ChunkStatus p_219301_1_);
 
     @Shadow
     public abstract CompletableFuture<Either<IBigCube, ChunkHolder.ChunkLoadingFailure>> getOrScheduleFuture(ChunkStatus chunkStatus,
-                                                                                                          ChunkMap chunkManager);
+            ChunkMap chunkManager);
 
     @Shadow private CompletableFuture<Void> pendingFullStateConfirmation;
+
+    @Shadow @org.jetbrains.annotations.Nullable public abstract LevelChunk getTickingChunk();
+
     private CubePos cubePos; // set from ASM
 
     private final ShortArraySet changedLocalBlocks = new ShortArraySet();
@@ -202,7 +208,7 @@ public abstract class MixinChunkHolder implements ICubeHolder {
         return cubePos;
     }
 
-    // getChunkIfComplete
+    // getChunkIfComplete, TODO: rename to getTickingCube
     @Nullable
     @Override
     public BigCube getCubeIfComplete() {
@@ -303,12 +309,30 @@ public abstract class MixinChunkHolder implements ICubeHolder {
     @Overwrite
     public void blockChanged(BlockPos blockPos) {
         if (cubePos == null) {
-            throw new IllegalStateException("Why is this getting called?");
+            ChunkAccess chunk = getTickingChunk();
+            if (chunk == null) {
+                return;
+            }
+            for (Heightmap.Types value : Heightmap.Types.values()) {
+                if (!value.sendToClient()) {
+                    continue;
+                }
+                int topY = chunk.getHeight(value, blockPos.getX(), blockPos.getZ()) - 1;
+                // if the block being changed is new top block - heightmap probably was updated
+                // if block being changed is above new top block - heightmap was probably decreased
+                // TODO: replace heuristics with proper tracking
+                if (blockPos.getY() >= topY) {
+                    // TODO: don't use heightmap type as "height" for address
+                    changedLocalBlocks.add((short) AddressTools.getLocalAddress(blockPos.getX() & 0xF, value.ordinal() & 0xF, blockPos.getZ()));
+                }
+            }
+            return;
         }
         BigCube cube = getCubeIfComplete();
         if (cube == null) {
             return;
         }
+        // TODO: per section addresses and changed block tracking
         changedLocalBlocks.add((short) AddressTools.getLocalAddress(blockPos.getX(), blockPos.getY(), blockPos.getZ()));
     }
 
@@ -321,6 +345,15 @@ public abstract class MixinChunkHolder implements ICubeHolder {
         if (cubePos != null) {
             throw new IllegalStateException("Why is this getting called?");
         }
+        if (this.changedLocalBlocks.isEmpty()) {
+            return;
+        }
+        ShortArraySet changed = changedLocalBlocks;
+
+        ChunkAccess chunk = this.getTickingChunk();
+
+        this.sendToTrackingColumn(new PacketHeightmapChanges(chunk, new ShortArrayList(changed)), false);
+        changedLocalBlocks.clear();
         // noop
     }
 
@@ -374,6 +407,11 @@ public abstract class MixinChunkHolder implements ICubeHolder {
     private void sendToTracking(Object packetIn, boolean boundaryOnly) {
         // TODO: fix block update tracking
         this.playerProvider.getPlayers(this.cubePos.asChunkPos(), boundaryOnly)
+                .forEach(player -> PacketDispatcher.sendTo(packetIn, player));
+    }
+
+    private void sendToTrackingColumn(Object packetIn, boolean boundaryOnly) {
+        this.playerProvider.getPlayers(this.pos, boundaryOnly)
                 .forEach(player -> PacketDispatcher.sendTo(packetIn, player));
     }
 
