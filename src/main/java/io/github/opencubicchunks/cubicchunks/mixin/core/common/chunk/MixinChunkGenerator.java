@@ -109,17 +109,6 @@ public abstract class MixinChunkGenerator implements ICubeGenerator {
 
         //TODO: Patch entity game crashes in order to spawn villages(village pieces spawn villagers)
         //TODO: Setup a 2D and 3D placement.
-        final Set<ResourceLocation> featureIDBlacklist = new HashSet<>(Arrays.asList(
-//                new ResourceLocation("ocean_ruin")
-//                new ResourceLocation("mineshaft_mesa"),
-//                new ResourceLocation("mansion"),
-//                new ResourceLocation("village_plains"),
-//                new ResourceLocation("village_desert"),
-//                new ResourceLocation("village_savanna"),
-//                new ResourceLocation("village_snowy"),
-//                new ResourceLocation("village_taiga")
-        ));
-
 
         IBigCube cube = (IBigCube) chunkAccess;
 
@@ -129,10 +118,7 @@ public abstract class MixinChunkGenerator implements ICubeGenerator {
         this.createCCStructure(StructureFeatures.STRONGHOLD, registry, featureManager, cube, manager, seed, cubePos, biome);
 
         for (Supplier<ConfiguredStructureFeature<?, ?>> configuredStructureFeatureSupplier : biome.getGenerationSettings().structures()) {
-            ResourceLocation key = registry.registry(Registry.CONFIGURED_STRUCTURE_FEATURE_REGISTRY).get().getKey(configuredStructureFeatureSupplier.get());
-
-            if (!featureIDBlacklist.contains(key))
-                this.createCCStructure(configuredStructureFeatureSupplier.get(), registry, featureManager, cube, manager, seed, cubePos, biome);
+            this.createCCStructure(configuredStructureFeatureSupplier.get(), registry, featureManager, cube, manager, seed, cubePos, biome);
         }
     }
 
