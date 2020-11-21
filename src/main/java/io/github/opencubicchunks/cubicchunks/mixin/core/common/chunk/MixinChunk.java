@@ -92,7 +92,7 @@ public abstract class MixinChunk implements ChunkAccess {
     }
 
     @SuppressWarnings("ConstantConditions")
-    public IBigCube getCube(int y) {
+    private IBigCube getCube(int y) {
         try {
             return ((ICubeProvider) level.getChunkSource()).getCube(
                     Coords.sectionToCube(chunkPos.x),
