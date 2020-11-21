@@ -2,6 +2,7 @@ package io.github.opencubicchunks.cubicchunks.server;
 
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
+import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.chunk.ChunkStatus;
 
@@ -22,6 +23,11 @@ public interface ICubicWorld { //TODO: maybe rename this class? I think this nam
 
     default IBigCube getCube(BlockPos pos) {
         return getCube(CubePos.from(pos));
+    }
+
+    @Nullable
+    default IBigCube getCube(BlockPos pos, ChunkStatus status, boolean notnull) {
+        return getCube(Coords.blockToCube(pos.getX()), Coords.blockToCube(pos.getY()), Coords.blockToCube(pos.getZ()), status, notnull);
     }
 
     @Nullable

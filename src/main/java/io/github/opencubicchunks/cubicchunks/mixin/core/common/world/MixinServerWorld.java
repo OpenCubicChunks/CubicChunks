@@ -4,6 +4,7 @@ import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.BigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.heightmap.SurfaceTrackerWrapper;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
+import io.github.opencubicchunks.cubicchunks.server.ICubicWorld;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import io.github.opencubicchunks.cubicchunks.world.server.IServerWorld;
 import net.minecraft.core.BlockPos;
@@ -14,6 +15,7 @@ import net.minecraft.util.profiling.ProfilerFiller;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.chunk.ChunkStatus;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.chunk.LevelChunkSection;
 import net.minecraft.world.level.dimension.DimensionType;
@@ -21,8 +23,11 @@ import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.storage.WritableLevelData;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Redirect;
 
 import java.util.Map;
+import java.util.Random;
 import java.util.function.Supplier;
 
 @Mixin(ServerLevel.class)
@@ -30,6 +35,24 @@ public abstract class MixinServerWorld extends Level implements IServerWorld {
     protected MixinServerWorld(WritableLevelData p_i231617_1_, ResourceKey<Level> p_i231617_2_, DimensionType p_i231617_4_,
             Supplier<ProfilerFiller> p_i231617_5_, boolean p_i231617_6_, boolean p_i231617_7_, long p_i231617_8_) {
         super(p_i231617_1_, p_i231617_2_, p_i231617_4_, p_i231617_5_, p_i231617_6_, p_i231617_7_, p_i231617_8_);
+    }
+
+    @Redirect(method = "tickChunk", at = @At(value = "INVOKE", target = "Ljava/util/Random;nextInt(I)I", ordinal = 1))
+    private int onRandNextInt(Random random, int bound, LevelChunk levelChunk, int i) {
+        ChunkPos chunkPos = levelChunk.getPos();
+        int x = chunkPos.getMinBlockX();
+        int z = chunkPos.getMinBlockZ();
+        BlockPos pos = this.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING, this.getNextBlockRandomPos(x, 0, z, 15));
+        if(((ICubicWorld) this).getCube(pos, ChunkStatus.FULL, false) == null) {
+            return -1;
+        }
+        return this.random.nextInt(16);
+    }
+
+    private BlockPos getNextBlockRandomPos(int i, int j, int k, int l) {
+        int randValue = this.randValue * 3 + 1013904223;
+        int m = randValue >> 2;
+        return new BlockPos(i + (m & 15), j + (m >> 16 & l), k + (m >> 8 & 15));
     }
 
     @Override
@@ -68,7 +91,7 @@ public abstract class MixinServerWorld extends Level implements IServerWorld {
                     int minY = columnPos.minBlockY();
                     int minZ = columnPos.minBlockZ();
                     for (int j = 0; j < randomTicks; j++) {
-                        BlockPos blockPos = this.getBlockRandomPos(minX, minY, minZ, 15);
+                        BlockPos blockPos = this.getNextBlockRandomPos(minX, minY, minZ, 15);
                         profilerFiller.push("randomTick");
                         BlockState blockState = chunkSection.getBlockState(blockPos.getX() - minX, blockPos.getY() - minY, blockPos.getZ() - minZ);
                         if (blockState.isRandomlyTicking()) {
