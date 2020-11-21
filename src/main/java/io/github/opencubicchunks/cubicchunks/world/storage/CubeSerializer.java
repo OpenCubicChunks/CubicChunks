@@ -23,18 +23,17 @@ import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.level.biome.BiomeSource;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.chunk.*;
-import net.minecraft.world.level.levelgen.GenerationStep;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureManager;
 import net.minecraft.world.level.lighting.LevelLightEngine;
 import org.apache.logging.log4j.LogManager;
 
 import javax.annotation.Nullable;
-import java.io.*;
+import java.io.DataOutputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.BitSet;
 import java.util.Objects;
-import java.util.zip.GZIPInputStream;
 
 public class CubeSerializer {
 
@@ -49,7 +48,9 @@ public class CubeSerializer {
         ChunkGenerator chunkgenerator = worldIn.getChunkSource().getGenerator();
         BiomeSource biomeprovider = chunkgenerator.getBiomeSource();
 
-        CubeBiomeContainer biomecontainer = new CubeBiomeContainer(worldIn.registryAccess().registryOrThrow(Registry.BIOME_REGISTRY), cubePos.asSectionPos(), biomeprovider, level.contains("Biomes", 11) ? level.getIntArray("Biomes") : null);
+        boolean biomes = level.contains("Biomes", 11);
+        int[] biomes1 = level.getIntArray("Biomes");
+        CubeBiomeContainer biomecontainer = new CubeBiomeContainer(worldIn.registryAccess().registryOrThrow(Registry.BIOME_REGISTRY), cubePos, biomeprovider, biomes ? biomes1 : null);
 //            UpgradeData upgradedata = level.contains("UpgradeData", 10) ? new UpgradeData(level.getCompound("UpgradeData")) : UpgradeData.EMPTY;
         //TODO: reimplement ticklists
 //            ChunkPrimerTickList<Block> chunkprimerticklist = new ChunkPrimerTickList<>((p_222652_0_) -> {
@@ -271,7 +272,7 @@ public class CubeSerializer {
             level.putBoolean("isLightOn", true);
         }
 
-        ChunkBiomeContainer biomecontainer = icube.getCubeBiomes();
+        CubeBiomeContainer biomecontainer = icube.getCubeBiomes();
         if (biomecontainer != null) {
             level.putIntArray("Biomes", biomecontainer.writeBiomes());
         }
@@ -397,7 +398,7 @@ public class CubeSerializer {
             level.putBoolean("isLightOn", true);
         }
 
-        ChunkBiomeContainer biomecontainer = icube.getCubeBiomes();
+        CubeBiomeContainer biomecontainer = icube.getCubeBiomes();
         if (biomecontainer != null) {
             level.putIntArray("Biomes", biomecontainer.writeBiomes());
         }

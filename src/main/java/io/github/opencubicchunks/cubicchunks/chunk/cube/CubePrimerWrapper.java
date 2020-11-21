@@ -135,9 +135,9 @@ public class CubePrimerWrapper extends CubePrimer {
         return this.cube.isEmptyCube();
     }
 
-    @Deprecated @Override public ChunkBiomeContainer getBiomes() { return this.getCubeBiomes(); }
+    @Deprecated @Override public ChunkBiomeContainer getBiomes() { return this.cube.getBiomes(); }
     @Override public CubeBiomeContainer getCubeBiomes() {
-        return this.cube.getBiomes();
+        return this.cube.getCubeBiomes();
     }
 
     @Override public void setHeightmap(Heightmap.Types type, long[] data) {

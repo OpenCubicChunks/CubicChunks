@@ -2,6 +2,9 @@ package io.github.opencubicchunks.cubicchunks.mixin.core.common.chunk;
 
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.ICubeGenerator;
+import io.github.opencubicchunks.cubicchunks.chunk.biome.CubeBiomeContainer;
+import io.github.opencubicchunks.cubicchunks.chunk.cube.CubePrimer;
+import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import io.github.opencubicchunks.cubicchunks.world.CubeWorldGenRegion;
 import net.minecraft.core.BlockPos;
@@ -13,6 +16,7 @@ import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.StructureFeatureManager;
 import net.minecraft.world.level.WorldGenLevel;
 import net.minecraft.world.level.biome.Biome;
+import net.minecraft.world.level.biome.BiomeSource;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.ChunkGenerator;
@@ -26,7 +30,9 @@ import net.minecraft.world.level.levelgen.feature.stateproviders.SimpleStateProv
 import net.minecraft.world.level.levelgen.feature.trunkplacers.DarkOakTrunkPlacer;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureManager;
 import net.minecraft.world.level.levelgen.synth.PerlinNoise;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -38,6 +44,8 @@ import java.util.Random;
 
 @Mixin(ChunkGenerator.class)
 public class MixinChunkGenerator implements ICubeGenerator {
+
+    @Shadow @Final protected BiomeSource runtimeBiomeSource;
 
     private final PerlinNoise gen1 = new PerlinNoise(new WorldgenRandom(42), createOctaveList());
     private final PerlinNoise gen2 = new PerlinNoise(new WorldgenRandom(4242), createOctaveList());
@@ -60,10 +68,12 @@ public class MixinChunkGenerator implements ICubeGenerator {
     }
 
     @Inject(method = "createBiomes", at = @At("HEAD"), cancellable = true)
-    public void generateBiomes(Registry<Biome> p_242706_1_, ChunkAccess chunkIn, CallbackInfo ci) {
-        if (chunkIn instanceof IBigCube) {
-            ci.cancel();
-        }
+    public void generateBiomes(Registry<Biome> registry, ChunkAccess chunkIn, CallbackInfo ci) {
+        /* This can only be a  CubePrimer at this point due to the inject in MixinChunkStatus#cubicChunksBiome  */
+        IBigCube iCube = (IBigCube)chunkIn;
+        CubePos cubePos = ((IBigCube) chunkIn).getCubePos();
+        ((CubePrimer)iCube).setCubeBiomes(new CubeBiomeContainer(registry, cubePos, this.runtimeBiomeSource));
+        ci.cancel();
     }
 
     @Override

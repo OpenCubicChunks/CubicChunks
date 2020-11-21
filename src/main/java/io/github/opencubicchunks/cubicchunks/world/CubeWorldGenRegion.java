@@ -114,6 +114,15 @@ public class CubeWorldGenRegion implements WorldGenLevel {
                 true);
     }
 
+    public IBigCube getCube(CubePos cubePos) {
+        return this.getCube(cubePos.getX(), cubePos.getY(), cubePos.getZ(), ChunkStatus.EMPTY,
+                true);
+    }
+
+    public IBigCube getCube(int cubeX, int cubeY, int cubeZ, ChunkStatus status) {
+        return this.getCube(cubeX, cubeY, cubeZ, status, true);
+    }
+
     public IBigCube getCube(int x, int y, int z, ChunkStatus requiredStatus, boolean nonnull) {
         IBigCube icube;
         if (this.cubeExists(x, y, z)) {

@@ -59,7 +59,6 @@ public class Coords {
     private static final int INDEX_TO_N_Y = LOG2_BLOCK_SIZE - 4;
     private static final int INDEX_TO_N_Z = INDEX_TO_N_Y * 2;
 
-
     /**
      * <it><b>CC INTERNAL</b></it> | Mask used for converting BlockPos to ChunkSection index within a {@link BigCube}.
      */
