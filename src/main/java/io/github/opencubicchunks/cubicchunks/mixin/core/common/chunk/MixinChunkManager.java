@@ -1,5 +1,9 @@
 package io.github.opencubicchunks.cubicchunks.mixin.core.common.chunk;
 
+import static io.github.opencubicchunks.cubicchunks.CubicChunks.LOGGER;
+import static io.github.opencubicchunks.cubicchunks.utils.Coords.cubeToSection;
+import static io.github.opencubicchunks.cubicchunks.utils.Coords.sectionToCube;
+
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -7,7 +11,11 @@ import com.google.common.collect.Queues;
 import com.mojang.datafixers.DataFixer;
 import com.mojang.datafixers.util.Either;
 import io.github.opencubicchunks.cubicchunks.CubicChunks;
-import io.github.opencubicchunks.cubicchunks.chunk.*;
+import io.github.opencubicchunks.cubicchunks.chunk.CubeCollectorFuture;
+import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
+import io.github.opencubicchunks.cubicchunks.chunk.IChunkManager;
+import io.github.opencubicchunks.cubicchunks.chunk.ICubeHolder;
+import io.github.opencubicchunks.cubicchunks.chunk.ICubeStatusListener;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.BigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.CubePrimer;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.CubePrimerWrapper;
@@ -19,44 +27,41 @@ import io.github.opencubicchunks.cubicchunks.chunk.ticket.ITicketManager;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.chunk.util.Utils;
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.EntityTrackerAccess;
-import io.github.opencubicchunks.cubicchunks.network.*;
-import io.github.opencubicchunks.cubicchunks.world.storage.RegionCubeIO;
+import io.github.opencubicchunks.cubicchunks.network.PacketCubes;
+import io.github.opencubicchunks.cubicchunks.network.PacketDispatcher;
+import io.github.opencubicchunks.cubicchunks.network.PacketHeightmap;
+import io.github.opencubicchunks.cubicchunks.network.PacketUnloadCube;
+import io.github.opencubicchunks.cubicchunks.network.PacketUpdateCubePosition;
+import io.github.opencubicchunks.cubicchunks.network.PacketUpdateLight;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import io.github.opencubicchunks.cubicchunks.world.server.IServerWorld;
 import io.github.opencubicchunks.cubicchunks.world.server.IServerWorldLightManager;
 import io.github.opencubicchunks.cubicchunks.world.storage.CubeSerializer;
+import io.github.opencubicchunks.cubicchunks.world.storage.RegionCubeIO;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
+import it.unimi.dsi.fastutil.longs.Long2ByteMap;
+import it.unimi.dsi.fastutil.longs.Long2ByteOpenHashMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.longs.LongIterator;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
-import it.unimi.dsi.fastutil.longs.*;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.world.level.chunk.*;
-import net.minecraft.world.level.chunk.storage.ChunkSerializer;
-import net.minecraft.world.level.entity.ChunkStatusUpdateListener;
-import org.apache.commons.lang3.mutable.MutableBoolean;
-import org.spongepowered.asm.mixin.*;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Group;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.Redirect;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
-
-import javax.annotation.Nullable;
 import net.minecraft.CrashReport;
 import net.minecraft.CrashReportCategory;
 import net.minecraft.ReportedException;
 import net.minecraft.Util;
 import net.minecraft.core.SectionPos;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientboundLightUpdatePacket;
 import net.minecraft.network.protocol.game.ClientboundSetChunkCacheCenterPacket;
 import net.minecraft.network.protocol.game.ClientboundSetEntityLinkPacket;
 import net.minecraft.network.protocol.game.ClientboundSetPassengersPacket;
-import net.minecraft.server.level.*;
+import net.minecraft.server.level.ChunkHolder;
+import net.minecraft.server.level.ChunkMap;
+import net.minecraft.server.level.PlayerMap;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.level.ThreadedLevelLightEngine;
 import net.minecraft.server.level.progress.ChunkProgressListener;
 import net.minecraft.util.Mth;
 import net.minecraft.util.thread.BlockableEventLoop;
@@ -68,14 +73,16 @@ import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.ChunkGenerator;
 import net.minecraft.world.level.chunk.ChunkStatus;
+import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.chunk.LightChunkGetter;
+import net.minecraft.world.level.chunk.UpgradeData;
+import net.minecraft.world.level.chunk.storage.ChunkSerializer;
 import net.minecraft.world.level.entity.ChunkStatusUpdateListener;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureManager;
 import net.minecraft.world.level.lighting.LevelLightEngine;
 import net.minecraft.world.level.storage.DimensionDataStorage;
 import net.minecraft.world.level.storage.LevelStorageSource;
 import org.apache.commons.lang3.mutable.MutableBoolean;
-import org.apache.logging.log4j.Logger;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
@@ -88,11 +95,15 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
-import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
-import java.util.*;
 import java.io.UncheckedIOException;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Queue;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.Executor;
@@ -104,9 +115,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static io.github.opencubicchunks.cubicchunks.utils.Coords.cubeToSection;
-import static io.github.opencubicchunks.cubicchunks.CubicChunks.LOGGER;
-import static io.github.opencubicchunks.cubicchunks.utils.Coords.sectionToCube;
+import javax.annotation.Nullable;
 
 @Mixin(ChunkMap.class)
 public abstract class MixinChunkManager implements IChunkManager {
@@ -165,6 +174,10 @@ public abstract class MixinChunkManager implements IChunkManager {
     @Shadow private static int checkerboardDistance(ChunkPos chunkPosIn, int x, int y) {
         throw new Error("Mixin didn't apply");
     }
+
+    @Shadow public abstract Stream<ServerPlayer> getPlayers(ChunkPos chunkPos, boolean bl);
+
+    @Shadow private volatile Long2ObjectLinkedOpenHashMap<ChunkHolder> visibleChunkMap;
 
     @Inject(method = "<init>", at = @At("RETURN"), locals = LocalCapture.CAPTURE_FAILHARD)
     private void onConstruct(ServerLevel worldIn,
@@ -727,6 +740,14 @@ public abstract class MixinChunkManager implements IChunkManager {
                 this.getPlayers(cubePos, false).forEach((serverPlayerEntity) -> {
                     this.playerLoadedCube(serverPlayerEntity, objects, cube);
                 });
+                for (int dx = 0; dx < IBigCube.DIAMETER_IN_SECTIONS; dx++) {
+                    for (int dz = 0; dz < IBigCube.DIAMETER_IN_SECTIONS; dz++) {
+                        ChunkPos pos = cubePos.asChunkPos(dx, dz);
+                        this.getPlayers(pos, false).forEach(player -> {
+                            this.updatePlayerHeightmap(player, pos);
+                        });
+                    }
+                }
                 return Either.left(cube);
             });
         }, (p_219202_2_) -> {
@@ -1049,6 +1070,14 @@ public abstract class MixinChunkManager implements IChunkManager {
                     BigCube cube = ((ICubeHolder)chunkholder).getCubeIfComplete();
                     if (cube != null) {
                         this.playerLoadedCube(player, packetCache, cube);
+                        for (int dx = 0; dx < IBigCube.DIAMETER_IN_SECTIONS; dx++) {
+                            for (int dz = 0; dz < IBigCube.DIAMETER_IN_SECTIONS; dz++) {
+                                ChunkPos pos = cubePosIn.asChunkPos(dx, dz);
+                                this.getPlayers(pos, false).forEach(p -> {
+                                    this.updatePlayerHeightmap(p, pos);
+                                });
+                            }
+                        }
                     }
                     //TODO: reimplement debugpacket
                     //DebugPacketSender.sendChuckPos(this.world, cubePosIn);
@@ -1140,6 +1169,19 @@ public abstract class MixinChunkManager implements IChunkManager {
                 player.connection.send(new ClientboundSetPassengersPacket(entity2));
             }
         }
+    }
+
+    private void updatePlayerHeightmap(ServerPlayer player, ChunkPos pos) {
+        ChunkHolder chunkHolder = visibleChunkMap.get(pos.toLong());
+        if (chunkHolder == null) {
+            // todo: is this ever going to be null?
+            return;
+        }
+        Either<LevelChunk, ChunkHolder.ChunkLoadingFailure> chunkOrError = chunkHolder.getFullChunkFuture().getNow(null);
+        if (chunkOrError == null) {
+            return;
+        }
+        chunkOrError.ifLeft(chunk -> PacketDispatcher.sendTo(PacketHeightmap.forChunk(chunk), player));
     }
 
     // func_219174_c, getTickingGenerated

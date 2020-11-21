@@ -251,8 +251,8 @@ public abstract class MixinServerChunkProvider implements IServerChunkProvider, 
      * @author Barteks2x
      * @reason sections
      */
-    @Overwrite
-    public void blockChanged(BlockPos pos) {
+    @Inject(method = "blockChanged", at = @At("RETURN"))
+    public void onBlockChanged(BlockPos pos, CallbackInfo ci) {
         ChunkHolder chunkholder = ((IChunkManager) this.chunkMap).getCubeHolder(CubePos.from(pos).asLong());
         if (chunkholder != null) {
             // markBlockChanged

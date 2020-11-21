@@ -4,6 +4,7 @@ import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.ICubeProvider;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.BigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.EmptyCube;
+import io.github.opencubicchunks.cubicchunks.chunk.heightmap.ClientSurfaceTracker;
 import io.github.opencubicchunks.cubicchunks.chunk.heightmap.SurfaceTrackerWrapper;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import net.minecraft.core.BlockPos;
@@ -54,8 +55,12 @@ public abstract class MixinChunk implements ChunkAccess {
 
     @Redirect(method = "<init>(Lnet/minecraft/world/level/Level;Lnet/minecraft/world/level/ChunkPos;Lnet/minecraft/world/level/chunk/ChunkBiomeContainer;Lnet/minecraft/world/level/chunk/UpgradeData;Lnet/minecraft/world/level/TickList;Lnet/minecraft/world/level/TickList;J[Lnet/minecraft/world/level/chunk/LevelChunkSection;Ljava/util/function/Consumer;)V",
             at = @At(value = "NEW", target = "net/minecraft/world/level/levelgen/Heightmap"))
-    private Heightmap getCCHeightmap(ChunkAccess chunkAccess, Heightmap.Types types) {
-        return new SurfaceTrackerWrapper(chunkAccess, types); //TODO: Load from this from files.
+    private Heightmap getCCHeightmap(ChunkAccess chunkAccess, Heightmap.Types type) {
+        if (this.level.isClientSide()) {
+            return new ClientSurfaceTracker(chunkAccess, type);
+        } else {
+            return new SurfaceTrackerWrapper(chunkAccess, type); //TODO: Load from this from files.
+        }
     }
 
     @Redirect(method = {"getBlockState", "getFluidState(III)Lnet/minecraft/world/level/material/FluidState;", "setBlockState"},

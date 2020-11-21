@@ -1,44 +1,50 @@
 package io.github.opencubicchunks.cubicchunks.chunk.heightmap;
 
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
+import io.github.opencubicchunks.cubicchunks.mixin.access.common.HeightmapAccess;
+import io.github.opencubicchunks.cubicchunks.utils.Coords;
+import net.minecraft.util.BitStorage;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.levelgen.Heightmap;
 
 public class SurfaceTrackerWrapper extends Heightmap {
 	private final SurfaceTrackerSection surfaceTracker;
-//	private final ChunkAccess chunk;
+	private final int dx;
+	private final int dz;
 
-	// TODO use mixin sorcery to nullify the private fields of superclass
 	public SurfaceTrackerWrapper(ChunkAccess chunkAccess, Types types) {
 		super(chunkAccess, types);
-//		this.chunk = chunkAccess;
+		((HeightmapAccess) this).setIsOpaque(null);
 		this.surfaceTracker = new SurfaceTrackerSection(types);
+		this.dx = Coords.sectionToMinBlock(chunkAccess.getPos().x);
+		this.dz = Coords.sectionToMinBlock(chunkAccess.getPos().z);
 	}
 
 	@Override
 	public boolean update(int x, int y, int z, BlockState blockState) {
 		// TODO do we need to do anything else here?
-		surfaceTracker.markDirty(x, z);
+		surfaceTracker.getCubeNode(Coords.blockToCube(y)).markDirty(x + dx, z + dz);
 		// TODO not sure if this is safe to do or if things depend on the result
 		return false;
 	}
 
 	@Override
 	public int getFirstAvailable(int x, int z) {
-		return surfaceTracker.getHeight(x, z);
+		return surfaceTracker.getHeight(x + dx, z + dz) + 1;
 	}
 
 	// TODO not sure what to do about these methods
 	@Override
 	public void setRawData(long[] ls) {
-//		throw new UnsupportedOperationException();
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public long[] getRawData() {
-//		throw new UnsupportedOperationException();
-		return new long[]{};
+		BitStorage data = ((HeightmapAccess) this).getData();
+		surfaceTracker.writeData(dx, dz, data, ((HeightmapAccess) this).getChunk().getMinBuildHeight());
+		return data.getRaw();
 	}
 
 	public void loadCube(IBigCube cube) {
