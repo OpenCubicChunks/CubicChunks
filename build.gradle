@@ -138,6 +138,9 @@ dependencies {
         modImplementation(fabricApi.module(it, project.fabric_version))
     }
 
+    // Workaround for mixin annotation processor being broken on intellij
+    annotationProcessor("net.fabricmc:fabric-mixin-compile-extensions:0.3.2.6")
+
     // modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 
     modRuntime ("com.github.SuperCoder7979:databreaker:0.2.6") {
