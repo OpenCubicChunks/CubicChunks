@@ -120,8 +120,6 @@ repositories{
     }
 }
 
-configurations.getByName("annotationProcessor").extendsFrom(configurations.compileClasspath)
-
 // for vulkan
 project.ext.lwjglVersion = "3.2.2"
 
@@ -153,9 +151,6 @@ dependencies {
     ["fabric-api-base", "fabric-command-api-v1", "fabric-networking-v0"].forEach {
         modImplementation(fabricApi.module(it, project.fabric_version))
     }
-
-    // Workaround for mixin annotation processor being broken on intellij
-    annotationProcessor("net.fabricmc:fabric-mixin-compile-extensions:0.3.2.6")
 
     // modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 
