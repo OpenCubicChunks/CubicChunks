@@ -97,7 +97,9 @@ public class SectionSizeCubeAccessWrapper implements ChunkAccess {
     }
 
     @Override public int getHeight(Heightmap.Types types, int x, int z) {
-        return delegates[1].getHeight(types, dx, dz) == getMinBuildHeight() ? delegates[0].getHeight(types, dx, dz) : delegates[1].getHeight(types, dx, dz);
+        IBigCube cube1 = (IBigCube) delegates[1];
+        int localHeight = cube1.getCubeLocalHeight(types, dx, dz);
+        return localHeight == getMinBuildHeight() ? ((IBigCube) delegates[0]).getCubeLocalHeight(types, dx, dz) : localHeight;
     }
 
     @Override public ChunkPos getPos() {

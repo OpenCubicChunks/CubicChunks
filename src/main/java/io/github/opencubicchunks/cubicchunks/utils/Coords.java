@@ -370,8 +370,12 @@ public class Coords {
             indexToZ(i)));
     }
 
-    public static int blockToLocalSection(int x) {
+    public static int blockToCubeLocalSection(int x) {
         return (x >> 4) & (IBigCube.DIAMETER_IN_SECTIONS - 1);
 
+    }
+
+    public static int cubeLocalSection(int section) {
+        return section & (IBigCube.DIAMETER_IN_SECTIONS - 1);
     }
 }

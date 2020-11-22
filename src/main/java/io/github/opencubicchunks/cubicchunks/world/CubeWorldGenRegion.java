@@ -314,11 +314,11 @@ public class CubeWorldGenRegion implements WorldGenLevel, ICubicWorld {
         int yStart = Coords.cubeToMinBlock(mainCubeY + 1);
         int yEnd = Coords.cubeToMinBlock(mainCubeY);
         IBigCube cube1 = getCube(new BlockPos(x, yStart, z));
-        if (((ChunkAccess) cube1).getHeight(heightmapType, x, z) >= yStart) {
+        if (cube1.getCubeLocalHeight(heightmapType, x, z) >= yStart) {
             return yStart + 2;
         }
         IBigCube cube2 = getCube(new BlockPos(x, yEnd, z));
-        int height = ((ChunkAccess) cube2).getHeight(heightmapType, x, z);
+        int height = cube2.getCubeLocalHeight(heightmapType, x, z);
 
         //Check whether or not height was found for this cube. If height wasn't found, move to the next cube under the current cube
         if (height <= getMinBuildHeight()) {

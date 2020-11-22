@@ -7,6 +7,7 @@ import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
 import io.github.opencubicchunks.cubicchunks.chunk.biome.CubeBiomeContainer;
+import io.github.opencubicchunks.cubicchunks.chunk.heightmap.SurfaceTrackerSection;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.meta.EarlyConfig;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
@@ -18,6 +19,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.ChunkStatus;
 import net.minecraft.world.level.chunk.FeatureAccess;
 import net.minecraft.world.level.chunk.LevelChunkSection;
+import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.levelgen.feature.StructureFeature;
 import net.minecraft.world.level.levelgen.structure.StructureStart;
 import org.apache.logging.log4j.LogManager;
@@ -86,4 +88,9 @@ public interface IBigCube extends BlockGetter, FeatureAccess {
     long getCubeInhabitedTime();
 
     @Nullable CubeBiomeContainer getCubeBiomes();
+
+    int getCubeLocalHeight(Heightmap.Types heightmapType, int x, int z);
+
+    default void loadHeightmapSection(SurfaceTrackerSection section, int localSectionX, int localSectionZZ) {
+    }
 }

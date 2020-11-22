@@ -151,7 +151,7 @@ public class SurfaceTrackerSection {
         }
     }
 
-    public void loadCube(IBigCube newCube, boolean markDirty) {
+    public void loadCube(int sectionX, int sectionZ, IBigCube newCube, boolean markDirty) {
         if (this.cubeOrNodes == null) {
             throw new IllegalStateException("Attempting to load cube " + newCube.getCubePos() + " into an unloaded surface tracker section");
         }
@@ -159,6 +159,7 @@ public class SurfaceTrackerSection {
             Arrays.fill(dirtyPositions, -1);
         }
         if (this.scale == 0) {
+            newCube.loadHeightmapSection(this, sectionX, sectionZ);
             return;
         }
         int idx = indexOfRawHeightNode(newCube.getCubePos().getY(), scale, scaledY);
@@ -172,7 +173,7 @@ public class SurfaceTrackerSection {
             nodes[i] = newMap;
         }
         assert nodes[idx] != null;
-        nodes[idx].loadCube(newCube, markDirty);
+        nodes[idx].loadCube(sectionX, sectionZ, newCube, markDirty);
     }
 
     public SurfaceTrackerSection getParent() {
@@ -202,6 +203,10 @@ public class SurfaceTrackerSection {
 
     public IBigCube getCube() {
         return (IBigCube) cubeOrNodes;
+    }
+
+    public Heightmap.Types getType() {
+        return Heightmap.Types.values()[heightmapType];
     }
 
     @Nullable

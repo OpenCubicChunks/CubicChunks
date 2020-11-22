@@ -1,8 +1,9 @@
 package io.github.opencubicchunks.cubicchunks.chunk.heightmap;
 
+import static io.github.opencubicchunks.cubicchunks.utils.Coords.*;
+
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.HeightmapAccess;
-import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import net.minecraft.util.BitStorage;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.ChunkAccess;
@@ -17,14 +18,14 @@ public class SurfaceTrackerWrapper extends Heightmap {
         super(chunkAccess, types);
         ((HeightmapAccess) this).setIsOpaque(null);
         this.surfaceTracker = new SurfaceTrackerSection(types);
-        this.dx = Coords.sectionToMinBlock(chunkAccess.getPos().x);
-        this.dz = Coords.sectionToMinBlock(chunkAccess.getPos().z);
+        this.dx = sectionToMinBlock(chunkAccess.getPos().x);
+        this.dz = sectionToMinBlock(chunkAccess.getPos().z);
     }
 
     @Override
     public boolean update(int x, int y, int z, BlockState blockState) {
         // TODO do we need to do anything else here?
-        surfaceTracker.getCubeNode(Coords.blockToCube(y)).markDirty(x + dx, z + dz);
+        surfaceTracker.getCubeNode(blockToCube(y)).markDirty(x + dx, z + dz);
         // TODO not sure if this is safe to do or if things depend on the result
         return false;
     }
@@ -49,7 +50,7 @@ public class SurfaceTrackerWrapper extends Heightmap {
 
     public void loadCube(IBigCube cube) {
         // TODO loading should only cause marking as dirty if not loading from save file
-        this.surfaceTracker.loadCube(cube, true);
+        this.surfaceTracker.loadCube(blockToCubeLocalSection(dx), blockToCubeLocalSection(dz), cube, true);
     }
 
     public void unloadCube(IBigCube cube) {

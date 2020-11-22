@@ -25,7 +25,6 @@ import io.github.opencubicchunks.cubicchunks.chunk.heightmap.SurfaceTrackerSecti
 import io.github.opencubicchunks.cubicchunks.chunk.heightmap.SurfaceTrackerWrapper;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.ChunkSectionAccess;
-import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import io.github.opencubicchunks.cubicchunks.utils.MathUtil;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
@@ -100,9 +99,7 @@ public class BigCube implements ChunkAccess, IBigCube {
     private final Map<StructureFeature<?>, StructureStart<?>> structureStarts;
     private final Map<StructureFeature<?>, LongSet> structuresRefences;
 
-    private final Map<Heightmap.Types, SurfaceTrackerSection> heightmaps;
-
-    private final BitSet pendingHeightmapUpdates = new BitSet(DIAMETER_IN_BLOCKS * DIAMETER_IN_BLOCKS);
+    private final Map<Heightmap.Types, SurfaceTrackerSection[]> heightmaps;
 
     private CubeBiomeContainer biomes;
 
@@ -158,7 +155,7 @@ public class BigCube implements ChunkAccess, IBigCube {
             }
 
             for (int i = 0; i < sectionsIn.length; i++) {
-                int sectionYPos = cubeToSection(cubePosIn.getY(), Coords.indexToY(i));
+                int sectionYPos = cubeToSection(cubePosIn.getY(), indexToY(i));
 
                 if (sectionsIn[i] != null) {
                     sections[i] = new LevelChunkSection(sectionYPos,
@@ -251,7 +248,7 @@ public class BigCube implements ChunkAccess, IBigCube {
     }
 
     @Override @Nullable public BlockState setBlock(BlockPos pos, BlockState state, boolean isMoving) {
-        return this.setBlock(Coords.blockToIndex(pos.getX(), pos.getY(), pos.getZ()), pos, state, isMoving);
+        return this.setBlock(blockToIndex(pos.getX(), pos.getY(), pos.getZ()), pos, state, isMoving);
     }
 
     @Nullable public BlockState setBlock(int sectionIndex, BlockPos pos, BlockState newState, boolean isMoving) {
@@ -265,15 +262,19 @@ public class BigCube implements ChunkAccess, IBigCube {
             return null;
         }
         Block newBlock = newState.getBlock();
-        int localX = Coords.blockToLocal(pos.getX());
-        int localZ = Coords.blockToLocal(pos.getZ());
-
+        int localX = blockToLocal(pos.getX());
+        int localZ = blockToLocal(pos.getZ());
 
         if (!this.heightmaps.isEmpty()) {
-            this.heightmaps.get(Heightmap.Types.MOTION_BLOCKING).markDirty(localX, localZ);
-            this.heightmaps.get(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES).markDirty(localX, localZ);
-            this.heightmaps.get(Heightmap.Types.OCEAN_FLOOR).markDirty(localX, localZ);
-            this.heightmaps.get(Heightmap.Types.WORLD_SURFACE).markDirty(localX, localZ);
+            int xSection = blockToCubeLocalSection(pos.getX());
+            int zSection = blockToCubeLocalSection(pos.getZ());
+
+            int idx = xSection + zSection * DIAMETER_IN_SECTIONS;
+
+            this.heightmaps.get(Heightmap.Types.MOTION_BLOCKING)[idx].markDirty(localX, localZ);
+            this.heightmaps.get(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES)[idx].markDirty(localX, localZ);
+            this.heightmaps.get(Heightmap.Types.OCEAN_FLOOR)[idx].markDirty(localX, localZ);
+            this.heightmaps.get(Heightmap.Types.WORLD_SURFACE)[idx].markDirty(localX, localZ);
         }
 
         boolean hadBlockEntity = oldState.hasBlockEntity();
@@ -310,7 +311,7 @@ public class BigCube implements ChunkAccess, IBigCube {
 
     @Override public BlockState getBlockState(int x, int y, int z) {
         // TODO: crash report generation
-        int index = Coords.blockToIndex(x, y, z);
+        int index = blockToIndex(x, y, z);
         return LevelChunkSection.isEmpty(this.sections[index]) ?
             Blocks.AIR.defaultBlockState() :
             this.sections[index].getBlockState(x & 15, y & 15, z & 15);
@@ -330,7 +331,7 @@ public class BigCube implements ChunkAccess, IBigCube {
     }
 
     private int getIndexFromEntity(Entity entityIn) {
-        return Coords.blockToIndex((int) entityIn.getX(), (int) entityIn.getY(), (int) entityIn.getZ());
+        return blockToIndex((int) entityIn.getX(), (int) entityIn.getY(), (int) entityIn.getZ());
     }
 
     public void removeEntity(Entity entityIn) {
@@ -692,7 +693,7 @@ public class BigCube implements ChunkAccess, IBigCube {
             //        }
             //        return false;
 
-            int dy = Coords.indexToY(i);
+            int dy = indexToY(i);
 
             SectionPos sectionPos = getCubePos().asSectionPos();
             int y = sectionPos.getY() + dy;
@@ -732,9 +733,9 @@ public class BigCube implements ChunkAccess, IBigCube {
 
     @Deprecated
     public SectionPos getSectionPosition(int index) {
-        int xPos = Coords.indexToX(index);
-        int yPos = Coords.indexToY(index);
-        int zPos = Coords.indexToZ(index);
+        int xPos = indexToX(index);
+        int yPos = indexToY(index);
+        int zPos = indexToZ(index);
 
         SectionPos sectionPos = this.cubePos.asSectionPos();
         return SectionPos.of(xPos + sectionPos.getX(), yPos + sectionPos.getY(), zPos + sectionPos.getZ());
@@ -755,6 +756,26 @@ public class BigCube implements ChunkAccess, IBigCube {
 
     @Override public Heightmap getOrCreateHeightmapUnprimed(Heightmap.Types typeIn) {
         throw new UnsupportedOperationException("Not implemented");
+    }
+
+    @Override public void loadHeightmapSection(SurfaceTrackerSection section, int localSectionX, int localSectionZ) {
+        int idx = localSectionX + localSectionZ * DIAMETER_IN_SECTIONS;
+
+        this.heightmaps.computeIfAbsent(section.getType(), t -> new SurfaceTrackerSection[IBigCube.DIAMETER_IN_SECTIONS * IBigCube.DIAMETER_IN_SECTIONS])[idx] = section;
+    }
+
+    @Override public int getCubeLocalHeight(Heightmap.Types type, int x, int z) {
+        SurfaceTrackerSection[] surfaceTrackerSections = this.heightmaps.get(type);
+        if (surfaceTrackerSections == null) {
+            throw new IllegalStateException("Trying to access heightmap of type " + type + " for cube " + cubePos + " before it's loaded!");
+        }
+        int xSection = blockToCubeLocalSection(x);
+        int zSection = blockToCubeLocalSection(z);
+
+        int idx = xSection + zSection * DIAMETER_IN_SECTIONS;
+
+        SurfaceTrackerSection surfaceTrackerSection = surfaceTrackerSections[idx];
+        return surfaceTrackerSection.getHeight(blockToLocal(x), blockToLocal(z));
     }
 
     @Override public int getHeight(Heightmap.Types heightmapType, int x, int z) {
@@ -783,7 +804,7 @@ public class BigCube implements ChunkAccess, IBigCube {
 
     public FluidState getFluidState(int x, int y, int z) {
         try {
-            int index = Coords.blockToIndex(x, y, z);
+            int index = blockToIndex(x, y, z);
             if (!LevelChunkSection.isEmpty(this.sections[index])) {
                 return this.sections[index].getFluidState(x & 15, y & 15, z & 15);
             }

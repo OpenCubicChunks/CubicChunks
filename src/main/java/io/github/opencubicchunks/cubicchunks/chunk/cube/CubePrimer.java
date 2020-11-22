@@ -208,8 +208,8 @@ public class CubePrimer implements IBigCube, ChunkAccess {
 
             for (Heightmap.Types types : heightMapsAfter) {
 
-                int xSection = Coords.blockToLocalSection(pos.getX());
-                int zSection = Coords.blockToLocalSection(pos.getZ());
+                int xSection = Coords.blockToCubeLocalSection(pos.getX());
+                int zSection = Coords.blockToCubeLocalSection(pos.getZ());
 
                 int idx = xSection + zSection * DIAMETER_IN_SECTIONS;
 
@@ -229,7 +229,7 @@ public class CubePrimer implements IBigCube, ChunkAccess {
                 for (int dz = 0; dz < IBigCube.DIAMETER_IN_SECTIONS; dz++) {
                     int idx = dx + dz * IBigCube.DIAMETER_IN_SECTIONS;
                     surfaceTrackerSections[idx] = new SurfaceTrackerSection(0, cubePos.getY(), null, this, type);
-                    surfaceTrackerSections[idx].loadCube(this, true);
+                    surfaceTrackerSections[idx].loadCube(dx, dz, this, true);
                 }
             }
             this.heightmaps.put(type, surfaceTrackerSections);
@@ -464,19 +464,23 @@ public class CubePrimer implements IBigCube, ChunkAccess {
         throw new UnsupportedOperationException("For later implementation");
     }
 
-    @Override public int getHeight(Heightmap.Types types, int x, int z) {
-        SurfaceTrackerSection[] surfaceTrackerSections = this.heightmaps.get(types);
+    @Override public int getCubeLocalHeight(Heightmap.Types type, int x, int z) {
+        SurfaceTrackerSection[] surfaceTrackerSections = this.heightmaps.get(type);
         if (surfaceTrackerSections == null) {
-            primeHeightMaps(EnumSet.of(types));
-            surfaceTrackerSections = this.heightmaps.get(types);
+            primeHeightMaps(EnumSet.of(type));
+            surfaceTrackerSections = this.heightmaps.get(type);
         }
-        int xSection = Coords.blockToLocalSection(x);
-        int zSection = Coords.blockToLocalSection(z);
+        int xSection = Coords.blockToCubeLocalSection(x);
+        int zSection = Coords.blockToCubeLocalSection(z);
 
         int idx = xSection + zSection * DIAMETER_IN_SECTIONS;
 
         SurfaceTrackerSection surfaceTrackerSection = surfaceTrackerSections[idx];
         return surfaceTrackerSection.getHeight(Coords.blockToLocal(x), Coords.blockToLocal(z));
+    }
+
+    @Override public int getHeight(Heightmap.Types types, int x, int z) {
+        throw new UnsupportedOperationException("Not implemented");
     }
 
     @org.jetbrains.annotations.Nullable
