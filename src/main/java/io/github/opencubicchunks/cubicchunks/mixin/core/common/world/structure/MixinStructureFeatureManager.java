@@ -9,7 +9,7 @@ import net.minecraft.world.level.chunk.ChunkStatus;
 import net.minecraft.world.level.chunk.FeatureAccess;
 import net.minecraft.world.level.levelgen.feature.StructureFeature;
 import net.minecraft.world.level.levelgen.structure.StructureStart;
-import org.jetbrains.annotations.Nullable;
+import javax.annotation.Nullable;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;

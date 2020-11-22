@@ -11,7 +11,8 @@ import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.biome.Biomes;
 import net.minecraft.world.level.chunk.ChunkBiomeContainer;
 import net.minecraft.world.level.chunk.ChunkStatus;
-import org.jetbrains.annotations.Nullable;
+
+import javax.annotation.Nullable;
 
 public class ColumnBiomeContainer extends ChunkBiomeContainer {
     private static final Biome DUMMY_BIOME = BuiltinRegistries.BIOME.get(Biomes.FOREST.location());
