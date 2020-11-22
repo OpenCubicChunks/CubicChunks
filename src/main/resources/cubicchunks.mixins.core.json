@@ -40,6 +40,7 @@
         "common.world.feature.MixinIcebergFeature",
         "common.world.feature.MixinLakeFeature",
         "common.world.feature.MixinOreFeature",
+        "common.world.feature.MixinSeagrassFeature",
         "common.world.feature.MixinSpringFeature",
         "common.world.feature.MixinVineFeature",
         "common.world.lighting.MixinBlockLightEngine",
