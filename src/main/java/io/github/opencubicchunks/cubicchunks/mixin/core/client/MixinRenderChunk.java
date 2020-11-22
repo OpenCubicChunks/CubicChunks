@@ -17,13 +17,14 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(ChunkRenderDispatcher.RenderChunk.class)
 public abstract class MixinRenderChunk {
 
-    @Shadow protected abstract double getDistToPlayerSqr();
-
-    @Shadow protected abstract boolean doesChunkExistAt(BlockPos blockPos);
 
     @Shadow @Final private BlockPos.MutableBlockPos[] relativeOrigins;
 
-    @SuppressWarnings("target") @Shadow(aliases = "field_20833", remap = false) ChunkRenderDispatcher this$0;
+    @SuppressWarnings("target") @Shadow(aliases = "field_20833", remap = false) @Final private ChunkRenderDispatcher this$0;
+
+    @Shadow protected abstract double getDistToPlayerSqr();
+
+    @Shadow protected abstract boolean doesChunkExistAt(BlockPos blockPos);
 
     /**
      * Add checks for the cube at that pos
@@ -36,12 +37,12 @@ public abstract class MixinRenderChunk {
                 Coords.blockToSection(blockPos.getZ()),
                 ChunkStatus.FULL,
                 false) != null &&
-            ((ICubicWorld) ((ChunkRenderDispatcherAccess) this$0).getLevel()).getCube(
-                Coords.blockToCube(blockPos.getX()),
-                Coords.blockToCube(blockPos.getY()),
-                Coords.blockToCube(blockPos.getZ()),
-                ChunkStatus.FULL,
-                false) != null
+                ((ICubicWorld) ((ChunkRenderDispatcherAccess) this$0).getLevel()).getCube(
+                    Coords.blockToCube(blockPos.getX()),
+                    Coords.blockToCube(blockPos.getY()),
+                    Coords.blockToCube(blockPos.getZ()),
+                    ChunkStatus.FULL,
+                    false) != null
         );
     }
 
@@ -55,11 +56,11 @@ public abstract class MixinRenderChunk {
         } else {
             cir.setReturnValue(
                 this.doesChunkExistAt(this.relativeOrigins[Direction.WEST.ordinal()])
-                && this.doesChunkExistAt(this.relativeOrigins[Direction.NORTH.ordinal()])
-                && this.doesChunkExistAt(this.relativeOrigins[Direction.EAST.ordinal()])
-                && this.doesChunkExistAt(this.relativeOrigins[Direction.SOUTH.ordinal()])
-                && this.doesChunkExistAt(this.relativeOrigins[Direction.UP.ordinal()])
-                && this.doesChunkExistAt(this.relativeOrigins[Direction.DOWN.ordinal()])
+                    && this.doesChunkExistAt(this.relativeOrigins[Direction.NORTH.ordinal()])
+                    && this.doesChunkExistAt(this.relativeOrigins[Direction.EAST.ordinal()])
+                    && this.doesChunkExistAt(this.relativeOrigins[Direction.SOUTH.ordinal()])
+                    && this.doesChunkExistAt(this.relativeOrigins[Direction.UP.ordinal()])
+                    && this.doesChunkExistAt(this.relativeOrigins[Direction.DOWN.ordinal()])
             );
         }
     }

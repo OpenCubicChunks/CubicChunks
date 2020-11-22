@@ -1,5 +1,17 @@
 package io.github.opencubicchunks.cubicchunks.chunk.ticket;
 
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
+import java.util.function.Function;
+import java.util.function.IntConsumer;
+import java.util.function.IntSupplier;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
 import com.google.common.collect.Sets;
 import com.mojang.datafixers.util.Either;
 import io.github.opencubicchunks.cubicchunks.chunk.ICubeHolder;
@@ -14,18 +26,6 @@ import net.minecraft.util.thread.ProcessorMailbox;
 import net.minecraft.util.thread.StrictQueue;
 import net.minecraft.world.level.ChunkPos;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Executor;
-import java.util.function.Function;
-import java.util.function.IntConsumer;
-import java.util.function.IntSupplier;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
 public class CubeTaskPriorityQueueSorter implements AutoCloseable, ChunkHolder.LevelChangeListener, ICubeHolderListener {
 
     private final Map<ProcessorHandle<?>, CubeTaskPriorityQueue<? extends Function<ProcessorHandle<Unit>, ?>>> queues;
@@ -34,7 +34,7 @@ public class CubeTaskPriorityQueueSorter implements AutoCloseable, ChunkHolder.L
 
     public CubeTaskPriorityQueueSorter(List<ProcessorHandle<?>> taskExecutors, Executor executor, int p_i50713_3_) {
         this.queues = taskExecutors.stream().collect(Collectors.toMap(Function.identity(), (p_219084_1_) ->
-                new CubeTaskPriorityQueue<>(p_219084_1_.name() + "_queue", p_i50713_3_)));
+            new CubeTaskPriorityQueue<>(p_219084_1_.name() + "_queue", p_i50713_3_)));
         this.actors = Sets.newHashSet(taskExecutors);
         this.sorter = new ProcessorMailbox<>(new StrictQueue.FixedPriorityQueue(4), executor, "sorter");
     }
@@ -61,13 +61,15 @@ public class CubeTaskPriorityQueueSorter implements AutoCloseable, ChunkHolder.L
     public <T> ProcessorHandle<CubeTaskPriorityQueueSorter.FunctionEntry<T>> createExecutor(ProcessorHandle<T> iTaskExecutor, boolean p_219087_2_) {
         return this.sorter.<ProcessorHandle<CubeTaskPriorityQueueSorter.FunctionEntry<T>>>ask((p_219086_3_) -> new StrictQueue.IntRunnable(0, () -> {
             this.getQueue(iTaskExecutor);
-            p_219086_3_.tell(ProcessorHandle.of("chunk priority sorter around " + iTaskExecutor.name(), (p_219071_3_) -> this.execute(iTaskExecutor, p_219071_3_.task, p_219071_3_.cubePos, p_219071_3_.level, p_219087_2_)));
+            p_219086_3_.tell(ProcessorHandle.of("chunk priority sorter around " + iTaskExecutor.name(),
+                (p_219071_3_) -> this.execute(iTaskExecutor, p_219071_3_.task, p_219071_3_.cubePos, p_219071_3_.level, p_219087_2_)));
         })).join();
     }
 
     // func_219091_a, getReleaseProcessor
     public ProcessorHandle<CubeTaskPriorityQueueSorter.RunnableEntry> createSorterExecutor(ProcessorHandle<Runnable> p_219091_1_) {
-        return this.sorter.<ProcessorHandle<CubeTaskPriorityQueueSorter.RunnableEntry>>ask((p_219080_2_) -> new StrictQueue.IntRunnable(0, () -> p_219080_2_.tell(ProcessorHandle.of("chunk priority sorter around " + p_219091_1_.name(), (p_219075_2_) -> this.sort(p_219091_1_, p_219075_2_.pos, p_219075_2_.runnable, p_219075_2_.clearQueue))))).join();
+        return this.sorter.<ProcessorHandle<CubeTaskPriorityQueueSorter.RunnableEntry>>ask((p_219080_2_) -> new StrictQueue.IntRunnable(0, () -> p_219080_2_.tell(ProcessorHandle
+            .of("chunk priority sorter around " + p_219091_1_.name(), (p_219075_2_) -> this.sort(p_219091_1_, p_219075_2_.pos, p_219075_2_.runnable, p_219075_2_.clearQueue))))).join();
     }
 
     // func_219066_a, onLevelChange
@@ -76,7 +78,7 @@ public class CubeTaskPriorityQueueSorter implements AutoCloseable, ChunkHolder.L
         this.sorter.tell(new StrictQueue.IntRunnable(0, () -> {
             int i = getLevel.getAsInt();
             this.queues.values().forEach((cubeTaskPriorityQueue) ->
-                    cubeTaskPriorityQueue.updateCubeLevel(i, pos, level));
+                cubeTaskPriorityQueue.updateCubeLevel(i, pos, level));
             setLevel.accept(level);
         }));
     }
@@ -122,7 +124,7 @@ public class CubeTaskPriorityQueueSorter implements AutoCloseable, ChunkHolder.L
                     p_219077_0_.run();
                     return CompletableFuture.completedFuture(Unit.INSTANCE);
                 })).collect(Collectors.toList())).thenAccept((p_219088_3_) ->
-                        this.pollTask(p_219078_1_, p_219078_2_));
+                    this.pollTask(p_219078_1_, p_219078_2_));
             }
 
         }));

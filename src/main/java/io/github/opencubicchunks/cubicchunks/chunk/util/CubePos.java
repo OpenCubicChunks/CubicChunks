@@ -1,5 +1,7 @@
 package io.github.opencubicchunks.cubicchunks.chunk.util;
 
+import static io.github.opencubicchunks.cubicchunks.utils.Coords.*;
+
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.SectionPos;
@@ -7,8 +9,6 @@ import net.minecraft.core.Vec3i;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.ChunkPos;
-
-import static io.github.opencubicchunks.cubicchunks.utils.Coords.*;
 
 public class CubePos extends Vec3i {
     private CubePos(int xIn, int yIn, int zIn) {
@@ -20,23 +20,23 @@ public class CubePos extends Vec3i {
         this(extractX(cubePosIn), extractY(cubePosIn), extractZ(cubePosIn));
     }
 
-    public static long asLong(int x, int y, int z) {
-        long i = 0L;
-        i |= ((long)x & (1 << 21) - 1) << 43;
-        i |= ((long)y & (1 << 22) - 1);
-        i |= ((long)z & (1 << 21) - 1) << 22;
-        return i;
-    }
-
     public static CubePos of(int x, int y, int z) {
         return new CubePos(x, y, z);
     }
 
+    public static long asLong(int x, int y, int z) {
+        long i = 0L;
+        i |= ((long) x & (1 << 21) - 1) << 43;
+        i |= ((long) y & (1 << 22) - 1);
+        i |= ((long) z & (1 << 21) - 1) << 22;
+        return i;
+    }
+
     public long asLong() {
         long i = 0L;
-        i |= ((long)this.getX() & (1 << 21) - 1) << 43;
-        i |= ((long)this.getY() & (1 << 22) - 1);
-        i |= ((long)this.getZ() & (1 << 21) - 1) << 22;
+        i |= ((long) this.getX() & (1 << 21) - 1) << 43;
+        i |= ((long) this.getY() & (1 << 22) - 1);
+        i |= ((long) this.getZ() & (1 << 21) - 1) << 22;
         return i;
     }
 
@@ -48,10 +48,10 @@ public class CubePos extends Vec3i {
         return new ChunkPos(cubeToSection(this.getX(), dx), cubeToSection(this.getZ(), dz));
     }
 
-    public static CubePos from(long cubePosIn)
-    {
+    public static CubePos from(long cubePosIn) {
         return new CubePos(cubePosIn);
     }
+
     public static CubePos from(BlockPos blockPosIn) {
         return new CubePos(blockToCube(blockPosIn.getX()), blockToCube(blockPosIn.getY()), blockToCube(blockPosIn.getZ()));
     }
@@ -60,28 +60,30 @@ public class CubePos extends Vec3i {
         return new CubePos(sectionToCube(position.x), yPos, sectionToCube(position.z));
     }
 
-    public static CubePos from(SectionPos sectionPos) { return new CubePos(
+    public static CubePos from(SectionPos sectionPos) {
+        return new CubePos(
             Coords.sectionToCube(sectionPos.getX()),
             Coords.sectionToCube(sectionPos.getY()),
-            Coords.sectionToCube(sectionPos.getZ())); }
+            Coords.sectionToCube(sectionPos.getZ()));
+    }
 
     public static CubePos from(Entity p_218157_0_) {
         return new CubePos(blockToCube(Mth.floor(p_218157_0_.getX())),
-                blockToCube(Mth.floor(p_218157_0_.getY())),
-                blockToCube(Mth.floor(p_218157_0_.getZ())));
+            blockToCube(Mth.floor(p_218157_0_.getY())),
+            blockToCube(Mth.floor(p_218157_0_.getZ())));
     }
 
 
     public static int extractX(long packed) {
-        return (int)(packed >> 43);
+        return (int) (packed >> 43);
     }
 
     public static int extractY(long packed) {
-        return (int)(packed << 42 >> 42);
+        return (int) (packed << 42 >> 42);
     }
 
     public static int extractZ(long packed) {
-        return (int)(packed << 21 >> 43);
+        return (int) (packed << 21 >> 43);
     }
 
     public int minCubeX() {
@@ -136,9 +138,11 @@ public class CubePos extends Vec3i {
     public int getRegionX() {
         return getX() >> 3;
     }
+
     public int getRegionY() {
         return getY() >> 3;
     }
+
     public int getRegionZ() {
         return getZ() >> 3;
     }
@@ -146,15 +150,16 @@ public class CubePos extends Vec3i {
     public int getLocalRegionX() {
         return getX() & 15;
     }
+
     public int getLocalRegionY() {
         return getY() & 15;
     }
+
     public int getLocalRegionZ() {
         return getZ() & 15;
     }
 
-    public static long sectionToCubeSectionLong(long sectionPosIn)
-    {
+    public static long sectionToCubeSectionLong(long sectionPosIn) {
         return CubePos.from(SectionPos.of(sectionPosIn)).asSectionPos().asLong();
     }
 }

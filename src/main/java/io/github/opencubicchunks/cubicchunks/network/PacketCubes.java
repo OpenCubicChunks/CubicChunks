@@ -1,5 +1,12 @@
 package io.github.opencubicchunks.cubicchunks.network;
 
+import static io.github.opencubicchunks.cubicchunks.utils.Coords.*;
+
+import java.util.ArrayList;
+import java.util.BitSet;
+import java.util.List;
+import java.util.stream.Collectors;
+
 import io.github.opencubicchunks.cubicchunks.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.IClientCubeProvider;
@@ -17,13 +24,6 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
-
-import java.util.ArrayList;
-import java.util.BitSet;
-import java.util.List;
-import java.util.stream.Collectors;
-
-import static io.github.opencubicchunks.cubicchunks.utils.Coords.cubeToSection;
 
 public class PacketCubes {
     // vanilla has max chunk size of 2MB, it works out to be 128kB for a 32^3 cube
@@ -44,9 +44,9 @@ public class PacketCubes {
         this.packetData = new byte[calculateDataSize(cubes)];
         fillDataBuffer(wrapBuffer(this.packetData), cubes, cubeExists);
         this.tileEntityTags = cubes.stream()
-                .flatMap(cube -> cube.getTileEntityMap().values().stream())
-                .map(BlockEntity::getUpdateTag)
-                .collect(Collectors.toList());
+            .flatMap(cube -> cube.getTileEntityMap().values().stream())
+            .map(BlockEntity::getUpdateTag)
+            .collect(Collectors.toList());
     }
 
     PacketCubes(FriendlyByteBuf buf) {
@@ -69,7 +69,7 @@ public class PacketCubes {
         int packetLength = buf.readVarInt();
         if (packetLength > MAX_CUBE_SIZE * cubes.length) {
             throw new RuntimeException("Cubes Packet trying to allocate too much memory on read: " +
-                    packetLength + " bytes for " + cubes.length + " cubes");
+                packetLength + " bytes for " + cubes.length + " cubes");
         }
         this.packetData = new byte[packetLength];
         buf.readBytes(this.packetData);
@@ -101,49 +101,6 @@ public class PacketCubes {
         }
     }
 
-    public static class Handler {
-
-        public static void handle(PacketCubes packet, Level worldIn) {
-            ClientLevel world = (ClientLevel) worldIn;
-
-            FriendlyByteBuf dataReader = wrapBuffer(packet.packetData);
-            BitSet cubeExists = packet.cubeExists;
-            for (int i = 0; i < packet.cubes.length; i++) {
-                CubePos pos = packet.cubePositions[i];
-                int x = pos.getX();
-                int y = pos.getY();
-                int z = pos.getZ();
-
-                CubeBiomeContainer cubeBiomeContainer = new CubeBiomeContainer(Minecraft.getInstance().level.registryAccess().registryOrThrow(Registry.BIOME_REGISTRY), packet.biomeDataArrays.get(i));
-
-                ((IClientCubeProvider) world.getChunkSource()).replaceWithPacketData(
-                        x, y, z, cubeBiomeContainer, dataReader, new CompoundTag(), cubeExists.get(i));
-
-                // TODO: full cube info
-                //            if (cube != null /*&&fullCube*/) {
-                //                world.addEntitiesToChunk(cube.getColumn());
-                //            }
-                for (int dx = 0; dx < IBigCube.DIAMETER_IN_SECTIONS; dx++) {
-                    for (int dy = 0; dy < IBigCube.DIAMETER_IN_SECTIONS; dy++) {
-                        for (int dz = 0; dz < IBigCube.DIAMETER_IN_SECTIONS; dz++) {
-                            world.setSectionDirtyWithNeighbors(
-                                    cubeToSection(x, dx),
-                                    cubeToSection(y, dy),
-                                    cubeToSection(z, dz));
-                        }
-                    }
-                }
-
-                for (CompoundTag nbt : packet.tileEntityTags) {
-                    BlockPos tePos = new BlockPos(nbt.getInt("x"), nbt.getInt("y"), nbt.getInt("z"));
-                    BlockEntity te = world.getBlockEntity(tePos);
-                    if (te != null) {
-                        te.load(nbt);
-                    }
-                }
-            }
-        }
-    }
     private static void fillDataBuffer(FriendlyByteBuf buf, List<BigCube> cubes, BitSet existingChunks) {
         buf.writerIndex(0);
         int i = 0;
@@ -169,13 +126,58 @@ public class PacketCubes {
         List<int[]> dataArrays = new ArrayList<>(cubes.length);
         for (BigCube cube : cubes) {
             CubeBiomeContainer cubeBiomeContainer = cube.getCubeBiomes();
-            if (cubeBiomeContainer != null)
+            if (cubeBiomeContainer != null) {
                 dataArrays.add(cubeBiomeContainer.writeBiomes());
-            else {
+            } else {
                 CubicChunks.LOGGER.error("Cube had null biomes! Sending empty array");
-                dataArrays.add(new int[]{ 1 });
+                dataArrays.add(new int[] { 1 });
             }
         }
         return dataArrays;
+    }
+
+    public static class Handler {
+
+        public static void handle(PacketCubes packet, Level worldIn) {
+            ClientLevel world = (ClientLevel) worldIn;
+
+            FriendlyByteBuf dataReader = wrapBuffer(packet.packetData);
+            BitSet cubeExists = packet.cubeExists;
+            for (int i = 0; i < packet.cubes.length; i++) {
+                CubePos pos = packet.cubePositions[i];
+                int x = pos.getX();
+                int y = pos.getY();
+                int z = pos.getZ();
+
+                CubeBiomeContainer cubeBiomeContainer =
+                    new CubeBiomeContainer(Minecraft.getInstance().level.registryAccess().registryOrThrow(Registry.BIOME_REGISTRY), packet.biomeDataArrays.get(i));
+
+                ((IClientCubeProvider) world.getChunkSource()).replaceWithPacketData(
+                    x, y, z, cubeBiomeContainer, dataReader, new CompoundTag(), cubeExists.get(i));
+
+                // TODO: full cube info
+                //            if (cube != null /*&&fullCube*/) {
+                //                world.addEntitiesToChunk(cube.getColumn());
+                //            }
+                for (int dx = 0; dx < IBigCube.DIAMETER_IN_SECTIONS; dx++) {
+                    for (int dy = 0; dy < IBigCube.DIAMETER_IN_SECTIONS; dy++) {
+                        for (int dz = 0; dz < IBigCube.DIAMETER_IN_SECTIONS; dz++) {
+                            world.setSectionDirtyWithNeighbors(
+                                cubeToSection(x, dx),
+                                cubeToSection(y, dy),
+                                cubeToSection(z, dz));
+                        }
+                    }
+                }
+
+                for (CompoundTag nbt : packet.tileEntityTags) {
+                    BlockPos tePos = new BlockPos(nbt.getInt("x"), nbt.getInt("y"), nbt.getInt("z"));
+                    BlockEntity te = world.getBlockEntity(tePos);
+                    if (te != null) {
+                        te.load(nbt);
+                    }
+                }
+            }
+        }
     }
 }

@@ -12,7 +12,7 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 @Mixin(ProtoTickList.class)
 public class MixinProtoTickList<T> {
     @Redirect(method = "<init>(Ljava/util/function/Predicate;Lnet/minecraft/world/level/ChunkPos;Lnet/minecraft/nbt/ListTag;Lnet/minecraft/world/level/LevelHeightAccessor;)V",
-            at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/LevelHeightAccessor;getSectionsCount()I"))
+        at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/LevelHeightAccessor;getSectionsCount()I"))
     private int getFakeSectionCount(LevelHeightAccessor accessor) {
         return 0;
     }

@@ -1,5 +1,24 @@
 package io.github.opencubicchunks.cubicchunks.world.storage;
 
+import static net.minecraft.nbt.NbtIo.writeCompressed;
+
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Function;
+import java.util.function.Supplier;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
 import com.google.common.collect.Maps;
 import com.mojang.datafixers.util.Either;
 import cubicchunks.regionlib.impl.EntryLocation2D;
@@ -17,28 +36,10 @@ import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import org.apache.logging.log4j.Logger;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionException;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Function;
-import java.util.function.Supplier;
-
-import static net.minecraft.nbt.NbtIo.writeCompressed;
-
 public class RegionCubeIO {
 
-    private static final long kB = 1024;
-    private static final long MB = kB * 1024;
+    private static final long KB = 1024;
+    private static final long MB = KB * 1024;
     private static final Logger LOGGER = CubicChunks.LOGGER;
 
     @Nonnull private final Level world;
@@ -124,8 +125,9 @@ public class RegionCubeIO {
                     SaveCubeColumns save = getSave();
 
                     Optional<ByteBuffer> buf = save.load(new EntryLocation3D(cubePos.getX(), cubePos.getY(), cubePos.getZ()), true);
-                    if(!buf.isPresent())
+                    if (!buf.isPresent()) {
                         return Either.left(null);
+                    }
 
                     CompoundTag compoundnbt = NbtIo.readCompressed(new ByteArrayInputStream(buf.get().array()));
                     return Either.left(compoundnbt);
@@ -140,7 +142,7 @@ public class RegionCubeIO {
             return cubeReadFuture.join();
         } catch (CompletionException completionexception) {
             if (completionexception.getCause() instanceof IOException) {
-                throw (IOException)completionexception.getCause();
+                throw (IOException) completionexception.getCause();
             } else {
                 throw completionexception;
             }
@@ -166,8 +168,9 @@ public class RegionCubeIO {
                     SaveCubeColumns save = getSave();
 
                     Optional<ByteBuffer> buf = save.load(new EntryLocation2D(chunkPos.x, chunkPos.z), true);
-                    if(!buf.isPresent())
+                    if (!buf.isPresent()) {
                         return Either.left(null);
+                    }
 
                     CompoundTag compoundnbt = NbtIo.readCompressed(new ByteArrayInputStream(buf.get().array()));
                     return Either.left(compoundnbt);
@@ -182,7 +185,7 @@ public class RegionCubeIO {
             return cubeReadFuture.join();
         } catch (CompletionException completionexception) {
             if (completionexception.getCause() instanceof IOException) {
-                throw (IOException)completionexception.getCause();
+                throw (IOException) completionexception.getCause();
             } else {
                 throw completionexception;
             }
@@ -265,7 +268,7 @@ public class RegionCubeIO {
         private CompoundTag data;
         private final CompletableFuture<Void> result = new CompletableFuture<>();
 
-        public SaveEntry(CompoundTag p_i231891_1_) {
+        SaveEntry(CompoundTag p_i231891_1_) {
             this.data = p_i231891_1_;
         }
     }

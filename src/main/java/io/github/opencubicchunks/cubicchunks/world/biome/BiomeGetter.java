@@ -8,5 +8,5 @@ import net.minecraft.world.level.chunk.ChunkGenerator;
 
 public interface BiomeGetter {
 
-    void generate(StructureFeatureManager structureFeatureManager, ChunkGenerator chunkGenerator, CubeWorldGenRegion worldGenRegion, long seed, CubeWorldGenRandom worldgenRandom, BlockPos blockPos);
+    void generate(StructureFeatureManager structureManager, ChunkGenerator chunkGenerator, CubeWorldGenRegion region, long seed, CubeWorldGenRandom random, BlockPos blockPos);
 }

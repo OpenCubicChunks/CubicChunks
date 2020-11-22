@@ -1,5 +1,7 @@
 package io.github.opencubicchunks.cubicchunks.mixin.core.client.world;
 
+import javax.annotation.Nullable;
+
 import io.github.opencubicchunks.cubicchunks.chunk.ClientChunkProviderCubeArray;
 import io.github.opencubicchunks.cubicchunks.chunk.IClientCubeProvider;
 import io.github.opencubicchunks.cubicchunks.chunk.biome.CubeBiomeContainer;
@@ -26,18 +28,17 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import javax.annotation.Nullable;
-
 @Mixin(ClientChunkCache.class)
 public abstract class MixinClientChunkProvider implements IClientCubeProvider {
-    private volatile ClientChunkProviderCubeArray cubeArray;
 
     @Shadow @Final private static Logger LOGGER;
 
     @Shadow @Final private ClientLevel level;
-    private EmptyCube emptyCube;
 
     @Shadow private volatile ClientChunkCache.Storage storage;
+
+    private volatile ClientChunkProviderCubeArray cubeArray;
+    private EmptyCube emptyCube;
 
     @Shadow public abstract int getLoadedChunksCount();
 
@@ -91,7 +92,7 @@ public abstract class MixinClientChunkProvider implements IClientCubeProvider {
 
     @Override
     public BigCube replaceWithPacketData(int cubeX, int cubeY, int cubeZ,
-                            @Nullable CubeBiomeContainer biomes, FriendlyByteBuf readBuffer, CompoundTag nbtTagIn, boolean cubeExists) {
+                                         @Nullable CubeBiomeContainer biomes, FriendlyByteBuf readBuffer, CompoundTag nbtTagIn, boolean cubeExists) {
 
         if (!this.cubeArray.inView(cubeX, cubeY, cubeZ)) {
             LOGGER.warn("Ignoring cube since it's not in the view range: {}, {}, {}", cubeX, cubeY, cubeZ);
@@ -100,10 +101,10 @@ public abstract class MixinClientChunkProvider implements IClientCubeProvider {
         int index = this.cubeArray.getIndex(cubeX, cubeY, cubeZ);
         BigCube cube = this.cubeArray.cubes.get(index);
         if (!isCubeValid(cube, cubeX, cubeY, cubeZ)) {
-             if (biomes == null) {
-                 LOGGER.warn("Ignoring cube since we don't have complete data: {}, {}, {}", cubeX, cubeY, cubeZ);
-                 return null;
-             }
+            if (biomes == null) {
+                LOGGER.warn("Ignoring cube since we don't have complete data: {}, {}, {}", cubeX, cubeY, cubeZ);
+                return null;
+            }
 
             cube = new BigCube(this.level, CubePos.of(cubeX, cubeY, cubeZ), biomes);
             cube.read(biomes, readBuffer, nbtTagIn, cubeExists);
@@ -121,7 +122,7 @@ public abstract class MixinClientChunkProvider implements IClientCubeProvider {
             worldlightmanager.updateSectionStatus(Coords.sectionPosByIndex(cube.getCubePos(), i), LevelChunkSection.isEmpty(chunksection));
         }
 
-        ((IClientWorld)this.level).onCubeLoaded(cubeX, cubeY, cubeZ);
+        ((IClientWorld) this.level).onCubeLoaded(cubeX, cubeY, cubeZ);
         // TODO: forge client cube load event
         // net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.event.world.ChunkEvent.Load(cube));
         return cube;
@@ -140,12 +141,12 @@ public abstract class MixinClientChunkProvider implements IClientCubeProvider {
         if (old == newDist) {
             return;
         }
-        ClientChunkProviderCubeArray array = new ClientChunkProviderCubeArray(newDist, cube->{});
+        ClientChunkProviderCubeArray array = new ClientChunkProviderCubeArray(newDist, cube -> {});
         array.centerX = this.cubeArray.centerX;
         array.centerY = this.cubeArray.centerY;
         array.centerZ = this.cubeArray.centerZ;
 
-        for(int k = 0; k < this.cubeArray.cubes.length(); ++k) {
+        for (int k = 0; k < this.cubeArray.cubes.length(); ++k) {
             BigCube chunk = this.cubeArray.cubes.get(k);
             if (chunk == null) {
                 continue;
@@ -167,7 +168,7 @@ public abstract class MixinClientChunkProvider implements IClientCubeProvider {
     public String gatherStats() {
         //noinspection ConstantConditions
         return "Client Chunk Cache: " + ((ClientChunkProviderChunkArrayAccess) (Object) this.storage).getChunks().length() + ", " + this.getLoadedChunksCount() +
-                " | " + this.cubeArray.cubes.length() + ", " + getLoadedCubesCount();
+            " | " + this.cubeArray.cubes.length() + ", " + getLoadedCubesCount();
     }
 
     public int getLoadedCubesCount() {

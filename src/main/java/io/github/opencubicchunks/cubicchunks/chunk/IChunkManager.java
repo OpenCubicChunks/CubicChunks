@@ -1,5 +1,12 @@
 package io.github.opencubicchunks.cubicchunks.chunk;
 
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.function.IntFunction;
+import java.util.function.IntSupplier;
+
+import javax.annotation.Nullable;
+
 import com.mojang.datafixers.util.Either;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.BigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.CubeStatus;
@@ -10,12 +17,6 @@ import net.minecraft.core.SectionPos;
 import net.minecraft.server.level.ChunkHolder;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.chunk.ChunkStatus;
-
-import javax.annotation.Nullable;
-import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.function.IntFunction;
-import java.util.function.IntSupplier;
 
 public interface IChunkManager {
     int MAX_CUBE_DISTANCE = 33 + CubeStatus.maxDistance();
@@ -36,7 +37,7 @@ public interface IChunkManager {
     ChunkHolder getImmutableCubeHolder(long cubePosIn);
 
     CompletableFuture<Either<IBigCube, ChunkHolder.ChunkLoadingFailure>> scheduleCube(ChunkHolder chunkHolderIn,
-                                                                                         ChunkStatus chunkStatusIn);
+                                                                                      ChunkStatus chunkStatusIn);
 
     CompletableFuture<Either<BigCube, ChunkHolder.ChunkLoadingFailure>> unpackCubeTicks(ChunkHolder chunkHolder);
 
@@ -44,7 +45,7 @@ public interface IChunkManager {
     CompletableFuture<Either<BigCube, ChunkHolder.ChunkLoadingFailure>> postProcessCube(ChunkHolder chunkHolder);
 
     CompletableFuture<Either<List<IBigCube>, ChunkHolder.ChunkLoadingFailure>> getCubeRangeFuture(CubePos pos, int p_219236_2_,
-                                                                                                     IntFunction<ChunkStatus> p_219236_3_);
+                                                                                                  IntFunction<ChunkStatus> p_219236_3_);
 
     CompletableFuture<Void> packCubeTicks(BigCube cubeIn);
 
@@ -53,7 +54,7 @@ public interface IChunkManager {
     Iterable<ChunkHolder> getCubes();
 
     // func_219215_b, checkerboardDistance
-    static int getCubeChebyshevDistance(CubePos pos, ServerPlayer player, boolean p_219215_2_)  {
+    static int getCubeChebyshevDistance(CubePos pos, ServerPlayer player, boolean p_219215_2_) {
         int x;
         int y;
         int z;

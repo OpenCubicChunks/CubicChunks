@@ -1,5 +1,11 @@
 package io.github.opencubicchunks.cubicchunks.chunk;
 
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Stream;
+
+import javax.annotation.Nullable;
+
 import io.github.opencubicchunks.cubicchunks.chunk.biome.CubeBiomeContainer;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.meta.EarlyConfig;
@@ -16,11 +22,6 @@ import net.minecraft.world.level.levelgen.feature.StructureFeature;
 import net.minecraft.world.level.levelgen.structure.StructureStart;
 import org.apache.logging.log4j.LogManager;
 
-import javax.annotation.Nullable;
-import java.util.Map;
-import java.util.Set;
-import java.util.stream.Stream;
-
 public interface IBigCube extends BlockGetter, FeatureAccess {
 
     int SECTION_DIAMETER = 16;
@@ -30,7 +31,7 @@ public interface IBigCube extends BlockGetter, FeatureAccess {
     int DIAMETER_IN_BLOCKS = SECTION_DIAMETER * DIAMETER_IN_SECTIONS;
     int BLOCK_COUNT = DIAMETER_IN_BLOCKS * DIAMETER_IN_BLOCKS * DIAMETER_IN_BLOCKS;
     int BLOCK_COLUMNS_PER_SECTION = SECTION_DIAMETER * SECTION_DIAMETER;
-    int SIZE_BITS = (int)Math.round(Math.log(DIAMETER_IN_BLOCKS) / Math.log(2.0D));
+    int SIZE_BITS = (int) Math.round(Math.log(DIAMETER_IN_BLOCKS) / Math.log(2.0D));
 
     CubePos getCubePos();
     LevelChunkSection[] getCubeSections();

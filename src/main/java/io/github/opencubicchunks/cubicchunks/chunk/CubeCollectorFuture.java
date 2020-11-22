@@ -1,12 +1,12 @@
 package io.github.opencubicchunks.cubicchunks.chunk;
 
-import com.mojang.datafixers.util.Either;
-import net.minecraft.server.level.ChunkHolder;
-
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import com.mojang.datafixers.util.Either;
+import net.minecraft.server.level.ChunkHolder;
 
 public class CubeCollectorFuture extends CompletableFuture<List<Either<IBigCube, ChunkHolder.ChunkLoadingFailure>>> {
 

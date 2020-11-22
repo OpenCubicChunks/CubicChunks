@@ -22,9 +22,9 @@ public class PacketCubeBlockChanges {
     @SuppressWarnings("deprecation")
     public PacketCubeBlockChanges(FriendlyByteBuf in) {
         this.cubePos = CubePos.of(
-                BufferUtils.readSignedVarInt(in),
-                BufferUtils.readSignedVarInt(in),
-                BufferUtils.readSignedVarInt(in));
+            BufferUtils.readSignedVarInt(in),
+            BufferUtils.readSignedVarInt(in),
+            BufferUtils.readSignedVarInt(in));
 
         short numBlocks = in.readShort();
         localAddresses = new short[numBlocks];

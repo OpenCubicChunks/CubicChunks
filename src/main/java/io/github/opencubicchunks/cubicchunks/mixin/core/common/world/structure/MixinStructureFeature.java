@@ -26,7 +26,8 @@ public abstract class MixinStructureFeature {
     @Shadow protected abstract boolean linearSeparation();
 
     @Inject(at = @At("HEAD"), method = "getNearestGeneratedFeature", cancellable = true)
-    private void getNearestStructure3D(LevelReader level, StructureFeatureManager manager, BlockPos blockPos, int searchRadius, boolean skipExistingChunks, long seed, StructureFeatureConfiguration structureFeatureConfiguration, CallbackInfoReturnable<BlockPos> cir) {
+    private void getNearestStructure3D(LevelReader level, StructureFeatureManager manager, BlockPos blockPos, int searchRadius, boolean skipExistingChunks, long seed,
+                                       StructureFeatureConfiguration structureFeatureConfiguration, CallbackInfoReturnable<BlockPos> cir) {
         int spacing = structureFeatureConfiguration.spacing();
         int ySpacing = IBigCube.DIAMETER_IN_SECTIONS;
 
@@ -35,7 +36,7 @@ public abstract class MixinStructureFeature {
         int mainSectionZ = SectionPos.blockToSectionCoord(blockPos.getZ());
         WorldgenRandom worldgenRandom = new WorldgenRandom();
 
-        for (int radius = 0; radius <= 100 ;++radius){
+        for (int radius = 0; radius <= 100; ++radius) {
             for (int dx = -radius; dx <= radius; ++dx) {
                 boolean isEdgeX = dx == -radius || dx == radius;
 
@@ -58,9 +59,9 @@ public abstract class MixinStructureFeature {
                         for (int sectionX = 0; sectionX < IBigCube.DIAMETER_IN_SECTIONS; sectionX++) {
                             for (int sectionZ = 0; sectionZ < IBigCube.DIAMETER_IN_SECTIONS; sectionZ++) {
                                 SectionPos sp = SectionPos.of(
-                                        Coords.cubeToSection(pos.getX(), sectionX),
-                                        Coords.cubeToSection(pos.getY(), 0),
-                                        Coords.cubeToSection(pos.getZ(), sectionZ)
+                                    Coords.cubeToSection(pos.getX(), sectionX),
+                                    Coords.cubeToSection(pos.getY(), 0),
+                                    Coords.cubeToSection(pos.getZ(), sectionZ)
                                 );
                                 boolean validBiome = level.getBiomeManager().getPrimaryBiomeAtChunk(sp.x(), sp.z()).getGenerationSettings().isValidStart((StructureFeature<?>) (Object) this);
                                 if (!validBiome) {

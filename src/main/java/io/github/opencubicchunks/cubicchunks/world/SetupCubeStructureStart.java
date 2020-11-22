@@ -1,12 +1,12 @@
 package io.github.opencubicchunks.cubicchunks.world;
 
+import java.util.Random;
+
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.StructureFeatureManager;
 import net.minecraft.world.level.WorldGenLevel;
 import net.minecraft.world.level.chunk.ChunkGenerator;
 import net.minecraft.world.level.levelgen.structure.BoundingBox;
-
-import java.util.Random;
 
 public interface SetupCubeStructureStart {
 

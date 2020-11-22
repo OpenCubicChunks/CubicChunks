@@ -1,7 +1,19 @@
 package io.github.opencubicchunks.cubicchunks.client;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.*;
+import com.mojang.blaze3d.vertex.BufferBuilder;
+import com.mojang.blaze3d.vertex.BufferUploader;
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.Tesselator;
+import com.mojang.blaze3d.vertex.VertexFormat;
 import com.mojang.math.Matrix4f;
 import com.mojang.math.Transformation;
 import com.mojang.math.Vector4f;
@@ -17,19 +29,17 @@ import net.minecraft.server.level.progress.StoringChunkProgressListener;
 import net.minecraft.world.level.chunk.ChunkStatus;
 import org.lwjgl.opengl.GL11;
 
-import java.util.*;
-
 public class CubicWorldLoadScreen {
 
     public static void doRender(PoseStack mStack, StoringChunkProgressListener trackerParam, int xBase, int yBase, int scale, int spacing,
-            Object2IntMap<ChunkStatus> colors) {
+                                Object2IntMap<ChunkStatus> colors) {
         render3d(trackerParam, xBase, yBase, scale, spacing, colors);
         // TODO: config option
         // render2d(mStack, trackerParam, xBase, yBase, scale, spacing, colors);
     }
 
     private static void render3d(StoringChunkProgressListener trackerParam, int xBase, int yBase, int scale, int spacing,
-            Object2IntMap<ChunkStatus> colors) {
+                                 Object2IntMap<ChunkStatus> colors) {
         float aspectRatio = Minecraft.getInstance().screen.width / (float) Minecraft.getInstance().screen.height;
 
         float scaleWithCineSize = scale * IBigCube.DIAMETER_IN_SECTIONS / 2.0f;
@@ -62,7 +72,7 @@ public class CubicWorldLoadScreen {
     }
 
     private static void render3dDrawCubes(StoringChunkProgressListener trackerParam, int xBase, int yBase, float scale, int spacing,
-            Object2IntMap<ChunkStatus> colors) {
+                                          Object2IntMap<ChunkStatus> colors) {
         RenderSystem.disableTexture();
         RenderSystem.enableBlend();
         RenderSystem.enableAlphaTest();
@@ -84,7 +94,7 @@ public class CubicWorldLoadScreen {
                 int alpha = 0xB0;
                 int c = colors.getOrDefault(columnStatus, 0xFFFF00FF) | (alpha << 24);
                 drawCube(buffer, cdx - sectionRenderRadius / 2, -30, cdz - sectionRenderRadius / 2,
-                        0.12f * scale / IBigCube.DIAMETER_IN_SECTIONS, c, EnumSet.of(Direction.UP));
+                    0.12f * scale / IBigCube.DIAMETER_IN_SECTIONS, c, EnumSet.of(Direction.UP));
             }
         }
 
@@ -109,7 +119,7 @@ public class CubicWorldLoadScreen {
                         }
                     }
                     drawCube(buffer, dx - renderRadius / 2, dy - renderRadius / 2, dz - renderRadius / 2,
-                            0.12f * scale, c, renderFaces);
+                        0.12f * scale, c, renderFaces);
                 }
             }
         }
@@ -199,7 +209,7 @@ public class CubicWorldLoadScreen {
 
     private static void vertex(BufferBuilder buffer, float x, float y, float z, int nx, int ny, int nz, int color) {
         // color = (color & 0xFF000000) | ((~color) & 0x00FFFFFF);
-        float scale = 1f/255;
+        float scale = 1f / 255;
         float r = (color >>> 16 & 0xFF) * scale;
         float g = (color >>> 8 & 0xFF) * scale;
         float b = (color & 0xFF) * scale;
@@ -210,7 +220,7 @@ public class CubicWorldLoadScreen {
 
 
     private static void render2d(PoseStack mStack, StoringChunkProgressListener trackerParam, int xBase, int yBase, int scale, int spacing,
-            Object2IntMap<ChunkStatus> colors) {
+                                 Object2IntMap<ChunkStatus> colors) {
         int squareScale = scale + spacing;
         int loadDiameter = trackerParam.getFullDiameter();
         int diameterPixels = loadDiameter * squareScale - spacing;
@@ -259,7 +269,7 @@ public class CubicWorldLoadScreen {
                 }
 
                 fillFloat(Transformation.identity().getMatrix(),
-                        centerX, centerZ, centerX + squareScale, centerZ +  squareScale, colors.getInt(null) | 0xff000000);
+                    centerX, centerZ, centerX + squareScale, centerZ + squareScale, colors.getInt(null) | 0xff000000);
 
                 for (ChunkStatus status : statusesReverse) {
                     if (!squareSizes.containsKey(status)) {
@@ -271,7 +281,7 @@ public class CubicWorldLoadScreen {
                     float screenY = centerZ - radius;
 
                     fillFloat(Transformation.identity().getMatrix(),
-                            screenX, screenY, screenX + radius * 2, screenY + radius * 2, colors.getInt(status) | 0xff000000);
+                        screenX, screenY, screenX + radius * 2, screenY + radius * 2, colors.getInt(status) | 0xff000000);
                 }
             }
         }

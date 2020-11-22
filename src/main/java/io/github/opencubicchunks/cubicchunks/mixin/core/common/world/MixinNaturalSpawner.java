@@ -12,7 +12,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class MixinNaturalSpawner {
     @Inject(method = "spawnForChunk", at = @At("HEAD"), cancellable = true)
     private static void cancelSpawnForChunk(ServerLevel serverLevel, LevelChunk levelChunk, NaturalSpawner.SpawnState spawnState, boolean bl,
-            boolean bl2, boolean bl3, CallbackInfo ci) {
+                                            boolean bl2, boolean bl3, CallbackInfo ci) {
         ci.cancel(); // TODO: mob spawning
     }
 }

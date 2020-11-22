@@ -1,14 +1,14 @@
 package io.github.opencubicchunks.cubicchunks.mixin.core.common.world.placement;
 
+import java.util.Random;
+import java.util.stream.Stream;
+
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.world.placement.CubicSimpleFeatureDecorator;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.levelgen.placement.DepthAverageConfigation;
 import net.minecraft.world.level.levelgen.placement.DepthAverageDecorator;
 import org.spongepowered.asm.mixin.Mixin;
-
-import java.util.Random;
-import java.util.stream.Stream;
 
 @Mixin(DepthAverageDecorator.class)
 public class MixinDepthAverageDecorator implements CubicSimpleFeatureDecorator<DepthAverageConfigation> {
@@ -21,8 +21,9 @@ public class MixinDepthAverageDecorator implements CubicSimpleFeatureDecorator<D
         int z = minCubePos.getZ();
         int blockY = rand.nextInt(spread) + rand.nextInt(spread) - spread + baseline;
 
-        if (blockY < minCubePos.getY() || blockY >= minCubePos.getY() + IBigCube.DIAMETER_IN_BLOCKS)
+        if (blockY < minCubePos.getY() || blockY >= minCubePos.getY() + IBigCube.DIAMETER_IN_BLOCKS) {
             return Stream.of();
+        }
 
         return Stream.of(new BlockPos(x, blockY, z));
     }

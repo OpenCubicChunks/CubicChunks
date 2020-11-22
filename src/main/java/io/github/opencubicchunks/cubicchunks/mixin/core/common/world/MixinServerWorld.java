@@ -1,5 +1,9 @@
 package io.github.opencubicchunks.cubicchunks.mixin.core.common.world;
 
+import java.util.Map;
+import java.util.Random;
+import java.util.function.Supplier;
+
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.BigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.heightmap.SurfaceTrackerWrapper;
@@ -26,14 +30,10 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
-import java.util.Map;
-import java.util.Random;
-import java.util.function.Supplier;
-
 @Mixin(ServerLevel.class)
 public abstract class MixinServerWorld extends Level implements IServerWorld {
     protected MixinServerWorld(WritableLevelData p_i231617_1_, ResourceKey<Level> p_i231617_2_, DimensionType p_i231617_4_,
-            Supplier<ProfilerFiller> p_i231617_5_, boolean p_i231617_6_, boolean p_i231617_7_, long p_i231617_8_) {
+                               Supplier<ProfilerFiller> p_i231617_5_, boolean p_i231617_6_, boolean p_i231617_7_, long p_i231617_8_) {
         super(p_i231617_1_, p_i231617_2_, p_i231617_4_, p_i231617_5_, p_i231617_6_, p_i231617_7_, p_i231617_8_);
     }
 
@@ -43,7 +43,7 @@ public abstract class MixinServerWorld extends Level implements IServerWorld {
         int x = chunkPos.getMinBlockX();
         int z = chunkPos.getMinBlockZ();
         BlockPos pos = this.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING, this.getNextBlockRandomPos(x, 0, z, 15));
-        if(((ICubicWorld) this).getCube(pos, ChunkStatus.FULL, false) == null) {
+        if (((ICubicWorld) this).getCube(pos, ChunkStatus.FULL, false) == null) {
             return -1;
         }
         return this.random.nextInt(16);

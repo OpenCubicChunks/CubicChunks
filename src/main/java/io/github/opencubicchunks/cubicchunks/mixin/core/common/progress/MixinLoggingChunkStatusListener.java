@@ -1,19 +1,23 @@
 package io.github.opencubicchunks.cubicchunks.mixin.core.common.progress;
 
+import javax.annotation.Nullable;
+
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.ICubeStatusListener;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import net.minecraft.server.level.progress.LoggerChunkProgressListener;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.chunk.ChunkStatus;
-import org.spongepowered.asm.mixin.*;
+import org.spongepowered.asm.mixin.Final;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Mutable;
+import org.spongepowered.asm.mixin.Overwrite;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Constant;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyConstant;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-
-import javax.annotation.Nullable;
 
 @Mixin(LoggerChunkProgressListener.class)
 public abstract class MixinLoggingChunkStatusListener implements ICubeStatusListener {
@@ -30,16 +34,17 @@ public abstract class MixinLoggingChunkStatusListener implements ICubeStatusList
         // Except we subtract one before the ceil and readd it after, for... some reason
         // Multiply by two to convert cube radius -> diameter,
         // And then add one for the center cube
-        int ccCubeRadius = 1+(int) Math.ceil((vanillaSpawnRadius-1) / ((float) IBigCube.DIAMETER_IN_SECTIONS));
-        int ccCubeDiameter = ccCubeRadius*2+1;
-        totalCubes = ccCubeDiameter*ccCubeDiameter*ccCubeDiameter;
+        int ccCubeRadius = 1 + (int) Math.ceil((vanillaSpawnRadius - 1) / ((float) IBigCube.DIAMETER_IN_SECTIONS));
+        int ccCubeDiameter = ccCubeRadius * 2 + 1;
+        totalCubes = ccCubeDiameter * ccCubeDiameter * ccCubeDiameter;
 
         int ccChunkRadius = ccCubeRadius * IBigCube.DIAMETER_IN_SECTIONS;
-        int ccChunkDiameter = ccChunkRadius*2+1;
-        maxCount = ccChunkDiameter*ccChunkDiameter;
+        int ccChunkDiameter = ccChunkRadius * 2 + 1;
+        maxCount = ccChunkDiameter * ccChunkDiameter;
     }
 
-    @Override public void startCubes(CubePos center) {}
+    @Override public void startCubes(CubePos center) {
+    }
 
     @Override public void onCubeStatusChange(CubePos cubePos, @Nullable ChunkStatus newStatus) {
         if (newStatus == ChunkStatus.FULL) {

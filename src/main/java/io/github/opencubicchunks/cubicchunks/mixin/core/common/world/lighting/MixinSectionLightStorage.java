@@ -21,16 +21,21 @@ import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 
 @Mixin(LayerLightSectionStorage.class)
-public abstract class MixinSectionLightStorage <M extends DataLayerStorageMap<M>> extends SectionTracker implements ISectionLightStorage {
+public abstract class MixinSectionLightStorage<M extends DataLayerStorageMap<M>> extends SectionTracker implements ISectionLightStorage {
+
+    @Shadow @Final private static Direction[] DIRECTIONS;
 
     @Shadow @Final protected Long2ObjectMap<DataLayer> queuedSections;
-    @Shadow @Final private LongSet toRemove;
     @Shadow @Final protected M updatingSectionData;
     @Shadow protected volatile boolean hasToRemove;
     @Shadow @Final protected LongSet changedSections;
-    @Shadow @Final private static Direction[] DIRECTIONS;
+    @Shadow @Final private LongSet toRemove;
 
     private final LongSet cubesToRetain = new LongOpenHashSet();
+
+    protected MixinSectionLightStorage(int p_i50706_1_, int p_i50706_2_, int p_i50706_3_) {
+        super(p_i50706_1_, p_i50706_2_, p_i50706_3_);
+    }
 
     @Shadow protected abstract void clearQueuedSectionBlocks(LayerLightEngine<?, ?> engine, long sectionPosIn);
 
@@ -39,10 +44,6 @@ public abstract class MixinSectionLightStorage <M extends DataLayerStorageMap<M>
     @Shadow protected abstract boolean storingLightForSection(long sectionPosIn);
 
     @Shadow protected abstract boolean hasInconsistencies();
-    
-    protected MixinSectionLightStorage(int p_i50706_1_, int p_i50706_2_, int p_i50706_3_) {
-        super(p_i50706_1_, p_i50706_2_, p_i50706_3_);
-    }
 
     @Override
     public void retainCubeData(long cubeSectionPos, boolean retain) {
@@ -60,7 +61,7 @@ public abstract class MixinSectionLightStorage <M extends DataLayerStorageMap<M>
     @Overwrite
     protected void markNewInconsistencies(LayerLightEngine<M, ?> engine, boolean updateSkyLight, boolean updateBlockLight) {
         if (this.hasInconsistencies() || !this.queuedSections.isEmpty()) {
-            for(long noLightPos : this.toRemove) {
+            for (long noLightPos : this.toRemove) {
                 this.clearQueuedSectionBlocks(engine, noLightPos);
                 DataLayer nibblearray = this.queuedSections.remove(noLightPos);
                 DataLayer nibblearray1 = this.updatingSectionData.removeLayer(noLightPos);
@@ -75,7 +76,7 @@ public abstract class MixinSectionLightStorage <M extends DataLayerStorageMap<M>
 
             this.updatingSectionData.clearCache();
 
-            for(long section : this.toRemove) {
+            for (long section : this.toRemove) {
                 //TODO: implement this for CC
                 this.onNodeRemoved(section);
             }
@@ -83,7 +84,7 @@ public abstract class MixinSectionLightStorage <M extends DataLayerStorageMap<M>
             this.toRemove.clear();
             this.hasToRemove = false;
 
-            for(Long2ObjectMap.Entry<DataLayer> entry : this.queuedSections.long2ObjectEntrySet()) {
+            for (Long2ObjectMap.Entry<DataLayer> entry : this.queuedSections.long2ObjectEntrySet()) {
                 long entryPos = entry.getLongKey();
                 if (this.storingLightForSection(entryPos)) {
                     DataLayer nibblearray2 = entry.getValue();
@@ -95,24 +96,24 @@ public abstract class MixinSectionLightStorage <M extends DataLayerStorageMap<M>
                 }
             }
 
-            LevelBasedGraphAccess engineAccess = ((LevelBasedGraphAccess)engine);
+            LevelBasedGraphAccess engineAccess = ((LevelBasedGraphAccess) engine);
 
             this.updatingSectionData.clearCache();
             if (!updateBlockLight) {
-                for(long newArray : this.queuedSections.keySet()) {
+                for (long newArray : this.queuedSections.keySet()) {
                     if (this.storingLightForSection(newArray)) {
                         int newX = SectionPos.sectionToBlockCoord(SectionPos.x(newArray));
                         int newY = SectionPos.sectionToBlockCoord(SectionPos.y(newArray));
                         int newZ = SectionPos.sectionToBlockCoord(SectionPos.z(newArray));
 
-                        for(Direction direction : DIRECTIONS) {
+                        for (Direction direction : DIRECTIONS) {
                             long posOffset = SectionPos.offset(newArray, direction);
                             if (!this.queuedSections.containsKey(posOffset) && this.storingLightForSection(posOffset)) {
-                                for(int i1 = 0; i1 < 16; ++i1) {
-                                    for(int j1 = 0; j1 < 16; ++j1) {
+                                for (int i1 = 0; i1 < 16; ++i1) {
+                                    for (int j1 = 0; j1 < 16; ++j1) {
                                         long k1;
                                         long l1;
-                                        switch(direction) {
+                                        switch (direction) {
                                             case DOWN:
                                                 k1 = BlockPos.asLong(newX + j1, newY, newZ + i1);
                                                 l1 = BlockPos.asLong(newX + j1, newY - 1, newZ + i1);
@@ -139,9 +140,9 @@ public abstract class MixinSectionLightStorage <M extends DataLayerStorageMap<M>
                                         }
 
                                         engineAccess.invokeCheckEdge(k1, l1, engineAccess.invokeComputeLevelFromNeighbor(k1, l1, engineAccess.invokeGetLevel(k1)),
-                                                false);
+                                            false);
                                         engineAccess.invokeCheckEdge(l1, k1, engineAccess.invokeComputeLevelFromNeighbor(l1, k1, engineAccess.invokeGetLevel(l1)),
-                                                false);
+                                            false);
                                     }
                                 }
                             }
@@ -152,7 +153,7 @@ public abstract class MixinSectionLightStorage <M extends DataLayerStorageMap<M>
 
             ObjectIterator<Long2ObjectMap.Entry<DataLayer>> objectiterator = this.queuedSections.long2ObjectEntrySet().iterator();
 
-            while(objectiterator.hasNext()) {
+            while (objectiterator.hasNext()) {
                 Long2ObjectMap.Entry<DataLayer> entry1 = objectiterator.next();
                 long k2 = entry1.getLongKey();
                 if (this.storingLightForSection(k2)) {

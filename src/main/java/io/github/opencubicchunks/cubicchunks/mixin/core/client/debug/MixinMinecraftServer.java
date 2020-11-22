@@ -1,5 +1,8 @@
 package io.github.opencubicchunks.cubicchunks.mixin.core.client.debug;
 
+import java.io.IOException;
+import java.util.Map;
+
 import io.github.opencubicchunks.cubicchunks.debug.DebugVisualization;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;
@@ -15,9 +18,6 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-
-import java.io.IOException;
-import java.util.Map;
 
 @Mixin(MinecraftServer.class)
 public class MixinMinecraftServer {

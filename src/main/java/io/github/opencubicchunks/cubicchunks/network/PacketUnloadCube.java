@@ -9,13 +9,11 @@ import net.minecraft.world.level.chunk.ChunkSource;
 public class PacketUnloadCube {
     private final CubePos pos;
 
-    public PacketUnloadCube(CubePos posIn)
-    {
+    public PacketUnloadCube(CubePos posIn) {
         this.pos = posIn;
     }
 
-    PacketUnloadCube(FriendlyByteBuf buf)
-    {
+    PacketUnloadCube(FriendlyByteBuf buf) {
         this.pos = CubePos.of(buf.readInt(), buf.readInt(), buf.readInt());
     }
 

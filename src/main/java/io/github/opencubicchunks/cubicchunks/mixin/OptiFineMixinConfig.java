@@ -1,12 +1,13 @@
 package io.github.opencubicchunks.cubicchunks.mixin;
 
+import java.util.List;
+import java.util.Set;
+
+import javax.annotation.Nullable;
+
 import org.objectweb.asm.tree.ClassNode;
 import org.spongepowered.asm.mixin.extensibility.IMixinConfigPlugin;
 import org.spongepowered.asm.mixin.extensibility.IMixinInfo;
-
-import javax.annotation.Nullable;
-import java.util.List;
-import java.util.Set;
 
 public class OptiFineMixinConfig implements IMixinConfigPlugin {
 

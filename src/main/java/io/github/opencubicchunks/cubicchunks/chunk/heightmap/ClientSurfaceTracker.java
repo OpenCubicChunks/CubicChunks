@@ -1,12 +1,12 @@
 package io.github.opencubicchunks.cubicchunks.chunk.heightmap;
 
+import java.util.function.Predicate;
+
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.HeightmapAccess;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.levelgen.Heightmap;
-
-import java.util.function.Predicate;
 
 public class ClientSurfaceTracker extends Heightmap {
 

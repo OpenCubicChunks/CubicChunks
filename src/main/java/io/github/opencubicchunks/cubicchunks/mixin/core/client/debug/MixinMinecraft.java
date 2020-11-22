@@ -1,10 +1,11 @@
 package io.github.opencubicchunks.cubicchunks.mixin.core.client.debug;
 
+import javax.annotation.Nullable;
+
 import io.github.opencubicchunks.cubicchunks.debug.DebugVisualization;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.multiplayer.ClientLevel;
-import javax.annotation.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;

@@ -1,65 +1,66 @@
 package io.github.opencubicchunks.cubicchunks.world;
 
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
+
 import io.github.opencubicchunks.cubicchunks.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.annotation.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.level.Level;
 
-import javax.annotation.Nullable;
-import javax.annotation.ParametersAreNonnullByDefault;
-
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public final class SpawnPlaceFinder {
+
+    private static final int MIN_FREE_SPACE_SPAWN = 32;
 
     private SpawnPlaceFinder() {
         throw new Error();
     }
 
-    private static final int MIN_FREE_SPACE_SPAWN = 32;
-/*
-    public static BlockPos getRandomizedSpawnPoint(World world) {
-        //TODO: uses getTopSolidOrLiquidBlock() ... not good
-        BlockPos ret = world.getSpawnPoint();
+    /*
+        public static BlockPos getRandomizedSpawnPoint(World world) {
+            //TODO: uses getTopSolidOrLiquidBlock() ... not good
+            BlockPos ret = world.getSpawnPoint();
 
-        CubicChunks.LOGGER.trace("Finding spawnpoint starting from {}", ret);
+            CubicChunks.LOGGER.trace("Finding spawnpoint starting from {}", ret);
 
-        boolean isAdventure = world.getWorldInfo().getGameType() == GameType.ADVENTURE;
-        int spawnFuzz;
-        if (world instanceof ServerWorld) {
-            spawnFuzz = world.getWorldType().getSpawnFuzz((ServerWorld) world,
-                    Objects.requireNonNull(world.getServer()));
-        } else {
-            spawnFuzz = 1;
-        }
-        int border = MathHelper.floor(world.getWorldBorder().getClosestDistance(ret.getX(), ret.getZ()));
-        if (border < spawnFuzz) {
-            spawnFuzz = border;
-        }
-
-        if (!world.provider.isNether() && !isAdventure && spawnFuzz != 0) {
-            if (spawnFuzz < 2) {
-                spawnFuzz = 2;
-            }
-            int spawnFuzzHalf = spawnFuzz / 2;
-            CubicChunks.LOGGER.trace("Running bisect with spawn fizz {}", spawnFuzz);
-            ret = getTopBlockBisect(world, ret.add(
-                    world.rand.nextInt(spawnFuzzHalf) - spawnFuzz,
-                    0,
-                    world.rand.nextInt(spawnFuzzHalf) - spawnFuzz
-            ));
-            if (ret == null) {
-                ret = world.getSpawnPoint();
-                CubicChunks.LOGGER.trace("No spawnpoint place found starting at {}, spawning at {}", ret, ret);
+            boolean isAdventure = world.getWorldInfo().getGameType() == GameType.ADVENTURE;
+            int spawnFuzz;
+            if (world instanceof ServerWorld) {
+                spawnFuzz = world.getWorldType().getSpawnFuzz((ServerWorld) world,
+                        Objects.requireNonNull(world.getServer()));
             } else {
-                ret = ret.up();
+                spawnFuzz = 1;
             }
-        }
+            int border = MathHelper.floor(world.getWorldBorder().getClosestDistance(ret.getX(), ret.getZ()));
+            if (border < spawnFuzz) {
+                spawnFuzz = border;
+            }
 
-        return ret;
-    }
-*/
+            if (!world.provider.isNether() && !isAdventure && spawnFuzz != 0) {
+                if (spawnFuzz < 2) {
+                    spawnFuzz = 2;
+                }
+                int spawnFuzzHalf = spawnFuzz / 2;
+                CubicChunks.LOGGER.trace("Running bisect with spawn fizz {}", spawnFuzz);
+                ret = getTopBlockBisect(world, ret.add(
+                        world.rand.nextInt(spawnFuzzHalf) - spawnFuzz,
+                        0,
+                        world.rand.nextInt(spawnFuzzHalf) - spawnFuzz
+                ));
+                if (ret == null) {
+                    ret = world.getSpawnPoint();
+                    CubicChunks.LOGGER.trace("No spawnpoint place found starting at {}, spawning at {}", ret, ret);
+                } else {
+                    ret = ret.up();
+                }
+            }
+
+            return ret;
+        }
+    */
     @Nullable
     public static BlockPos getTopBlockBisect(Level world, BlockPos pos, boolean checkValid) {
         BlockPos minPos, maxPos;

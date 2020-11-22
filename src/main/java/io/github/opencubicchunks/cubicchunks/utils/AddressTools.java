@@ -24,10 +24,10 @@
  */
 package io.github.opencubicchunks.cubicchunks.utils;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
 import io.github.opencubicchunks.cubicchunks.annotation.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
-
-import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
@@ -35,20 +35,28 @@ public class AddressTools {
 
     public static int getLocalAddress(int localX, int localY, int localZ) {
         return (Bits.packUnsignedToInt(localX, 5, 0)
-                | Bits.packUnsignedToInt(localZ, 5, 5)
-                | Bits.packUnsignedToInt(localY, 5, 10));
+            | Bits.packUnsignedToInt(localZ, 5, 5)
+            | Bits.packUnsignedToInt(localY, 5, 10));
     }
 
     public static int getLocalAddress(int localX, int localZ) {
         return (Bits.packUnsignedToInt(localX, 5, 0)
-                | Bits.packUnsignedToInt(localZ, 5, 5));
+            | Bits.packUnsignedToInt(localZ, 5, 5));
     }
 
+    public static int getLocalAddress(BlockPos pos) {
+        return getLocalAddress(pos.getX(), pos.getY(), pos.getZ());
+    }
+
+    public static int getBiomeAddress(int biomeX, int biomeZ) {
+        return biomeX << 3 | biomeZ;
+    }
 
     /**
      * Unpacks localX from packed address. Works for both, x/y/z and x/z version
      *
      * @param localAddress local address to unpack
+     *
      * @return x coordinate from that local address
      */
     public static int getLocalX(int localAddress) {
@@ -59,6 +67,7 @@ public class AddressTools {
      * Unpacks localY from packed address.
      *
      * @param localAddress local address to unpack
+     *
      * @return y coordinate from that local address
      */
     public static int getLocalY(int localAddress) {
@@ -69,17 +78,10 @@ public class AddressTools {
      * Unpacks localZ from packed address. Works for both, x/y/z and x/z version
      *
      * @param localAddress local address to unpack
+     *
      * @return z coordinate from that local address
      */
     public static int getLocalZ(int localAddress) {
         return Bits.unpackUnsigned(localAddress, 5, 5);
-    }
-
-    public static int getLocalAddress(BlockPos pos) {
-        return getLocalAddress(pos.getX(), pos.getY(), pos.getZ());
-    }
-
-    public static int getBiomeAddress(int biomeX, int biomeZ) {
-        return biomeX << 3 | biomeZ;
     }
 }

@@ -1,5 +1,10 @@
 package io.github.opencubicchunks.cubicchunks.mixin.core.common.world.placement;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+import java.util.stream.Stream;
+
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.world.placement.CubicSimpleFeatureDecorator;
 import net.minecraft.core.BlockPos;
@@ -7,13 +12,8 @@ import net.minecraft.world.level.levelgen.feature.configurations.DecoratorConfig
 import net.minecraft.world.level.levelgen.placement.nether.FireDecorator;
 import org.spongepowered.asm.mixin.Mixin;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
-import java.util.stream.Stream;
-
 @Mixin(FireDecorator.class)
-public class MixinFireDecorator <DC extends DecoratorConfiguration> implements CubicSimpleFeatureDecorator<DC> {
+public class MixinFireDecorator<DC extends DecoratorConfiguration> implements CubicSimpleFeatureDecorator<DC> {
 
     @Override
     public Stream<BlockPos> placeCubic(Random rand, DC config, BlockPos minCubePos) {

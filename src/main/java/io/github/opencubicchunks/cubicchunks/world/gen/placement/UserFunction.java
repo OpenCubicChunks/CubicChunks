@@ -1,17 +1,22 @@
 package io.github.opencubicchunks.cubicchunks.world.gen.placement;
 
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import io.github.opencubicchunks.cubicchunks.utils.MathUtil;
 
-import java.util.*;
-
 public class UserFunction {
 
     public static final Codec<UserFunction> CODEC = RecordCodecBuilder.create((instance) ->
-            instance.group(
-                    Codec.list(Entry.CODEC).fieldOf("values").forGetter((UserFunction config) -> Arrays.asList(config.values))
-            ).apply(instance, UserFunction::new));
+        instance.group(
+            Codec.list(Entry.CODEC).fieldOf("values").forGetter((UserFunction config) -> Arrays.asList(config.values))
+        ).apply(instance, UserFunction::new));
 
     private final Entry[] values;
 
@@ -22,9 +27,9 @@ public class UserFunction {
 
     public UserFunction(Map<Float, Float> funcMap) {
         values = funcMap.entrySet().stream()
-                .sorted(Comparator.comparing(Map.Entry::getKey))
-                .map(e -> new Entry(e.getKey(), e.getValue()))
-                .toArray(Entry[]::new);
+            .sorted(Comparator.comparing(Map.Entry::getKey))
+            .map(e -> new Entry(e.getKey(), e.getValue()))
+            .toArray(Entry[]::new);
     }
 
     public float getValue(float y) {
@@ -70,10 +75,10 @@ public class UserFunction {
     public static class Entry {
 
         public static final Codec<Entry> CODEC = RecordCodecBuilder.create((instance) ->
-                instance.group(
-                        Codec.FLOAT.fieldOf("y").forGetter((Entry config) -> config.y),
-                        Codec.FLOAT.fieldOf("v").forGetter((Entry config) -> config.v)
-                ).apply(instance, Entry::new));
+            instance.group(
+                Codec.FLOAT.fieldOf("y").forGetter((Entry config) -> config.y),
+                Codec.FLOAT.fieldOf("v").forGetter((Entry config) -> config.v)
+            ).apply(instance, Entry::new));
         public float y;
         public float v;
 
@@ -105,9 +110,9 @@ public class UserFunction {
         @Override
         public String toString() {
             return "Entry{" +
-                    "y=" + y +
-                    ", v=" + v +
-                    '}';
+                "y=" + y +
+                ", v=" + v +
+                '}';
         }
     }
 }

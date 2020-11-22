@@ -1,5 +1,7 @@
 package io.github.opencubicchunks.cubicchunks.world.biome;
 
+import java.util.stream.Stream;
+
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.core.Registry;
@@ -7,11 +9,11 @@ import net.minecraft.resources.RegistryLookupCodec;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.biome.BiomeSource;
 
-import java.util.stream.Stream;
-
 public class StripedBiomeSource extends BiomeSource {
 
-    public static final Codec<StripedBiomeSource> CODEC = RecordCodecBuilder.create((instance) -> instance.group(RegistryLookupCodec.create(Registry.BIOME_REGISTRY).forGetter((theEndBiomeSource) -> theEndBiomeSource.biomeRegistry)).apply(instance, instance.stable(StripedBiomeSource::new)));
+    public static final Codec<StripedBiomeSource> CODEC = RecordCodecBuilder.create(
+        (instance) -> instance.group(RegistryLookupCodec.create(Registry.BIOME_REGISTRY).forGetter((theEndBiomeSource) -> theEndBiomeSource.biomeRegistry))
+            .apply(instance, instance.stable(StripedBiomeSource::new)));
 
     private final Registry<Biome> biomeRegistry;
 
@@ -20,7 +22,8 @@ public class StripedBiomeSource extends BiomeSource {
     public StripedBiomeSource(Registry<Biome> registry) {
         super(Stream.of());
         this.biomeRegistry = registry;
-        this.biomeArray = registry.stream().filter(biome -> biome.getBiomeCategory() != Biome.BiomeCategory.NETHER && biome.getBiomeCategory() != Biome.BiomeCategory.THEEND).toArray(Biome[]::new);
+        this.biomeArray =
+            registry.stream().filter(biome -> biome.getBiomeCategory() != Biome.BiomeCategory.NETHER && biome.getBiomeCategory() != Biome.BiomeCategory.THEEND).toArray(Biome[]::new);
     }
 
     @Override

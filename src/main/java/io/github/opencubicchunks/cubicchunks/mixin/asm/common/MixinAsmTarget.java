@@ -5,9 +5,9 @@ import net.minecraft.server.level.ChunkMap;
 import org.spongepowered.asm.mixin.Mixin;
 
 @Mixin({
-        ChunkMap.DistanceManager.class,
-        ChunkMap.class,
-        ChunkHolder.class
+    ChunkMap.DistanceManager.class,
+    ChunkMap.class,
+    ChunkHolder.class
 })
 public class MixinAsmTarget {
     // intentionally empty

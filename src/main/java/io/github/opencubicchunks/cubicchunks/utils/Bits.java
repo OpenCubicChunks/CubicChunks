@@ -24,9 +24,9 @@
  */
 package io.github.opencubicchunks.cubicchunks.utils;
 
-import io.github.opencubicchunks.cubicchunks.annotation.MethodsReturnNonnullByDefault;
-
 import javax.annotation.ParametersAreNonnullByDefault;
+
+import io.github.opencubicchunks.cubicchunks.annotation.MethodsReturnNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
@@ -57,6 +57,11 @@ public class Bits {
         return (int) packed & getMask(size);
     }
 
+    public static int unpackUnsigned(int packed, int size, int offset) {
+        packed = packed >> offset;
+        return packed & getMask(size);
+    }
+
     public static int unpackSigned(long packed, int size, int offset) {
         // first, scrollOffset to the far left and back so we can preserve the two's complement
         int complementOffset = 64 - offset - size;
@@ -65,11 +70,6 @@ public class Bits {
         // then unpack the integer
         packed = packed >> offset;
         return (int) packed;
-    }
-
-    public static int unpackUnsigned(int packed, int size, int offset) {
-        packed = packed >> offset;
-        return packed & getMask(size);
     }
 
     public static int unpackSigned(int packed, int size, int offset) {

@@ -59,8 +59,8 @@ public abstract class MixinViewFrustum {
                     int yBase = this.chunkGridSizeY * 16;
                     int yTemp = viewY - 8 - yBase / 2;
                     int posY = yTemp + Math.floorMod(yIndex * 16 - yTemp, yBase);
-                    ChunkRenderDispatcher.RenderChunk chunkrenderdispatcher$chunkrender = this.chunks[this.getChunkIndex(xIndex, yIndex, zIndex)];
-                    chunkrenderdispatcher$chunkrender.setOrigin(posX, posY, posZ);
+                    ChunkRenderDispatcher.RenderChunk renderChunk = this.chunks[this.getChunkIndex(xIndex, yIndex, zIndex)];
+                    renderChunk.setOrigin(posX, posY, posZ);
                 }
             }
         }

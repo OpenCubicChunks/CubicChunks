@@ -1,5 +1,10 @@
 package io.github.opencubicchunks.cubicchunks.mixin.core.common.world.server;
 
+import java.util.concurrent.CompletableFuture;
+import java.util.function.IntSupplier;
+
+import javax.annotation.Nullable;
+
 import com.mojang.datafixers.util.Pair;
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.IChunkManager;
@@ -23,10 +28,6 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 
-import javax.annotation.Nullable;
-import java.util.concurrent.CompletableFuture;
-import java.util.function.IntSupplier;
-
 @Mixin(ThreadedLevelLightEngine.class)
 public abstract class MixinServerWorldLightManager extends MixinWorldLightManager implements IServerWorldLightManager {
 
@@ -41,7 +42,7 @@ public abstract class MixinServerWorldLightManager extends MixinWorldLightManage
     @Shadow protected abstract void runUpdate();
 
     @Override public void postConstructorSetup(CubeTaskPriorityQueueSorter sorter,
-            ProcessorHandle<CubeTaskPriorityQueueSorter.FunctionEntry<Runnable>> taskExecutor) {
+                                               ProcessorHandle<CubeTaskPriorityQueueSorter.FunctionEntry<Runnable>> taskExecutor) {
         this.cubeSorterMailbox = taskExecutor;
     }
 
@@ -53,24 +54,24 @@ public abstract class MixinServerWorldLightManager extends MixinWorldLightManage
     public void checkBlock(BlockPos blockPosIn) {
         BlockPos blockpos = blockPosIn.immutable();
         this.addTask(
-                Coords.blockToCube(blockPosIn.getX()),
-                Coords.blockToCube(blockPosIn.getY()),
-                Coords.blockToCube(blockPosIn.getZ()),
-                ThreadedLevelLightEngine.TaskType.POST_UPDATE,
-                Util.name(() -> super.checkBlock(blockpos),
+            Coords.blockToCube(blockPosIn.getX()),
+            Coords.blockToCube(blockPosIn.getY()),
+            Coords.blockToCube(blockPosIn.getZ()),
+            ThreadedLevelLightEngine.TaskType.POST_UPDATE,
+            Util.name(() -> super.checkBlock(blockpos),
                 () -> "checkBlock " + blockpos)
         );
     }
 
     // func_215586_a, addTask
     private void addTask(int cubePosX, int cubePosY, int cubePosZ, ThreadedLevelLightEngine.TaskType phase, Runnable runnable) {
-        this.addTask(cubePosX, cubePosY, cubePosZ, ((IChunkManager)this.chunkMap).getCubeQueueLevel(CubePos.of(cubePosX, cubePosY,
-                cubePosZ).asLong()), phase, runnable);
+        this.addTask(cubePosX, cubePosY, cubePosZ, ((IChunkManager) this.chunkMap).getCubeQueueLevel(CubePos.of(cubePosX, cubePosY,
+            cubePosZ).asLong()), phase, runnable);
     }
 
     // func_215600_a, addTask
     private void addTask(int cubePosX, int cubePosY, int cubePosZ, IntSupplier getCompletedLevel, ThreadedLevelLightEngine.TaskType phase,
-            Runnable runnable) {
+                         Runnable runnable) {
         this.cubeSorterMailbox.tell(CubeTaskPriorityQueueSorter.createMsg(() -> {
             this.lightTasks.add(Pair.of(phase, runnable));
             if (this.lightTasks.size() >= this.taskPerBatch) {
@@ -89,12 +90,12 @@ public abstract class MixinServerWorldLightManager extends MixinWorldLightManage
             super.enableLightSources(cubePos, false);
 
 
-            for(int i = 0; i < IBigCube.SECTION_COUNT; ++i) {
-                super.queueSectionData(LightLayer.BLOCK, Coords.sectionPosByIndex(cubePos, i), (DataLayer)null, true);
-                super.queueSectionData(LightLayer.SKY, Coords.sectionPosByIndex(cubePos, i), (DataLayer)null, true);
+            for (int i = 0; i < IBigCube.SECTION_COUNT; ++i) {
+                super.queueSectionData(LightLayer.BLOCK, Coords.sectionPosByIndex(cubePos, i), (DataLayer) null, true);
+                super.queueSectionData(LightLayer.SKY, Coords.sectionPosByIndex(cubePos, i), (DataLayer) null, true);
             }
 
-            for(int j = 0; j < IBigCube.SECTION_COUNT; ++j) {
+            for (int j = 0; j < IBigCube.SECTION_COUNT; ++j) {
                 super.updateSectionStatus(Coords.sectionPosByIndex(cubePos, j), true);
             }
 
@@ -107,7 +108,7 @@ public abstract class MixinServerWorldLightManager extends MixinWorldLightManage
         CubePos cubePos = icube.getCubePos();
         icube.setCubeLight(false);
         this.addTask(cubePos.getX(), cubePos.getY(), cubePos.getZ(), ThreadedLevelLightEngine.TaskType.PRE_UPDATE, Util.name(() -> {
-            for(int i = 0; i < IBigCube.SECTION_COUNT; ++i) {
+            for (int i = 0; i < IBigCube.SECTION_COUNT; ++i) {
                 LevelChunkSection chunksection = icube.getCubeSections()[i];
                 if (!LevelChunkSection.isEmpty(chunksection)) {
                     super.updateSectionStatus(Coords.sectionPosByIndex(cubePos, i), false);
@@ -121,7 +122,7 @@ public abstract class MixinServerWorldLightManager extends MixinWorldLightManage
                 });
             }
 
-            ((IChunkManager)this.chunkMap).releaseLightTicket(cubePos);
+            ((IChunkManager) this.chunkMap).releaseLightTicket(cubePos);
         }, () -> "lightCube " + cubePos + " " + flagIn));
         return CompletableFuture.supplyAsync(() -> {
             icube.setCubeLight(true);

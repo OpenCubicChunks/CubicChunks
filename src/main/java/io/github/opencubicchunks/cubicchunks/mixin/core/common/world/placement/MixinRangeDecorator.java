@@ -1,16 +1,16 @@
 package io.github.opencubicchunks.cubicchunks.mixin.core.common.world.placement;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+import java.util.stream.Stream;
+
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.world.placement.CubicSimpleFeatureDecorator;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.levelgen.feature.configurations.RangeDecoratorConfiguration;
 import net.minecraft.world.level.levelgen.placement.RangeDecorator;
 import org.spongepowered.asm.mixin.Mixin;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
-import java.util.stream.Stream;
 
 @Mixin(RangeDecorator.class)
 public abstract class MixinRangeDecorator<DC extends RangeDecoratorConfiguration> implements CubicSimpleFeatureDecorator<DC> {

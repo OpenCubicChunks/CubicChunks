@@ -1,5 +1,21 @@
 package io.github.opencubicchunks.cubicchunks.chunk.cube;
 
+import static io.github.opencubicchunks.cubicchunks.utils.Coords.*;
+import static net.minecraft.world.level.chunk.LevelChunk.EMPTY_SECTION;
+
+import java.util.Arrays;
+import java.util.BitSet;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
+
+import javax.annotation.Nullable;
+
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import io.github.opencubicchunks.cubicchunks.CubicChunks;
@@ -38,7 +54,12 @@ import net.minecraft.world.level.block.entity.BlockEntityTicker;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.entity.TickingBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.chunk.*;
+import net.minecraft.world.level.chunk.ChunkAccess;
+import net.minecraft.world.level.chunk.ChunkBiomeContainer;
+import net.minecraft.world.level.chunk.ChunkStatus;
+import net.minecraft.world.level.chunk.LevelChunk;
+import net.minecraft.world.level.chunk.LevelChunkSection;
+import net.minecraft.world.level.chunk.UpgradeData;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.levelgen.feature.StructureFeature;
 import net.minecraft.world.level.levelgen.structure.StructureStart;
@@ -47,16 +68,6 @@ import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.material.Fluids;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
-import javax.annotation.Nullable;
-import java.util.*;
-import java.util.function.Consumer;
-import java.util.function.Supplier;
-import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
-
-import static io.github.opencubicchunks.cubicchunks.utils.Coords.cubeToSection;
-import static net.minecraft.world.level.chunk.LevelChunk.EMPTY_SECTION;
 
 public class BigCube implements ChunkAccess, IBigCube {
 
@@ -130,7 +141,7 @@ public class BigCube implements ChunkAccess, IBigCube {
 
         //noinspection unchecked
         this.entityLists = new ClassInstanceMultiMap[IBigCube.SECTION_COUNT];
-        for(int i = 0; i < this.entityLists.length; ++i) {
+        for (int i = 0; i < this.entityLists.length; ++i) {
             this.entityLists[i] = new ClassInstanceMultiMap<>(Entity.class);
         }
 
@@ -141,7 +152,7 @@ public class BigCube implements ChunkAccess, IBigCube {
         this.inhabitedTime = inhabitedTimeIn;
         this.postLoadConsumer = postLoadConsumerIn;
 
-        if(sectionsIn != null) {
+        if (sectionsIn != null) {
             if (sectionsIn.length != SECTION_COUNT) {
                 throw new IllegalStateException("Number of Sections must equal BigCube.CUBESIZE");
             }
@@ -149,11 +160,11 @@ public class BigCube implements ChunkAccess, IBigCube {
             for (int i = 0; i < sectionsIn.length; i++) {
                 int sectionYPos = cubeToSection(cubePosIn.getY(), Coords.indexToY(i));
 
-                if(sectionsIn[i] != null) {
+                if (sectionsIn[i] != null) {
                     sections[i] = new LevelChunkSection(sectionYPos,
-                            ((ChunkSectionAccess) sectionsIn[i]).getNonEmptyBlockCount(),
-                            ((ChunkSectionAccess) sectionsIn[i]).getTickingBlockCount(),
-                            ((ChunkSectionAccess) sectionsIn[i]).getTickingFluidCount());
+                        ((ChunkSectionAccess) sectionsIn[i]).getNonEmptyBlockCount(),
+                        ((ChunkSectionAccess) sectionsIn[i]).getTickingBlockCount(),
+                        ((ChunkSectionAccess) sectionsIn[i]).getTickingFluidCount());
                     //noinspection ConstantConditions
                     ((ChunkSectionAccess) sections[i]).setStates(sectionsIn[i].getStates());
                 }
@@ -168,16 +179,16 @@ public class BigCube implements ChunkAccess, IBigCube {
 //        this(worldIn, cubePrimerIn.getCubePos(), cubePrimerIn.getCubeBiomes(), cubePrimerIn.getUpgradeData(), cubePrimerIn.getBlocksToBeTicked(),
 //            cubePrimerIn.getFluidsToBeTicked(), cubePrimerIn.getInhabitedTime(), cubePrimerIn.getSections(), (Consumer<BigCube>)null);
         this(worldIn, cubePrimerIn.getCubePos(), cubePrimerIn.getCubeBiomes(), null, null,
-                null, cubePrimerIn.getCubeInhabitedTime(), cubePrimerIn.getCubeSections(), postLoadConsumerIn);
+            null, cubePrimerIn.getCubeInhabitedTime(), cubePrimerIn.getCubeSections(), postLoadConsumerIn);
 
-        for(CompoundTag compoundnbt : cubePrimerIn.getCubeEntities()) {
+        for (CompoundTag compoundnbt : cubePrimerIn.getCubeEntities()) {
             EntityType.loadEntityRecursive(compoundnbt, worldIn, (entity) -> {
                 this.addEntity(entity);
                 return entity;
             });
         }
 
-        for(BlockEntity tileentity : cubePrimerIn.getCubeTileEntities().values()) {
+        for (BlockEntity tileentity : cubePrimerIn.getCubeTileEntities().values()) {
             this.setBlockEntity(tileentity);
         }
 
@@ -200,22 +211,29 @@ public class BigCube implements ChunkAccess, IBigCube {
         throw new UnsupportedOperationException("Not implemented");
     }
 
-    @Override public CubePos getCubePos()
-    {
+    @Override public CubePos getCubePos() {
         return this.cubePos;
     }
 
     @Deprecated @Override public LevelChunkSection[] getSections() {
         return this.sections;
     }
+
     @Override public LevelChunkSection[] getCubeSections() {
         return this.sections;
     }
 
     //STATUS
-    @Override public void setCubeStatus(ChunkStatus status) { throw new UnsupportedOperationException("BigCube does not have a setter for setCubeStatus"); }
-    @Deprecated @Override public ChunkStatus getStatus() { return this.getCubeStatus(); }
+    @Override public void setCubeStatus(ChunkStatus status) {
+        throw new UnsupportedOperationException("BigCube does not have a setter for setCubeStatus");
+    }
+
+    @Deprecated @Override public ChunkStatus getStatus() {
+        return this.getCubeStatus();
+    }
+
     @Override public ChunkStatus getCubeStatus() {
+        Runnable r = () -> {};
         return ChunkStatus.FULL;
     }
 
@@ -231,24 +249,24 @@ public class BigCube implements ChunkAccess, IBigCube {
     @Deprecated @Nullable @Override public BlockState setBlockState(BlockPos pos, BlockState state, boolean isMoving) {
         return setBlock(pos, state, isMoving);
     }
+
     @Override @Nullable public BlockState setBlock(BlockPos pos, BlockState state, boolean isMoving) {
         return this.setBlock(Coords.blockToIndex(pos.getX(), pos.getY(), pos.getZ()), pos, state, isMoving);
     }
+
     @Nullable public BlockState setBlock(int sectionIndex, BlockPos pos, BlockState newState, boolean isMoving) {
         int x = pos.getX() & 15;
         int y = pos.getY() & 15;
         int z = pos.getZ() & 15;
         LevelChunkSection chunksection = sections[sectionIndex];
 
-        BlockState oldState = chunksection.setBlockState(
-                x, y, z, newState);
+        BlockState oldState = chunksection.setBlockState(x, y, z, newState);
         if (oldState == newState) {
             return null;
         }
         Block newBlock = newState.getBlock();
         int localX = Coords.blockToLocal(pos.getX());
         int localZ = Coords.blockToLocal(pos.getZ());
-
 
 
         if (!this.heightmaps.isEmpty()) {
@@ -294,8 +312,8 @@ public class BigCube implements ChunkAccess, IBigCube {
         // TODO: crash report generation
         int index = Coords.blockToIndex(x, y, z);
         return LevelChunkSection.isEmpty(this.sections[index]) ?
-                Blocks.AIR.defaultBlockState() :
-                this.sections[index].getBlockState(x & 15, y & 15, z & 15);
+            Blocks.AIR.defaultBlockState() :
+            this.sections[index].getBlockState(x & 15, y & 15, z & 15);
     }
 
     //ENTITY
@@ -306,17 +324,19 @@ public class BigCube implements ChunkAccess, IBigCube {
     public ClassInstanceMultiMap<Entity>[] getCubeEntityLists() {
         return entityLists;
     }
+
     public ClassInstanceMultiMap<Entity>[] getEntityLists() {
         return this.getCubeEntityLists();
     }
 
     private int getIndexFromEntity(Entity entityIn) {
-        return Coords.blockToIndex((int)entityIn.getX(), (int)entityIn.getY(), (int)entityIn.getZ());
+        return Coords.blockToIndex((int) entityIn.getX(), (int) entityIn.getY(), (int) entityIn.getZ());
     }
 
     public void removeEntity(Entity entityIn) {
         this.removeEntityAtIndex(entityIn, this.getIndexFromEntity(entityIn));
     }
+
     public void removeEntityAtIndex(Entity entityIn, int index) {
         if (index < 0) {
             index = 0;
@@ -334,11 +354,15 @@ public class BigCube implements ChunkAccess, IBigCube {
     @Deprecated @Override public void setBlockEntityNbt(CompoundTag nbt) {
         this.setCubeBlockEntity(nbt);
     }
+
     @Override public void setCubeBlockEntity(CompoundTag nbt) {
         this.deferredTileEntities.put(new BlockPos(nbt.getInt("x"), nbt.getInt("y"), nbt.getInt("z")), nbt);
     }
 
-    @Deprecated @Override public void setBlockEntity(BlockEntity tileEntityIn) { this.setCubeBlockEntity(tileEntityIn); }
+    @Deprecated @Override public void setBlockEntity(BlockEntity tileEntityIn) {
+        this.setCubeBlockEntity(tileEntityIn);
+    }
+
     @Override public void setCubeBlockEntity(BlockEntity tileEntityIn) {
         BlockPos pos = tileEntityIn.getBlockPos();
         if (this.getBlockState(pos).hasBlockEntity()) {
@@ -398,7 +422,10 @@ public class BigCube implements ChunkAccess, IBigCube {
 
     }
 
-    @Deprecated @Override public void removeBlockEntity(BlockPos pos) { this.removeCubeBlockEntity(pos); }
+    @Deprecated @Override public void removeBlockEntity(BlockPos pos) {
+        this.removeCubeBlockEntity(pos);
+    }
+
     @Override public void removeCubeBlockEntity(BlockPos pos) {
         if (isInLevel()) {
             BlockEntity tileentity = this.blockEntities.remove(pos);
@@ -472,6 +499,7 @@ public class BigCube implements ChunkAccess, IBigCube {
     public Map<BlockPos, BlockEntity> getTileEntityMap() {
         return blockEntities;
     }
+
     public Map<BlockPos, CompoundTag> getDeferredTileEntityMap() {
         return this.deferredTileEntities;
     }
@@ -479,13 +507,17 @@ public class BigCube implements ChunkAccess, IBigCube {
     @Deprecated @Override public Set<BlockPos> getBlockEntitiesPos() {
         return this.getCubeTileEntitiesPos();
     }
+
     @Override public Set<BlockPos> getCubeTileEntitiesPos() {
         Set<BlockPos> set = Sets.newHashSet(this.deferredTileEntities.keySet());
         set.addAll(this.blockEntities.keySet());
         return set;
     }
 
-    @Deprecated @Nullable @Override public CompoundTag getBlockEntityNbtForSaving(BlockPos pos) { return this.getCubeBlockEntityNbtForSaving(pos); }
+    @Deprecated @Nullable @Override public CompoundTag getBlockEntityNbtForSaving(BlockPos pos) {
+        return this.getCubeBlockEntityNbtForSaving(pos);
+    }
+
     @Nullable @Override public CompoundTag getCubeBlockEntityNbtForSaving(BlockPos pos) {
         BlockEntity tileentity = this.getBlockEntity(pos);
         if (tileentity != null && !tileentity.isRemoved()) {
@@ -503,29 +535,41 @@ public class BigCube implements ChunkAccess, IBigCube {
         }
     }
 
-    @Deprecated @Nullable @Override public CompoundTag getBlockEntityNbt(BlockPos pos) { return this.getCubeDeferredTileEntity(pos); }
+    @Deprecated @Nullable @Override public CompoundTag getBlockEntityNbt(BlockPos pos) {
+        return this.getCubeDeferredTileEntity(pos);
+    }
+
     @Nullable @Override public CompoundTag getCubeDeferredTileEntity(BlockPos pos) {
         return this.deferredTileEntities.get(pos);
     }
 
     //LIGHTING
-    @Deprecated @Override public boolean isLightCorrect() { throw new UnsupportedOperationException("Chunk method called on a cube!"); }
+    @Deprecated @Override public boolean isLightCorrect() {
+        throw new UnsupportedOperationException("Chunk method called on a cube!");
+    }
+
     @Override public boolean hasCubeLight() {
         return this.lightCorrect;
     }
 
-    @Deprecated @Override public void setLightCorrect(boolean lightCorrectIn) { throw new UnsupportedOperationException("Chunk method called on a cube!"); }
+    @Deprecated @Override public void setLightCorrect(boolean lightCorrectIn) {
+        throw new UnsupportedOperationException("Chunk method called on a cube!");
+    }
+
     @Override public void setCubeLight(boolean lightCorrectIn) {
         this.lightCorrect = lightCorrectIn;
         this.setDirty(true);
     }
 
-    @Deprecated @Override public Stream<BlockPos> getLights() { return this.getCubeLightSources(); }
+    @Deprecated @Override public Stream<BlockPos> getLights() {
+        return this.getCubeLightSources();
+    }
+
     @Override public Stream<BlockPos> getCubeLightSources() {
         return StreamSupport
-                .stream(BlockPos.betweenClosed(this.cubePos.minCubeX(), this.cubePos.minCubeY(), this.cubePos.minCubeZ(),
-                        this.cubePos.maxCubeX(), this.cubePos.maxCubeY(), this.cubePos.maxCubeZ())
-                        .spliterator(), false).filter((blockPos) -> this.getBlockState(blockPos).getLightEmission() != 0);
+            .stream(BlockPos.betweenClosed(this.cubePos.minCubeX(), this.cubePos.minCubeY(), this.cubePos.minCubeZ(),
+                this.cubePos.maxCubeX(), this.cubePos.maxCubeY(), this.cubePos.maxCubeZ())
+                .spliterator(), false).filter((blockPos) -> this.getBlockState(blockPos).getLightEmission() != 0);
     }
 
     //MISC
@@ -537,46 +581,61 @@ public class BigCube implements ChunkAccess, IBigCube {
         return (this.level.isClientSide() || this.getFullStatus().isOrAfter(ChunkHolder.FullChunkStatus.TICKING)) && this.level.getWorldBorder().isWithinBounds(blockPos);
     }
 
-    @Deprecated @Override public void setUnsaved(boolean modified) { setDirty(modified); }
+    @Deprecated @Override public void setUnsaved(boolean modified) {
+        setDirty(modified);
+    }
+
     @Override public void setDirty(boolean modified) {
         this.dirty = modified;
     }
 
-    @Deprecated @Override public boolean isUnsaved() { return isDirty(); }
+    @Deprecated @Override public boolean isUnsaved() {
+        return isDirty();
+    }
+
     @Override public boolean isDirty() {
         return this.dirty;
     }
 
     @Override public boolean isEmptyCube() {
-        for(LevelChunkSection section : this.sections) {
-            if(section != EMPTY_SECTION && !section.isEmpty()) {
+        for (LevelChunkSection section : this.sections) {
+            if (section != EMPTY_SECTION && !section.isEmpty()) {
                 return false;
             }
         }
         return true;
     }
 
-    @Deprecated @Override public long getInhabitedTime() { return this.getCubeInhabitedTime(); }
+    @Deprecated @Override public long getInhabitedTime() {
+        return this.getCubeInhabitedTime();
+    }
+
     @Override public long getCubeInhabitedTime() {
         return this.inhabitedTime;
     }
 
-    @Deprecated @Override public void setInhabitedTime(long newInhabitedTime) { this.setCubeInhabitedTime(newInhabitedTime); }
+    @Deprecated @Override public void setInhabitedTime(long newInhabitedTime) {
+        this.setCubeInhabitedTime(newInhabitedTime);
+    }
+
     @Override public void setCubeInhabitedTime(long newInhabitedTime) {
         this.inhabitedTime = newInhabitedTime;
     }
 
-    @Deprecated @Nullable @Override public ChunkBiomeContainer getBiomes() { throw new UnsupportedOperationException("Chunk method called on a cube"); }
+    @Deprecated @Nullable @Override public ChunkBiomeContainer getBiomes() {
+        throw new UnsupportedOperationException("Chunk method called on a cube");
+    }
+
     @Nullable @Override public CubeBiomeContainer getCubeBiomes() {
         return this.biomes;
     }
 
     public int getSize() {
         int size = MathUtil.ceilDiv(sections.length, Byte.SIZE); // exists flags
-        for(LevelChunkSection section : this.sections)
-        {
-            if(section != null)
+        for (LevelChunkSection section : this.sections) {
+            if (section != null) {
                 size += section.getSerializedSize();
+            }
         }
         return size;
     }
@@ -599,7 +658,7 @@ public class BigCube implements ChunkAccess, IBigCube {
         }
     }
 
-    public void read(@Nullable CubeBiomeContainer biomes, FriendlyByteBuf readBuffer, CompoundTag nbtTagIn, boolean cubeExists) {
+    public void read(@Nullable CubeBiomeContainer biomesIn, FriendlyByteBuf readBuffer, CompoundTag nbtTagIn, boolean cubeExists) {
         if (!cubeExists) {
             Arrays.fill(sections, null);
             return;
@@ -608,8 +667,9 @@ public class BigCube implements ChunkAccess, IBigCube {
         readBuffer.readBytes(emptyFlagsBytes);
         BitSet emptyFlags = BitSet.valueOf(emptyFlagsBytes);
 
-        if(biomes != null)
-            this.biomes = biomes;
+        if (biomesIn != null) {
+            this.biomes = biomesIn;
+        }
 
         // TODO: support partial updates
         this.blockEntities.values().forEach(this::onBlockEntityRemove);
@@ -671,8 +731,7 @@ public class BigCube implements ChunkAccess, IBigCube {
     }
 
     @Deprecated
-    public SectionPos getSectionPosition(int index)
-    {
+    public SectionPos getSectionPosition(int index) {
         int xPos = Coords.indexToX(index);
         int yPos = Coords.indexToY(index);
         int zPos = Coords.indexToZ(index);
@@ -770,7 +829,7 @@ public class BigCube implements ChunkAccess, IBigCube {
     }
 
     public void addReferenceForFeature(StructureFeature<?> structureFeature, long cubeLong) {
-        ((LongSet)this.structuresRefences.computeIfAbsent(structureFeature, (structureFeaturex) -> {
+        ((LongSet) this.structuresRefences.computeIfAbsent(structureFeature, (structureFeaturex) -> {
             return new LongOpenHashSet();
         })).add(cubeLong);
     }
@@ -788,10 +847,11 @@ public class BigCube implements ChunkAccess, IBigCube {
     public void setLoaded(boolean loaded) {
         this.loaded = loaded;
     }
-    public boolean getLoaded()
-    {
+
+    public boolean getLoaded() {
         return this.loaded;
     }
+
     public void postLoad() {
         if (this.postLoadConsumer != null) {
             this.postLoadConsumer.accept(this);
@@ -888,9 +948,9 @@ public class BigCube implements ChunkAccess, IBigCube {
                             this.loggedInvalidBlockState = false;
                         } else if (!this.loggedInvalidBlockState) {
                             this.loggedInvalidBlockState = true;
-                            BigCube.LOGGER.warn("Block entity {} @ {} state {} invalid for ticking:", new org.apache.logging.log4j.util.Supplier[]{this::getType, this::getPos, () -> {
+                            BigCube.LOGGER.warn("Block entity {} @ {} state {} invalid for ticking:", new org.apache.logging.log4j.util.Supplier[] { this::getType, this::getPos, () -> {
                                 return blockState;
-                            }});
+                            } });
                         }
 
                         profilerFiller.pop();

@@ -1,5 +1,11 @@
 package io.github.opencubicchunks.cubicchunks.mixin.core.common.chunk;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Objects;
+
+import javax.annotation.Nullable;
+
 import io.github.opencubicchunks.cubicchunks.chunk.biome.ColumnBiomeContainer;
 import net.minecraft.SharedConstants;
 import net.minecraft.core.Registry;
@@ -8,7 +14,14 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.ai.village.poi.PoiManager;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.ChunkTickList;
-import net.minecraft.world.level.chunk.*;
+import net.minecraft.world.level.chunk.ChunkAccess;
+import net.minecraft.world.level.chunk.ChunkStatus;
+import net.minecraft.world.level.chunk.ImposterProtoChunk;
+import net.minecraft.world.level.chunk.LevelChunk;
+import net.minecraft.world.level.chunk.LevelChunkSection;
+import net.minecraft.world.level.chunk.ProtoChunk;
+import net.minecraft.world.level.chunk.ProtoTickList;
+import net.minecraft.world.level.chunk.UpgradeData;
 import net.minecraft.world.level.chunk.storage.ChunkSerializer;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureManager;
 import net.minecraft.world.level.material.Fluids;
@@ -17,11 +30,6 @@ import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
-
-import javax.annotation.Nullable;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Objects;
 
 @Mixin(value = ChunkSerializer.class, priority = 900)
 public abstract class MixinChunkSerializer {
@@ -49,13 +57,13 @@ public abstract class MixinChunkSerializer {
         ColumnBiomeContainer biomeContainerIn = new ColumnBiomeContainer(worldIn.registryAccess().registryOrThrow(Registry.BIOME_REGISTRY), worldIn);
         if (statusType == ChunkStatus.ChunkType.LEVELCHUNK) {
             newChunk = new LevelChunk(worldIn.getLevel(), pos, biomeContainerIn, UpgradeData.EMPTY,
-                    new ChunkTickList<>(Registry.BLOCK::getKey, new ArrayList<>(), 0), // TODO: supply game time
-                    new ChunkTickList<>(Registry.FLUID::getKey, new ArrayList<>(), 0),
-                    inhabitedTime, new LevelChunkSection[16], (chunk) -> { });
+                new ChunkTickList<>(Registry.BLOCK::getKey, new ArrayList<>(), 0), // TODO: supply game time
+                new ChunkTickList<>(Registry.FLUID::getKey, new ArrayList<>(), 0),
+                inhabitedTime, new LevelChunkSection[16], (chunk) -> { });
         } else {
             ProtoChunk chunkprimer = new ProtoChunk(pos, UpgradeData.EMPTY, new LevelChunkSection[16],
-                    new ProtoTickList<>((block) -> block == null || block.defaultBlockState().isAir(), pos, worldIn),
-                    new ProtoTickList<>((fluid) -> fluid == null || fluid == Fluids.EMPTY, pos, worldIn), worldIn);
+                new ProtoTickList<>((block) -> block == null || block.defaultBlockState().isAir(), pos, worldIn),
+                new ProtoTickList<>((fluid) -> fluid == null || fluid == Fluids.EMPTY, pos, worldIn), worldIn);
 
             chunkprimer.setBiomes(biomeContainerIn); // setBiomes
             newChunk = chunkprimer;
@@ -80,9 +88,9 @@ public abstract class MixinChunkSerializer {
             newChunk.setUnsaved(true);
         }
         if (statusType == ChunkStatus.ChunkType.LEVELCHUNK) {
-            return new ImposterProtoChunk((LevelChunk)newChunk);
+            return new ImposterProtoChunk((LevelChunk) newChunk);
         } else {
-            ProtoChunk primer = (ProtoChunk)newChunk;
+            ProtoChunk primer = (ProtoChunk) newChunk;
             return primer;
         }
     }

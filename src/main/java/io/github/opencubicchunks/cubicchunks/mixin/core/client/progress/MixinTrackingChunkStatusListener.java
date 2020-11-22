@@ -1,5 +1,7 @@
 package io.github.opencubicchunks.cubicchunks.mixin.core.client.progress;
 
+import javax.annotation.Nullable;
+
 import io.github.opencubicchunks.cubicchunks.chunk.ICubeStatusListener;
 import io.github.opencubicchunks.cubicchunks.chunk.ITrackingCubeStatusListener;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
@@ -15,8 +17,6 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-
-import javax.annotation.Nullable;
 
 @Mixin(StoringChunkProgressListener.class)
 public abstract class MixinTrackingChunkStatusListener implements ICubeStatusListener, ITrackingCubeStatusListener {
@@ -63,8 +63,8 @@ public abstract class MixinTrackingChunkStatusListener implements ICubeStatusLis
         }
         int radiusCubes = Coords.sectionToCubeCeil(this.radius);
         return this.cubeStatuses.get(CubePos.asLong(
-                x + this.spawnCube.getX() - radiusCubes,
-                y + this.spawnCube.getY() - radiusCubes,
-                z + this.spawnCube.getZ() - radiusCubes));
+            x + this.spawnCube.getX() - radiusCubes,
+            y + this.spawnCube.getY() - radiusCubes,
+            z + this.spawnCube.getZ() - radiusCubes));
     }
 }

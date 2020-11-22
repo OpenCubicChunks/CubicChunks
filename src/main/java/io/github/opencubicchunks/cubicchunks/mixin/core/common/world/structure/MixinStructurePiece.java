@@ -12,8 +12,9 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 @Mixin(StructurePiece.class)
 public class MixinStructurePiece {
 
-    @Redirect(at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/WorldGenLevel;getChunk(Lnet/minecraft/core/BlockPos;)Lnet/minecraft/world/level/chunk/ChunkAccess;"), method = "placeBlock")
+    @Redirect(at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/WorldGenLevel;getChunk(Lnet/minecraft/core/BlockPos;)Lnet/minecraft/world/level/chunk/ChunkAccess;"),
+        method = "placeBlock")
     private ChunkAccess getCube(WorldGenLevel worldGenLevel, BlockPos blockPos) {
-        return (ChunkAccess) ((ICubicWorld)worldGenLevel).getCube(blockPos);
+        return (ChunkAccess) ((ICubicWorld) worldGenLevel).getCube(blockPos);
     }
 }

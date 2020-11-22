@@ -2,7 +2,6 @@
     "schemaVersion": 1,
     "id": "cubicchunks",
     "version": "${version}",
-
     "name": "Cubic Chunks",
     "description": "CubicChunks mod",
     "authors": [
@@ -12,10 +11,8 @@
         "homepage": "https://github.com/OpenCubicChunks/CubicChunks",
         "sources": "https://github.com/OpenCubicChunks/CubicChunks"
     },
-
     "license": "MIT",
     "icon": "assets/cubicchunks/icon.png",
-
     "environment": "*",
     "entrypoints": {
         "main": [
@@ -29,7 +26,6 @@
         "cubicchunks.mixins.core.json",
         "cubicchunks.mixins.optifine.json"
     ],
-
     "depends": {
         "fabricloader": ">=0.7.4",
         "fabric-networking-v0": ">=0.1.10",

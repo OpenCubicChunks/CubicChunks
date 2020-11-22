@@ -1,5 +1,7 @@
 package io.github.opencubicchunks.cubicchunks.mixin.core.common.world.lighting;
 
+import javax.annotation.Nullable;
+
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.SectionLightStorageAccess;
@@ -22,10 +24,8 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 
-import javax.annotation.Nullable;
-
 @Mixin(LayerLightEngine.class)
-public class MixinLightEngine <M extends DataLayerStorageMap<M>, S extends LayerLightSectionStorage<M>> implements ILightEngine {
+public class MixinLightEngine<M extends DataLayerStorageMap<M>, S extends LayerLightSectionStorage<M>> implements ILightEngine {
 
     @Shadow @Final protected S storage;
 
@@ -38,9 +38,9 @@ public class MixinLightEngine <M extends DataLayerStorageMap<M>, S extends Layer
     @Shadow @Final private BlockGetter[] lastChunk;
 
     @Override
-    public void retainCubeData(CubePos pos, boolean retain) {
-        long i = pos.asSectionPos().asLong();
-        ((ISectionLightStorage)this.storage).retainCubeData(i, retain);
+    public void retainCubeData(CubePos posIn, boolean retain) {
+        long i = posIn.asSectionPos().asLong();
+        ((ISectionLightStorage) this.storage).retainCubeData(i, retain);
     }
 
     @Override
@@ -95,15 +95,15 @@ public class MixinLightEngine <M extends DataLayerStorageMap<M>, S extends Layer
     private BlockGetter getCubeReader(int sectionX, int sectionY, int sectionZ) {
         long i = SectionPos.asLong(sectionX, sectionY, sectionZ);
 
-        for(int j = 0; j < 2; ++j) {
+        for (int j = 0; j < 2; ++j) {
             if (i == this.lastChunkPos[j]) {
                 return this.lastChunk[j];
             }
         }
 
-        BlockGetter iblockreader = ((ICubeLightProvider)this.chunkSource).getCubeForLighting(sectionX, sectionY, sectionZ);
+        BlockGetter iblockreader = ((ICubeLightProvider) this.chunkSource).getCubeForLighting(sectionX, sectionY, sectionZ);
 
-        for(int k = 1; k > 0; --k) {
+        for (int k = 1; k > 0; --k) {
             this.lastChunkPos[k] = this.lastChunkPos[k - 1];
             this.lastChunk[k] = this.lastChunk[k - 1];
         }

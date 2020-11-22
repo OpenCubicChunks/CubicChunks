@@ -1,5 +1,7 @@
 package io.github.opencubicchunks.cubicchunks;
 
+import java.lang.reflect.InvocationTargetException;
+
 import io.github.opencubicchunks.cubicchunks.chunk.IChunkManager;
 import io.github.opencubicchunks.cubicchunks.meta.EarlyConfig;
 import io.github.opencubicchunks.cubicchunks.network.PacketDispatcher;
@@ -14,8 +16,6 @@ import net.minecraft.world.level.biome.Biome;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.lang.reflect.InvocationTargetException;
-
 /**
  * Requires Mixin BootStrap in order to use in forge.
  */
@@ -25,11 +25,11 @@ public class CubicChunks implements ModInitializer {
     // TODO: debug and fix optimized cubeload
     public static final boolean OPTIMIZED_CUBELOAD = false;
 
-    public static long SECTIONPOS_SENTINEL = -1;
+    public static final long SECTIONPOS_SENTINEL = -1;
 
-    public static int MAX_SUPPORTED_HEIGHT = Integer.MAX_VALUE / 2;
-    public static int MIN_SUPPORTED_HEIGHT = -MAX_SUPPORTED_HEIGHT;
-    public static int SEA_LEVEL = 64;
+    public static final int MAX_SUPPORTED_HEIGHT = Integer.MAX_VALUE / 2;
+    public static final int MIN_SUPPORTED_HEIGHT = -MAX_SUPPORTED_HEIGHT;
+    public static final int SEA_LEVEL = 64;
 
     public static final String MODID = "cubicchunks";
     public static final Logger LOGGER = LogManager.getLogger();

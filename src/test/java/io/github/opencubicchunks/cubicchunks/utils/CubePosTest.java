@@ -10,17 +10,15 @@ import org.junit.Test;
 public class CubePosTest {
 
     @Test
-    public void cubePosTest()
-    {
+    public void cubePosTest() {
         chunkPosTest();
         sectionPosTest();
     }
 
-    public void chunkPosTest()
-    {
-        for (int x = Integer.MIN_VALUE/16; x < Integer.MAX_VALUE/16; x+= Integer.MAX_VALUE/16/500) {
-            for (int y = Integer.MIN_VALUE/16; y < Integer.MAX_VALUE/16; y+= Integer.MAX_VALUE/16/500) {
-                for (int z = Integer.MIN_VALUE/16; z < Integer.MAX_VALUE/16; z+= Integer.MAX_VALUE/16/500) {
+    public void chunkPosTest() {
+        for (int x = Integer.MIN_VALUE / 16; x < Integer.MAX_VALUE / 16; x += Integer.MAX_VALUE / 16 / 500) {
+            for (int y = Integer.MIN_VALUE / 16; y < Integer.MAX_VALUE / 16; y += Integer.MAX_VALUE / 16 / 500) {
+                for (int z = Integer.MIN_VALUE / 16; z < Integer.MAX_VALUE / 16; z += Integer.MAX_VALUE / 16 / 500) {
                     ChunkPos chunkPos = CubePos.of(x, y, z).asChunkPos();
                     CubePos cubePos = CubePos.from(chunkPos, y);
 
@@ -31,11 +29,10 @@ public class CubePosTest {
         }
     }
 
-    public void sectionPosTest()
-    {
-        for (int x = Integer.MIN_VALUE/16; x < Integer.MAX_VALUE/16; x+= Integer.MAX_VALUE/16/500) {
-            for (int y = Integer.MIN_VALUE/16; y < Integer.MAX_VALUE/16; y+= Integer.MAX_VALUE/16/500) {
-                for (int z = Integer.MIN_VALUE/16; z < Integer.MAX_VALUE/16; z+= Integer.MAX_VALUE/16/500) {
+    public void sectionPosTest() {
+        for (int x = Integer.MIN_VALUE / 16; x < Integer.MAX_VALUE / 16; x += Integer.MAX_VALUE / 16 / 500) {
+            for (int y = Integer.MIN_VALUE / 16; y < Integer.MAX_VALUE / 16; y += Integer.MAX_VALUE / 16 / 500) {
+                for (int z = Integer.MIN_VALUE / 16; z < Integer.MAX_VALUE / 16; z += Integer.MAX_VALUE / 16 / 500) {
                     SectionPos sectionPos = CubePos.of(x, y, z).asSectionPos();
                     CubePos cubePos = CubePos.from(sectionPos);
 

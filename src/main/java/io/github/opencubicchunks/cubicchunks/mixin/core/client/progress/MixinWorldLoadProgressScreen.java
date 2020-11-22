@@ -27,7 +27,7 @@ public class MixinWorldLoadProgressScreen extends Screen {
 
     @Inject(method = "renderChunks", at = @At("HEAD"), cancellable = true)
     private static void onDraw(PoseStack mStack, StoringChunkProgressListener trackerParam,
-            int xBase, int yBase, int scale, int spacing, CallbackInfo ci) {
+                               int xBase, int yBase, int scale, int spacing, CallbackInfo ci) {
         ci.cancel();
 
         CubicWorldLoadScreen.doRender(mStack, trackerParam, xBase, yBase, scale, spacing, COLORS);

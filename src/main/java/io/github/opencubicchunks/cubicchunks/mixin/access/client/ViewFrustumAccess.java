@@ -9,7 +9,7 @@ import org.spongepowered.asm.mixin.gen.Invoker;
 @Mixin(ViewArea.class)
 public interface ViewFrustumAccess {
     /**
-    Allows us to get this method in {@link MixinWorldRenderer_Common}
+     * Allows us to get this method in {@link MixinWorldRenderer_Common}
      */
 
     @Invoker ChunkRenderDispatcher.RenderChunk invokeGetRenderChunkAt(BlockPos pos);

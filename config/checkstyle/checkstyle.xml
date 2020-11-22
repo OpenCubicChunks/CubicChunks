@@ -1,0 +1,237 @@
+<?xml version="1.0"?>
+<!DOCTYPE module PUBLIC
+        "-//Checkstyle//DTD Checkstyle Configuration 1.3//EN"
+        "https://checkstyle.org/dtds/configuration_1_3.dtd">
+
+<!--
+    Checkstyle configuration that checks the Google coding conventions from Google Java Style
+    that can be found at https://google.github.io/styleguide/javaguide.html.
+    Checkstyle is very configurable. Be sure to read the documentation at
+    http://checkstyle.sf.net (or in your downloaded distribution).
+    To completely disable a check, just comment it out or delete it from the file.
+    Authors: Max Vetrenko, Ruslan Diachenko, Roman Ivanov.
+
+    TODO: checkstyle
+ -->
+
+<module name="Checker">
+    <property name="charset" value="UTF-8"/>
+
+    <!--<property name="severity" value="warning"/>-->
+    <property name="severity" value="error"/>
+
+    <property name="fileExtensions" value="java, json"/>
+    <!-- Checks for whitespace                               -->
+    <!-- See http://checkstyle.sf.net/config_whitespace.html -->
+    <module name="LineLength">
+        <property name="id" value="LineLengthCode"/>
+        <property name="max" value="190"/>
+        <property name="ignorePattern" value="^package.*|^import.*|a href|href|http://|https://|ftp://"/>
+        <message key="maxLineLen" value="Code line is longer than {0,number,integer} characters (found {1,number,integer})."/>
+    </module>
+
+    <module name="LineLength">
+        <property name="id" value="LineLengthComment"/>
+        <property name="max" value="190"/>
+        <property name="ignorePattern" value="^[ \t]*([a-zA-Z0-9\{\}\+\|\&amp;\&quot;@\(\)&gt;&lt;\.]|//)|@link|@see"/>
+        <property name="ignorePattern" value="^package.*|^import.*|a href|href|http://|https://|ftp://"/>
+        <message key="maxLineLen" value="Comment line is longer than {0,number,integer} characters (found {1,number,integer})."/>
+    </module>
+
+    <module name="FileTabCharacter">
+        <property name="eachLine" value="true"/>
+    </module>
+
+    <module name="SuppressWarningsFilter"/>
+
+    <module name="TreeWalker">
+        <module name="SuppressWarningsHolder"/>
+
+        <!-- Annotations -->
+
+        <module name="AnnotationLocation">
+            <property name="allowSamelineMultipleAnnotations" value="true"/>
+        </module>
+        <module name="MissingDeprecated"/>
+        <module name="MissingOverride"/>
+
+        <!-- Block checks -->
+
+        <module name="AvoidNestedBlocks">
+            <property name="allowInSwitchCase" value="true"/>
+        </module>
+        <module name="EmptyBlock"/>
+        <module name="EmptyCatchBlock"/>
+        <module name="LeftCurly"/>
+        <module name="NeedBraces">
+            <property name="allowSingleLineStatement" value="true"/>
+        </module>
+        <module name="RightCurly">
+            <property name="id" value="RightCurlySame"/>
+            <property name="tokens" value="LITERAL_TRY, LITERAL_CATCH, LITERAL_FINALLY, LITERAL_IF, LITERAL_ELSE, LITERAL_DO"/>
+        </module>
+        <module name="RightCurly">
+            <property name="id" value="RightCurlyAlone"/>
+            <property name="option" value="alone"/>
+            <property name="tokens" value="CLASS_DEF, METHOD_DEF, CTOR_DEF, LITERAL_FOR, LITERAL_WHILE, STATIC_INIT, INSTANCE_INIT"/>
+        </module>
+
+        <!-- Code design -->
+
+        <module name="InnerTypeLast"/>
+        <module name="InterfaceIsType"/>
+        <module name="MutableException"/>
+        <module name="OneTopLevelClass"/>
+
+        <!-- Coding -->
+
+        <!-- <module name="AvoidDoubleBraceInitializationCheck"/> not available in our version? -->
+        <!-- <module name="AvoidNoArgumentSuperConstructorCall"/> not available in our version? -->
+        <module name="CovariantEquals"/>
+        <module name="DeclarationOrder"/>
+        <module name="DefaultComesLast"/>
+        <module name="EmptyStatement"/>
+        <module name="EqualsHashCode"/>
+        <module name="FallThrough"/>
+        <!-- <module name="FinalLocalVariable"/> maybe in the future? -->
+        <module name="HiddenField">
+            <property name="ignoreConstructorParameter" value="true"/>
+            <property name="ignoreSetter" value="true"/>
+            <property name="setterCanReturnItsClass" value="true"/>
+            <property name="ignoreAbstractMethods" value="true"/>
+        </module>
+        <!-- <module name="IllegalCatch"/> maybe in the future with some suppression for ReportedException code? -->
+        <module name="IllegalThrows"/>
+        <!-- <module name="IllegalType"/> in the future? -->
+        <module name="InnerAssignment"/>
+        <!-- <module name="MagicNumber"/> TODO: investigate whether it's feasible to use this -->
+        <module name="ModifiedControlVariable"/>
+        <module name="MultipleStringLiterals">
+            <!-- This may need more special cases, add more if necessary. TODO: reduce max allowed duplicates -->
+            <property name="allowedDuplicates" value="5"/>
+            <property name="ignoreStringsRegexp" value="(Not implemented|For later implementation)"/>
+        </module>
+        <module name="NestedForDepth">
+            <!-- Worldgen code has 2 x 3d nested loops in it, set that as max -->
+            <property name="max" value="6"/>
+        </module>
+        <!-- <module name="NestedIfDepth"/> TODO: enable this -->
+        <module name="NestedTryDepth"/>
+        <module name="NoFinalizer"/>
+        <module name="OneStatementPerLine"/>
+        <module name="OverloadMethodsDeclarationOrder"/>
+        <module name="PackageDeclaration"/>
+        <!-- <module name="ParameterAssignment"/> in the future? -->
+        <!-- <module name="RequireThis"/> TODO: consider the possibility of using this -->
+        <module name="SimplifyBooleanExpression"/>
+        <module name="SimplifyBooleanReturn"/>
+        <module name="StringLiteralEquality"/>
+        <!-- <module name="UnnecessaryParentheses"/> TODO fix all of them and enable this, note: (a + b) + c is not considered unnecessary -->
+        <module name="UnnecessarySemicolonAfterTypeMemberDeclaration"/>
+        <module name="UnnecessarySemicolonInEnumeration"/>
+        <module name="UnnecessarySemicolonInTryWithResources"/>
+        <!-- <module name="VariableDeclarationUsageDistance"/> TODO: consider enabling this -->
+
+        <!-- Imports -->
+
+        <module name="AvoidStarImport">
+            <property name="excludes" value="io.github.opencubicchunks.cubicchunks.utils.Coords,
+            io.github.opencubicchunks.cubicchunks.chunk.util.Utils,
+            io.github.opencubicchunks.cubicchunks.utils.Utils,
+            io.github.opencubicchunks.cubicchunks.utils.Bits,
+            io.github.opencubicchunks.cubicchunks.utils.AddressTools,
+            io.github.opencubicchunks.cubicchunks.utils.MathUtil,
+            java.util.Math,
+            org.objectweb.asm.Opcodes"/>
+        </module>
+        <module name="IllegalImport">
+            <property name="illegalPkgs" value="java.awt, javax.swing, sun, jdk.internal"/>
+        </module>
+        <module name="ImportOrder">
+            <property name="option" value="top"/>
+            <property name="groups" value="/^java\./,javax"/>
+            <property name="separated" value="true"/>
+            <property name="sortStaticImportsAlphabetically" value="true"/>
+        </module>
+        <module name="RedundantImport"/>
+        <module name="UnusedImports"/>
+
+        <!-- TODO: javadoc checkstyle -->
+
+        <!-- Metrics -->
+
+        <module name="CyclomaticComplexity"/>
+        <!-- <module name="JavaNCSS"/> TODO fix and enable -->
+        <module name="NPathComplexity"/>
+
+        <!-- Misc -->
+
+        <module name="ArrayTypeStyle"/>
+        <module name="AvoidEscapedUnicodeCharacters"/>
+        <!-- <module name="CommentsIndentation"/> TODO: this breaks when intellij allows // at the beginning of th line. Any workaround? -->
+        <!-- <module name="Indentation"/> TODO: Doesn't match intellij for lambdas. Any workaround? -->
+        <module name="OuterTypeFilename"/>
+        <module name="UpperEll"/>
+
+        <!-- Modifiers -->
+
+        <module name="RedundantModifier"/>
+
+        <!-- Naming -->
+
+        <module name="ConstantName"/>
+        <!-- <module name="LambdaParameterName"/> TODO: fix later (p_XXXXXX_X_) -->
+        <module name="LocalFinalVariableName"/>
+        <module name="LocalVariableName"/>
+        <module name="MemberName"/>
+        <module name="MethodName"/>
+        <module name="PackageName"/>
+        <!-- <module name="ParameterName"/> TODO: fix later (p_XXXXXX_X_) -->
+        <module name="StaticVariableName"/>
+        <module name="TypeName"/>
+
+        <!-- Whitespace -->
+
+        <module name="EmptyForInitializerPad"/>
+        <module name="EmptyForIteratorPad"/>
+        <!--
+        Can't match intellij settings, maybe use SuppressionXpathFilter to filter out interfaces?
+        <module name="EmptyLineSeparator">
+            <property name="allowNoEmptyLineBetweenFields" value="true"/>
+        </module>
+        -->
+        <module name="GenericWhitespace"/>
+        <module name="NoLineWrap"/>
+        <module name="NoWhitespaceAfter">
+            <property name="tokens" value="AT, INC, DEC, UNARY_MINUS, UNARY_PLUS, BNOT, LNOT, DOT, ARRAY_DECLARATOR, INDEX_OP"/> <!-- defaults except array init -->
+        </module>
+        <module name="NoWhitespaceBefore"/>
+        <!-- <module name="OperatorWrap"/> TODO: consider enforcing newline before operators when wrapping lines -->
+        <module name="ParenPad"/>
+        <!-- <module name="SeparatorWrap"/> TODO: consider enforcing specific rules for wrapping on separators -->
+        <module name="SingleSpaceSeparator"/>
+        <module name="TypecastParenPad"/>
+        <module name="WhitespaceAfter"/>
+        <module name="WhitespaceAround">
+            <property name="allowEmptyLambdas" value="true"/>
+            <property name="tokens" value="ASSIGN, BAND, BAND_ASSIGN,
+                BOR, BOR_ASSIGN, BSR, BSR_ASSIGN,
+                BXOR, BXOR_ASSIGN, COLON, DIV, DIV_ASSIGN,
+                DO_WHILE, EQUAL, GE, GT, LAMBDA, LAND, LCURLY,
+                LE, LITERAL_CATCH, LITERAL_DO, LITERAL_ELSE,
+                LITERAL_FINALLY, LITERAL_FOR, LITERAL_IF,
+                LITERAL_RETURN, LITERAL_SWITCH, LITERAL_TRY,
+                LITERAL_WHILE, LOR, LT, MINUS, MINUS_ASSIGN,
+                MOD, MOD_ASSIGN, NOT_EQUAL, PLUS, PLUS_ASSIGN,
+                QUESTION, RCURLY, SL, SLIST, SL_ASSIGN, SR,
+                SR_ASSIGN, STAR, STAR_ASSIGN, LITERAL_ASSERT,
+                TYPE_EXTENSION_AND"/> <!-- defaults except syncuronized -->
+        </module>
+    </module>
+
+    <module name="SuppressionFilter">
+        <property name="file" value="${config_loc}/suppressions.xml"/>
+    </module>
+
+    <property name="basedir" value="${basedir}"/>
+</module>

@@ -1,5 +1,8 @@
 package io.github.opencubicchunks.cubicchunks.mixin.core.common.world.placement;
 
+import java.util.Random;
+import java.util.stream.Stream;
+
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import net.minecraft.core.BlockPos;
@@ -11,20 +14,22 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import java.util.Random;
-import java.util.stream.Stream;
-
 @Mixin(Spread32Decorator.class)
 public class MixinSpread32Decorator {
 
 
-    @Inject(at = @At("HEAD"), method = "getPositions(Lnet/minecraft/world/level/levelgen/placement/DecorationContext;Ljava/util/Random;Lnet/minecraft/world/level/levelgen/feature/configurations/NoneDecoratorConfiguration;Lnet/minecraft/core/BlockPos;)Ljava/util/stream/Stream;", cancellable = true)
-    private void getCubicPositions(DecorationContext decorationContext, Random random, NoneDecoratorConfiguration noneDecoratorConfiguration, BlockPos blockPos, CallbackInfoReturnable<Stream<BlockPos>> cir) {
+    @Inject(at = @At("HEAD"),
+        method = "getPositions(Lnet/minecraft/world/level/levelgen/placement/DecorationContext;Ljava/util/Random;"
+            + "Lnet/minecraft/world/level/levelgen/feature/configurations/NoneDecoratorConfiguration;Lnet/minecraft/core/BlockPos;)Ljava/util/stream/Stream;",
+        cancellable = true)
+    private void getCubicPositions(DecorationContext decorationContext, Random random, NoneDecoratorConfiguration noneDecoratorConfiguration, BlockPos blockPos,
+                                   CallbackInfoReturnable<Stream<BlockPos>> cir) {
 
         CubicLevelHeightAccessor context = (CubicLevelHeightAccessor) decorationContext;
 
-        if (!context.isCubicWorld())
+        if (!context.isCubicWorld()) {
             return;
+        }
 
         if (random.nextFloat() >= (0.125F * IBigCube.DIAMETER_IN_SECTIONS)) {
             cir.setReturnValue(Stream.of());

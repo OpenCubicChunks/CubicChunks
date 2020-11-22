@@ -1,5 +1,7 @@
 package io.github.opencubicchunks.cubicchunks.mixin.core.common.world.feature;
 
+import java.util.Random;
+
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.WorldGenLevel;
 import net.minecraft.world.level.chunk.ChunkGenerator;
@@ -10,14 +12,13 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import java.util.Random;
-
 //Enable this
 @Mixin(SpringFeature.class)
 public class MixinSpringFeature {
 
     @Inject(at = @At("HEAD"), method = "place", cancellable = true)
-    private void cancel(WorldGenLevel worldGenLevel, ChunkGenerator chunkGenerator, Random random, BlockPos blockPos, SpringConfiguration springConfiguration, CallbackInfoReturnable<Boolean> cir) {
+    private void cancel(WorldGenLevel worldGenLevel, ChunkGenerator chunkGenerator, Random random, BlockPos blockPos, SpringConfiguration springConfiguration,
+                        CallbackInfoReturnable<Boolean> cir) {
         cir.setReturnValue(true);
     }
 }

@@ -1,6 +1,9 @@
 package io.github.opencubicchunks.cubicchunks.mixin.core.common.world.placement;
 
 
+import java.util.Random;
+import java.util.stream.Stream;
+
 import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import io.github.opencubicchunks.cubicchunks.world.placement.CubicSimpleFeatureDecorator;
 import net.minecraft.core.BlockPos;
@@ -13,18 +16,16 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import java.util.Random;
-import java.util.stream.Stream;
-
 @Mixin(SimpleFeatureDecorator.class)
-public abstract class MixinSimpleFeatureDecorator <DC extends DecoratorConfiguration> implements CubicSimpleFeatureDecorator<DC> {
+public abstract class MixinSimpleFeatureDecorator<DC extends DecoratorConfiguration> implements CubicSimpleFeatureDecorator<DC> {
 
     @Shadow protected abstract Stream<BlockPos> place(Random random, DC decoratorConfiguration, BlockPos blockPos);
 
     @Inject(at = @At("HEAD"), method = "getPositions", cancellable = true)
     private void getCubicPositions(DecorationContext decorationContext, Random random, DC decoratorConfiguration, BlockPos blockPos, CallbackInfoReturnable<Stream<BlockPos>> cir) {
-        if (!((CubicLevelHeightAccessor) decorationContext).isCubicWorld())
+        if (!((CubicLevelHeightAccessor) decorationContext).isCubicWorld()) {
             return;
+        }
 
         cir.setReturnValue(placeCubic(random, decoratorConfiguration, blockPos));
     }

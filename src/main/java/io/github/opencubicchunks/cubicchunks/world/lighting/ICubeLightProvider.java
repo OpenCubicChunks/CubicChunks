@@ -1,8 +1,8 @@
 package io.github.opencubicchunks.cubicchunks.world.lighting;
 
-import net.minecraft.world.level.BlockGetter;
-
 import javax.annotation.Nullable;
+
+import net.minecraft.world.level.BlockGetter;
 
 public interface ICubeLightProvider {
 

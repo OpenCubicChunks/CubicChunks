@@ -1,22 +1,24 @@
 package io.github.opencubicchunks.cubicchunks.chunk;
 
-import io.github.opencubicchunks.cubicchunks.chunk.cube.BigCube;
-
-import javax.annotation.Nullable;
 import java.util.concurrent.atomic.AtomicReferenceArray;
 import java.util.function.Consumer;
+
+import javax.annotation.Nullable;
+
+import io.github.opencubicchunks.cubicchunks.chunk.cube.BigCube;
 
 public class ClientChunkProviderCubeArray {
 
     public final AtomicReferenceArray<BigCube> cubes;
     public final int viewDistance;
-    private final int sideLength;
-    private final int sideArea;
-    private final Consumer<BigCube> onUnload;
     public volatile int centerX;
     public volatile int centerY;
     public volatile int centerZ;
     public int loaded;
+
+    private final int sideLength;
+    private final int sideArea;
+    private final Consumer<BigCube> onUnload;
 
     public ClientChunkProviderCubeArray(int viewDistanceIn, Consumer<BigCube> onUnload) {
         this.viewDistance = viewDistanceIn;
@@ -28,8 +30,8 @@ public class ClientChunkProviderCubeArray {
 
     public int getIndex(int x, int y, int z) {
         return Math.floorMod(z, this.sideLength) * this.sideArea
-                + Math.floorMod(y, this.sideLength) * this.sideLength
-                + Math.floorMod(x, this.sideLength);
+            + Math.floorMod(y, this.sideLength) * this.sideLength
+            + Math.floorMod(x, this.sideLength);
     }
 
     public void replace(int chunkIndex, @Nullable BigCube chunkIn) {
@@ -56,8 +58,8 @@ public class ClientChunkProviderCubeArray {
 
     public boolean inView(int x, int y, int z) {
         return Math.abs(x - this.centerX) <= this.viewDistance
-                && Math.abs(y - this.centerY) <= this.viewDistance
-                && Math.abs(z - this.centerZ) <= this.viewDistance;
+            && Math.abs(y - this.centerY) <= this.viewDistance
+            && Math.abs(z - this.centerZ) <= this.viewDistance;
     }
 
     @Nullable

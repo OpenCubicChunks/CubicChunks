@@ -11,6 +11,7 @@ public interface MixinIWorldReader extends LevelReader {
     /**
      * @author OverInfrared
      * @reason (Interface Overwrite) Must overwrite for swimming to work below 0 and above 256
+     * @deprecated Deprecated in Minecraft
      */
     @Deprecated
     @Overwrite
@@ -21,8 +22,8 @@ public interface MixinIWorldReader extends LevelReader {
             toX = toX >> 4;
             toZ = toZ >> 4;
 
-            for(int i = fromX; i <= toX; ++i) {
-                for(int j = fromZ; j <= toZ; ++j) {
+            for (int i = fromX; i <= toX; ++i) {
+                for (int j = fromZ; j <= toZ; ++j) {
                     if (!this.hasChunk(i, j)) {
                         return false;
                     }

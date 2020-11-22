@@ -10,9 +10,10 @@ public class CCPlacement {
 
     public static final FeatureDecorator<CubicLakePlacementConfig> CUBIC_LAKE = featureDecorator("cubic_lake", new SurfaceProjectedDecorator(CubicLakePlacementConfig.CODEC));
 
-    public static void init() {}
+    public static void init() {
+    }
 
-    public static<T extends DecoratorConfiguration> FeatureDecorator<T> featureDecorator(String ID, FeatureDecorator<T> decorator) {
+    public static <T extends DecoratorConfiguration> FeatureDecorator<T> featureDecorator(String ID, FeatureDecorator<T> decorator) {
         Registry.register(Registry.DECORATOR, new ResourceLocation(CubicChunks.MODID, ID), decorator);
         return decorator;
     }

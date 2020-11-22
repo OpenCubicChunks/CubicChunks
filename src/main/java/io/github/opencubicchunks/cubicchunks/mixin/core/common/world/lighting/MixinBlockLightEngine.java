@@ -21,10 +21,10 @@ public class MixinBlockLightEngine extends MixinLightEngine<BlockLightSectionSto
         int blockX = BlockPos.getX(worldPos);
         int blockY = BlockPos.getY(worldPos);
         int blockZ = BlockPos.getZ(worldPos);
-        BlockGetter iblockreader = ((ICubeLightProvider)this.chunkSource).getCubeForLighting(
-                SectionPos.blockToSectionCoord(blockX),
-                SectionPos.blockToSectionCoord(blockY),
-                SectionPos.blockToSectionCoord(blockZ)
+        BlockGetter iblockreader = ((ICubeLightProvider) this.chunkSource).getCubeForLighting(
+            SectionPos.blockToSectionCoord(blockX),
+            SectionPos.blockToSectionCoord(blockY),
+            SectionPos.blockToSectionCoord(blockZ)
         );
         return iblockreader != null ? iblockreader.getLightEmission(this.pos.set(blockX, blockY, blockZ)) : 0;
     }

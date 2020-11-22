@@ -1,5 +1,7 @@
 package io.github.opencubicchunks.cubicchunks.network;
 
+import java.util.Map;
+
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.LongArrayTag;
 import net.minecraft.network.FriendlyByteBuf;
@@ -8,8 +10,6 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.chunk.ChunkSource;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.levelgen.Heightmap;
-
-import java.util.Map;
 
 public class PacketHeightmap {
     private final ChunkPos pos;

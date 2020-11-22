@@ -8,9 +8,8 @@ public class MathUtil {
         return -Math.floorDiv(-a, b);
     }
 
-    public static int log2(int n)
-    {
-        return (int)(Math.log(n) / Math.log(2));
+    public static int log2(int n) {
+        return (int) (Math.log(n) / Math.log(2));
     }
 
     public static Matrix4f createMatrix(float[] data) {

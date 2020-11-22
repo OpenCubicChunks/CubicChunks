@@ -1,5 +1,11 @@
 package io.github.opencubicchunks.cubicchunks.chunk.cube;
 
+import java.util.BitSet;
+import java.util.Map;
+import java.util.stream.Stream;
+
+import javax.annotation.Nullable;
+
 import io.github.opencubicchunks.cubicchunks.chunk.biome.CubeBiomeContainer;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import it.unimi.dsi.fastutil.longs.LongSet;
@@ -20,11 +26,6 @@ import net.minecraft.world.level.levelgen.feature.StructureFeature;
 import net.minecraft.world.level.levelgen.structure.StructureStart;
 import net.minecraft.world.level.material.FluidState;
 
-import javax.annotation.Nullable;
-import java.util.BitSet;
-import java.util.Map;
-import java.util.stream.Stream;
-
 @SuppressWarnings("deprecation")
 public class CubePrimerWrapper extends CubePrimer {
 
@@ -35,23 +36,31 @@ public class CubePrimerWrapper extends CubePrimer {
         this.cube = cubeIn;
     }
 
-    public BigCube getCube()
-    {
+    public BigCube getCube() {
         return this.cube;
     }
 
-    @Deprecated @Override public ChunkPos getPos() { throw new UnsupportedOperationException("This function should never be called!"); }
+    @Deprecated @Override public ChunkPos getPos() {
+        throw new UnsupportedOperationException("This function should never be called!");
+    }
+
     @Override public CubePos getCubePos() {
         return this.cube.getCubePos();
     }
 
-    @Deprecated @Override public LevelChunkSection[] getSections() { throw new UnsupportedOperationException("This should never be called!"); }
+    @Deprecated @Override public LevelChunkSection[] getSections() {
+        throw new UnsupportedOperationException("This should never be called!");
+    }
+
     @Override public LevelChunkSection[] getCubeSections() {
         return cube.getCubeSections();
     }
 
     //STATUS
-    @Deprecated @Override public ChunkStatus getStatus() { return this.cube.getCubeStatus(); }
+    @Deprecated @Override public ChunkStatus getStatus() {
+        return this.cube.getCubeStatus();
+    }
+
     @Override public ChunkStatus getCubeStatus() {
         return cube.getCubeStatus();
     }
@@ -70,46 +79,72 @@ public class CubePrimerWrapper extends CubePrimer {
     }
 
     //ENTITY
-    @Deprecated @Override public void addEntity(Entity entityIn) { }
-    @Override public void addCubeEntity(Entity entityIn) { }
+    @Deprecated @Override public void addEntity(Entity entityIn) {
+    }
+
+    @Override public void addCubeEntity(Entity entityIn) {
+    }
 
     //TILE ENTITY
-    @Deprecated @Override public void setBlockEntityNbt(CompoundTag nbt) { }
-    @Override public void setCubeBlockEntity(CompoundTag nbt) { }
+    @Deprecated @Override public void setBlockEntityNbt(CompoundTag nbt) {
+    }
 
-    @Deprecated @Override public void removeBlockEntity(BlockPos pos) { }
-    @Override public void removeCubeBlockEntity(BlockPos pos) { }
+    @Override public void setCubeBlockEntity(CompoundTag nbt) {
+    }
 
-    @Deprecated @Override public void setBlockEntity(BlockEntity tileEntity) { }
-    @Override public void setCubeBlockEntity(BlockEntity tileEntityIn) { }
+    @Deprecated @Override public void removeBlockEntity(BlockPos pos) {
+    }
+
+    @Override public void removeCubeBlockEntity(BlockPos pos) {
+    }
+
+    @Deprecated @Override public void setBlockEntity(BlockEntity tileEntity) {
+    }
+
+    @Override public void setCubeBlockEntity(BlockEntity tileEntityIn) {
+    }
 
     @Override @Nullable public BlockEntity getBlockEntity(BlockPos pos) {
         return this.cube.getBlockEntity(pos);
     }
 
-    @Deprecated @Override @Nullable public CompoundTag getBlockEntityNbtForSaving(BlockPos pos) { return this.getCubeBlockEntityNbtForSaving(pos); }
+    @Deprecated @Override @Nullable public CompoundTag getBlockEntityNbtForSaving(BlockPos pos) {
+        return this.getCubeBlockEntityNbtForSaving(pos);
+    }
+
     @Override @Nullable public CompoundTag getCubeBlockEntityNbtForSaving(BlockPos pos) {
         return this.cube.getCubeBlockEntityNbtForSaving(pos);
     }
 
-    @Deprecated @Override @Nullable public CompoundTag getBlockEntityNbt(BlockPos pos) { return this.getCubeDeferredTileEntity(pos); }
+    @Deprecated @Override @Nullable public CompoundTag getBlockEntityNbt(BlockPos pos) {
+        return this.getCubeDeferredTileEntity(pos);
+    }
+
     @Override @Nullable public CompoundTag getCubeDeferredTileEntity(BlockPos pos) {
         return this.cube.getCubeDeferredTileEntity(pos);
     }
 
     //LIGHTING
-    @Deprecated @Override public void setLightCorrect(boolean lightCorrectIn) { throw new UnsupportedOperationException("Chunk method called on a cube!"); }
-    @Override public void setCubeLight(boolean lightCorrectIn)
-    {
+    @Deprecated @Override public void setLightCorrect(boolean lightCorrectIn) {
+        throw new UnsupportedOperationException("Chunk method called on a cube!");
+    }
+
+    @Override public void setCubeLight(boolean lightCorrectIn) {
         this.cube.setCubeLight(lightCorrectIn);
     }
 
-    @Deprecated @Override public boolean isLightCorrect() { throw new UnsupportedOperationException("Chunk method called on a cube!"); }
+    @Deprecated @Override public boolean isLightCorrect() {
+        throw new UnsupportedOperationException("Chunk method called on a cube!");
+    }
+
     @Override public boolean hasCubeLight() {
         return this.cube.hasCubeLight();
     }
 
-    @Deprecated @Override public Stream<BlockPos> getLights() { return this.getCubeLightSources(); }
+    @Deprecated @Override public Stream<BlockPos> getLights() {
+        return this.getCubeLightSources();
+    }
+
     @Override public Stream<BlockPos> getCubeLightSources() {
         return this.cube.getCubeLightSources();
     }
@@ -122,11 +157,15 @@ public class CubePrimerWrapper extends CubePrimer {
     @Deprecated @Override public void setUnsaved(boolean modified) {
 
     }
+
     @Override public void setDirty(boolean modified) {
 
     }
 
-    @Deprecated @Override public boolean isUnsaved() { return false; }
+    @Deprecated @Override public boolean isUnsaved() {
+        return false;
+    }
+
     @Override public boolean isDirty() {
         return false;
     }
@@ -135,7 +174,10 @@ public class CubePrimerWrapper extends CubePrimer {
         return this.cube.isEmptyCube();
     }
 
-    @Deprecated @Override public ChunkBiomeContainer getBiomes() { return this.cube.getBiomes(); }
+    @Deprecated @Override public ChunkBiomeContainer getBiomes() {
+        return this.cube.getBiomes();
+    }
+
     @Override public CubeBiomeContainer getCubeBiomes() {
         return this.cube.getCubeBiomes();
     }
@@ -157,7 +199,7 @@ public class CubePrimerWrapper extends CubePrimer {
 
     // getStructureStart
     @Override @Nullable public StructureStart<?> getStartForFeature(StructureFeature<?> var1) {
-         return this.cube.getStartForFeature(var1);
+        return this.cube.getStartForFeature(var1);
     }
 
     @Override public void setStartForFeature(StructureFeature<?> structureIn, StructureStart<?> structureStartIn) {

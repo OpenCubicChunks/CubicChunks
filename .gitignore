@@ -1,3 +1,5 @@
+.idea/*
+!.idea/codeStyles/
 # eclipse
 bin
 *.launch
@@ -11,7 +13,6 @@ out
 *.ipr
 *.iws
 *.iml
-.idea
 
 # gradle
 build

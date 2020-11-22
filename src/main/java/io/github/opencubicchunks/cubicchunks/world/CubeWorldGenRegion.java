@@ -1,5 +1,15 @@
 package io.github.opencubicchunks.cubicchunks.world;
 
+import static io.github.opencubicchunks.cubicchunks.utils.Coords.*;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.Random;
+import java.util.function.Predicate;
+import java.util.stream.Stream;
+
+import javax.annotation.Nullable;
+
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.server.ICubicWorld;
@@ -45,15 +55,6 @@ import net.minecraft.world.level.storage.LevelData;
 import net.minecraft.world.phys.AABB;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
-import javax.annotation.Nullable;
-import java.util.Collections;
-import java.util.List;
-import java.util.Random;
-import java.util.function.Predicate;
-import java.util.stream.Stream;
-
-import static io.github.opencubicchunks.cubicchunks.utils.Coords.blockToCube;
 
 public class CubeWorldGenRegion implements WorldGenLevel, ICubicWorld {
 
@@ -110,10 +111,10 @@ public class CubeWorldGenRegion implements WorldGenLevel, ICubicWorld {
             IBigCube minCube = this.cubePrimers[0];
             IBigCube maxCube = this.cubePrimers[this.cubePrimers.length - 1];
             this.minCubeX = minCube.getCubePos().getX();
-            this.minCubeY= minCube.getCubePos().getY();
+            this.minCubeY = minCube.getCubePos().getY();
             this.minCubeZ = minCube.getCubePos().getZ();
             this.maxCubeX = maxCube.getCubePos().getX();
-            this.maxCubeY= maxCube.getCubePos().getY();
+            this.maxCubeY = maxCube.getCubePos().getY();
             this.maxCubeZ = maxCube.getCubePos().getZ();
         }
     }
@@ -136,12 +137,12 @@ public class CubeWorldGenRegion implements WorldGenLevel, ICubicWorld {
 
     public IBigCube getCube(BlockPos blockPos) {
         return this.getCube(blockToCube(blockPos.getX()), blockToCube(blockPos.getY()), blockToCube(blockPos.getZ()), ChunkStatus.EMPTY,
-                true);
+            true);
     }
 
     public IBigCube getCube(CubePos cubePos) {
         return this.getCube(cubePos.getX(), cubePos.getY(), cubePos.getZ(), ChunkStatus.EMPTY,
-                true);
+            true);
     }
 
     public IBigCube getCube(int cubeX, int cubeY, int cubeZ, ChunkStatus status) {
@@ -169,22 +170,22 @@ public class CubeWorldGenRegion implements WorldGenLevel, ICubicWorld {
             IBigCube cornerCube2 = this.cubePrimers[this.cubePrimers.length - 1];
             LOGGER.error("Requested section : {} {} {}", x, y, z);
             LOGGER.error("Region bounds : {} {} {} | {} {} {}",
-                    cornerCube1.getCubePos().getX(), cornerCube1.getCubePos().getY(), cornerCube1.getCubePos().getZ(),
-                    cornerCube2.getCubePos().getX(), cornerCube2.getCubePos().getY(), cornerCube2.getCubePos().getZ());
+                cornerCube1.getCubePos().getX(), cornerCube1.getCubePos().getY(), cornerCube1.getCubePos().getZ(),
+                cornerCube2.getCubePos().getX(), cornerCube2.getCubePos().getY(), cornerCube2.getCubePos().getZ());
             if (icube != null) {
                 throw Util.pauseInIde(new RuntimeException(String.format("Section is not of correct status. Expecting %s, got %s "
-                        + "| %s %s %s", requiredStatus, icube.getCubeStatus(), x, y, z)));
+                    + "| %s %s %s", requiredStatus, icube.getCubeStatus(), x, y, z)));
             } else {
                 throw Util.pauseInIde(new RuntimeException(String.format("We are asking a region for a section out of bound | "
-                        + "%s %s %s", x, y, z) + "\n" + String.format("Bound | " + "%s %s %s", this.minCubeX, this.minCubeY, this.minCubeZ)));
+                    + "%s %s %s", x, y, z) + "\n" + String.format("Bound | " + "%s %s %s", this.minCubeX, this.minCubeY, this.minCubeZ)));
             }
         }
     }
 
     public boolean cubeExists(int x, int y, int z) {
         return x >= this.minCubeX && x <= this.maxCubeX &&
-                y >= this.minCubeY && y <= this.maxCubeY &&
-                z >= this.minCubeZ && z <= this.maxCubeZ;
+            y >= this.minCubeY && y <= this.maxCubeY &&
+            z >= this.minCubeZ && z <= this.maxCubeZ;
     }
 
 
@@ -247,7 +248,7 @@ public class CubeWorldGenRegion implements WorldGenLevel, ICubicWorld {
         if (tileentity != null) {
             return tileentity;
         } else {
-            CompoundTag compoundnbt = null;// = icube.getDeferredTileEntity(pos);
+            CompoundTag compoundnbt = null; // = icube.getDeferredTileEntity(pos);
             BlockState state = this.getBlockState(pos);
             if (compoundnbt != null) {
                 if ("DUMMY".equals(compoundnbt.getString("id"))) {
@@ -265,9 +266,9 @@ public class CubeWorldGenRegion implements WorldGenLevel, ICubicWorld {
                 }
             }
 
-            if (icube.getBlockState(pos).hasBlockEntity()) {
-//                LOGGER.warn("Tried to access a block entity before it was created. {}", (Object) pos); //TODO:Re-enable warning
-            }
+            //if (icube.getBlockState(pos).hasBlockEntity()) {
+            //    LOGGER.warn("Tried to access a block entity before it was created. {}", (Object) pos); //TODO:Re-enable warning
+            //}
 
             return null;
         }
@@ -386,10 +387,10 @@ public class CubeWorldGenRegion implements WorldGenLevel, ICubicWorld {
             icube.removeCubeBlockEntity(pos);
         }
 
-        if (newState.hasPostProcess(this, pos)) {
-            //TODO: reimplement postprocessing
-            //this.markBlockForPostprocessing(pos);
-        }
+        //if (newState.hasPostProcess(this, pos)) {
+        //TODO: reimplement postprocessing
+        //this.markBlockForPostprocessing(pos);
+        //}
 
         return true;
     }

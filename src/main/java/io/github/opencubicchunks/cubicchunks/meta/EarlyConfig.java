@@ -1,6 +1,11 @@
 package io.github.opencubicchunks.cubicchunks.meta;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Arrays;
@@ -20,11 +25,7 @@ public class EarlyConfig {
         int diameter = EarlyConfig.DEFAULT_DIAMETER_IN_SECTIONS;
         try {
             Properties prop = new Properties();
-            if (!Files.exists(Paths.get(FILE_NAME))) {
-                //If the file is not there we just use the default (and dont create the file). This should prevent most users
-                // from using this setting without actually knowing what it is
-                // EarlyConfig.createDefaultEarlyConfigFile(FILE_NAME, prop);
-            } else {
+            if (Files.exists(Paths.get(FILE_NAME))) {
                 try (InputStream inputStream = Files.newInputStream(Paths.get(FILE_NAME))) {
                     //If there are any exceptions while loading, return default.
                     prop.load(inputStream);
@@ -41,7 +42,7 @@ public class EarlyConfig {
                     }
                     if (!valid) {
                         throw new UnsupportedOperationException(PROPERTY_NAME_DIAMETER_IN_SECTIONS + " " + diameter + " is not supported. Please use one of " +
-                                Arrays.stream(VALID_CUBE_DIAMETERS).mapToObj(String::valueOf).collect(Collectors.joining(", ", "[", "]")) + ".");
+                            Arrays.stream(VALID_CUBE_DIAMETERS).mapToObj(String::valueOf).collect(Collectors.joining(", ", "[", "]")) + ".");
                     }
                 }
                 prop.setProperty(PROPERTY_NAME_DIAMETER_IN_SECTIONS, String.valueOf(diameter));
@@ -49,8 +50,10 @@ public class EarlyConfig {
                     prop.store(out, "");
                 }
             }
-        }catch(IOException e)
-        {
+            //If the file is not there we just use the default (and dont create the file). This should prevent most users
+            // from using this setting without actually knowing what it is
+            // EarlyConfig.createDefaultEarlyConfigFile(FILE_NAME, prop);
+        } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
 
@@ -70,10 +73,9 @@ public class EarlyConfig {
     private static String getPropertyOrSetDefault(Properties prop, String propName, String defaultValue) {
         String property = prop.getProperty(propName);
 
-        if(property != null)
+        if (property != null) {
             return property;
-        else
-        {
+        } else {
             prop.setProperty(propName, defaultValue);
             return defaultValue;
         }

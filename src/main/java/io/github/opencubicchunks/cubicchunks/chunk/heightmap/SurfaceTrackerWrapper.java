@@ -9,50 +9,50 @@ import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.levelgen.Heightmap;
 
 public class SurfaceTrackerWrapper extends Heightmap {
-	private final SurfaceTrackerSection surfaceTracker;
-	private final int dx;
-	private final int dz;
+    private final SurfaceTrackerSection surfaceTracker;
+    private final int dx;
+    private final int dz;
 
-	public SurfaceTrackerWrapper(ChunkAccess chunkAccess, Types types) {
-		super(chunkAccess, types);
-		((HeightmapAccess) this).setIsOpaque(null);
-		this.surfaceTracker = new SurfaceTrackerSection(types);
-		this.dx = Coords.sectionToMinBlock(chunkAccess.getPos().x);
-		this.dz = Coords.sectionToMinBlock(chunkAccess.getPos().z);
-	}
+    public SurfaceTrackerWrapper(ChunkAccess chunkAccess, Types types) {
+        super(chunkAccess, types);
+        ((HeightmapAccess) this).setIsOpaque(null);
+        this.surfaceTracker = new SurfaceTrackerSection(types);
+        this.dx = Coords.sectionToMinBlock(chunkAccess.getPos().x);
+        this.dz = Coords.sectionToMinBlock(chunkAccess.getPos().z);
+    }
 
-	@Override
-	public boolean update(int x, int y, int z, BlockState blockState) {
-		// TODO do we need to do anything else here?
-		surfaceTracker.getCubeNode(Coords.blockToCube(y)).markDirty(x + dx, z + dz);
-		// TODO not sure if this is safe to do or if things depend on the result
-		return false;
-	}
+    @Override
+    public boolean update(int x, int y, int z, BlockState blockState) {
+        // TODO do we need to do anything else here?
+        surfaceTracker.getCubeNode(Coords.blockToCube(y)).markDirty(x + dx, z + dz);
+        // TODO not sure if this is safe to do or if things depend on the result
+        return false;
+    }
 
-	@Override
-	public int getFirstAvailable(int x, int z) {
-		return surfaceTracker.getHeight(x + dx, z + dz) + 1;
-	}
+    @Override
+    public int getFirstAvailable(int x, int z) {
+        return surfaceTracker.getHeight(x + dx, z + dz) + 1;
+    }
 
-	// TODO not sure what to do about these methods
-	@Override
-	public void setRawData(long[] ls) {
-		throw new UnsupportedOperationException();
-	}
+    // TODO not sure what to do about these methods
+    @Override
+    public void setRawData(long[] ls) {
+        throw new UnsupportedOperationException();
+    }
 
-	@Override
-	public long[] getRawData() {
-		BitStorage data = ((HeightmapAccess) this).getData();
-		surfaceTracker.writeData(dx, dz, data, ((HeightmapAccess) this).getChunk().getMinBuildHeight());
-		return data.getRaw();
-	}
+    @Override
+    public long[] getRawData() {
+        BitStorage data = ((HeightmapAccess) this).getData();
+        surfaceTracker.writeData(dx, dz, data, ((HeightmapAccess) this).getChunk().getMinBuildHeight());
+        return data.getRaw();
+    }
 
-	public void loadCube(IBigCube cube) {
-		// TODO loading should only cause marking as dirty if not loading from save file
-		this.surfaceTracker.loadCube(cube, true);
-	}
+    public void loadCube(IBigCube cube) {
+        // TODO loading should only cause marking as dirty if not loading from save file
+        this.surfaceTracker.loadCube(cube, true);
+    }
 
-	public void unloadCube(IBigCube cube) {
-		this.surfaceTracker.getCubeNode(cube.getCubePos().getY()).unloadCube(cube);
-	}
+    public void unloadCube(IBigCube cube) {
+        this.surfaceTracker.getCubeNode(cube.getCubePos().getY()).unloadCube(cube);
+    }
 }

@@ -9,6 +9,6 @@ public interface ChunkTicketTrackerFactoryAccess {
 
     @Invoker("<init>")
     static DistanceManager.ChunkTicketTracker construct(DistanceManager ticketManager) {
-       throw new Error("Mixin did not apply.");
+        throw new Error("Mixin did not apply.");
     }
 }

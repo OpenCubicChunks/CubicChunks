@@ -1,10 +1,10 @@
 package io.github.opencubicchunks.cubicchunks.mixin.access.common;
 
+import java.util.Comparator;
+
 import net.minecraft.server.level.TicketType;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Invoker;
-
-import java.util.Comparator;
 
 @Mixin(TicketType.class)
 public interface TicketTypeAccess {

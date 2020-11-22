@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+
+<!DOCTYPE suppressions PUBLIC
+        "-//Checkstyle//DTD SuppressionFilter Configuration 1.2//EN"
+        "https://checkstyle.org/dtds/suppressions_1_2.dtd">
+
+<suppressions>
+    <!-- suppress for time measurement code -->
+    <suppress checks="InnerAssignment" files="DebugVisualization.java"/>
+    <!-- class transformers will often repeat the same class name string literal -->
+    <suppress checks="MultipleStringLiterals" files=".*Transformer\.java"/>
+    <!-- implementations of ChunkAccess, getHeight for heightmap and world height are semantically not overloads but have the same name -->
+    <suppress checks="OverloadMethodsDeclarationOrder"
+              files="SectionSizeCubeAccessWrapper.java|BigCube.java|CubePrimer.java|CubePrimerWrapper.java"/>
+    <!-- mixins may have multiple inject methods with the same name, it's better to group them by their functionality -->
+    <suppress checks="OverloadMethodsDeclarationOrder" files=".*Mixin.*\.java"/>
+    <!-- TODO: DebugVulkan doesn't work yet anyway, and this requires some refactoring -->
+    <suppress checks="CyclomaticComplexity" files="DebugVulkan.java"/>
+    <!-- Mixins don't count for now until ASM is done -->
+    <suppress checks="CyclomaticComplexity" files=".*Mixin.*\.java"/>
+    <!-- we are not fixing setBlockState -->
+    <suppress checks="CyclomaticComplexity" files="BigCube.java|CubePrimer.java"/>
+    <!-- TODO: These probably need refactoring -->
+    <suppress checks="CyclomaticComplexity" files="CubicWorldLoadScreen.java|CubeSerializer.java|DebugVisualization.java"/>
+    <!-- TODO: DebugVulkan doesn't work yet anyway, and this requires some refactoring -->
+    <suppress checks="NPathComplexity" files="DebugVulkan.java"/>
+    <!-- Mixins don't count for now until ASM is done -->
+    <suppress checks="NPathComplexity" files=".*Mixin.*\.java"/>
+    <!-- TODO These need refactoring -->
+    <suppress checks="NPathComplexity" files="BigCube.java|CubePrimer.java|CubeSerializer.java"/>
+    <!-- Mixins need shadows and sometimes may want soft implements with special characters in prefix -->
+    <suppress checks="MemberName" files=".*Mixin.*\.java"/>
+    <suppress checks="MethodName" files=".*Mixin.*\.java"/>
+    <suppress checks="StaticVariableName" files=".*Mixin.*\.java"/>
+    <!-- Mixins may have an underscore to separate target from functionality -->
+    <suppress checks="TypeName" files=".*Mixin.*\.java"/>
+</suppressions>

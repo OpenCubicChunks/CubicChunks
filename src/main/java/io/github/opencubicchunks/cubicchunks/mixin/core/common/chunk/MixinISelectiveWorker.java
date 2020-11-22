@@ -1,5 +1,9 @@
 package io.github.opencubicchunks.cubicchunks.mixin.core.common.chunk;
 
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.function.Function;
+
 import com.mojang.datafixers.util.Either;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.CubePrimer;
 import net.minecraft.server.level.ChunkHolder;
@@ -14,10 +18,6 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 
-import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.function.Function;
-
 @Mixin(targets = "net.minecraft.world.level.chunk.ChunkStatus$SimpleGenerationTask")
 public interface MixinISelectiveWorker {
 
@@ -29,15 +29,15 @@ public interface MixinISelectiveWorker {
      */
     @Overwrite
     default CompletableFuture<Either<ChunkAccess, ChunkHolder.ChunkLoadingFailure>> doWork(
-            ChunkStatus status, ServerLevel p_doWork_2_, ChunkGenerator p_doWork_3_,
-            StructureManager p_doWork_4_, ThreadedLevelLightEngine p_doWork_5_,
-            Function<ChunkAccess, CompletableFuture<Either<ChunkAccess, ChunkHolder.ChunkLoadingFailure>>> p_doWork_6_,
-            List<ChunkAccess> p_doWork_7_, ChunkAccess chunk) {
+        ChunkStatus status, ServerLevel p_doWork_2_, ChunkGenerator p_doWork_3_,
+        StructureManager p_doWork_4_, ThreadedLevelLightEngine p_doWork_5_,
+        Function<ChunkAccess, CompletableFuture<Either<ChunkAccess, ChunkHolder.ChunkLoadingFailure>>> p_doWork_6_,
+        List<ChunkAccess> p_doWork_7_, ChunkAccess chunk) {
 
         if (!chunk.getStatus().isOrAfter(status)) {
             this.doWork(p_doWork_2_, p_doWork_3_, p_doWork_7_, chunk);
             if (chunk instanceof ProtoChunk) {
-                ((ProtoChunk)chunk).setStatus(status);
+                ((ProtoChunk) chunk).setStatus(status);
             } else if (chunk instanceof CubePrimer) {
                 ((CubePrimer) chunk).setCubeStatus(status);
             }

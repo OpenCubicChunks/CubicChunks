@@ -1,11 +1,15 @@
 package io.github.opencubicchunks.cubicchunks.mixin.core.common.chunk;
 
+import static io.github.opencubicchunks.cubicchunks.utils.Coords.*;
+
+import java.util.List;
+import java.util.function.Supplier;
+
 import io.github.opencubicchunks.cubicchunks.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.ICubeGenerator;
-import io.github.opencubicchunks.cubicchunks.chunk.biome.CubeBiomeContainer;
-import io.github.opencubicchunks.cubicchunks.chunk.cube.CubePrimer;
 import io.github.opencubicchunks.cubicchunks.chunk.SectionSizeCubeAccessWrapper;
+import io.github.opencubicchunks.cubicchunks.chunk.biome.CubeBiomeContainer;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.CubePrimer;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.OverworldBiomeSourceAccess;
@@ -23,7 +27,6 @@ import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.SectionPos;
 import net.minecraft.data.worldgen.StructureFeatures;
 import net.minecraft.network.protocol.game.DebugPackets;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.ChunkPos;
@@ -56,45 +59,42 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.noise.module.source.Perlin;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.function.Supplier;
-
-import static io.github.opencubicchunks.cubicchunks.utils.Coords.*;
-
 @Mixin(ChunkGenerator.class)
 public abstract class MixinChunkGenerator implements ICubeGenerator {
 
-    @Mutable
-    @Shadow
-    @Final
-    protected BiomeSource biomeSource;
-    @Mutable
-    @Shadow
-    @Final
-    protected BiomeSource runtimeBiomeSource;
+    private static final float[] BIOME_WEIGHTS = Util.make(new float[25], (fs) -> {
+        for (int i = -2; i <= 2; ++i) {
+            for (int j = -2; j <= 2; ++j) {
+                float f = 10.0F / Mth.sqrt((float) (i * i + j * j) + 0.2F);
+                fs[i + 2 + (j + 2) * 5] = f;
+            }
+        }
 
-    @Shadow
-    @Final
-    private StructureSettings settings;
+    });
 
-    @Shadow
-    protected abstract void generateStrongholds();
+    @Mutable @Shadow @Final protected BiomeSource biomeSource;
+    @Mutable @Shadow @Final protected BiomeSource runtimeBiomeSource;
 
-    @Shadow
-    @Final
-    private List<ChunkPos> strongholdPositions;
+    @Shadow @Final private StructureSettings settings;
+    @Shadow @Final private List<ChunkPos> strongholdPositions;
 
+    private Perlin perlin1 = null;
+    private Perlin perlin2 = null;
+    private Perlin perlin3 = null;
+    private final double frequencyDivisor = 1;
 
-    @Inject(at = @At("RETURN"), method = "<init>(Lnet/minecraft/world/level/biome/BiomeSource;Lnet/minecraft/world/level/biome/BiomeSource;Lnet/minecraft/world/level/levelgen/StructureSettings;J)V")
-    private void switchBiomeSource(BiomeSource biomeSource, BiomeSource biomeSource2, StructureSettings structureSettings, long l, CallbackInfo ci) {
+    @Shadow protected abstract void generateStrongholds();
+
+    @Inject(at = @At("RETURN"),
+        method = "<init>(Lnet/minecraft/world/level/biome/BiomeSource;Lnet/minecraft/world/level/biome/BiomeSource;Lnet/minecraft/world/level/levelgen/StructureSettings;J)V")
+    private void switchBiomeSource(BiomeSource biomeSourceIn, BiomeSource biomeSourceIn2, StructureSettings structureSettings, long l, CallbackInfo ci) {
         if (System.getProperty("cubicchunks.debug.biomes", "false").equalsIgnoreCase("true")) {
-            if (this.biomeSource instanceof OverworldBiomeSource)
+            if (this.biomeSource instanceof OverworldBiomeSource) {
                 this.biomeSource = new StripedBiomeSource(((OverworldBiomeSourceAccess) this.biomeSource).getBiomes());
-            if (this.runtimeBiomeSource instanceof OverworldBiomeSource)
+            }
+            if (this.runtimeBiomeSource instanceof OverworldBiomeSource) {
                 this.runtimeBiomeSource = new StripedBiomeSource(((OverworldBiomeSourceAccess) this.runtimeBiomeSource).getBiomes());
+            }
         }
     }
 
@@ -102,8 +102,9 @@ public abstract class MixinChunkGenerator implements ICubeGenerator {
     // TODO: check which one is which
     @Inject(method = "createStructures", at = @At("HEAD"), cancellable = true)
     public void onGenerateStructures(RegistryAccess registry, StructureFeatureManager featureManager, ChunkAccess chunkAccess, StructureManager manager, long seed, CallbackInfo ci) {
-        if (!(chunkAccess instanceof IBigCube))
+        if (!(chunkAccess instanceof IBigCube)) {
             return;
+        }
         ci.cancel();
 
 
@@ -123,13 +124,18 @@ public abstract class MixinChunkGenerator implements ICubeGenerator {
     }
 
 
-    private void createCCStructure(ConfiguredStructureFeature<?, ?> configuredStructureFeature, RegistryAccess registryAccess, StructureFeatureManager structureFeatureManager, IBigCube cube, StructureManager structureManager, long seed, CubePos cubePos, Biome biome) {
-        StructureStart<?> structureStart = structureFeatureManager.getStartForFeature(/*SectionPos.of(cube.getPos(), 0) We return null as a sectionPos Arg is not used in the method*/null, configuredStructureFeature.feature, cube);
+    private void createCCStructure(ConfiguredStructureFeature<?, ?> configuredStructureFeature, RegistryAccess registryAccess, StructureFeatureManager structureFeatureManager, IBigCube cube,
+                                   StructureManager structureManager, long seed, CubePos cubePos, Biome biome) {
+        StructureStart<?> structureStart = structureFeatureManager
+            .getStartForFeature(/*SectionPos.of(cube.getPos(), 0) We return null as a sectionPos Arg is not used in the method*/null, configuredStructureFeature.feature, cube);
         int i = structureStart != null ? structureStart.getReferences() : 0;
         StructureFeatureConfiguration structureFeatureConfiguration = this.settings.getConfig(configuredStructureFeature.feature);
         if (structureFeatureConfiguration != null) {
-            StructureStart<?> structureStart2 = configuredStructureFeature.generate(registryAccess, ((ChunkGenerator) (Object) this), this.biomeSource, structureManager, seed, cubePos.asChunkPos(), biome, i, structureFeatureConfiguration);
-            structureFeatureManager.setStartForFeature(/* SectionPos.of(cube.getPos(), 0) We return null as a sectionPos Arg is not used in the method*/null, configuredStructureFeature.feature, structureStart2, cube);
+            StructureStart<?> structureStart2 = configuredStructureFeature
+                .generate(registryAccess, ((ChunkGenerator) (Object) this), this.biomeSource, structureManager, seed, cubePos.asChunkPos(), biome, i, structureFeatureConfiguration);
+            structureFeatureManager
+                .setStartForFeature(/* SectionPos.of(cube.getPos(), 0) We return null as a sectionPos Arg is not used in the method*/null, configuredStructureFeature.feature,
+                    structureStart2, cube);
         }
 
     }
@@ -137,8 +143,9 @@ public abstract class MixinChunkGenerator implements ICubeGenerator {
 
     @Inject(method = "createReferences", at = @At("HEAD"), cancellable = true)
     public void createReferences(WorldGenLevel worldGenLevel, StructureFeatureManager featureManager, ChunkAccess chunkAccess, CallbackInfo ci) {
-        if (!(chunkAccess instanceof IBigCube))
+        if (!(chunkAccess instanceof IBigCube)) {
             return;
+        }
 
         ci.cancel();
 
@@ -162,11 +169,11 @@ public abstract class MixinChunkGenerator implements ICubeGenerator {
                     for (StructureStart<?> structureStart : world.getCube(CubePos.of(x, y, z)).getAllCubeStructureStarts().values()) {
                         try {
                             if (structureStart != StructureStart.INVALID_START && structureStart.getBoundingBox().intersects(
-                                    //We use a new Bounding Box and check if it intersects a given cube.
-                                    new BoundingBox(blockX, blockY, blockZ,
-                                            blockX + IBigCube.DIAMETER_IN_BLOCKS - 1,
-                                            blockY + IBigCube.DIAMETER_IN_BLOCKS - 1,
-                                            blockZ + IBigCube.DIAMETER_IN_BLOCKS - 1))) {
+                                //We use a new Bounding Box and check if it intersects a given cube.
+                                new BoundingBox(blockX, blockY, blockZ,
+                                    blockX + IBigCube.DIAMETER_IN_BLOCKS - 1,
+                                    blockY + IBigCube.DIAMETER_IN_BLOCKS - 1,
+                                    blockZ + IBigCube.DIAMETER_IN_BLOCKS - 1))) {
                                 //The First Param is a SectionPos arg that is not used anywhere so we make it null.
                                 featureManager.addReferenceForFeature(null, structureStart.getFeature(), cubePosAsLong, cube);
                                 DebugPackets.sendStructurePacket(world, structureStart);
@@ -185,8 +192,12 @@ public abstract class MixinChunkGenerator implements ICubeGenerator {
         }
     }
 
-    @Inject(at = @At("HEAD"), method = "findNearestMapFeature(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/level/levelgen/feature/StructureFeature;Lnet/minecraft/core/BlockPos;IZ)Lnet/minecraft/core/BlockPos;", cancellable = true)
-    private void do3DLocateStructure(ServerLevel serverLevel, StructureFeature<?> structureFeature, BlockPos blockPos, int radius, boolean skipExistingChunks, CallbackInfoReturnable<BlockPos> cir) {
+    @Inject(at = @At("HEAD"),
+        method = "findNearestMapFeature(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/level/levelgen/feature/StructureFeature;Lnet/minecraft/core/BlockPos;IZ)"
+            + "Lnet/minecraft/core/BlockPos;",
+        cancellable = true)
+    private void do3DLocateStructure(ServerLevel serverLevel, StructureFeature<?> structureFeature, BlockPos blockPos, int radius, boolean skipExistingChunks,
+                                     CallbackInfoReturnable<BlockPos> cir) {
         if (!this.biomeSource.canGenerateStructure(structureFeature)) {
             cir.setReturnValue(null);
         } else if (structureFeature == StructureFeature.STRONGHOLD) {
@@ -210,23 +221,19 @@ public abstract class MixinChunkGenerator implements ICubeGenerator {
             cir.setReturnValue(blockPos2);
         } else {
             StructureFeatureConfiguration structureFeatureConfiguration = this.settings.getConfig(structureFeature);
-            cir.setReturnValue(structureFeatureConfiguration == null ? null : structureFeature.getNearestGeneratedFeature(serverLevel, serverLevel.structureFeatureManager(), blockPos, radius, skipExistingChunks, serverLevel.getSeed(), structureFeatureConfiguration));
+            cir.setReturnValue(structureFeatureConfiguration == null ? null : structureFeature
+                .getNearestGeneratedFeature(serverLevel, serverLevel.structureFeatureManager(), blockPos, radius, skipExistingChunks, serverLevel.getSeed(), structureFeatureConfiguration));
         }
     }
 
     @Inject(method = "createBiomes", at = @At("HEAD"), cancellable = true)
     public void generateBiomes(Registry<Biome> registry, ChunkAccess chunkIn, CallbackInfo ci) {
         /* This can only be a  CubePrimer at this point due to the inject in MixinChunkStatus#cubicChunksBiome  */
-        IBigCube iCube = (IBigCube)chunkIn;
+        IBigCube iCube = (IBigCube) chunkIn;
         CubePos cubePos = ((IBigCube) chunkIn).getCubePos();
-        ((CubePrimer)iCube).setCubeBiomes(new CubeBiomeContainer(registry, cubePos, this.runtimeBiomeSource));
+        ((CubePrimer) iCube).setCubeBiomes(new CubeBiomeContainer(registry, cubePos, this.runtimeBiomeSource));
         ci.cancel();
     }
-
-    private Perlin perlin1 = null;
-    private Perlin perlin2 = null;
-    private Perlin perlin3 = null;
-    private final double frequencyDivisor = 1;
 
     private void setSeed(long seed) {
         if (perlin1 == null) {
@@ -245,17 +252,6 @@ public abstract class MixinChunkGenerator implements ICubeGenerator {
             this.perlin3.setFrequency(0.01138 / frequencyDivisor);
         }
     }
-
-
-    private static final float[] BIOME_WEIGHTS = Util.make(new float[25], (fs) -> {
-        for (int i = -2; i <= 2; ++i) {
-            for (int j = -2; j <= 2; ++j) {
-                float f = 10.0F / Mth.sqrt((float) (i * i + j * j) + 0.2F);
-                fs[i + 2 + (j + 2) * 5] = f;
-            }
-        }
-
-    });
 
     @Override
     public void makeBase(LevelAccessor worldIn, StructureFeatureManager var2, IBigCube cube) {
@@ -295,11 +291,12 @@ public abstract class MixinChunkGenerator implements ICubeGenerator {
                 ConfiguredSurfaceBuilder<?> configuredSurfaceBuilder = biome.getGenerationSettings().getSurfaceBuilder().get();
                 configuredSurfaceBuilder.initNoise(1000);
                 int surfaceHeight = height - cubeToMinBlock(cube.getCubePos().getY()) + 1;
-                if (surfaceHeight >= 0 && surfaceHeight < 2 * IBigCube.DIAMETER_IN_BLOCKS)
+                if (surfaceHeight >= 0 && surfaceHeight < 2 * IBigCube.DIAMETER_IN_BLOCKS) {
                     configuredSurfaceBuilder.apply(worldIn.getRandom(), cubeWrapper, biome, realX, realZ,
-                            surfaceHeight + 1, 1,
-                            Blocks.STONE.defaultBlockState(), Blocks.WATER.defaultBlockState(), CubicChunks.SEA_LEVEL - cubeToMinBlock(cube.getCubePos().getY()) + 1,
-                            1000);
+                        surfaceHeight + 1, 1,
+                        Blocks.STONE.defaultBlockState(), Blocks.WATER.defaultBlockState(), CubicChunks.SEA_LEVEL - cubeToMinBlock(cube.getCubePos().getY()) + 1,
+                        1000);
+                }
             }
         }
     }
@@ -332,15 +329,16 @@ public abstract class MixinChunkGenerator implements ICubeGenerator {
 
                             LevelChunkSection cubeSection = cube.getCubeSections()[blockToIndex(dx, dy, dz)];
                             if (cubeSection == null) {
-                                cube.getCubeSections()[blockToIndex(dx, dy, dz)] = cubeSection = new LevelChunkSection(blockToSection(blockY));
+                                cubeSection = new LevelChunkSection(blockToSection(blockY));
+                                cube.getCubeSections()[blockToIndex(dx, dy, dz)] = cubeSection;
                             }
 
                             if (blockY < height) {
                                 cubeSection.setBlockState(dx & 0xF, dy & 0xF, dz & 0xF,
-                                        Blocks.STONE.defaultBlockState(), false);
+                                    Blocks.STONE.defaultBlockState(), false);
                             } else if (blockY <= CubicChunks.SEA_LEVEL) {
                                 cubeSection.setBlockState(dx & 0xF, dy & 0xF, dz & 0xF,
-                                        Blocks.WATER.defaultBlockState(), false);
+                                    Blocks.WATER.defaultBlockState(), false);
                             }
                         }
                     }
@@ -386,8 +384,9 @@ public abstract class MixinChunkGenerator implements ICubeGenerator {
 
                 float height = (float) Mth.clampedLerp(v1, v2, v3);
 
-                if (height < biomeBaseHeight)
+                if (height < biomeBaseHeight) {
                     height = (height - biomeBaseHeight) * 0.25F + biomeBaseHeight;
+                }
 
                 densities[dx + dz * size] = height;
             }
@@ -420,7 +419,8 @@ public abstract class MixinChunkGenerator implements ICubeGenerator {
                     ((BiomeGetter) (Object) biome).generate(structureManager, ((ChunkGenerator) (Object) this), region, seed, worldgenRandom, columnMinPos);
                 } catch (Exception e) {
                     CrashReport crashReport = CrashReport.forThrowable(e, "Biome decoration");
-                    crashReport.addCategory("Generation").setDetail("CubeX", mainCubeX).setDetail("CubeY", mainCubeY).setDetail("CubeZ", mainCubeZ).setDetail("Seed", seed).setDetail("Biome", biome);
+                    crashReport.addCategory("Generation").setDetail("CubeX", mainCubeX).setDetail("CubeY", mainCubeY).setDetail("CubeZ", mainCubeZ).setDetail("Seed", seed)
+                        .setDetail("Biome", biome);
                     throw new ReportedException(crashReport);
                 }
             }

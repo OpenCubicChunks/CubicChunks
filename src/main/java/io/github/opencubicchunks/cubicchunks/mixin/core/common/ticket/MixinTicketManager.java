@@ -1,21 +1,39 @@
 package io.github.opencubicchunks.cubicchunks.mixin.core.common.ticket;
 
+import java.util.HashSet;
+import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
+
 import com.google.common.collect.ImmutableList;
 import com.mojang.datafixers.util.Either;
 import io.github.opencubicchunks.cubicchunks.chunk.IChunkManager;
 import io.github.opencubicchunks.cubicchunks.chunk.ICubeHolder;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.BigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.graph.CCTicketType;
-import io.github.opencubicchunks.cubicchunks.chunk.ticket.*;
+import io.github.opencubicchunks.cubicchunks.chunk.ticket.CubeTaskPriorityQueueSorter;
+import io.github.opencubicchunks.cubicchunks.chunk.ticket.CubeTicketTracker;
+import io.github.opencubicchunks.cubicchunks.chunk.ticket.ITicketManager;
+import io.github.opencubicchunks.cubicchunks.chunk.ticket.PlayerCubeTicketTracker;
+import io.github.opencubicchunks.cubicchunks.chunk.ticket.PlayerCubeTracker;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.ChunkHolderAccess;
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.TicketAccess;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
-import it.unimi.dsi.fastutil.longs.*;
+import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
+import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.longs.LongIterator;
+import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
+import it.unimi.dsi.fastutil.longs.LongSet;
 import it.unimi.dsi.fastutil.objects.ObjectIterator;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import it.unimi.dsi.fastutil.objects.ObjectSet;
-import net.minecraft.server.level.*;
+import net.minecraft.server.level.ChunkHolder;
+import net.minecraft.server.level.ChunkMap;
+import net.minecraft.server.level.DistanceManager;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.level.Ticket;
+import net.minecraft.server.level.TicketType;
 import net.minecraft.util.SortedArraySet;
 import net.minecraft.util.thread.ProcessorHandle;
 import org.spongepowered.asm.mixin.Final;
@@ -26,25 +44,17 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import java.util.HashSet;
-import java.util.Set;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Executor;
-
 @Mixin(DistanceManager.class)
 public abstract class MixinTicketManager implements ITicketManager {
+
+    @Final @Shadow private Executor mainThreadExecutor;
+    @Shadow private long ticketTickCounter;
+
     private final Long2ObjectOpenHashMap<SortedArraySet<Ticket<?>>> cubeTickets = new Long2ObjectOpenHashMap<>();
     private final Long2ObjectMap<ObjectSet<ServerPlayer>> playersPerCube = new Long2ObjectOpenHashMap<>();
 
     private final Set<ChunkHolder> cubesToUpdateFutures = new HashSet<>();
     private final LongSet cubeTicketsToRelease = new LongOpenHashSet();
-
-    @Final @Shadow private Executor mainThreadExecutor;
-    @Shadow private long ticketTickCounter;
-
-    @Shadow private static int getTicketLevelAt(SortedArraySet<Ticket<?>> p_229844_0_) {
-        throw new Error("Mixin did not apply correctly");
-    }
 
     private final CubeTicketTracker cubeTicketTracker = new CubeTicketTracker(this);
     private final PlayerCubeTracker naturalSpawnCubeCounter = new PlayerCubeTracker(this, 8);
@@ -52,6 +62,10 @@ public abstract class MixinTicketManager implements ITicketManager {
     private CubeTaskPriorityQueueSorter cubeTicketThrottler;
     private ProcessorHandle<CubeTaskPriorityQueueSorter.FunctionEntry<Runnable>> cubeTicketThrottlerInput;
     private ProcessorHandle<CubeTaskPriorityQueueSorter.RunnableEntry> cubeTicketThrottlerReleaser;
+
+    @Shadow private static int getTicketLevelAt(SortedArraySet<Ticket<?>> p_229844_0_) {
+        throw new Error("Mixin did not apply correctly");
+    }
 
     @Inject(method = "<init>", at = @At("RETURN"))
     public void init(Executor executor, Executor executor2, CallbackInfo ci) {
@@ -126,7 +140,7 @@ public abstract class MixinTicketManager implements ITicketManager {
                         }
 
                         CompletableFuture<Either<BigCube, ChunkHolder.ChunkLoadingFailure>> sectionEntityTickingFuture =
-                                ((ICubeHolder)chunkholder).getCubeEntityTickingFuture();
+                            ((ICubeHolder) chunkholder).getCubeEntityTickingFuture();
                         sectionEntityTickingFuture.thenAccept((p_219363_3_) -> this.mainThreadExecutor.execute(() -> {
                             this.cubeTicketThrottlerReleaser.tell(CubeTaskPriorityQueueSorter.createSorterMsg(() -> {
                             }, j, false));
@@ -240,7 +254,9 @@ public abstract class MixinTicketManager implements ITicketManager {
     }
 
     @Override
-    public ProcessorHandle<CubeTaskPriorityQueueSorter.RunnableEntry> getCubeTicketThrottlerReleaser() { return cubeTicketThrottlerReleaser; }
+    public ProcessorHandle<CubeTaskPriorityQueueSorter.RunnableEntry> getCubeTicketThrottlerReleaser() {
+        return cubeTicketThrottlerReleaser;
+    }
 
     @Override
     public LongSet getCubeTicketsToRelease() {
@@ -248,8 +264,7 @@ public abstract class MixinTicketManager implements ITicketManager {
     }
 
     @Override
-    public Set<ChunkHolder> getCubesToUpdateFutures()
-    {
+    public Set<ChunkHolder> getCubesToUpdateFutures() {
         return this.cubesToUpdateFutures;
     }
 
@@ -264,8 +279,7 @@ public abstract class MixinTicketManager implements ITicketManager {
     }
 
     @Override
-    public Long2ObjectMap<ObjectSet<ServerPlayer>> getPlayersPerCube()
-    {
+    public Long2ObjectMap<ObjectSet<ServerPlayer>> getPlayersPerCube() {
         return this.playersPerCube;
     }
 

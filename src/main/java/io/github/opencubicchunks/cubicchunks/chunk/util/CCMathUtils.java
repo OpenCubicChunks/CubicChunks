@@ -5,11 +5,12 @@ import java.util.Random;
 public class CCMathUtils {
 
     public static int getRandomPositiveOrNegativeY(Random rand, int bound) {
-        if (bound > 0)
+        if (bound > 0) {
             return rand.nextInt(bound);
-        else if (bound == 0)
+        } else if (bound == 0) {
             return bound;
-        else
+        } else {
             return -rand.nextInt(Math.abs(bound));
+        }
     }
 }

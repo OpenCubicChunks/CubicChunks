@@ -20,7 +20,6 @@ import static org.lwjgl.glfw.GLFW.glfwSwapBuffers;
 import static org.lwjgl.glfw.GLFW.glfwWindowHint;
 import static org.lwjgl.opengl.GL11.GL_BLEND;
 import static org.lwjgl.opengl.GL11.GL_COLOR_BUFFER_BIT;
-import static org.lwjgl.opengl.GL11.GL_CULL_FACE;
 import static org.lwjgl.opengl.GL11.GL_DEPTH_BUFFER_BIT;
 import static org.lwjgl.opengl.GL11.GL_DEPTH_TEST;
 import static org.lwjgl.opengl.GL11.GL_FLOAT;
@@ -32,7 +31,6 @@ import static org.lwjgl.opengl.GL11.GL_UNSIGNED_BYTE;
 import static org.lwjgl.opengl.GL11.glBlendFunc;
 import static org.lwjgl.opengl.GL11.glClear;
 import static org.lwjgl.opengl.GL11.glClearColor;
-import static org.lwjgl.opengl.GL11.glDisable;
 import static org.lwjgl.opengl.GL11.glDrawArrays;
 import static org.lwjgl.opengl.GL11.glEnable;
 import static org.lwjgl.opengl.GL11.glFinish;
@@ -66,6 +64,21 @@ import static org.lwjgl.opengl.GL20.glUseProgram;
 import static org.lwjgl.opengl.GL20.glVertexAttribPointer;
 import static org.lwjgl.opengl.GL30.glBindVertexArray;
 import static org.lwjgl.opengl.GL30.glGenVertexArrays;
+
+import java.lang.reflect.Field;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.nio.FloatBuffer;
+import java.nio.IntBuffer;
+import java.util.ArrayList;
+import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
@@ -107,40 +120,25 @@ import org.lwjgl.opengl.GLCapabilities;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.system.MemoryUtil;
 
-import java.lang.reflect.Field;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.nio.FloatBuffer;
-import java.nio.IntBuffer;
-import java.util.ArrayList;
-import java.util.EnumSet;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
-
 public class DebugVisualization {
 
     private static final String VERT_SHADER =
-            "#version 330 core\n" +
-                    "layout(location = 0) in vec3 posIn;\n" +
-                    "layout(location = 1) in vec4 colorIn;\n" +
-                    "smooth out vec4 fragColor;\n" +
-                    "uniform mat4 mvpMatrix;\n" +
-                    "void main() {\n" +
-                    "  gl_Position = mvpMatrix * vec4(posIn, 1);\n" +
-                    "  fragColor = colorIn;\n" +
-                    "}";
+        "#version 330 core\n" +
+            "layout(location = 0) in vec3 posIn;\n" +
+            "layout(location = 1) in vec4 colorIn;\n" +
+            "smooth out vec4 fragColor;\n" +
+            "uniform mat4 mvpMatrix;\n" +
+            "void main() {\n" +
+            "  gl_Position = mvpMatrix * vec4(posIn, 1);\n" +
+            "  fragColor = colorIn;\n" +
+            "}";
     private static final String FRAG_SHADER =
-            "#version 330 core\n" +
-                    "smooth in vec4 fragColor;\n" +
-                    "out vec4 outColor;\n" +
-                    "void main() {\n" +
-                    "  outColor = fragColor;\n" +
-                    "}";
+        "#version 330 core\n" +
+            "smooth in vec4 fragColor;\n" +
+            "out vec4 outColor;\n" +
+            "void main() {\n" +
+            "  outColor = fragColor;\n" +
+            "}";
     private static final Logger LOGGER = LogManager.getLogger();
 
     private static volatile Level clientWorld;
@@ -168,7 +166,7 @@ public class DebugVisualization {
 
     private static PerfTimer timer() {
         if (perfTimer[perfTimerIdx] == null) {
-            return perfTimer[perfTimerIdx] = new PerfTimer();
+            perfTimer[perfTimerIdx] = new PerfTimer();
         }
         return perfTimer[perfTimerIdx];
     }
@@ -182,8 +180,9 @@ public class DebugVisualization {
         if (!enabled) {
             return;
         }
-        if(shutdown)
+        if (shutdown) {
             return;
+        }
 
         long ctx = glfwGetCurrentContext();
 
@@ -218,7 +217,7 @@ public class DebugVisualization {
             return;
         }
         if (w instanceof ClientLevel) {
-            clientWorld =  w;
+            clientWorld = w;
         } else if (w instanceof ServerLevel) {
             serverWorlds.put(w.dimension(), w);
         }
@@ -237,8 +236,9 @@ public class DebugVisualization {
     public static void initializeWindow() {
         GLFWErrorCallback.createPrint(System.err).set();
 
-        if ( !glfwInit() )
+        if (!glfwInit()) {
             throw new IllegalStateException("Unable to initialize GLFW");
+        }
 
 
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -259,7 +259,7 @@ public class DebugVisualization {
             GLFWVidMode vidmode = glfwGetVideoMode(glfwGetPrimaryMonitor());
             glfwGetMonitorPos(glfwGetPrimaryMonitor(), monPosLeft, monPosTop);
             glfwSetWindowPos(window, (vidmode.width() - pWidth.get(0)) / 2 + monPosLeft.get(0),
-                    (vidmode.height() - pHeight.get(0)) / 2 + monPosTop.get(0));
+                (vidmode.height() - pHeight.get(0)) / 2 + monPosTop.get(0));
         }
 
         initWindow();
@@ -393,7 +393,7 @@ public class DebugVisualization {
         modelView.multiply(Matrix4f.createTranslateMatrix(0, 0, -500));
         // model
         modelView.multiply(Vector3f.XP.rotationDegrees(30));
-        modelView.multiply(Vector3f.YP.rotationDegrees((float) ((System.currentTimeMillis() * 0.04) % 360)));//
+        modelView.multiply(Vector3f.YP.rotationDegrees((float) ((System.currentTimeMillis() * 0.04) % 360)));
 
         mvpMatrix.multiply(modelView);
         inverseMatrix.invert();
@@ -409,16 +409,16 @@ public class DebugVisualization {
         timer().bufferReset = System.nanoTime();
     }
 
-    private static void drawSelectedWorld(BufferBuilder bufferBuilder) {
+    private static void drawSelectedWorld(BufferBuilder builder) {
         Level w = serverWorlds.get(LevelStem.OVERWORLD);
         if (w == null) {
             return;
         }
 
-        drawWorld(bufferBuilder, w);
+        drawWorld(builder, w);
     }
 
-    private static void drawWorld(BufferBuilder bufferBuilder, Level world) {
+    private static void drawWorld(BufferBuilder builder, Level world) {
         AbstractClientPlayer player = Minecraft.getInstance().player;
         int playerX = player == null ? 0 : Coords.getCubeXForEntity(player);
         int playerY = player == null ? 0 : Coords.getCubeYForEntity(player);
@@ -428,7 +428,7 @@ public class DebugVisualization {
         if (chunkProvider instanceof ServerChunkCache) {
             Long2ByteLinkedOpenHashMap cubeMap = buildStatusMaps((ServerChunkCache) chunkProvider);
             timer().buildStatusMap = System.nanoTime();
-            buildQuads(bufferBuilder, playerX, playerY, playerZ, cubeMap);
+            buildQuads(builder, playerX, playerY, playerZ, cubeMap);
             timer().buildQuads = System.nanoTime();
         }
 
@@ -436,7 +436,8 @@ public class DebugVisualization {
 
     private static Long2ByteLinkedOpenHashMap buildStatusMaps(ServerChunkCache chunkProvider) {
         ChunkMap chunkManager = chunkProvider.chunkMap;
-        Long2ObjectLinkedOpenHashMap<ChunkHolder> loadedCubes = getField(ChunkMap.class, chunkManager, "visibleCubeMap");;
+        Long2ObjectLinkedOpenHashMap<ChunkHolder> loadedCubes = getField(ChunkMap.class, chunkManager, "visibleCubeMap");
+
         Object[] data = getField(Long2ObjectLinkedOpenHashMap.class, loadedCubes, "value");
         long[] keys = getField(Long2ObjectLinkedOpenHashMap.class, loadedCubes, "key");
         Long2ByteLinkedOpenHashMap cubeMap = new Long2ByteLinkedOpenHashMap(100000);
@@ -464,9 +465,9 @@ public class DebugVisualization {
         }
     }
 
-    private static void buildQuads(BufferBuilder bufferBuilder, int playerX, int playerY, int playerZ, Long2ByteLinkedOpenHashMap cubeMap) {
+    private static void buildQuads(BufferBuilder builder, int playerX, int playerY, int playerZ, Long2ByteLinkedOpenHashMap cubeMap) {
         Object2IntMap<ChunkStatus> colors = getField(
-                LevelLoadingScreen.class, null, "COLORS" // TODO: intermediary name
+            LevelLoadingScreen.class, null, "COLORS" // TODO: intermediary name
         );
         int[] colorsArray = new int[256];
         ChunkStatus[] statusLookup = new ChunkStatus[256];
@@ -476,9 +477,9 @@ public class DebugVisualization {
             statusLookup[id] = chunkStatus;
         }
         colorsArray[255] = 0x00FF00FF;
-        EnumSet<Direction> renderFaces = EnumSet.noneOf(Direction.class);
+
         Direction[] directions = Direction.values();
-        float ratioFactor =  1/(float) ChunkStatus.FULL.getIndex();
+        float ratioFactor = 1 / (float) ChunkStatus.FULL.getIndex();
         final boolean drawNull = false;
 
         Map<ChunkStatus, List<Vertex>> verts = new HashMap<>();
@@ -494,35 +495,46 @@ public class DebugVisualization {
             if (!drawNull && status == 255) {
                 continue;
             }
-            renderFaces.clear();
             ChunkStatus statusObj = statusLookup[status];
             float ratio = statusObj == null ? 1 : statusObj.getIndex() * ratioFactor;
             int alpha = status == 255 ? 0x22 : (int) (0x20 + ratio * (0xFF - 0x20));
             int c = colorsArray[status] | (alpha << 24);
-            for (Direction value : directions) {
-                long l = CubePos.asLong(posX + value.getStepX(), posY + value.getStepY(), posZ + value.getStepZ());
-                int cubeStatus = cubeMap.get(l) & 0xFF;
-                // this.ordinal() >= status.ordinal();
-                if (drawNull) {
-                    if (status == 255 || cubeStatus == 255 || cubeStatus < status) {
-                        renderFaces.add(value);
-                    }
-                } else {
-                    if (status != 255 && (cubeStatus == 255 || cubeStatus < status)) {
-                        renderFaces.add(value);
-                    }
-                }
 
-            }
+            EnumSet<Direction> renderFaces = findRenderFaces(cubeMap, directions, drawNull, posX, posY, posZ, status);
+
             List<Vertex> buffer = verts.get(statusObj);
-            if(buffer!=null)
+            if (buffer != null) {
                 drawCube(buffer, posX - playerX, posY - playerY, posZ - playerZ, 7, c, renderFaces);
+            }
         }
+        buildVertices(builder, verts);
+    }
+
+    private static EnumSet<Direction> findRenderFaces(Long2ByteLinkedOpenHashMap cubeMap, Direction[] directions, boolean drawNull, int posX, int posY, int posZ, int status) {
+        EnumSet<Direction> renderFaces = EnumSet.noneOf(Direction.class);
+        for (Direction value : directions) {
+            long l = CubePos.asLong(posX + value.getStepX(), posY + value.getStepY(), posZ + value.getStepZ());
+            int cubeStatus = cubeMap.get(l) & 0xFF;
+            // this.ordinal() >= status.ordinal();
+            if (drawNull) {
+                if (status == 255 || cubeStatus == 255 || cubeStatus < status) {
+                    renderFaces.add(value);
+                }
+            } else {
+                if (status != 255 && (cubeStatus == 255 || cubeStatus < status)) {
+                    renderFaces.add(value);
+                }
+            }
+        }
+        return renderFaces;
+    }
+
+    private static void buildVertices(BufferBuilder builder, Map<ChunkStatus, List<Vertex>> verts) {
         List<ChunkStatus> statusList = ChunkStatus.getStatusList();
         for (int i = statusList.size() - 1; i >= 0; i--) {
             ChunkStatus chunkStatus = statusList.get(i);
             for (Vertex v : verts.get(chunkStatus)) {
-                vertex(bufferBuilder, v.x, v.y, v.z, v.nx, v.ny, v.nz, v.rgba);
+                vertex(builder, v.x, v.y, v.z, v.nx, v.ny, v.nz, v.rgba);
             }
         }
     }
@@ -618,29 +630,29 @@ public class DebugVisualization {
         perfGraphBuilder.discard();
 
         int[] colors = {
-                0x000000, // glStateSetup
-                0xFFFFFF, // matrixSetup
-                0xFF0000, // bufferReset
-                0x00FF00, // buildStatusMap
-                0xFFFF00, // buildQuads
-                0xFF00FF, // sortQuads
-                0xC0C0C0, // toTriangles
-                0x808080, // setBufferData
-                0x800000, // preDrawSetup
-                0x808000, // draw
-                0x008000, // freeMem
-                0x800080, // glFinish
-                0x8B4513, //
-                0x708090, //
-                0x8FBC8F, //
-                0x808000, //
-                0xB8860B
+            0x000000, // glStateSetup
+            0xFFFFFF, // matrixSetup
+            0xFF0000, // bufferReset
+            0x00FF00, // buildStatusMap
+            0xFFFF00, // buildQuads
+            0xFF00FF, // sortQuads
+            0xC0C0C0, // toTriangles
+            0x808080, // setBufferData
+            0x800000, // preDrawSetup
+            0x808000, // draw
+            0x008000, // freeMem
+            0x800080, // glFinish
+            0x8B4513, //
+            0x708090, //
+            0x8FBC8F, //
+            0x808000, //
+            0xB8860B
         };
         perfGraphBuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
         for (int i = 0; i < perfTimer.length; i++) {
             int x = perfTimer.length - 1 - i;
             PerfTimer timer = perfTimer[(i + perfTimerIdx) % perfTimer.length];
-            if(timer == null) {
+            if (timer == null) {
                 continue;
             }
             AtomicInteger ci = new AtomicInteger();
@@ -655,12 +667,13 @@ public class DebugVisualization {
 
         glUseProgram(shaderProgram);
 
-        Matrix4f ortho = MathUtil.createMatrix(new float[]{
-                2f / 854f, 0, 0, -1f,
-                0, 2f / 480f, 0, -1f,
-                0, 0, -2f / 2000f, 0,
-                0, 0, 0, 1
-        });;
+        Matrix4f ortho = MathUtil.createMatrix(new float[] {
+            2f / 854f, 0, 0, -1f,
+            0, 2f / 480f, 0, -1f,
+            0, 0, -2f / 2000f, 0,
+            0, 0, 0, 1
+        });
+
         FloatBuffer buffer = MemoryUtil.memAllocFloat(16);
         ortho.store(buffer);
         buffer.clear();
@@ -679,10 +692,10 @@ public class DebugVisualization {
     }
 
     private static void quad2d(BufferBuilder buf, float x1, float y1, float x2, float y2, int color) {
-        vertex(buf, x1, y1, 1,  0, 0, 0, color);
-        vertex(buf, x1, y2, 1,  0, 0, 0, color);
-        vertex(buf, x2, y2, 1,  0, 0, 0, color);
-        vertex(buf, x2, y1, 1,  0, 0, 0, color);
+        vertex(buf, x1, y1, 1, 0, 0, 0, color);
+        vertex(buf, x1, y2, 1, 0, 0, 0, color);
+        vertex(buf, x2, y2, 1, 0, 0, 0, color);
+        vertex(buf, x2, y1, 1, 0, 0, 0, color);
     }
 
     private static void drawCube(List<Vertex> buffer, int x, int y, int z, float scale, int color, EnumSet<Direction> renderFaces) {
@@ -768,7 +781,7 @@ public class DebugVisualization {
         int nx, ny, nz;
         int rgba;
 
-        public Vertex(float x, float y, float z, int nx, int ny, int nz, int rgba) {
+        Vertex(float x, float y, float z, int nx, int ny, int nz, int rgba) {
             this.x = x;
             this.y = y;
             this.z = z;
@@ -815,45 +828,45 @@ public class DebugVisualization {
             double scale = 0.3f / TimeUnit.MILLISECONDS.toNanos(1);
 
 
-            double glFinish = this.glFinish;
-            double freeMem = this.freeMem;
-            double draw = this.draw;
-            double preDrawSetup = this.preDrawSetup;
-            double setBufferData = this.setBufferData;
-            double toTriangles = this.toTriangles;
-            double sortQuads = this.sortQuads;
-            double buildQuads = this.buildQuads;
-            double buildStatusMap = this.buildStatusMap;
-            double bufferReset = this.bufferReset;
-            double matrixSetup = this.matrixSetup;
-            double glStateSetup = this.glStateSetup;
+            double glFinishTime = this.glFinish;
+            double freeMemTime = this.freeMem;
+            double drawTime = this.draw;
+            double preDrawSetupTime = this.preDrawSetup;
+            double setBufferDataTime = this.setBufferData;
+            double toTrianglesTime = this.toTriangles;
+            double sortQuadsTime = this.sortQuads;
+            double buildQuadsTime = this.buildQuads;
+            double buildStatusMapTime = this.buildStatusMap;
+            double bufferResetTime = this.bufferReset;
+            double matrixSetupTime = this.matrixSetup;
+            double glStateSetupTime = this.glStateSetup;
 
-            glFinish -= freeMem;
-            freeMem -= draw;
-            draw -= preDrawSetup;
-            preDrawSetup -= setBufferData;
-            setBufferData -= toTriangles;
-            toTriangles -= sortQuads;
-            sortQuads -= buildQuads;
-            buildQuads -= buildStatusMap;
-            buildStatusMap -= bufferReset;
-            bufferReset -= matrixSetup;
-            matrixSetup -= glStateSetup;
-            glStateSetup -= beginFrame;
+            glFinishTime -= freeMem;
+            freeMemTime -= draw;
+            drawTime -= preDrawSetup;
+            preDrawSetupTime -= setBufferData;
+            setBufferDataTime -= toTriangles;
+            toTrianglesTime -= sortQuads;
+            sortQuadsTime -= buildQuads;
+            buildQuadsTime -= buildStatusMap;
+            buildStatusMapTime -= bufferReset;
+            bufferResetTime -= matrixSetup;
+            matrixSetupTime -= glStateSetup;
+            glStateSetupTime -= beginFrame;
 
             float y = 0;
-            line.accept(y, y += (glStateSetup * scale));
-            line.accept(y, y += (matrixSetup * scale));
-            line.accept(y, y += (bufferReset * scale));
-            line.accept(y, y += (buildStatusMap * scale));
-            line.accept(y, y += (buildQuads * scale));
-            line.accept(y, y += (sortQuads * scale));
-            line.accept(y, y += (toTriangles * scale));
-            line.accept(y, y += (setBufferData * scale));
-            line.accept(y, y += (preDrawSetup * scale));
-            line.accept(y, y += (draw * scale));
-            line.accept(y, y += (freeMem * scale));
-            line.accept(y, y += (glFinish * scale));
+            line.accept(y, y += (glStateSetupTime * scale));
+            line.accept(y, y += (matrixSetupTime * scale));
+            line.accept(y, y += (bufferResetTime * scale));
+            line.accept(y, y += (buildStatusMapTime * scale));
+            line.accept(y, y += (buildQuadsTime * scale));
+            line.accept(y, y += (sortQuadsTime * scale));
+            line.accept(y, y += (toTrianglesTime * scale));
+            line.accept(y, y += (setBufferDataTime * scale));
+            line.accept(y, y += (preDrawSetupTime * scale));
+            line.accept(y, y += (drawTime * scale));
+            line.accept(y, y += (freeMemTime * scale));
+            line.accept(y, y += (glFinishTime * scale));
         }
     }
 

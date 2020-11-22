@@ -1,5 +1,8 @@
 package io.github.opencubicchunks.cubicchunks.mixin.core.common.world.placement;
 
+import java.util.Random;
+import java.util.stream.Stream;
+
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import net.minecraft.core.BlockPos;
@@ -13,9 +16,6 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import java.util.Random;
-import java.util.stream.Stream;
-
 @Mixin(HeightmapDoubleDecorator.class)
 public abstract class MixinHeightMapDoubleDecorator<DC extends DecoratorConfiguration> {
 
@@ -25,8 +25,9 @@ public abstract class MixinHeightMapDoubleDecorator<DC extends DecoratorConfigur
     private void allowNegativeCoords(DecorationContext decorationContext, Random random, DC decoratorConfiguration, BlockPos blockPos, CallbackInfoReturnable<Stream<BlockPos>> cir) {
         CubicLevelHeightAccessor context = (CubicLevelHeightAccessor) decorationContext;
 
-        if (!context.isCubicWorld())
+        if (!context.isCubicWorld()) {
             return;
+        }
 
         if (random.nextFloat() >= (0.1F * IBigCube.DIAMETER_IN_SECTIONS)) {
             cir.setReturnValue(Stream.of());

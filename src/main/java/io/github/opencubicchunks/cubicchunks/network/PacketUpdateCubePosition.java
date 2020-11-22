@@ -9,13 +9,11 @@ import net.minecraft.world.level.chunk.ChunkSource;
 public class PacketUpdateCubePosition {
     private final SectionPos pos;
 
-    public PacketUpdateCubePosition(SectionPos posIn)
-    {
+    public PacketUpdateCubePosition(SectionPos posIn) {
         this.pos = posIn;
     }
 
-    PacketUpdateCubePosition(FriendlyByteBuf buf)
-    {
+    PacketUpdateCubePosition(FriendlyByteBuf buf) {
         this.pos = SectionPos.of(buf.readInt(), buf.readInt(), buf.readInt());
     }
 

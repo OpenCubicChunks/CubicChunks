@@ -1,5 +1,18 @@
 package io.github.opencubicchunks.cubicchunks.mixin.core.common.chunk;
 
+import static io.github.opencubicchunks.cubicchunks.chunk.util.Utils.*;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
+import java.util.concurrent.atomic.AtomicReferenceArray;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
+
+import javax.annotation.Nullable;
+
 import com.mojang.datafixers.util.Either;
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.IChunkManager;
@@ -25,23 +38,16 @@ import net.minecraft.world.level.chunk.ChunkStatus;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.lighting.LevelLightEngine;
-import org.spongepowered.asm.mixin.*;
+import org.spongepowered.asm.mixin.Dynamic;
+import org.spongepowered.asm.mixin.Final;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Mutable;
+import org.spongepowered.asm.mixin.Overwrite;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-
-import javax.annotation.Nullable;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Executor;
-import java.util.concurrent.atomic.AtomicReferenceArray;
-import java.util.function.BiConsumer;
-import java.util.function.Consumer;
-
-import static io.github.opencubicchunks.cubicchunks.chunk.util.Utils.unsafeCast;
 
 @Mixin(ChunkHolder.class)
 public abstract class MixinChunkHolder implements ICubeHolder {
@@ -62,31 +68,30 @@ public abstract class MixinChunkHolder implements ICubeHolder {
     @Shadow private int blockChangedLightSectionFilter;
     @Shadow private int queueLevel;
 
+    @Shadow @Final private ChunkHolder.PlayerProvider playerProvider;
+    @Shadow private CompletableFuture<Void> pendingFullStateConfirmation;
+
+    private CubePos cubePos; // set from ASM
+
+    private final ShortArraySet changedLocalBlocks = new ShortArraySet();
+
+    private final AtomicReferenceArray<ArrayList<BiConsumer<Either<IBigCube, ChunkHolder.ChunkLoadingFailure>, Throwable>>> listenerLists =
+        new AtomicReferenceArray<>(ChunkStatus.getStatusList().size());
+
     @Shadow protected abstract void broadcastBlockEntity(Level worldIn, BlockPos posIn);
 
-    @Shadow @Final private ChunkHolder.PlayerProvider playerProvider;
-
     @Shadow protected abstract void updateChunkToSave(
-            CompletableFuture<? extends Either<? extends ChunkAccess, ChunkHolder.ChunkLoadingFailure>> eitherChunk);
+        CompletableFuture<? extends Either<? extends ChunkAccess, ChunkHolder.ChunkLoadingFailure>> eitherChunk);
 
     @Shadow public static ChunkStatus getStatus(int level) {
         throw new Error("Mixin failed to apply");
     }
 
-    @Shadow
-    public abstract CompletableFuture<Either<ChunkAccess, ChunkHolder.ChunkLoadingFailure>> getFutureIfPresentUnchecked(ChunkStatus p_219301_1_);
+    @Shadow public abstract CompletableFuture<Either<ChunkAccess, ChunkHolder.ChunkLoadingFailure>> getFutureIfPresentUnchecked(ChunkStatus p_219301_1_);
 
-    @Shadow
-    public abstract CompletableFuture<Either<IBigCube, ChunkHolder.ChunkLoadingFailure>> getOrScheduleFuture(ChunkStatus chunkStatus,
-            ChunkMap chunkManager);
+    @Shadow public abstract CompletableFuture<Either<IBigCube, ChunkHolder.ChunkLoadingFailure>> getOrScheduleFuture(ChunkStatus chunkStatus, ChunkMap chunkManager);
 
-    @Shadow private CompletableFuture<Void> pendingFullStateConfirmation;
-
-    @Shadow @org.jetbrains.annotations.Nullable public abstract LevelChunk getTickingChunk();
-
-    private CubePos cubePos; // set from ASM
-
-    private final ShortArraySet changedLocalBlocks = new ShortArraySet();
+    @Shadow @Nullable public abstract LevelChunk getTickingChunk();
 
     //BEGIN INJECTS:
 
@@ -94,19 +99,19 @@ public abstract class MixinChunkHolder implements ICubeHolder {
 
     @Dynamic
     @Redirect(
-            method = "<init>(Lio/github/opencubicchunks/cubicchunks/chunk/util/CubePos;ILnet/minecraft/world/level/LevelHeightAccessor;"
-                    + "Lnet/minecraft/world/level/lighting/LevelLightEngine;Lnet/minecraft/server/level/ChunkHolder$LevelChangeListener;"
-                    + "Lnet/minecraft/server/level/ChunkHolder$PlayerProvider;)V",
-            at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/LevelHeightAccessor;getSectionsCount()I"))
+        method = "<init>(Lio/github/opencubicchunks/cubicchunks/chunk/util/CubePos;ILnet/minecraft/world/level/LevelHeightAccessor;"
+            + "Lnet/minecraft/world/level/lighting/LevelLightEngine;Lnet/minecraft/server/level/ChunkHolder$LevelChangeListener;"
+            + "Lnet/minecraft/server/level/ChunkHolder$PlayerProvider;)V",
+        at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/LevelHeightAccessor;getSectionsCount()I"))
     private int getFakeSectionCountCC(LevelHeightAccessor accessor) {
         return 0;
     }
 
     @Redirect(
-            method = "<init>(Lnet/minecraft/world/level/ChunkPos;ILnet/minecraft/world/level/LevelHeightAccessor;"
-                    + "Lnet/minecraft/world/level/lighting/LevelLightEngine;Lnet/minecraft/server/level/ChunkHolder$LevelChangeListener;"
-                    + "Lnet/minecraft/server/level/ChunkHolder$PlayerProvider;)V",
-            at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/LevelHeightAccessor;getSectionsCount()I"))
+        method = "<init>(Lnet/minecraft/world/level/ChunkPos;ILnet/minecraft/world/level/LevelHeightAccessor;"
+            + "Lnet/minecraft/world/level/lighting/LevelLightEngine;Lnet/minecraft/server/level/ChunkHolder$LevelChangeListener;"
+            + "Lnet/minecraft/server/level/ChunkHolder$PlayerProvider;)V",
+        at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/LevelHeightAccessor;getSectionsCount()I"))
     private int getFakeSectionCountVanilla(LevelHeightAccessor accessor) {
         return 0;
     }
@@ -115,14 +120,14 @@ public abstract class MixinChunkHolder implements ICubeHolder {
     @SuppressWarnings("target")
     @Dynamic("Generated by ASM by copying and transforming original constructor")
     @Inject(method = "<init>(Lio/github/opencubicchunks/cubicchunks/chunk/util/CubePos;I"
-            + "Lnet/minecraft/world/level/LevelHeightAccessor;"
-            + "Lnet/minecraft/world/level/lighting/LevelLightEngine;"
-            + "Lnet/minecraft/server/level/ChunkHolder$LevelChangeListener;"
-            + "Lnet/minecraft/server/level/ChunkHolder$PlayerProvider;)V",
-            at = @At("RETURN")
+        + "Lnet/minecraft/world/level/LevelHeightAccessor;"
+        + "Lnet/minecraft/world/level/lighting/LevelLightEngine;"
+        + "Lnet/minecraft/server/level/ChunkHolder$LevelChangeListener;"
+        + "Lnet/minecraft/server/level/ChunkHolder$PlayerProvider;)V",
+        at = @At("RETURN")
     )
     public void onConstructCubeHolder(CubePos cubePosIn, int levelIn, LevelHeightAccessor levelHeightAccessor, LevelLightEngine lightManagerIn, ChunkHolder.LevelChangeListener p_i50716_4_,
-            ChunkHolder.PlayerProvider playerProviderIn, CallbackInfo ci) {
+                                      ChunkHolder.PlayerProvider playerProviderIn, CallbackInfo ci) {
         this.pos = cubePosIn.asChunkPos();
     }
 
@@ -139,7 +144,7 @@ public abstract class MixinChunkHolder implements ICubeHolder {
          This is being implemented as a mixin, instead of having a specific CubeManager class.
          this.sectionPos is essentially being used as a flag for changing behaviour.
          */
-        if(this.cubePos == null) {
+        if (this.cubePos == null) {
             return;
         }
         ci.cancel();
@@ -149,15 +154,16 @@ public abstract class MixinChunkHolder implements ICubeHolder {
     // TODO: currently entity tracking is done on columns only, the next 3 methods cancel it for cube holders
 
     @Redirect(method = "scheduleFullChunkPromotion", at = @At(
-            value = "INVOKE",
-            target = "Ljava/util/concurrent/CompletableFuture;thenRunAsync(Ljava/lang/Runnable;Ljava/util/concurrent/Executor;)Ljava/util/concurrent/CompletableFuture;"))
+        value = "INVOKE",
+        target = "Ljava/util/concurrent/CompletableFuture;thenRunAsync(Ljava/lang/Runnable;Ljava/util/concurrent/Executor;)Ljava/util/concurrent/CompletableFuture;"))
     private CompletableFuture<Void> onRunAsyncFullChunkStatusChange(CompletableFuture<?> completableFuture, Runnable action, Executor executor,
-            ChunkMap chunkMap, CompletableFuture<Either<LevelChunk, ChunkHolder.ChunkLoadingFailure>> completableFutureParam, Executor executorParam,
-            ChunkHolder.FullChunkStatus fullChunkStatus) {
+                                                                    ChunkMap chunkMap, CompletableFuture<Either<LevelChunk, ChunkHolder.ChunkLoadingFailure>> completableFutureParam,
+                                                                    Executor executorParam,
+                                                                    ChunkHolder.FullChunkStatus fullChunkStatus) {
         if (cubePos == null) {
             return completableFuture.thenRunAsync(action, executor);
         }
-        return completableFuture.thenRunAsync(()->{});
+        return completableFuture.thenRunAsync(() -> {});
         // TODO: this is for entity tracking, the runnable goes to PersistentEntitySectionManager#updateChunkStatus
         //return completableFuture.thenRunAsync(() -> {
         //    chunkMap.onFullCubeStatusChange(this.cubePos, fullChunkStatus);
@@ -165,10 +171,10 @@ public abstract class MixinChunkHolder implements ICubeHolder {
     }
 
     @Redirect(method = "scheduleFullChunkPromotion", at = @At(
-            value = "INVOKE",
-            target = "Ljava/util/concurrent/CompletableFuture;thenAccept(Ljava/util/function/Consumer;)Ljava/util/concurrent/CompletableFuture;"))
+        value = "INVOKE",
+        target = "Ljava/util/concurrent/CompletableFuture;thenAccept(Ljava/util/function/Consumer;)Ljava/util/concurrent/CompletableFuture;"))
     private CompletableFuture<Void> onCompleteScheduleFullChunkPromotion(CompletableFuture<Either<LevelChunk, ChunkHolder.ChunkLoadingFailure>> completableFuture,
-            Consumer<?> action) {
+                                                                         Consumer<?> action) {
         CompletableFuture<Void> f2 = pendingFullStateConfirmation;
         if (cubePos == null) {
             return completableFuture.thenAccept((either) -> {
@@ -190,7 +196,7 @@ public abstract class MixinChunkHolder implements ICubeHolder {
     }
 
     @Inject(method = "demoteFullChunk", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ChunkMap;onFullChunkStatusChange"
-            + "(Lnet/minecraft/world/level/ChunkPos;Lnet/minecraft/server/level/ChunkHolder$FullChunkStatus;)V"), cancellable = true)
+        + "(Lnet/minecraft/world/level/ChunkPos;Lnet/minecraft/server/level/ChunkHolder$FullChunkStatus;)V"), cancellable = true)
     private void onDemoteFullChunk(ChunkMap chunkMap, ChunkHolder.FullChunkStatus fullChunkStatus, CallbackInfo ci) {
         if (cubePos != null) {
             ci.cancel();
@@ -231,18 +237,14 @@ public abstract class MixinChunkHolder implements ICubeHolder {
     // func_225410_b, getFutureIfPresent
     @Override public CompletableFuture<Either<IBigCube, ChunkHolder.ChunkLoadingFailure>> getCubeFutureIfPresent(ChunkStatus chunkStatus) {
         return ICubeHolder.getCubeStatusFromLevel(this.ticketLevel).isOrAfter(chunkStatus) ?
-                unsafeCast(this.getFutureIfPresentUnchecked(chunkStatus)) : // getFutureIfPresentUnchecked = getFutureByCubeStatus
-                MISSING_CUBE_FUTURE;
+            unsafeCast(this.getFutureIfPresentUnchecked(chunkStatus)) : // getFutureIfPresentUnchecked = getFutureByCubeStatus
+            MISSING_CUBE_FUTURE;
     }
-
-
-    private AtomicReferenceArray<ArrayList<BiConsumer<Either<IBigCube, ChunkHolder.ChunkLoadingFailure>, Throwable>>> listenerLists = new AtomicReferenceArray<>(ChunkStatus.getStatusList().size());
-
 
     // func_219276_a, getOrScheduleFuture
     @Redirect(method = "getOrScheduleFuture", at = @At(
-            value = "INVOKE",
-            target = "Lnet/minecraft/server/level/ChunkHolder;getStatus(I)Lnet/minecraft/world/level/chunk/ChunkStatus;"
+        value = "INVOKE",
+        target = "Lnet/minecraft/server/level/ChunkHolder;getStatus(I)Lnet/minecraft/world/level/chunk/ChunkStatus;"
     ))
     private ChunkStatus getChunkOrCubeStatus(int level) {
         if (cubePos == null) {
@@ -253,8 +255,9 @@ public abstract class MixinChunkHolder implements ICubeHolder {
     }
 
     @Redirect(method = "getOrScheduleFuture", at = @At(
-            value = "INVOKE",
-            target = "Lnet/minecraft/server/level/ChunkMap;schedule(Lnet/minecraft/server/level/ChunkHolder;Lnet/minecraft/world/level/chunk/ChunkStatus;)Ljava/util/concurrent/CompletableFuture;"
+        value = "INVOKE",
+        target = "Lnet/minecraft/server/level/ChunkMap;schedule(Lnet/minecraft/server/level/ChunkHolder;Lnet/minecraft/world/level/chunk/ChunkStatus;)"
+            + "Ljava/util/concurrent/CompletableFuture;"
     ))
     private CompletableFuture<?> scheduleChunkOrCube(ChunkMap chunkManager, ChunkHolder _this, ChunkStatus status) {
         if (cubePos == null) {
@@ -296,6 +299,7 @@ public abstract class MixinChunkHolder implements ICubeHolder {
 
 
     // TODO: this needs to be completely replaced for proper section handling
+
     /**
      * @author Barteks2x**
      * @reason height limits
@@ -373,9 +377,9 @@ public abstract class MixinChunkHolder implements ICubeHolder {
         //     this.boundaryMask &= ~(this.skyLightChangeMask & this.blockLightChangeMask);
         // }
 
-        ShortArraySet changed = changedLocalBlocks;
-        int changedBlocks = changed.size();
-//        if (changed.size() >= net.minecraftforge.common.ForgeConfig.SERVER.clumpingThreshold.get()) {
+        ShortArraySet changedPositions = changedLocalBlocks;
+        int changedBlocks = changedPositions.size();
+//        if (changedPositions.size() >= net.minecraftforge.common.ForgeConfig.SERVER.clumpingThreshold.get()) {
 //            this.queueLevel = -1;// boundaryMask
 //        }
 //
@@ -384,12 +388,12 @@ public abstract class MixinChunkHolder implements ICubeHolder {
 //        }
 
         if (changedBlocks != 0) {
-            this.sendToTracking(new PacketCubeBlockChanges(cube, new ShortArrayList(changed)), false);
-            for (short pos : changed) {
+            this.sendToTracking(new PacketCubeBlockChanges(cube, new ShortArrayList(changedPositions)), false);
+            for (short changed : changedPositions) {
                 BlockPos blockpos1 = new BlockPos(
-                        this.cubePos.blockX(AddressTools.getLocalX(pos)),
-                        this.cubePos.blockY(AddressTools.getLocalY(pos)),
-                        this.cubePos.blockZ(AddressTools.getLocalZ(pos)));
+                    this.cubePos.blockX(AddressTools.getLocalX(changed)),
+                    this.cubePos.blockY(AddressTools.getLocalY(changed)),
+                    this.cubePos.blockZ(AddressTools.getLocalZ(changed)));
                 if (world.getBlockState(blockpos1).hasBlockEntity()) {
                     this.broadcastBlockEntity(world, blockpos1);
                 }
@@ -401,18 +405,18 @@ public abstract class MixinChunkHolder implements ICubeHolder {
     private void sendToTracking(Object packetIn, boolean boundaryOnly) {
         // TODO: fix block update tracking
         this.playerProvider.getPlayers(this.cubePos.asChunkPos(), boundaryOnly)
-                .forEach(player -> PacketDispatcher.sendTo(packetIn, player));
+            .forEach(player -> PacketDispatcher.sendTo(packetIn, player));
     }
 
     private void sendToTrackingColumn(Object packetIn, boolean boundaryOnly) {
         this.playerProvider.getPlayers(this.pos, boundaryOnly)
-                .forEach(player -> PacketDispatcher.sendTo(packetIn, player));
+            .forEach(player -> PacketDispatcher.sendTo(packetIn, player));
     }
 
     // func_219294_a, replaceProtoChunk
     @Override
     public void replaceProtoCube(CubePrimerWrapper primer) {
-        for(int i = 0; i < this.futures.length(); ++i) {
+        for (int i = 0; i < this.futures.length(); ++i) {
             CompletableFuture<Either<IBigCube, ChunkHolder.ChunkLoadingFailure>> future = this.futures.get(i);
             if (future != null) {
                 Optional<IBigCube> optional = future.getNow(MISSING_CUBE).left();
