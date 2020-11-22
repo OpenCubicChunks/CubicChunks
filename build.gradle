@@ -1,15 +1,27 @@
+import io.github.opencubicchunks.gradle.MergedMappingsDependency
 import org.gradle.internal.os.OperatingSystem
 
+buildscript {
+    repositories {
+        maven {
+            name = 'Fabric'
+            url = 'https://maven.fabricmc.net/'
+        }
+    }
+    dependencies {
+        classpath 'net.fabricmc:fabric-loom:0.5-SNAPSHOT'
+    }
+}
 plugins {
-    id 'fabric-loom' version '0.5-SNAPSHOT'
     id 'maven-publish'
 }
 
-sourceCompatibility = JavaVersion.VERSION_1_8
-targetCompatibility = JavaVersion.VERSION_1_8
-
+apply plugin: "fabric-loom"
 apply plugin: "io.github.opencubicchunks.gradle.mcGitVersion"
 apply plugin: "io.github.opencubicchunks.gradle.mixingen"
+
+sourceCompatibility = JavaVersion.VERSION_1_8
+targetCompatibility = JavaVersion.VERSION_1_8
 
 mcGitVersion {
     snapshot = true
@@ -130,7 +142,10 @@ switch (OperatingSystem.current()) {
 
 dependencies {
     minecraft "com.mojang:minecraft:${project.minecraft_version}"
-    mappings minecraft.officialMojangMappings()
+    def dummyConfig = configurations.create("dummyResolvingConfiguration")
+    mappings new MergedMappingsDependency(project, dummyConfig,
+            minecraft.officialMojangMappings(),
+            dependencies.add("dummyResolvingConfiguration", dependencies.create("net.fabricmc:yarn:20w46a+build.20:v2")))
     modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
 
     // Add each module as a dependency
