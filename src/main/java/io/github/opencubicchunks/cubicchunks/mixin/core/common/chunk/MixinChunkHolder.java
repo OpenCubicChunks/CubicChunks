@@ -76,8 +76,7 @@ public abstract class MixinChunkHolder implements ICubeHolder {
     private final ShortArraySet changedLocalBlocks = new ShortArraySet();
 
     //@formatter:off SPLITTING THIS LINE BREAKS MIXIN https://github.com/SpongePowered/Mixin/issues/418
-    @SuppressWarnings("LineLengthCode")
-    private final AtomicReferenceArray<ArrayList<BiConsumer<Either<IBigCube, ChunkHolder.ChunkLoadingFailure>, Throwable>>> listenerLists = new AtomicReferenceArray<>(ChunkStatus.getStatusList().size());
+    @SuppressWarnings("LineLengthCode") private final AtomicReferenceArray<ArrayList<BiConsumer<Either<IBigCube, ChunkHolder.ChunkLoadingFailure>, Throwable>>> listenerLists = new AtomicReferenceArray<>(ChunkStatus.getStatusList().size());
     //@formatter:on
 
     @Shadow protected abstract void broadcastBlockEntity(Level worldIn, BlockPos posIn);
