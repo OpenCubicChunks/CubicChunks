@@ -2,19 +2,6 @@ package io.github.opencubicchunks.gradle;
 
 import static java.util.Collections.singletonMap;
 
-import net.fabricmc.loom.LoomGradleExtension;
-import net.fabricmc.mapping.tree.ClassDef;
-import net.fabricmc.mapping.tree.FieldDef;
-import net.fabricmc.mapping.tree.MethodDef;
-import net.fabricmc.mapping.tree.ParameterDef;
-import net.fabricmc.mapping.tree.TinyMappingFactory;
-import net.fabricmc.mapping.tree.TinyTree;
-import org.gradle.api.Project;
-import org.gradle.api.artifacts.Configuration;
-import org.gradle.api.artifacts.Dependency;
-import org.gradle.api.artifacts.SelfResolvingDependency;
-import org.gradle.api.tasks.TaskDependency;
-
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.ByteArrayInputStream;
@@ -41,6 +28,19 @@ import java.util.Set;
 
 import javax.annotation.Nullable;
 
+import net.fabricmc.loom.LoomGradleExtension;
+import net.fabricmc.mapping.tree.ClassDef;
+import net.fabricmc.mapping.tree.FieldDef;
+import net.fabricmc.mapping.tree.MethodDef;
+import net.fabricmc.mapping.tree.ParameterDef;
+import net.fabricmc.mapping.tree.TinyMappingFactory;
+import net.fabricmc.mapping.tree.TinyTree;
+import org.gradle.api.Project;
+import org.gradle.api.artifacts.Configuration;
+import org.gradle.api.artifacts.Dependency;
+import org.gradle.api.artifacts.SelfResolvingDependency;
+import org.gradle.api.tasks.TaskDependency;
+
 public class MergedMappingsDependency implements SelfResolvingDependency {
 
     private final Project project;
@@ -49,8 +49,7 @@ public class MergedMappingsDependency implements SelfResolvingDependency {
     private final Dependency fallback;
     private String reason;
 
-    public MergedMappingsDependency(Project project,
-            Configuration configuration, Dependency main, Dependency fallback) {
+    public MergedMappingsDependency(Project project, Configuration configuration, Dependency main, Dependency fallback) {
         this.project = project;
         this.configuration = configuration;
         this.main = main;
@@ -72,10 +71,8 @@ public class MergedMappingsDependency implements SelfResolvingDependency {
             byte[] fallbackData = readMappings(fallbackResolved.iterator().next());
             byte[] mainData = readMappings(mainResolved.iterator().next());
 
-            TinyTree fallbackTree =
-                    TinyMappingFactory.loadWithDetection(new BufferedReader(new InputStreamReader(new ByteArrayInputStream(fallbackData))));
-            TinyTree mainTinyTree =
-                    TinyMappingFactory.loadWithDetection(new BufferedReader(new InputStreamReader(new ByteArrayInputStream(mainData))));
+            TinyTree fallbackTree = TinyMappingFactory.loadWithDetection(new BufferedReader(new InputStreamReader(new ByteArrayInputStream(fallbackData))));
+            TinyTree mainTinyTree = TinyMappingFactory.loadWithDetection(new BufferedReader(new InputStreamReader(new ByteArrayInputStream(mainData))));
 
             Mappings mappingsFallback = new Mappings();
             Mappings mappingsMojang = new Mappings();
@@ -88,9 +85,7 @@ public class MergedMappingsDependency implements SelfResolvingDependency {
             try (FileSystem fs = createNewJarFileSystem(mappingsFile)) {
                 Files.createDirectories(fs.getPath("mappings"));
                 Path output = fs.getPath("mappings/mappings.tiny");
-                try (BufferedWriter writer =
-                        Files.newBufferedWriter(output, StandardCharsets.UTF_8, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)) {
-
+                try (BufferedWriter writer = Files.newBufferedWriter(output, StandardCharsets.UTF_8, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)) {
                     new TinyWriter(writer, "intermediary", "named").write(mappings);
                 }
             }
@@ -118,10 +113,8 @@ public class MergedMappingsDependency implements SelfResolvingDependency {
 
             Map<MemberEntry, String> methodCommentsIn = mappingsFallback.methodComments.computeIfAbsent(obfClassName, x -> new LinkedHashMap<>());
             Map<MemberEntry, String> fieldCommentsIn = mappingsFallback.fieldComments.computeIfAbsent(obfClassName, x -> new LinkedHashMap<>());
-            Map<MemberEntry, Map<Integer, String>> classParamsIn =
-                    mappingsFallback.paramNames.computeIfAbsent(obfClassName, x -> new LinkedHashMap<>());
-            Map<MemberEntry, Map<Integer, String>> classParamCommentsIn =
-                    mappingsFallback.paramComments.computeIfAbsent(obfClassName, x -> new LinkedHashMap<>());
+            Map<MemberEntry, Map<Integer, String>> classParamsIn = mappingsFallback.paramNames.computeIfAbsent(obfClassName, x -> new LinkedHashMap<>());
+            Map<MemberEntry, Map<Integer, String>> classParamCommentsIn = mappingsFallback.paramComments.computeIfAbsent(obfClassName, x -> new LinkedHashMap<>());
 
             for (Map.Entry<MemberEntry, String> methodEntry : mappingsMojang.methodMappings.computeIfAbsent(obfClassName, x -> new LinkedHashMap<>()).entrySet()) {
                 MemberEntry obfMethod = methodEntry.getKey();
@@ -161,16 +154,73 @@ public class MergedMappingsDependency implements SelfResolvingDependency {
                 }
             }
         }
-        for (String s : mappingsFallback.classMappings.keySet()) {
-            if (!mappingsMojang.classMappings.containsKey(s)) {
-                mappings.classMappings.put(s, mappingsFallback.classMappings.get(s));
-                mappings.methodMappings.put(s, mappingsFallback.methodMappings.get(s));
-                mappings.methodComments.put(s, mappingsFallback.methodComments.get(s));
-                mappings.paramNames.put(s, mappingsFallback.paramNames.get(s));
-                mappings.paramComments.put(s, mappingsFallback.paramComments.get(s));
-                mappings.fieldMappings.put(s, mappingsFallback.fieldMappings.get(s));
-                mappings.fieldComments.put(s, mappingsFallback.fieldComments.get(s));
+        for (String obfClassName : mappingsFallback.classMappings.keySet()) {
+            if (mappingsMojang.classMappings.containsKey(obfClassName)) {
+                continue;
             }
+            String fallbackMappedClass = mappingsFallback.classMappings.get(obfClassName);
+            if (!obfClassName.equals(fallbackMappedClass)) {
+                project.getLogger().warn("Ignoring class remap: " + obfClassName + " -> " + fallbackMappedClass);
+            }
+            mappings.classComments.put(obfClassName, obfClassName);
+            mappings.classComments.put(obfClassName, mappingsFallback.classComments.get(obfClassName));
+
+            Map<MemberEntry, String> methods = mappings.methodMappings.computeIfAbsent(obfClassName, x -> new LinkedHashMap<>());
+            Map<MemberEntry, String> methodComments = mappings.methodComments.computeIfAbsent(obfClassName, x -> new LinkedHashMap<>());
+            Map<MemberEntry, String> fields = mappings.fieldMappings.computeIfAbsent(obfClassName, x -> new LinkedHashMap<>());
+            Map<MemberEntry, String> fieldComments = mappings.fieldComments.computeIfAbsent(obfClassName, x -> new LinkedHashMap<>());
+            Map<MemberEntry, Map<Integer, String>> classParams = mappings.paramNames.computeIfAbsent(obfClassName, x -> new LinkedHashMap<>());
+            Map<MemberEntry, Map<Integer, String>> classParamComments = mappings.paramNames.computeIfAbsent(obfClassName, x -> new LinkedHashMap<>());
+
+            Map<MemberEntry, String> methodCommentsIn = mappingsFallback.methodComments.computeIfAbsent(obfClassName, x -> new LinkedHashMap<>());
+            Map<MemberEntry, String> fieldCommentsIn = mappingsFallback.fieldComments.computeIfAbsent(obfClassName, x -> new LinkedHashMap<>());
+            Map<MemberEntry, Map<Integer, String>> classParamsIn = mappingsFallback.paramNames.computeIfAbsent(obfClassName, x -> new LinkedHashMap<>());
+            Map<MemberEntry, Map<Integer, String>> classParamCommentsIn = mappingsFallback.paramComments.computeIfAbsent(obfClassName, x -> new LinkedHashMap<>());
+
+            for (Map.Entry<MemberEntry, String> methodEntry : mappingsFallback.methodMappings.computeIfAbsent(obfClassName, x -> new LinkedHashMap<>()).entrySet()) {
+                MemberEntry obfMethod = methodEntry.getKey();
+                String fallbackDeobf = methodEntry.getValue();
+                if (!obfMethod.name.equals(fallbackDeobf)) {
+                    project.getLogger().warn("Ignoring method remap: " + obfClassName + "." + obfMethod.name + obfMethod.signature + " -> " + fallbackDeobf);
+                }
+                methods.put(obfMethod, obfMethod.name);
+
+                String methodComment = methodCommentsIn.get(obfMethod);
+                if (methodComment != null) {
+                    methodComments.put(obfMethod, methodComment);
+                }
+
+                Map<Integer, String> methodParams = classParams.computeIfAbsent(obfMethod, x -> new LinkedHashMap<>());
+                Map<Integer, String> methodParamComments = classParamComments.computeIfAbsent(obfMethod, x -> new LinkedHashMap<>());
+
+                Map<Integer, String> methodParamsIn = classParamsIn.computeIfAbsent(obfMethod, x -> new LinkedHashMap<>());
+                Map<Integer, String> methodParamCommentsIn = classParamCommentsIn.computeIfAbsent(obfMethod, x -> new LinkedHashMap<>());
+
+                for (Map.Entry<Integer, String> paramEntry : methodParamsIn.entrySet()) {
+                    int idx = paramEntry.getKey();
+                    String name = paramEntry.getValue();
+                    String comment = methodParamCommentsIn.get(idx);
+                    methodParams.put(idx, name);
+                    if (comment != null) {
+                        methodParamComments.put(idx, comment);
+                    }
+                }
+            }
+
+            for (Map.Entry<MemberEntry, String> fieldEntry : mappingsFallback.fieldMappings.computeIfAbsent(obfClassName, x -> new LinkedHashMap<>()).entrySet()) {
+                MemberEntry obfField = fieldEntry.getKey();
+                String fallbackDeobf = fieldEntry.getValue();
+                if (!obfField.name.equals(fallbackDeobf)) {
+                    project.getLogger().warn("Ignoring field remap: " + obfClassName + "." + obfField.name + ":" + obfField.signature + " -> " + fallbackDeobf);
+                }
+                fields.put(obfField, obfField.name);
+
+                String fieldComment = fieldCommentsIn.get(obfField);
+                if (fieldComment != null) {
+                    fieldComments.put(obfField, fieldComment);
+                }
+            }
+
         }
         return mappings;
     }
@@ -208,8 +258,7 @@ public class MergedMappingsDependency implements SelfResolvingDependency {
                 String comment = field.getComment();
                 if (comment != null && !comment.isEmpty()) {
                     comment = escape(comment);
-                    output.fieldComments.computeIfAbsent(className, x -> new LinkedHashMap<>())
-                            .put(fieldEntry, comment);
+                    output.fieldComments.computeIfAbsent(className, x -> new LinkedHashMap<>()).put(fieldEntry, comment);
                 }
             }
 
@@ -223,15 +272,11 @@ public class MergedMappingsDependency implements SelfResolvingDependency {
                 }
                 for (ParameterDef parameter : method.getParameters()) {
                     int idx = parameter.getLocalVariableIndex();
-                    output.paramNames.computeIfAbsent(className, x -> new LinkedHashMap<>())
-                            .computeIfAbsent(methodEntry, x -> new LinkedHashMap<>())
-                            .put(idx, parameter.getName(to));
+                    output.paramNames.computeIfAbsent(className, x -> new LinkedHashMap<>()).computeIfAbsent(methodEntry, x -> new LinkedHashMap<>()).put(idx, parameter.getName(to));
                     String paramComment = parameter.getComment();
                     if (paramComment != null && !paramComment.isEmpty()) {
                         paramComment = escape(paramComment);
-                        output.paramComments.computeIfAbsent(className, x -> new LinkedHashMap<>())
-                                .computeIfAbsent(methodEntry, x -> new LinkedHashMap<>())
-                                .put(idx, paramComment);
+                        output.paramComments.computeIfAbsent(className, x -> new LinkedHashMap<>()).computeIfAbsent(methodEntry, x -> new LinkedHashMap<>()).put(idx, paramComment);
                     }
                 }
             }
@@ -239,8 +284,7 @@ public class MergedMappingsDependency implements SelfResolvingDependency {
     }
 
     private String escape(String paramComment) {
-        return paramComment.replaceAll("\\\\", "\\\\").replaceAll("\n", "\\n")
-                .replaceAll("\t", "\\t");
+        return paramComment.replaceAll("\\\\", "\\\\").replaceAll("\n", "\\n").replaceAll("\t", "\\t");
     }
 
     private byte[] readMappings(File mappingsFile) throws IOException {
@@ -367,13 +411,9 @@ public class MergedMappingsDependency implements SelfResolvingDependency {
                     if (comment != null) {
                         this.writer.println("\t\tc\t" + comment);
                     }
-
-                    mappings.paramNames.getOrDefault(classObf, new HashMap<>())
-                            .getOrDefault(methodEntry, new HashMap<>()).forEach((idx, name) -> {
+                    mappings.paramNames.getOrDefault(classObf, new HashMap<>()).getOrDefault(methodEntry, new HashMap<>()).forEach((idx, name) -> {
                         this.writer.println("\t\tp\t" + idx + "\t\t" + name);
-
-                        String commentParam = mappings.paramComments.getOrDefault(classObf, new HashMap<>())
-                                .getOrDefault(methodEntry, new HashMap<>()).get(idx);
+                        String commentParam = mappings.paramComments.getOrDefault(classObf, new HashMap<>()).getOrDefault(methodEntry, new HashMap<>()).get(idx);
                         if (commentParam != null) {
                             this.writer.println("\t\t\tc\t" + commentParam);
                         }
