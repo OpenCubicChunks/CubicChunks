@@ -22,7 +22,6 @@
         "common.chunk.MixinChunkManager",
         "common.chunk.MixinChunkSerializer",
         "common.chunk.MixinChunkStatus",
-        "common.chunk.MixinEntityTracker",
         "common.chunk.MixinISelectiveWorker",
         "common.chunk.MixinProtoChunk",
         "common.chunk.MixinProtoTickList",
