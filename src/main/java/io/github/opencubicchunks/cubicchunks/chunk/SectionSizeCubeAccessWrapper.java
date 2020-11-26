@@ -8,7 +8,6 @@ import java.util.stream.Stream;
 
 import javax.annotation.Nullable;
 
-import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import it.unimi.dsi.fastutil.shorts.ShortList;
@@ -19,6 +18,7 @@ import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.TickList;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.ChunkAccess;
@@ -31,6 +31,7 @@ import net.minecraft.world.level.levelgen.feature.StructureFeature;
 import net.minecraft.world.level.levelgen.structure.StructureStart;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.FluidState;
+import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
@@ -39,7 +40,6 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 //used only in Surface Builders
 public class SectionSizeCubeAccessWrapper implements ChunkAccess {
     private final ChunkAccess[] delegates;
-    private final CubePos pos;
     private int dx;
     private int dz;
 
@@ -47,7 +47,6 @@ public class SectionSizeCubeAccessWrapper implements ChunkAccess {
         this.delegates = new ChunkAccess[2];
         this.delegates[0] = (ChunkAccess) delegate;
         this.delegates[1] = (ChunkAccess) delegateAbove;
-        this.pos = delegate.getCubePos();
     }
 
     public void setLocalSectionPos(int sectionX, int sectionZ) {
@@ -57,15 +56,25 @@ public class SectionSizeCubeAccessWrapper implements ChunkAccess {
 
 
     @Nullable @Override public BlockState setBlockState(BlockPos blockPos, BlockState blockState, boolean bl) {
-        return getDelegate(blockPos.getY()).setBlockState(blockPos.offset(dx, 0, dz), blockState, bl);
+        ChunkAccess delegate = getDelegate(blockPos.getY());
+        if (delegate != null) {
+            return delegate.setBlockState(blockPos.offset(dx, 0, dz), blockState, bl);
+        }
+        return Blocks.AIR.defaultBlockState();
     }
 
     @Override public void setBlockEntity(BlockEntity blockEntity) {
-        getDelegate(blockEntity.getBlockPos().getY()).setBlockEntity(blockEntity);
+        ChunkAccess delegate = getDelegate(blockEntity.getBlockPos().getY());
+        if (delegate != null) {
+            delegate.setBlockEntity(blockEntity);
+        }
     }
 
     @Override public void addEntity(Entity entity) {
-        getDelegate(entity.getBlockY()).addEntity(entity);
+        ChunkAccess delegate = getDelegate(entity.getBlockY());
+        if (delegate != null) {
+            delegate.addEntity(entity);
+        }
     }
 
     @Override @Nullable public LevelChunkSection getHighestSection() {
@@ -131,15 +140,21 @@ public class SectionSizeCubeAccessWrapper implements ChunkAccess {
     }
 
     @Override public ChunkStatus getStatus() {
-        return getDelegateCube(pos.getY()).getStatus();
+        return delegates[0].getStatus();
     }
 
     @Override public void removeBlockEntity(BlockPos blockPos) {
-        getDelegate(blockPos.getY()).removeBlockEntity(blockPos.offset(dx, 0, dz));
+        ChunkAccess delegate = getDelegate(blockPos.getY());
+        if (delegate != null) {
+            delegate.removeBlockEntity(blockPos.offset(dx, 0, dz));
+        }
     }
 
     @Override public void markPosForPostprocessing(BlockPos blockPos) {
-        getDelegate(blockPos.getY()).markPosForPostprocessing(blockPos.offset(dx, 0, dz));
+        ChunkAccess delegate = getDelegate(blockPos.getY());
+        if (delegate != null) {
+            delegate.markPosForPostprocessing(blockPos.offset(dx, 0, dz));
+        }
     }
 
     @Override public ShortList[] getPostProcessing() {
@@ -195,19 +210,35 @@ public class SectionSizeCubeAccessWrapper implements ChunkAccess {
     }
 
     @Override @Nullable public BlockEntity getBlockEntity(BlockPos blockPos) {
-        return getDelegate(blockPos.getY()).getBlockEntity(blockPos.offset(dx, 0, dz));
+        ChunkAccess delegate = getDelegate(blockPos.getY());
+        if (delegate != null) {
+            return delegate.getBlockEntity(blockPos.offset(dx, 0, dz));
+        }
+        return null;
     }
 
     @Override public BlockState getBlockState(BlockPos blockPos) {
-        return getDelegate(blockPos.getY()).getBlockState(blockPos.offset(dx, 0, dz));
+        ChunkAccess delegate = getDelegate(blockPos.getY());
+        if (delegate != null) {
+            return delegate.getBlockState(blockPos.offset(dx, 0, dz));
+        }
+        return Blocks.AIR.defaultBlockState();
     }
 
     @Override public FluidState getFluidState(BlockPos blockPos) {
-        return getDelegate(blockPos.getY()).getFluidState(blockPos.offset(dx, 0, dz));
+        ChunkAccess delegate = getDelegate(blockPos.getY());
+        if (delegate != null) {
+            return delegate.getFluidState(blockPos.offset(dx, 0, dz));
+        }
+        return Fluids.EMPTY.defaultFluidState();
     }
 
     @Override public int getLightEmission(BlockPos blockPos) {
-        return getDelegate(blockPos.getY()).getLightEmission(blockPos.offset(dx, 0, dz));
+        ChunkAccess delegate = getDelegate(blockPos.getY());
+        if (delegate != null) {
+            return delegate.getLightEmission(blockPos.offset(dx, 0, dz));
+        }
+        return 0;
     }
 
     @Override public int getMaxLightLevel() {
@@ -305,11 +336,26 @@ public class SectionSizeCubeAccessWrapper implements ChunkAccess {
         throw new UnsupportedOperationException();
     }
 
-    public ChunkAccess getDelegateCube(int y) {
-        return delegates[y & 1];
+    @Nullable public ChunkAccess getDelegateCube(int y) {
+        int minY = ((IBigCube) delegates[0]).getCubePos().getY();
+        if (y < minY) {
+            throw StopGeneratingThrowable.INSTANCE;
+        }
+        if (y > ((IBigCube) delegates[1]).getCubePos().getY()) {
+            return null;
+        }
+        return delegates[y - minY];
     }
 
-    public ChunkAccess getDelegate(int blockY) {
+    @Nullable public ChunkAccess getDelegate(int blockY) {
         return getDelegateCube(Coords.blockToCube(blockY));
+    }
+
+    public static class StopGeneratingThrowable extends RuntimeException {
+        public static final StopGeneratingThrowable INSTANCE = new StopGeneratingThrowable();
+
+        public StopGeneratingThrowable() {
+            super("Stop the surface builder");
+        }
     }
 }
