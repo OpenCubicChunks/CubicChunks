@@ -1,17 +1,14 @@
 package io.github.opencubicchunks.cubicchunks.mixin.core.common.chunk;
 
 import static io.github.opencubicchunks.cubicchunks.CubicChunks.LOGGER;
-import static io.github.opencubicchunks.cubicchunks.utils.Coords.*;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Queue;
-import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.Executor;
@@ -125,7 +122,6 @@ public abstract class MixinChunkManager implements IChunkManager {
 
     private final Long2ObjectLinkedOpenHashMap<ChunkHolder> updatingCubeMap = new Long2ObjectLinkedOpenHashMap<>();
     private volatile Long2ObjectLinkedOpenHashMap<ChunkHolder> visibleCubeMap = this.updatingCubeMap.clone();
-    private volatile Long2ObjectLinkedOpenHashMap<Set<ChunkHolder>> visibleColumnMap = new Long2ObjectLinkedOpenHashMap<>();
 
     private final LongSet cubesToDrop = new LongOpenHashSet();
     private final LongSet cubeEntitiesInLevel = new LongOpenHashSet();
@@ -469,21 +465,12 @@ public abstract class MixinChunkManager implements IChunkManager {
         )
     )
     private void onPromoteChunkMap(CallbackInfoReturnable<Boolean> cir) {
-        Long2ObjectLinkedOpenHashMap<Set<ChunkHolder>> newColumnMap = new Long2ObjectLinkedOpenHashMap<>();
-        for (ChunkHolder chunkHolder : updatingCubeMap.values()) {
-            newColumnMap.computeIfAbsent(chunkHolder.getPos().toLong(), x -> new HashSet<>()).add(chunkHolder);
-        }
-        this.visibleColumnMap = newColumnMap;
         this.visibleCubeMap = updatingCubeMap.clone();
     }
 
     @Override
     public Iterable<ChunkHolder> getCubes() {
         return Iterables.unmodifiableIterable(this.visibleCubeMap.values());
-    }
-
-    public Set<ChunkHolder> getColumnMap(ChunkPos pos) {
-        return Collections.unmodifiableSet(visibleColumnMap.get(ChunkPos.asLong(cubeToSection(sectionToCube(pos.x), 0), cubeToSection(sectionToCube(pos.z), 0))));
     }
 
     // func_219244_a, schedule
