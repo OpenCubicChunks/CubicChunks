@@ -4,6 +4,7 @@ import static io.github.opencubicchunks.cubicchunks.utils.Coords.*;
 
 import java.util.List;
 import java.util.function.Supplier;
+import java.util.stream.IntStream;
 
 import io.github.opencubicchunks.cubicchunks.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
@@ -30,7 +31,6 @@ import net.minecraft.network.protocol.game.DebugPackets;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.ChunkPos;
-import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.StructureFeatureManager;
 import net.minecraft.world.level.WorldGenLevel;
 import net.minecraft.world.level.biome.Biome;
@@ -42,6 +42,7 @@ import net.minecraft.world.level.chunk.ChunkGenerator;
 import net.minecraft.world.level.chunk.LevelChunkSection;
 import net.minecraft.world.level.chunk.UpgradeData;
 import net.minecraft.world.level.levelgen.StructureSettings;
+import net.minecraft.world.level.levelgen.WorldgenRandom;
 import net.minecraft.world.level.levelgen.feature.ConfiguredStructureFeature;
 import net.minecraft.world.level.levelgen.feature.StructureFeature;
 import net.minecraft.world.level.levelgen.feature.configurations.StructureFeatureConfiguration;
@@ -49,6 +50,8 @@ import net.minecraft.world.level.levelgen.structure.BoundingBox;
 import net.minecraft.world.level.levelgen.structure.StructureStart;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureManager;
 import net.minecraft.world.level.levelgen.surfacebuilders.ConfiguredSurfaceBuilder;
+import net.minecraft.world.level.levelgen.synth.PerlinNoise;
+import net.minecraft.world.level.levelgen.synth.SurfaceNoise;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Mutable;
@@ -82,6 +85,7 @@ public abstract class MixinChunkGenerator implements ICubeGenerator {
     private Perlin perlin2 = null;
     private Perlin perlin3 = null;
     private final double frequencyDivisor = 1;
+    private SurfaceNoise surfaceNoise;
 
     @Shadow protected abstract void generateStrongholds();
 
@@ -96,6 +100,8 @@ public abstract class MixinChunkGenerator implements ICubeGenerator {
                 this.runtimeBiomeSource = new StripedBiomeSource(((OverworldBiomeSourceAccess) this.runtimeBiomeSource).getBiomes());
             }
         }
+
+        this.surfaceNoise = new PerlinNoise(new WorldgenRandom(l), IntStream.rangeClosed(-3, 0));
     }
 
 
@@ -254,8 +260,8 @@ public abstract class MixinChunkGenerator implements ICubeGenerator {
     }
 
     @Override
-    public void makeBase(LevelAccessor worldIn, StructureFeatureManager var2, IBigCube cube) {
-        setSeed(1000);
+    public void makeBase(CubeWorldGenRegion worldIn, StructureFeatureManager var2, IBigCube cube) {
+        setSeed(worldIn.getSeed());
         double perlin1Max = perlin1.getMaxValue();
         double perlin2Max = perlin2.getMaxValue();
         double perlin3Max = perlin3.getMaxValue();
@@ -276,7 +282,7 @@ public abstract class MixinChunkGenerator implements ICubeGenerator {
         buildSurface(worldIn, cube, cubeWrapper, storedHeights);
     }
 
-    private void buildSurface(LevelAccessor worldIn, IBigCube cube, SectionSizeCubeAccessWrapper cubeWrapper, int[] storedHeights) {
+    private void buildSurface(CubeWorldGenRegion worldIn, IBigCube cube, SectionSizeCubeAccessWrapper cubeWrapper, int[] storedHeights) {
         for (int x = 0; x < IBigCube.DIAMETER_IN_BLOCKS; x++) {
             for (int z = 0; z < IBigCube.DIAMETER_IN_BLOCKS; z++) {
                 int realX = cube.getCubePos().minCubeX() + (x);
@@ -288,14 +294,17 @@ public abstract class MixinChunkGenerator implements ICubeGenerator {
 
                 cubeWrapper.setLocalSectionPos(blockToSection(x), blockToSection(z));
 
+                double surfaceNoise = this.surfaceNoise.getSurfaceNoiseValue((double) realX * 0.0625D, (double) realZ * 0.0625D, 0.0625D, (double) x * 0.0625D) * 15.0D;
+
                 ConfiguredSurfaceBuilder<?> configuredSurfaceBuilder = biome.getGenerationSettings().getSurfaceBuilder().get();
-                configuredSurfaceBuilder.initNoise(1000);
-                int surfaceHeight = height - cubeToMinBlock(cube.getCubePos().getY()) + 1;
-                if (surfaceHeight >= 0 && surfaceHeight < 2 * IBigCube.DIAMETER_IN_BLOCKS) {
+                configuredSurfaceBuilder.initNoise(worldIn.getSeed());
+                try {
                     configuredSurfaceBuilder.apply(worldIn.getRandom(), cubeWrapper, biome, realX, realZ,
-                        surfaceHeight + 1, 1,
-                        Blocks.STONE.defaultBlockState(), Blocks.WATER.defaultBlockState(), CubicChunks.SEA_LEVEL - cubeToMinBlock(cube.getCubePos().getY()) + 1,
-                        1000);
+                        height + 1, surfaceNoise,
+                        Blocks.STONE.defaultBlockState(), Blocks.WATER.defaultBlockState(), CubicChunks.SEA_LEVEL,
+                        worldIn.getSeed());
+                } catch (SectionSizeCubeAccessWrapper.StopGeneratingThrowable ignored) {
+                    // used as a way to stop the surface builder when it goes below the current cube
                 }
             }
         }
