@@ -19,11 +19,13 @@
 
 package io.github.opencubicchunks.cubicchunks.core.server.chunkio.async.forge;
 
+import io.github.opencubicchunks.cubicchunks.api.worldgen.ICubeGenerator;
 import io.github.opencubicchunks.cubicchunks.core.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.core.server.chunkio.ICubeIO;
-import io.github.opencubicchunks.cubicchunks.api.worldgen.ICubeGenerator;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.world.chunk.Chunk;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.world.ChunkDataEvent;
 
 import java.io.IOException;
 
@@ -39,7 +41,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 class AsyncColumnIOProvider extends AsyncIOProvider<Chunk> {
 
     @Nonnull private final ICubeIO loader;
-    @Nullable private Chunk column; // The target
+    @Nullable private ICubeIO.PartialData<Chunk> columnData; // The target
     @Nonnull private final QueuedColumn colInfo;
     private ICubeGenerator generator;
 
@@ -49,10 +51,25 @@ class AsyncColumnIOProvider extends AsyncIOProvider<Chunk> {
         this.generator = generator;
     }
 
+    @Override public void run() {
+        try {
+            this.columnData = this.loader.loadColumnAsyncPart(this.colInfo.x, this.colInfo.z);
+        } catch (IOException e) {
+            CubicChunks.LOGGER.error("Could not load column in {} @ ({}, {})", this.colInfo.world, this.colInfo.x, this.colInfo.z, e);
+        } finally {
+            synchronized (this) {
+                this.finished = true;
+                this.notifyAll();
+            }
+        }
+    }
+
     @Override void runSynchronousPart() {
-        if (column != null) {
-            //TODO: ChunkDataEvent.Load and Save
-            //MinecraftForge.EVENT_BUS.post(new ChunkDataEvent.Load(column, this.nbt)); // Don't call ChunkDataEvent.Load async
+        if (columnData != null) {
+            this.loader.loadColumnSyncPart(columnData);
+            Chunk column = this.columnData.getObject();
+            assert column != null;
+            MinecraftForge.EVENT_BUS.post(new ChunkDataEvent.Load(column, this.columnData.getNbt()));
             column.setLastSaveTime(this.colInfo.world.getTotalWorldTime());
             // this actually initializes internal information about that chunk's structures
             generator.recreateStructures(column);
@@ -61,19 +78,6 @@ class AsyncColumnIOProvider extends AsyncIOProvider<Chunk> {
     }
 
     @Nullable @Override Chunk get() {
-        return column;
-    }
-
-    @Override public void run() {
-        synchronized (this) {
-            try {
-                this.column = this.loader.loadColumn(this.colInfo.x, this.colInfo.z);
-            } catch (IOException e) {
-                CubicChunks.LOGGER.error("Could not load column in {} @ ({}, {})", this.colInfo.world, this.colInfo.x, this.colInfo.z, e);
-            }
-
-            this.finished = true;
-            this.notifyAll();
-        }
+        return columnData == null ? null : columnData.getObject();
     }
 }

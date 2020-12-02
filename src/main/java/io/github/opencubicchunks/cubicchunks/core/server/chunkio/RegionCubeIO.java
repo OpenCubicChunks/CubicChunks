@@ -29,6 +29,7 @@ import cubicchunks.regionlib.impl.EntryLocation2D;
 import cubicchunks.regionlib.impl.EntryLocation3D;
 import cubicchunks.regionlib.impl.SaveCubeColumns;
 import io.github.opencubicchunks.cubicchunks.api.util.CubePos;
+import io.github.opencubicchunks.cubicchunks.api.world.ICube;
 import io.github.opencubicchunks.cubicchunks.core.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.core.world.cube.Cube;
 import net.minecraft.nbt.CompressedStreamTools;
@@ -128,9 +129,7 @@ public class RegionCubeIO implements ICubeIO {
         }
     }
 
-    @Override
-    @Nullable
-    public Chunk loadColumn(int chunkX, int chunkZ) throws IOException {
+    @Override @Nullable public PartialData<Chunk> loadColumnAsyncPart(int chunkX, int chunkZ) throws IOException {
         SaveCubeColumns save = this.getSave();
         NBTTagCompound nbt;
         SaveEntry<EntryLocation2D> saveEntry;
@@ -144,10 +143,14 @@ public class RegionCubeIO implements ICubeIO {
             }
             nbt = FMLCommonHandler.instance().getDataFixer().process(FixTypes.CHUNK, CompressedStreamTools.readCompressed(new ByteArrayInputStream(buf.get().array())));
         }
-        return IONbtReader.readColumn(world, chunkX, chunkZ, nbt);
+        Chunk chunk = IONbtReader.readColumn(world, chunkX, chunkZ, nbt);
+        return new PartialData<>(chunk, nbt);
     }
 
-    @Override @Nullable public ICubeIO.PartialCubeData loadCubeAsyncPart(Chunk column, int cubeY) throws IOException {
+    @Override @Nullable public void loadColumnSyncPart(PartialData<Chunk> info) {
+    }
+
+    @Override @Nullable public PartialData<ICube> loadCubeAsyncPart(Chunk column, int cubeY) throws IOException {
         SaveCubeColumns save = this.getSave();
         NBTTagCompound nbt;
         SaveEntry<EntryLocation3D> saveEntry;
@@ -167,11 +170,11 @@ public class RegionCubeIO implements ICubeIO {
         if (cube == null) {
             return null;
         }
-        return new ICubeIO.PartialCubeData(cube, nbt);
+        return new PartialData<>(cube, nbt);
     }
 
-    @Override public void loadCubeSyncPart(ICubeIO.PartialCubeData info) {
-        IONbtReader.readCubeSyncPart(info.cube, world, info.nbt);
+    @Override public void loadCubeSyncPart(PartialData<ICube> info) {
+        IONbtReader.readCubeSyncPart((Cube) info.object, world, info.nbt);
     }
 
     @Override public void saveColumn(Chunk column) {

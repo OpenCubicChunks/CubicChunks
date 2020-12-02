@@ -27,7 +27,6 @@ import io.github.opencubicchunks.cubicchunks.core.world.cube.Cube;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.world.ChunkDataEvent;
 
 import java.io.IOException;
 import java.util.concurrent.CompletableFuture;
@@ -48,7 +47,7 @@ class AsyncCubeIOProvider extends AsyncIOProvider<Cube> {
     @Nonnull private final ICubeIO loader;
 
     @Nonnull private CompletableFuture<Chunk> futureColumn = new CompletableFuture<>();
-    @Nullable private ICubeIO.PartialCubeData cubeData;
+    @Nullable private ICubeIO.PartialData<ICube> cubeData;
 
     AsyncCubeIOProvider(QueuedCube cube, ICubeIO loader) {
         this.cubeInfo = cube;
@@ -56,7 +55,7 @@ class AsyncCubeIOProvider extends AsyncIOProvider<Cube> {
     }
 
     @Override
-    public synchronized void run() {
+    public void run() {
         try {
             cubeData = this.loader.loadCubeAsyncPart(futureColumn.get(), this.cubeInfo.y);
         } catch (IOException e) {
@@ -67,8 +66,10 @@ class AsyncCubeIOProvider extends AsyncIOProvider<Cube> {
         } catch (ExecutionException e) {
             throw new RuntimeException(e);
         } finally {
-            this.finished = true;
-            this.notifyAll();
+            synchronized (this) {
+                this.finished = true;
+                this.notifyAll();
+            }
         }
     }
 
@@ -78,8 +79,7 @@ class AsyncCubeIOProvider extends AsyncIOProvider<Cube> {
 
         if (cubeData != null) {
             this.loader.loadCubeSyncPart(cubeData);
-            assert cubeData != null;
-            ICube cube = this.cubeData.getCube();
+            ICube cube = this.cubeData.getObject();
             assert cube != null;
             MinecraftForge.EVENT_BUS.post(new CubeDataEvent.Load(cube, this.cubeData.getNbt()));
         }
@@ -92,7 +92,7 @@ class AsyncCubeIOProvider extends AsyncIOProvider<Cube> {
 
     @Nullable @Override
     public Cube get() {
-        return cubeData == null ? null : cubeData.getCube();
+        return cubeData == null ? null : (Cube) cubeData.getObject();
     }
 
     public void setColumn(@Nullable Chunk chunk) {

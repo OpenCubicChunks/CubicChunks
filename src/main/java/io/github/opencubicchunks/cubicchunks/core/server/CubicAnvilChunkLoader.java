@@ -39,7 +39,6 @@ import net.minecraft.world.chunk.storage.AnvilChunkLoader;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.util.function.Supplier;
 
 import javax.annotation.Nullable;
@@ -65,11 +64,20 @@ public class CubicAnvilChunkLoader extends AnvilChunkLoader {
     }
 
     @Override @Nullable public Chunk loadChunk(World worldIn, int x, int z) throws IOException {
-        return ((ICubeProviderInternal.Server) worldIn.getChunkProvider()).getCubeIO().loadColumn(x, z);
+        ICubeIO.PartialData<Chunk> data = ((ICubeProviderInternal.Server) worldIn.getChunkProvider()).getCubeIO().loadColumnAsyncPart(x, z);
+        if (data != null) {
+            ((ICubeProviderInternal.Server) worldIn.getChunkProvider()).getCubeIO().loadColumnSyncPart(data);
+            return data.getObject();
+        }
+        return null;
     }
 
     @Override @Nullable public Object[] loadChunk__Async(World worldIn, int x, int z) throws IOException {
-        throw new UnsupportedOperationException();
+        ICubeIO.PartialData<Chunk> data = ((ICubeProviderInternal.Server) worldIn.getChunkProvider()).getCubeIO().loadColumnAsyncPart(x, z);
+        if (data == null) {
+            return null;
+        }
+        return new Object[]{data.getObject(), data.getNbt()};
     }
 
     @Override public boolean isChunkGeneratedAt(int x, int z) {
@@ -97,7 +105,7 @@ public class CubicAnvilChunkLoader extends AnvilChunkLoader {
     }
 
     @Override public boolean writeNextIO() {
-        return false;
+        return getCubeIO().writeNextIO();
     }
 
     @Override public void saveExtraChunkData(World worldIn, Chunk chunkIn) {

@@ -24,6 +24,7 @@
  */
 package io.github.opencubicchunks.cubicchunks.core.server.chunkio;
 
+import io.github.opencubicchunks.cubicchunks.api.world.ICube;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.storage.IThreadedFileIO;
@@ -37,11 +38,13 @@ import io.github.opencubicchunks.cubicchunks.core.world.cube.Cube;
 public interface ICubeIO extends IThreadedFileIO {
 	void flush() throws IOException;
 
-	@Nullable Chunk loadColumn(int chunkX, int chunkZ) throws IOException;
+	@Nullable PartialData<Chunk> loadColumnAsyncPart(int chunkX, int chunkZ) throws IOException;
 
-	@Nullable PartialCubeData loadCubeAsyncPart(Chunk column, int cubeY) throws IOException;
+	@Nullable void loadColumnSyncPart(PartialData<Chunk> info);
 
-	void loadCubeSyncPart(PartialCubeData info);
+	@Nullable PartialData<ICube> loadCubeAsyncPart(Chunk column, int cubeY) throws IOException;
+
+	void loadCubeSyncPart(PartialData<ICube> info);
 
 	void saveColumn(Chunk column);
 
@@ -58,17 +61,17 @@ public interface ICubeIO extends IThreadedFileIO {
     /**
 	 * Stores partially read cube, before sync read but after async read
 	 */
-	class PartialCubeData {
+	class PartialData<T> {
 		final NBTTagCompound nbt;
-		final Cube cube;
+		final T object;
 
-		PartialCubeData(Cube cube, NBTTagCompound nbt) {
-			this.cube = cube;
+		PartialData(T object, NBTTagCompound nbt) {
+			this.object = object;
 			this.nbt = nbt;
 		}
 
-		public Cube getCube() {
-			return cube;
+		public T getObject() {
+			return object;
 		}
 
 		public NBTTagCompound getNbt() {
