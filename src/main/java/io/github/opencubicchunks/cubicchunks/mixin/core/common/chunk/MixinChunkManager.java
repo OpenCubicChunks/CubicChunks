@@ -5,6 +5,7 @@ import static io.github.opencubicchunks.cubicchunks.CubicChunks.LOGGER;
 import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.util.BitSet;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -1121,7 +1122,7 @@ public abstract class MixinChunkManager implements IChunkManager {
 
     @Nullable
     @Redirect(method = "playerLoadedChunk", at = @At(value = "NEW", target = "net/minecraft/network/protocol/game/ClientboundLightUpdatePacket"))
-    private ClientboundLightUpdatePacket onVanillaLightPacketConstruct(ChunkPos pos, LevelLightEngine lightManager, boolean bool) {
+    private ClientboundLightUpdatePacket onVanillaLightPacketConstruct(ChunkPos pos, LevelLightEngine lightManager, BitSet bits1, BitSet bits2, boolean bool) {
         return new ClientboundLightUpdatePacket();
     }
 

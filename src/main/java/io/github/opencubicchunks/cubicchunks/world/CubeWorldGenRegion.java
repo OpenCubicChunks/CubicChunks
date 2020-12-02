@@ -45,6 +45,7 @@ import net.minecraft.world.level.chunk.ChunkSource;
 import net.minecraft.world.level.chunk.ChunkStatus;
 import net.minecraft.world.level.dimension.DimensionType;
 import net.minecraft.world.level.entity.EntityTypeTest;
+import net.minecraft.world.level.gameevent.GameEvent;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.levelgen.feature.StructureFeature;
 import net.minecraft.world.level.levelgen.structure.StructureStart;
@@ -236,6 +237,9 @@ public class CubeWorldGenRegion implements WorldGenLevel, ICubicWorld {
 
     @Override public void levelEvent(@Nullable Player player, int type, BlockPos pos, int data) {
         throw new UnsupportedOperationException("Not implemented yet!");
+    }
+
+    @Override public void gameEvent(@Nullable Entity entity, GameEvent gameEvent, BlockPos blockPos) {
     }
 
     @Override public WorldBorder getWorldBorder() {
@@ -430,11 +434,11 @@ public class CubeWorldGenRegion implements WorldGenLevel, ICubicWorld {
         return this.level.startsForFeature(sectionPos, structure);
     }
 
-    @Override public int getSectionsCount() {
-        return this.level.getSectionsCount();
+    @Override public int getMinBuildHeight() {
+        return level.getMinBuildHeight();
     }
 
-    @Override public int getMinSection() {
-        return this.level.getMinSection();
+    @Override public int getHeight() {
+        return level.getHeight();
     }
 }

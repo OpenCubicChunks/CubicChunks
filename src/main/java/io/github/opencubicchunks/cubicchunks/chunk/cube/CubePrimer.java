@@ -575,19 +575,19 @@ public class CubePrimer implements IBigCube, ChunkAccess {
         this.carvingMasks.put(type, mask);
     }
 
-    @Override public int getSectionsCount() {
-        return this.levelHeightAccessor.getSectionsCount();
-    }
-
-    @Override public int getMinSection() {
-        return this.levelHeightAccessor.getMinSection();
-    }
-
     @Override
     public void markPosForPostprocessing(BlockPos blockPos) {
         if (System.currentTimeMillis() % 15000 == 0) {
             LogManager.getLogger().warn("Trying to mark a block for PostProcessing @ {}, but this operation is not supported.", blockPos);
 
         }
+    }
+
+    @Override public int getHeight() {
+        return levelHeightAccessor.getHeight();
+    }
+
+    @Override public int getMinBuildHeight() {
+        return levelHeightAccessor.getMinBuildHeight();
     }
 }

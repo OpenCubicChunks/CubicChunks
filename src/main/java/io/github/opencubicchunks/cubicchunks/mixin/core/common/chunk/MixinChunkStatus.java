@@ -135,7 +135,7 @@ public class MixinChunkStatus {
         }
         ci.cancel();
         //noinspection ConstantConditions
-        ColumnBiomeContainer biomeContainer = new ColumnBiomeContainer(serverLevel.registryAccess().registryOrThrow(BIOME_REGISTRY), serverLevel);
+        ColumnBiomeContainer biomeContainer = new ColumnBiomeContainer(serverLevel.registryAccess().registryOrThrow(BIOME_REGISTRY), serverLevel, serverLevel);
         ((ProtoChunk) chunkAccess).setBiomes(biomeContainer);
     }
 

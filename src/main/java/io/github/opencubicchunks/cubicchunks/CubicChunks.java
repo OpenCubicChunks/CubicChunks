@@ -12,7 +12,6 @@ import net.fabricmc.api.ModInitializer;
 import net.minecraft.core.Registry;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ChunkMap;
-import net.minecraft.world.level.biome.Biome;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -53,12 +52,6 @@ public class CubicChunks implements ModInitializer {
         //Custom CC Features
         CCPlacement.init();
         CCFeatures.init();
-    }
-
-    private static void convertImmutableFeatures(Biome biome) {
-        //if (biome.getGenerationSettings().features instanceof ImmutableList) {
-        //    biome.getGenerationSettings().features =biome.getGenerationSettings().features.stream().map(Lists::newArrayList).collect(Collectors.toList());
-        //}
     }
 
     @Override

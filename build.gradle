@@ -83,6 +83,7 @@ sourceSets {
 
 minecraft {
     accessWidener "src/main/resources/cubicchunks.accesswidener"
+    // intermediaryUrl = { "http://localhost:9000/intermediary-20w49a-v2.jar" }
 }
 
 /*

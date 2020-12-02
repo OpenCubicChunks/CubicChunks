@@ -54,7 +54,7 @@ public abstract class MixinChunkSerializer {
         ChunkStatus.ChunkType statusType = getChunkTypeFromTag(compound);
         ChunkAccess newChunk;
         //TODO: Double Check that this is proper
-        ColumnBiomeContainer biomeContainerIn = new ColumnBiomeContainer(worldIn.registryAccess().registryOrThrow(Registry.BIOME_REGISTRY), worldIn);
+        ColumnBiomeContainer biomeContainerIn = new ColumnBiomeContainer(worldIn.registryAccess().registryOrThrow(Registry.BIOME_REGISTRY), worldIn, worldIn);
         if (statusType == ChunkStatus.ChunkType.LEVELCHUNK) {
             newChunk = new LevelChunk(worldIn.getLevel(), pos, biomeContainerIn, UpgradeData.EMPTY,
                 new ChunkTickList<>(Registry.BLOCK::getKey, new ArrayList<>(), 0), // TODO: supply game time

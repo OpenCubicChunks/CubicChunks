@@ -16,12 +16,12 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(Level.class)
 public abstract class MixinWorld implements ICubicWorld, LevelHeightAccessor {
 
-    @Override public int getSectionsCount() {
-        return 40000000 / 16;
+    @Override public int getHeight() {
+        return 20000000;
     }
 
-    @Override public int getMinSection() {
-        return -20000000 / 16;
+    @Override public int getMinBuildHeight() {
+        return -20000000;
     }
 
     @Inject(method = "blockEntityChanged", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/chunk/LevelChunk;markUnsaved()V"))

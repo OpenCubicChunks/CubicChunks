@@ -32,7 +32,7 @@ public abstract class MixinClientPacketListener {
         int chunkZ = clientboundLevelChunkPacket.getZ();
 
         @SuppressWarnings("ConstantConditions") //Not an NPE because this method is client-side.
-        ColumnBiomeContainer biomeContainer = new ColumnBiomeContainer(minecraft.level.registryAccess().registryOrThrow(Registry.BIOME_REGISTRY), level);
+        ColumnBiomeContainer biomeContainer = new ColumnBiomeContainer(minecraft.level.registryAccess().registryOrThrow(Registry.BIOME_REGISTRY), level, level);
         this.level.getChunkSource().replaceWithPacketData(chunkX, chunkZ, biomeContainer, clientboundLevelChunkPacket.getReadBuffer(), clientboundLevelChunkPacket.getHeightmaps(),
             clientboundLevelChunkPacket.getAvailableSections());
     }

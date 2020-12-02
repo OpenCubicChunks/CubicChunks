@@ -3,6 +3,7 @@ package io.github.opencubicchunks.cubicchunks.mixin.core.common.chunk;
 import static io.github.opencubicchunks.cubicchunks.chunk.util.Utils.*;
 
 import java.util.ArrayList;
+import java.util.BitSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -64,8 +65,8 @@ public abstract class MixinChunkHolder implements ICubeHolder {
     @Shadow private CompletableFuture<IBigCube> chunkToSave;
 
 
-    @Shadow private int skyChangedLightSectionFilter;
-    @Shadow private int blockChangedLightSectionFilter;
+    @Shadow private BitSet skyChangedLightSectionFilter;
+    @Shadow private BitSet blockChangedLightSectionFilter;
     @Shadow private int queueLevel;
 
     @Shadow @Final private ChunkHolder.PlayerProvider playerProvider;
@@ -361,7 +362,7 @@ public abstract class MixinChunkHolder implements ICubeHolder {
         if (cubePos == null) {
             throw new IllegalStateException("broadcastChanges(BigCube) called on column holder!");
         }
-        if (this.changedLocalBlocks.isEmpty() && this.skyChangedLightSectionFilter == 0 && this.blockChangedLightSectionFilter == 0) {
+        if (this.changedLocalBlocks.isEmpty() && this.skyChangedLightSectionFilter.isEmpty() && this.blockChangedLightSectionFilter.isEmpty()) {
             return;
         }
         Level world = cube.getLevel();

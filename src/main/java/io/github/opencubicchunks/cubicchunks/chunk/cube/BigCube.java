@@ -110,11 +110,8 @@ public class BigCube implements ChunkAccess, IBigCube {
     private final Map<BlockPos, CompoundTag> deferredTileEntities = Maps.newHashMap();
 
     private long inhabitedTime;
-    @Nullable
-    private Consumer<BigCube> postLoadConsumer;
-
-    @Nullable
-    private Supplier<ChunkHolder.FullChunkStatus> fullStatus;
+    @Nullable private Consumer<BigCube> postLoadConsumer;
+    @Nullable private Supplier<ChunkHolder.FullChunkStatus> fullStatus;
 
     public BigCube(Level worldIn, CubePos cubePosIn, CubeBiomeContainer biomeContainerIn) {
         this(worldIn, cubePosIn, biomeContainerIn, UpgradeData.EMPTY, EmptyTickList.empty(), EmptyTickList.empty(), 0L, null, null);
@@ -230,7 +227,6 @@ public class BigCube implements ChunkAccess, IBigCube {
     }
 
     @Override public ChunkStatus getCubeStatus() {
-        Runnable r = () -> {};
         return ChunkStatus.FULL;
     }
 
@@ -255,9 +251,9 @@ public class BigCube implements ChunkAccess, IBigCube {
         int x = pos.getX() & 15;
         int y = pos.getY() & 15;
         int z = pos.getZ() & 15;
-        LevelChunkSection chunksection = sections[sectionIndex];
+        LevelChunkSection section = sections[sectionIndex];
 
-        BlockState oldState = chunksection.setBlockState(x, y, z, newState);
+        BlockState oldState = section.setBlockState(x, y, z, newState);
         if (oldState == newState) {
             return null;
         }
@@ -284,7 +280,7 @@ public class BigCube implements ChunkAccess, IBigCube {
             this.removeBlockEntity(pos);
         }
 
-        if (chunksection.getBlockState(x, y, z).getBlock() != newBlock) {
+        if (section.getBlockState(x, y, z).getBlock() != newBlock) {
             return null;
         }
 
@@ -894,14 +890,6 @@ public class BigCube implements ChunkAccess, IBigCube {
         }
     }
 
-    @Override public int getSectionsCount() {
-        return this.level.getSectionsCount();
-    }
-
-    @Override public int getMinSection() {
-        return this.level.getMinSection();
-    }
-
     public void invalidateAllBlockEntities() {
         this.blockEntities.values().forEach(this::onBlockEntityRemove);
     }
@@ -912,6 +900,14 @@ public class BigCube implements ChunkAccess, IBigCube {
             LogManager.getLogger().warn("Trying to mark a block for PostProcessing @ {}, but this operation is not supported.", blockPos);
 
         }
+    }
+
+    @Override public int getHeight() {
+        return level.getHeight();
+    }
+
+    @Override public int getMinBuildHeight() {
+        return level.getMinBuildHeight();
     }
 
     public static class RebindableTickingBlockEntityWrapper implements TickingBlockEntity {

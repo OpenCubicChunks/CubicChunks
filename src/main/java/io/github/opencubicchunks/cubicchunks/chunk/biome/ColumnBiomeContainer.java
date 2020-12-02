@@ -9,6 +9,7 @@ import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import net.minecraft.core.IdMap;
 import net.minecraft.data.BuiltinRegistries;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LevelHeightAccessor;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.biome.Biomes;
 import net.minecraft.world.level.chunk.ChunkBiomeContainer;
@@ -19,8 +20,8 @@ public class ColumnBiomeContainer extends ChunkBiomeContainer {
 
     private Level level;
 
-    public ColumnBiomeContainer(IdMap<Biome> idMap, @Nullable Level level) {
-        super(idMap, new Biome[0]);
+    public ColumnBiomeContainer(IdMap<Biome> idMap, LevelHeightAccessor heightAccess, @Nullable Level level) {
+        super(idMap, heightAccess, new Biome[0]);
         this.level = level;
     }
 

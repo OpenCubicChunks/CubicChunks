@@ -43,6 +43,9 @@ public abstract class MixinServerWorld extends Level implements IServerWorld {
         int x = chunkPos.getMinBlockX();
         int z = chunkPos.getMinBlockZ();
         BlockPos pos = this.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING, this.getNextBlockRandomPos(x, 0, z, 15));
+        if (!isInWorldBounds(pos)) {
+            return -1;
+        }
         if (((ICubicWorld) this).getCube(pos, ChunkStatus.FULL, false) == null) {
             return -1;
         }

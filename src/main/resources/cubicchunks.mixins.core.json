@@ -12,7 +12,6 @@
     },
     "mixins": [
         "common.MixinBlockPos",
-        "common.MixinIntegratedServer",
         "common.MixinMinecraftServer",
         "common.MixinServerChunkProvider",
         "common.chunk.MixinChunk",
