@@ -7,7 +7,6 @@ import static org.junit.Assert.assertThat;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Set;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
@@ -18,13 +17,6 @@ import org.objectweb.asm.Type;
 public class TestInheritanceObfuscationCollisions {
     @Test
     public void tesChunkCube() {
-        for (int i = 0; i < 6; i++) {
-            System.out.println((Predicate<Object>) x -> true);
-        }
-        for (int i = 0; i < 6; i++) {
-            int j = i;
-            System.out.println((Predicate<Object>) x -> j == 0);
-        }
         verifyNoCollision(IBigCube.class, ChunkAccess.class);
     }
 
