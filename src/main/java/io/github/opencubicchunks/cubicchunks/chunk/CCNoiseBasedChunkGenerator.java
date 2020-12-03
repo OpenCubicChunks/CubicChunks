@@ -81,7 +81,7 @@ public final class CCNoiseBasedChunkGenerator extends ChunkGenerator {
     private static final BlockState AIR = Blocks.AIR.defaultBlockState();
     private final int chunkHeight;
     private final int chunkWidth;
-    private final int chunkSizeX;
+    private int chunkSizeX; //Not final as this needs to move up and down
     private final int chunkSizeY;
     private final int chunkSizeZ;
     protected final WorldgenRandom random;
@@ -108,14 +108,14 @@ public final class CCNoiseBasedChunkGenerator extends ChunkGenerator {
         NoiseGeneratorSettings noiseGeneratorSettings = supplier.get();
         this.settings = supplier;
         NoiseSettings noiseSettings = noiseGeneratorSettings.noiseSettings();
-        this.height = /*noiseSettings.height()*/ 32;
-        this.chunkHeight = noiseSettings.noiseSizeVertical() * 4;
-        this.chunkWidth = noiseSettings.noiseSizeHorizontal() * 4;
-        this.defaultBlock = noiseGeneratorSettings.getDefaultBlock();
-        this.defaultFluid = noiseGeneratorSettings.getDefaultFluid();
-        this.chunkSizeX = 16 / this.chunkWidth;
-        this.chunkSizeY = /*noiseSettings.height()*/ 32 / this.chunkHeight;
-        this.chunkSizeZ = 16 / this.chunkWidth;
+        this.height = /*noiseSettings.height()*/ IBigCube.DIAMETER_IN_BLOCKS; //256 in vanilla
+        this.chunkHeight = noiseSettings.noiseSizeVertical() * 4; //8 in vanilla
+        this.chunkWidth = noiseSettings.noiseSizeHorizontal() * 4; //4 in vanilla
+        this.defaultBlock = noiseGeneratorSettings.getDefaultBlock(); //Stone
+        this.defaultFluid = noiseGeneratorSettings.getDefaultFluid(); //Water
+        this.chunkSizeX = 16 / this.chunkWidth; //4 in vanilla
+        this.chunkSizeY = /*noiseSettings.height()*/ IBigCube.DIAMETER_IN_BLOCKS / this.chunkHeight; //16 in vanilla
+        this.chunkSizeZ = 16 / this.chunkWidth; //4 in vanilla
         this.random = new WorldgenRandom(seed);
         this.minLimitPerlinNoise = new PerlinNoise(this.random, IntStream.rangeClosed(-15, 0));
         this.maxLimitPerlinNoise = new PerlinNoise(this.random, IntStream.rangeClosed(-15, 0));
@@ -352,9 +352,11 @@ public final class CCNoiseBasedChunkGenerator extends ChunkGenerator {
         BlockState worldBlock;
         if (density > 0.0D) {
             worldBlock = this.defaultBlock;
-        } else if (y < this.getSeaLevel()) {
-            worldBlock = this.defaultFluid;
-        } else {
+        }
+//        else if (y < this.getSeaLevel()) {
+//            worldBlock = this.defaultFluid;
+//        }
+        else {
             worldBlock = AIR;
         }
 
@@ -470,7 +472,7 @@ public final class CCNoiseBasedChunkGenerator extends ChunkGenerator {
                     double y1x1z1 = zSliceDensities[1][dz + 1][dy + 1];
 
                     for (int chunkHeight = this.chunkHeight - 1; chunkHeight >= 0; --chunkHeight) {
-                        int yCoord = dy * this.chunkHeight + chunkHeight /* + this.settings.get().noiseSettings().minY()*/;
+                        int yCoord = dy * this.chunkHeight + chunkHeight + chunk.getMinBuildHeight()   /* + this.settings.get().noiseSettings().minY()*/;
                         int yLocal = yCoord & 15;
                         int ySectionIDX = protoChunk.getSectionIndex(yCoord);
                         if (protoChunk.getSectionIndex(topSection.bottomBlockY()) != ySectionIDX) {
@@ -578,7 +580,7 @@ public final class CCNoiseBasedChunkGenerator extends ChunkGenerator {
     }
 
     public int getSeaLevel() {
-        return ((NoiseGeneratorSettings) this.settings.get()).seaLevel();
+        return this.settings.get().seaLevel();
     }
 
     public List<MobSpawnSettings.SpawnerData> getMobsAt(Biome biome, StructureFeatureManager accessor, MobCategory group, BlockPos pos) {
