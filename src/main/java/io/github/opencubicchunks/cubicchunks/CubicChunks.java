@@ -2,6 +2,7 @@ package io.github.opencubicchunks.cubicchunks;
 
 import java.lang.reflect.InvocationTargetException;
 
+import io.github.opencubicchunks.cubicchunks.chunk.CCNoiseBasedChunkGenerator;
 import io.github.opencubicchunks.cubicchunks.chunk.IChunkManager;
 import io.github.opencubicchunks.cubicchunks.meta.EarlyConfig;
 import io.github.opencubicchunks.cubicchunks.network.PacketDispatcher;
@@ -54,10 +55,12 @@ public class CubicChunks implements ModInitializer {
         CCFeatures.init();
     }
 
+
     @Override
     public void onInitialize() {
         PacketDispatcher.register();
 
         Registry.register(Registry.BIOME_SOURCE, new ResourceLocation(MODID, "stripes"), StripedBiomeSource.CODEC);
+        Registry.register(Registry.CHUNK_GENERATOR, new ResourceLocation(MODID, "generator"), CCNoiseBasedChunkGenerator.CODEC);
     }
 }

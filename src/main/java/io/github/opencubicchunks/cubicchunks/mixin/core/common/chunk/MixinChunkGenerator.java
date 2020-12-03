@@ -323,13 +323,10 @@ public abstract class MixinChunkGenerator implements ICubeGenerator {
                     float dx0 = (float) Mth.lerp(x * 0.25, d00, d10);
                     float dx1 = (float) Mth.lerp(x * 0.25, d01, d11);
                     int dx = sectionX * 4 + x;
-                    int blockX = cube.getCubePos().minCubeX() + (dx);
-
 
                     for (int z = 0; z < 4; z++) {
                         int height = (int) Mth.lerp(z * 0.25, dx0, dx1);
                         int dz = sectionZ * 4 + z;
-                        int blockZ = cube.getCubePos().minCubeZ() + (dz);
 
                         storedHeights[dx + dz * IBigCube.DIAMETER_IN_BLOCKS] = height;
 
@@ -337,6 +334,7 @@ public abstract class MixinChunkGenerator implements ICubeGenerator {
                             int blockY = cube.getCubePos().minCubeY() + dy;
 
                             LevelChunkSection cubeSection = cube.getCubeSections()[blockToIndex(dx, dy, dz)];
+
                             if (cubeSection == null) {
                                 cubeSection = new LevelChunkSection(blockToSection(blockY));
                                 cube.getCubeSections()[blockToIndex(dx, dy, dz)] = cubeSection;

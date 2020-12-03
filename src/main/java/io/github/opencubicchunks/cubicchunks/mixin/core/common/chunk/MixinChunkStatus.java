@@ -12,6 +12,7 @@ import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.ICubeGenerator;
 import io.github.opencubicchunks.cubicchunks.chunk.biome.ColumnBiomeContainer;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.CubePrimer;
+import io.github.opencubicchunks.cubicchunks.chunk.cube.FillFromNoiseProtoChunkHelper;
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.StructureFeatureManagerAccess;
 import io.github.opencubicchunks.cubicchunks.world.CubeWorldGenRegion;
 import io.github.opencubicchunks.cubicchunks.world.server.IServerWorldLightManager;
@@ -24,6 +25,7 @@ import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.ChunkGenerator;
 import net.minecraft.world.level.chunk.ChunkStatus;
 import net.minecraft.world.level.chunk.ProtoChunk;
+import net.minecraft.world.level.chunk.UpgradeData;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureManager;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -147,13 +149,28 @@ public class MixinChunkStatus {
     )
     private static void cubicChunksNoise(ServerLevel world, ChunkGenerator generator, List<ChunkAccess> neighbors, ChunkAccess chunk,
                                          CallbackInfo ci) {
-
         ci.cancel();
         if (chunk instanceof IBigCube) {
-            // generator.makeBase(new CubeWorldGenRegion(world, unsafeCast(neighbors)), chunk);
-            // structureFeatureManager == getStructureManager
-            ((ICubeGenerator) generator).makeBase(new CubeWorldGenRegion(world, unsafeCast(neighbors)), world.structureFeatureManager(), (IBigCube) chunk);
-        }
+//            if (generator instanceof CCNoiseBasedChunkGenerator) {
+                CubeWorldGenRegion cubeWorldGenRegion = new CubeWorldGenRegion(world, unsafeCast(neighbors));
+                StructureFeatureManager structureFeatureManager =
+                    new StructureFeatureManager(cubeWorldGenRegion, ((StructureFeatureManagerAccess) world.structureFeatureManager()).getWorldGenSettings());
+                for (int columnX = 0; columnX < IBigCube.DIAMETER_IN_SECTIONS; columnX++) {
+                    for (int columnZ = 0; columnZ < IBigCube.DIAMETER_IN_SECTIONS; columnZ++) {
+                        FillFromNoiseProtoChunkHelper fillFromNoiseProtoChunkHelper = new FillFromNoiseProtoChunkHelper(((IBigCube) chunk).getCubePos().asChunkPos(columnX, columnZ),
+                            UpgradeData.EMPTY,
+                            world,
+                            (CubePrimer) chunk, columnX,
+                            columnZ);
+
+                        generator.fillFromNoise(cubeWorldGenRegion, structureFeatureManager, fillFromNoiseProtoChunkHelper);
+                    }
+                }
+            }
+//            else {
+//                ((ICubeGenerator) generator).makeBase(new CubeWorldGenRegion(world, unsafeCast(neighbors)), world.structureFeatureManager(), (IBigCube) chunk);
+//            }
+//        }
     }
 
     @SuppressWarnings({ "UnresolvedMixinReference", "target" })

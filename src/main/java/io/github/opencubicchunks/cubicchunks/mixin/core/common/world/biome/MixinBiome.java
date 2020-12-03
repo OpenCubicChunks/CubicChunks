@@ -79,7 +79,7 @@ public class MixinBiome implements BiomeGetter {
             }
 
             if (featureBlacklist.isEmpty()) {
-                getBlacklist(region);
+                getBlacklist();
             }
 
 
@@ -116,7 +116,7 @@ public class MixinBiome implements BiomeGetter {
     }
 
     //TODO: Remove this blacklist.
-    private void getBlacklist(CubeWorldGenRegion cubeWorldGenRegion) {
+    private void getBlacklist() {
 
         List<ResourceLocation> resourceLocationList = Arrays.asList(
 
