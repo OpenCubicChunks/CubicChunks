@@ -340,6 +340,7 @@ public abstract class MixinChunkGenerator implements ICubeGenerator {
                                 cube.getCubeSections()[blockToIndex(dx, dy, dz)] = cubeSection;
                             }
 
+                            getMinAndMaxNoise(height);
                             if (blockY < height) {
                                 cubeSection.setBlockState(dx & 0xF, dy & 0xF, dz & 0xF,
                                     Blocks.STONE.defaultBlockState(), false);
@@ -351,6 +352,21 @@ public abstract class MixinChunkGenerator implements ICubeGenerator {
                     }
                 }
             }
+        }
+    }
+
+    private static double min = 1000;
+    private static double max = -11111;
+
+    private void getMinAndMaxNoise(double noise) {
+        if (noise < min) {
+            min = noise;
+            CubicChunks.LOGGER.info("Min height: " + min);
+        }
+
+        if (noise > max) {
+            max = noise;
+            CubicChunks.LOGGER.info("Max height: " + max);
         }
     }
 

@@ -2,6 +2,7 @@ package io.github.opencubicchunks.cubicchunks.chunk;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import io.github.opencubicchunks.cubicchunks.CubicChunks;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectList;
 import it.unimi.dsi.fastutil.objects.ObjectListIterator;
@@ -472,9 +473,9 @@ public final class CCNoiseBasedChunkGenerator extends ChunkGenerator {
                     double y1x1z1 = zSliceDensities[1][dz + 1][dy + 1];
 
                     for (int chunkHeight = this.chunkHeight - 1; chunkHeight >= 0; --chunkHeight) {
-                        int yCoord = dy * this.chunkHeight + chunkHeight + chunk.getMinBuildHeight()   /* + this.settings.get().noiseSettings().minY()*/;
-                        int yLocal = yCoord & 15;
-                        int ySectionIDX = protoChunk.getSectionIndex(yCoord);
+                        int blockY = dy * this.chunkHeight + chunkHeight + chunk.getMinBuildHeight()   /* + this.settings.get().noiseSettings().minY()*/;
+                        int yLocal = blockY & 15;
+                        int ySectionIDX = protoChunk.getSectionIndex(blockY);
                         if (protoChunk.getSectionIndex(topSection.bottomBlockY()) != ySectionIDX) {
                             topSection.release();
                             topSection = protoChunk.getOrCreateSection(ySectionIDX);
@@ -506,7 +507,7 @@ public final class CCNoiseBasedChunkGenerator extends ChunkGenerator {
 //                                    StructurePiece structurePiece = structurePieceIterator.next();
 //                                    BoundingBox structurePieceBoundingBox = structurePiece.getBoundingBox();
 //                                    int xDistance = Math.max(0, Math.max(structurePieceBoundingBox.x0 - xCoord, xCoord - structurePieceBoundingBox.x1));
-//                                    int yDistance = yCoord - (structurePieceBoundingBox.y0 + (structurePiece instanceof PoolElementStructurePiece ?
+//                                    int yDistance = blockY - (structurePieceBoundingBox.y0 + (structurePiece instanceof PoolElementStructurePiece ?
 //                                        ((PoolElementStructurePiece) structurePiece).getGroundLevelDelta() : 0));
 //                                    int zDistance = Math.max(0, Math.max(structurePieceBoundingBox.z0 - zCoord, zCoord - structurePieceBoundingBox.z1));
 //                                    density += getContribution(xDistance, yDistance, zDistance) * 0.8D;
@@ -517,24 +518,33 @@ public final class CCNoiseBasedChunkGenerator extends ChunkGenerator {
 //                                while (jigsawJunctionIterator.hasNext()) {
 //                                    JigsawJunction jigsawJunction = jigsawJunctionIterator.next();
 //                                    int xDistance = xCoord - jigsawJunction.getSourceX();
-//                                    int yDistance = yCoord - jigsawJunction.getSourceGroundY();
+//                                    int yDistance = blockY - jigsawJunction.getSourceGroundY();
 //                                    int zDistance = zCoord - jigsawJunction.getSourceZ();
 //                                    density += getContribution(xDistance, yDistance, zDistance) * 0.4D;
 //                                }
 //
 //                                jigsawJunctionIterator.back(jigsawJunctionsList.size());
-                                BlockState baseState = this.generateBaseState(density, yCoord);
+//                                BlockState baseState = this.generateBaseState(density, blockY);
 
                                 //Light engine
 //                                if (baseState != AIR) {
 //                                    if (baseState.getLightEmission() != 0) {
-//                                        mutableBlockPos.set(xCoord, yCoord, zCoord);
+//                                        mutableBlockPos.set(xCoord, blockY, zCoord);
 //                                        cubePrimer.addLight(mutableBlockPos);
 //                                    }
 //
-                                topSection.setBlockState(xLocal, yLocal, zLocal, baseState, false);
-//                                    oceanFloorHeightmap.update(xLocal, yCoord, zLocal, baseState);
-//                                    worldSurfaceHeightmap.update(xLocal, yCoord, zLocal, baseState);
+                                getMinAndMaxNoise(height);
+                                if (blockY < height) {
+                                    topSection.setBlockState(xLocal, yLocal, zLocal,
+                                        Blocks.STONE.defaultBlockState(), false);
+                                } else if (blockY <= CubicChunks.SEA_LEVEL) {
+                                    topSection.setBlockState(xLocal, yLocal, zLocal,
+                                        Blocks.WATER.defaultBlockState(), false);
+                                }
+
+//                                topSection.setBlockState(xLocal, yLocal, zLocal, baseState, false);
+//                                    oceanFloorHeightmap.update(xLocal, blockY, zLocal, baseState);
+//                                    worldSurfaceHeightmap.update(xLocal, blockY, zLocal, baseState);
 //                                }
                             }
                         }
@@ -546,6 +556,21 @@ public final class CCNoiseBasedChunkGenerator extends ChunkGenerator {
             double[][] temp = zSliceDensities[0];
             zSliceDensities[0] = zSliceDensities[1];
             zSliceDensities[1] = temp;
+        }
+    }
+
+    static double min = 1000;
+    static double max = -11111;
+
+    private void getMinAndMaxNoise(double noise) {
+        if (noise < min) {
+            min = noise;
+            CubicChunks.LOGGER.info("Min height: " + min);
+        }
+
+        if (noise > max) {
+            max = noise;
+            CubicChunks.LOGGER.info("Max height: " + max);
         }
     }
 

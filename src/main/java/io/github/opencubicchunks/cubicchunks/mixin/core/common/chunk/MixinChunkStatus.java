@@ -13,6 +13,7 @@ import io.github.opencubicchunks.cubicchunks.chunk.ICubeGenerator;
 import io.github.opencubicchunks.cubicchunks.chunk.biome.ColumnBiomeContainer;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.CubePrimer;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.FillFromNoiseProtoChunkHelper;
+import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.StructureFeatureManagerAccess;
 import io.github.opencubicchunks.cubicchunks.world.CubeWorldGenRegion;
 import io.github.opencubicchunks.cubicchunks.world.server.IServerWorldLightManager;
@@ -152,25 +153,35 @@ public class MixinChunkStatus {
         ci.cancel();
         if (chunk instanceof IBigCube) {
 //            if (generator instanceof CCNoiseBasedChunkGenerator) {
-                CubeWorldGenRegion cubeWorldGenRegion = new CubeWorldGenRegion(world, unsafeCast(neighbors));
-                StructureFeatureManager structureFeatureManager =
-                    new StructureFeatureManager(cubeWorldGenRegion, ((StructureFeatureManagerAccess) world.structureFeatureManager()).getWorldGenSettings());
-                for (int columnX = 0; columnX < IBigCube.DIAMETER_IN_SECTIONS; columnX++) {
-                    for (int columnZ = 0; columnZ < IBigCube.DIAMETER_IN_SECTIONS; columnZ++) {
-                        FillFromNoiseProtoChunkHelper fillFromNoiseProtoChunkHelper = new FillFromNoiseProtoChunkHelper(((IBigCube) chunk).getCubePos().asChunkPos(columnX, columnZ),
-                            UpgradeData.EMPTY,
-                            world,
-                            (CubePrimer) chunk, columnX,
-                            columnZ);
+            CubeWorldGenRegion cubeWorldGenRegion = new CubeWorldGenRegion(world, unsafeCast(neighbors));
+            StructureFeatureManager structureFeatureManager =
+                new StructureFeatureManager(cubeWorldGenRegion, ((StructureFeatureManagerAccess) world.structureFeatureManager()).getWorldGenSettings());
+            for (int columnX = 0; columnX < IBigCube.DIAMETER_IN_SECTIONS; columnX++) {
+                for (int columnZ = 0; columnZ < IBigCube.DIAMETER_IN_SECTIONS; columnZ++) {
+                    FillFromNoiseProtoChunkHelper fillFromNoiseProtoChunkHelper = new FillFromNoiseProtoChunkHelper(((IBigCube) chunk).getCubePos().asChunkPos(columnX, columnZ),
+                        UpgradeData.EMPTY,
+                        world,
+                        (CubePrimer) chunk, columnX,
+                        columnZ);
 
-                        generator.fillFromNoise(cubeWorldGenRegion, structureFeatureManager, fillFromNoiseProtoChunkHelper);
-                    }
+                    CubePrimer cubeAbove = new CubePrimer(CubePos.of(((IBigCube) chunk).getCubePos().getX(), ((IBigCube) chunk).getCubePos().getY() + 1,
+                        ((IBigCube) chunk).getCubePos().getZ()), UpgradeData.EMPTY, cubeWorldGenRegion);
+
+                    FillFromNoiseProtoChunkHelper fillFromNoiseProtoChunkHelperCubeAbove = new FillFromNoiseProtoChunkHelper(cubeAbove.getCubePos().asChunkPos(columnX, columnZ),
+                        UpgradeData.EMPTY,
+                        world,
+                        (CubePrimer) chunk, columnX,
+                        columnZ);
+
+                    generator.fillFromNoise(cubeWorldGenRegion, structureFeatureManager, fillFromNoiseProtoChunkHelper);
+                    generator.fillFromNoise(cubeWorldGenRegion, structureFeatureManager, fillFromNoiseProtoChunkHelperCubeAbove);
                 }
             }
 //            else {
 //                ((ICubeGenerator) generator).makeBase(new CubeWorldGenRegion(world, unsafeCast(neighbors)), world.structureFeatureManager(), (IBigCube) chunk);
 //            }
 //        }
+        }
     }
 
     @SuppressWarnings({ "UnresolvedMixinReference", "target" })
