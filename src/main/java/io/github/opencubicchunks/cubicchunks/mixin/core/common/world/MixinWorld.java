@@ -17,7 +17,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public abstract class MixinWorld implements ICubicWorld, LevelHeightAccessor {
 
     @Override public int getHeight() {
-        return 20000000;
+        return 40000000;
     }
 
     @Override public int getMinBuildHeight() {
