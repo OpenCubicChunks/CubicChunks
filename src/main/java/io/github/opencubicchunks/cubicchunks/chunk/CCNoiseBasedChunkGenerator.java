@@ -109,13 +109,13 @@ public final class CCNoiseBasedChunkGenerator extends ChunkGenerator {
         NoiseGeneratorSettings noiseGeneratorSettings = supplier.get();
         this.settings = supplier;
         NoiseSettings noiseSettings = noiseGeneratorSettings.noiseSettings();
-        this.height = /*noiseSettings.height()*/ IBigCube.DIAMETER_IN_BLOCKS; //256 in vanilla
+        this.height = /*noiseSettings.height()*/ IBigCube.DIAMETER_IN_BLOCKS/*!*/; /*!*/ //256 in vanilla
         this.chunkHeight = noiseSettings.noiseSizeVertical() * 4; //8 in vanilla
         this.chunkWidth = noiseSettings.noiseSizeHorizontal() * 4; //4 in vanilla
         this.defaultBlock = noiseGeneratorSettings.getDefaultBlock(); //Stone
         this.defaultFluid = noiseGeneratorSettings.getDefaultFluid(); //Water
         this.chunkSizeX = 16 / this.chunkWidth; //4 in vanilla
-        this.chunkSizeY = /*noiseSettings.height()*/ IBigCube.DIAMETER_IN_BLOCKS / this.chunkHeight; //32 in vanilla
+        this.chunkSizeY = /*noiseSettings.height()*/ IBigCube.DIAMETER_IN_BLOCKS/*!*/ / this.chunkHeight; //32 in vanilla
         this.chunkSizeZ = 16 / this.chunkWidth; //4 in vanilla
         this.random = new WorldgenRandom(seed);
         this.minLimitPerlinNoise = new PerlinNoise(this.random, IntStream.rangeClosed(-15, 0));
