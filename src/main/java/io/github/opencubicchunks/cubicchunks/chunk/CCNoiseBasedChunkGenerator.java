@@ -198,7 +198,7 @@ public final class CCNoiseBasedChunkGenerator extends ChunkGenerator {
 //      return ds;
 //   }
 
-    private void fillNoiseColumn(double[] densities, int x, int z, ChunkAccess chunkAccess) {
+    private void fillNoiseColumn(double[] densities, int x, int z, ChunkAccess chunkAccess/*!*/) {
         NoiseSettings noiseSettings = this.settings.get().noiseSettings();
         double biomeDensityOffset;
         double biomeDensityFactor;
@@ -251,12 +251,12 @@ public final class CCNoiseBasedChunkGenerator extends ChunkGenerator {
         double randomOffset = noiseSettings.randomDensityOffset() ? this.getRandomDensity(x, z) : 0.0D;
         double densityFactor = noiseSettings.densityFactor();
         double densityOffset = noiseSettings.densityOffset();
-        int ySize = Mth.intFloorDiv(/*noiseSettings.minY() or 0*/ chunkAccess.getMinBuildHeight(), this.chunkHeight); //Size in blocks
+        int ySize = Mth.intFloorDiv(/*noiseSettings.minY() or 0*/ chunkAccess.getMinBuildHeight() /*!*/, this.chunkHeight); //Size in blocks
 
         for (int ySection = 0; ySection <= this.chunkSizeY; ++ySection) {
-            int y = ySection + ( ySize);
+            int y = ySection + (ySize);
             double height = this.sampleAndClampNoise(x, y, z, lowAndHighHorizontalFrequency, lowAndHighVerticalFrequency, horizontalSelectorFrequency, verticalSelectorFrequency);
-            double baseYGradient = 1.0D - (double) y * 2.0D / (double) 32 + randomOffset; //TODO: 32 constant must change w/ datapacks.
+            double baseYGradient = 1.0D - (double) y * 2.0D / (double)/*this.chunkSizeY*/ 32/*!*/ + randomOffset; //TODO: 32 constant must change w/ datapacks.
             double configuredYGradient = baseYGradient * densityFactor + densityOffset;
             double biomeYGradient = (configuredYGradient + biomeDensityOffset) * biomeDensityFactor;
 
@@ -266,7 +266,7 @@ public final class CCNoiseBasedChunkGenerator extends ChunkGenerator {
                 height += biomeYGradient;
             }
 
-            //TODO: Datapacks
+            //TODO: Datapacks /*!*/
 //            double slideFraction;
 //            if (topSlideSettingSize > 0.0D) {
 //                slideFraction = ((double) (this.chunkSizeY - y) - topSlideOffset) / topSlideSettingSize;
@@ -278,14 +278,14 @@ public final class CCNoiseBasedChunkGenerator extends ChunkGenerator {
 //                height = Mth.clampedLerp(bottomSlideTarget, height, slideFraction);
 //            }
 
-            densities[ySection] = height; //Fills with an extreme and dilated value
+            densities[ySection] = height;
         }
 
     }
 
     //Not really used in current version. Implemented wrong by mojang.
     private double getRandomDensity(int x, int z) {
-        double depthNoise = this.depthNoise.getValue(x * 200, 10.0D, (double) (z * 200), 1.0D, 0.0D, true);
+        double depthNoise = this.depthNoise.getValue(x * 200, 10.0D, z * 200, 1.0D, 0.0D, true);
         double f;
         if (depthNoise < 0.0D) {
             f = -depthNoise * 0.3D;
@@ -468,7 +468,7 @@ public final class CCNoiseBasedChunkGenerator extends ChunkGenerator {
                     double y1x1z1 = zSliceDensities[1][dz + 1][dy + 1];
 
                     for (int chunkHeight = this.chunkHeight - 1; chunkHeight >= 0; --chunkHeight) {
-                        int blockY = dy * this.chunkHeight + chunkHeight + chunk.getMinBuildHeight()   /* + this.settings.get().noiseSettings().minY()*/;
+                        int blockY = dy * this.chunkHeight + chunkHeight + chunk.getMinBuildHeight()/*!*/   /* + this.settings.get().noiseSettings().minY()*/;
                         int yLocal = blockY & 15;
                         int ySectionIDX = protoChunk.getSectionIndex(blockY);
                         if (protoChunk.getSectionIndex(topSection.bottomBlockY()) != ySectionIDX) {
