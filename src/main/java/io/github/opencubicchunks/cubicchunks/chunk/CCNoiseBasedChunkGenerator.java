@@ -82,7 +82,7 @@ public final class CCNoiseBasedChunkGenerator extends ChunkGenerator {
     private static final BlockState AIR = Blocks.AIR.defaultBlockState();
     private final int chunkHeight;
     private final int chunkWidth;
-    private int chunkSizeX; //Not final as this needs to move up and down
+    private final int chunkSizeX;
     private final int chunkSizeY;
     private final int chunkSizeZ;
     protected final WorldgenRandom random;
@@ -109,7 +109,7 @@ public final class CCNoiseBasedChunkGenerator extends ChunkGenerator {
         NoiseGeneratorSettings noiseGeneratorSettings = supplier.get();
         this.settings = supplier;
         NoiseSettings noiseSettings = noiseGeneratorSettings.noiseSettings();
-        this.height = /*noiseSettings.height()*/ IBigCube.DIAMETER_IN_BLOCKS/*!*/; /*!*/ //256 in vanilla
+        this.height = /*noiseSettings.height()*/ IBigCube.DIAMETER_IN_BLOCKS/*!*/; //256 in vanilla
         this.chunkHeight = noiseSettings.noiseSizeVertical() * 4; //8 in vanilla
         this.chunkWidth = noiseSettings.noiseSizeHorizontal() * 4; //4 in vanilla
         this.defaultBlock = noiseGeneratorSettings.getDefaultBlock(); //Stone
@@ -221,6 +221,11 @@ public final class CCNoiseBasedChunkGenerator extends ChunkGenerator {
                     Biome biome = this.biomeSource.getNoiseBiome(x + biomeX, seaLevel, z + biomeZ);
                     float rawDepth = biome.getDepth();
                     float rawScale = biome.getScale();
+
+                    if (noiseSettings.isAmplified() && rawDepth > 0.0F) {
+                        rawDepth = 1.0F + rawDepth * 2.0F;
+                        rawScale = 1.0F + rawScale * 4.0F;
+                    }
 
                     float weightFactor = rawDepth > mainHeight ? 0.5F : 1.0F;
                     float biomeWeight = weightFactor * BIOME_WEIGHTS[biomeX + 2 + (biomeZ + 2) * 5] / (rawDepth + 2.0F);
