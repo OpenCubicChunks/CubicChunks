@@ -110,12 +110,12 @@ public final class CCNoiseBasedChunkGenerator extends ChunkGenerator {
         this.settings = supplier;
         NoiseSettings noiseSettings = noiseGeneratorSettings.noiseSettings();
         this.height = /*noiseSettings.height()*/ IBigCube.DIAMETER_IN_BLOCKS; //256 in vanilla
-        this.chunkHeight = noiseSettings.noiseSizeVertical() * (IBigCube.DIAMETER_IN_SECTIONS * 2); //8 in vanilla
+        this.chunkHeight = noiseSettings.noiseSizeVertical() * 4; //8 in vanilla
         this.chunkWidth = noiseSettings.noiseSizeHorizontal() * 4; //4 in vanilla
         this.defaultBlock = noiseGeneratorSettings.getDefaultBlock(); //Stone
         this.defaultFluid = noiseGeneratorSettings.getDefaultFluid(); //Water
         this.chunkSizeX = 16 / this.chunkWidth; //4 in vanilla
-        this.chunkSizeY = /*noiseSettings.height()*/ IBigCube.DIAMETER_IN_BLOCKS / this.chunkHeight; //16 in vanilla
+        this.chunkSizeY = /*noiseSettings.height()*/ IBigCube.DIAMETER_IN_BLOCKS / this.chunkHeight; //32 in vanilla
         this.chunkSizeZ = 16 / this.chunkWidth; //4 in vanilla
         this.random = new WorldgenRandom(seed);
         this.minLimitPerlinNoise = new PerlinNoise(this.random, IntStream.rangeClosed(-15, 0));
@@ -198,7 +198,7 @@ public final class CCNoiseBasedChunkGenerator extends ChunkGenerator {
 //      return ds;
 //   }
 
-    private void fillNoiseColumn(double[] densities, int x, int z, ChunkAccess chunk) {
+    private void fillNoiseColumn(double[] densities, int x, int z, ChunkAccess chunkAccess) {
         NoiseSettings noiseSettings = this.settings.get().noiseSettings();
         double biomeDensityOffset;
         double biomeDensityFactor;
@@ -219,27 +219,23 @@ public final class CCNoiseBasedChunkGenerator extends ChunkGenerator {
             for (int biomeX = -2; biomeX <= 2; ++biomeX) {
                 for (int biomeZ = -2; biomeZ <= 2; ++biomeZ) {
                     Biome biome = this.biomeSource.getNoiseBiome(x + biomeX, seaLevel, z + biomeZ);
-                    float depth = biome.getDepth();
-                    float scale = biome.getScale();
-                    if (noiseSettings.isAmplified() && depth > 0.0F) {
-                        depth = 1.0F + depth * 2.0F;
-                        scale = 1.0F + scale * 4.0F;
-                    }
+                    float rawDepth = biome.getDepth();
+                    float rawScale = biome.getScale();
 
-                    float weightFactor = depth > mainHeight ? 0.5F : 1.0F;
-                    float biomeWeight = weightFactor * BIOME_WEIGHTS[biomeX + 2 + (biomeZ + 2) * 5] / (depth + 2.0F);
-                    totalDepth += depth * biomeWeight;
-                    totalScale += scale * biomeWeight;
+                    float weightFactor = rawDepth > mainHeight ? 0.5F : 1.0F;
+                    float biomeWeight = weightFactor * BIOME_WEIGHTS[biomeX + 2 + (biomeZ + 2) * 5] / (rawDepth + 2.0F);
+                    totalDepth += rawDepth * biomeWeight;
+                    totalScale += rawScale * biomeWeight;
                     totalWeight += biomeWeight;
                 }
             }
 
-            float rawScale = totalScale / totalWeight;
             float rawDepth = totalDepth / totalWeight;
-            double biomeScale = rawScale * 0.5F - 0.125F;
-            double biomeDepth = rawDepth * 0.9F + 0.1F;
-            biomeDensityOffset = biomeScale * 0.265625D;
-            biomeDensityFactor = 96.0D / biomeDepth;
+            float rawScale = totalScale / totalWeight;
+            double biomeDepth = rawDepth * 0.5F - 0.125F;
+            double biomeScale = rawScale * 0.9F + 0.1F;
+            biomeDensityOffset = biomeDepth * 0.265625D;
+            biomeDensityFactor = 96.0D / biomeScale;
         }
 
         double lowAndHighHorizontalFrequency = 684.412D * noiseSettings.noiseSamplingSettings().xzScale(); //Low and High horizontal frequency.
@@ -255,12 +251,12 @@ public final class CCNoiseBasedChunkGenerator extends ChunkGenerator {
         double randomOffset = noiseSettings.randomDensityOffset() ? this.getRandomDensity(x, z) : 0.0D;
         double densityFactor = noiseSettings.densityFactor();
         double densityOffset = noiseSettings.densityOffset();
-        int ySize = Mth.intFloorDiv(/*noiseSettings.minY() or 0*/ 0, this.chunkHeight); //Size in blocks
+        int ySize = Mth.intFloorDiv(/*noiseSettings.minY() or 0*/ chunkAccess.getMinBuildHeight(), this.chunkHeight); //Size in blocks
 
         for (int ySection = 0; ySection <= this.chunkSizeY; ++ySection) {
-            int noiseY = ySection + (ySize);
-            double height = this.sampleAndClampNoise(x, noiseY, z, lowAndHighHorizontalFrequency, lowAndHighVerticalFrequency, horizontalSelectorFrequency, verticalSelectorFrequency);
-            double baseYGradient = 1.0D - (double) noiseY * 2.0D / (double) this.chunkSizeY + randomOffset;
+            int y = ySection + ( ySize);
+            double height = this.sampleAndClampNoise(x, y, z, lowAndHighHorizontalFrequency, lowAndHighVerticalFrequency, horizontalSelectorFrequency, verticalSelectorFrequency);
+            double baseYGradient = 1.0D - (double) y * 2.0D / (double) 32 + randomOffset; //TODO: 32 constant must change w/ datapacks.
             double configuredYGradient = baseYGradient * densityFactor + densityOffset;
             double biomeYGradient = (configuredYGradient + biomeDensityOffset) * biomeDensityFactor;
 
@@ -270,16 +266,17 @@ public final class CCNoiseBasedChunkGenerator extends ChunkGenerator {
                 height += biomeYGradient;
             }
 
-            double slideFraction;
-            if (topSlideSettingSize > 0.0D) {
-                slideFraction = ((double) (this.chunkSizeY - ySection) - topSlideOffset) / topSlideSettingSize;
-                height = Mth.clampedLerp(topSlideSettingTarget, height, slideFraction);
-            }
-
-            if (bottomSlideSize > 0.0D) {
-                slideFraction = ((double) ySection - bottomSlideOffset) / bottomSlideSize;
-                height = Mth.clampedLerp(bottomSlideTarget, height, slideFraction);
-            }
+            //TODO: Datapacks
+//            double slideFraction;
+//            if (topSlideSettingSize > 0.0D) {
+//                slideFraction = ((double) (this.chunkSizeY - y) - topSlideOffset) / topSlideSettingSize;
+//                height = Mth.clampedLerp(topSlideSettingTarget, height, slideFraction);
+//            }
+//
+//            if (bottomSlideSize > 0.0D) {
+//                slideFraction = ((double) y - bottomSlideOffset) / bottomSlideSize;
+//                height = Mth.clampedLerp(bottomSlideTarget, height, slideFraction);
+//            }
 
             densities[ySection] = height; //Fills with an extreme and dilated value
         }
@@ -353,11 +350,9 @@ public final class CCNoiseBasedChunkGenerator extends ChunkGenerator {
         BlockState worldBlock;
         if (density > 0.0D) {
             worldBlock = this.defaultBlock;
-        }
-//        else if (y < this.getSeaLevel()) {
-//            worldBlock = this.defaultFluid;
-//        }
-        else {
+        } else if (y < this.getSeaLevel()) {
+            worldBlock = this.defaultFluid;
+        } else {
             worldBlock = AIR;
         }
 
@@ -445,8 +440,8 @@ public final class CCNoiseBasedChunkGenerator extends ChunkGenerator {
         }
 
         ProtoChunk protoChunk = (ProtoChunk) chunk;
-//        Heightmap oceanFloorHeightmap = cubePrimer.getOrCreateHeightmapUnprimed(Heightmap.Types.OCEAN_FLOOR_WG);
-//        Heightmap worldSurfaceHeightmap = cubePrimer.getOrCreateHeightmapUnprimed(Heightmap.Types.WORLD_SURFACE_WG);
+//        Heightmap oceanFloorHeightmap = protoChunk.getOrCreateHeightmapUnprimed(Heightmap.Types.OCEAN_FLOOR_WG);
+//        Heightmap worldSurfaceHeightmap = protoChunk.getOrCreateHeightmapUnprimed(Heightmap.Types.WORLD_SURFACE_WG);
         BlockPos.MutableBlockPos mutableBlockPos = new BlockPos.MutableBlockPos();
         ObjectListIterator<StructurePiece> structurePieceIterator = structurePiecesList.iterator();
         ObjectListIterator<JigsawJunction> jigsawJunctionIterator = jigsawJunctionsList.iterator();
@@ -502,7 +497,7 @@ public final class CCNoiseBasedChunkGenerator extends ChunkGenerator {
                                 double height = Mth.lerp(zFraction, dx0, dx1);
                                 double density = Mth.clamp(height / 200.0D, -1.0D, 1.0D);
 
-//                                density = density / 2.0D - density * density * density / 24.0D;
+                                density = density / 2.0D - density * density * density / 24.0D;
 //                                while (structurePieceIterator.hasNext()) {
 //                                    StructurePiece structurePiece = structurePieceIterator.next();
 //                                    BoundingBox structurePieceBoundingBox = structurePiece.getBoundingBox();
@@ -524,7 +519,7 @@ public final class CCNoiseBasedChunkGenerator extends ChunkGenerator {
 //                                }
 //
 //                                jigsawJunctionIterator.back(jigsawJunctionsList.size());
-//                                BlockState baseState = this.generateBaseState(density, blockY);
+                                BlockState baseState = this.generateBaseState(density, blockY);
 
                                 //Light engine
 //                                if (baseState != AIR) {
@@ -533,15 +528,10 @@ public final class CCNoiseBasedChunkGenerator extends ChunkGenerator {
 //                                        cubePrimer.addLight(mutableBlockPos);
 //                                    }
 //
-                                getMinAndMaxNoise(height);
+//                                getMinAndMaxNoise(height);
 
-                                if (blockY < height) {
-                                    topSection.setBlockState(xLocal, yLocal, zLocal,
-                                        Blocks.STONE.defaultBlockState(), false);
-                                } else if (blockY <= CubicChunks.SEA_LEVEL) {
-                                    topSection.setBlockState(xLocal, yLocal, zLocal,
-                                        Blocks.WATER.defaultBlockState(), false);
-                                }
+                                topSection.setBlockState(xLocal, yLocal, zLocal, baseState, false);
+
 
 //                                topSection.setBlockState(xLocal, yLocal, zLocal, baseState, false);
 //                                    oceanFloorHeightmap.update(xLocal, blockY, zLocal, baseState);

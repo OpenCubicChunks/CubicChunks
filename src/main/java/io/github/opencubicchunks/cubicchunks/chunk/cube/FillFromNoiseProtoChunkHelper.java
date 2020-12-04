@@ -13,30 +13,18 @@ import net.minecraft.world.level.levelgen.Heightmap;
 
 public class FillFromNoiseProtoChunkHelper extends ProtoChunk {
 
-    private final int relativeColumnX;
-    private final int relativeColumnZ;
-
     private final CubePrimer cubePrimer;
 
-
-    public FillFromNoiseProtoChunkHelper(ChunkPos chunkPos, UpgradeData upgradeData, LevelHeightAccessor levelHeightAccessor, CubePrimer cubePrimer, int relativeColumnX, int relativeColumnZ) {
+    public FillFromNoiseProtoChunkHelper(ChunkPos chunkPos, UpgradeData upgradeData, LevelHeightAccessor levelHeightAccessor, CubePrimer cubePrimer) {
         super(chunkPos, upgradeData, levelHeightAccessor);
         this.cubePrimer = cubePrimer;
-        this.relativeColumnX = relativeColumnX;
-        this.relativeColumnZ = relativeColumnZ;
     }
 
-
-    @Override public ChunkPos getPos() {
-        return this.cubePrimer.getCubePos().asChunkPos(relativeColumnX, relativeColumnZ);
-    }
-
-    @Override public LevelChunkSection getOrCreateSection(int y) {
+    @Override public LevelChunkSection getOrCreateSection(int sectionIndex) {
         LevelChunkSection[] cubeSections = this.cubePrimer.getCubeSections();
-        int sectionIndex = this.getSectionIndex(y);
 
         if (cubeSections[sectionIndex] == LevelChunk.EMPTY_SECTION) {
-            cubeSections[sectionIndex] = new LevelChunkSection(this.getSectionYFromSectionIndex(y));
+            cubeSections[sectionIndex] = new LevelChunkSection(this.getSectionYFromSectionIndex(sectionIndex));
         }
         return cubeSections[sectionIndex];
     }
@@ -46,21 +34,20 @@ public class FillFromNoiseProtoChunkHelper extends ProtoChunk {
     }
 
 
-
-//    @Override public int getSectionsCount() {
-//        return IBigCube.DIAMETER_IN_SECTIONS;
-//    }
-
     @Override public int getSectionIndex(int y) {
-        return Coords.sectionToIndex(relativeColumnX, Coords.blockToSection(y), relativeColumnZ);
+        return Coords.sectionToIndex(getPos().x, Coords.blockToSection(y), getPos().z);
     }
 
     @Override public int getMinBuildHeight() {
         return cubePrimer.getCubePos().minCubeY();
     }
 
-    @Override public int getMaxBuildHeight() {
-        return cubePrimer.getCubePos().maxCubeY();
+    @Override public int getSectionYFromSectionIndex(int sectionIndex) {
+        return cubePrimer.getCubePos().asSectionPos().getY() + Coords.indexToY(sectionIndex);
+    }
+
+    @Override public int getHeight() {
+        return IBigCube.DIAMETER_IN_BLOCKS;
     }
 
     @Override public void addLight(BlockPos pos) {

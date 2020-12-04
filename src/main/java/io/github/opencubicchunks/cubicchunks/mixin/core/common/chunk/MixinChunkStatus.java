@@ -154,27 +154,28 @@ public class MixinChunkStatus {
         if (chunk instanceof IBigCube) {
 //            if (generator instanceof CCNoiseBasedChunkGenerator) {
             CubeWorldGenRegion cubeWorldGenRegion = new CubeWorldGenRegion(world, unsafeCast(neighbors));
+
             StructureFeatureManager structureFeatureManager =
                 new StructureFeatureManager(cubeWorldGenRegion, ((StructureFeatureManagerAccess) world.structureFeatureManager()).getWorldGenSettings());
+
+            CubePrimer cubeAbove = new CubePrimer(CubePos.of(((IBigCube) chunk).getCubePos().getX(), ((IBigCube) chunk).getCubePos().getY() + 1,
+                ((IBigCube) chunk).getCubePos().getZ()), UpgradeData.EMPTY, cubeWorldGenRegion);
+
+
             for (int columnX = 0; columnX < IBigCube.DIAMETER_IN_SECTIONS; columnX++) {
                 for (int columnZ = 0; columnZ < IBigCube.DIAMETER_IN_SECTIONS; columnZ++) {
-                    FillFromNoiseProtoChunkHelper fillFromNoiseProtoChunkHelper = new FillFromNoiseProtoChunkHelper(((IBigCube) chunk).getCubePos().asChunkPos(columnX, columnZ),
+                    FillFromNoiseProtoChunkHelper chunkHelper = new FillFromNoiseProtoChunkHelper(((IBigCube) chunk).getCubePos().asChunkPos(columnX, columnZ),
                         UpgradeData.EMPTY,
                         world,
-                        (CubePrimer) chunk, columnX,
-                        columnZ);
+                        (CubePrimer) chunk);
 
-                    CubePrimer cubeAbove = new CubePrimer(CubePos.of(((IBigCube) chunk).getCubePos().getX(), ((IBigCube) chunk).getCubePos().getY() + 1,
-                        ((IBigCube) chunk).getCubePos().getZ()), UpgradeData.EMPTY, cubeWorldGenRegion);
 
-                    FillFromNoiseProtoChunkHelper fillFromNoiseProtoChunkHelperCubeAbove = new FillFromNoiseProtoChunkHelper(cubeAbove.getCubePos().asChunkPos(columnX, columnZ),
+                    FillFromNoiseProtoChunkHelper cubeAboveChunkHelper = new FillFromNoiseProtoChunkHelper(cubeAbove.getCubePos().asChunkPos(columnX, columnZ),
                         UpgradeData.EMPTY,
-                        world,
-                        (CubePrimer) chunk, columnX,
-                        columnZ);
+                        world, cubeAbove);
 
-                    generator.fillFromNoise(cubeWorldGenRegion, structureFeatureManager, fillFromNoiseProtoChunkHelper);
-                    generator.fillFromNoise(cubeWorldGenRegion, structureFeatureManager, fillFromNoiseProtoChunkHelperCubeAbove);
+                    generator.fillFromNoise(cubeWorldGenRegion, structureFeatureManager, chunkHelper);
+                    generator.fillFromNoise(cubeWorldGenRegion, structureFeatureManager, cubeAboveChunkHelper);
                 }
             }
 //            else {
