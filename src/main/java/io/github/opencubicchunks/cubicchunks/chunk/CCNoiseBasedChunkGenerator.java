@@ -110,7 +110,7 @@ public final class CCNoiseBasedChunkGenerator extends ChunkGenerator {
         this.settings = supplier;
         NoiseSettings noiseSettings = noiseGeneratorSettings.noiseSettings();
         this.height = /*noiseSettings.height()*/ IBigCube.DIAMETER_IN_BLOCKS; //256 in vanilla
-        this.chunkHeight = noiseSettings.noiseSizeVertical() * 4; //8 in vanilla
+        this.chunkHeight = noiseSettings.noiseSizeVertical() * (IBigCube.DIAMETER_IN_SECTIONS * 2); //8 in vanilla
         this.chunkWidth = noiseSettings.noiseSizeHorizontal() * 4; //4 in vanilla
         this.defaultBlock = noiseGeneratorSettings.getDefaultBlock(); //Stone
         this.defaultFluid = noiseGeneratorSettings.getDefaultFluid(); //Water
@@ -198,7 +198,7 @@ public final class CCNoiseBasedChunkGenerator extends ChunkGenerator {
 //      return ds;
 //   }
 
-    private void fillNoiseColumn(double[] densities, int x, int z) {
+    private void fillNoiseColumn(double[] densities, int x, int z, ChunkAccess chunk) {
         NoiseSettings noiseSettings = this.settings.get().noiseSettings();
         double biomeDensityOffset;
         double biomeDensityFactor;
@@ -255,10 +255,10 @@ public final class CCNoiseBasedChunkGenerator extends ChunkGenerator {
         double randomOffset = noiseSettings.randomDensityOffset() ? this.getRandomDensity(x, z) : 0.0D;
         double densityFactor = noiseSettings.densityFactor();
         double densityOffset = noiseSettings.densityOffset();
-        int ySize = Mth.intFloorDiv(noiseSettings.minY(), this.chunkHeight); //Size in blocks
+        int ySize = Mth.intFloorDiv(/*noiseSettings.minY() or 0*/ 0, this.chunkHeight); //Size in blocks
 
         for (int ySection = 0; ySection <= this.chunkSizeY; ++ySection) {
-            int noiseY = ySection + ySize;
+            int noiseY = ySection + (ySize);
             double height = this.sampleAndClampNoise(x, noiseY, z, lowAndHighHorizontalFrequency, lowAndHighVerticalFrequency, horizontalSelectorFrequency, verticalSelectorFrequency);
             double baseYGradient = 1.0D - (double) noiseY * 2.0D / (double) this.chunkSizeY + randomOffset;
             double configuredYGradient = baseYGradient * densityFactor + densityOffset;
@@ -281,7 +281,7 @@ public final class CCNoiseBasedChunkGenerator extends ChunkGenerator {
                 height = Mth.clampedLerp(bottomSlideTarget, height, slideFraction);
             }
 
-            densities[ySection] = height;
+            densities[ySection] = height; //Fills with an extreme and dilated value
         }
 
     }
@@ -440,7 +440,7 @@ public final class CCNoiseBasedChunkGenerator extends ChunkGenerator {
 
         for (int zCount = 0; zCount < this.chunkSizeZ + 1; ++zCount) {
             zSliceDensities[0][zCount] = new double[this.chunkSizeY + 1];
-            this.fillNoiseColumn(zSliceDensities[0][zCount], chunkX * this.chunkSizeX, chunkZ * this.chunkSizeZ + zCount);
+            this.fillNoiseColumn(zSliceDensities[0][zCount], chunkX * this.chunkSizeX, chunkZ * this.chunkSizeZ + zCount, chunk);
             zSliceDensities[1][zCount] = new double[this.chunkSizeY + 1];
         }
 
@@ -453,7 +453,7 @@ public final class CCNoiseBasedChunkGenerator extends ChunkGenerator {
 
         for (int dx = 0; dx < this.chunkSizeX; ++dx) {
             for (int dz = 0; dz < this.chunkSizeZ + 1; ++dz) {
-                this.fillNoiseColumn(zSliceDensities[1][dz], chunkX * this.chunkSizeX + dx + 1, chunkZ * this.chunkSizeZ + dz);
+                this.fillNoiseColumn(zSliceDensities[1][dz], chunkX * this.chunkSizeX + dx + 1, chunkZ * this.chunkSizeZ + dz, chunk);
             }
 
             for (int dz = 0; dz < this.chunkSizeZ; ++dz) {
@@ -534,6 +534,7 @@ public final class CCNoiseBasedChunkGenerator extends ChunkGenerator {
 //                                    }
 //
                                 getMinAndMaxNoise(height);
+
                                 if (blockY < height) {
                                     topSection.setBlockState(xLocal, yLocal, zLocal,
                                         Blocks.STONE.defaultBlockState(), false);

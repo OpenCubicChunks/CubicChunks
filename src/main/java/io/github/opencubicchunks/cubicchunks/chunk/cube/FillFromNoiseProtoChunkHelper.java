@@ -59,6 +59,10 @@ public class FillFromNoiseProtoChunkHelper extends ProtoChunk {
         return cubePrimer.getCubePos().minCubeY();
     }
 
+    @Override public int getMaxBuildHeight() {
+        return cubePrimer.getCubePos().maxCubeY();
+    }
+
     @Override public void addLight(BlockPos pos) {
         super.addLight(pos); //TODO
     }
