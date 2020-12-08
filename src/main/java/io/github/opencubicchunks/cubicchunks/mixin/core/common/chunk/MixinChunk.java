@@ -7,16 +7,20 @@ import java.util.function.Consumer;
 import javax.annotation.Nullable;
 
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
+import io.github.opencubicchunks.cubicchunks.chunk.IChunk;
 import io.github.opencubicchunks.cubicchunks.chunk.ICubeProvider;
 import io.github.opencubicchunks.cubicchunks.chunk.biome.ColumnBiomeContainer;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.BigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.EmptyCube;
 import io.github.opencubicchunks.cubicchunks.chunk.heightmap.ClientSurfaceTracker;
+import io.github.opencubicchunks.cubicchunks.chunk.heightmap.LightSurfaceTrackerSection;
+import io.github.opencubicchunks.cubicchunks.chunk.heightmap.LightSurfaceTrackerWrapper;
 import io.github.opencubicchunks.cubicchunks.chunk.heightmap.SurfaceTrackerWrapper;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Registry;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.TickList;
@@ -28,6 +32,7 @@ import net.minecraft.world.level.chunk.ChunkBiomeContainer;
 import net.minecraft.world.level.chunk.ChunkStatus;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.chunk.LevelChunkSection;
+import net.minecraft.world.level.chunk.ProtoChunk;
 import net.minecraft.world.level.chunk.UpgradeData;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.material.Fluid;
@@ -40,9 +45,10 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyConstant;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(LevelChunk.class)
-public abstract class MixinChunk implements ChunkAccess {
+public abstract class MixinChunk implements ChunkAccess, IChunk {
 
     @Shadow @Final private Level level;
     @Shadow @Final private ChunkPos chunkPos;
@@ -57,6 +63,13 @@ public abstract class MixinChunk implements ChunkAccess {
         return false;
     }
 
+    private LightSurfaceTrackerWrapper lightHeightmap;
+
+    @Override
+    public LightSurfaceTrackerWrapper getLightHeightmap() {
+        return lightHeightmap;
+    }
+
     @Inject(
         method = "<init>(Lnet/minecraft/world/level/Level;Lnet/minecraft/world/level/ChunkPos;Lnet/minecraft/world/level/chunk/ChunkBiomeContainer;"
             + "Lnet/minecraft/world/level/chunk/UpgradeData;Lnet/minecraft/world/level/TickList;Lnet/minecraft/world/level/TickList;J[Lnet/minecraft/world/level/chunk/LevelChunkSection;"
@@ -68,6 +81,27 @@ public abstract class MixinChunk implements ChunkAccess {
         //Client will already supply a ColumnBiomeContainer, server will not
         if (!(biomes instanceof ColumnBiomeContainer)) {
             this.biomes = new ColumnBiomeContainer(levelIn.registryAccess().registryOrThrow(Registry.BIOME_REGISTRY), levelIn, levelIn);
+        }
+
+        lightHeightmap = new LightSurfaceTrackerWrapper(this);
+    }
+
+    @Inject(
+            method = "<init>(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/level/chunk/ProtoChunk;Ljava/util/function/Consumer;)V",
+            at = @At("RETURN")
+    )
+    private void onInitFromProtoChunk(ServerLevel serverLevel, ProtoChunk protoChunk, Consumer<LevelChunk> consumer, CallbackInfo ci) {
+        lightHeightmap = new LightSurfaceTrackerWrapper(this);
+    }
+
+    @Inject(
+            method = "setBlockState(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;Z)Lnet/minecraft/world/level/block/state/BlockState;",
+            at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/chunk/LevelChunkSection;isEmpty()Z")
+    )
+    private void onSetBlock(BlockPos pos, BlockState state, boolean moved, CallbackInfoReturnable<BlockState> cir) {
+        // TODO client side light heightmap stuff
+        if (!this.level.isClientSide) {
+            ((IChunk) this).getLightHeightmap().update(pos.getX() & 15, pos.getY(), pos.getZ() & 15, state);
         }
     }
 

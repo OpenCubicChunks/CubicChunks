@@ -29,15 +29,15 @@ public class SurfaceTrackerSection {
     // Use width of 16 to match columns.
     private static final int WIDTH_BLOCKS = 16;
 
-    private final BitStorage heights;
+    protected final BitStorage heights;
     private final long[] dirtyPositions; // bitset has 100% memory usage overhead due to pointers and object headers
-    private SurfaceTrackerSection parent;
-    private Object cubeOrNodes;
+    protected SurfaceTrackerSection parent;
+    protected Object cubeOrNodes;
     /**
      * Position of this section, within all sections of this size e.g. with 64-block sections, y=0-63 would be section 0, y=64-127 would be section 1, etc.
      */
-    private final int scaledY;
-    private final byte scale;
+    protected final int scaledY;
+    protected final byte scale;
     private final byte heightmapType;
 
     public SurfaceTrackerSection(Heightmap.Types types) {
@@ -100,7 +100,7 @@ public class SurfaceTrackerSection {
         }
     }
 
-    private void clearDirty(int idx) {
+    protected void clearDirty(int idx) {
         dirtyPositions[idx >> 6] &= ~(1L << idx);
     }
 
@@ -108,7 +108,7 @@ public class SurfaceTrackerSection {
         dirtyPositions[idx >> 6] |= 1L << idx;
     }
 
-    private boolean isDirty(int idx) {
+    protected boolean isDirty(int idx) {
         return (dirtyPositions[idx >> 6] & (1L << idx)) != 0;
     }
 
@@ -210,7 +210,7 @@ public class SurfaceTrackerSection {
     }
 
     @Nullable
-    private SurfaceTrackerSection loadNode(int newScaledY, int sectionScale, IBigCube newCube, boolean create) {
+    protected SurfaceTrackerSection loadNode(int newScaledY, int sectionScale, IBigCube newCube, boolean create) {
         // TODO: loading from disk
         if (!create) {
             return null;
@@ -221,7 +221,7 @@ public class SurfaceTrackerSection {
         return new SurfaceTrackerSection(sectionScale, newScaledY, this, HEIGHTMAP_TYPES[this.heightmapType]);
     }
 
-    private int index(int x, int z) {
+    protected int index(int x, int z) {
         return (z & 0xF) * WIDTH_BLOCKS + (x & 0xF);
     }
 

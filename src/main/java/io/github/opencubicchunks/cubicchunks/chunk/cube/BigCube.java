@@ -20,6 +20,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import io.github.opencubicchunks.cubicchunks.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
+import io.github.opencubicchunks.cubicchunks.chunk.IChunk;
 import io.github.opencubicchunks.cubicchunks.chunk.biome.CubeBiomeContainer;
 import io.github.opencubicchunks.cubicchunks.chunk.heightmap.SurfaceTrackerSection;
 import io.github.opencubicchunks.cubicchunks.chunk.heightmap.SurfaceTrackerWrapper;
@@ -886,6 +887,7 @@ public class BigCube implements ChunkAccess, IBigCube {
                     SurfaceTrackerWrapper tracker = (SurfaceTrackerWrapper) heightmap;
                     tracker.loadCube(this);
                 }
+                ((IChunk) chunk).getLightHeightmap().loadCube(this);
             }
         }
     }

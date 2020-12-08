@@ -10,7 +10,7 @@ import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.levelgen.Heightmap;
 
 public class SurfaceTrackerWrapper extends Heightmap {
-    private final SurfaceTrackerSection surfaceTracker;
+    protected final SurfaceTrackerSection surfaceTracker;
     private final int dx;
     private final int dz;
 
@@ -18,6 +18,14 @@ public class SurfaceTrackerWrapper extends Heightmap {
         super(chunkAccess, types);
         ((HeightmapAccess) this).setIsOpaque(null);
         this.surfaceTracker = new SurfaceTrackerSection(types);
+        this.dx = sectionToMinBlock(chunkAccess.getPos().x);
+        this.dz = sectionToMinBlock(chunkAccess.getPos().z);
+    }
+
+    protected SurfaceTrackerWrapper(ChunkAccess chunkAccess, Types types, SurfaceTrackerSection root) {
+        super(chunkAccess, types);
+        ((HeightmapAccess) this).setIsOpaque(null);
+        this.surfaceTracker = root;
         this.dx = sectionToMinBlock(chunkAccess.getPos().x);
         this.dz = sectionToMinBlock(chunkAccess.getPos().z);
     }
