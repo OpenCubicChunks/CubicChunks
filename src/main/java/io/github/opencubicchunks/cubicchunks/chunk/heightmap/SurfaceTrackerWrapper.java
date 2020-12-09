@@ -11,8 +11,8 @@ import net.minecraft.world.level.levelgen.Heightmap;
 
 public class SurfaceTrackerWrapper extends Heightmap {
     protected final SurfaceTrackerSection surfaceTracker;
-    private final int dx;
-    private final int dz;
+    protected final int dx;
+    protected final int dz;
 
     public SurfaceTrackerWrapper(ChunkAccess chunkAccess, Types types) {
         super(chunkAccess, types);

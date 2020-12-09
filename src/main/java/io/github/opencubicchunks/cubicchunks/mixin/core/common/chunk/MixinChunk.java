@@ -7,13 +7,12 @@ import java.util.function.Consumer;
 import javax.annotation.Nullable;
 
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
-import io.github.opencubicchunks.cubicchunks.chunk.IChunk;
+import io.github.opencubicchunks.cubicchunks.chunk.LightHeightmapGetter;
 import io.github.opencubicchunks.cubicchunks.chunk.ICubeProvider;
 import io.github.opencubicchunks.cubicchunks.chunk.biome.ColumnBiomeContainer;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.BigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.EmptyCube;
 import io.github.opencubicchunks.cubicchunks.chunk.heightmap.ClientSurfaceTracker;
-import io.github.opencubicchunks.cubicchunks.chunk.heightmap.LightSurfaceTrackerSection;
 import io.github.opencubicchunks.cubicchunks.chunk.heightmap.LightSurfaceTrackerWrapper;
 import io.github.opencubicchunks.cubicchunks.chunk.heightmap.SurfaceTrackerWrapper;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
@@ -48,7 +47,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(LevelChunk.class)
-public abstract class MixinChunk implements ChunkAccess, IChunk {
+public abstract class MixinChunk implements ChunkAccess, LightHeightmapGetter {
 
     @Shadow @Final private Level level;
     @Shadow @Final private ChunkPos chunkPos;
@@ -101,7 +100,7 @@ public abstract class MixinChunk implements ChunkAccess, IChunk {
     private void onSetBlock(BlockPos pos, BlockState state, boolean moved, CallbackInfoReturnable<BlockState> cir) {
         // TODO client side light heightmap stuff
         if (!this.level.isClientSide) {
-            ((IChunk) this).getLightHeightmap().update(pos.getX() & 15, pos.getY(), pos.getZ() & 15, state);
+            ((LightHeightmapGetter) this).getLightHeightmap().update(pos.getX() & 15, pos.getY(), pos.getZ() & 15, state);
         }
     }
 
