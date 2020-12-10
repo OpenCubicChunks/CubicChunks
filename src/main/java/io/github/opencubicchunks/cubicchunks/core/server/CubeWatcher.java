@@ -161,7 +161,7 @@ public class CubeWatcher implements ITicket, ICubeWatcher {
         if (loading) {
             return false;
         }
-        if (this.cube != null && (!canGenerate || (cube.isFullyPopulated() && cube.isInitialLightingDone() && !cube.hasLightUpdates()))) {
+        if (this.cube != null && (!canGenerate || (cube.isFullyPopulated() && cube.isInitialLightingDone() && !cube.hasLightUpdates() && cube.isSurfaceTracked()))) {
             return true;
         }
         int cubeX = cubePos.getX();
