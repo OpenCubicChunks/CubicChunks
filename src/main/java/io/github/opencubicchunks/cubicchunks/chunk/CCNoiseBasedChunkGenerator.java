@@ -3,6 +3,7 @@ package io.github.opencubicchunks.cubicchunks.chunk;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import io.github.opencubicchunks.cubicchunks.CubicChunks;
+import io.github.opencubicchunks.cubicchunks.chunk.cube.FillFromNoiseProtoChunkHelper;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectList;
 import it.unimi.dsi.fastutil.objects.ObjectListIterator;
@@ -16,6 +17,7 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.Util;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Registry;
 import net.minecraft.core.SectionPos;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.WorldGenRegion;
@@ -365,29 +367,32 @@ public final class CCNoiseBasedChunkGenerator extends ChunkGenerator {
     }
 
     public void buildSurfaceAndBedrock(WorldGenRegion region, ChunkAccess chunk) {
-//      ChunkPos chunkPos = chunk.getPos();
-//      int i = chunkPos.x;
-//      int j = chunkPos.z;
-//      WorldgenRandom worldgenRandom = new WorldgenRandom();
-//      worldgenRandom.setBaseChunkSeed(i, j);
-//      ChunkPos chunkPos2 = chunk.getPos();
-//      int k = chunkPos2.getMinBlockX();
-//      int l = chunkPos2.getMinBlockZ();
-//      double d = 0.0625D;
-//      BlockPos.MutableBlockPos mutableBlockPos = new BlockPos.MutableBlockPos();
-//
-//      for(int m = 0; m < 16; ++m) {
-//         for(int n = 0; n < 16; ++n) {
-//            int o = k + m;
-//            int p = l + n;
-//            int q = chunk.getHeight(Heightmap.Types.WORLD_SURFACE_WG, m, n) + 1;
-//            double e = this.surfaceNoise.getSurfaceNoiseValue((double)o * 0.0625D, (double)p * 0.0625D, 0.0625D, (double)m * 0.0625D) * 15.0D;
-//            region.getBiome(mutableBlockPos.set(k + m, q, l + n)).buildSurfaceAt(worldgenRandom, chunk, o, p, q, e, this.defaultBlock, this.defaultFluid, this.getSeaLevel(), region
-//            .getSeed());
-//         }
-//      }
-//
-//      this.setBedrock(chunk, worldgenRandom);
+        ChunkPos chunkPos = chunk.getPos();
+        int chunkX = chunkPos.x;
+        int chunkZ = chunkPos.z;
+        WorldgenRandom worldgenRandom = new WorldgenRandom();
+        worldgenRandom.setBaseChunkSeed(chunkX, chunkZ);
+        int minX = chunkPos.getMinBlockX();
+        int minZ = chunkPos.getMinBlockZ();
+        BlockPos.MutableBlockPos mutableBlockPos = new BlockPos.MutableBlockPos();
+
+        for (int moveX = 0; moveX < 16; ++moveX) {
+            for (int moveZ = 0; moveZ < 16; ++moveZ) {
+                int blockX = minX + moveX;
+                int blockZ = minZ + moveZ;
+
+                int startHeight = chunk.getHeight(Heightmap.Types.WORLD_SURFACE, moveX, moveZ) + 1;
+                double noise = this.surfaceNoise.getSurfaceNoiseValue((double) blockX * 0.0625D, (double) blockZ * 0.0625D, 0.0625D, (double) moveX * 0.0625D) * 15.0D;
+                Biome biome = region.getBiome(mutableBlockPos.set(minX + moveX, startHeight, minZ + moveZ));
+
+                try {
+                    biome.buildSurfaceAt(worldgenRandom, chunk, blockX, blockZ, startHeight, noise, this.defaultBlock, this.defaultFluid, this.getSeaLevel(), region
+                        .getSeed());
+                } catch (SectionSizeCubeAccessWrapper.StopGeneratingThrowable ignored) {
+
+                }
+            }
+        }
     }
 
     public void fillFromNoise(LevelAccessor world, StructureFeatureManager featureManager, ChunkAccess chunk) {

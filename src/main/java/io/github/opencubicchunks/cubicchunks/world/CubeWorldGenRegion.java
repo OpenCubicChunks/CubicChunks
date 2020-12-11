@@ -1,11 +1,19 @@
+
+
 package io.github.opencubicchunks.cubicchunks.world;
 
+import static io.github.opencubicchunks.cubicchunks.chunk.util.Utils.*;
 import static io.github.opencubicchunks.cubicchunks.utils.Coords.*;
 
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javax.annotation.Nullable;
@@ -14,6 +22,8 @@ import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.server.ICubicWorld;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
+import it.unimi.dsi.fastutil.longs.LongSet;
+import it.unimi.dsi.fastutil.shorts.ShortList;
 import net.minecraft.Util;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -22,6 +32,7 @@ import net.minecraft.core.SectionPos;
 import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.WorldGenRegion;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Mth;
@@ -29,7 +40,9 @@ import net.minecraft.world.DifficultyInstance;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.EmptyTickList;
+import net.minecraft.world.level.StructureFeatureManager;
 import net.minecraft.world.level.TickList;
 import net.minecraft.world.level.WorldGenLevel;
 import net.minecraft.world.level.biome.Biome;
@@ -41,8 +54,11 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.border.WorldBorder;
 import net.minecraft.world.level.chunk.ChunkAccess;
+import net.minecraft.world.level.chunk.ChunkBiomeContainer;
 import net.minecraft.world.level.chunk.ChunkSource;
 import net.minecraft.world.level.chunk.ChunkStatus;
+import net.minecraft.world.level.chunk.LevelChunkSection;
+import net.minecraft.world.level.chunk.UpgradeData;
 import net.minecraft.world.level.dimension.DimensionType;
 import net.minecraft.world.level.entity.EntityTypeTest;
 import net.minecraft.world.level.gameevent.GameEvent;
@@ -57,7 +73,7 @@ import net.minecraft.world.phys.AABB;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class CubeWorldGenRegion implements WorldGenLevel, ICubicWorld {
+public class CubeWorldGenRegion extends WorldGenRegion implements ICubicWorld {
 
     private static final Logger LOGGER = LogManager.getLogger();
     private final IBigCube[] cubePrimers;
@@ -76,12 +92,12 @@ public class CubeWorldGenRegion implements WorldGenLevel, ICubicWorld {
 
 
     private final int diameter;
-    private final ServerLevel level;
     private final long seed;
     private final int seaLevel;
     private final LevelData worldInfo;
     private final Random random;
     private final DimensionType dimension;
+
     //    private final ITickList<Block> pendingBlockTickList = new WorldGenTickList<>((blockPos) -> {
     //        return this.getCube(blockPos).getBlocksToBeTicked();
     //    });
@@ -91,10 +107,13 @@ public class CubeWorldGenRegion implements WorldGenLevel, ICubicWorld {
     private final BiomeManager biomeManager;
 
     public CubeWorldGenRegion(ServerLevel worldIn, List<IBigCube> cubesIn) {
+        super(worldIn, Collections.singletonList(new DummyChunkAccess()));
+
         int i = Mth.floor(Math.cbrt(cubesIn.size()));
         if (i * i * i != cubesIn.size()) {
             throw Util.pauseInIde(new IllegalStateException("Cache size is not a square."));
         } else {
+
             CubePos cubePos = cubesIn.get(cubesIn.size() / 2).getCubePos();
             this.cubePrimers = cubesIn.toArray(new IBigCube[0]);
 
@@ -102,7 +121,6 @@ public class CubeWorldGenRegion implements WorldGenLevel, ICubicWorld {
             this.mainCubeY = cubePos.getY();
             this.mainCubeZ = cubePos.getZ();
             this.diameter = i;
-            this.level = worldIn;
             this.seed = worldIn.getSeed();
             this.seaLevel = worldIn.getSeaLevel();
             this.worldInfo = worldIn.getLevelData();
@@ -202,10 +220,6 @@ public class CubeWorldGenRegion implements WorldGenLevel, ICubicWorld {
         return new EmptyTickList<>();
     }
 
-    @Override public ServerLevel getLevel() {
-        return this.level;
-    }
-
     @Override public LevelData getLevelData() {
         return this.worldInfo;
     }
@@ -214,12 +228,12 @@ public class CubeWorldGenRegion implements WorldGenLevel, ICubicWorld {
         if (!this.cubeExists(blockToCube(pos.getX()), blockToCube(pos.getY()), blockToCube(pos.getZ()))) {
             throw new RuntimeException("We are asking a region for a chunk out of bound");
         } else {
-            return new DifficultyInstance(this.level.getDifficulty(), this.level.getDayTime(), 0L, this.level.getMoonBrightness());
+            return new DifficultyInstance(this.getLevel().getDifficulty(), this.getLevel().getDayTime(), 0L, this.getLevel().getMoonBrightness());
         }
     }
 
     @Override public ChunkSource getChunkSource() {
-        return level.getChunkSource();
+        return getLevel().getChunkSource();
     }
 
     @Override public Random getRandom() {
@@ -243,7 +257,7 @@ public class CubeWorldGenRegion implements WorldGenLevel, ICubicWorld {
     }
 
     @Override public WorldBorder getWorldBorder() {
-        return level.getWorldBorder();
+        return getLevel().getWorldBorder();
     }
 
     @Nullable @Override public BlockEntity getBlockEntity(BlockPos pos) {
@@ -305,14 +319,10 @@ public class CubeWorldGenRegion implements WorldGenLevel, ICubicWorld {
         return Collections.emptyList();
     }
 
-    @Override public List<? extends Player> players() {
-        return level.players();
+    @Override public List<Player> players() {
+        return /*level.players()*/ Collections.emptyList();
     }
 
-    @Deprecated
-    @Nullable @Override public ChunkAccess getChunk(int x, int z, ChunkStatus requiredStatus, boolean nonnull) {
-        throw new UnsupportedOperationException("This should never be called!");
-    }
 
     @Override public int getHeight(Heightmap.Types heightmapType, int x, int z) {
         int yStart = Coords.cubeToMinBlock(mainCubeY + 1);
@@ -340,7 +350,7 @@ public class CubeWorldGenRegion implements WorldGenLevel, ICubicWorld {
     }
 
     @Override public Biome getUncachedNoiseBiome(int x, int y, int z) {
-        return this.level.getUncachedNoiseBiome(x, y, z);
+        return this.getLevel().getUncachedNoiseBiome(x, y, z);
     }
 
     //TODO: Cube Biome Storage
@@ -366,7 +376,7 @@ public class CubeWorldGenRegion implements WorldGenLevel, ICubicWorld {
     }
 
     @Override public LevelLightEngine getLightEngine() {
-        return level.getLightEngine();
+        return getLevel().getLightEngine();
     }
 
     // setBlockState
@@ -374,7 +384,7 @@ public class CubeWorldGenRegion implements WorldGenLevel, ICubicWorld {
         IBigCube icube = this.getCube(pos);
         BlockState blockstate = icube.setBlock(pos, newState, false);
         if (blockstate != null) {
-            this.level.onBlockStateChange(pos, blockstate, newState);
+            this.getLevel().onBlockStateChange(pos, blockstate, newState);
         }
         if (newState.hasBlockEntity()) {
             if (icube.getCubeStatus().getChunkType() == ChunkStatus.ChunkType.LEVELCHUNK) {
@@ -411,7 +421,7 @@ public class CubeWorldGenRegion implements WorldGenLevel, ICubicWorld {
         } else {
             if (isPlayerInCreative) {
                 BlockEntity tileentity = blockstate.hasBlockEntity() ? this.getBlockEntity(pos) : null;
-                Block.dropResources(blockstate, this.level, pos, tileentity, droppedEntities, ItemStack.EMPTY);
+                Block.dropResources(blockstate, this.getLevel(), pos, tileentity, droppedEntities, ItemStack.EMPTY);
             }
 
             return this.setBlock(pos, Blocks.AIR.defaultBlockState(), 3, recursionLimit);
@@ -426,19 +436,180 @@ public class CubeWorldGenRegion implements WorldGenLevel, ICubicWorld {
 
     @Override
     public RegistryAccess registryAccess() {
-        return this.level.registryAccess();
+        return this.getLevel().registryAccess();
     }
 
     @Override
     public Stream<? extends StructureStart<?>> startsForFeature(SectionPos sectionPos, StructureFeature<?> structure) {
-        return this.level.startsForFeature(sectionPos, structure);
+        return this.getLevel().startsForFeature(sectionPos, structure);
     }
 
     @Override public int getMinBuildHeight() {
-        return level.getMinBuildHeight();
+        return getLevel().getMinBuildHeight();
     }
 
     @Override public int getHeight() {
-        return level.getHeight();
+        return getLevel().getHeight();
+    }
+
+    private static class DummyChunkAccess implements ChunkAccess {
+
+
+        @org.jetbrains.annotations.Nullable @Override public BlockState setBlockState(BlockPos pos, BlockState state, boolean moved) {
+            return null;
+        }
+
+        @Override public void setBlockEntity(BlockEntity blockEntity) {
+
+        }
+
+        @Override public void addEntity(Entity entity) {
+
+        }
+
+        @Override public Set<BlockPos> getBlockEntitiesPos() {
+            return null;
+        }
+
+        @Override public LevelChunkSection[] getSections() {
+            return new LevelChunkSection[0];
+        }
+
+        @Override public Collection<Map.Entry<Heightmap.Types, Heightmap>> getHeightmaps() {
+            return null;
+        }
+
+        @Override public void setHeightmap(Heightmap.Types type, long[] heightmap) {
+
+        }
+
+        @Override public Heightmap getOrCreateHeightmapUnprimed(Heightmap.Types type) {
+            return null;
+        }
+
+        @Override public int getHeight(Heightmap.Types type, int x, int z) {
+            return 0;
+        }
+
+        @Override public ChunkPos getPos() {
+            return new ChunkPos(0, 0);
+        }
+
+        @Override public Map<StructureFeature<?>, StructureStart<?>> getAllStarts() {
+            return null;
+        }
+
+        @Override public void setAllStarts(Map<StructureFeature<?>, StructureStart<?>> structureStarts) {
+
+        }
+
+        @org.jetbrains.annotations.Nullable @Override public ChunkBiomeContainer getBiomes() {
+            return null;
+        }
+
+        @Override public void setUnsaved(boolean shouldSave) {
+
+        }
+
+        @Override public boolean isUnsaved() {
+            return false;
+        }
+
+        @Override public ChunkStatus getStatus() {
+            return null;
+        }
+
+        @Override public void removeBlockEntity(BlockPos pos) {
+
+        }
+
+        @Override public ShortList[] getPostProcessing() {
+            return new ShortList[0];
+        }
+
+        @org.jetbrains.annotations.Nullable @Override public CompoundTag getBlockEntityNbt(BlockPos pos) {
+            return null;
+        }
+
+        @org.jetbrains.annotations.Nullable @Override public CompoundTag getBlockEntityNbtForSaving(BlockPos pos) {
+            return null;
+        }
+
+        @Override public Stream<BlockPos> getLights() {
+            return null;
+        }
+
+        @Override public TickList<Block> getBlockTicks() {
+            return null;
+        }
+
+        @Override public TickList<Fluid> getLiquidTicks() {
+            return null;
+        }
+
+        @Override public UpgradeData getUpgradeData() {
+            return null;
+        }
+
+        @Override public void setInhabitedTime(long inhabitedTime) {
+
+        }
+
+        @Override public long getInhabitedTime() {
+            return 0;
+        }
+
+        @Override public boolean isLightCorrect() {
+            return false;
+        }
+
+        @Override public void setLightCorrect(boolean lightOn) {
+
+        }
+
+        @org.jetbrains.annotations.Nullable @Override public BlockEntity getBlockEntity(BlockPos pos) {
+            return null;
+        }
+
+        @Override public BlockState getBlockState(BlockPos pos) {
+            return null;
+        }
+
+        @Override public FluidState getFluidState(BlockPos pos) {
+            return null;
+        }
+
+        @Override public int getHeight() {
+            return 0;
+        }
+
+        @Override public int getMinBuildHeight() {
+            return 0;
+        }
+
+        @org.jetbrains.annotations.Nullable @Override public StructureStart<?> getStartForFeature(StructureFeature<?> structure) {
+            return null;
+        }
+
+        @Override public void setStartForFeature(StructureFeature<?> structure, StructureStart<?> start) {
+
+        }
+
+        @Override public LongSet getReferencesForFeature(StructureFeature<?> structure) {
+            return null;
+        }
+
+        @Override public void addReferenceForFeature(StructureFeature<?> structure, long reference) {
+
+        }
+
+        @Override public Map<StructureFeature<?>, LongSet> getAllReferences() {
+            return null;
+        }
+
+        @Override public void setAllReferences(Map<StructureFeature<?>, LongSet> structureReferences) {
+
+        }
     }
 }
+

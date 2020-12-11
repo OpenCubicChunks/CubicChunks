@@ -10,6 +10,7 @@ import java.util.function.Function;
 import com.mojang.datafixers.util.Either;
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.ICubeGenerator;
+import io.github.opencubicchunks.cubicchunks.chunk.SectionSizeCubeAccessWrapper;
 import io.github.opencubicchunks.cubicchunks.chunk.biome.ColumnBiomeContainer;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.CubePrimer;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.FillFromNoiseProtoChunkHelper;
@@ -152,7 +153,6 @@ public class MixinChunkStatus {
                                          CallbackInfo ci) {
         ci.cancel();
         if (chunk instanceof IBigCube) {
-//            if (generator instanceof CCNoiseBasedChunkGenerator) {
             CubeWorldGenRegion cubeWorldGenRegion = new CubeWorldGenRegion(world, unsafeCast(neighbors));
 
             StructureFeatureManager structureFeatureManager =
@@ -162,26 +162,25 @@ public class MixinChunkStatus {
                 ((IBigCube) chunk).getCubePos().getZ()), UpgradeData.EMPTY, cubeWorldGenRegion);
 
 
+            FillFromNoiseProtoChunkHelper chunkHelper = new FillFromNoiseProtoChunkHelper(((IBigCube) chunk).getCubePos().asChunkPos(0, 0),
+                UpgradeData.EMPTY,
+                world,
+                (CubePrimer) chunk);
+
+
+            FillFromNoiseProtoChunkHelper cubeAboveChunkHelper = new FillFromNoiseProtoChunkHelper(cubeAbove.getCubePos().asChunkPos(0, 0),
+                UpgradeData.EMPTY,
+                world, cubeAbove);
+
             for (int columnX = 0; columnX < IBigCube.DIAMETER_IN_SECTIONS; columnX++) {
                 for (int columnZ = 0; columnZ < IBigCube.DIAMETER_IN_SECTIONS; columnZ++) {
-                    FillFromNoiseProtoChunkHelper chunkHelper = new FillFromNoiseProtoChunkHelper(((IBigCube) chunk).getCubePos().asChunkPos(columnX, columnZ),
-                        UpgradeData.EMPTY,
-                        world,
-                        (CubePrimer) chunk);
-
-
-                    FillFromNoiseProtoChunkHelper cubeAboveChunkHelper = new FillFromNoiseProtoChunkHelper(cubeAbove.getCubePos().asChunkPos(columnX, columnZ),
-                        UpgradeData.EMPTY,
-                        world, cubeAbove);
+                    chunkHelper.moveColumn(columnX, columnZ);
+                    cubeAboveChunkHelper.moveColumn(columnX, columnZ);
 
                     generator.fillFromNoise(cubeWorldGenRegion, structureFeatureManager, chunkHelper);
-                    generator.fillFromNoise(cubeWorldGenRegion, structureFeatureManager, cubeAboveChunkHelper);
+                    generator.buildSurfaceAndBedrock(cubeWorldGenRegion, chunkHelper);
                 }
             }
-//            else {
-//                ((ICubeGenerator) generator).makeBase(new CubeWorldGenRegion(world, unsafeCast(neighbors)), world.structureFeatureManager(), (IBigCube) chunk);
-//            }
-//        }
         }
     }
 
