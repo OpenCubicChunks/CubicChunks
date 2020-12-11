@@ -2,10 +2,8 @@
 
 package io.github.opencubicchunks.cubicchunks.world;
 
-import static io.github.opencubicchunks.cubicchunks.chunk.util.Utils.*;
 import static io.github.opencubicchunks.cubicchunks.utils.Coords.*;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -13,7 +11,6 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javax.annotation.Nullable;
@@ -42,9 +39,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.EmptyTickList;
-import net.minecraft.world.level.StructureFeatureManager;
 import net.minecraft.world.level.TickList;
-import net.minecraft.world.level.WorldGenLevel;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.biome.BiomeManager;
 import net.minecraft.world.level.block.Block;

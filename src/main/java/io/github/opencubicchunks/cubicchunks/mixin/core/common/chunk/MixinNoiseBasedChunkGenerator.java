@@ -5,16 +5,12 @@ import java.util.Random;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
-import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
-import io.github.opencubicchunks.cubicchunks.chunk.NoiseAndSurfaceBuilderHelper;
-import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import it.unimi.dsi.fastutil.objects.ObjectList;
 import net.minecraft.core.SectionPos;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.StructureFeatureManager;
-import net.minecraft.world.level.biome.BiomeSource;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.levelgen.NoiseBasedChunkGenerator;
 import net.minecraft.world.level.levelgen.NoiseGeneratorSettings;
@@ -27,9 +23,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Mutable;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Constant;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.ModifyConstant;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
@@ -77,7 +71,7 @@ public abstract class MixinNoiseBasedChunkGenerator {
 
     @SuppressWarnings("UnresolvedMixinReference")
     @Redirect(method = "lambda$fillFromNoise$6", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/levelgen/feature/structures/JigsawJunction;getSourceX()I"))
-    private static int yes(JigsawJunction junction, ChunkPos pos, ObjectList list, int number, int number2, ObjectList list2, StructureStart structureStart) {
+    private static int checkYBounds(JigsawJunction junction, ChunkPos pos, ObjectList list, int number, int number2, ObjectList list2, StructureStart structureStart) {
         ChunkAccess chunkAccess = (ChunkAccess) list.get(0);
         int jigsawJunctionSourceY = junction.getSourceGroundY();
         int minY = chunkAccess.getMinBuildHeight();
