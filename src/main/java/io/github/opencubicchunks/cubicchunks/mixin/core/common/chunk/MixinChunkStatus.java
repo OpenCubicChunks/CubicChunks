@@ -10,10 +10,9 @@ import java.util.function.Function;
 import com.mojang.datafixers.util.Either;
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.ICubeGenerator;
-import io.github.opencubicchunks.cubicchunks.chunk.SectionSizeCubeAccessWrapper;
+import io.github.opencubicchunks.cubicchunks.chunk.NoiseAndSurfaceBuilderHelper;
 import io.github.opencubicchunks.cubicchunks.chunk.biome.ColumnBiomeContainer;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.CubePrimer;
-import io.github.opencubicchunks.cubicchunks.chunk.cube.FillFromNoiseProtoChunkHelper;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.StructureFeatureManagerAccess;
 import io.github.opencubicchunks.cubicchunks.world.CubeWorldGenRegion;
@@ -123,7 +122,7 @@ public class MixinChunkStatus {
 
         ci.cancel();
         if (chunk instanceof IBigCube) {
-            generator.createReferences(new CubeWorldGenRegion(world, unsafeCast(neighbors)), world.structureFeatureManager(), chunk);
+            generator.createReferences(new CubeWorldGenRegion(world, unsafeCast(neighbors), chunk), world.structureFeatureManager(), chunk);
         }
     }
 
@@ -153,7 +152,7 @@ public class MixinChunkStatus {
                                          CallbackInfo ci) {
         ci.cancel();
         if (chunk instanceof IBigCube) {
-            CubeWorldGenRegion cubeWorldGenRegion = new CubeWorldGenRegion(world, unsafeCast(neighbors));
+            CubeWorldGenRegion cubeWorldGenRegion = new CubeWorldGenRegion(world, unsafeCast(neighbors), chunk);
 
             StructureFeatureManager structureFeatureManager =
                 new StructureFeatureManager(cubeWorldGenRegion, ((StructureFeatureManagerAccess) world.structureFeatureManager()).getWorldGenSettings());
@@ -161,24 +160,14 @@ public class MixinChunkStatus {
             CubePrimer cubeAbove = new CubePrimer(CubePos.of(((IBigCube) chunk).getCubePos().getX(), ((IBigCube) chunk).getCubePos().getY() + 1,
                 ((IBigCube) chunk).getCubePos().getZ()), UpgradeData.EMPTY, cubeWorldGenRegion);
 
-
-            FillFromNoiseProtoChunkHelper chunkHelper = new FillFromNoiseProtoChunkHelper(((IBigCube) chunk).getCubePos().asChunkPos(0, 0),
-                UpgradeData.EMPTY,
-                world,
-                (CubePrimer) chunk);
-
-
-            FillFromNoiseProtoChunkHelper cubeAboveChunkHelper = new FillFromNoiseProtoChunkHelper(cubeAbove.getCubePos().asChunkPos(0, 0),
-                UpgradeData.EMPTY,
-                world, cubeAbove);
+            NoiseAndSurfaceBuilderHelper cubeAccessWrapper = new NoiseAndSurfaceBuilderHelper((IBigCube) chunk, cubeAbove);
 
             for (int columnX = 0; columnX < IBigCube.DIAMETER_IN_SECTIONS; columnX++) {
                 for (int columnZ = 0; columnZ < IBigCube.DIAMETER_IN_SECTIONS; columnZ++) {
-                    chunkHelper.moveColumn(columnX, columnZ);
-                    cubeAboveChunkHelper.moveColumn(columnX, columnZ);
-
-                    generator.fillFromNoise(cubeWorldGenRegion, structureFeatureManager, chunkHelper);
-                    generator.buildSurfaceAndBedrock(cubeWorldGenRegion, chunkHelper);
+                    cubeAccessWrapper.moveColumn(columnX, columnZ);
+                    generator.fillFromNoise(cubeWorldGenRegion, structureFeatureManager, cubeAccessWrapper);
+                    cubeAccessWrapper.applySections();
+                    generator.buildSurfaceAndBedrock(cubeWorldGenRegion, cubeAccessWrapper);
                 }
             }
         }
@@ -254,7 +243,7 @@ public class MixinChunkStatus {
             //        .of(Heightmap.Type.MOTION_BLOCKING, Heightmap.Type.MOTION_BLOCKING_NO_LEAVES, Heightmap.Type.OCEAN_FLOOR,
             //        Heightmap.Type.WORLD_SURFACE));
 
-            CubeWorldGenRegion cubeWorldGenRegion = new CubeWorldGenRegion(world, unsafeCast(chunks));
+            CubeWorldGenRegion cubeWorldGenRegion = new CubeWorldGenRegion(world, unsafeCast(chunks), chunk);
             StructureFeatureManager structureFeatureManager =
                 new StructureFeatureManager(cubeWorldGenRegion, ((StructureFeatureManagerAccess) world.structureFeatureManager()).getWorldGenSettings());
 

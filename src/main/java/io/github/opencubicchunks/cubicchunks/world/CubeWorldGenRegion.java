@@ -97,6 +97,7 @@ public class CubeWorldGenRegion extends WorldGenRegion implements ICubicWorld {
     private final LevelData worldInfo;
     private final Random random;
     private final DimensionType dimension;
+    private final ChunkAccess access;
 
     //    private final ITickList<Block> pendingBlockTickList = new WorldGenTickList<>((blockPos) -> {
     //        return this.getCube(blockPos).getBlocksToBeTicked();
@@ -106,7 +107,7 @@ public class CubeWorldGenRegion extends WorldGenRegion implements ICubicWorld {
     //    });
     private final BiomeManager biomeManager;
 
-    public CubeWorldGenRegion(ServerLevel worldIn, List<IBigCube> cubesIn) {
+    public CubeWorldGenRegion(ServerLevel worldIn, List<IBigCube> cubesIn, ChunkAccess access) {
         super(worldIn, Collections.singletonList(new DummyChunkAccess()));
 
         int i = Mth.floor(Math.cbrt(cubesIn.size()));
@@ -135,6 +136,8 @@ public class CubeWorldGenRegion extends WorldGenRegion implements ICubicWorld {
             this.maxCubeX = maxCube.getCubePos().getX();
             this.maxCubeY = maxCube.getCubePos().getY();
             this.maxCubeZ = maxCube.getCubePos().getZ();
+
+            this.access = access;
         }
     }
 
@@ -323,6 +326,10 @@ public class CubeWorldGenRegion extends WorldGenRegion implements ICubicWorld {
         return /*level.players()*/ Collections.emptyList();
     }
 
+    @Deprecated
+    @Nullable @Override public ChunkAccess getChunk(int x, int z, ChunkStatus requiredStatus, boolean nonnull) {
+       return this.access; //TODO: Do not do this.
+    }
 
     @Override public int getHeight(Heightmap.Types heightmapType, int x, int z) {
         int yStart = Coords.cubeToMinBlock(mainCubeY + 1);
