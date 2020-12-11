@@ -388,7 +388,7 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
             while (iterator.hasNext() && chunksToGenerate >= 0 && System.nanoTime() < stopTime) {
                 CubeWatcher watcher = iterator.next();
                 boolean success = watcher.getCube() != null && watcher.getCube().isFullyPopulated() && watcher.getCube().isInitialLightingDone() &&
-                        !watcher.getCube().hasLightUpdates();
+                        !watcher.getCube().hasLightUpdates() && watcher.getCube().isSurfaceTracked();
                 boolean alreadyLoaded = success;
                 if (!success) {
                     boolean canGenerate = watcher.hasPlayerMatching(CAN_GENERATE_CHUNKS);
