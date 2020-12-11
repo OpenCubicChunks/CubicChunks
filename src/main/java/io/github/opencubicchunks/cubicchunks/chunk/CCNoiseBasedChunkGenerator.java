@@ -3,11 +3,12 @@ package io.github.opencubicchunks.cubicchunks.chunk;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import io.github.opencubicchunks.cubicchunks.CubicChunks;
-import io.github.opencubicchunks.cubicchunks.chunk.cube.FillFromNoiseProtoChunkHelper;
+import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectList;
 import it.unimi.dsi.fastutil.objects.ObjectListIterator;
 
+import java.util.Iterator;
 import java.util.List;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -17,7 +18,6 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.Util;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Registry;
 import net.minecraft.core.SectionPos;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.WorldGenRegion;
@@ -44,6 +44,8 @@ import net.minecraft.world.level.levelgen.NoiseSettings;
 import net.minecraft.world.level.levelgen.WorldgenRandom;
 import net.minecraft.world.level.levelgen.feature.StructureFeature;
 import net.minecraft.world.level.levelgen.feature.structures.JigsawJunction;
+import net.minecraft.world.level.levelgen.feature.structures.StructureTemplatePool;
+import net.minecraft.world.level.levelgen.structure.PoolElementStructurePiece;
 import net.minecraft.world.level.levelgen.structure.StructurePiece;
 import net.minecraft.world.level.levelgen.synth.ImprovedNoise;
 import net.minecraft.world.level.levelgen.synth.PerlinNoise;
@@ -388,7 +390,7 @@ public final class CCNoiseBasedChunkGenerator extends ChunkGenerator {
                 try {
                     biome.buildSurfaceAt(worldgenRandom, chunk, blockX, blockZ, startHeight, noise, this.defaultBlock, this.defaultFluid, this.getSeaLevel(), region
                         .getSeed());
-                } catch (SectionSizeCubeAccessWrapper.StopGeneratingThrowable ignored) {
+                } catch (NoiseAndSurfaceBuilderHelper.StopGeneratingThrowable ignored) {
 
                 }
             }
@@ -404,42 +406,48 @@ public final class CCNoiseBasedChunkGenerator extends ChunkGenerator {
         int ySectionCoordX = SectionPos.sectionToBlockCoord(chunkX);
         int ySectionCoordZ = SectionPos.sectionToBlockCoord(chunkZ);
 
-//        for (StructureFeature<?> structureFeature : StructureFeature.NOISE_AFFECTING_FEATURES) {
-//            featureManager.startsForFeature(SectionPos.of(chunkPos, 0), structureFeature).forEach((start) -> {
-//                Iterator<StructurePiece> structurePieceIterator = start.getPieces().iterator();
-//
-//                while (true) {
-//                    StructurePiece structurePiece;
-//                    do {
-//                        if (!structurePieceIterator.hasNext()) {
-//                            return;
-//                        }
-//
-//                        structurePiece = structurePieceIterator.next();
-//                    } while (!structurePiece.isCloseToChunk(chunkPos, 12));
-//
-//                    if (structurePiece instanceof PoolElementStructurePiece) {
-//                        PoolElementStructurePiece poolElementStructurePiece = (PoolElementStructurePiece) structurePiece;
-//                        StructureTemplatePool.Projection projection = poolElementStructurePiece.getElement().getProjection();
-//                        if (projection == StructureTemplatePool.Projection.RIGID) {
-//                            structurePiecesList.add(poolElementStructurePiece);
-//                        }
-//
-//                        for (JigsawJunction jigsawJunction : poolElementStructurePiece.getJunctions()) {
-//                            int jigsawJunctionSourceX = jigsawJunction.getSourceX();
-//                            int jigsawJunctionSourceZ = jigsawJunction.getSourceZ();
-//                            if (jigsawJunctionSourceX > ySectionCoordX - 12 && jigsawJunctionSourceZ > ySectionCoordZ - 12 && jigsawJunctionSourceX < ySectionCoordX + 15 + 12
-//                                && jigsawJunctionSourceZ
-//                                < ySectionCoordZ + 15 + 12) {
-//                                jigsawJunctionsList.add(jigsawJunction);
-//                            }
-//                        }
-//                    } else {
-//                        structurePiecesList.add(structurePiece);
-//                    }
-//                }
-//            });
-//        }
+        for (StructureFeature<?> structureFeature : StructureFeature.NOISE_AFFECTING_FEATURES) {
+            featureManager.startsForFeature(SectionPos.of(chunkPos, 0), structureFeature).forEach((start) -> {
+                Iterator<StructurePiece> structurePieceIterator = start.getPieces().iterator();
+
+                while (true) {
+                    StructurePiece structurePiece;
+                    do {
+                        if (!structurePieceIterator.hasNext()) {
+                            return;
+                        }
+
+                        structurePiece = structurePieceIterator.next();
+                    } while (!structurePiece.isCloseToChunk(chunkPos, 12));
+
+                    if (structurePiece instanceof PoolElementStructurePiece) {
+                        PoolElementStructurePiece poolElementStructurePiece = (PoolElementStructurePiece) structurePiece;
+                        StructureTemplatePool.Projection projection = poolElementStructurePiece.getElement().getProjection();
+                        if (projection == StructureTemplatePool.Projection.RIGID) {
+                            structurePiecesList.add(poolElementStructurePiece);
+                        }
+
+                        for (JigsawJunction jigsawJunction : poolElementStructurePiece.getJunctions()) {
+                            int jigsawJunctionSourceX = jigsawJunction.getSourceX();
+                            int jigsawJunctionSourceY = jigsawJunction.getSourceGroundY();
+                            int jigsawJunctionSourceZ = jigsawJunction.getSourceZ();
+                            int minY = chunk.getMinBuildHeight();
+                            int maxY = chunk.getMaxBuildHeight() - 1;
+
+                            boolean isInYBounds = jigsawJunctionSourceY > minY - 12 && jigsawJunctionSourceY < maxY + 12;
+                            if (jigsawJunctionSourceX > ySectionCoordX - (isInYBounds ? 12 :
+                                (-jigsawJunctionSourceX + ySectionCoordX)) && jigsawJunctionSourceZ > ySectionCoordZ - 12 && jigsawJunctionSourceX < ySectionCoordX + 15 + 12
+                                && jigsawJunctionSourceZ
+                                < ySectionCoordZ + 15 + 12) {
+                                jigsawJunctionsList.add(jigsawJunction);
+                            }
+                        }
+                    } else {
+                        structurePiecesList.add(structurePiece);
+                    }
+                }
+            });
+        }
 
         double[][][] zSliceDensities = new double[2][this.chunkSizeZ + 1][this.chunkSizeY + 1];
 
