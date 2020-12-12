@@ -221,7 +221,7 @@ public class VanillaCompatibilityGenerator implements ICubeGenerator {
                         for (int x = 0; x < Cube.SIZE; x++) {
                             IBlockState state = cubeY < 0 ? extensionBlockBottom : extensionBlockTop;
                             int blockY = Coords.localToBlock(cubeY, y);
-                            state = WorldGenUtils.getRandomBedrockReplacement(world, rand, state, blockY, 1,
+                            state = WorldGenUtils.getRandomBedrockReplacement(world, rand, state, blockY, 5,
                                     hasTopBedrock, hasBottomBedrock);
                             primer.setBlockState(x, y, z, state);
                         }
@@ -235,7 +235,7 @@ public class VanillaCompatibilityGenerator implements ICubeGenerator {
                                      ((ICubicWorldInternal.Server) world).doCompatibilityGeneration()) {
                             lastChunk = vanilla.generateChunk(cubeX, cubeZ);
                             ChunkPrimer chunkPrimer = ((IColumnInternal) lastChunk).getCompatGenerationPrimer();
-                            replaceBedrock(chunkPrimer);
+                            replaceBedrock(chunkPrimer, rand);
                         }
                     } else {
                         lastChunk = vanilla.generateChunk(cubeX, cubeZ);
@@ -279,11 +279,11 @@ public class VanillaCompatibilityGenerator implements ICubeGenerator {
                                     } else {
                                         state = extensionBlockTop;
                                     }
-                                    state = WorldGenUtils.getRandomBedrockReplacement(world, rand, state, blockY, 1,
+                                    state = WorldGenUtils.getRandomBedrockReplacement(world, rand, state, blockY, 5,
                                             hasTopBedrock, hasBottomBedrock);
                                     primer.setBlockState(x, y, z, state);
                                 } else {
-                                    state = WorldGenUtils.getRandomBedrockReplacement(world, rand, state, blockY, 1,
+                                    state = WorldGenUtils.getRandomBedrockReplacement(world, rand, state, blockY, 5,
                                             hasTopBedrock, hasBottomBedrock);
                                     primer.setBlockState(x, y, z, state);
                                 }
@@ -299,26 +299,28 @@ public class VanillaCompatibilityGenerator implements ICubeGenerator {
         }
     }
 
-    private void replaceBedrock(ChunkPrimer chunkPrimer) {
+    private void replaceBedrock(ChunkPrimer chunkPrimer, Random rand) {
         for (int y = 0; y < 8; y++) {
-            replaceBedrockAtLayer(chunkPrimer, y);
+            replaceBedrockAtLayer(chunkPrimer, rand, y);
         }
         int startY = Coords.localToBlock(worldHeightCubes - 1, 8);
         int endY = Coords.cubeToMinBlock(worldHeightCubes);
         for (int y = startY; y < endY; y++) {
-            replaceBedrockAtLayer(chunkPrimer, y);
+            replaceBedrockAtLayer(chunkPrimer, rand, y);
         }
     }
 
-    private void replaceBedrockAtLayer(ChunkPrimer chunkPrimer, int y) {
+    private void replaceBedrockAtLayer(ChunkPrimer chunkPrimer, Random rand, int y) {
         for (int z = 0; z < Cube.SIZE; z++) {
             for (int x = 0; x < Cube.SIZE; x++) {
                 IBlockState state = chunkPrimer.getBlockState(x, y, z);
                 if (state == Blocks.BEDROCK.getDefaultState()) {
                     if (y < 64) {
-                        chunkPrimer.setBlockState(x, y, z, extensionBlockBottom);
+                        chunkPrimer.setBlockState(x, y, z,
+                                WorldGenUtils.getRandomBedrockReplacement(world, rand, extensionBlockBottom, y, 5, hasTopBedrock, hasBottomBedrock));
                     } else {
-                        chunkPrimer.setBlockState(x, y, z, extensionBlockTop);
+                        chunkPrimer.setBlockState(x, y, z,
+                                WorldGenUtils.getRandomBedrockReplacement(world, rand, extensionBlockTop, y, 5, hasTopBedrock, hasBottomBedrock));
                     }
                 }
             }
