@@ -40,6 +40,7 @@ import io.github.opencubicchunks.cubicchunks.chunk.cube.CubePrimer;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.CubePrimerWrapper;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.CubeStatus;
 import io.github.opencubicchunks.cubicchunks.chunk.graph.CCTicketType;
+import io.github.opencubicchunks.cubicchunks.chunk.storage.ISectionStorage;
 import io.github.opencubicchunks.cubicchunks.chunk.ticket.CubeTaskPriorityQueue;
 import io.github.opencubicchunks.cubicchunks.chunk.ticket.CubeTaskPriorityQueueSorter;
 import io.github.opencubicchunks.cubicchunks.chunk.ticket.ITicketManager;
@@ -88,6 +89,7 @@ import net.minecraft.util.thread.ProcessorHandle;
 import net.minecraft.util.thread.ProcessorMailbox;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.ai.village.poi.PoiManager;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.ChunkGenerator;
@@ -177,6 +179,8 @@ public abstract class MixinChunkManager implements IChunkManager {
 
     @Shadow public abstract Stream<ServerPlayer> getPlayers(ChunkPos chunkPos, boolean bl);
 
+    @Shadow @Final private PoiManager poiManager;
+
     @Inject(method = "<init>", at = @At("RETURN"), locals = LocalCapture.CAPTURE_FAILHARD)
     private void onConstruct(ServerLevel worldIn,
                              LevelStorageSource.LevelStorageAccess levelSave,
@@ -203,7 +207,7 @@ public abstract class MixinChunkManager implements IChunkManager {
             this.cubeQueueSorter.createExecutor(delegatedtaskexecutor1, false));
 
         try {
-            regionCubeIO = new RegionCubeIO(worldIn, storageFolder);
+            regionCubeIO = new RegionCubeIO(storageFolder, "chunk", "cube");
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
@@ -261,7 +265,7 @@ public abstract class MixinChunkManager implements IChunkManager {
 
     // chunkSave
     private boolean cubeSave(IBigCube cube) {
-//        this.poiManager.flush(cube.getCubePos());
+        ((ISectionStorage) this.poiManager).flush(cube.getCubePos());
         if (!cube.isDirty()) {
             return false;
         } else {

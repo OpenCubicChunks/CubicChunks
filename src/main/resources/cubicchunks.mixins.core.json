@@ -65,7 +65,9 @@
         "common.world.structure.MixinStructureFeatureManager",
         "common.world.structure.MixinStructurePiece",
         "common.world.structure.MixinStructureStart",
-        "common.world.structure.pieces.MixinOceanRuinPieces"
+        "common.world.structure.pieces.MixinOceanRuinPieces",
+        "common.chunk.storage.MixinSectionStorage",
+        "common.chunk.storage.MixinPoiManager"
     ],
     "client": [
         "client.MixinClientPacketListener",
