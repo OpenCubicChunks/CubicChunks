@@ -20,12 +20,12 @@ public class LightSurfaceTrackerWrapper extends SurfaceTrackerWrapper {
         if (relY == 0) {
             SurfaceTrackerSection section = surfaceTracker.getCubeNode(blockToCube(y - 1));
             if (section != null) {
-                section.markDirty(x + dx, z + dz);
+                section.markDirty(x, z);
             }
         } else if (relY == IBigCube.DIAMETER_IN_BLOCKS - 1) {
             SurfaceTrackerSection section = surfaceTracker.getCubeNode(blockToCube(y + 1));
             if (section != null) {
-                section.markDirty(x + dx, z + dz);
+                section.markDirty(x, z);
             }
         }
 

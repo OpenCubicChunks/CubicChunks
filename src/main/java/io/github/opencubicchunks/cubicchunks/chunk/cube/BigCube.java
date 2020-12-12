@@ -887,6 +887,7 @@ public class BigCube implements ChunkAccess, IBigCube {
                     SurfaceTrackerWrapper tracker = (SurfaceTrackerWrapper) heightmap;
                     tracker.loadCube(this);
                 }
+                // TODO probably don't want to do this if the cube was already loaded as a CubePrimer
                 ((LightHeightmapGetter) chunk).getLightHeightmap().loadCube(this);
             }
         }

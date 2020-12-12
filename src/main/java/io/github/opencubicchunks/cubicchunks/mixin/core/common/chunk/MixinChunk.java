@@ -90,16 +90,18 @@ public abstract class MixinChunk implements ChunkAccess, LightHeightmapGetter {
             at = @At("RETURN")
     )
     private void onInitFromProtoChunk(ServerLevel serverLevel, ProtoChunk protoChunk, Consumer<LevelChunk> consumer, CallbackInfo ci) {
-        lightHeightmap = new LightSurfaceTrackerWrapper(this);
+        lightHeightmap = ((LightHeightmapGetter) protoChunk).getLightHeightmap();
     }
 
     @Inject(
             method = "setBlockState(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;Z)Lnet/minecraft/world/level/block/state/BlockState;",
-            at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/chunk/LevelChunkSection;isEmpty()Z")
+            at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/levelgen/Heightmap;update(IIILnet/minecraft/world/level/block/state/BlockState;)Z", ordinal = 0)
     )
     private void onSetBlock(BlockPos pos, BlockState state, boolean moved, CallbackInfoReturnable<BlockState> cir) {
         // TODO client side light heightmap stuff
         if (!this.level.isClientSide) {
+            // Light heightmap update needs to occur before the light engine update.
+            // LevelChunk.setBlockState is called before the light engine is updated, so this works fine currently, but if this update call is ever moved, that must still be the case.
             ((LightHeightmapGetter) this).getLightHeightmap().update(pos.getX() & 15, pos.getY(), pos.getZ() & 15, state);
         }
     }

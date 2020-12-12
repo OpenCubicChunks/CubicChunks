@@ -17,10 +17,13 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
+import io.github.opencubicchunks.cubicchunks.chunk.LightHeightmapGetter;
 import io.github.opencubicchunks.cubicchunks.chunk.biome.CubeBiomeContainer;
+import io.github.opencubicchunks.cubicchunks.chunk.heightmap.LightSurfaceTrackerWrapper;
 import io.github.opencubicchunks.cubicchunks.chunk.heightmap.SurfaceTrackerSection;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
+import io.github.opencubicchunks.cubicchunks.world.CubeWorldGenRegion;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap;
@@ -31,7 +34,9 @@ import net.minecraft.ReportedException;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.SectionPos;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.LevelHeightAccessor;
 import net.minecraft.world.level.TickList;
@@ -41,6 +46,7 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.ChunkBiomeContainer;
+import net.minecraft.world.level.chunk.ChunkSource;
 import net.minecraft.world.level.chunk.ChunkStatus;
 import net.minecraft.world.level.chunk.LevelChunkSection;
 import net.minecraft.world.level.chunk.ProtoTickList;
@@ -88,6 +94,8 @@ public class CubePrimer implements IBigCube, ChunkAccess {
 
     private long inhabitedTime;
 
+    private boolean[] lightHeightmapLoaded;
+
     public CubePrimer(CubePos cubePos, UpgradeData upgradeData, LevelHeightAccessor levelHeightAccessor) {
 //        this(cubePos, upgradeData, (ChunkSection[])null, new ChunkPrimerTickList<>((p_205332_0_) -> {
 //            return p_205332_0_ == null || p_205332_0_.defaultBlockState().isAir();
@@ -121,6 +129,8 @@ public class CubePrimer implements IBigCube, ChunkAccess {
                 throw new IllegalStateException("Number of Sections must equal BigCube.CUBESIZE");
             }
         }
+
+        this.lightHeightmapLoaded = new boolean[IBigCube.CHUNK_COUNT];
     }
 
     @Deprecated @Override public ChunkPos getPos() {
@@ -182,7 +192,35 @@ public class CubePrimer implements IBigCube, ChunkAccess {
             LevelChunkSection chunksection = this.sections[index];
             BlockState blockstate = chunksection.setBlockState(x, y, z, state, false);
             if (this.status.isOrAfter(ChunkStatus.FEATURES) && state != blockstate && (state.getLightBlock(this, pos) != blockstate.getLightBlock(this, pos)
-                || state.getLightEmission() != blockstate.getLightEmission() || state.useShapeForLightOcclusion() || blockstate.useShapeForLightOcclusion())) {
+                    || state.getLightEmission() != blockstate.getLightEmission() || state.useShapeForLightOcclusion() || blockstate.useShapeForLightOcclusion())) {
+                ChunkSource chunkSource;
+                if (this.levelHeightAccessor instanceof CubeWorldGenRegion) {
+                    chunkSource = ((CubeWorldGenRegion) this.levelHeightAccessor).getChunkSource();
+                } else {
+                    chunkSource = ((ServerLevel) this.levelHeightAccessor).getChunkSource();
+                }
+
+                ChunkPos chunkPos = this.cubePos.asChunkPos();
+                for (int dx = 0; dx < IBigCube.DIAMETER_IN_SECTIONS; dx++) {
+                    for (int dz = 0; dz < IBigCube.DIAMETER_IN_SECTIONS; dz++) {
+                        // TODO this can return null, leading to incorrect light heightmap values -> incorrect sky lighting on worldgen.
+                        //      not really feasible to fix until we get a "columns before cubes" invariant.
+                        BlockGetter chunk = chunkSource.getChunkForLighting(chunkPos.x + dx, chunkPos.z + dz);
+                        if (chunk instanceof LightHeightmapGetter) {
+                            LightSurfaceTrackerWrapper lightHeightmap = ((LightHeightmapGetter) chunk).getLightHeightmap();
+                            if (lightHeightmap != null) {
+                                // TODO this stuff is awful for performance; need to optimize it
+                                //      probably want to do the thing we do for other scale0 sections and store a reference to it
+                                if (!lightHeightmapLoaded[dx + dz * IBigCube.DIAMETER_IN_SECTIONS]) {
+                                    lightHeightmapLoaded[dx + dz * IBigCube.DIAMETER_IN_SECTIONS] = true;
+                                    lightHeightmap.loadCube(this);
+                                }
+                                // Not sure if this is the right blockstate to pass in, but it doesn't actually matter since we don't use it
+                                lightHeightmap.update(x, pos.getY(), z, state);
+                            }
+                        }
+                    }
+                }
 
                 lightManager.checkBlock(pos);
             }
