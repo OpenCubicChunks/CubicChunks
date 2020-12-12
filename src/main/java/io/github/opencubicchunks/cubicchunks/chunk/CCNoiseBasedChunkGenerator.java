@@ -43,6 +43,7 @@ import net.minecraft.world.level.levelgen.WorldgenRandom;
 import net.minecraft.world.level.levelgen.feature.StructureFeature;
 import net.minecraft.world.level.levelgen.feature.structures.JigsawJunction;
 import net.minecraft.world.level.levelgen.feature.structures.StructureTemplatePool;
+import net.minecraft.world.level.levelgen.structure.BoundingBox;
 import net.minecraft.world.level.levelgen.structure.PoolElementStructurePiece;
 import net.minecraft.world.level.levelgen.structure.StructurePiece;
 import net.minecraft.world.level.levelgen.synth.ImprovedNoise;
@@ -194,13 +195,13 @@ public final class CCNoiseBasedChunkGenerator extends ChunkGenerator {
         return Mth.clampedLerp(minClampNoise / 512.0D, maxClampNoise / 512.0D, (mainClampNoise / 10.0D + 1.0D) / 2.0D);
     }
 
-//   private double[] makeAndFillNoiseColumn(int x, int z) {
-//      double[] ds = new double[this.chunkCountY + 1];
-//      this.fillNoiseColumn(ds, x, z);
-//      return ds;
-//   }
+    private double[] makeAndFillNoiseColumn(int x, int z) {
+        double[] ds = new double[this.chunkSizeY + 1];
+        this.fillNoiseColumn(ds, x, z, null);
+        return ds;
+    }
 
-    private void fillNoiseColumn(double[] densities, int x, int z, ChunkAccess chunkAccess/*!*/) {
+    private void fillNoiseColumn(double[] densities, int x, int z, @Nullable ChunkAccess chunkAccess/*!*/) {
         NoiseSettings noiseSettings = this.settings.get().noiseSettings();
         double biomeDensityOffset;
         double biomeDensityFactor;
@@ -258,7 +259,7 @@ public final class CCNoiseBasedChunkGenerator extends ChunkGenerator {
         double randomOffset = noiseSettings.randomDensityOffset() ? this.getRandomDensity(x, z) : 0.0D;
         double densityFactor = noiseSettings.densityFactor();
         double densityOffset = noiseSettings.densityOffset();
-        int ySize = Mth.intFloorDiv(/*noiseSettings.minY() or 0*/ chunkAccess.getMinBuildHeight() /*!*/, this.chunkHeight); //Size in blocks
+        int ySize = Mth.intFloorDiv((chunkAccess != null) ? chunkAccess.getMinBuildHeight() : noiseSettings.minY() /*!*/, this.chunkHeight); //Size in blocks
 
         for (int ySection = 0; ySection <= this.chunkSizeY; ++ySection) {
             int y = ySection + (ySize);
@@ -315,41 +316,40 @@ public final class CCNoiseBasedChunkGenerator extends ChunkGenerator {
     }
 
     private int iterateNoiseColumn(int x, int z, @Nullable BlockState[] states, @Nullable Predicate<BlockState> predicate) {
-//      int i = Math.floorDiv(x, this.chunkWidth);
-//      int j = Math.floorDiv(z, this.chunkWidth);
-//      int k = Math.floorMod(x, this.chunkWidth);
-//      int l = Math.floorMod(z, this.chunkWidth);
-//      double d = (double)k / (double)this.chunkWidth;
-//      double e = (double)l / (double)this.chunkWidth;
-//      double[][] ds = new double[][]{this.makeAndFillNoiseColumn(i, j), this.makeAndFillNoiseColumn(i, j + 1), this.makeAndFillNoiseColumn(i + 1, j), this.makeAndFillNoiseColumn(i + 1,
-//      j + 1)};
-//
-//      for(int m = this.chunkCountY - 1; m >= 0; --m) {
-//         double f = ds[0][m];
-//         double g = ds[1][m];
-//         double h = ds[2][m];
-//         double n = ds[3][m];
-//         double o = ds[0][m + 1];
-//         double p = ds[1][m + 1];
-//         double q = ds[2][m + 1];
-//         double r = ds[3][m + 1];
-//
-//         for(int s = this.chunkHeight - 1; s >= 0; --s) {
-//            double t = (double)s / (double)this.chunkHeight;
-//            double u = Mth.lerp3(t, d, e, f, o, h, q, g, p, n, r);
-//            int v = m * this.chunkHeight + s;
-//            int w = v + ((NoiseGeneratorSettings)this.settings.get()).noiseSettings().minY();
-//            BlockState blockState = this.generateBaseState(u, w);
-//            if (states != null) {
-//               states[v] = blockState;
-//            }
-//
-//            if (predicate != null && predicate.test(blockState)) {
-//               return w + 1;
-//            }
-//         }
-//      }
+        int i = Math.floorDiv(x, this.chunkWidth);
+        int j = Math.floorDiv(z, this.chunkWidth);
+        int k = Math.floorMod(x, this.chunkWidth);
+        int l = Math.floorMod(z, this.chunkWidth);
+        double d = (double) k / (double) this.chunkWidth;
+        double e = (double) l / (double) this.chunkWidth;
+        double[][] ds = new double[][] { this.makeAndFillNoiseColumn(i, j), this.makeAndFillNoiseColumn(i, j + 1), this.makeAndFillNoiseColumn(i + 1, j), this.makeAndFillNoiseColumn(i + 1,
+            j + 1) };
 
+        for (int m = this.chunkSizeY - 1; m >= 0; --m) {
+            double f = ds[0][m];
+            double g = ds[1][m];
+            double h = ds[2][m];
+            double n = ds[3][m];
+            double o = ds[0][m + 1];
+            double p = ds[1][m + 1];
+            double q = ds[2][m + 1];
+            double r = ds[3][m + 1];
+
+            for (int s = this.chunkHeight - 1; s >= 0; --s) {
+                double t = (double) s / (double) this.chunkHeight;
+                double u = Mth.lerp3(t, d, e, f, o, h, q, g, p, n, r);
+                int v = m * this.chunkHeight + s;
+                int w = v + this.settings.get().noiseSettings().minY();
+                BlockState blockState = this.generateBaseState(u, w);
+                if (states != null) {
+                    states[v] = blockState;
+                }
+
+                if (predicate != null && predicate.test(blockState)) {
+                    return w + 1;
+                }
+            }
+        }
         return 0;
     }
 
@@ -456,8 +456,8 @@ public final class CCNoiseBasedChunkGenerator extends ChunkGenerator {
         }
 
         ProtoChunk protoChunk = (ProtoChunk) chunk;
-//        Heightmap oceanFloorHeightmap = protoChunk.getOrCreateHeightmapUnprimed(Heightmap.Types.OCEAN_FLOOR_WG);
-//        Heightmap worldSurfaceHeightmap = protoChunk.getOrCreateHeightmapUnprimed(Heightmap.Types.WORLD_SURFACE_WG);
+        Heightmap oceanFloorHeightmap = protoChunk.getOrCreateHeightmapUnprimed(Heightmap.Types.OCEAN_FLOOR_WG);
+        Heightmap worldSurfaceHeightmap = protoChunk.getOrCreateHeightmapUnprimed(Heightmap.Types.WORLD_SURFACE_WG);
         BlockPos.MutableBlockPos mutableBlockPos = new BlockPos.MutableBlockPos();
         ObjectListIterator<StructurePiece> structurePieceIterator = structurePiecesList.iterator();
         ObjectListIterator<JigsawJunction> jigsawJunctionIterator = jigsawJunctionsList.iterator();
@@ -514,45 +514,44 @@ public final class CCNoiseBasedChunkGenerator extends ChunkGenerator {
                                 double density = Mth.clamp(height / 200.0D, -1.0D, 1.0D);
 
                                 density = density / 2.0D - density * density * density / 24.0D;
-//                                while (structurePieceIterator.hasNext()) {
-//                                    StructurePiece structurePiece = structurePieceIterator.next();
-//                                    BoundingBox structurePieceBoundingBox = structurePiece.getBoundingBox();
-//                                    int xDistance = Math.max(0, Math.max(structurePieceBoundingBox.x0 - xCoord, xCoord - structurePieceBoundingBox.x1));
-//                                    int yDistance = blockY - (structurePieceBoundingBox.y0 + (structurePiece instanceof PoolElementStructurePiece ?
-//                                        ((PoolElementStructurePiece) structurePiece).getGroundLevelDelta() : 0));
-//                                    int zDistance = Math.max(0, Math.max(structurePieceBoundingBox.z0 - zCoord, zCoord - structurePieceBoundingBox.z1));
-//                                    density += getContribution(xDistance, yDistance, zDistance) * 0.8D;
-//                                }
-//
-//                                structurePieceIterator.back(structurePiecesList.size());
-//
-//                                while (jigsawJunctionIterator.hasNext()) {
-//                                    JigsawJunction jigsawJunction = jigsawJunctionIterator.next();
-//                                    int xDistance = xCoord - jigsawJunction.getSourceX();
-//                                    int yDistance = blockY - jigsawJunction.getSourceGroundY();
-//                                    int zDistance = zCoord - jigsawJunction.getSourceZ();
-//                                    density += getContribution(xDistance, yDistance, zDistance) * 0.4D;
-//                                }
-//
-//                                jigsawJunctionIterator.back(jigsawJunctionsList.size());
+                                while (structurePieceIterator.hasNext()) {
+                                    StructurePiece structurePiece = structurePieceIterator.next();
+                                    BoundingBox structurePieceBoundingBox = structurePiece.getBoundingBox();
+                                    int xDistance = Math.max(0, Math.max(structurePieceBoundingBox.x0 - xCoord, xCoord - structurePieceBoundingBox.x1));
+                                    int yDistance = blockY - (structurePieceBoundingBox.y0 + (structurePiece instanceof PoolElementStructurePiece ?
+                                        ((PoolElementStructurePiece) structurePiece).getGroundLevelDelta() : 0));
+                                    int zDistance = Math.max(0, Math.max(structurePieceBoundingBox.z0 - zCoord, zCoord - structurePieceBoundingBox.z1));
+                                    density += getContribution(xDistance, yDistance, zDistance) * 0.8D;
+                                }
+
+                                structurePieceIterator.back(structurePiecesList.size());
+
+                                while (jigsawJunctionIterator.hasNext()) {
+                                    JigsawJunction jigsawJunction = jigsawJunctionIterator.next();
+                                    int xDistance = xCoord - jigsawJunction.getSourceX();
+                                    int yDistance = blockY - jigsawJunction.getSourceGroundY();
+                                    int zDistance = zCoord - jigsawJunction.getSourceZ();
+                                    density += getContribution(xDistance, yDistance, zDistance) * 0.4D;
+                                }
+
+                                jigsawJunctionIterator.back(jigsawJunctionsList.size());
                                 BlockState baseState = this.generateBaseState(density, blockY);
 
                                 //Light engine
-//                                if (baseState != AIR) {
-//                                    if (baseState.getLightEmission() != 0) {
-//                                        mutableBlockPos.set(xCoord, blockY, zCoord);
-//                                        cubePrimer.addLight(mutableBlockPos);
-//                                    }
-//
-//                                getMinAndMaxNoise(height);
-
-                                topSection.setBlockState(xLocal, yLocal, zLocal, baseState, false);
+                                if (baseState != AIR) {
+                                    if (baseState.getLightEmission() != 0) {
+                                        mutableBlockPos.set(xCoord, blockY, zCoord);
+                                        protoChunk.addLight(mutableBlockPos);
+                                    }
 
 
-//                                topSection.setBlockState(xLocal, yLocal, zLocal, baseState, false);
-//                                    oceanFloorHeightmap.update(xLocal, blockY, zLocal, baseState);
-//                                    worldSurfaceHeightmap.update(xLocal, blockY, zLocal, baseState);
-//                                }
+                                    topSection.setBlockState(xLocal, yLocal, zLocal, baseState, false);
+
+
+                                    topSection.setBlockState(xLocal, yLocal, zLocal, baseState, false);
+                                    oceanFloorHeightmap.update(xLocal, blockY, zLocal, baseState);
+                                    worldSurfaceHeightmap.update(xLocal, blockY, zLocal, baseState);
+                                }
                             }
                         }
                     }
@@ -569,17 +568,6 @@ public final class CCNoiseBasedChunkGenerator extends ChunkGenerator {
     static double min = 1000;
     static double max = -11111;
 
-    private void getMinAndMaxNoise(double noise) {
-        if (noise < min) {
-            min = noise;
-            CubicChunks.LOGGER.info("Min height: " + min);
-        }
-
-        if (noise > max) {
-            max = noise;
-            CubicChunks.LOGGER.info("Max height: " + max);
-        }
-    }
 
     private static double getContribution(int xDistance, int yDistance, int zDistance) {
         int xIDX = xDistance + 12;
