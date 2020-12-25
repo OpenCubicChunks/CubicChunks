@@ -455,7 +455,9 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
                             cubesToGenerate.appendToStart(watcher);
                         }
                     }
-                    toSend--;
+                    if (state != CubeWatcher.SendToPlayersResult.ALREADY_DONE) {
+                        toSend--;
+                    }
                     iter.remove();
                 }
                 if (!iter.hasNext()) {
