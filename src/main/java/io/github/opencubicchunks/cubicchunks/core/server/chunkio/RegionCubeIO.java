@@ -28,9 +28,18 @@ import cubicchunks.regionlib.api.region.key.IKey;
 import cubicchunks.regionlib.impl.EntryLocation2D;
 import cubicchunks.regionlib.impl.EntryLocation3D;
 import cubicchunks.regionlib.impl.SaveCubeColumns;
+import cubicchunks.regionlib.impl.save.SaveSection2D;
+import cubicchunks.regionlib.impl.save.SaveSection3D;
+import cubicchunks.regionlib.lib.ExtRegion;
+import cubicchunks.regionlib.lib.Region;
+import cubicchunks.regionlib.lib.provider.SharedCachedRegionProvider;
+import cubicchunks.regionlib.lib.provider.SimpleRegionProvider;
+import cubicchunks.regionlib.util.Utils;
 import io.github.opencubicchunks.cubicchunks.api.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.api.world.ICube;
 import io.github.opencubicchunks.cubicchunks.core.CubicChunks;
+import io.github.opencubicchunks.cubicchunks.core.CubicChunksConfig;
+import io.github.opencubicchunks.cubicchunks.core.server.chunkio.region.ShadowPagingRegion;
 import io.github.opencubicchunks.cubicchunks.core.world.cube.Cube;
 import net.minecraft.nbt.CompressedStreamTools;
 import net.minecraft.nbt.NBTTagCompound;
@@ -47,8 +56,10 @@ import org.apache.logging.log4j.Logger;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
@@ -99,7 +110,56 @@ public class RegionCubeIO implements ICubeIO {
             path = Paths.get(".").toAbsolutePath().resolve("clientCache").resolve("DIM" + world.provider.getDimension());
         }
 
-        this.save = SaveCubeColumns.create(path);
+        if (CubicChunksConfig.useShadowPagingIO) {
+            Utils.createDirectories(path);
+
+            Path part2d = path.resolve("region2d");
+            Utils.createDirectories(part2d);
+
+            Path part3d = path.resolve("region3d");
+            Utils.createDirectories(part3d);
+
+            SaveSection2D section2d = new SaveSection2D(
+                    new SharedCachedRegionProvider<>(
+                            new SimpleRegionProvider<>(new EntryLocation2D.Provider(), part2d, (keyProv, r) ->
+                                    ShadowPagingRegion.<EntryLocation2D>builder()
+                                            .setDirectory(part2d)
+                                            .setRegionKey(r)
+                                            .setKeyProvider(keyProv)
+                                            .setSectorSize(512)
+                                            .build(),
+                                    (dir, key) -> Files.exists(dir.resolve(key.getRegionKey().getName()))
+                            )
+                    ),
+                    new SharedCachedRegionProvider<>(
+                            new SimpleRegionProvider<>(new EntryLocation2D.Provider(), part2d,
+                                    (keyProvider, regionKey) -> new ExtRegion<>(part2d, Collections.emptyList(), keyProvider, regionKey),
+                                    (dir, key) -> Files.exists(dir.resolve(key.getRegionKey().getName() + ".ext"))
+                            )
+                    ));
+            SaveSection3D section3d = new SaveSection3D(
+                    new SharedCachedRegionProvider<>(
+                            new SimpleRegionProvider<>(new EntryLocation3D.Provider(), part3d, (keyProv, r) ->
+                                    ShadowPagingRegion.<EntryLocation3D>builder()
+                                            .setDirectory(part3d)
+                                            .setRegionKey(r)
+                                            .setKeyProvider(keyProv)
+                                            .setSectorSize(512)
+                                            .build(),
+                                    (dir, key) -> Files.exists(dir.resolve(key.getRegionKey().getName()))
+                            )
+                    ),
+                    new SharedCachedRegionProvider<>(
+                            new SimpleRegionProvider<>(new EntryLocation3D.Provider(), part3d,
+                                    (keyProvider, regionKey) -> new ExtRegion<>(part3d, Collections.emptyList(), keyProvider, regionKey),
+                                    (dir, key) -> Files.exists(dir.resolve(key.getRegionKey().getName() + ".ext"))
+                            )
+                    ));
+
+            this.save = new SaveCubeColumns(section2d, section3d);
+        } else {
+            this.save = SaveCubeColumns.create(path);
+        }
     }
 
     @Override
@@ -235,11 +295,15 @@ public class RegionCubeIO implements ICubeIO {
             SaveCubeColumns save = this.getSave();
             // NOTE: return true to redo this call (used for batching)
 
-            final int ColumnsBatchSize = 25;
-            final int CubesBatchSize = 250;
+            final int ColumnsBatchSize = 32;
+            final int CubesBatchSize = 256;
 
+            // int numColumnsToSave = columnsToSave.size();
+            // int numCubesToSave = cubesToSave.size();
             int numColumnsSaved = 0;
             int numCubesSaved = 0;
+
+            // TODO: more efficient batched shadow paging?
 
             // save a batch of columns
             Iterator<SaveEntry<EntryLocation2D>> colIt = columnsToSave.values().iterator();
@@ -280,6 +344,8 @@ public class RegionCubeIO implements ICubeIO {
                 }
             }
             boolean hasMoreCubes = cubeIt.hasNext();
+
+            // LOGGER.info("Saved {}/{} cubes and {}/{} columns", numCubesSaved, numCubesToSave, numColumnsSaved, numColumnsToSave);
             return hasMoreColumns || hasMoreCubes;
         } catch (Throwable t) {
             LOGGER.error("Exception occurred when saving cubes", t);

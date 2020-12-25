@@ -196,6 +196,12 @@ public class CubicChunksConfig {
     @Config.Comment("Options relating to support for vanilla clients.")
     public static VanillaClients vanillaClients = new VanillaClients();
 
+    @Config.LangKey("cubicchunks.config.use_shadow_paging_io")
+    @Config.Comment("Whether cubic chunks save format IO should use shadow paging. This may be slightly slower and use "
+            + "a bit more storage but should significantly improve reliability in case of improper shutdown.")
+    @Config.RequiresWorldRestart
+    public static boolean useShadowPagingIO = true;
+
     public static final class VanillaClients {
         @Config.LangKey("cubicchunks.config.vanilla_clients.horizontal_slices")
         @Config.Comment("Enables horizontal slices for vanilla clients. "
