@@ -22,26 +22,54 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package io.github.opencubicchunks.cubicchunks.core.asm.mixin.core.common;
+package io.github.opencubicchunks.cubicchunks.api.worldgen;
 
-import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.server.management.PlayerChunkMapEntry;
-import net.minecraft.util.math.ChunkPos;
-import net.minecraft.world.chunk.Chunk;
+import net.minecraft.nbt.NBTTagCompound;
 
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.gen.Accessor;
+import java.util.Objects;
 
-import java.util.List;
+import javax.annotation.Nullable;
 
-@Mixin(PlayerChunkMapEntry.class)
-public interface IPlayerChunkMapEntry {
-    @Accessor("players") List<EntityPlayerMP> getPlayerList();
-    @Accessor void setLastUpdateInhabitedTime(long time);
-    @Accessor void setSentToPlayers(boolean value);
-    @Accessor(remap = false) boolean isLoading();
-    @Accessor(remap = false) Runnable getLoadedRunnable();
-    @Accessor Chunk getChunk();
-    @Accessor void setChunk(Chunk chunk);
-    @Accessor ChunkPos getPos();
+public class LoadingData<POS> {
+    private final POS pos;
+    @Nullable private NBTTagCompound nbt;
+
+    public LoadingData(POS pos, @Nullable NBTTagCompound nbt) {
+        this.pos = pos;
+        this.nbt = nbt;
+    }
+
+    public POS getPos() {
+        return pos;
+    }
+
+    /**
+     * Returns chunk loading NBT data. Null if chunk not found.
+     */
+    @Nullable public NBTTagCompound getNbt() {
+        return nbt;
+    }
+
+    public void setNbt(NBTTagCompound tag) {
+        this.nbt = tag;
+    }
+
+    @Override public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        LoadingData<?> that = (LoadingData<?>) o;
+        return pos.equals(that.pos);
+    }
+
+    @Override public int hashCode() {
+        return Objects.hash(pos);
+    }
+
+    @Override public String toString() {
+        return "LoadingData(" + pos + ')';
+    }
 }

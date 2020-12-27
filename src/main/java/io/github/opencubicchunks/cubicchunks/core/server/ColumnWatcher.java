@@ -24,6 +24,11 @@
  */
 package io.github.opencubicchunks.cubicchunks.core.server;
 
+import java.util.List;
+
+import javax.annotation.Nonnull;
+import javax.annotation.ParametersAreNonnullByDefault;
+
 import gnu.trove.list.TByteList;
 import gnu.trove.list.array.TByteArrayList;
 import io.github.opencubicchunks.cubicchunks.api.util.CubePos;
@@ -38,22 +43,19 @@ import io.github.opencubicchunks.cubicchunks.core.network.PacketUnloadColumn;
 import io.github.opencubicchunks.cubicchunks.core.server.chunkio.async.forge.AsyncWorldIOExecutor;
 import io.github.opencubicchunks.cubicchunks.core.util.AddressTools;
 import mcp.MethodsReturnNonnullByDefault;
-import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.server.management.PlayerChunkMapEntry;
-import net.minecraft.util.math.ChunkPos;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.world.ChunkWatchEvent;
 
-import java.util.List;
-
-import javax.annotation.Nonnull;
-import javax.annotation.ParametersAreNonnullByDefault;
+import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.server.management.PlayerChunkMapEntry;
+import net.minecraft.util.math.ChunkPos;
+import net.minecraft.world.chunk.Chunk;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class ColumnWatcher extends PlayerChunkMapEntry implements XZAddressable {
 
-    @Nonnull private PlayerCubeMap playerCubeMap;
+    @Nonnull private final PlayerCubeMap playerCubeMap;
     @Nonnull private final TByteList dirtyColumns = new TByteArrayList(64);
 
     ColumnWatcher(PlayerCubeMap playerCubeMap, ChunkPos pos) {
@@ -65,7 +67,29 @@ public class ColumnWatcher extends PlayerChunkMapEntry implements XZAddressable 
         return (IPlayerChunkMapEntry) this;
     }
 
+    @Override
+    public boolean providePlayerChunk(boolean canGenerate) {
+        if (self().isLoading()) {
+            return false;
+        }
+        if (self().getChunk() != null) {
+            return true;
+        }
+        if (canGenerate) {
+            Chunk chunk = this.playerCubeMap.getWorldServer().getChunkProvider().provideChunk(self().getPos().x, self().getPos().z);
+            if (chunk.isEmpty()) {
+                return false;
+            }
+            self().setChunk(chunk);
+        } else {
+            self().setChunk(this.playerCubeMap.getWorldServer().getChunkProvider().loadChunk(self().getPos().x, self().getPos().z));
+        }
+
+        return self().getChunk() != null;
+    }
+
     // CHECKED: 1.10.2-12.18.1.2092
+    @Override
     public void addPlayer(EntityPlayerMP player) {
         assert this.getChunk() == null || this.getChunk() == playerCubeMap.getWorldServer().getChunkProvider().getLoadedChunk(getX(), getZ());
         if (self().getPlayerList().contains(player)) {
@@ -95,6 +119,7 @@ public class ColumnWatcher extends PlayerChunkMapEntry implements XZAddressable 
     }
 
     // CHECKED: 1.10.2-12.18.1.2092//TODO: remove it, the only different line is sending packet
+    @Override
     public void removePlayer(EntityPlayerMP player) {
         assert this.getChunk() == playerCubeMap.getWorldServer().getChunkProvider().getLoadedChunk(getX(), getZ());
         if (!self().getPlayerList().contains(player)) {

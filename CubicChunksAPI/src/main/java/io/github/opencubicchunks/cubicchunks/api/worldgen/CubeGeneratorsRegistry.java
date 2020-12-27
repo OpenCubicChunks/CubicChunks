@@ -25,39 +25,34 @@
 package io.github.opencubicchunks.cubicchunks.api.worldgen;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Random;
-import java.util.Set;
-import java.util.TreeMap;
 import java.util.TreeSet;
+import java.util.function.BiConsumer;
 
 import com.google.common.base.Preconditions;
 import io.github.opencubicchunks.cubicchunks.api.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.api.world.ICube;
 import io.github.opencubicchunks.cubicchunks.api.world.ICubicWorld;
+import io.github.opencubicchunks.cubicchunks.api.worldgen.populator.ICubicPopulator;
+
+import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
-import net.minecraftforge.fml.common.FMLCommonHandler;
-import net.minecraftforge.fml.common.Loader;
-import org.apache.commons.lang3.reflect.FieldUtils;
-
-import com.google.common.collect.ImmutableList;
-import com.google.common.primitives.Ints;
-
-import io.github.opencubicchunks.cubicchunks.api.worldgen.populator.ICubicPopulator;
-import net.minecraftforge.fml.common.IWorldGenerator;
-import net.minecraftforge.fml.common.registry.GameRegistry;
 
 public class CubeGeneratorsRegistry {
 
     /** List of populators added by other mods to vanilla compatibility generator type */
     private static final List<ICubicPopulator> customPopulatorsForFlatCubicGenerator = new ArrayList<ICubicPopulator>();
+    private static final List<BiConsumer<? super World, ? super LoadingData<CubePos>>> cubeLoadingCallbacks = new ArrayList<>(2);
+    private static final List<BiConsumer<? super World, ? super LoadingData<ChunkPos>>> columnLoadingCallbacks = new ArrayList<>(2);
 
-    private static TreeSet<GeneratorWrapper> sortedGeneratorList = new TreeSet<>();
+    private static final Collection<BiConsumer<? super World, ? super LoadingData<CubePos>>> cubeLoadingCallbacksView = Collections.unmodifiableCollection(cubeLoadingCallbacks);
+    private static final Collection<BiConsumer<? super World, ? super LoadingData<ChunkPos>>> columnLoadingCallbacksView = Collections.unmodifiableCollection(columnLoadingCallbacks);
+
+    private static final TreeSet<GeneratorWrapper> sortedGeneratorList = new TreeSet<>();
 
     /**
      * Register a world generator - something that inserts new block types into the world on population stage
@@ -84,6 +79,47 @@ public class CubeGeneratorsRegistry {
         for (GeneratorWrapper wrapper : sortedGeneratorList) {
             wrapper.populator.generate(world, random, pos, biome);
         }
+    }
+
+    /**
+     * Populators added here will be launched prior to any other. It is
+     * recommended to use this function in init or pre init event of a mod.
+     *
+     * @param populator populator instance to register
+     */
+    public static void registerForCompatibilityGenerator(ICubicPopulator populator) {
+        if (!customPopulatorsForFlatCubicGenerator.contains(populator))
+            customPopulatorsForFlatCubicGenerator.add(populator);
+    }
+
+    public static void populateVanillaCubic(World world, Random rand, ICube cube) {
+        for (ICubicPopulator populator : customPopulatorsForFlatCubicGenerator) {
+            populator.generate(world, rand, cube.getCoords(), cube.getBiome(cube.getCoords().getCenterBlockPos()));
+        }
+    }
+
+    /**
+     * Registers a callback invoked after loading cube NBT from disk. This callback will get called even if no data is found, potentially allowing
+     * to prepare data for world generation asynchronously in a cache.
+     */
+    public static void registerCubeAsyncLoadingCallback(BiConsumer<? super World, ? super LoadingData<CubePos>> cubeCallback) {
+        cubeLoadingCallbacks.add(cubeCallback);
+    }
+
+    /**
+     * Registers a callback invoked after loading column NBT from disk. This callback will get called even if no data is found, potentially allowing
+     * to prepare data for world generation asynchronously in a cache.
+     */
+    public static void registerColumnAsyncLoadingCallback(BiConsumer<? super World, ? super LoadingData<ChunkPos>> columnCallback) {
+        columnLoadingCallbacks.add(columnCallback);
+    }
+
+    public static Collection<BiConsumer<? super World, ? super LoadingData<CubePos>>> getCubeAsyncLoadingCallbacks() {
+        return cubeLoadingCallbacksView;
+    }
+
+    public static Collection<BiConsumer<? super World, ? super LoadingData<ChunkPos>>> getColumnAsyncLoadingCallbacks() {
+        return columnLoadingCallbacksView;
     }
 
     private static class GeneratorWrapper implements Comparable<GeneratorWrapper> {
@@ -124,23 +160,6 @@ public class CubeGeneratorsRegistry {
 
         @Override public int compareTo(GeneratorWrapper o) {
             return Integer.compare(weight, o.weight);
-        }
-    }
-    
-    /**
-     * Populators added here will be launched prior to any other. It is
-     * recommended to use this function in init or pre init event of a mod.
-     *
-     * @param populator populator instance to register
-     */
-    public static void registerForCompatibilityGenerator(ICubicPopulator populator) {
-        if (!customPopulatorsForFlatCubicGenerator.contains(populator))
-            customPopulatorsForFlatCubicGenerator.add(populator);
-    }
-    
-    public static void populateVanillaCubic(World world, Random rand, ICube cube) {
-        for (ICubicPopulator populator : customPopulatorsForFlatCubicGenerator) {
-            populator.generate(world, rand, cube.getCoords(), cube.getBiome(cube.getCoords().getCenterBlockPos()));
         }
     }
 }

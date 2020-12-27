@@ -42,6 +42,7 @@ import io.github.opencubicchunks.cubicchunks.core.network.PacketUnloadCube;
 import io.github.opencubicchunks.cubicchunks.core.server.chunkio.async.forge.AsyncWorldIOExecutor;
 import io.github.opencubicchunks.cubicchunks.core.util.AddressTools;
 import io.github.opencubicchunks.cubicchunks.core.util.ticket.ITicket;
+import io.github.opencubicchunks.cubicchunks.core.world.cube.BlankCube;
 import io.github.opencubicchunks.cubicchunks.core.world.cube.Cube;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import mcp.MethodsReturnNonnullByDefault;
@@ -176,6 +177,14 @@ public class CubeWatcher implements ITicket, ICubeWatcher {
         playerCubeMap.getWorldServer().profiler.startSection("getCube");
         if (canGenerate) {
             this.cube = this.cubeCache.getCube(cubeX, cubeY, cubeZ, ICubeProviderServer.Requirement.LIGHT);
+            assert this.cube != null;
+            if (this.cube instanceof BlankCube) {
+                this.cube = null;
+                return false;
+            }
+            if (!this.cube.isFullyPopulated()) {
+                return false;
+            }
         } else {
             this.cube = this.cubeCache.getCube(cubeX, cubeY, cubeZ, ICubeProviderServer.Requirement.LOAD);
         }
@@ -193,8 +202,6 @@ public class CubeWatcher implements ITicket, ICubeWatcher {
                     lightGenerationAttempts = 0;
                 }
             }
-            // NOTE: edge light updates may cause hasLightUpdates to be true
-            // if the neighbor cube is not loaded. Just send the cube anyway
         }
         playerCubeMap.getWorldServer().profiler.endSection();
 

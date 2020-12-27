@@ -54,6 +54,19 @@ public class Box {
         }
     }
 
+    public boolean allMatch(XYZPredicate predicate) {
+        for (int x = x1; x <= x2; x++) {
+            for (int y = y1; y <= y2; y++) {
+                for (int z = z1; z <= z2; z++) {
+                    if (!predicate.test(x, y, z)) {
+                        return false;
+                    }
+                }
+            }
+        }
+        return true;
+    }
+
     public Box add(Box o) {
         return new Box(x1 + o.x1, y1 + o.y1, z1 + o.z1,
                 x2 + o.x2, y2 + o.y2, z2 + o.z2);
@@ -67,6 +80,12 @@ public class Box {
     public interface XYZFunction {
 
         void apply(int x, int y, int z);
+    }
+
+    @FunctionalInterface
+    public interface XYZPredicate {
+
+        boolean test(int x, int y, int z);
     }
 
     public static class Mutable extends Box{

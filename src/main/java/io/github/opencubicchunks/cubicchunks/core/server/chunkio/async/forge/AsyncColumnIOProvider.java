@@ -19,19 +19,20 @@
 
 package io.github.opencubicchunks.cubicchunks.core.server.chunkio.async.forge;
 
-import io.github.opencubicchunks.cubicchunks.api.worldgen.ICubeGenerator;
-import io.github.opencubicchunks.cubicchunks.core.CubicChunks;
-import io.github.opencubicchunks.cubicchunks.core.server.chunkio.ICubeIO;
-import mcp.MethodsReturnNonnullByDefault;
-import net.minecraft.world.chunk.Chunk;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.world.ChunkDataEvent;
-
 import java.io.IOException;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
+
+import io.github.opencubicchunks.cubicchunks.api.worldgen.ICubeGenerator;
+import io.github.opencubicchunks.cubicchunks.core.CubicChunks;
+import io.github.opencubicchunks.cubicchunks.core.server.chunkio.ICubeIO;
+import mcp.MethodsReturnNonnullByDefault;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.world.ChunkDataEvent;
+
+import net.minecraft.world.chunk.Chunk;
 
 /**
  * Async loading of columns. Roughly equivalent to Forge's ChunkIOProvider
@@ -53,7 +54,7 @@ class AsyncColumnIOProvider extends AsyncIOProvider<Chunk> {
 
     @Override public void run() {
         try {
-            this.columnData = this.loader.loadColumnAsyncPart(this.colInfo.x, this.colInfo.z);
+            this.columnData = this.loader.loadColumnAsyncPart(this.colInfo.world, this.colInfo.x, this.colInfo.z);
         } catch (IOException e) {
             CubicChunks.LOGGER.error("Could not load column in {} @ ({}, {})", this.colInfo.world, this.colInfo.x, this.colInfo.z, e);
         } finally {
@@ -65,7 +66,8 @@ class AsyncColumnIOProvider extends AsyncIOProvider<Chunk> {
     }
 
     @Override void runSynchronousPart() {
-        if (columnData != null) {
+        assert columnData != null;
+        if (columnData.getObject() != null) {
             this.loader.loadColumnSyncPart(columnData);
             Chunk column = this.columnData.getObject();
             assert column != null;

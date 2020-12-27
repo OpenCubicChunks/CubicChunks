@@ -24,24 +24,25 @@
  */
 package io.github.opencubicchunks.cubicchunks.core.server;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.function.Supplier;
+
+import javax.annotation.Nullable;
+
 import io.github.opencubicchunks.cubicchunks.api.world.IColumn;
 import io.github.opencubicchunks.cubicchunks.api.world.ICube;
 import io.github.opencubicchunks.cubicchunks.core.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.core.server.chunkio.ICubeIO;
 import io.github.opencubicchunks.cubicchunks.core.world.ICubeProviderInternal;
 import io.github.opencubicchunks.cubicchunks.core.world.cube.Cube;
+
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.datafix.DataFixer;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.storage.AnvilChunkLoader;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.function.Supplier;
-
-import javax.annotation.Nullable;
 
 public class CubicAnvilChunkLoader extends AnvilChunkLoader {
 
@@ -64,19 +65,13 @@ public class CubicAnvilChunkLoader extends AnvilChunkLoader {
     }
 
     @Override @Nullable public Chunk loadChunk(World worldIn, int x, int z) throws IOException {
-        ICubeIO.PartialData<Chunk> data = ((ICubeProviderInternal.Server) worldIn.getChunkProvider()).getCubeIO().loadColumnAsyncPart(x, z);
-        if (data != null) {
-            ((ICubeProviderInternal.Server) worldIn.getChunkProvider()).getCubeIO().loadColumnSyncPart(data);
-            return data.getObject();
-        }
-        return null;
+        ICubeIO.PartialData<Chunk> data = ((ICubeProviderInternal.Server) worldIn.getChunkProvider()).getCubeIO().loadColumnAsyncPart(worldIn, x, z);
+        ((ICubeProviderInternal.Server) worldIn.getChunkProvider()).getCubeIO().loadColumnSyncPart(data);
+        return data.getObject();
     }
 
     @Override @Nullable public Object[] loadChunk__Async(World worldIn, int x, int z) throws IOException {
-        ICubeIO.PartialData<Chunk> data = ((ICubeProviderInternal.Server) worldIn.getChunkProvider()).getCubeIO().loadColumnAsyncPart(x, z);
-        if (data == null) {
-            return null;
-        }
+        ICubeIO.PartialData<Chunk> data = ((ICubeProviderInternal.Server) worldIn.getChunkProvider()).getCubeIO().loadColumnAsyncPart(worldIn, x, z);
         return new Object[]{data.getObject(), data.getNbt()};
     }
 

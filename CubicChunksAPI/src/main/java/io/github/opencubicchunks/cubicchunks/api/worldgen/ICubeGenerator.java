@@ -24,18 +24,22 @@
  */
 package io.github.opencubicchunks.cubicchunks.api.worldgen;
 
-import io.github.opencubicchunks.cubicchunks.api.util.Box;
-import io.github.opencubicchunks.cubicchunks.api.world.ICube;
-import mcp.MethodsReturnNonnullByDefault;
-import net.minecraft.entity.EnumCreatureType;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.biome.Biome;
-import net.minecraft.world.chunk.Chunk;
-
 import java.util.List;
+import java.util.Optional;
 
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
+
+import io.github.opencubicchunks.cubicchunks.api.util.Box;
+import io.github.opencubicchunks.cubicchunks.api.world.ICube;
+import mcp.MethodsReturnNonnullByDefault;
+
+import net.minecraft.entity.EnumCreatureType;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.World;
+import net.minecraft.world.biome.Biome;
+import net.minecraft.world.chunk.Chunk;
+import net.minecraft.world.chunk.ChunkPrimer;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
@@ -105,6 +109,37 @@ public interface ICubeGenerator {
      */
     void populate(ICube cube);
 
+    default Optional<CubePrimer> tryGenerateCube(int cubeX, int cubeY, int cubeZ, CubePrimer primer) {
+        return Optional.of(this.generateCube(cubeX, cubeY, cubeZ, primer));
+    }
+
+    default Optional<Chunk> tryGenerateColumn(World world, int columnX, int columnZ, ChunkPrimer primer) {
+        Chunk column = new Chunk(world, columnX, columnZ);
+        this.generateColumn(column);
+        return Optional.of(column);
+    }
+
+    /**
+     * Checks whether the generator is ready to generate a given cube.
+     */
+    default GeneratorReadyState pollAsyncCubeGenerator(int cubeX, int cubeY, int cubeZ) {
+        return GeneratorReadyState.READY;
+    }
+
+    /**
+     * Checks whether the generator is ready to generate a given column.
+     */
+    default GeneratorReadyState pollAsyncColumnGenerator(int chunkX, int chunkZ) {
+        return GeneratorReadyState.READY;
+    }
+
+    /**
+     * Checks whether the generator is ready to generate a given column.
+     */
+    default GeneratorReadyState pollAsyncCubePopulator(int cubeX, int cubeY, int cubeZ) {
+        return GeneratorReadyState.READY;
+    }
+
     /**
      * Get the bounding box defining a range of cubes whose population contributes to {@code cube} being fully
      * populated. The requested cubes will all be generated and populated when the cube that they affect needs to be fully populated.
@@ -113,7 +148,7 @@ public interface ICubeGenerator {
      * {@link ICubeGenerator#populate(ICube)} populates a 16x16x16 block area in a 2x2x2 area of cubes around the center.
      * <pre>
      *
-     * Shown: Which cubes affect the current cube (marked with dots), and their coprresponding areas of population.
+     * Shown: Which cubes affect the current cube (marked with dots), and their corresponding areas of population.
      *
      * +----------+----------+  . .  The chunk provided as a parameter
      * |          | . . . . .|  . .  to this method (getFullPopulationRequirements).
@@ -219,4 +254,20 @@ public interface ICubeGenerator {
      * @return the position of the structure, or {@code null} if none could be found
      */
     @Nullable BlockPos getClosestStructure(String name, BlockPos pos, boolean findUnexplored);
+
+    enum GeneratorReadyState {
+        /**
+         * Indicates that the generator is ready to generate a given cube or column
+         */
+        READY,
+        /**
+         * Indicates that the generator is waiting for some resources to generate a given cube or column.
+         * Generating may be possible in this state, but it could fail and take longer amount of time.
+         */
+        WAITING,
+        /**
+         * Generating a cube or column will most likely fail in this state.
+         */
+        FAIL
+    }
 }

@@ -46,7 +46,7 @@ class AsyncCubeIOProvider extends AsyncIOProvider<Cube> {
     @Nonnull private final QueuedCube cubeInfo;
     @Nonnull private final ICubeIO loader;
 
-    @Nonnull private CompletableFuture<Chunk> futureColumn = new CompletableFuture<>();
+    @Nonnull private final CompletableFuture<Chunk> futureColumn = new CompletableFuture<>();
     @Nullable private ICubeIO.PartialData<ICube> cubeData;
 
     AsyncCubeIOProvider(QueuedCube cube, ICubeIO loader) {
@@ -76,8 +76,8 @@ class AsyncCubeIOProvider extends AsyncIOProvider<Cube> {
     // sync stuff
     @Override
     public void runSynchronousPart() {
-
-        if (cubeData != null) {
+        assert cubeData != null;
+        if (cubeData.getObject() != null) {
             this.loader.loadCubeSyncPart(cubeData);
             ICube cube = this.cubeData.getObject();
             assert cube != null;

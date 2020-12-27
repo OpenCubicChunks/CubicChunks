@@ -24,25 +24,60 @@
  */
 package io.github.opencubicchunks.cubicchunks.core.server.chunkio;
 
+import java.io.IOException;
+import java.util.Collection;
+import java.util.function.BiConsumer;
+
+import io.github.opencubicchunks.cubicchunks.api.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.api.world.ICube;
+import io.github.opencubicchunks.cubicchunks.api.worldgen.CubeGeneratorsRegistry;
+import io.github.opencubicchunks.cubicchunks.api.worldgen.LoadingData;
+import io.github.opencubicchunks.cubicchunks.core.world.cube.Cube;
+
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.math.ChunkPos;
+import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.storage.IThreadedFileIO;
-
-import java.io.IOException;
-
-import javax.annotation.Nullable;
-
-import io.github.opencubicchunks.cubicchunks.core.world.cube.Cube;
 
 public interface ICubeIO extends IThreadedFileIO {
 	void flush() throws IOException;
 
-	@Nullable PartialData<Chunk> loadColumnAsyncPart(int chunkX, int chunkZ) throws IOException;
+	default PartialData<Chunk> loadColumnAsyncPart(World world, int chunkX, int chunkZ) throws IOException {
+		PartialData<Chunk> data = loadColumnNbt(chunkX, chunkZ);
+		Collection<BiConsumer<? super World, ? super LoadingData<ChunkPos>>> asyncCallbacks = CubeGeneratorsRegistry.getColumnAsyncLoadingCallbacks();
+		if (!asyncCallbacks.isEmpty()) {
+			ChunkPos chunkPos = new ChunkPos(chunkX, chunkZ);
+			LoadingData<ChunkPos> chunkLoadingData = new LoadingData<>(chunkPos, data.getNbt());
+			asyncCallbacks.forEach(cons -> cons.accept(world, chunkLoadingData));
+			data.setNbt(chunkLoadingData.getNbt());
+		}
+		loadColumnAsyncPart(data, chunkX, chunkZ);
+		return data;
+	}
 
-	@Nullable void loadColumnSyncPart(PartialData<Chunk> info);
+	PartialData<Chunk> loadColumnNbt(int chunkX, int chunkZ) throws IOException;
 
-	@Nullable PartialData<ICube> loadCubeAsyncPart(Chunk column, int cubeY) throws IOException;
+	void loadColumnAsyncPart(PartialData<Chunk> info, int chunkX, int chunkZ);
+
+	void loadColumnSyncPart(PartialData<Chunk> info);
+
+	default PartialData<ICube> loadCubeAsyncPart(Chunk column, int cubeY) throws IOException {
+		PartialData<ICube> data = loadCubeNbt(column, cubeY);
+		Collection<BiConsumer<? super World, ? super LoadingData<CubePos>>> asyncCallbacks = CubeGeneratorsRegistry.getCubeAsyncLoadingCallbacks();
+		if (!asyncCallbacks.isEmpty()) {
+			CubePos cubePos = new CubePos(column.x, cubeY, column.z);
+			LoadingData<CubePos> chunkLoadingData = new LoadingData<>(cubePos, data.getNbt());
+			asyncCallbacks.forEach(cons -> cons.accept(column.getWorld(), chunkLoadingData));
+			data.setNbt(chunkLoadingData.getNbt());
+		}
+		loadCubeAsyncPart(data, column, cubeY);
+		return data;
+	}
+
+	PartialData<ICube> loadCubeNbt(Chunk column, int cubeY) throws IOException;
+
+	void loadCubeAsyncPart(PartialData<ICube> info, Chunk column, int cubeY);
 
 	void loadCubeSyncPart(PartialData<ICube> info);
 
@@ -62,8 +97,8 @@ public interface ICubeIO extends IThreadedFileIO {
 	 * Stores partially read cube, before sync read but after async read
 	 */
 	class PartialData<T> {
-		final NBTTagCompound nbt;
-		final T object;
+		NBTTagCompound nbt;
+		T object;
 
 		PartialData(T object, NBTTagCompound nbt) {
 			this.object = object;
@@ -74,8 +109,16 @@ public interface ICubeIO extends IThreadedFileIO {
 			return object;
 		}
 
+	    public void setObject(T obj) {
+		    this.object = obj;
+	    }
+
 		public NBTTagCompound getNbt() {
 			return nbt;
 		}
-	}
+
+	    public void setNbt(NBTTagCompound nbt) {
+		    this.nbt = nbt;
+	    }
+    }
 }

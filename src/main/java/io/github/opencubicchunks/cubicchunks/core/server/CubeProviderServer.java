@@ -39,6 +39,7 @@ import io.github.opencubicchunks.cubicchunks.api.util.XYZMap;
 import io.github.opencubicchunks.cubicchunks.core.world.ICubeProviderInternal;
 import io.github.opencubicchunks.cubicchunks.core.asm.mixin.ICubicWorldInternal;
 import io.github.opencubicchunks.cubicchunks.api.world.IColumn;
+import io.github.opencubicchunks.cubicchunks.core.world.cube.BlankCube;
 import io.github.opencubicchunks.cubicchunks.core.world.cube.Cube;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.entity.EnumCreatureType;
@@ -49,6 +50,7 @@ import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.chunk.Chunk;
+import net.minecraft.world.chunk.ChunkPrimer;
 import net.minecraft.world.gen.ChunkProviderServer;
 import net.minecraftforge.common.ForgeChunkManager;
 import net.minecraftforge.fml.common.registry.GameRegistry;
@@ -57,6 +59,7 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
 import java.util.Random;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
@@ -79,22 +82,25 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 public class CubeProviderServer extends ChunkProviderServer implements ICubeProviderServer, ICubeProviderInternal.Server {
 
-    @Nonnull private WorldServer worldServer;
-    @Nonnull private ICubeIO cubeIO;
+    @Nonnull private final EmptyColumn emptyColumn;
+    @Nonnull private final BlankCube emptyCube;
+
+    @Nonnull private final WorldServer worldServer;
+    @Nonnull private final ICubeIO cubeIO;
 
     // TODO: Use a better hash map!
-    @Nonnull private XYZMap<Cube> cubeMap = new XYZMap<>(0.7f, 8000);
+    @Nonnull private final XYZMap<Cube> cubeMap = new XYZMap<>(0.7f, 8000);
 
-    @Nonnull private CubePrimer primer;
-    @Nonnull private ICubeGenerator cubeGen;
-    @Nonnull private Profiler profiler;
+    @Nonnull private final CubePrimer cubePrimer;
+    @Nonnull private final ICubeGenerator cubeGen;
+    @Nonnull private final Profiler profiler;
 
     public CubeProviderServer(WorldServer worldServer, ICubeGenerator cubeGen) {
         super(worldServer,
                 worldServer.getSaveHandler().getChunkLoader(worldServer.provider), // forge uses this in
                 worldServer.provider.createChunkGenerator()); // let's create the chunk generator, for now the vanilla one may be enough
 
-        this.primer = new CubePrimer();
+        this.cubePrimer = new CubePrimer();
         this.cubeGen = cubeGen;
         this.worldServer = worldServer;
         this.profiler = worldServer.profiler;
@@ -103,6 +109,9 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
+
+        this.emptyColumn = new EmptyColumn(worldServer, 0, 0);
+        this.emptyCube = new BlankCube(emptyColumn);
     }
 
     @Override
@@ -368,16 +377,27 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
             return cube;
         }
         if (cube == null) {
+            if (cubeGen.pollAsyncCubeGenerator(cubeX, cubeY, cubeZ) != ICubeGenerator.GeneratorReadyState.READY) {
+                return emptyCube;
+            }
             // generate the Cube
-            cube = generateCube(cubeX, cubeY, cubeZ, column);
+            cube = generateCube(cubeX, cubeY, cubeZ, column).orElse(null);
+            if (cube == null) {
+                return emptyCube;
+            }
             if (req == Requirement.GENERATE) {
                 return cube;
             }
         }
 
         if (!cube.isFullyPopulated()) {
+            if (cubeGen.pollAsyncCubePopulator(cubeX, cubeY, cubeZ) != ICubeGenerator.GeneratorReadyState.READY) {
+                return emptyCube;
+            }
             // forced full population of this cube
-            populateCube(cube);
+            if (!populateCube(cube)) {
+                return cube;
+            }
             if (req == Requirement.POPULATE) {
                 return cube;
             }
@@ -404,19 +424,19 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
      *
      * @return The generated cube
      */
-    private Cube generateCube(int cubeX, int cubeY, int cubeZ, Chunk column) {
-        CubePrimer primer = cubeGen.generateCube(cubeX, cubeY, cubeZ, this.primer);
-        Cube cube = new Cube(column, cubeY, primer);
-
-        // don't bother resetting the primer if it wasn't used by the generator.
-        // if the generator modifies the primer and then returns a different one it's
-        // not implementing generateCube correctly, so we don't account for that case
-        if (primer == this.primer) {
-            primer.reset();
-        }
-
-        onCubeLoaded(cube, column);
-        return cube;
+    private Optional<Cube> generateCube(int cubeX, int cubeY, int cubeZ, Chunk column) {
+        return cubeGen.tryGenerateCube(cubeX, cubeY, cubeZ, this.cubePrimer)
+                .map(primer -> {
+                    Cube cube = new Cube(column, cubeY, primer);
+                    onCubeLoaded(cube, column);
+                    // don't bother resetting the primer if it wasn't used by the generator.
+                    // if the generator modifies the primer and then returns a different one it's
+                    // not implementing generateCube correctly, so we don't account for that case
+                    if (primer == this.cubePrimer) {
+                        primer.reset();
+                    }
+                    return cube;
+                });
     }
 
     /**
@@ -424,7 +444,7 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
      *
      * @param cube The cube to populate
      */
-    private void populateCube(Cube cube) {
+    private boolean populateCube(Cube cube) {
         int cubeX = cube.getX();
         int cubeY = cube.getY();
         int cubeZ = cube.getZ();
@@ -439,7 +459,7 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
                 ).add(fullPopulation);
             }
         }
-        fullPopulation.forEachPoint((x, y, z) -> {
+        boolean success = fullPopulation.allMatch((x, y, z) -> {
             // this also generates the cube
             Cube fullPopulationCube = getCube(x + cubeX, y + cubeY, z + cubeZ);
             Box newBox = cubeGen.getPopulationPregenerationRequirements(fullPopulationCube);
@@ -451,18 +471,25 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
                     ).add(newBox);
                 }
             }
-            newBox.forEachPoint((nx, ny, nz) -> {
+            boolean generated = newBox.allMatch((nx, ny, nz) -> {
                 int genX = cubeX + x + nx;
                 int genY = cubeY + y + ny;
                 int genZ = cubeZ + z + nz;
-                getCube(genX, genY, genZ);
+                return !(getCube(genX, genY, genZ) instanceof BlankCube);
             });
+            if (!generated) {
+                return false;
+            }
             // a check for populators that populate more than one cube (vanilla compatibility generator)
             if (!fullPopulationCube.isPopulated()) {
                 cubeGen.populate(fullPopulationCube);
                 fullPopulationCube.setPopulated(true);
             }
+            return true;
         });
+        if (!success) {
+            return false;
+        }
         if (CubicChunksConfig.useVanillaChunkWorldGenerators) {
             Box.Mutable box = fullPopulation.asMutable();
             box.setY1(0);
@@ -472,6 +499,7 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
             });
         }
         cube.setFullyPopulated(true);
+        return true;
     }
 
     /**
@@ -569,8 +597,13 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
             return null;
         }
 
-        column = new Chunk(worldServer, columnX, columnZ);
-        cubeGen.generateColumn(column);
+        if (cubeGen.pollAsyncColumnGenerator(columnX, columnZ) != ICubeGenerator.GeneratorReadyState.READY) {
+            return emptyColumn;
+        }
+        column = cubeGen.tryGenerateColumn(world, columnX, columnZ, new ChunkPrimer()).orElse(null);
+        if (column == null) {
+            return emptyColumn;
+        }
 
         loadedChunks.put(ChunkPos.asLong(columnX, columnZ), column);
         column.setLastSaveTime(this.worldServer.getTotalWorldTime()); // the column was just generated

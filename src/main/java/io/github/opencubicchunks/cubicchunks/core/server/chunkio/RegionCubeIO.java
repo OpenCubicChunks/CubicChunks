@@ -189,7 +189,7 @@ public class RegionCubeIO implements ICubeIO {
         }
     }
 
-    @Override @Nullable public PartialData<Chunk> loadColumnAsyncPart(int chunkX, int chunkZ) throws IOException {
+    @Override public PartialData<Chunk> loadColumnNbt(int chunkX, int chunkZ) throws IOException {
         SaveCubeColumns save = this.getSave();
         NBTTagCompound nbt;
         SaveEntry<EntryLocation2D> saveEntry;
@@ -199,18 +199,26 @@ public class RegionCubeIO implements ICubeIO {
             // IOException makes using Optional impossible :(
             Optional<ByteBuffer> buf = save.load(new EntryLocation2D(chunkX, chunkZ), true);
             if (!buf.isPresent()) {
-                return null;
+                return new PartialData<>(null, null);
             }
             nbt = FMLCommonHandler.instance().getDataFixer().process(FixTypes.CHUNK, CompressedStreamTools.readCompressed(new ByteArrayInputStream(buf.get().array())));
         }
-        Chunk chunk = IONbtReader.readColumn(world, chunkX, chunkZ, nbt);
-        return new PartialData<>(chunk, nbt);
+        return new PartialData<>(null, nbt);
     }
 
-    @Override @Nullable public void loadColumnSyncPart(PartialData<Chunk> info) {
+    @Override
+    public void loadColumnAsyncPart(PartialData<Chunk> info, int chunkX, int chunkZ) {
+        if (info.getNbt() == null) {
+            return;
+        }
+        Chunk chunk = IONbtReader.readColumn(world, chunkX, chunkZ, info.getNbt());
+        info.setObject(chunk);
     }
 
-    @Override @Nullable public PartialData<ICube> loadCubeAsyncPart(Chunk column, int cubeY) throws IOException {
+    @Override public void loadColumnSyncPart(PartialData<Chunk> info) {
+    }
+
+    @Override public PartialData<ICube> loadCubeNbt(Chunk column, int cubeY) throws IOException {
         SaveCubeColumns save = this.getSave();
         NBTTagCompound nbt;
         SaveEntry<EntryLocation3D> saveEntry;
@@ -220,17 +228,21 @@ public class RegionCubeIO implements ICubeIO {
             // does the database have the cube?
             Optional<ByteBuffer> buf = save.load(new EntryLocation3D(column.x, cubeY, column.z), true);
             if (!buf.isPresent()) {
-                return null;
+                return new PartialData<>(null, null);
             }
             nbt = FMLCommonHandler.instance().getDataFixer().process(FixTypes.CHUNK, CompressedStreamTools.readCompressed(new ByteArrayInputStream(buf.get().array())));
         }
+        return new PartialData<>(null, nbt);
+    }
 
-        // restore the cube - async part
-        Cube cube = IONbtReader.readCubeAsyncPart(column, column.x, cubeY, column.z, nbt);
-        if (cube == null) {
-            return null;
+    @Override
+    public void loadCubeAsyncPart(PartialData<ICube> info, Chunk column, int cubeY) {
+        if (info.getNbt() == null) {
+            return;
         }
-        return new PartialData<>(cube, nbt);
+        // restore the cube - async part
+        Cube cube = IONbtReader.readCubeAsyncPart(column, column.x, cubeY, column.z, info.getNbt());
+        info.setObject(cube);
     }
 
     @Override public void loadCubeSyncPart(PartialData<ICube> info) {
