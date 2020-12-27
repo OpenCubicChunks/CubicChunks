@@ -387,8 +387,10 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
 
             while (iterator.hasNext() && chunksToGenerate >= 0 && System.nanoTime() < stopTime) {
                 CubeWatcher watcher = iterator.next();
-                boolean success = watcher.getCube() != null && watcher.getCube().isFullyPopulated() && watcher.getCube().isInitialLightingDone() &&
-                        !watcher.getCube().hasLightUpdates() && watcher.getCube().isSurfaceTracked();
+                if (watcher.isWaitingForColumn()) {
+                    continue;
+                }
+                boolean success = !watcher.isWaitingForCube() && !watcher.isWaitingForLighting();
                 boolean alreadyLoaded = success;
                 if (!success) {
                     boolean canGenerate = watcher.hasPlayerMatching(CAN_GENERATE_CHUNKS);
@@ -524,9 +526,7 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
             this.cubeWatchers.put(cubeWatcher);
 
 
-            if (cubeWatcher.getCube() == null ||
-                    !cubeWatcher.getCube().isFullyPopulated() ||
-                    !cubeWatcher.getCube().isInitialLightingDone()) {
+            if (cubeWatcher.isWaitingForColumn() || cubeWatcher.isWaitingForCube() || cubeWatcher.isWaitingForLighting()) {
                 this.cubesToGenerate.appendToEnd(cubeWatcher);
             }
             // vanilla has the below check, which causes the cubes to be sent to client too early and sometimes in too big amounts
