@@ -118,7 +118,7 @@ public final class CCNoiseBasedChunkGenerator extends ChunkGenerator {
         this.defaultBlock = noiseGeneratorSettings.getDefaultBlock(); //Stone
         this.defaultFluid = noiseGeneratorSettings.getDefaultFluid(); //Water
         this.chunkSizeX = 16 / this.chunkWidth; //4 in vanilla
-        this.chunkSizeY = /*noiseSettings.height()*/ IBigCube.DIAMETER_IN_BLOCKS/*!*/ / this.chunkHeight; //32 in vanilla
+        this.chunkSizeY = /*noiseSettings.height()*/ IBigCube.DIAMETER_IN_BLOCKS/*32*/ /*!*/  / this.chunkHeight; //32 in vanilla
         this.chunkSizeZ = 16 / this.chunkWidth; //4 in vanilla
         this.random = new WorldgenRandom(seed);
         this.minLimitPerlinNoise = new PerlinNoise(this.random, IntStream.rangeClosed(-15, 0));
@@ -433,10 +433,8 @@ public final class CCNoiseBasedChunkGenerator extends ChunkGenerator {
                             int maxY = chunk.getMaxBuildHeight() - 1;
 
                             boolean isInYBounds = jigsawJunctionSourceY > minY - 12 && jigsawJunctionSourceY < maxY + 12;
-                            if (jigsawJunctionSourceX > ySectionCoordX - (isInYBounds ? 12 :
-                                (-jigsawJunctionSourceX + ySectionCoordX)) && jigsawJunctionSourceZ > ySectionCoordZ - 12 && jigsawJunctionSourceX < ySectionCoordX + 15 + 12
-                                && jigsawJunctionSourceZ
-                                < ySectionCoordZ + 15 + 12) {
+                            if (jigsawJunctionSourceX > ySectionCoordX - (isInYBounds/*!*/ ? 12 : (-jigsawJunctionSourceX + ySectionCoordX)) && jigsawJunctionSourceZ > ySectionCoordZ - 12
+                                && jigsawJunctionSourceX < ySectionCoordX + 15 + 12 && jigsawJunctionSourceZ < ySectionCoordZ + 15 + 12) {
                                 jigsawJunctionsList.add(jigsawJunction);
                             }
                         }
