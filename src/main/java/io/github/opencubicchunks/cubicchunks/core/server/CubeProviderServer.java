@@ -310,6 +310,7 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
         return getCube(cubeX, cubeY, cubeZ, req, true);
     }
 
+    @Nullable
     private Cube getCube(int cubeX, int cubeY, int cubeZ, Requirement req, boolean forceNow) {
         Cube cube = getLoadedCube(cubeX, cubeY, cubeZ);
         if (req == Requirement.GET_CACHED ||

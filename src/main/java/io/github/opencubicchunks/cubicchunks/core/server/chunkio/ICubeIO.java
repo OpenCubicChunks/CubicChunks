@@ -100,7 +100,7 @@ public interface ICubeIO extends IThreadedFileIO {
 		NBTTagCompound nbt;
 		T object;
 
-		PartialData(T object, NBTTagCompound nbt) {
+		public PartialData(T object, NBTTagCompound nbt) {
 			this.object = object;
 			this.nbt = nbt;
 		}

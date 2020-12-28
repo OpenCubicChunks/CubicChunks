@@ -57,10 +57,14 @@ class AsyncCubeIOProvider extends AsyncIOProvider<Cube> {
     @Override
     public void run() {
         try {
-            cubeData = this.loader.loadCubeAsyncPart(futureColumn.get(), this.cubeInfo.y);
+            Chunk column = futureColumn.get();
+            if (column.isEmpty()) {
+                cubeData = new ICubeIO.PartialData<>(null, null);
+            } else {
+                cubeData = this.loader.loadCubeAsyncPart(column, this.cubeInfo.y);
+            }
         } catch (IOException e) {
-            CubicChunks.LOGGER
-                    .error("Could not load cube in {} @ ({}, {}, {})", this.cubeInfo.world, this.cubeInfo.x, this.cubeInfo.y, this.cubeInfo.z, e);
+            CubicChunks.LOGGER.error("Could not load cube in {} @ ({}, {}, {})", this.cubeInfo.world, this.cubeInfo.x, this.cubeInfo.y, this.cubeInfo.z, e);
         } catch (InterruptedException e) {
             throw new Error(e);
         } catch (ExecutionException e) {
