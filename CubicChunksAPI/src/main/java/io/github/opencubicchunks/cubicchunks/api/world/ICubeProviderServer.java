@@ -24,6 +24,7 @@
  */
 package io.github.opencubicchunks.cubicchunks.api.world;
 
+import io.github.opencubicchunks.cubicchunks.api.util.CubePos;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.world.chunk.Chunk;
 
@@ -58,6 +59,9 @@ public interface ICubeProviderServer extends ICubeProvider {
      */
     @Nullable
     ICube getCube(int cubeX, int cubeY, int cubeZ, Requirement req);
+
+    @Nullable ICube getCubeNow(int cubeX, int cubeY, int cubeZ, ICubeProviderServer.Requirement req);
+
 
     /**
      * Returns true if the specified cube has been already generated (either loaded or saved

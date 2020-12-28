@@ -24,7 +24,10 @@
  */
 package io.github.opencubicchunks.cubicchunks.core.world;
 
+import io.github.opencubicchunks.cubicchunks.api.util.Coords;
+import io.github.opencubicchunks.cubicchunks.api.world.ICubeProviderServer;
 import io.github.opencubicchunks.cubicchunks.api.world.ICubicWorld;
+import io.github.opencubicchunks.cubicchunks.api.world.ICubicWorldServer;
 import io.github.opencubicchunks.cubicchunks.core.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.core.world.cube.Cube;
 import mcp.MethodsReturnNonnullByDefault;
@@ -167,6 +170,10 @@ public final class SpawnPlaceFinder {
     private static BlockPos findNonEmpty(World world, BlockPos pos) {
         pos = pos.down(MIN_FREE_SPACE_SPAWN);
         for (int i = 0; i < MIN_FREE_SPACE_SPAWN * 2; i++, pos = pos.up()) {
+            ((ICubicWorldServer) world).getCubeCache().getCubeNow(
+                    Coords.blockToCube(pos.getX()), Coords.blockToCube(pos.getY()), Coords.blockToCube(pos.getZ()),
+                    ICubeProviderServer.Requirement.POPULATE
+            );
             if (world.getBlockState(pos).isSideSolid(world, pos, EnumFacing.UP)) {
                 return pos;
             }

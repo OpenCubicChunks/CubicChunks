@@ -294,7 +294,8 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
                 Chunk col = getLoadedColumn(cubeX, cubeZ);
                 if (col != null) {
                     onCubeLoaded(loaded, col);
-                    loaded = postCubeLoadAttempt(cubeX, cubeY, cubeZ, loaded, col, req);
+                    // TODO: async loading in asyncGetCube?
+                    loaded = postCubeLoadAttempt(cubeX, cubeY, cubeZ, loaded, col, req, false);
                 }
                 callback.accept(loaded);
             });
@@ -303,6 +304,15 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
 
     @Nullable @Override
     public Cube getCube(int cubeX, int cubeY, int cubeZ, Requirement req) {
+        return getCube(cubeX, cubeY, cubeZ, req, false);
+    }
+
+    @Nullable @Override
+    public Cube getCubeNow(int cubeX, int cubeY, int cubeZ, Requirement req) {
+        return getCube(cubeX, cubeY, cubeZ, req, true);
+    }
+
+    private Cube getCube(int cubeX, int cubeY, int cubeZ, Requirement req, boolean forceNow) {
         Cube cube = getLoadedCube(cubeX, cubeY, cubeZ);
         if (req == Requirement.GET_CACHED ||
                 (cube != null && req.compareTo(Requirement.GENERATE) <= 0)) {
@@ -322,7 +332,7 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
             onCubeLoaded(cube, column);
         }
 
-        return postCubeLoadAttempt(cubeX, cubeY, cubeZ, cube, column, req);
+        return postCubeLoadAttempt(cubeX, cubeY, cubeZ, cube, column, req, forceNow);
     }
 
     @Override public boolean isCubeGenerated(int cubeX, int cubeY, int cubeZ) {
@@ -362,7 +372,7 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
      * @return The processed cube, or <code>null</code> if the effort level is not sufficient to provide a cube
      */
     @Nullable
-    private Cube postCubeLoadAttempt(int cubeX, int cubeY, int cubeZ, @Nullable Cube cube, Chunk column, Requirement req) {
+    private Cube postCubeLoadAttempt(int cubeX, int cubeY, int cubeZ, @Nullable Cube cube, Chunk column, Requirement req, boolean forceNow) {
         // when async load+generate request is immediately followed by sync request,  the async one will generate the cube in callback, but it won't
         // change the async load request result, so the cube here will still be null. Just to make sure, get the cube here
         // otherwise we may end up generating the same cube twice
@@ -377,7 +387,7 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
             return cube;
         }
         if (cube == null) {
-            if (cubeGen.pollAsyncCubeGenerator(cubeX, cubeY, cubeZ) != ICubeGenerator.GeneratorReadyState.READY) {
+            if (!forceNow && cubeGen.pollAsyncCubeGenerator(cubeX, cubeY, cubeZ) != ICubeGenerator.GeneratorReadyState.READY) {
                 return emptyCube;
             }
             // generate the Cube
@@ -391,11 +401,11 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
         }
 
         if (!cube.isFullyPopulated()) {
-            if (cubeGen.pollAsyncCubePopulator(cubeX, cubeY, cubeZ) != ICubeGenerator.GeneratorReadyState.READY) {
+            if (!forceNow && cubeGen.pollAsyncCubePopulator(cubeX, cubeY, cubeZ) != ICubeGenerator.GeneratorReadyState.READY) {
                 return emptyCube;
             }
             // forced full population of this cube
-            if (!populateCube(cube)) {
+            if (!populateCube(cube, forceNow)) {
                 return cube;
             }
             if (req == Requirement.POPULATE) {
@@ -444,7 +454,7 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
      *
      * @param cube The cube to populate
      */
-    private boolean populateCube(Cube cube) {
+    private boolean populateCube(Cube cube, boolean forceNow) {
         int cubeX = cube.getX();
         int cubeY = cube.getY();
         int cubeZ = cube.getZ();
@@ -475,7 +485,7 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
                 int genX = cubeX + x + nx;
                 int genY = cubeY + y + ny;
                 int genZ = cubeZ + z + nz;
-                return !(getCube(genX, genY, genZ) instanceof BlankCube);
+                return !(getCube(genX, genY, genZ, Requirement.GENERATE, forceNow) instanceof BlankCube);
             });
             if (!generated) {
                 return false;
