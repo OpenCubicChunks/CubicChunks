@@ -241,6 +241,9 @@ public class CubeWatcher implements ITicket, ICubeWatcher {
         if (isWaitingForColumn()) {
             return SendToPlayersResult.WAITING;
         }
+        if (!playerCubeMap.getColumnWatcher(cubePos.chunkPos()).isSentToPlayers()) {
+            return SendToPlayersResult.WAITING;
+        }
         this.dirtyBlocks.clear();
         //set to true before adding to queue so that sendToPlayer can actually add it
         this.sentToPlayers = true;
