@@ -109,11 +109,11 @@ public interface ICubeGenerator {
      */
     void populate(ICube cube);
 
-    default Optional<CubePrimer> tryGenerateCube(int cubeX, int cubeY, int cubeZ, CubePrimer primer) {
+    default Optional<CubePrimer> tryGenerateCube(int cubeX, int cubeY, int cubeZ, CubePrimer primer, boolean forceGenerate) {
         return Optional.of(this.generateCube(cubeX, cubeY, cubeZ, primer));
     }
 
-    default Optional<Chunk> tryGenerateColumn(World world, int columnX, int columnZ, ChunkPrimer primer) {
+    default Optional<Chunk> tryGenerateColumn(World world, int columnX, int columnZ, ChunkPrimer primer, boolean forceGenerate) {
         Chunk column = new Chunk(world, columnX, columnZ);
         this.generateColumn(column);
         return Optional.of(column);

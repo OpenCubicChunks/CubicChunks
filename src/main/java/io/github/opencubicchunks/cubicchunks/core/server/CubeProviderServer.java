@@ -319,7 +319,7 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
         }
 
         // try to get the Column
-        Chunk column = getColumn(cubeX, cubeZ, req);
+        Chunk column = getColumn(cubeX, cubeZ, req, forceNow);
         if (column == null) {
             return cube; // Column did not reach req, so Cube also does not
         }
@@ -393,7 +393,7 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
                 return emptyCube;
             }
             // generate the Cube
-            cube = generateCube(cubeX, cubeY, cubeZ, column).orElse(null);
+            cube = generateCube(cubeX, cubeY, cubeZ, column, forceNow).orElse(null);
             if (cube == null) {
                 return emptyCube;
             }
@@ -436,8 +436,8 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
      *
      * @return The generated cube
      */
-    private Optional<Cube> generateCube(int cubeX, int cubeY, int cubeZ, Chunk column) {
-        return cubeGen.tryGenerateCube(cubeX, cubeY, cubeZ, this.cubePrimer)
+    private Optional<Cube> generateCube(int cubeX, int cubeY, int cubeZ, Chunk column, boolean forceGenerate) {
+        return cubeGen.tryGenerateCube(cubeX, cubeY, cubeZ, this.cubePrimer, forceGenerate)
                 .map(primer -> {
                     Cube cube = new Cube(column, cubeY, primer);
                     onCubeLoaded(cube, column);
@@ -563,20 +563,26 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
         }
 
         AsyncWorldIOExecutor.queueColumnLoad(worldServer, cubeIO, columnX, columnZ, col -> {
-            col = postProcessColumn(columnX, columnZ, col, req);
+            col = postProcessColumn(columnX, columnZ, col, req, false);
             callback.accept(col);
         });
     }
 
     @Nullable @Override
     public Chunk getColumn(int columnX, int columnZ, Requirement req) {
+        return getColumn(columnX, columnZ, req, false);
+    }
+
+
+    @Nullable
+    private Chunk getColumn(int columnX, int columnZ, Requirement req, boolean forceNow) {
         Chunk column = getLoadedColumn(columnX, columnZ);
         if (column != null || req == Requirement.GET_CACHED) {
             return column;
         }
 
         column = AsyncWorldIOExecutor.syncColumnLoad(worldServer, cubeIO, columnX, columnZ);
-        column = postProcessColumn(columnX, columnZ, column, req);
+        column = postProcessColumn(columnX, columnZ, column, req, forceNow);
 
         return column;
     }
@@ -592,7 +598,7 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
      * @return The postprocessed column, or <code>null</code>
      */
     @Nullable
-    private Chunk postProcessColumn(int columnX, int columnZ, @Nullable Chunk column, Requirement req) {
+    private Chunk postProcessColumn(int columnX, int columnZ, @Nullable Chunk column, Requirement req, boolean force) {
         Chunk loaded = getLoadedColumn(columnX, columnZ);
         if (loaded != null) {
             if (column != null && loaded != column) {
@@ -609,10 +615,10 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
             return null;
         }
 
-        if (cubeGen.pollAsyncColumnGenerator(columnX, columnZ) != ICubeGenerator.GeneratorReadyState.READY) {
+        if (!force && cubeGen.pollAsyncColumnGenerator(columnX, columnZ) != ICubeGenerator.GeneratorReadyState.READY) {
             return emptyColumn;
         }
-        column = cubeGen.tryGenerateColumn(world, columnX, columnZ, new ChunkPrimer()).orElse(null);
+        column = cubeGen.tryGenerateColumn(world, columnX, columnZ, new ChunkPrimer(), force).orElse(null);
         if (column == null) {
             return emptyColumn;
         }
