@@ -159,13 +159,10 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
     @Override
     @Deprecated
     public Chunk loadChunk(int columnX, int columnZ, @Nullable Runnable runnable) {
-        // TODO: Set this to LOAD when PlayerCubeMap works
         if (runnable == null) {
-            return getColumn(columnX, columnZ, /*Requirement.LOAD*/Requirement.LIGHT);
+            return getColumn(columnX, columnZ, Requirement.LOAD);
         }
-
-        // TODO here too
-        asyncGetColumn(columnX, columnZ, Requirement.LIGHT, col -> runnable.run());
+        asyncGetColumn(columnX, columnZ, Requirement.LOAD, col -> runnable.run());
         return null;
     }
 
@@ -293,6 +290,7 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
             AsyncWorldIOExecutor.queueCubeLoad(worldServer, cubeIO, this, cubeX, cubeY, cubeZ, loaded -> {
                 Chunk col = getLoadedColumn(cubeX, cubeZ);
                 if (col != null) {
+                    assert !col.isEmpty();
                     onCubeLoaded(loaded, col);
                     // TODO: async loading in asyncGetCube?
                     loaded = postCubeLoadAttempt(cubeX, cubeY, cubeZ, loaded, col, req, false);
@@ -323,6 +321,9 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
         Chunk column = getColumn(cubeX, cubeZ, req);
         if (column == null) {
             return cube; // Column did not reach req, so Cube also does not
+        }
+        if (column.isEmpty()) {
+            return emptyCube;
         }
 
         if (cube == null) {

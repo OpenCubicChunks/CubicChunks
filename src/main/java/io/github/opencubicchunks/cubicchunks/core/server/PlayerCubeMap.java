@@ -418,6 +418,17 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
         if (!this.columnsToSendToClients.isEmpty()) {
             getWorldServer().profiler.startSection("columns");
 
+            Iterator<ColumnWatcher> it = this.columnsToSendToClients.iterator();
+
+            while (it.hasNext()) {
+                ColumnWatcher playerInstance = it.next();
+
+                if (playerInstance.sendToPlayers()) {
+                    it.remove();
+                } else if (!columnsToGenerate.contains(playerInstance)) {
+                    columnsToGenerate.appendToStart(playerInstance);
+                }
+            }
             this.columnsToSendToClients.removeIf(ColumnWatcher::sendToPlayers);
             getWorldServer().profiler.endSection(); // columns
         }

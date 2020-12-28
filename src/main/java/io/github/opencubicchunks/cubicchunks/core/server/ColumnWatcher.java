@@ -159,14 +159,13 @@ public class ColumnWatcher extends PlayerChunkMapEntry implements XZAddressable 
     // CHECKED: 1.10.2-12.18.1.2092
     @Override
     public boolean sendToPlayers() {
-        assert this.getChunk() == playerCubeMap.getWorldServer().getChunkProvider().getLoadedChunk(getX(), getZ());
         if (this.isSentToPlayers()) {
             return true;
         }
         if (getChunk() == null) {
             return false;
         }
-
+        assert this.getChunk() == playerCubeMap.getWorldServer().getChunkProvider().getLoadedChunk(getX(), getZ());
         try {
 
             PacketColumn message = new PacketColumn(this.getChunk());
