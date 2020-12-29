@@ -43,6 +43,7 @@
         "common.world.lighting.MixinBlockLightEngine",
         "common.world.lighting.MixinLightEngine",
         "common.world.lighting.MixinSectionLightStorage",
+        "common.world.lighting.MixinSkyLightSectionStorage",
         "common.world.lighting.MixinWorldLightManager",
         "common.world.MixinAbstractChunkProvider",
         "common.world.MixinFuzzyOffsetConstantColumnBiomeZoomer",
