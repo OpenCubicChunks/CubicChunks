@@ -332,6 +332,11 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
         }
 
         if (cube == null) {
+            // loading a column may cause loading a cube when a mod accesses blocks in chunk data load event, check if the cube became loaded
+            cube = getLoadedCube(cubeX, cubeY, cubeZ);
+        }
+
+        if (cube == null) {
             // a little hack to fix StackOverflowError when loading TileEntities, as Cube methods are now redirected into IColumn
             // Column needs cube to be loaded to add TileEntity, so make CubeProvider contain it already
             cube = AsyncWorldIOExecutor.syncCubeLoad(worldServer, cubeIO, this, cubeX, cubeY, cubeZ);
