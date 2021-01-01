@@ -100,6 +100,9 @@ class AsyncCubeIOProvider extends AsyncIOProvider<Cube> {
     }
 
     public void setColumn(@Nullable Chunk chunk) {
+        if (futureColumn.isDone()) {
+            return;
+        }
         this.futureColumn.complete(chunk);
     }
 }

@@ -115,6 +115,7 @@ public class AsyncWorldIOExecutor {
         QueuedCube key = new QueuedCube(cubeX, cubeY, cubeZ, world);
         AsyncCubeIOProvider task = cubeTasks.remove(key); // Remove task because we will call the sync callbacks directly
         if (task != null) {
+            task.setColumn(column);
             runTask(task);
         } else {
             task = new AsyncCubeIOProvider(key, loader);
