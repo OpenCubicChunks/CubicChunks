@@ -94,6 +94,9 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
     @Nonnull private final CubePrimer cubePrimer;
     @Nonnull private final ICubeGenerator cubeGen;
     @Nonnull private final Profiler profiler;
+    // some mods will try to access blocks in ChunkDataEvent.Load
+    // this needs the column to be already known by the chunk provider so that it can load cubes without trying to load the column again
+    private Chunk currentlyLoadingColumn;
 
     public CubeProviderServer(WorldServer worldServer, ICubeGenerator cubeGen) {
         super(worldServer,
@@ -131,7 +134,8 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
      */
     @Nullable @Override
     public Chunk getLoadedColumn(int columnX, int columnZ) {
-        return this.loadedChunks.get(ChunkPos.asLong(columnX, columnZ));
+        Chunk chunk = this.loadedChunks.get(ChunkPos.asLong(columnX, columnZ));
+        return chunk == null ? currentlyLoadingColumn : chunk;
     }
 
     @Nullable
@@ -565,7 +569,7 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
         AsyncWorldIOExecutor.queueColumnLoad(worldServer, cubeIO, columnX, columnZ, col -> {
             col = postProcessColumn(columnX, columnZ, col, req, false);
             callback.accept(col);
-        });
+        }, col -> currentlyLoadingColumn = col);
     }
 
     @Nullable @Override
@@ -581,7 +585,7 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
             return column;
         }
 
-        column = AsyncWorldIOExecutor.syncColumnLoad(worldServer, cubeIO, columnX, columnZ);
+        column = AsyncWorldIOExecutor.syncColumnLoad(worldServer, cubeIO, columnX, columnZ, col -> currentlyLoadingColumn = col);
         column = postProcessColumn(columnX, columnZ, column, req, forceNow);
 
         return column;

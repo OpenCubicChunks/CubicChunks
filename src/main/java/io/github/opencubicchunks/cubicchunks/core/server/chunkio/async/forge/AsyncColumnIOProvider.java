@@ -20,6 +20,7 @@
 package io.github.opencubicchunks.cubicchunks.core.server.chunkio.async.forge;
 
 import java.io.IOException;
+import java.util.function.Consumer;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -45,11 +46,16 @@ class AsyncColumnIOProvider extends AsyncIOProvider<Chunk> {
     @Nullable private ICubeIO.PartialData<Chunk> columnData; // The target
     @Nonnull private final QueuedColumn colInfo;
     private ICubeGenerator generator;
+    // some mods will try to access blocks in ChunkDataEvent.Load
+    // this needs the column to be already known by the chunk provider so that it can load cubes without trying to load the column again
+    // this callback temporarily puts the cube into a special field in the chunk provider
+    private final Consumer<Chunk> setProviderLoadingColumn;
 
-    AsyncColumnIOProvider(QueuedColumn colInfo, ICubeIO loader, ICubeGenerator generator) {
+    AsyncColumnIOProvider(QueuedColumn colInfo, ICubeIO loader, ICubeGenerator generator, Consumer<Chunk> setProviderLoadingColumn) {
         this.loader = loader;
         this.colInfo = colInfo;
         this.generator = generator;
+        this.setProviderLoadingColumn = setProviderLoadingColumn;
     }
 
     @Override public void run() {
@@ -71,7 +77,12 @@ class AsyncColumnIOProvider extends AsyncIOProvider<Chunk> {
             this.loader.loadColumnSyncPart(columnData);
             Chunk column = this.columnData.getObject();
             assert column != null;
-            MinecraftForge.EVENT_BUS.post(new ChunkDataEvent.Load(column, this.columnData.getNbt()));
+            try {
+                setProviderLoadingColumn.accept(column);
+                MinecraftForge.EVENT_BUS.post(new ChunkDataEvent.Load(column, this.columnData.getNbt()));
+            } finally {
+                setProviderLoadingColumn.accept(null);
+            }
             column.setLastSaveTime(this.colInfo.world.getTotalWorldTime());
             // this actually initializes internal information about that chunk's structures
             generator.recreateStructures(column);
