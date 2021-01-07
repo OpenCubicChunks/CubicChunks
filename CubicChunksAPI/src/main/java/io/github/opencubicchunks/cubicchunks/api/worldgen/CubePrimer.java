@@ -52,6 +52,15 @@ public class CubePrimer {
         this(new char[4096]);
     }
 
+    public static CubePrimer createFilled(IBlockState state) {
+        @SuppressWarnings("deprecation")
+        int value = Block.BLOCK_STATE_IDS.get(state);
+        char lsb = (char) value;
+        char[] data = new char[4096];
+        Arrays.fill(data, lsb);
+        return new CubePrimer(data);
+    }
+
     protected CubePrimer(char[] data) {
         this.data = data;
     }
