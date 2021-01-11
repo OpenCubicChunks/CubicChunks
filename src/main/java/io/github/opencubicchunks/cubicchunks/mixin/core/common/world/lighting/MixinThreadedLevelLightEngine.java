@@ -1,4 +1,4 @@
-package io.github.opencubicchunks.cubicchunks.mixin.core.common.world.server;
+package io.github.opencubicchunks.cubicchunks.mixin.core.common.world.lighting;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.function.IntSupplier;
@@ -10,7 +10,6 @@ import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.IChunkManager;
 import io.github.opencubicchunks.cubicchunks.chunk.ticket.CubeTaskPriorityQueueSorter;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
-import io.github.opencubicchunks.cubicchunks.mixin.core.common.world.lighting.MixinWorldLightManager;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import io.github.opencubicchunks.cubicchunks.world.server.IServerWorldLightManager;
 import it.unimi.dsi.fastutil.objects.ObjectList;
@@ -29,7 +28,7 @@ import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 
 @Mixin(ThreadedLevelLightEngine.class)
-public abstract class MixinServerWorldLightManager extends MixinWorldLightManager implements IServerWorldLightManager {
+public abstract class MixinThreadedLevelLightEngine extends MixinLevelLightEngine implements IServerWorldLightManager {
 
     private ProcessorHandle<CubeTaskPriorityQueueSorter.FunctionEntry<Runnable>> cubeSorterMailbox;
 
@@ -40,6 +39,8 @@ public abstract class MixinServerWorldLightManager extends MixinWorldLightManage
     @Shadow private volatile int taskPerBatch;
 
     @Shadow protected abstract void runUpdate();
+    @Shadow
+    protected abstract void addTask(int x, int z, ThreadedLevelLightEngine.TaskType stage, Runnable task);
 
     @Override public void postConstructorSetup(CubeTaskPriorityQueueSorter sorter,
                                                ProcessorHandle<CubeTaskPriorityQueueSorter.FunctionEntry<Runnable>> taskExecutor) {
@@ -120,6 +121,8 @@ public abstract class MixinServerWorldLightManager extends MixinWorldLightManage
                 icube.getCubeLightSources().forEach((blockPos) -> {
                     super.onBlockEmissionIncrease(blockPos, icube.getLightEmission(blockPos));
                 });
+                // FIXME we probably want another flag for controlling skylight
+                super.doSkyLightForCube(icube);
             }
 
             ((IChunkManager) this.chunkMap).releaseLightTicket(cubePos);
@@ -131,6 +134,14 @@ public abstract class MixinServerWorldLightManager extends MixinWorldLightManage
         }, (runnable) -> {
             this.addTask(cubePos.getX(), cubePos.getY(), cubePos.getZ(), ThreadedLevelLightEngine.TaskType.POST_UPDATE, runnable);
         });
+    }
+
+    @Override
+    public void checkSkyLightColumn(int x, int z, int oldHeight, int newHeight) {
+        // FIXME figure out when this should actually be scheduled instead of just hoping for the best
+        this.addTask(SectionPos.blockToSectionCoord(x), SectionPos.blockToSectionCoord(z), ThreadedLevelLightEngine.TaskType.POST_UPDATE, Util.name(() -> {
+            super.checkSkyLightColumn(x, z, oldHeight, newHeight);
+        }, () -> "checkSkyLightColumn " + x + " " + z));
     }
 
     /**

@@ -25,7 +25,7 @@ import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 
 @Mixin(LayerLightEngine.class)
-public class MixinLightEngine<M extends DataLayerStorageMap<M>, S extends LayerLightSectionStorage<M>> implements ILightEngine {
+public abstract class MixinLightEngine<M extends DataLayerStorageMap<M>, S extends LayerLightSectionStorage<M>> extends MixinDynamicGraphMinFixedPoint implements ILightEngine {
 
     @Shadow @Final protected S storage;
 
@@ -36,6 +36,8 @@ public class MixinLightEngine<M extends DataLayerStorageMap<M>, S extends LayerL
     @Shadow @Final private long[] lastChunkPos;
 
     @Shadow @Final private BlockGetter[] lastChunk;
+
+    @Shadow protected void checkNode(long id) {}
 
     @Override
     public void retainCubeData(CubePos posIn, boolean retain) {

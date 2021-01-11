@@ -9,4 +9,7 @@ public interface SectionLightStorageAccess {
 
     @Invoker("enableLightSources") void invokeSetColumnEnabled(long seed, boolean enable);
 
+    @Invoker boolean invokeStoringLightForSection(long sectionPos);
+
+    @Invoker void invokeRunAllUpdates();
 }
