@@ -119,6 +119,14 @@ public interface ICubeGenerator {
         return Optional.of(column);
     }
 
+    default boolean supportsConcurrentCubeGeneration() {
+        return false;
+    }
+
+    default boolean supportsConcurrentColumnGeneration() {
+        return false;
+    }
+
     /**
      * Checks whether the generator is ready to generate a given cube.
      */
