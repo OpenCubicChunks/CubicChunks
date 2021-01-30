@@ -39,6 +39,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.util.ClassInheritanceMultiMap;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.chunk.Chunk;
+import org.spongepowered.asm.mixin.Dynamic;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -79,17 +80,66 @@ public class MixinRenderGlobal {
      * This allows to get the Y position of rendered entity by injecting itself directly before call to
      * chunk.getEntityLists
      */
-    @Group(name = "renderEntitiesFix")//, min = 3, max = 3)
+    @Group(name = "renderEntitiesFix", min = 3, max = 3)
     @Inject(method = "renderEntities",
             at = @At(value = "INVOKE",
                     target = "Lnet/minecraft/client/multiplayer/WorldClient;getChunk(Lnet/minecraft/util/math/BlockPos;)Lnet/minecraft/world/chunk/Chunk;"),
-            locals = LocalCapture.CAPTURE_FAILHARD)
+            locals = LocalCapture.CAPTURE_FAILSOFT)
     public void onGetPosition(Entity renderViewEntity, ICamera camera, float partialTicks,
             CallbackInfo ci, int pass, double d0, double d1, double d2,
             Entity entity, double d3, double d4, double d5,
             List<Entity> list, List<Entity> list1, List<Entity> list2,
             BlockPos.PooledMutableBlockPos pos, Iterator<?> var21,
             /*RenderGlobal.ContainerLocalRenderInformation*/ @Coerce Object info) {
+        RenderChunk renderChunk = ((IContainerLocalRenderInformation) info).getRenderChunk();
+        ICubicWorld world = (ICubicWorld) renderChunk.getWorld();
+        if (world.isCubicWorld()) {
+            this.position = renderChunk.getPosition();
+        } else {
+            this.position = null;
+        }
+    }
+
+    /*
+     * Optifine-specific version of the entity render fix. Versions 1.12.2_HD_U_C7_pre to 1.12.2_HD_U_F5
+     *
+     * This method sets position for MixinRenderGlobal#getRenderChunkYPos to use
+     */
+    @Dynamic @Group(name = "renderEntitiesFix") @Inject(method = "renderEntities",
+        at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/chunk/RenderChunk;getChunk()Lnet/minecraft/world/chunk/Chunk;",
+            remap = false),
+        locals = LocalCapture.CAPTURE_FAILSOFT, remap = true)
+    public void onGetPosition(Entity renderViewEntity, ICamera camera, float partialTicks,
+        CallbackInfo ci, int pass, double d0, double d1, double d2,
+        Entity entity, double d3, double d4, double d5,
+        List list, boolean forgeEntityPass, boolean forgeTileEntityPass, boolean isShaders, boolean oldFancyGraphics, List list1, List list2,
+        BlockPos.PooledMutableBlockPos pos, Iterator<?> var22,
+        /*RenderGlobal.ContainerLocalRenderInformation*/ @Coerce Object info) {
+        RenderChunk renderChunk = ((IContainerLocalRenderInformation) info).getRenderChunk();
+        ICubicWorld world = (ICubicWorld) renderChunk.getWorld();
+        if (world.isCubicWorld()) {
+            this.position = renderChunk.getPosition();
+        } else {
+            this.position = null;
+        }
+    }
+
+    /*
+     * Optifine-specific version of the entity render fix. Versions 1.12.2_HD_U_G5 and up
+     *
+     * This method sets position for MixinRenderGlobal#getRenderChunkYPos to use
+     */
+    @Dynamic @Group(name = "renderEntitiesFix")
+    @Inject(method = "renderEntities",
+        at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/chunk/RenderChunk;getChunk()Lnet/minecraft/world/chunk/Chunk;",
+            remap = false),
+        locals = LocalCapture.CAPTURE_FAILSOFT, remap = true)
+    public void onGetPosition(Entity renderViewEntity, ICamera camera, float partialTicks,
+        CallbackInfo ci, int pass, double d0, double d1, double d2,
+        Entity entity, double d3, double d4, double d5,
+        List list, boolean forgeEntityPass, boolean forgeTileEntityPass, boolean isShaders, List list1, List list2,
+        BlockPos.PooledMutableBlockPos pos, boolean playerShadowPass, Iterator<?> var22,
+        /*RenderGlobal.ContainerLocalRenderInformation*/ @Coerce Object info) {
         RenderChunk renderChunk = ((IContainerLocalRenderInformation) info).getRenderChunk();
         ICubicWorld world = (ICubicWorld) renderChunk.getWorld();
         if (world.isCubicWorld()) {
@@ -108,7 +158,7 @@ public class MixinRenderGlobal {
      */
     @Group(name = "renderEntitiesFix")
     @Redirect(method = "renderEntities", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/math/BlockPos;getY()I"), require = 1)
-    public int getRenderChunkYPos(BlockPos pos) {
+    private int getRenderChunkYPos(BlockPos pos) {
         //position is null when it's not cubic chunks renderer
         if (this.position != null) { // also set from optifine specific mixins
             return 0;//must be 0 (or anything between 0 and 15)
@@ -125,7 +175,7 @@ public class MixinRenderGlobal {
     @Redirect(method = "renderEntities",
             at = @At(value = "INVOKE", target = "Lnet/minecraft/world/chunk/Chunk;getEntityLists()[Lnet/minecraft/util/ClassInheritanceMultiMap;"),
             require = 1)
-    public ClassInheritanceMultiMap<Entity>[] getEntityList(Chunk chunk) {
+    private ClassInheritanceMultiMap<Entity>[] getEntityList(Chunk chunk) {
         if (position == null) {
             return chunk.getEntityLists(); //TODO: is this right?
         }

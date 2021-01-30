@@ -59,7 +59,7 @@ public class CubicChunksMixinConfig implements IMixinConfigPlugin {
     @SuppressWarnings({"unchecked", "rawtypes"})
     @Override
     public void onLoad(String mixinPackage) {
-        OptifineState optifineState = OptifineState.NOT_LOADED;
+        OptifineState optifineState;
         String optifineVersion = System.getProperty("cubicchunks.optifineVersion", null);
         if (optifineVersion == null) {
             try {
@@ -80,13 +80,13 @@ public class CubicChunksMixinConfig implements IMixinConfigPlugin {
 
         if (optifineVersion == null) {
             optifineState = OptifineState.NOT_LOADED;
-        } else if (optifineVersion.compareTo("E3") >= 0) {
-            LOGGER.error("Unknown optifine version: " + optifineVersion + ", it may not work. Assuming E1.");
+        } else if (optifineVersion.compareTo("G5") >= 0) {
+            LOGGER.error("Unknown optifine version: " + optifineVersion + ", it may not work. Assuming E1-G5.");
             optifineState = OptifineState.LOADED_E1;
         } else if (optifineVersion.compareTo("E1") >= 0) {
             optifineState = OptifineState.LOADED_E1;
         } else {
-            new RuntimeException("Unsupported optifine version " + optifineVersion + ", trying E1-specific mixins").printStackTrace();
+            new RuntimeException("Unsupported optifine version " + optifineVersion + ", trying E1-G5 specific mixins").printStackTrace();
             optifineState = OptifineState.LOADED_E1;
         }
 
