@@ -235,7 +235,12 @@ public class VanillaCompatibilityGenerator implements ICubeGenerator {
                                      ((ICubicWorldInternal.Server) world).doCompatibilityGeneration()) {
                             lastChunk = vanilla.generateChunk(cubeX, cubeZ);
                             ChunkPrimer chunkPrimer = ((IColumnInternal) lastChunk).getCompatGenerationPrimer();
-                            replaceBedrock(chunkPrimer, rand);
+                            if (chunkPrimer == null) {
+                                CubicChunks.LOGGER.error("Optimized compatibility generation failed, disabling...");
+                                CubicChunksConfig.optimizedCompatibilityGenerator = false;
+                            } else {
+                                replaceBedrock(chunkPrimer, rand);
+                            }
                         }
                     } else {
                         lastChunk = vanilla.generateChunk(cubeX, cubeZ);
