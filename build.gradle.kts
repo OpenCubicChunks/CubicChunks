@@ -13,10 +13,10 @@ buildscript {
         mavenCentral()
         jcenter()
         maven {
-            setUrl("http://files.minecraftforge.net/maven")
+            setUrl("https://files.minecraftforge.net/maven")
         }
         maven {
-            setUrl("http://repo.spongepowered.org/maven")
+            setUrl("https://repo.spongepowered.org/maven")
         }
         maven {
             setUrl("https://plugins.gradle.org/m2/")
@@ -495,7 +495,7 @@ repositories {
         setUrl("https://oss.sonatype.org/content/repositories/public/")
     }
     maven {
-        setUrl("http://repo.spongepowered.org/maven")
+        setUrl("https://repo.spongepowered.org/maven")
     }
 }
 
