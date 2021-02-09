@@ -183,8 +183,8 @@ public class ShadowPagingRegion<K extends IKey<K>> implements IRegion<K> {
 		return -Math.floorDiv(-x, y);
 	}
 
-	public static <L extends IKey<L>> Region.Builder<L> builder() {
-		return new Region.Builder<>();
+	public static <L extends IKey<L>> ShadowPagingRegion.Builder<L> builder() {
+		return new ShadowPagingRegion.Builder<>();
 	}
 
 	public static class Builder<K extends IKey<K>> {
