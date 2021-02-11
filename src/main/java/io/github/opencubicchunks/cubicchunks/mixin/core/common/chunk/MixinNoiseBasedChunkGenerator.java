@@ -9,6 +9,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.StructureFeatureManager;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.LevelChunkSection;
 import net.minecraft.world.level.levelgen.Aquifer;
@@ -36,6 +37,8 @@ public abstract class MixinNoiseBasedChunkGenerator {
 
     @Mutable @Shadow @Final private int height;
 
+
+    @Shadow @Final protected BlockState defaultBlock;
 
     @Redirect(method = "fillFromNoise", at = @At(value = "INVOKE", target = "Ljava/lang/Math;max(II)I"))
     private int alwaysUseChunkMinBuildHeight(int a, int b) {
@@ -84,5 +87,19 @@ public abstract class MixinNoiseBasedChunkGenerator {
     @Inject(method = "setBedrock", at = @At(value = "HEAD"), cancellable = true)
     private void cancelBedrockPlacement(ChunkAccess chunk, Random random, CallbackInfo ci) {
         ci.cancel();
+    }
+
+    @Inject(
+        method = "updateNoiseAndGenerateBaseState",
+        at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/levelgen/Aquifer;computeAt(III)V", shift = At.Shift.BEFORE),
+        locals = LocalCapture.CAPTURE_FAILHARD,
+        cancellable = true
+    )
+    private void computeAquifer(Beardifier beardifier, Aquifer aquifer, int x, int y, int z, double noise, CallbackInfoReturnable<BlockState> ci, double density) {
+        // optimization: we don't need to compute aquifer if we know that this block is already solid
+        if (density > 0.0) {
+            ci.cancel();
+            ci.setReturnValue(this.defaultBlock);
+        }
     }
 }
