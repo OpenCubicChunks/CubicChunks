@@ -4,19 +4,18 @@ import java.util.Random;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 
-import io.github.opencubicchunks.cubicchunks.chunk.ICubeAquifer;
-import net.minecraft.core.BlockPos;
+import io.github.opencubicchunks.cubicchunks.mixin.access.common.NoiseGeneratorSettingsAccess;
 import net.minecraft.util.Mth;
-import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.StructureFeatureManager;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.ChunkAccess;
-import net.minecraft.world.level.chunk.LevelChunkSection;
 import net.minecraft.world.level.levelgen.Aquifer;
 import net.minecraft.world.level.levelgen.Beardifier;
-import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.levelgen.NoiseBasedChunkGenerator;
+import net.minecraft.world.level.levelgen.NoiseGeneratorSettings;
+import net.minecraft.world.level.levelgen.NoiseSampler;
 import net.minecraft.world.level.levelgen.NoiseSettings;
+import net.minecraft.world.level.levelgen.synth.NormalNoise;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Mutable;
@@ -72,16 +71,28 @@ public abstract class MixinNoiseBasedChunkGenerator {
         return Mth.intFloorDiv(chunkAccess.getMaxBuildHeight() - chunkAccess.getMinBuildHeight(), cellHeight);
     }
 
-    @Inject(method = "doFill", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/levelgen/NoiseBasedChunkGenerator;updateNoiseAndGenerateBaseState"
-        + "(Lnet/minecraft/world/level/levelgen/Beardifier;Lnet/minecraft/world/level/levelgen/Aquifer;IIID)Lnet/minecraft/world/level/block/state/BlockState;", shift = At.Shift.BEFORE),
-        locals = LocalCapture.CAPTURE_FAILHARD)
-    private void attachAquiferChunk(StructureFeatureManager structureFeatureManager, ChunkAccess chunkAccess, int i, int j, CallbackInfoReturnable<ChunkAccess> cir,
-                                    NoiseSettings noiseSettings, int k, Heightmap heightmap, Heightmap heightmap2, ChunkPos chunkPos, int l, int m, int n, int o, Beardifier beardifier,
-                                    Aquifer aquifer, double ds[][][], BlockPos.MutableBlockPos mutableBlockPos, int s, int w, LevelChunkSection levelChunkSection, int x, double d, double e,
-                                    double f, double g, double h, double y, double z, double aa, int ab, int ac, int ad, double af, double ag, double ah, double ai, double aj, int ak,
-                                    int al, int am, double an, double ao, double ap, int aq, int ar, int as, double at, double au) {
+    @Redirect(method = "doFill", at = @At(value = "NEW", target = "net/minecraft/world/level/levelgen/Aquifer"))
+    private Aquifer createAquifier(int i, int j, NormalNoise normalNoise, NormalNoise normalNoise2, NoiseGeneratorSettings generatorSettings, NoiseSampler noiseSampler, int k,
+                                   StructureFeatureManager structureFeatureManager, ChunkAccess chunk, int chunkX, int chunkZ) {
 
-        ((ICubeAquifer) aquifer).prepareLocalWaterLevelForCube(chunkAccess);
+        // copy noise generator settings with the minimum noise value set for aquifier initialization
+        NoiseGeneratorSettingsAccess generatorSettingsAccess = (NoiseGeneratorSettingsAccess) (Object) generatorSettings;
+        NoiseSettings noise = generatorSettings.noiseSettings();
+        noise = NoiseSettings.create(
+            chunk.getMinBuildHeight(), noise.height(), noise.noiseSamplingSettings(), noise.topSlideSettings(), noise.bottomSlideSettings(), noise.noiseSizeHorizontal(),
+            noise.noiseSizeVertical(), noise.densityFactor(), noise.densityOffset(), noise.useSimplexSurfaceNoise(), noise.randomDensityOffset(), noise.islandNoiseOverride(),
+            noise.isAmplified()
+        );
+
+        NoiseGeneratorSettings cubeGeneratorSettings = NoiseGeneratorSettingsAccess.create(
+            generatorSettings.structureSettings(), noise, generatorSettings.getDefaultBlock(), generatorSettings.getDefaultFluid(),
+            generatorSettings.getBedrockRoofPosition(), generatorSettings.getBedrockFloorPosition(), generatorSettings.seaLevel(),
+            generatorSettingsAccess.isDisableMobGeneration(),
+            generatorSettingsAccess.isAquifersEnabled(),
+            generatorSettingsAccess.isNoiseCavesEnabled()
+        );
+
+        return new Aquifer(i, j, normalNoise, normalNoise2, cubeGeneratorSettings, noiseSampler, k);
     }
 
     @Inject(method = "setBedrock", at = @At(value = "HEAD"), cancellable = true)
