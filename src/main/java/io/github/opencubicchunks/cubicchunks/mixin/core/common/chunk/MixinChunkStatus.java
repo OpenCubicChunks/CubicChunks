@@ -180,22 +180,26 @@ public class MixinChunkStatus {
             CubePrimer cubeAbove = new CubePrimer(CubePos.of(((IBigCube) chunk).getCubePos().getX(), ((IBigCube) chunk).getCubePos().getY() + 1,
                 ((IBigCube) chunk).getCubePos().getZ()), UpgradeData.EMPTY, cubeWorldGenRegion);
 
-            List<CompletableFuture<ChunkAccess>> chunkCompletableFuturesList = new ArrayList<>(4);
+            CompletableFuture<ChunkAccess> completableFuture = null;
 
             for (int columnX = 0; columnX < IBigCube.DIAMETER_IN_SECTIONS; columnX++) {
                 for (int columnZ = 0; columnZ < IBigCube.DIAMETER_IN_SECTIONS; columnZ++) {
                     NoiseAndSurfaceBuilderHelper cubeAccessWrapper = new NoiseAndSurfaceBuilderHelper((IBigCube) chunk, cubeAbove);
                     cubeAccessWrapper.moveColumn(columnX, columnZ);
                     CompletableFuture<ChunkAccess> chunkAccessCompletableFuture =
-                        generator.fillFromNoise(executor, world.structureFeatureManager(), cubeAccessWrapper).thenApply(chunkAccess -> {
+                        generator.fillFromNoise(executor, world.structureFeatureManager(), cubeAccessWrapper).thenApplyAsync(chunkAccess -> {
                             generator.buildSurfaceAndBedrock(cubeWorldGenRegion, chunkAccess);
                             cubeAccessWrapper.applySections();
                             return chunkAccess;
-                        });
-                    chunkCompletableFuturesList.add(chunkAccessCompletableFuture);
+                        }, Util.backgroundExecutor());
+                    if (completableFuture == null)
+                        completableFuture = chunkAccessCompletableFuture;
+                    else
+                        completableFuture = completableFuture.thenCombineAsync(chunkAccessCompletableFuture, (chunk1, chunk2) -> chunk1, Util.backgroundExecutor());
                 }
             }
-            ci.setReturnValue(Util.sequence(chunkCompletableFuturesList).thenApply(chunkAccess2 -> {
+            assert completableFuture != null;
+            ci.setReturnValue(completableFuture.thenApply(chunkAccess2 -> {
                 if (chunk instanceof CubePrimer) {
                     ((CubePrimer) chunk).setCubeStatus(status);
                 }
