@@ -11,6 +11,8 @@
         "conformVisibility": true
     },
     "mixins": [
+        "common.chunk.cave.MixinAquifer",
+        "common.chunk.MixinBeardifier",
         "common.chunk.MixinChunk",
         "common.chunk.MixinChunkGenerator",
         "common.chunk.MixinChunkHolder",
@@ -22,7 +24,6 @@
         "common.chunk.MixinNoiseBasedChunkGenerator",
         "common.chunk.MixinProtoChunk",
         "common.chunk.MixinProtoTickList",
-        "common.entity.MixinBoatEntity",
         "common.entity.MixinServerPlayerEntity",
         "common.MixinBlockPos",
         "common.MixinMinecraftServer",

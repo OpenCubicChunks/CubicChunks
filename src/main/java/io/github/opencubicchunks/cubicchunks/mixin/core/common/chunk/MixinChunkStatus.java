@@ -3,8 +3,10 @@ package io.github.opencubicchunks.cubicchunks.mixin.core.common.chunk;
 import static io.github.opencubicchunks.cubicchunks.chunk.util.Utils.*;
 import static net.minecraft.core.Registry.BIOME_REGISTRY;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
 import java.util.function.Function;
 
 import com.mojang.datafixers.util.Either;
@@ -17,6 +19,7 @@ import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.StructureFeatureManagerAccess;
 import io.github.opencubicchunks.cubicchunks.world.CubeWorldGenRegion;
 import io.github.opencubicchunks.cubicchunks.world.server.IServerWorldLightManager;
+import net.minecraft.Util;
 import net.minecraft.core.Registry;
 import net.minecraft.server.level.ChunkHolder;
 import net.minecraft.server.level.ServerLevel;
@@ -82,13 +85,14 @@ public class MixinChunkStatus {
     // structure starts - replace setStatus, handled by MixinChunkGenerator
     @SuppressWarnings({ "UnresolvedMixinReference", "target" })
     @Inject(
-        method = "lambda$static$2(Lnet/minecraft/world/level/chunk/ChunkStatus;Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/level/chunk/ChunkGenerator;"
-            + "Lnet/minecraft/world/level/levelgen/structure/templatesystem/StructureManager;Lnet/minecraft/server/level/ThreadedLevelLightEngine;Ljava/util/function/Function;"
-            + "Ljava/util/List;Lnet/minecraft/world/level/chunk/ChunkAccess;)Ljava/util/concurrent/CompletableFuture;",
+        method = "lambda$static$2(Lnet/minecraft/world/level/chunk/ChunkStatus;Ljava/util/concurrent/Executor;Lnet/minecraft/server/level/ServerLevel;"
+            + "Lnet/minecraft/world/level/chunk/ChunkGenerator;Lnet/minecraft/world/level/levelgen/structure/templatesystem/StructureManager;"
+            + "Lnet/minecraft/server/level/ThreadedLevelLightEngine;Ljava/util/function/Function;Ljava/util/List;Lnet/minecraft/world/level/chunk/ChunkAccess;)"
+            + "Ljava/util/concurrent/CompletableFuture",
         at = @At("HEAD"), cancellable = true
     )
     private static void generateStructureStatus(
-        ChunkStatus status, ServerLevel world, ChunkGenerator generator,
+        ChunkStatus status, Executor executor, ServerLevel world, ChunkGenerator generator,
         StructureManager templateManager, ThreadedLevelLightEngine lightManager,
         Function<ChunkAccess, CompletableFuture<Either<ChunkAccess, ChunkHolder.ChunkLoadingFailure>>> func,
         List<ChunkAccess> chunks, ChunkAccess chunk,
@@ -145,37 +149,66 @@ public class MixinChunkStatus {
     // biomes -> handled by MixinChunkGenerator
     @SuppressWarnings({ "UnresolvedMixinReference", "target" })
     @Inject(
-        method = "lambda$static$5(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/level/chunk/ChunkGenerator;Ljava/util/List;Lnet/minecraft/world/level/chunk/ChunkAccess;)V",
+        method = "lambda$static$6(Lnet/minecraft/world/level/chunk/ChunkStatus;Ljava/util/concurrent/Executor;Lnet/minecraft/server/level/ServerLevel;"
+            + "Lnet/minecraft/world/level/chunk/ChunkGenerator;Lnet/minecraft/world/level/levelgen/structure/templatesystem/StructureManager;"
+            + "Lnet/minecraft/server/level/ThreadedLevelLightEngine;Ljava/util/function/Function;Ljava/util/List;Lnet/minecraft/world/level/chunk/ChunkAccess;)"
+            + "Ljava/util/concurrent/CompletableFuture",
         at = @At("HEAD"), cancellable = true
     )
-    private static void cubicChunksNoise(ServerLevel world, ChunkGenerator generator, List<ChunkAccess> neighbors, ChunkAccess chunk,
-                                         CallbackInfo ci) {
+    private static void cubicChunksNoise(ChunkStatus status, Executor executor, ServerLevel world, ChunkGenerator generator, StructureManager structureFeatureManager,
+                                         ThreadedLevelLightEngine lightEngine, Function<ChunkAccess, CompletableFuture<Either<ChunkAccess, ChunkHolder.ChunkLoadingFailure>>> function,
+                                         List<ChunkAccess> neighbors, ChunkAccess chunk, CallbackInfoReturnable<CompletableFuture<Either<ChunkAccess, ChunkHolder.ChunkLoadingFailure>>> ci) {
+
+//        if (!chunk.getStatus().isOrAfter(status)) {
+//            WorldGenRegion worldGenRegion = new WorldGenRegion(world, neighbors);
+//            ci.setReturnValue(generator.fillFromNoise(executor, world.structureFeatureManager().forWorldGenRegion(worldGenRegion), chunk).thenApply((chunkAccessx) -> {
+//                if (chunkAccessx instanceof ProtoChunk) {
+//                    ((ProtoChunk)chunkAccessx).setStatus(status);
+//                }
+//
+//                return Either.left(chunkAccessx);
+//            }));
+//        } else {
+//            ci.setReturnValue(CompletableFuture.completedFuture(Either.left(chunk)));
+//        }
+
+
         ci.cancel();
         if (chunk instanceof IBigCube) {
             CubeWorldGenRegion cubeWorldGenRegion = new CubeWorldGenRegion(world, unsafeCast(neighbors), chunk);
 
-            StructureFeatureManager structureFeatureManager =
-                new StructureFeatureManager(cubeWorldGenRegion, ((StructureFeatureManagerAccess) world.structureFeatureManager()).getWorldGenSettings());
-
             CubePrimer cubeAbove = new CubePrimer(CubePos.of(((IBigCube) chunk).getCubePos().getX(), ((IBigCube) chunk).getCubePos().getY() + 1,
                 ((IBigCube) chunk).getCubePos().getZ()), UpgradeData.EMPTY, cubeWorldGenRegion);
 
-            NoiseAndSurfaceBuilderHelper cubeAccessWrapper = new NoiseAndSurfaceBuilderHelper((IBigCube) chunk, cubeAbove);
+            List<CompletableFuture<ChunkAccess>> chunkCompletableFuturesList = new ArrayList<>(4);
 
             for (int columnX = 0; columnX < IBigCube.DIAMETER_IN_SECTIONS; columnX++) {
                 for (int columnZ = 0; columnZ < IBigCube.DIAMETER_IN_SECTIONS; columnZ++) {
+                    NoiseAndSurfaceBuilderHelper cubeAccessWrapper = new NoiseAndSurfaceBuilderHelper((IBigCube) chunk, cubeAbove);
                     cubeAccessWrapper.moveColumn(columnX, columnZ);
-                    generator.fillFromNoise(cubeWorldGenRegion, structureFeatureManager, cubeAccessWrapper);
-                    cubeAccessWrapper.applySections();
-                    generator.buildSurfaceAndBedrock(cubeWorldGenRegion, cubeAccessWrapper);
+                    CompletableFuture<ChunkAccess> chunkAccessCompletableFuture =
+                        generator.fillFromNoise(executor, world.structureFeatureManager(), cubeAccessWrapper).thenApply(chunkAccess -> {
+                            generator.buildSurfaceAndBedrock(cubeWorldGenRegion, chunkAccess);
+                            cubeAccessWrapper.applySections();
+                            return chunkAccess;
+                        });
+                    chunkCompletableFuturesList.add(chunkAccessCompletableFuture);
                 }
             }
+            ci.setReturnValue(Util.sequence(chunkCompletableFuturesList).thenApply(chunkAccess2 -> {
+                if (chunk instanceof CubePrimer) {
+                    ((CubePrimer) chunk).setCubeStatus(status);
+                }
+                return Either.left(chunk);
+            }));
+        } else {
+            ci.setReturnValue(CompletableFuture.completedFuture(Either.left(chunk)));
         }
     }
 
     @SuppressWarnings({ "UnresolvedMixinReference", "target" })
     @Inject(
-        method = "lambda$static$6(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/level/chunk/ChunkGenerator;Ljava/util/List;Lnet/minecraft/world/level/chunk/ChunkAccess;)V",
+        method = "lambda$static$7(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/level/chunk/ChunkGenerator;Ljava/util/List;Lnet/minecraft/world/level/chunk/ChunkAccess;)V",
         at = @At("HEAD"), cancellable = true
     )
     private static void cubicChunksSurface(ServerLevel world, ChunkGenerator generator, List<ChunkAccess> neighbors, ChunkAccess chunk,
@@ -189,7 +222,7 @@ public class MixinChunkStatus {
 
     @SuppressWarnings({ "UnresolvedMixinReference", "target" })
     @Inject(
-        method = "lambda$static$7(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/level/chunk/ChunkGenerator;Ljava/util/List;Lnet/minecraft/world/level/chunk/ChunkAccess;)V",
+        method = "lambda$static$8(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/level/chunk/ChunkGenerator;Ljava/util/List;Lnet/minecraft/world/level/chunk/ChunkAccess;)V",
         at = @At("HEAD"), cancellable = true
     )
     private static void cubicChunksCarvers(ServerLevel world, ChunkGenerator generator, List<ChunkAccess> neighbors, ChunkAccess chunk,
@@ -203,7 +236,7 @@ public class MixinChunkStatus {
 
     @SuppressWarnings({ "UnresolvedMixinReference", "target" })
     @Inject(
-        method = "lambda$static$8(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/level/chunk/ChunkGenerator;Ljava/util/List;Lnet/minecraft/world/level/chunk/ChunkAccess;)V",
+        method = "lambda$static$9(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/level/chunk/ChunkGenerator;Ljava/util/List;Lnet/minecraft/world/level/chunk/ChunkAccess;)V",
         at = @At("HEAD"), cancellable = true
     )
     private static void cubicChunksLiquidCarvers(ServerLevel world, ChunkGenerator generator, List<ChunkAccess> neighbors, ChunkAccess chunk,
@@ -217,13 +250,14 @@ public class MixinChunkStatus {
 
     @SuppressWarnings({ "UnresolvedMixinReference", "target" })
     @Inject(
-        method = "lambda$static$9(Lnet/minecraft/world/level/chunk/ChunkStatus;Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/level/chunk/ChunkGenerator;"
-            + "Lnet/minecraft/world/level/levelgen/structure/templatesystem/StructureManager;Lnet/minecraft/server/level/ThreadedLevelLightEngine;Ljava/util/function/Function;"
-            + "Ljava/util/List;Lnet/minecraft/world/level/chunk/ChunkAccess;)Ljava/util/concurrent/CompletableFuture;",
+        method = "lambda$static$10(Lnet/minecraft/world/level/chunk/ChunkStatus;Ljava/util/concurrent/Executor;Lnet/minecraft/server/level/ServerLevel;"
+            + "Lnet/minecraft/world/level/chunk/ChunkGenerator;Lnet/minecraft/world/level/levelgen/structure/templatesystem/StructureManager;"
+            + "Lnet/minecraft/server/level/ThreadedLevelLightEngine;Ljava/util/function/Function;Ljava/util/List;Lnet/minecraft/world/level/chunk/ChunkAccess;)"
+            + "Ljava/util/concurrent/CompletableFuture;",
         at = @At(value = "HEAD"), cancellable = true
     )
     private static void featuresSetStatus(
-        ChunkStatus status, ServerLevel world, ChunkGenerator generator,
+        ChunkStatus status, Executor executor, ServerLevel world, ChunkGenerator generator,
         StructureManager templateManager, ThreadedLevelLightEngine lightManager,
         Function<ChunkAccess, CompletableFuture<Either<ChunkAccess, ChunkHolder.ChunkLoadingFailure>>> func,
         List<ChunkAccess> chunks, ChunkAccess chunk,
@@ -274,7 +308,7 @@ public class MixinChunkStatus {
     //lambda$static$12
     @SuppressWarnings({ "UnresolvedMixinReference", "target" })
     @Inject(
-        method = "lambda$static$12(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/level/chunk/ChunkGenerator;Ljava/util/List;Lnet/minecraft/world/level/chunk/ChunkAccess;)V",
+        method = "lambda$static$13(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/level/chunk/ChunkGenerator;Ljava/util/List;Lnet/minecraft/world/level/chunk/ChunkAccess;)V",
         at = @At("HEAD"), cancellable = true
     )
     private static void cubicChunksSpawnMobs(ServerLevel world, ChunkGenerator generator, List<ChunkAccess> neighbors, ChunkAccess chunk,

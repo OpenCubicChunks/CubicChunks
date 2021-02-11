@@ -78,6 +78,11 @@ public class NoiseAndSurfaceBuilderHelper extends ProtoChunk {
     }
 
     @Override public LevelChunkSection getOrCreateSection(int sectionIndex) {
+        if (sectionIndex < 0) {
+            String s = "aaaaa";
+            System.out.println(s);
+        }
+
 
         LevelChunkSection[] cubeSections = this.getSections();
 

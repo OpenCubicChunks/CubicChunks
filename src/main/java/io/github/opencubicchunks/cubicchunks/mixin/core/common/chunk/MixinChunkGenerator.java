@@ -90,7 +90,7 @@ public abstract class MixinChunkGenerator implements ICubeGenerator {
 
         CubePos cubePos = cube.getCubePos();
 
-        Biome biome = this.biomeSource.getPrimaryBiome(cube.getCubePos().asSectionPos().getX(), cube.getCubePos().asSectionPos().getZ());
+        Biome biome = this.biomeSource.getPrimaryBiome(cube.getCubePos().asChunkPos());
         this.createCCStructure(StructureFeatures.STRONGHOLD, registry, featureManager, cube, manager, seed, cubePos, biome);
 
         for (Supplier<ConfiguredStructureFeature<?, ?>> configuredStructureFeatureSupplier : biome.getGenerationSettings().structures()) {
@@ -107,7 +107,7 @@ public abstract class MixinChunkGenerator implements ICubeGenerator {
         StructureFeatureConfiguration structureFeatureConfiguration = this.settings.getConfig(configuredStructureFeature.feature);
         if (structureFeatureConfiguration != null) {
             StructureStart<?> structureStart2 = configuredStructureFeature
-                .generate(registryAccess, ((ChunkGenerator) (Object) this), this.biomeSource, structureManager, seed, cubePos.asChunkPos(), biome, i, structureFeatureConfiguration);
+                .generate(registryAccess, ((ChunkGenerator) (Object) this), this.biomeSource, structureManager, seed, cubePos.asChunkPos(), biome, i, structureFeatureConfiguration, cube);
             structureFeatureManager
                 .setStartForFeature(/* SectionPos.of(cube.getPos(), 0) We return null as a sectionPos Arg is not used in the method*/null, configuredStructureFeature.feature,
                     structureStart2, cube);
@@ -232,7 +232,7 @@ public abstract class MixinChunkGenerator implements ICubeGenerator {
 
                 long seed = worldgenRandom.setDecorationSeed(region.getSeed(), columnMinPos.getX(), columnMinPos.getY(), columnMinPos.getZ());
 
-                Biome biome = ((ChunkGenerator) (Object) this).getBiomeSource().getPrimaryBiome(cubeToSection(mainCubeX, columnX), cubeToSection(mainCubeZ, columnZ));
+                Biome biome = ((ChunkGenerator) (Object) this).getBiomeSource().getPrimaryBiome(new ChunkPos(cubeToSection(mainCubeX, columnX), cubeToSection(mainCubeZ, columnZ)));
                 try {
                     ((BiomeGetter) (Object) biome).generate(structureManager, ((ChunkGenerator) (Object) this), region, seed, worldgenRandom, columnMinPos);
                 } catch (Exception e) {
