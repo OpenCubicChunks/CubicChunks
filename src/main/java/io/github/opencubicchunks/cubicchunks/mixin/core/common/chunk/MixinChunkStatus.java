@@ -3,7 +3,6 @@ package io.github.opencubicchunks.cubicchunks.mixin.core.common.chunk;
 import static io.github.opencubicchunks.cubicchunks.chunk.util.Utils.*;
 import static net.minecraft.core.Registry.BIOME_REGISTRY;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
@@ -19,7 +18,6 @@ import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.StructureFeatureManagerAccess;
 import io.github.opencubicchunks.cubicchunks.world.CubeWorldGenRegion;
 import io.github.opencubicchunks.cubicchunks.world.server.IServerWorldLightManager;
-import net.minecraft.Util;
 import net.minecraft.core.Registry;
 import net.minecraft.server.level.ChunkHolder;
 import net.minecraft.server.level.ServerLevel;
@@ -187,15 +185,16 @@ public class MixinChunkStatus {
                     NoiseAndSurfaceBuilderHelper cubeAccessWrapper = new NoiseAndSurfaceBuilderHelper((IBigCube) chunk, cubeAbove);
                     cubeAccessWrapper.moveColumn(columnX, columnZ);
                     CompletableFuture<ChunkAccess> chunkAccessCompletableFuture =
-                        generator.fillFromNoise(executor, world.structureFeatureManager(), cubeAccessWrapper).thenApplyAsync(chunkAccess -> {
+                        generator.fillFromNoise(executor, world.structureFeatureManager().forWorldGenRegion(cubeWorldGenRegion), cubeAccessWrapper).thenApply(chunkAccess -> {
                             generator.buildSurfaceAndBedrock(cubeWorldGenRegion, chunkAccess);
                             cubeAccessWrapper.applySections();
                             return chunkAccess;
-                        }, Util.backgroundExecutor());
+                        });
                     if (completableFuture == null)
                         completableFuture = chunkAccessCompletableFuture;
-                    else
-                        completableFuture = completableFuture.thenCombineAsync(chunkAccessCompletableFuture, (chunk1, chunk2) -> chunk1, Util.backgroundExecutor());
+                    else {
+                        completableFuture = completableFuture.thenCombine(chunkAccessCompletableFuture, (chunk1, chunk2) -> chunk1);
+                    }
                 }
             }
             assert completableFuture != null;
