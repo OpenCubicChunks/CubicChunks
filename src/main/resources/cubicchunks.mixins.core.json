@@ -22,6 +22,7 @@
         "common.chunk.MixinChunkStatus",
         "common.chunk.MixinISelectiveWorker",
         "common.chunk.MixinNoiseBasedChunkGenerator",
+        "common.chunk.MixinNoiseSampler",
         "common.chunk.MixinProtoChunk",
         "common.chunk.MixinProtoTickList",
         "common.entity.MixinServerPlayerEntity",
