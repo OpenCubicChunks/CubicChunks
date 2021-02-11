@@ -45,12 +45,20 @@ public class NoiseAndSurfaceBuilderHelper extends ProtoChunk {
     public void moveColumn(int columnX, int columnZ) {
         this.columnX = columnX;
         this.columnZ = columnZ;
+
+        for (int relativeSectionY = 0; relativeSectionY < IBigCube.DIAMETER_IN_SECTIONS * 2; relativeSectionY++) {
+            int sectionY = relativeSectionY + ((IBigCube) delegates[0]).getCubePos().asSectionPos().getY();
+            IBigCube delegateCube = (IBigCube) getDelegateFromSectionY(sectionY);
+            assert delegateCube != null;
+            getSections()[relativeSectionY] = delegateCube.getCubeSections()[Coords.sectionToIndex(columnX, sectionY, columnZ)];
+        }
     }
 
 
     public void applySections() {
-        for (int idx = 0; idx < this.getSections().length; idx++) {
-            int sectionY = getSectionYFromSectionIndex(idx);
+        for (int relativeSectionY = 0; relativeSectionY < IBigCube.DIAMETER_IN_SECTIONS * 2; relativeSectionY++) {
+            int sectionY = relativeSectionY + ((IBigCube) delegates[0]).getCubePos().asSectionPos().getY();
+            int idx = getSectionIndex(Coords.sectionToMinBlock(sectionY));
             IBigCube delegateCube = (IBigCube) getDelegateFromSectionY(sectionY);
             assert delegateCube != null;
             delegateCube.getCubeSections()[Coords.sectionToIndex(columnX, sectionY, columnZ)] = getSections()[idx];

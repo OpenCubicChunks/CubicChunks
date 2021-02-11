@@ -28,6 +28,7 @@ import net.minecraft.world.level.chunk.ChunkGenerator;
 import net.minecraft.world.level.chunk.ChunkStatus;
 import net.minecraft.world.level.chunk.ProtoChunk;
 import net.minecraft.world.level.chunk.UpgradeData;
+import net.minecraft.world.level.levelgen.GenerationStep;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureManager;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -232,9 +233,22 @@ public class MixinChunkStatus {
                                            CallbackInfo ci) {
 
         ci.cancel();
-        //if (chunk instanceof IBigCube) {
-        //    generator.func_225550_a_(world.getBiomeManager().copyWithProvider(generator.getBiomeProvider()), chunk, GenerationStage.Carving.AIR);
-        //}
+        if (chunk instanceof IBigCube) {
+            CubeWorldGenRegion cubeWorldGenRegion = new CubeWorldGenRegion(world, unsafeCast(neighbors), chunk);
+
+            CubePrimer cubeAbove = new CubePrimer(CubePos.of(((IBigCube) chunk).getCubePos().getX(), ((IBigCube) chunk).getCubePos().getY() + 1,
+                ((IBigCube) chunk).getCubePos().getZ()), UpgradeData.EMPTY, cubeWorldGenRegion);
+
+            NoiseAndSurfaceBuilderHelper noiseAndSurfaceBuilderHelper = new NoiseAndSurfaceBuilderHelper((IBigCube) chunk, cubeAbove);
+
+            for (int columnX = 0; columnX < IBigCube.DIAMETER_IN_SECTIONS; columnX++) {
+                for (int columnZ = 0; columnZ < IBigCube.DIAMETER_IN_SECTIONS; columnZ++) {
+                    noiseAndSurfaceBuilderHelper.moveColumn(columnX, columnZ);
+                    generator.applyCarvers(world.getSeed(), world.getBiomeManager(), noiseAndSurfaceBuilderHelper, GenerationStep.Carving.AIR);
+                    noiseAndSurfaceBuilderHelper.applySections();
+                }
+            }
+        }
     }
 
     @SuppressWarnings({ "UnresolvedMixinReference", "target" })

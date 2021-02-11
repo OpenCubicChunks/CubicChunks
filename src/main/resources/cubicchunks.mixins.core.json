@@ -11,6 +11,10 @@
         "conformVisibility": true
     },
     "mixins": [
+        "common.chunk.cave.legacy.MixinCanyonWorldCarver",
+        "common.chunk.cave.legacy.MixinCaveWorldCarver",
+        "common.chunk.cave.legacy.MixinConfiguredWorldCarver",
+        "common.chunk.cave.legacy.MixinWorldCarver",
         "common.chunk.cave.MixinAquifer",
         "common.chunk.MixinBeardifier",
         "common.chunk.MixinChunk",
