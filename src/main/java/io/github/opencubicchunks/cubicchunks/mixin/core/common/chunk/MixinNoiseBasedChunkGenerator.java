@@ -4,9 +4,16 @@ import java.util.Random;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 
+import io.github.opencubicchunks.cubicchunks.chunk.ICubeAquifer;
+import net.minecraft.core.BlockPos;
 import net.minecraft.util.Mth;
+import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.StructureFeatureManager;
 import net.minecraft.world.level.chunk.ChunkAccess;
+import net.minecraft.world.level.chunk.LevelChunkSection;
+import net.minecraft.world.level.levelgen.Aquifer;
+import net.minecraft.world.level.levelgen.Beardifier;
+import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.levelgen.NoiseBasedChunkGenerator;
 import net.minecraft.world.level.levelgen.NoiseSettings;
 import org.spongepowered.asm.mixin.Final;
@@ -18,6 +25,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 @Mixin(NoiseBasedChunkGenerator.class)
 public abstract class MixinNoiseBasedChunkGenerator {
@@ -59,6 +67,18 @@ public abstract class MixinNoiseBasedChunkGenerator {
     @Redirect(method = "fillFromNoise", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/Mth;intFloorDiv(II)I", ordinal = 1))
     private int alwaysUseChunkMaxHeight(int i, int j, Executor executor, StructureFeatureManager structureFeatureManager, ChunkAccess chunkAccess) {
         return Mth.intFloorDiv(chunkAccess.getMaxBuildHeight() - chunkAccess.getMinBuildHeight(), cellHeight);
+    }
+
+    @Inject(method = "doFill", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/levelgen/NoiseBasedChunkGenerator;updateNoiseAndGenerateBaseState"
+        + "(Lnet/minecraft/world/level/levelgen/Beardifier;Lnet/minecraft/world/level/levelgen/Aquifer;IIID)Lnet/minecraft/world/level/block/state/BlockState;", shift = At.Shift.BEFORE),
+        locals = LocalCapture.CAPTURE_FAILHARD)
+    private void attachAquiferChunk(StructureFeatureManager structureFeatureManager, ChunkAccess chunkAccess, int i, int j, CallbackInfoReturnable<ChunkAccess> cir,
+                                    NoiseSettings noiseSettings, int k, Heightmap heightmap, Heightmap heightmap2, ChunkPos chunkPos, int l, int m, int n, int o, Beardifier beardifier,
+                                    Aquifer aquifer, double ds[][][], BlockPos.MutableBlockPos mutableBlockPos, int s, int w, LevelChunkSection levelChunkSection, int x, double d, double e,
+                                    double f, double g, double h, double y, double z, double aa, int ab, int ac, int ad, double af, double ag, double ah, double ai, double aj, int ak,
+                                    int al, int am, double an, double ao, double ap, int aq, int ar, int as, double at, double au) {
+
+        ((ICubeAquifer) aquifer).prepareLocalWaterLevelForCube(chunkAccess);
     }
 
     @Inject(method = "setBedrock", at = @At(value = "HEAD"), cancellable = true)
