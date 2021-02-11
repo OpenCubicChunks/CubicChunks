@@ -17,6 +17,7 @@
         "common.HeightmapAccess",
         "common.LevelBasedGraphAccess",
         "common.Matrix4fAccess",
+        "common.NoiseGeneratorSettingsAccess",
         "common.OverworldBiomeSourceAccess",
         "common.PlayerChunkTrackerFactoryAccess",
         "common.PlayerTicketTrackerFactoryAccess",
