@@ -12,6 +12,7 @@ import net.minecraft.world.level.levelgen.feature.configurations.ProbabilityFeat
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
@@ -22,7 +23,7 @@ public class MixinCaveWorldCarver {
     private void cancelCaves(ChunkAccess chunkAccess, Function<BlockPos, Biome> function, Random random, int i, int j, int k, int l, int m, BitSet bitSet,
                              ProbabilityFeatureConfiguration probabilityFeatureConfiguration, CallbackInfoReturnable<Boolean> cir) {
         int cubeMinY = chunkAccess.getMinBuildHeight();
-        if (cubeMinY > 128 || cubeMinY < 0) {
+        if (cubeMinY > 128 || cubeMinY < -128) {
             cir.setReturnValue(false);
         }
 
