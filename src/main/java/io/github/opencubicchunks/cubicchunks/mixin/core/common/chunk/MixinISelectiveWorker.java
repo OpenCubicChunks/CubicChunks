@@ -2,6 +2,7 @@ package io.github.opencubicchunks.cubicchunks.mixin.core.common.chunk;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
 import java.util.function.Function;
 
 import com.mojang.datafixers.util.Either;
@@ -29,7 +30,7 @@ public interface MixinISelectiveWorker {
      */
     @Overwrite
     default CompletableFuture<Either<ChunkAccess, ChunkHolder.ChunkLoadingFailure>> doWork(
-        ChunkStatus status, ServerLevel p_doWork_2_, ChunkGenerator p_doWork_3_,
+        ChunkStatus status, Executor executor, ServerLevel p_doWork_2_, ChunkGenerator p_doWork_3_,
         StructureManager p_doWork_4_, ThreadedLevelLightEngine p_doWork_5_,
         Function<ChunkAccess, CompletableFuture<Either<ChunkAccess, ChunkHolder.ChunkLoadingFailure>>> p_doWork_6_,
         List<ChunkAccess> p_doWork_7_, ChunkAccess chunk) {

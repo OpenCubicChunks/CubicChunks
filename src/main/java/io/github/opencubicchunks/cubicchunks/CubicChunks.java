@@ -54,10 +54,12 @@ public class CubicChunks implements ModInitializer {
         CCFeatures.init();
     }
 
+
     @Override
     public void onInitialize() {
         PacketDispatcher.register();
 
         Registry.register(Registry.BIOME_SOURCE, new ResourceLocation(MODID, "stripes"), StripedBiomeSource.CODEC);
+//        Registry.register(Registry.CHUNK_GENERATOR, new ResourceLocation(MODID, "generator"), CCNoiseBasedChunkGenerator.CODEC);
     }
 }

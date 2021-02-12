@@ -480,7 +480,7 @@ public class CubePrimer implements IBigCube, ChunkAccess {
     }
 
     @Override public int getHeight(Heightmap.Types types, int x, int z) {
-        throw new UnsupportedOperationException("Not implemented");
+        return getCubeLocalHeight(types, x, z);
     }
 
     @org.jetbrains.annotations.Nullable

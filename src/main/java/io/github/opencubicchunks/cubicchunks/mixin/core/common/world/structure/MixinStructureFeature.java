@@ -6,6 +6,7 @@ import io.github.opencubicchunks.cubicchunks.server.ICubicWorld;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.SectionPos;
+import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.StructureFeatureManager;
 import net.minecraft.world.level.chunk.ChunkStatus;
@@ -63,7 +64,8 @@ public abstract class MixinStructureFeature {
                                     Coords.cubeToSection(pos.getY(), 0),
                                     Coords.cubeToSection(pos.getZ(), sectionZ)
                                 );
-                                boolean validBiome = level.getBiomeManager().getPrimaryBiomeAtChunk(sp.x(), sp.z()).getGenerationSettings().isValidStart((StructureFeature<?>) (Object) this);
+                                boolean validBiome =
+                                    level.getBiomeManager().getPrimaryBiomeAtChunk(new ChunkPos(sp.x(), sp.z())).getGenerationSettings().isValidStart((StructureFeature<?>) (Object) this);
                                 if (!validBiome) {
                                     continue;
                                 }

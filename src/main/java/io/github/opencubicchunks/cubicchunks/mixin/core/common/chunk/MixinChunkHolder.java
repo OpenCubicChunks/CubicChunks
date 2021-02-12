@@ -83,7 +83,7 @@ public abstract class MixinChunkHolder implements ICubeHolder {
     @Shadow protected abstract void broadcastBlockEntity(Level worldIn, BlockPos posIn);
 
     @Shadow protected abstract void updateChunkToSave(
-        CompletableFuture<? extends Either<? extends ChunkAccess, ChunkHolder.ChunkLoadingFailure>> eitherChunk);
+        CompletableFuture<? extends Either<? extends ChunkAccess, ChunkHolder.ChunkLoadingFailure>> eitherChunk, String string);
 
     @Shadow public static ChunkStatus getStatus(int level) {
         throw new Error("Mixin failed to apply");
@@ -428,6 +428,6 @@ public abstract class MixinChunkHolder implements ICubeHolder {
             }
         }
 
-        this.updateChunkToSave(unsafeCast(CompletableFuture.completedFuture(Either.left((IBigCube) primer.getCube()))));
+        this.updateChunkToSave(unsafeCast(CompletableFuture.completedFuture(Either.left((IBigCube) primer.getCube()))), "replaceProtoCube");
     }
 }

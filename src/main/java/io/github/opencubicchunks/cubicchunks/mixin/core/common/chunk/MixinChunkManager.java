@@ -442,16 +442,18 @@ public abstract class MixinChunkManager implements IChunkManager {
         }
     }
 
+
+    //A lamdba inside a lambda in the method scheduleChunkGeneration.
     @SuppressWarnings({ "UnresolvedMixinReference", "target" })
     @Inject(
-        method = "lambda$null$18(Lnet/minecraft/world/level/ChunkPos;Lnet/minecraft/server/level/ChunkHolder;Lnet/minecraft/world/level/chunk/ChunkStatus;Ljava/util/List;)"
-            + "Ljava/util/concurrent/CompletableFuture;",
+        method = "lambda$null$19(Lnet/minecraft/world/level/ChunkPos;Lnet/minecraft/server/level/ChunkHolder;Lnet/minecraft/world/level/chunk/ChunkStatus;Ljava/util/concurrent/Executor;"
+            + "Ljava/util/List;)Ljava/util/concurrent/CompletableFuture;",
         at = @At(
             value = "INVOKE",
             target = "Lnet/minecraft/server/level/progress/ChunkProgressListener;onStatusChange(Lnet/minecraft/world/level/ChunkPos;Lnet/minecraft/world/level/chunk/ChunkStatus;)V"
         )
     )
-    private void onGenerateStatusChange(ChunkPos chunkpos, ChunkHolder chunkHolderIn, ChunkStatus chunkStatusIn, List<?> p_223148_4_,
+    private void onGenerateStatusChange(ChunkPos chunkpos, ChunkHolder chunkHolderIn, ChunkStatus chunkStatusIn, Executor executor, List<?> p_223148_4_,
                                         CallbackInfoReturnable<CompletableFuture<?>> cir) {
         if (((ICubeHolder) chunkHolderIn).getCubePos() != null) {
             ((ICubeStatusListener) progressListener).onCubeStatusChange(
@@ -539,11 +541,14 @@ public abstract class MixinChunkManager implements IChunkManager {
         this.level.getProfiler().incrementCounter(() -> {
             return "cubeGenerate " + chunkStatusIn.getName();
         });
+
+        Executor executor = (runnable) -> this.cubeWorldgenMailbox.tell(CubeTaskPriorityQueueSorter.createMsg(chunkHolderIn, runnable));
+
         return future.thenComposeAsync((sectionOrError) -> {
             return sectionOrError.map((neighborSections) -> {
                 try {
                     CompletableFuture<Either<IBigCube, ChunkHolder.ChunkLoadingFailure>> finalFuture = Utils.unsafeCast(
-                        chunkStatusIn.generate(this.level, this.generator, this.structureManager, this.lightEngine, (chunk) -> {
+                        chunkStatusIn.generate(executor, this.level, this.generator, this.structureManager, this.lightEngine, (chunk) -> {
                             return Utils.unsafeCast(this.protoCubeToFullCube(chunkHolderIn));
                         }, Utils.unsafeCast(neighborSections)));
                     ((ICubeStatusListener) this.progressListener).onCubeStatusChange(cubePos, chunkStatusIn);

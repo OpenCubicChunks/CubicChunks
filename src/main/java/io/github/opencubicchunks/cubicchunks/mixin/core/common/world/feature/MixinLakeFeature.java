@@ -1,10 +1,7 @@
 package io.github.opencubicchunks.cubicchunks.mixin.core.common.world.feature;
 
-import java.util.Random;
-
-import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.WorldGenLevel;
-import net.minecraft.world.level.chunk.ChunkGenerator;
+import net.minecraft.world.level.levelgen.feature.FeaturePlaceContext;
 import net.minecraft.world.level.levelgen.feature.LakeFeature;
 import net.minecraft.world.level.levelgen.feature.configurations.BlockStateConfiguration;
 import org.spongepowered.asm.mixin.Mixin;
@@ -16,8 +13,7 @@ public class MixinLakeFeature {
 
 
     @Redirect(method = "place", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/WorldGenLevel;getMinBuildHeight()I", ordinal = 0))
-    private int cubicLakeFeature(WorldGenLevel worldGenLevel, WorldGenLevel worldGenLevel2, ChunkGenerator chunkGenerator, Random random, BlockPos blockPos,
-                                 BlockStateConfiguration blockStateConfiguration) {
-        return blockPos.getY();
+    private int cubicLakeFeature(WorldGenLevel worldGenLevel, FeaturePlaceContext<BlockStateConfiguration> featurePlaceContext) {
+        return featurePlaceContext.origin().getY();
     }
 }

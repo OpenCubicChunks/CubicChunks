@@ -1,5 +1,6 @@
 package io.github.opencubicchunks.cubicchunks.mixin.core.common.chunk;
 
+import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import net.minecraft.world.level.LevelHeightAccessor;
 import net.minecraft.world.level.chunk.ChunkStatus;
 import net.minecraft.world.level.chunk.ProtoChunk;
@@ -17,6 +18,6 @@ public abstract class MixinProtoChunk {
             + "Lnet/minecraft/world/level/chunk/ProtoTickList;Lnet/minecraft/world/level/chunk/ProtoTickList;Lnet/minecraft/world/level/LevelHeightAccessor;)V",
         at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/LevelHeightAccessor;getSectionsCount()I"))
     private int getFakeSectionCount(LevelHeightAccessor accessor) {
-        return 16; // TODO: properly handle ProtoChunk
+        return Math.min(IBigCube.SECTION_COUNT * 2, accessor.getSectionsCount()); // TODO: properly handle ProtoChunk
     }
 }

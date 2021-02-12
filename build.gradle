@@ -145,7 +145,7 @@ dependencies {
     def dummyConfig = configurations.create("dummyResolvingConfiguration")
     mappings new MergedMappingsDependency(project, dummyConfig,
             minecraft.officialMojangMappings(),
-            dependencies.add("dummyResolvingConfiguration", dependencies.create("net.fabricmc:yarn:20w46a+build.20:v2")))
+            dependencies.add("dummyResolvingConfiguration", dependencies.create("net.fabricmc:yarn:${project.yarn_version}:v2")))
     modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
 
     // Add each module as a dependency
