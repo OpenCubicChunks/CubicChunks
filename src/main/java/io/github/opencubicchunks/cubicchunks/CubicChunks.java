@@ -1,17 +1,23 @@
 package io.github.opencubicchunks.cubicchunks;
 
 import java.lang.reflect.InvocationTargetException;
+import java.util.HashSet;
+import java.util.Set;
 
+import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.IChunkManager;
+import io.github.opencubicchunks.cubicchunks.chunk.NoiseAndSurfaceBuilderHelper;
 import io.github.opencubicchunks.cubicchunks.meta.EarlyConfig;
 import io.github.opencubicchunks.cubicchunks.network.PacketDispatcher;
 import io.github.opencubicchunks.cubicchunks.world.biome.StripedBiomeSource;
 import io.github.opencubicchunks.cubicchunks.world.gen.feature.CCFeatures;
 import io.github.opencubicchunks.cubicchunks.world.gen.placement.CCPlacement;
 import net.fabricmc.api.ModInitializer;
+import net.minecraft.Util;
 import net.minecraft.core.Registry;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ChunkMap;
+import net.minecraft.world.level.chunk.ChunkAccess;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -54,6 +60,15 @@ public class CubicChunks implements ModInitializer {
         CCFeatures.init();
     }
 
+    public static Set<String> COLUMN_DIMENSION_MAP = Util.make(new HashSet<>(), (set) -> {
+        set.add("minecraft:the_nether");
+        set.add("minecraft:the_end");
+    });
+
+
+    public static boolean isCubicChunk(ChunkAccess chunkAccess) {
+        return chunkAccess instanceof IBigCube || chunkAccess instanceof NoiseAndSurfaceBuilderHelper;
+    }
 
     @Override
     public void onInitialize() {

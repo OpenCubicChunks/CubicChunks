@@ -32,6 +32,9 @@ public abstract class MixinStructureFeatureManager {
     @Inject(at = @At("HEAD"), method = "startsForFeature(Lnet/minecraft/core/SectionPos;Lnet/minecraft/world/level/levelgen/feature/StructureFeature;)Ljava/util/stream/Stream;",
         cancellable = true)
     private void useCubePos(SectionPos sectionPos, StructureFeature<?> structureFeature, CallbackInfoReturnable<Stream<? extends StructureStart<?>>> cir) {
+        if (!(level instanceof ICubicWorld))
+            return;
+
         cir.setReturnValue(((ICubicWorld) this.level).getCube(sectionToCube(sectionPos.x()), sectionToCube(sectionPos.y()), sectionToCube(sectionPos.z()), ChunkStatus.STRUCTURE_REFERENCES)
             .getReferencesForFeature(structureFeature).stream().map((seed) -> {
                 return CubePos.from(seed);

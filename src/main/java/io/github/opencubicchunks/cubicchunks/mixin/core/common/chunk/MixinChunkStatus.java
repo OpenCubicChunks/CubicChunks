@@ -9,10 +9,12 @@ import java.util.concurrent.Executor;
 import java.util.function.Function;
 
 import com.mojang.datafixers.util.Either;
+import io.github.opencubicchunks.cubicchunks.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.ICubeGenerator;
 import io.github.opencubicchunks.cubicchunks.chunk.NoiseAndSurfaceBuilderHelper;
 import io.github.opencubicchunks.cubicchunks.chunk.biome.ColumnBiomeContainer;
+import io.github.opencubicchunks.cubicchunks.chunk.biome.CubeBiomeContainer;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.CubePrimer;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.StructureFeatureManagerAccess;
@@ -74,6 +76,7 @@ public class MixinChunkStatus {
         ChunkAccess chunk,
         CallbackInfoReturnable<CompletableFuture<Either<ChunkAccess, ChunkHolder.ChunkLoadingFailure>>> ci) {
 
+
         if (chunk instanceof CubePrimer && !chunk.getStatus().isOrAfter(status)) {
             ((CubePrimer) chunk).setCubeStatus(status);
         }
@@ -93,6 +96,20 @@ public class MixinChunkStatus {
         Function<ChunkAccess, CompletableFuture<Either<ChunkAccess, ChunkHolder.ChunkLoadingFailure>>> func,
         List<ChunkAccess> chunks, ChunkAccess chunk,
         CallbackInfoReturnable<CompletableFuture<Either<ChunkAccess, ChunkHolder.ChunkLoadingFailure>>> cir) {
+
+        if (CubicChunks.COLUMN_DIMENSION_MAP.contains(world.dimension().location().toString())) {
+            if (!(chunk instanceof IBigCube)) {
+                return;
+            }
+
+            if (!((IBigCube) chunk).getCubeStatus().isOrAfter(status)) {
+                if (chunk instanceof CubePrimer) {
+                    ((CubePrimer) chunk).setCubeStatus(status);
+                }
+            }
+            cir.setReturnValue(CompletableFuture.completedFuture(Either.left(chunk)));
+            return;
+        }
 
         cir.setReturnValue(CompletableFuture.completedFuture(Either.left(chunk)));
         if (!(chunk instanceof IBigCube)) {
@@ -120,6 +137,10 @@ public class MixinChunkStatus {
     private static void cubicChunksStructureReferences(ServerLevel world, ChunkGenerator generator, List<ChunkAccess> neighbors, ChunkAccess chunk,
                                                        CallbackInfo ci) {
 
+        if (CubicChunks.COLUMN_DIMENSION_MAP.contains(world.dimension().location().toString())) {
+            return;
+        }
+
         ci.cancel();
         if (chunk instanceof IBigCube) {
             generator.createReferences(new CubeWorldGenRegion(world, unsafeCast(neighbors), chunk), world.structureFeatureManager(), chunk);
@@ -131,14 +152,23 @@ public class MixinChunkStatus {
         method = "lambda$static$4(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/level/chunk/ChunkGenerator;Ljava/util/List;Lnet/minecraft/world/level/chunk/ChunkAccess;)V",
         at = @At("HEAD"), cancellable = true
     )
-    private static void cubicChunksBiome(ServerLevel serverLevel, ChunkGenerator chunkGenerator, List<ChunkAccess> neighbors, ChunkAccess chunkAccess, CallbackInfo ci) {
+    private static void cubicChunksBiome(ServerLevel world, ChunkGenerator chunkGenerator, List<ChunkAccess> neighbors, ChunkAccess chunkAccess, CallbackInfo ci) {
+        if (CubicChunks.COLUMN_DIMENSION_MAP.contains(world.dimension().location().toString())) {
+            if (chunkAccess instanceof IBigCube) {
+//                /* This can only be a  CubePrimer at this point due to the inject in MixinChunkStatus#cubicChunksBiome  */
+//                IBigCube iCube = (IBigCube) chunkAccess;
+//                CubePos cubePos = ((IBigCube) chunkAccess).getCubePos();
+//                ((CubePrimer) iCube).setCubeBiomes(new CubeBiomeContainer(world.registryAccess().registryOrThrow(Registry.BIOME_REGISTRY), cubePos, this.runtimeBiomeSource));
+                return;
+            }
+        }
         if (chunkAccess instanceof IBigCube) {
-            chunkGenerator.createBiomes(serverLevel.registryAccess().registryOrThrow(Registry.BIOME_REGISTRY), chunkAccess);
+            chunkGenerator.createBiomes(world.registryAccess().registryOrThrow(Registry.BIOME_REGISTRY), chunkAccess);
             return;
         }
         ci.cancel();
         //noinspection ConstantConditions
-        ColumnBiomeContainer biomeContainer = new ColumnBiomeContainer(serverLevel.registryAccess().registryOrThrow(BIOME_REGISTRY), serverLevel, serverLevel);
+        ColumnBiomeContainer biomeContainer = new ColumnBiomeContainer(world.registryAccess().registryOrThrow(BIOME_REGISTRY), world, world);
         ((ProtoChunk) chunkAccess).setBiomes(biomeContainer);
     }
 
@@ -152,19 +182,12 @@ public class MixinChunkStatus {
                                          ThreadedLevelLightEngine lightEngine, Function<ChunkAccess, CompletableFuture<Either<ChunkAccess, ChunkHolder.ChunkLoadingFailure>>> function,
                                          List<ChunkAccess> neighbors, ChunkAccess chunk, CallbackInfoReturnable<CompletableFuture<Either<ChunkAccess, ChunkHolder.ChunkLoadingFailure>>> ci) {
 
-//        if (!chunk.getStatus().isOrAfter(status)) {
-//            WorldGenRegion worldGenRegion = new WorldGenRegion(world, neighbors);
-//            ci.setReturnValue(generator.fillFromNoise(executor, world.structureFeatureManager().forWorldGenRegion(worldGenRegion), chunk).thenApply((chunkAccessx) -> {
-//                if (chunkAccessx instanceof ProtoChunk) {
-//                    ((ProtoChunk)chunkAccessx).setStatus(status);
-//                }
-//
-//                return Either.left(chunkAccessx);
-//            }));
-//        } else {
-//            ci.setReturnValue(CompletableFuture.completedFuture(Either.left(chunk)));
-//        }
-
+        if (CubicChunks.COLUMN_DIMENSION_MAP.contains(world.dimension().location().toString())) {
+            if (chunk instanceof IBigCube) {
+                ci.setReturnValue(CompletableFuture.completedFuture(Either.left(chunk)));
+            }
+            return;
+        }
 
         ci.cancel();
         if (chunk instanceof IBigCube) {
@@ -212,6 +235,9 @@ public class MixinChunkStatus {
     private static void cubicChunksSurface(ServerLevel world, ChunkGenerator generator, List<ChunkAccess> neighbors, ChunkAccess chunk,
                                            CallbackInfo ci) {
 
+        if (CubicChunks.COLUMN_DIMENSION_MAP.contains(world.dimension().location().toString())) {
+            return;
+        }
         ci.cancel();
         //if (chunk instanceof IBigCube) {
         //   generator.generateSurface(new CubeWorldGenRegion(world, unsafeCast(neighbors)), chunk);
@@ -225,6 +251,10 @@ public class MixinChunkStatus {
     )
     private static void cubicChunksCarvers(ServerLevel world, ChunkGenerator generator, List<ChunkAccess> neighbors, ChunkAccess chunk,
                                            CallbackInfo ci) {
+
+        if (CubicChunks.COLUMN_DIMENSION_MAP.contains(world.dimension().location().toString())) {
+            return;
+        }
 
         ci.cancel();
         if (chunk instanceof IBigCube) {
@@ -252,6 +282,10 @@ public class MixinChunkStatus {
     )
     private static void cubicChunksLiquidCarvers(ServerLevel world, ChunkGenerator generator, List<ChunkAccess> neighbors, ChunkAccess chunk,
                                                  CallbackInfo ci) {
+
+        if (CubicChunks.COLUMN_DIMENSION_MAP.contains(world.dimension().location().toString())) {
+            return;
+        }
 
         ci.cancel();
         if (chunk instanceof IBigCube) {
@@ -287,6 +321,19 @@ public class MixinChunkStatus {
         Function<ChunkAccess, CompletableFuture<Either<ChunkAccess, ChunkHolder.ChunkLoadingFailure>>> func,
         List<ChunkAccess> chunks, ChunkAccess chunk,
         CallbackInfoReturnable<CompletableFuture<Either<ChunkAccess, ChunkHolder.ChunkLoadingFailure>>> cir) {
+
+        if (CubicChunks.COLUMN_DIMENSION_MAP.contains(world.dimension().location().toString())) {
+            if (!(chunk instanceof CubePrimer)) {
+                return;
+            }
+
+            CubePrimer cubePrimer = (CubePrimer) chunk;
+            if (!cubePrimer.getCubeStatus().isOrAfter(status)) {
+                cubePrimer.setCubeStatus(status);
+            }
+            cir.setReturnValue(CompletableFuture.completedFuture(Either.left(chunk)));
+            return;
+        }
 
         if (!(chunk instanceof CubePrimer)) {
             // cancel column population for now
