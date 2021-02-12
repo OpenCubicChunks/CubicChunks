@@ -84,10 +84,7 @@ public class MixinChunkStatus {
     // structure starts - replace setStatus, handled by MixinChunkGenerator
     @SuppressWarnings({ "UnresolvedMixinReference", "target" })
     @Inject(
-        method = "lambda$static$2(Lnet/minecraft/world/level/chunk/ChunkStatus;Ljava/util/concurrent/Executor;Lnet/minecraft/server/level/ServerLevel;"
-            + "Lnet/minecraft/world/level/chunk/ChunkGenerator;Lnet/minecraft/world/level/levelgen/structure/templatesystem/StructureManager;"
-            + "Lnet/minecraft/server/level/ThreadedLevelLightEngine;Ljava/util/function/Function;Ljava/util/List;Lnet/minecraft/world/level/chunk/ChunkAccess;)"
-            + "Ljava/util/concurrent/CompletableFuture",
+        method = "lambda$static$2",
         at = @At("HEAD"), cancellable = true
     )
     private static void generateStructureStatus(
@@ -148,10 +145,7 @@ public class MixinChunkStatus {
     // biomes -> handled by MixinChunkGenerator
     @SuppressWarnings({ "UnresolvedMixinReference", "target" })
     @Inject(
-        method = "lambda$static$6(Lnet/minecraft/world/level/chunk/ChunkStatus;Ljava/util/concurrent/Executor;Lnet/minecraft/server/level/ServerLevel;"
-            + "Lnet/minecraft/world/level/chunk/ChunkGenerator;Lnet/minecraft/world/level/levelgen/structure/templatesystem/StructureManager;"
-            + "Lnet/minecraft/server/level/ThreadedLevelLightEngine;Ljava/util/function/Function;Ljava/util/List;Lnet/minecraft/world/level/chunk/ChunkAccess;)"
-            + "Ljava/util/concurrent/CompletableFuture",
+        method = "lambda$static$6",
         at = @At("HEAD"), cancellable = true
     )
     private static void cubicChunksNoise(ChunkStatus status, Executor executor, ServerLevel world, ChunkGenerator generator, StructureManager structureFeatureManager,
