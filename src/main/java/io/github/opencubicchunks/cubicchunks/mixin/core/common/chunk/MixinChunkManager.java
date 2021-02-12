@@ -33,6 +33,7 @@ import io.github.opencubicchunks.cubicchunks.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.chunk.CubeCollectorFuture;
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.IChunkManager;
+import io.github.opencubicchunks.cubicchunks.chunk.IChunkMapInternal;
 import io.github.opencubicchunks.cubicchunks.chunk.ICubeHolder;
 import io.github.opencubicchunks.cubicchunks.chunk.ICubeStatusListener;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.BigCube;
@@ -97,7 +98,6 @@ import net.minecraft.world.level.chunk.ChunkStatus;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.chunk.LightChunkGetter;
 import net.minecraft.world.level.chunk.UpgradeData;
-import net.minecraft.world.level.chunk.storage.ChunkSerializer;
 import net.minecraft.world.level.entity.ChunkStatusUpdateListener;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureManager;
 import net.minecraft.world.level.lighting.LevelLightEngine;
@@ -117,7 +117,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 @Mixin(ChunkMap.class)
-public abstract class MixinChunkManager implements IChunkManager {
+public abstract class MixinChunkManager implements IChunkManager, IChunkMapInternal {
 
     private static final double TICK_UPDATE_DISTANCE = 128.0;
 
@@ -180,6 +180,7 @@ public abstract class MixinChunkManager implements IChunkManager {
     }
 
     @Shadow public abstract Stream<ServerPlayer> getPlayers(ChunkPos chunkPos, boolean bl);
+
 
     @Inject(method = "<init>", at = @At("RETURN"), locals = LocalCapture.CAPTURE_FAILHARD)
     private void onConstruct(ServerLevel worldIn,
@@ -311,27 +312,8 @@ public abstract class MixinChunkManager implements IChunkManager {
         }
     }
 
-    private boolean isExistingCubeFull(CubePos cubePos) {
-        byte b0 = cubeTypeCache.get(cubePos.asLong());
-        if (b0 != 0) {
-            return b0 == 1;
-        } else {
-            CompoundTag compoundnbt;
-            try {
-                compoundnbt = regionCubeIO.loadCubeNBT(cubePos);
-                if (compoundnbt == null) {
-                    this.markCubePositionReplaceable(cubePos);
-                    return false;
-                }
-            } catch (Exception exception) {
-                LOGGER.error("Failed to read chunk {}", cubePos, exception);
-                this.markCubePositionReplaceable(cubePos);
-                return false;
-            }
-
-            ChunkStatus.ChunkType status = ChunkSerializer.getChunkTypeFromTag(compoundnbt);
-            return this.markCubePosition(cubePos, status) == 1;
-        }
+    private CompoundTag readCubeNBT(CubePos cubePos) throws IOException {
+        return regionCubeIO.loadCubeNBT(cubePos);
     }
 
     // processUnloads
