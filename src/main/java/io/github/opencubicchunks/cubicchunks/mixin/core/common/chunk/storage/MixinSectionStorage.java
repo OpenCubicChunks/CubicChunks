@@ -64,7 +64,7 @@ public abstract class MixinSectionStorage<R> implements ISectionStorage {
 
     @Shadow protected abstract void setDirty(long pos);
 
-    @Shadow protected abstract boolean outsideStoredRange(SectionPos pos);
+    @Shadow protected abstract boolean outsideStoredRange(long sectionLong);
 
     @Shadow @Nullable protected abstract Optional<R> get(long pos);
 
@@ -95,7 +95,7 @@ public abstract class MixinSectionStorage<R> implements ISectionStorage {
     @Overwrite
     protected Optional<R> getOrLoad(long pos) {
         SectionPos sectionPos = SectionPos.of(pos);
-        if (this.outsideStoredRange(sectionPos)) {
+        if (this.outsideStoredRange(pos)) {
             return Optional.empty();
         } else {
             Optional<R> optional = this.get(pos);
