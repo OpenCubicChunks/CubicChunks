@@ -131,15 +131,21 @@ public class NoiseAndSurfaceBuilderHelper extends ProtoChunk {
     @Nullable @Override public BlockState setBlockState(BlockPos pos, BlockState state, boolean moved) {
         ChunkAccess delegate = getDelegateFromBlockY(pos.getY());
         if (delegate != null) {
-            return delegate.setBlockState(pos.offset(Coords.sectionToMinBlock(columnX), 0, (Coords.sectionToMinBlock(columnZ))), state, moved);
+            return delegate.setBlockState(correctPos(pos), state, moved);
         }
         return Blocks.AIR.defaultBlockState();
+    }
+
+    private BlockPos correctPos(BlockPos pos) {
+        int x = Coords.blockToSectionLocal(pos.getX()) + Coords.sectionToMinBlock(columnX);
+        int z = Coords.blockToSectionLocal(pos.getZ()) + Coords.sectionToMinBlock(columnZ);
+        return new BlockPos(x, pos.getY(), z);
     }
 
     @Override public BlockState getBlockState(BlockPos blockPos) {
         ChunkAccess delegate = getDelegateFromBlockY(blockPos.getY());
         if (delegate != null) {
-            return delegate.getBlockState(blockPos.offset(Coords.sectionToMinBlock(columnX), 0, (Coords.sectionToMinBlock(columnZ))));
+            return delegate.getBlockState(correctPos(blockPos));
         }
         return Blocks.AIR.defaultBlockState();
     }
@@ -147,7 +153,7 @@ public class NoiseAndSurfaceBuilderHelper extends ProtoChunk {
     @Override public FluidState getFluidState(BlockPos blockPos) {
         ChunkAccess delegate = getDelegateFromBlockY(blockPos.getY());
         if (delegate != null) {
-            return delegate.getFluidState(blockPos.offset(Coords.sectionToMinBlock(columnX), 0, (Coords.sectionToMinBlock(columnZ))));
+            return delegate.getFluidState(correctPos(blockPos));
         }
         return Fluids.EMPTY.defaultFluidState();
     }
@@ -169,7 +175,7 @@ public class NoiseAndSurfaceBuilderHelper extends ProtoChunk {
     @Override @Nullable public BlockEntity getBlockEntity(BlockPos blockPos) {
         ChunkAccess delegate = getDelegateFromBlockY(blockPos.getY());
         if (delegate != null) {
-            return delegate.getBlockEntity(blockPos.offset(Coords.sectionToMinBlock(columnX), 0, (Coords.sectionToMinBlock(columnZ))));
+            return delegate.getBlockEntity(correctPos(blockPos));
         }
         return null;
     }
@@ -177,21 +183,21 @@ public class NoiseAndSurfaceBuilderHelper extends ProtoChunk {
     @Override public void removeBlockEntity(BlockPos blockPos) {
         ChunkAccess delegate = getDelegateFromBlockY(blockPos.getY());
         if (delegate != null) {
-            delegate.removeBlockEntity(blockPos.offset(Coords.sectionToMinBlock(columnX), 0, (Coords.sectionToMinBlock(columnZ))));
+            delegate.removeBlockEntity(correctPos(blockPos));
         }
     }
 
     @Override public void markPosForPostprocessing(BlockPos blockPos) {
         ChunkAccess delegate = getDelegateFromBlockY(blockPos.getY());
         if (delegate != null) {
-            delegate.markPosForPostprocessing(blockPos.offset(Coords.sectionToMinBlock(columnX), 0, (Coords.sectionToMinBlock(columnZ))));
+            delegate.markPosForPostprocessing(correctPos(blockPos));
         }
     }
 
     @Override public int getLightEmission(BlockPos blockPos) {
         ChunkAccess delegate = getDelegateFromBlockY(blockPos.getY());
         if (delegate != null) {
-            return delegate.getLightEmission(blockPos.offset(Coords.sectionToMinBlock(columnX), 0, (Coords.sectionToMinBlock(columnZ))));
+            return delegate.getLightEmission(correctPos(blockPos));
         }
         return 0;
     }

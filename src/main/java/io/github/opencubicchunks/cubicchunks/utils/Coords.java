@@ -359,6 +359,10 @@ public class Coords {
         return sectionVal << 4;
     }
 
+    public static int blockToSectionLocal(int pos) {
+        return pos & 0xF;
+    }
+
     /**
      * @param cubePos The {@link CubePos}
      * @param i The index of the {@link ChunkSection} inside the {@link CubePos}
