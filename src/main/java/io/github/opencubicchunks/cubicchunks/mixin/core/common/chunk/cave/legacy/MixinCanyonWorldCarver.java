@@ -5,6 +5,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
+//TODO: Verify ravines are generating appropriately
 @Mixin(CanyonWorldCarver.class)
 public class MixinCanyonWorldCarver {
 
