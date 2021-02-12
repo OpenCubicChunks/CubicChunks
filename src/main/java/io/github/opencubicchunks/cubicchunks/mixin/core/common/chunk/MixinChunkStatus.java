@@ -187,8 +187,8 @@ public class MixinChunkStatus {
                     cubeAccessWrapper.moveColumn(columnX, columnZ);
                     CompletableFuture<ChunkAccess> chunkAccessCompletableFuture =
                         generator.fillFromNoise(executor, world.structureFeatureManager().forWorldGenRegion(cubeWorldGenRegion), cubeAccessWrapper).thenApply(chunkAccess -> {
-                            generator.buildSurfaceAndBedrock(cubeWorldGenRegion, chunkAccess);
                             cubeAccessWrapper.applySections();
+                            generator.buildSurfaceAndBedrock(cubeWorldGenRegion, chunkAccess);
                             return chunkAccess;
                         });
                     if (completableFuture == null)
