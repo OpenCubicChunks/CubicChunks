@@ -166,6 +166,8 @@ public abstract class MixinChunkManager implements IChunkManager {
 
     @Shadow @Final private PlayerMap playerMap;
 
+    @Shadow @Final private PoiManager poiManager;
+
     @Shadow private volatile Long2ObjectLinkedOpenHashMap<ChunkHolder> visibleChunkMap;
 
     @Shadow protected abstract boolean skipPlayer(ServerPlayer player);
@@ -178,8 +180,6 @@ public abstract class MixinChunkManager implements IChunkManager {
     }
 
     @Shadow public abstract Stream<ServerPlayer> getPlayers(ChunkPos chunkPos, boolean bl);
-
-    @Shadow @Final private PoiManager poiManager;
 
     @Inject(method = "<init>", at = @At("RETURN"), locals = LocalCapture.CAPTURE_FAILHARD)
     private void onConstruct(ServerLevel worldIn,

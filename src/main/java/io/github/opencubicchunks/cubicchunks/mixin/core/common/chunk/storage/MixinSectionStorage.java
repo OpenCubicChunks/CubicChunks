@@ -44,41 +44,37 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(SectionStorage.class) //TODO: Consider vanilla dimensions
 public abstract class MixinSectionStorage<R> implements ISectionStorage {
 
-
-    @Shadow @Final private LongLinkedOpenHashSet dirty;
-
     @Shadow @Final private static Logger LOGGER;
 
     @Shadow @Final protected LevelHeightAccessor levelHeightAccessor;
+
+    @Shadow @Final private LongLinkedOpenHashSet dirty;
 
     @Shadow @Final private Long2ObjectMap<Optional<R>> storage;
 
     @Shadow @Final private Function<Runnable, Codec<R>> codec;
 
+    @Shadow @Final private DataFixer fixerUpper;
+
+    @Shadow @Final private DataFixTypes type;
+
+    private RegionCubeIO cubeWorker;
+
+    @Shadow protected abstract void onSectionLoad(long pos);
+
     @Shadow protected abstract void setDirty(long pos);
 
-    @Shadow @Final private DataFixer fixerUpper;
+    @Shadow protected abstract boolean outsideStoredRange(SectionPos pos);
+
+    @Shadow @Nullable protected abstract Optional<R> get(long pos);
 
     @Shadow protected static int getVersion(Dynamic<?> dynamic) {
         throw new Error("Mixin didn't apply");
     }
 
-    @Shadow @Final private DataFixTypes type;
-
-    @Shadow protected abstract void onSectionLoad(long pos);
-
-    @Shadow @Nullable protected abstract Optional<R> get(long pos);
-
-    @Shadow protected abstract boolean outsideStoredRange(SectionPos pos);
-
-
-    RegionCubeIO cubeWorker;
-
-
     @Inject(method = "<init>", at = @At("RETURN"))
     private void getServerLevel(File file, Function<Runnable, Codec<R>> function, Function<Runnable, R> function2, DataFixer dataFixer, DataFixTypes dataFixTypes, boolean bl,
-                                LevelHeightAccessor levelHeightAccessor, CallbackInfo ci) throws IOException {
-
+                                LevelHeightAccessor heightAccessor, CallbackInfo ci) throws IOException {
         cubeWorker = new RegionCubeIO(file, file.getName() + "-chunk", file.getName());
     }
 
