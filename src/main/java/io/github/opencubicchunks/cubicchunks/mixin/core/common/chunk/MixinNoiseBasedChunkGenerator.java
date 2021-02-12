@@ -30,14 +30,14 @@ import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 @Mixin(NoiseBasedChunkGenerator.class)
 public abstract class MixinNoiseBasedChunkGenerator {
 
+    @Shadow @Final protected BlockState defaultBlock;
+
     @Shadow @Final private int cellHeight;
 
     @Mutable @Shadow @Final private int cellCountY;
 
     @Mutable @Shadow @Final private int height;
 
-
-    @Shadow @Final protected BlockState defaultBlock;
 
     @Redirect(method = "fillFromNoise", at = @At(value = "INVOKE", target = "Ljava/lang/Math;max(II)I"))
     private int alwaysUseChunkMinBuildHeight(int a, int b) {

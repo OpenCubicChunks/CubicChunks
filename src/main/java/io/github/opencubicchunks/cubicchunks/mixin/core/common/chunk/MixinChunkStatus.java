@@ -185,9 +185,9 @@ public class MixinChunkStatus {
                             generator.buildSurfaceAndBedrock(cubeWorldGenRegion, chunkAccess);
                             return chunkAccess;
                         });
-                    if (completableFuture == null)
+                    if (completableFuture == null) {
                         completableFuture = chunkAccessCompletableFuture;
-                    else {
+                    } else {
                         completableFuture = completableFuture.thenCombine(chunkAccessCompletableFuture, (chunk1, chunk2) -> chunk1);
                     }
                 }

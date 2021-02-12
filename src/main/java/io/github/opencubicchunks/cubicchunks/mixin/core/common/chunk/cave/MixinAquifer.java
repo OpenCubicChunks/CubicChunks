@@ -14,8 +14,7 @@ public abstract class MixinAquifer {
     // optimization: don't create a new random instance every time
     @Redirect(method = "computeAt", at = @At(value = "NEW", target = "net/minecraft/world/level/levelgen/WorldgenRandom"))
     private WorldgenRandom createRandom(long seed) {
-        AquiferRandom random = this.random;
-        random.setSeed(seed);
-        return random;
+        this.random.setSeed(seed);
+        return this.random;
     }
 }

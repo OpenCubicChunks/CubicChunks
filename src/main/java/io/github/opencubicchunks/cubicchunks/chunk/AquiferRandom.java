@@ -21,8 +21,8 @@ public final class AquiferRandom extends WorldgenRandom {
 
     @Override
     public int next(int bits) {
-        long seed = (this.seed * MULTIPLIER + ADDEND) & MASK;
-        this.seed = seed;
-        return (int) (seed >>> (48 - bits));
+        long localSeed = (this.seed * MULTIPLIER + ADDEND) & MASK;
+        this.seed = localSeed;
+        return (int) (localSeed >>> (48 - bits));
     }
 }

@@ -42,15 +42,15 @@ public class NoiseAndSurfaceBuilderHelper extends ProtoChunk {
 
     }
 
-    public void moveColumn(int columnX, int columnZ) {
-        this.columnX = columnX;
-        this.columnZ = columnZ;
+    public void moveColumn(int newColumnX, int newColumnZ) {
+        this.columnX = newColumnX;
+        this.columnZ = newColumnZ;
 
         for (int relativeSectionY = 0; relativeSectionY < IBigCube.DIAMETER_IN_SECTIONS * 2; relativeSectionY++) {
             int sectionY = relativeSectionY + ((IBigCube) delegates[0]).getCubePos().asSectionPos().getY();
             IBigCube delegateCube = (IBigCube) getDelegateFromSectionY(sectionY);
             assert delegateCube != null;
-            getSections()[relativeSectionY] = delegateCube.getCubeSections()[Coords.sectionToIndex(columnX, sectionY, columnZ)];
+            getSections()[relativeSectionY] = delegateCube.getCubeSections()[Coords.sectionToIndex(newColumnX, sectionY, newColumnZ)];
         }
     }
 
@@ -253,7 +253,7 @@ public class NoiseAndSurfaceBuilderHelper extends ProtoChunk {
         private final int minBuildHeight;
         private final int height;
 
-        public HeightAccessor(int minBuildHeight, int height) {
+        private HeightAccessor(int minBuildHeight, int height) {
 
             this.minBuildHeight = minBuildHeight;
             this.height = height;
