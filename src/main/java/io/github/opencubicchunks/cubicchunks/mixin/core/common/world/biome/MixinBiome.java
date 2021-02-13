@@ -12,6 +12,7 @@ import java.util.function.Supplier;
 import io.github.opencubicchunks.cubicchunks.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.NoiseAndSurfaceBuilderHelper;
+import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import io.github.opencubicchunks.cubicchunks.world.CubeWorldGenRandom;
 import io.github.opencubicchunks.cubicchunks.world.CubeWorldGenRegion;
@@ -37,8 +38,10 @@ import net.minecraft.world.level.levelgen.structure.BoundingBox;
 import net.minecraft.world.level.levelgen.surfacebuilders.ConfiguredSurfaceBuilder;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(Biome.class)
 public class MixinBiome implements BiomeGetter {
@@ -125,8 +128,16 @@ public class MixinBiome implements BiomeGetter {
      * @author Corgitaco
      * @reason Catch the surface builder
      */
-    @Overwrite
-    public void buildSurfaceAt(Random random, ChunkAccess chunk, int x, int z, int worldHeight, double noise, BlockState defaultBlock, BlockState defaultFluid, int seaLevel, long seed) {
+    @Inject(method = "buildSurfaceAt", at = @At("HEAD"), cancellable = true)
+    public void buildSurfaceAt(Random random, ChunkAccess chunk, int x, int z, int worldHeight, double noise, BlockState defaultBlock, BlockState defaultFluid, int seaLevel, long seed,
+                               CallbackInfo ci) {
+
+        if (!((CubicLevelHeightAccessor) chunk).isCubic()) {
+            return;
+        }
+
+        ci.cancel();
+
         ConfiguredSurfaceBuilder<?> configuredSurfaceBuilder = this.generationSettings.getSurfaceBuilder().get();
         configuredSurfaceBuilder.initNoise(seed);
         try {

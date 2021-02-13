@@ -56,6 +56,10 @@ public abstract class MixinWorld implements ICubicWorld, LevelReader {
 
     @Inject(method = "blockEntityChanged", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/chunk/LevelChunk;markUnsaved()V"))
     private void onBlockEntityChanged(BlockPos blockPos, CallbackInfo ci) {
+        if (!isCubic()) {
+            return;
+        }
+
         this.getCubeAt(blockPos).setDirty(true);
     }
 

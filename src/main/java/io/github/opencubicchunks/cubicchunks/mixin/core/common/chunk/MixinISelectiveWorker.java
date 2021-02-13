@@ -36,7 +36,7 @@ public interface MixinISelectiveWorker {
         Function<ChunkAccess, CompletableFuture<Either<ChunkAccess, ChunkHolder.ChunkLoadingFailure>>> completableFuture,
         List<ChunkAccess> neighbors, ChunkAccess chunk) {
 
-        if (((CubicLevelHeightAccessor) chunk).worldStyle() == CubicLevelHeightAccessor.WorldStyle.CHUNK) {
+        if (!((CubicLevelHeightAccessor) chunk).isCubic()) {
             if (!chunk.getStatus().isOrAfter(status)) {
                 this.doWork(world, generator, neighbors, chunk);
                 if (chunk instanceof ProtoChunk) {

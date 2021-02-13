@@ -13,7 +13,6 @@ import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import io.github.opencubicchunks.cubicchunks.world.client.IClientWorld;
 import io.github.opencubicchunks.cubicchunks.world.lighting.IWorldLightManager;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientChunkCache;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.nbt.CompoundTag;
@@ -29,6 +28,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(ClientChunkCache.class)
 public abstract class MixinClientChunkProvider implements IClientCubeProvider {
@@ -48,6 +48,10 @@ public abstract class MixinClientChunkProvider implements IClientCubeProvider {
 
     @Inject(method = "<init>", at = @At("RETURN"))
     private void onConstruct(ClientLevel clientWorldIn, int viewDistance, CallbackInfo ci) {
+        if (!((CubicLevelHeightAccessor) clientWorldIn).isCubic()) {
+            return;
+        }
+
         this.cubeArray = new ClientChunkProviderCubeArray(adjustCubeViewDistance(viewDistance), cube -> {});
         this.emptyCube = new EmptyCube(level);
     }
@@ -172,11 +176,15 @@ public abstract class MixinClientChunkProvider implements IClientCubeProvider {
      * @author Barteks2x
      * @reason Change the debug string
      */
-    @Overwrite
-    public String gatherStats() {
+    @Inject(method = "gatherStats", at = @At("HEAD"), cancellable = true)
+    public void gatherStats(CallbackInfoReturnable<String> cir) {
+
+        if (!((CubicLevelHeightAccessor) this.level).isCubic())
+            return;
+
         //noinspection ConstantConditions
-        return "Client Chunk Cache: " + ((ClientChunkProviderChunkArrayAccess) (Object) this.storage).getChunks().length() + ", " + this.getLoadedChunksCount() +
-            " | " + this.cubeArray.cubes.length() + ", " + getLoadedCubesCount();
+        cir.setReturnValue( "Client Chunk Cache: " + ((ClientChunkProviderChunkArrayAccess) (Object) this.storage).getChunks().length() + ", " + this.getLoadedChunksCount() +
+            " | " + this.cubeArray.cubes.length() + ", " + getLoadedCubesCount());
     }
 
     public int getLoadedCubesCount() {
