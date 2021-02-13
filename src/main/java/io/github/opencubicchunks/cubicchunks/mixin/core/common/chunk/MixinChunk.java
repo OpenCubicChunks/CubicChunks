@@ -231,6 +231,9 @@ public abstract class MixinChunk implements ChunkAccess, CubicLevelHeightAccesso
             BigCube cube = (BigCube) this.getCube(Coords.blockToSection(((BlockPos) key).getY()));
             return cube.getTileEntityMap().get(key);
         } else if (map == this.pendingBlockEntities) {
+            if (!this.isCubic()) {
+                return map.get(key);
+            }
             BigCube cube = (BigCube) this.getCube(Coords.blockToSection(((BlockPos) key).getY()));
             return cube.getDeferredTileEntityMap().get(key);
         }
@@ -249,6 +252,9 @@ public abstract class MixinChunk implements ChunkAccess, CubicLevelHeightAccesso
             BigCube cube = (BigCube) this.getCube(Coords.blockToSection(((BlockPos) key).getY()));
             return cube.getTileEntityMap().remove(key);
         } else if (map == this.pendingBlockEntities) {
+            if (!this.isCubic()) {
+                return map.remove(key);
+            }
             BigCube cube = (BigCube) this.getCube(Coords.blockToSection(((BlockPos) key).getY()));
             return cube.getDeferredTileEntityMap().remove(key);
         }
@@ -266,6 +272,9 @@ public abstract class MixinChunk implements ChunkAccess, CubicLevelHeightAccesso
             BigCube cube = (BigCube) this.getCube(Coords.blockToSection(((BlockPos) key).getY()));
             return cube.getTileEntityMap().put((BlockPos) key, (BlockEntity) value);
         } else if (map == this.pendingBlockEntities) {
+            if (!this.isCubic()) {
+                return map.put(key, value);
+            }
             BigCube cube = (BigCube) this.getCube(Coords.blockToSection(((BlockPos) key).getY()));
             return cube.getDeferredTileEntityMap().put((BlockPos) key, (CompoundTag) value);
         }
