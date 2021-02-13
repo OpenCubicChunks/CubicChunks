@@ -71,6 +71,7 @@ public abstract class MixinChunkHolder implements ICubeHolder {
 
     @Shadow @Final private ChunkHolder.PlayerProvider playerProvider;
     @Shadow private CompletableFuture<Void> pendingFullStateConfirmation;
+    @Shadow @Final private LevelHeightAccessor levelHeightAccessor;
 
     private CubePos cubePos; // set from ASM
 
@@ -98,8 +99,6 @@ public abstract class MixinChunkHolder implements ICubeHolder {
     //BEGIN INJECTS:
 
     // targetting <init>* seems to break when running with gradle for the copied constructor
-
-    @Shadow @Final private LevelHeightAccessor levelHeightAccessor;
 
     @Dynamic
     @Redirect(
@@ -137,7 +136,7 @@ public abstract class MixinChunkHolder implements ICubeHolder {
         + "Lnet/minecraft/server/level/ChunkHolder$PlayerProvider;)V",
         at = @At("RETURN")
     )
-    public void onConstructCubeHolder(CubePos cubePosIn, int levelIn, LevelHeightAccessor levelHeightAccessor, LevelLightEngine lightManagerIn, ChunkHolder.LevelChangeListener p_i50716_4_,
+    public void onConstructCubeHolder(CubePos cubePosIn, int levelIn, LevelHeightAccessor heightAccessor, LevelLightEngine lightManagerIn, ChunkHolder.LevelChangeListener p_i50716_4_,
                                       ChunkHolder.PlayerProvider playerProviderIn, CallbackInfo ci) {
 
         if (!((CubicLevelHeightAccessor) this.levelHeightAccessor).isCubic()) { //TODO: Vanilla Chunks - Figure out how to handle ASM Targets

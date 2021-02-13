@@ -2,13 +2,9 @@ package io.github.opencubicchunks.cubicchunks;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 
-import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.IChunkManager;
-import io.github.opencubicchunks.cubicchunks.chunk.NoiseAndSurfaceBuilderHelper;
 import io.github.opencubicchunks.cubicchunks.meta.EarlyConfig;
 import io.github.opencubicchunks.cubicchunks.network.PacketDispatcher;
 import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
@@ -20,7 +16,6 @@ import net.minecraft.Util;
 import net.minecraft.core.Registry;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ChunkMap;
-import net.minecraft.world.level.chunk.ChunkAccess;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -44,6 +39,13 @@ public class CubicChunks implements ModInitializer {
 
     public static final String PROTOCOL_VERSION = "0";
 
+    public static final Map<String, CubicLevelHeightAccessor.WorldStyle> DIMENSION_TO_WORLD_STYLE = Util.make(new HashMap<>(), (set) -> {
+        set.put("minecraft:overworld", CubicLevelHeightAccessor.WorldStyle.CUBIC);
+        set.put("minecraft:the_nether", CubicLevelHeightAccessor.WorldStyle.CHUNK);
+        set.put("minecraft:the_end", CubicLevelHeightAccessor.WorldStyle.CHUNK);
+    });
+
+
     public CubicChunks() {
         if (!(IChunkManager.class.isAssignableFrom(ChunkMap.class))) {
             throw new IllegalStateException("Mixin not applied!");
@@ -62,12 +64,6 @@ public class CubicChunks implements ModInitializer {
         CCPlacement.init();
         CCFeatures.init();
     }
-
-    public static Map<String, CubicLevelHeightAccessor.WorldStyle> DIMENSION_TO_WORLD_STYLE = Util.make(new HashMap<>(), (set) -> {
-        set.put("minecraft:overworld", CubicLevelHeightAccessor.WorldStyle.CUBIC);
-        set.put("minecraft:the_nether", CubicLevelHeightAccessor.WorldStyle.CHUNK);
-        set.put("minecraft:the_end", CubicLevelHeightAccessor.WorldStyle.CHUNK);
-    });
 
     @Override
     public void onInitialize() {

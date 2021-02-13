@@ -13,7 +13,6 @@ import io.github.opencubicchunks.cubicchunks.chunk.cube.BigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.EmptyCube;
 import io.github.opencubicchunks.cubicchunks.chunk.heightmap.ClientSurfaceTracker;
 import io.github.opencubicchunks.cubicchunks.chunk.heightmap.SurfaceTrackerWrapper;
-import io.github.opencubicchunks.cubicchunks.mixin.core.common.world.MixinServerWorld;
 import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import net.minecraft.core.BlockPos;
@@ -53,15 +52,13 @@ public abstract class MixinChunk implements ChunkAccess, CubicLevelHeightAccesso
     @Shadow @Final private Map<BlockPos, CompoundTag> pendingBlockEntities;
     @Shadow private ChunkBiomeContainer biomes;
 
-    @Shadow public abstract ChunkStatus getStatus();
-
-    @Shadow @Final private LevelChunkSection[] sections;
-
     @Shadow private volatile boolean unsaved;
 
-    private Boolean isCubic;
-    private Boolean generates2DChunks;
+    private boolean isCubic;
+    private boolean generates2DChunks;
     private WorldStyle worldStyle;
+
+    @Shadow public abstract ChunkStatus getStatus();
 
     @Shadow protected abstract boolean isInLevel();
 
@@ -301,20 +298,14 @@ public abstract class MixinChunk implements ChunkAccess, CubicLevelHeightAccesso
     }
 
     @Override public WorldStyle worldStyle() {
-                if (worldStyle == null)
-            new Error().printStackTrace();
         return worldStyle;
     }
 
-    @Override public Boolean isCubic() {
-                if (isCubic == null)
-            new Error().printStackTrace();
+    @Override public boolean isCubic() {
         return isCubic;
     }
 
-    @Override public Boolean generates2DChunks() {
-                if (generates2DChunks == null)
-            new Error().printStackTrace();
+    @Override public boolean generates2DChunks() {
         return generates2DChunks;
     }
 

@@ -21,7 +21,6 @@ import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.ChunkStatus;
-import net.minecraft.world.level.chunk.EmptyLevelChunk;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.chunk.LevelChunkSection;
 import net.minecraft.world.level.dimension.DimensionType;
@@ -42,8 +41,9 @@ public abstract class MixinServerWorld extends Level implements IServerWorld {
     @Redirect(method = "tickChunk", at = @At(value = "INVOKE", target = "Ljava/util/Random;nextInt(I)I", ordinal = 1))
     private int onRandNextInt(Random random, int bound, LevelChunk levelChunk, int i) {
 
-        if (!((CubicLevelHeightAccessor) levelChunk).isCubic())
+        if (!((CubicLevelHeightAccessor) levelChunk).isCubic()) {
             return random.nextInt(bound);
+        }
 
 
         ChunkPos chunkPos = levelChunk.getPos();

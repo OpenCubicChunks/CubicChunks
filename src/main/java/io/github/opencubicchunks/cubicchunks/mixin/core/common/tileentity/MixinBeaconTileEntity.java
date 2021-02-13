@@ -25,7 +25,8 @@ public abstract class MixinBeaconTileEntity {
 //        return 256;
 //    }
     @Redirect(method = "applyEffects", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/phys/AABB;expandTowards(DDD)Lnet/minecraft/world/phys/AABB;"))
-    private static AABB on$expand(AABB axisAlignedBB, double x, double y, double z, Level world, BlockPos pos, int beaconLevel, @Nullable MobEffect primaryEffect, @Nullable MobEffect secondaryEffect) {
+    private static AABB on$expand(AABB axisAlignedBB, double x, double y, double z, Level world, BlockPos pos, int beaconLevel, @Nullable MobEffect primaryEffect,
+                                  @Nullable MobEffect secondaryEffect) {
         if (!((CubicLevelHeightAccessor) world).isCubic()) {
             return axisAlignedBB.expandTowards(x, y, z);
         }

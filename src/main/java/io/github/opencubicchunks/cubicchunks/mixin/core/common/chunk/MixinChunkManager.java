@@ -99,7 +99,6 @@ import net.minecraft.world.level.chunk.ChunkStatus;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.chunk.LightChunkGetter;
 import net.minecraft.world.level.chunk.UpgradeData;
-import net.minecraft.world.level.chunk.storage.ChunkStorage;
 import net.minecraft.world.level.entity.ChunkStatusUpdateListener;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureManager;
 import net.minecraft.world.level.lighting.LevelLightEngine;
@@ -108,7 +107,6 @@ import net.minecraft.world.level.storage.LevelStorageSource;
 import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Group;
@@ -184,13 +182,13 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
     @Shadow public abstract Stream<ServerPlayer> getPlayers(ChunkPos chunkPos, boolean bl);
 
 
-    @Shadow @org.jetbrains.annotations.Nullable protected abstract CompoundTag readChunk(ChunkPos pos) throws IOException;
+    @Shadow @Nullable protected abstract CompoundTag readChunk(ChunkPos pos) throws IOException;
 
     @Redirect(method = "<init>", at = @At(value = "NEW", target = "net/minecraft/server/level/ChunkMap$DistanceManager"))
     private ChunkMap.DistanceManager setIsCubic(ChunkMap chunkMap, Executor executor, Executor executor2, ServerLevel worldIn) {
-        ChunkMap.DistanceManager distanceManager = chunkMap.new DistanceManager(executor, executor2);
-        ((ITicketManager) distanceManager).hasCubicTickets(((CubicLevelHeightAccessor) this.level).isCubic());
-        return distanceManager;
+        ChunkMap.DistanceManager distanceManager1 = chunkMap.new DistanceManager(executor, executor2);
+        ((ITicketManager) distanceManager1).hasCubicTickets(((CubicLevelHeightAccessor) this.level).isCubic());
+        return distanceManager1;
     }
 
     @Inject(method = "<init>", at = @At("RETURN"), locals = LocalCapture.CAPTURE_FAILHARD)

@@ -19,6 +19,7 @@ import org.spongepowered.asm.mixin.Shadow;
 
 @Mixin(LevelLightEngine.class)
 public abstract class MixinWorldLightManager implements IWorldLightManager, LightEventListener {
+    @Shadow @Final protected LevelHeightAccessor levelHeightAccessor;
 
     @Shadow @Final @Nullable private LayerLightEngine<?, ?> blockEngine;
 
@@ -38,7 +39,6 @@ public abstract class MixinWorldLightManager implements IWorldLightManager, Ligh
     @Shadow public void onBlockEmissionIncrease(BlockPos blockPos, int lightValue) {
     }
 
-    @Shadow @Final protected LevelHeightAccessor levelHeightAccessor;
 
     @Override
     public void retainData(CubePos cubePos, boolean retain) {

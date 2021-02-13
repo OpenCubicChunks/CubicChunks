@@ -5,7 +5,6 @@ import java.util.function.Supplier;
 import io.github.opencubicchunks.cubicchunks.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.ICubeProvider;
-import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import io.github.opencubicchunks.cubicchunks.server.ICubicWorld;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import net.minecraft.core.BlockPos;
@@ -25,8 +24,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(Level.class)
 public abstract class MixinWorld implements ICubicWorld, LevelReader {
 
-    private Boolean isCubic;
-    private Boolean generates2DChunks;
+    private boolean isCubic;
+    private boolean generates2DChunks;
     private WorldStyle worldStyle;
 
     @Inject(method = "<init>", at = @At("RETURN"))
@@ -41,15 +40,17 @@ public abstract class MixinWorld implements ICubicWorld, LevelReader {
     @Shadow public abstract ResourceKey<Level> dimension();
 
     @Override public int getHeight() {
-        if (!isCubic())
+        if (!isCubic()) {
             return LevelReader.super.getHeight();
+        }
 
         return 40000000;
     }
 
     @Override public int getMinBuildHeight() {
-        if (!isCubic())
+        if (!isCubic()) {
             return LevelReader.super.getMinBuildHeight();
+        }
 
         return -20000000;
     }
@@ -68,22 +69,17 @@ public abstract class MixinWorld implements ICubicWorld, LevelReader {
     }
 
     @Override public WorldStyle worldStyle() {
-                if (worldStyle == null)
-            new Error().printStackTrace();
         return worldStyle;
     }
 
-    @Override public Boolean isCubic() {
-                if (isCubic == null)
-            new Error().printStackTrace();
+    @Override public boolean isCubic() {
         return isCubic;
     }
 
-    @Override public Boolean generates2DChunks() {
-                if (generates2DChunks == null)
-            new Error().printStackTrace();
+    @Override public boolean generates2DChunks() {
         return generates2DChunks;
     }
+
     @Override
     public IBigCube getCube(int cubeX, int cubeY, int cubeZ) {
         return this.getCube(cubeX, cubeY, cubeZ, ChunkStatus.FULL, true);

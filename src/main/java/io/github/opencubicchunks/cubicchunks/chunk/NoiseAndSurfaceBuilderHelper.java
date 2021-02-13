@@ -32,8 +32,8 @@ public class NoiseAndSurfaceBuilderHelper extends ProtoChunk implements CubicLev
     private int columnX;
     private int columnZ;
     private final Map<Heightmap.Types, Heightmap> heightmaps;
-    private final Boolean isCubic;
-    private final Boolean generates2DChunks;
+    private final boolean isCubic;
+    private final boolean generates2DChunks;
     private final WorldStyle worldStyle;
 
     public NoiseAndSurfaceBuilderHelper(IBigCube delegate, IBigCube delegateAbove) {
@@ -130,20 +130,14 @@ public class NoiseAndSurfaceBuilderHelper extends ProtoChunk implements CubicLev
     }
 
     @Override public WorldStyle worldStyle() {
-                if (worldStyle == null)
-            new Error().printStackTrace();
         return worldStyle;
     }
 
-    @Override public Boolean isCubic() {
-                if (isCubic == null)
-            new Error().printStackTrace();
-        return isCubic;
+    @Override public boolean isCubic() {
+         return isCubic;
     }
 
-    @Override public Boolean generates2DChunks() {
-                if (generates2DChunks == null)
-            new Error().printStackTrace();
+    @Override public boolean generates2DChunks() {
         return generates2DChunks;
     }
 
@@ -275,8 +269,8 @@ public class NoiseAndSurfaceBuilderHelper extends ProtoChunk implements CubicLev
 
         private final int minBuildHeight;
         private final int height;
-        private final Boolean isCubic;
-        private final Boolean generates2DChunks;
+        private final boolean isCubic;
+        private final boolean generates2DChunks;
         private final WorldStyle worldStyle;
 
 
@@ -298,20 +292,14 @@ public class NoiseAndSurfaceBuilderHelper extends ProtoChunk implements CubicLev
         }
 
         @Override public WorldStyle worldStyle() {
-                    if (worldStyle == null)
-            new Error().printStackTrace();
         return worldStyle;
         }
 
-        @Override public Boolean isCubic() {
-                    if (isCubic == null)
-            new Error().printStackTrace();
-        return isCubic;
+        @Override public boolean isCubic() {
+            return isCubic;
         }
 
-        @Override public Boolean generates2DChunks() {
-                    if (generates2DChunks == null)
-            new Error().printStackTrace();
+        @Override public boolean generates2DChunks() {
         return generates2DChunks;
         }
     }

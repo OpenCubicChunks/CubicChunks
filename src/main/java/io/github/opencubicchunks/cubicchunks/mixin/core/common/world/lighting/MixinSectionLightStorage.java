@@ -34,6 +34,7 @@ public abstract class MixinSectionLightStorage<M extends DataLayerStorageMap<M>>
     @Shadow protected volatile boolean hasToRemove;
     @Shadow @Final protected LongSet changedSections;
     @Shadow @Final private LongSet toRemove;
+    @Shadow @Final private LightChunkGetter chunkSource;
 
     private final LongSet cubesToRetain = new LongOpenHashSet();
 
@@ -49,7 +50,6 @@ public abstract class MixinSectionLightStorage<M extends DataLayerStorageMap<M>>
 
     @Shadow protected abstract boolean hasInconsistencies();
 
-    @Shadow @Final private LightChunkGetter chunkSource;
 
     @Override
     public void retainCubeData(long cubeSectionPos, boolean retain) {

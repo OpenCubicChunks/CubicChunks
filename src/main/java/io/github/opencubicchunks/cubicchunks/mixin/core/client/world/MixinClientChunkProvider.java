@@ -23,7 +23,6 @@ import net.minecraft.world.level.lighting.LevelLightEngine;
 import org.apache.logging.log4j.Logger;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -178,12 +177,12 @@ public abstract class MixinClientChunkProvider implements IClientCubeProvider {
      */
     @Inject(method = "gatherStats", at = @At("HEAD"), cancellable = true)
     public void gatherStats(CallbackInfoReturnable<String> cir) {
-
-        if (!((CubicLevelHeightAccessor) this.level).isCubic())
+        if (!((CubicLevelHeightAccessor) this.level).isCubic()) {
             return;
+        }
 
         //noinspection ConstantConditions
-        cir.setReturnValue( "Client Chunk Cache: " + ((ClientChunkProviderChunkArrayAccess) (Object) this.storage).getChunks().length() + ", " + this.getLoadedChunksCount() +
+        cir.setReturnValue("Client Chunk Cache: " + ((ClientChunkProviderChunkArrayAccess) (Object) this.storage).getChunks().length() + ", " + this.getLoadedChunksCount() +
             " | " + this.cubeArray.cubes.length() + ", " + getLoadedCubesCount());
     }
 

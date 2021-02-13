@@ -3,9 +3,7 @@ package io.github.opencubicchunks.cubicchunks.mixin.core.common.world.structure.
 import java.util.Random;
 
 import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
-import io.github.opencubicchunks.cubicchunks.world.CubeWorldGenRegion;
 import net.minecraft.core.BlockPos;
-import net.minecraft.server.level.WorldGenRegion;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.StructureFeatureManager;
 import net.minecraft.world.level.WorldGenLevel;

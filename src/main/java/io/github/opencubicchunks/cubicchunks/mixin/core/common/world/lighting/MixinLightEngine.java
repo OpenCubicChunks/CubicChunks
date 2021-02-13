@@ -31,7 +31,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(LayerLightEngine.class)
 public abstract class MixinLightEngine<M extends DataLayerStorageMap<M>, S extends LayerLightSectionStorage<M>> implements ILightEngine {
-
     @Shadow @Final protected S storage;
 
     @Shadow @Final protected BlockPos.MutableBlockPos pos;
@@ -42,7 +41,11 @@ public abstract class MixinLightEngine<M extends DataLayerStorageMap<M>, S exten
 
     @Shadow @Final private BlockGetter[] lastChunk;
 
-    @Shadow @org.jetbrains.annotations.Nullable protected abstract BlockGetter getChunk(int chunkX, int chunkZ);
+    private boolean isCubic;
+    private boolean generates2DChunks;
+    private CubicLevelHeightAccessor.WorldStyle worldStyle;
+
+    @Shadow @Nullable protected abstract BlockGetter getChunk(int chunkX, int chunkZ);
 
     @Override
     public void retainCubeData(CubePos posIn, boolean retain) {
@@ -60,11 +63,6 @@ public abstract class MixinLightEngine<M extends DataLayerStorageMap<M>, S exten
             }
         }
     }
-
-    private Boolean isCubic;
-    private Boolean generates2DChunks;
-    private CubicLevelHeightAccessor.WorldStyle worldStyle;
-
 
     @Inject(method = "<init>", at = @At("RETURN"))
     private void setCubic(LightChunkGetter lightChunkGetter, LightLayer lightLayer, S layerLightSectionStorage, CallbackInfo ci) {
@@ -138,10 +136,11 @@ public abstract class MixinLightEngine<M extends DataLayerStorageMap<M>, S exten
     }
 
 
-    //This is here to throw an actual exception as this method will cause incomplete cube loading when called in cubic context
+    //This is here to throw an actual exception as this method will cause incomplete cube loading when called in a cubic context
     @Inject(method = "getChunk", at = @At("HEAD"), cancellable = true)
     private void crashIfInCubicContext(int chunkX, int chunkZ, CallbackInfoReturnable<BlockGetter> cir) {
-        if (this.isCubic)
+        if (this.isCubic) {
             throw new UnsupportedOperationException("Trying to get chunks in a cubic context! Use \"getCubeReader\" instead!");
+        }
     }
 }

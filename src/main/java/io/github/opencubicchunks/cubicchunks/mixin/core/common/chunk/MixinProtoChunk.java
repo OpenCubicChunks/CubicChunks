@@ -24,20 +24,21 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(ProtoChunk.class)
 public abstract class MixinProtoChunk implements LevelHeightAccessor, CubicLevelHeightAccessor {
-    @Shadow public abstract ChunkStatus getStatus();
-
     @Shadow @Final private LevelHeightAccessor levelHeightAccessor;
-    private Boolean isCubic;
-    private Boolean generates2DChunks;
+
+    private boolean isCubic;
+    private boolean generates2DChunks;
     private WorldStyle worldStyle;
+
+    @Shadow public abstract ChunkStatus getStatus();
 
     @Inject(method = "<init>(Lnet/minecraft/world/level/ChunkPos;Lnet/minecraft/world/level/chunk/UpgradeData;[Lnet/minecraft/world/level/chunk/LevelChunkSection;"
         + "Lnet/minecraft/world/level/chunk/ProtoTickList;Lnet/minecraft/world/level/chunk/ProtoTickList;Lnet/minecraft/world/level/LevelHeightAccessor;)V", at = @At("RETURN"))
     private void setCubic(ChunkPos chunkPos, UpgradeData upgradeData, LevelChunkSection[] levelChunkSections, ProtoTickList<Block> protoTickList, ProtoTickList<Fluid> protoTickList2,
-                          LevelHeightAccessor levelHeightAccessor, CallbackInfo ci) {
-        isCubic = ((CubicLevelHeightAccessor) levelHeightAccessor).isCubic();
-        generates2DChunks = ((CubicLevelHeightAccessor) levelHeightAccessor).generates2DChunks();
-        worldStyle = ((CubicLevelHeightAccessor) levelHeightAccessor).worldStyle();
+                          LevelHeightAccessor heightAccessor, CallbackInfo ci) {
+        isCubic = ((CubicLevelHeightAccessor) heightAccessor).isCubic();
+        generates2DChunks = ((CubicLevelHeightAccessor) heightAccessor).generates2DChunks();
+        worldStyle = ((CubicLevelHeightAccessor) heightAccessor).worldStyle();
     }
 
     @Redirect(
@@ -86,20 +87,14 @@ public abstract class MixinProtoChunk implements LevelHeightAccessor, CubicLevel
     }
 
     @Override public WorldStyle worldStyle() {
-                if (worldStyle == null)
-            new Error().printStackTrace();
         return worldStyle;
     }
 
-    @Override public Boolean isCubic() {
-                if (isCubic == null)
-            new Error().printStackTrace();
+    @Override public boolean isCubic() {
         return isCubic;
     }
 
-    @Override public Boolean generates2DChunks() {
-                if (generates2DChunks == null)
-            new Error().printStackTrace();
+    @Override public boolean generates2DChunks() {
         return generates2DChunks;
     }
 }

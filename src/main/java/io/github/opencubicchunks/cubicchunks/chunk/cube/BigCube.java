@@ -25,7 +25,6 @@ import io.github.opencubicchunks.cubicchunks.chunk.heightmap.SurfaceTrackerSecti
 import io.github.opencubicchunks.cubicchunks.chunk.heightmap.SurfaceTrackerWrapper;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.ChunkSectionAccess;
-import io.github.opencubicchunks.cubicchunks.mixin.core.common.world.MixinServerWorld;
 import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import io.github.opencubicchunks.cubicchunks.utils.MathUtil;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
@@ -115,8 +114,8 @@ public class BigCube implements ChunkAccess, IBigCube, CubicLevelHeightAccessor 
     @Nullable private Consumer<BigCube> postLoadConsumer;
     @Nullable private Supplier<ChunkHolder.FullChunkStatus> fullStatus;
 
-    private final Boolean isCubic;
-    private final Boolean generates2DChunks;
+    private final boolean isCubic;
+    private final boolean generates2DChunks;
     private final WorldStyle worldStyle;
 
     public BigCube(Level worldIn, CubePos cubePosIn, CubeBiomeContainer biomeContainerIn) {
@@ -921,20 +920,14 @@ public class BigCube implements ChunkAccess, IBigCube, CubicLevelHeightAccessor 
     }
 
     @Override public WorldStyle worldStyle() {
-        if (worldStyle == null)
-            new Error().printStackTrace();
         return worldStyle;
     }
 
-    @Override public Boolean isCubic() {
-        if (isCubic == null)
-            new Error().printStackTrace();
+    @Override public boolean isCubic() {
         return isCubic;
     }
 
-    @Override public Boolean generates2DChunks() {
-        if (generates2DChunks == null)
-            new Error().printStackTrace();
+    @Override public boolean generates2DChunks() {
         return generates2DChunks;
     }
 

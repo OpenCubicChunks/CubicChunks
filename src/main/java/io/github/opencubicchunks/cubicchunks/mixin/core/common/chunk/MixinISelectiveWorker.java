@@ -40,7 +40,7 @@ public interface MixinISelectiveWorker {
             if (!chunk.getStatus().isOrAfter(status)) {
                 this.doWork(world, generator, neighbors, chunk);
                 if (chunk instanceof ProtoChunk) {
-                    ((ProtoChunk)chunk).setStatus(status);
+                    ((ProtoChunk) chunk).setStatus(status);
                 }
             }
             return CompletableFuture.completedFuture(Either.left(chunk));
