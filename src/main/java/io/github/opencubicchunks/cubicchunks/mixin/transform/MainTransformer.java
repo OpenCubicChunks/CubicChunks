@@ -137,6 +137,9 @@ public class MainTransformer {
                 + "net.minecraft.class_2806$class_2808)" // ChunkStatus.ChunkType
             )), "markCubePosition");
 
+        methodRedirects.put(new ClassMethod(getObjectType("net/minecraft/class_1923"), // ChunkPos
+                getMethod("long method_8324()")), // toLong
+            "asLong");
 
         Map<ClassField, String> fieldRedirects = new HashMap<>();
         fieldRedirects.put(new ClassField(
