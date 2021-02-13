@@ -69,7 +69,7 @@ public abstract class MixinNoiseBasedChunkGenerator {
 
     @Inject(method = "doFill", at = @At("HEAD"))
     private void changeCellSize2(StructureFeatureManager structureFeatureManager, ChunkAccess chunkAccess, int i, int j, CallbackInfoReturnable<ChunkAccess> cir) {
-        if (!((CubicLevelHeightAccessor) chunkAccess).generates2DChunks()) {
+        if (((CubicLevelHeightAccessor) chunkAccess).generates2DChunks()) {
             return;
         }
         this.height = chunkAccess.getHeight();

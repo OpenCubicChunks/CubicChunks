@@ -26,7 +26,7 @@ public class MixinBeardifier {
     @Redirect(method = "<init>(Lnet/minecraft/world/level/StructureFeatureManager;Lnet/minecraft/world/level/chunk/ChunkAccess;)V",
         at = @At(value = "INVOKE", target = "Ljava/util/stream/Stream;forEach(Ljava/util/function/Consumer;)V"))
     private void setupChunkAccess(Stream stream, Consumer action, StructureFeatureManager structureFeatureManager, ChunkAccess chunk) {
-        if (!((CubicLevelHeightAccessor) chunk).generates2DChunks()) {
+        if (((CubicLevelHeightAccessor) chunk).generates2DChunks()) {
             stream.forEach(action);
             return;
         }
