@@ -11,6 +11,7 @@ import io.github.opencubicchunks.cubicchunks.chunk.biome.CubeBiomeContainer;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.CubePrimer;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.OverworldBiomeSourceAccess;
+import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import io.github.opencubicchunks.cubicchunks.world.CubeWorldGenRandom;
 import io.github.opencubicchunks.cubicchunks.world.CubeWorldGenRegion;
 import io.github.opencubicchunks.cubicchunks.world.biome.BiomeGetter;
@@ -77,6 +78,9 @@ public abstract class MixinChunkGenerator implements ICubeGenerator {
     // TODO: check which one is which
     @Inject(method = "createStructures", at = @At("HEAD"), cancellable = true)
     public void onGenerateStructures(RegistryAccess registry, StructureFeatureManager featureManager, ChunkAccess chunkAccess, StructureManager manager, long seed, CallbackInfo ci) {
+        if (!((CubicLevelHeightAccessor) chunkAccess).isCubic()) {
+            return;
+        }
         if (!(chunkAccess instanceof IBigCube)) {
             return;
         }
@@ -118,6 +122,10 @@ public abstract class MixinChunkGenerator implements ICubeGenerator {
 
     @Inject(method = "createReferences", at = @At("HEAD"), cancellable = true)
     public void createReferences(WorldGenLevel worldGenLevel, StructureFeatureManager featureManager, ChunkAccess chunkAccess, CallbackInfo ci) {
+        if (!((CubicLevelHeightAccessor) chunkAccess).isCubic()) {
+            return;
+        }
+
         if (!(chunkAccess instanceof IBigCube)) {
             return;
         }

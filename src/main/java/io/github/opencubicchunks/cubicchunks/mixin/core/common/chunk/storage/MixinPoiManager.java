@@ -7,6 +7,7 @@ import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 import com.mojang.datafixers.DataFixer;
+import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.SectionPos;
 import net.minecraft.util.datafix.DataFixTypes;
@@ -18,6 +19,9 @@ import net.minecraft.world.level.LevelHeightAccessor;
 import net.minecraft.world.level.chunk.storage.SectionStorage;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(PoiManager.class)
 public class MixinPoiManager extends SectionStorage<PoiSection> {
@@ -27,18 +31,19 @@ public class MixinPoiManager extends SectionStorage<PoiSection> {
         super(file, function, function2, dataFixer, dataFixTypes, bl, levelHeightAccessor);
     }
 
-    /**
-     * @author
-     */
-    @Overwrite
-    public Stream<PoiRecord> getInSquare(Predicate<PoiType> typePredicate, BlockPos pos, int radius, PoiManager.Occupancy occupancy) {
+    @Inject(method = "getInSquare", at = @At("HEAD"), cancellable = true)
+    private void getInSquare(Predicate<PoiType> typePredicate, BlockPos pos, int radius, PoiManager.Occupancy occupancy, CallbackInfoReturnable<Stream<PoiRecord>> cir) {
+        if (((CubicLevelHeightAccessor) this.levelHeightAccessor).isCubic()) {
+            return;
+        }
+
         int i = Math.floorDiv(radius, 16) + 1;
-        return SectionPos.cube(SectionPos.of(pos), i).flatMap((chunkPos) -> {
+        cir.setReturnValue(SectionPos.cube(SectionPos.of(pos), i).flatMap((chunkPos) -> {
             return this.getInSections(typePredicate, chunkPos, occupancy);
         }).filter((poiRecord) -> {
             BlockPos blockPos2 = poiRecord.getPos();
             return Math.abs(blockPos2.getX() - pos.getX()) <= radius && Math.abs(blockPos2.getY() - pos.getY()) <= radius && Math.abs(blockPos2.getZ() - pos.getZ()) <= radius;
-        });
+        }));
     }
 
     public Stream<PoiRecord> getInSections(Predicate<PoiType> predicate, SectionPos sectionPos, PoiManager.Occupancy occupationStatus) {

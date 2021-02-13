@@ -3,7 +3,10 @@ package io.github.opencubicchunks.cubicchunks.mixin.core.common.chunk;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
+import javax.annotation.Nullable;
+
 import io.github.opencubicchunks.cubicchunks.CubicChunks;
+import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.StructureFeatureManager;
 import net.minecraft.world.level.chunk.ChunkAccess;
@@ -17,12 +20,13 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 @Mixin(Beardifier.class)
 public class MixinBeardifier {
 
+    @Nullable
     private ChunkAccess chunkAccess;
 
     @Redirect(method = "<init>(Lnet/minecraft/world/level/StructureFeatureManager;Lnet/minecraft/world/level/chunk/ChunkAccess;)V",
         at = @At(value = "INVOKE", target = "Ljava/util/stream/Stream;forEach(Ljava/util/function/Consumer;)V"))
     private void setupChunkAccess(Stream stream, Consumer action, StructureFeatureManager structureFeatureManager, ChunkAccess chunk) {
-        if (!CubicChunks.isCubicChunk(chunkAccess)) {
+        if (!((CubicLevelHeightAccessor) chunk).generates2DChunks()) {
             stream.forEach(action);
             return;
         }

@@ -63,6 +63,8 @@ public abstract class MixinTicketManager implements ITicketManager {
     private ProcessorHandle<CubeTaskPriorityQueueSorter.FunctionEntry<Runnable>> cubeTicketThrottlerInput;
     private ProcessorHandle<CubeTaskPriorityQueueSorter.RunnableEntry> cubeTicketThrottlerReleaser;
 
+    private boolean isCubic;
+
     @Shadow private static int getTicketLevelAt(SortedArraySet<Ticket<?>> p_229844_0_) {
         throw new Error("Mixin did not apply correctly");
     }
@@ -106,6 +108,10 @@ public abstract class MixinTicketManager implements ITicketManager {
 
     @Inject(method = "updatePlayerTickets", at = @At("HEAD"))
     protected void onUpdatePlayerTickets(int viewDistance, CallbackInfo ci) {
+        if (!isCubic) {
+            return;
+        }
+
         this.playerCubeTicketTracker.updateCubeViewDistance(Coords.sectionToCubeRenderDistance(viewDistance));
     }
 
@@ -113,6 +119,10 @@ public abstract class MixinTicketManager implements ITicketManager {
 
     @Inject(method = "runAllUpdates", at = @At("RETURN"), cancellable = true)
     public void processUpdates(ChunkMap chunkManager, CallbackInfoReturnable<Boolean> callbackInfoReturnable) {
+        if (!isCubic) {
+            return;
+        }
+
         // Minecraft.getInstance().getIntegratedServer().getProfiler().startSection("cubeTrackerUpdates");
         this.naturalSpawnCubeCounter.processAllUpdates();
         // Minecraft.getInstance().getIntegratedServer().getProfiler().endStartSection("cubeTicketTrackerUpdates");
@@ -162,6 +172,11 @@ public abstract class MixinTicketManager implements ITicketManager {
      */
     @Inject(method = "purgeStaleTickets", at = @At("RETURN"))
     protected void purgeStaleCubeTickets(CallbackInfo ci) {
+
+        if (!isCubic) {
+            return;
+        }
+
         ObjectIterator<Long2ObjectMap.Entry<SortedArraySet<Ticket<?>>>> objectiterator = this.cubeTickets.long2ObjectEntrySet().fastIterator();
         while (objectiterator.hasNext()) {
             Long2ObjectMap.Entry<SortedArraySet<Ticket<?>>> entry = objectiterator.next();
@@ -287,5 +302,9 @@ public abstract class MixinTicketManager implements ITicketManager {
     public boolean hasCubePlayersNearby(long cubePos) {
         this.naturalSpawnCubeCounter.processAllUpdates();
         return this.naturalSpawnCubeCounter.cubesInRange.containsKey(cubePos);
+    }
+
+    @Override public void hasCubicTickets(boolean hasCubicTickets) {
+        this.isCubic = hasCubicTickets;
     }
 }

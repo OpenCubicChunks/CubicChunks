@@ -13,12 +13,15 @@ import io.github.opencubicchunks.cubicchunks.chunk.cube.BigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.EmptyCube;
 import io.github.opencubicchunks.cubicchunks.chunk.heightmap.ClientSurfaceTracker;
 import io.github.opencubicchunks.cubicchunks.chunk.heightmap.SurfaceTrackerWrapper;
+import io.github.opencubicchunks.cubicchunks.mixin.core.common.world.MixinServerWorld;
+import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Registry;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LevelHeightAccessor;
 import net.minecraft.world.level.TickList;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -42,7 +45,7 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(LevelChunk.class)
-public abstract class MixinChunk implements ChunkAccess {
+public abstract class MixinChunk implements ChunkAccess, CubicLevelHeightAccessor {
 
     @Shadow @Final private Level level;
     @Shadow @Final private ChunkPos chunkPos;
@@ -52,6 +55,12 @@ public abstract class MixinChunk implements ChunkAccess {
     @Shadow private ChunkBiomeContainer biomes;
 
     @Shadow public abstract ChunkStatus getStatus();
+
+    @Shadow @Final private LevelChunkSection[] sections;
+
+    @Shadow private volatile boolean unsaved;
+
+    @Shadow protected abstract boolean isInLevel();
 
     @Override public boolean isYSpaceEmpty(int startY, int endY) {
         return false;
@@ -64,6 +73,11 @@ public abstract class MixinChunk implements ChunkAccess {
         at = @At("RETURN"))
     private void onInit(Level levelIn, ChunkPos pos, ChunkBiomeContainer chunkBiomeContainer, UpgradeData upgradeData, TickList<Block> tickList, TickList<Fluid> tickList2, long l,
                         LevelChunkSection[] levelChunkSections, Consumer<LevelChunk> consumer, CallbackInfo ci) {
+
+        if (!this.isCubic()) {
+            return;
+        }
+
         //TODO: is cubicworld
         //Client will already supply a ColumnBiomeContainer, server will not
         if (!(biomes instanceof ColumnBiomeContainer)) {
@@ -77,6 +91,10 @@ public abstract class MixinChunk implements ChunkAccess {
             + "Ljava/util/function/Consumer;)V",
         at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;getSectionsCount()I"))
     private int getFakeSectionCount(Level levelIn) {
+        if (!this.isCubic()) {
+            return levelIn.getSectionsCount();
+        }
+
         return 16; // TODO: properly handle Chunk
     }
 
@@ -86,6 +104,10 @@ public abstract class MixinChunk implements ChunkAccess {
             + "Ljava/util/function/Consumer;)V",
         at = @At(value = "NEW", target = "net/minecraft/world/level/levelgen/Heightmap"))
     private Heightmap getCCHeightmap(ChunkAccess chunkAccess, Heightmap.Types type) {
+        if (!this.isCubic()) {
+            return new Heightmap(chunkAccess, type);
+        }
+
         if (this.level.isClientSide()) {
             return new ClientSurfaceTracker(chunkAccess, type);
         } else {
@@ -100,6 +122,10 @@ public abstract class MixinChunk implements ChunkAccess {
             args = "array=get"
         ))
     private LevelChunkSection getStorage(LevelChunkSection[] array, int sectionIndex) {
+        if (!this.isCubic()) {
+            return array[sectionIndex];
+        }
+
         int sectionY = getSectionYFromSectionIndex(sectionIndex);
         IBigCube cube = this.getCube(sectionY);
         if (cube instanceof EmptyCube) {
@@ -129,6 +155,10 @@ public abstract class MixinChunk implements ChunkAccess {
     @ModifyConstant(method = { "getBlockState", "getFluidState(III)Lnet/minecraft/world/level/material/FluidState;" },
         constant = @Constant(expandZeroConditions = Constant.Condition.GREATER_THAN_OR_EQUAL_TO_ZERO))
     private int getMinHeight(int _0) {
+        if (!this.isCubic()) {
+            return _0;
+        }
+
         return Integer.MIN_VALUE;
     }
 
@@ -139,6 +169,10 @@ public abstract class MixinChunk implements ChunkAccess {
             args = "array=length"
         ))
     private int getStorage(LevelChunkSection[] array) {
+        if (!this.isCubic()) {
+            return array.length;
+        }
+
         return Integer.MAX_VALUE;
     }
 
@@ -151,6 +185,11 @@ public abstract class MixinChunk implements ChunkAccess {
             args = "array=set"
         ))
     private void setStorage(LevelChunkSection[] array, int sectionIndex, LevelChunkSection newVal) {
+        if (!this.isCubic()) {
+            array[sectionIndex] = newVal;
+            return;
+        }
+
         int sectionY = getSectionYFromSectionIndex(sectionIndex);
         IBigCube cube = this.getCube(sectionY);
         if (cube instanceof EmptyCube) {
@@ -161,6 +200,12 @@ public abstract class MixinChunk implements ChunkAccess {
 
     @Redirect(method = "setBlockState", at = @At(value = "FIELD", target = "Lnet/minecraft/world/level/chunk/LevelChunk;unsaved:Z"))
     private void setIsModifiedFromSetBlockState_Field(LevelChunk chunk, boolean isModifiedIn, BlockPos pos, BlockState state, boolean isMoving) {
+        if (!this.isCubic()) {
+            this.unsaved = true; //TODO: VANILLA CHUNKS: VERIFY THIS WORKS
+            return;
+        }
+
+
 //        if (isColumn) {
         this.getCube(Coords.blockToSection(pos.getY())).setDirty(isModifiedIn);
 //        } else {
@@ -173,6 +218,11 @@ public abstract class MixinChunk implements ChunkAccess {
     @Redirect(method = "*",
         at = @At(value = "INVOKE", target = "Ljava/util/Map;get(Ljava/lang/Object;)Ljava/lang/Object;"))
     private Object getTileEntity(Map map, Object key) {
+        if (!this.isCubic()) {
+            return map.get(key);
+        }
+
+
         if (map == this.blockEntities) {
             BigCube cube = (BigCube) this.getCube(Coords.blockToSection(((BlockPos) key).getY()));
             return cube.getTileEntityMap().get(key);
@@ -188,6 +238,11 @@ public abstract class MixinChunk implements ChunkAccess {
         method = "*",
         at = @At(value = "INVOKE", target = "Ljava/util/Map;remove(Ljava/lang/Object;)Ljava/lang/Object;"))
     private Object removeTileEntity(Map map, Object key) {
+        if (!this.isCubic()) {
+            return map.remove(key);
+        }
+
+
         if (map == this.blockEntities) {
             BigCube cube = (BigCube) this.getCube(Coords.blockToSection(((BlockPos) key).getY()));
             return cube.getTileEntityMap().remove(key);
@@ -202,6 +257,10 @@ public abstract class MixinChunk implements ChunkAccess {
     @Redirect(method = "*",
         at = @At(value = "INVOKE", target = "Ljava/util/Map;put(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;"))
     private Object putTileEntity(Map map, Object key, Object value) {
+        if (!this.isCubic()) {
+            return map.put(key, value);
+        }
+
         if (map == this.blockEntities) {
             BigCube cube = (BigCube) this.getCube(Coords.blockToSection(((BlockPos) key).getY()));
             return cube.getTileEntityMap().put((BlockPos) key, (BlockEntity) value);
@@ -215,11 +274,23 @@ public abstract class MixinChunk implements ChunkAccess {
     @Redirect(method = "addAndRegisterBlockEntity",
         at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/chunk/LevelChunk;isInLevel()Z"))
     private boolean getLoadedFromBlockEntity(LevelChunk chunk, BlockEntity tileEntity) {
+        if (!this.isCubic()) {
+            return this.isInLevel();
+        }
+
         return ((BigCube) this.getCube(Coords.blockToSection(tileEntity.getBlockPos().getY()))).isInLevel();
     }
 
     @Redirect(method = "removeBlockEntity", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/chunk/LevelChunk;isInLevel()Z"))
     private boolean getLoadedFromBlockPos(LevelChunk chunk, BlockPos pos) {
+        if (!this.isCubic()) {
+            return this.isInLevel();
+        }
+
         return ((BigCube) this.getCube(Coords.blockToSection(pos.getY()))).isInLevel();
+    }
+
+    @Override public WorldStyle worldStyle() {
+        return ((CubicLevelHeightAccessor) this.level).worldStyle();
     }
 }

@@ -1,6 +1,8 @@
 package io.github.opencubicchunks.cubicchunks.mixin.core.client;
 
+import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.ViewArea;
 import net.minecraft.client.renderer.chunk.ChunkRenderDispatcher;
 import net.minecraft.core.BlockPos;
@@ -37,6 +39,14 @@ public abstract class MixinViewFrustum {
 
     @Inject(method = "repositionCamera", at = @At(value = "HEAD"), cancellable = true, require = 1)
     private void repositionCamera(double viewEntityX, double viewEntityZ, CallbackInfo ci) {
+        ClientLevel level = Minecraft.getInstance().level;
+        if (level != null) {
+            if (!((CubicLevelHeightAccessor) level).isCubic()) {
+                return;
+            }
+        }
+
+
         Entity view = Minecraft.getInstance().getCameraEntity();
         double x = view.getX();
         double y = view.getY();
@@ -69,6 +79,13 @@ public abstract class MixinViewFrustum {
 
     @Inject(method = "getRenderChunkAt", at = @At(value = "HEAD"), cancellable = true)
     private void getRenderChunkAt(BlockPos pos, CallbackInfoReturnable<ChunkRenderDispatcher.RenderChunk> cbi) {
+        ClientLevel level = Minecraft.getInstance().level;
+        if (level != null) {
+            if (!((CubicLevelHeightAccessor) level).isCubic()) {
+                return;
+            }
+        }
+
         int x = Mth.intFloorDiv(pos.getX(), 16);
         int y = Mth.intFloorDiv(pos.getY(), 16);
         int z = Mth.intFloorDiv(pos.getZ(), 16);
@@ -84,8 +101,15 @@ public abstract class MixinViewFrustum {
      * @author Barteks2x
      * @reason correctly use y position
      */
-    @Overwrite
-    public void setDirty(int i, int j, int k, boolean bl) {
+    @Inject(method = "setDirty", at = @At("HEAD"), cancellable = true)
+    public void setDirty(int i, int j, int k, boolean bl, CallbackInfo ci) {
+        ClientLevel level = Minecraft.getInstance().level;
+        if (level != null) {
+            if (!((CubicLevelHeightAccessor) level).isCubic()) {
+                return;
+            }
+        }
+        ci.cancel();
         int l = Math.floorMod(i, this.chunkGridSizeX);
         int m = Math.floorMod(j, this.chunkGridSizeY);
         int n = Math.floorMod(k, this.chunkGridSizeZ);

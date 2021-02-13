@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
+import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import io.github.opencubicchunks.cubicchunks.world.DummyHeightmap;
 import net.minecraft.core.BlockPos;
@@ -24,7 +25,7 @@ import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.material.Fluids;
 import org.jetbrains.annotations.Nullable;
 
-public class NoiseAndSurfaceBuilderHelper extends ProtoChunk {
+public class NoiseAndSurfaceBuilderHelper extends ProtoChunk implements CubicLevelHeightAccessor {
 
 
     private final ChunkAccess[] delegates;
@@ -122,6 +123,10 @@ public class NoiseAndSurfaceBuilderHelper extends ProtoChunk {
 
     @Override public int getHeight() {
         return IBigCube.DIAMETER_IN_BLOCKS * 2;
+    }
+
+    @Override public WorldStyle worldStyle() {
+        return ((CubicLevelHeightAccessor) this.delegates[0]).worldStyle();
     }
 
     @Override public void addLight(BlockPos pos) {

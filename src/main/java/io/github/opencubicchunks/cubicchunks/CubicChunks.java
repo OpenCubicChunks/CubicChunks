@@ -1,7 +1,9 @@
 package io.github.opencubicchunks.cubicchunks;
 
 import java.lang.reflect.InvocationTargetException;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
@@ -9,6 +11,7 @@ import io.github.opencubicchunks.cubicchunks.chunk.IChunkManager;
 import io.github.opencubicchunks.cubicchunks.chunk.NoiseAndSurfaceBuilderHelper;
 import io.github.opencubicchunks.cubicchunks.meta.EarlyConfig;
 import io.github.opencubicchunks.cubicchunks.network.PacketDispatcher;
+import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import io.github.opencubicchunks.cubicchunks.world.biome.StripedBiomeSource;
 import io.github.opencubicchunks.cubicchunks.world.gen.feature.CCFeatures;
 import io.github.opencubicchunks.cubicchunks.world.gen.placement.CCPlacement;
@@ -60,10 +63,12 @@ public class CubicChunks implements ModInitializer {
         CCFeatures.init();
     }
 
-    public static Set<String> COLUMN_DIMENSION_MAP = Util.make(new HashSet<>(), (set) -> {
-        set.add("minecraft:the_nether");
-        set.add("minecraft:the_end");
+    public static Map<String, CubicLevelHeightAccessor.WorldStyle> DIMENSION_TO_WORLD_STYLE = Util.make(new HashMap<>(), (set) -> {
+        set.put("minecraft:overworld", CubicLevelHeightAccessor.WorldStyle.CUBIC);
+        set.put("minecraft:the_nether", CubicLevelHeightAccessor.WorldStyle.CUBIC);
+        set.put("minecraft:the_end", CubicLevelHeightAccessor.WorldStyle.CUBIC);
     });
+
 
 
     public static boolean isCubicChunk(ChunkAccess chunkAccess) {

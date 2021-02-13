@@ -6,6 +6,7 @@ import java.util.concurrent.Executor;
 
 import io.github.opencubicchunks.cubicchunks.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.NoiseGeneratorSettingsAccess;
+import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.StructureFeatureManager;
 import net.minecraft.world.level.block.state.BlockState;
@@ -42,7 +43,7 @@ public abstract class MixinNoiseBasedChunkGenerator {
 
     @Redirect(method = "fillFromNoise", at = @At(value = "INVOKE", target = "Ljava/lang/Math;max(II)I"))
     private int alwaysUseChunkMinBuildHeight(int a, int b, Executor executor, StructureFeatureManager accessor, ChunkAccess chunk) {
-        if (!CubicChunks.isCubicChunk(chunk)) {
+        if (((CubicLevelHeightAccessor) chunk).generates2DChunks()) {
             return Math.max(a, b);
         }
         return b;
@@ -50,7 +51,7 @@ public abstract class MixinNoiseBasedChunkGenerator {
 
     @Redirect(method = "fillFromNoise", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/levelgen/NoiseSettings;minY()I"))
     private int modifyMinY(NoiseSettings noiseSettings, Executor executor, StructureFeatureManager structureFeatureManager, ChunkAccess chunkAccess) {
-        if (!CubicChunks.isCubicChunk(chunkAccess)) {
+        if (((CubicLevelHeightAccessor) chunkAccess).generates2DChunks()) {
             return noiseSettings.minY();
         }
 
@@ -59,7 +60,7 @@ public abstract class MixinNoiseBasedChunkGenerator {
 
     @Inject(method = "fillFromNoise", at = @At("HEAD"))
     private void changeCellSize(Executor executor, StructureFeatureManager structureFeatureManager, ChunkAccess chunkAccess, CallbackInfoReturnable<CompletableFuture<ChunkAccess>> cir) {
-        if (!CubicChunks.isCubicChunk(chunkAccess)) {
+        if (((CubicLevelHeightAccessor) chunkAccess).generates2DChunks()) {
             return;
         }
         this.height = chunkAccess.getHeight();
@@ -68,7 +69,7 @@ public abstract class MixinNoiseBasedChunkGenerator {
 
     @Inject(method = "doFill", at = @At("HEAD"))
     private void changeCellSize2(StructureFeatureManager structureFeatureManager, ChunkAccess chunkAccess, int i, int j, CallbackInfoReturnable<ChunkAccess> cir) {
-        if (!CubicChunks.isCubicChunk(chunkAccess)) {
+        if (!((CubicLevelHeightAccessor) chunkAccess).generates2DChunks()) {
             return;
         }
         this.height = chunkAccess.getHeight();
@@ -77,7 +78,7 @@ public abstract class MixinNoiseBasedChunkGenerator {
 
     @Redirect(method = "doFill", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/levelgen/NoiseSettings;minY()I"))
     private int changeMinY(NoiseSettings noiseSettings, StructureFeatureManager structureFeatureManager, ChunkAccess chunkAccess, int i, int j) {
-        if (!CubicChunks.isCubicChunk(chunkAccess)) {
+        if (((CubicLevelHeightAccessor) chunkAccess).generates2DChunks()) {
             return noiseSettings.minY();
         }
 
@@ -86,7 +87,7 @@ public abstract class MixinNoiseBasedChunkGenerator {
 
     @Redirect(method = "fillFromNoise", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/Mth;intFloorDiv(II)I", ordinal = 1))
     private int alwaysUseChunkMaxHeight(int i, int j, Executor executor, StructureFeatureManager structureFeatureManager, ChunkAccess chunkAccess) {
-        if (!CubicChunks.isCubicChunk(chunkAccess)) {
+        if (((CubicLevelHeightAccessor) chunkAccess).generates2DChunks()) {
             return Mth.intFloorDiv(i, j);
         }
 
@@ -97,7 +98,7 @@ public abstract class MixinNoiseBasedChunkGenerator {
     private Aquifer createAquifier(int i, int j, NormalNoise normalNoise, NormalNoise normalNoise2, NoiseGeneratorSettings generatorSettings, NoiseSampler noiseSampler, int k,
                                    StructureFeatureManager structureFeatureManager, ChunkAccess chunk, int chunkX, int chunkZ) {
 
-        if (!CubicChunks.isCubicChunk(chunk)) {
+        if (((CubicLevelHeightAccessor) chunk).generates2DChunks()) {
             return new Aquifer(i, j, normalNoise, normalNoise2, generatorSettings, noiseSampler, k);
         }
 
@@ -124,7 +125,7 @@ public abstract class MixinNoiseBasedChunkGenerator {
 
     @Inject(method = "setBedrock", at = @At(value = "HEAD"), cancellable = true)
     private void cancelBedrockPlacement(ChunkAccess chunk, Random random, CallbackInfo ci) {
-        if (!CubicChunks.isCubicChunk(chunk)) {
+        if (((CubicLevelHeightAccessor) chunk).generates2DChunks()) {
             return;
         }
         ci.cancel();

@@ -7,6 +7,7 @@ import java.util.Objects;
 import javax.annotation.Nullable;
 
 import io.github.opencubicchunks.cubicchunks.chunk.biome.ColumnBiomeContainer;
+import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import net.minecraft.SharedConstants;
 import net.minecraft.core.Registry;
 import net.minecraft.nbt.CompoundTag;
@@ -30,6 +31,9 @@ import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(value = ChunkSerializer.class, priority = 900)
 public abstract class MixinChunkSerializer {
@@ -43,8 +47,13 @@ public abstract class MixinChunkSerializer {
      * @author Barteks2x
      * @reason CubicChunks doesn't need much real data in columns
      */
-    @Overwrite
-    public static ProtoChunk read(ServerLevel worldIn, StructureManager templateManagerIn, PoiManager poiManager, ChunkPos pos, CompoundTag compound) {
+    @Inject(method = "read", at = @At("HEAD"), cancellable = true)
+    private static void read(ServerLevel worldIn, StructureManager templateManagerIn, PoiManager poiManager, ChunkPos pos, CompoundTag compound, CallbackInfoReturnable<ProtoChunk> cir) {
+        if (!((CubicLevelHeightAccessor) worldIn).isCubic()) {
+            return;
+        }
+        cir.cancel();
+
         CompoundTag level = compound.getCompound("Level");
         ChunkPos loadedPos = new ChunkPos(level.getInt("xPos"), level.getInt("zPos"));
         if (!Objects.equals(pos, loadedPos)) {
@@ -88,10 +97,10 @@ public abstract class MixinChunkSerializer {
             newChunk.setUnsaved(true);
         }
         if (statusType == ChunkStatus.ChunkType.LEVELCHUNK) {
-            return new ImposterProtoChunk((LevelChunk) newChunk);
+            cir.setReturnValue(new ImposterProtoChunk((LevelChunk) newChunk));
         } else {
             ProtoChunk primer = (ProtoChunk) newChunk;
-            return primer;
+            cir.setReturnValue(primer);
         }
     }
 
@@ -99,8 +108,15 @@ public abstract class MixinChunkSerializer {
      * @author Barteks2x
      * @reason Save only columns
      */
-    @Overwrite
-    public static CompoundTag write(ServerLevel worldIn, ChunkAccess chunkIn) {
+    @Inject(method = "write", at = @At("HEAD"), cancellable = true)
+    private static void write(ServerLevel worldIn, ChunkAccess chunkIn, CallbackInfoReturnable<CompoundTag> cir) {
+        if (!((CubicLevelHeightAccessor) worldIn).isCubic()) {
+            return;
+        }
+
+        cir.cancel();
+
+
         ChunkPos chunkpos = chunkIn.getPos();
         CompoundTag compoundnbt = new CompoundTag();
         CompoundTag level = new CompoundTag();
@@ -118,6 +134,6 @@ public abstract class MixinChunkSerializer {
 //            }
 //        }
 //        level.put("Heightmaps", heightmaps);
-        return compoundnbt;
+        cir.setReturnValue(compoundnbt);
     }
 }

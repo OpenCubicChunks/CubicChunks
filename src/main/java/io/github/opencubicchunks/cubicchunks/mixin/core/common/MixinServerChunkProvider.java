@@ -4,9 +4,12 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
+import java.util.function.Supplier;
 
 import javax.annotation.Nullable;
 
+import com.mojang.datafixers.DataFixer;
 import com.mojang.datafixers.util.Either;
 import io.github.opencubicchunks.cubicchunks.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
@@ -18,6 +21,7 @@ import io.github.opencubicchunks.cubicchunks.chunk.graph.CCTicketType;
 import io.github.opencubicchunks.cubicchunks.chunk.ticket.ITicketManager;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.ChunkManagerAccess;
+import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import io.github.opencubicchunks.cubicchunks.server.IServerChunkProvider;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import io.github.opencubicchunks.cubicchunks.world.lighting.ICubeLightProvider;
@@ -30,11 +34,17 @@ import net.minecraft.server.level.DistanceManager;
 import net.minecraft.server.level.ServerChunkCache;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.TicketType;
+import net.minecraft.server.level.progress.ChunkProgressListener;
 import net.minecraft.util.profiling.ProfilerFiller;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.NaturalSpawner;
+import net.minecraft.world.level.chunk.ChunkGenerator;
 import net.minecraft.world.level.chunk.ChunkStatus;
+import net.minecraft.world.level.entity.ChunkStatusUpdateListener;
+import net.minecraft.world.level.levelgen.structure.templatesystem.StructureManager;
+import net.minecraft.world.level.storage.DimensionDataStorage;
 import net.minecraft.world.level.storage.LevelData;
+import net.minecraft.world.level.storage.LevelStorageSource;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
@@ -202,8 +212,19 @@ public abstract class MixinServerChunkProvider implements IServerChunkProvider, 
         this.recentCubes[0] = newCubeIn;
     }
 
+    @Inject(method = "<init>", at = @At("RETURN"))
+    private void checkWorldStyle(ServerLevel serverLevel, LevelStorageSource.LevelStorageAccess levelStorageAccess, DataFixer dataFixer, StructureManager structureManager, Executor executor,
+                                 ChunkGenerator chunkGenerator, int i, boolean bl, ChunkProgressListener chunkProgressListener, ChunkStatusUpdateListener chunkStatusUpdateListener,
+                                 Supplier<DimensionDataStorage> supplier, CallbackInfo ci) {
+        ((ITicketManager) this.distanceManager).hasCubicTickets(((CubicLevelHeightAccessor) this.level).isCubic());
+    }
+
     @Inject(method = "runDistanceManagerUpdates", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerChunkCache;clearCache()V"))
     private void onRefeshAndInvalidate(CallbackInfoReturnable<Boolean> cir) {
+
+        if (!((CubicLevelHeightAccessor) this.level).isCubic()) {
+            return;
+        }
         this.clearCubeCache();
     }
 
@@ -257,6 +278,10 @@ public abstract class MixinServerChunkProvider implements IServerChunkProvider, 
      */
     @Inject(method = "blockChanged", at = @At("RETURN"))
     public void onBlockChanged(BlockPos pos, CallbackInfo ci) {
+        if (!((CubicLevelHeightAccessor) this.level).isCubic()) {
+            return;
+        }
+
         ChunkHolder chunkholder = ((IChunkManager) this.chunkMap).getCubeHolder(CubePos.from(pos).asLong());
         if (chunkholder != null) {
             // markBlockChanged
@@ -268,6 +293,10 @@ public abstract class MixinServerChunkProvider implements IServerChunkProvider, 
         locals = LocalCapture.CAPTURE_FAILHARD)
     private void tickSections(CallbackInfo ci, long l, long timePassed, LevelData levelData, boolean bl, boolean doMobSpawning, int randomTicks, boolean bl3, int j,
                               NaturalSpawner.SpawnState spawnState) {
+        if (!((CubicLevelHeightAccessor) this.level).isCubic()) {
+            return;
+        }
+
         ((IChunkManager) this.chunkMap).getCubes().forEach((cubeHolder) -> {
             Optional<BigCube> optional =
                 ((ICubeHolder) cubeHolder).getCubeEntityTickingFuture().getNow(ICubeHolder.UNLOADED_CUBE).left();
@@ -293,8 +322,11 @@ public abstract class MixinServerChunkProvider implements IServerChunkProvider, 
      * @author Barteks2x
      * @reason debug string
      */
-    @Overwrite
-    public String gatherStats() {
-        return "ServerChunkCache: " + this.getLoadedChunksCount() + " | " + ((IChunkManager) chunkMap).sizeCubes();
+    @Inject(method = "gatherStats", at = @At("HEAD"), cancellable = true)
+    public void gatherStats(CallbackInfoReturnable<String> cir) {
+        if (!((CubicLevelHeightAccessor) this.level).isCubic()) {
+            return;
+        }
+        cir.setReturnValue("ServerChunkCache: " + this.getLoadedChunksCount() + " | " + ((IChunkManager) chunkMap).sizeCubes());
     }
 }

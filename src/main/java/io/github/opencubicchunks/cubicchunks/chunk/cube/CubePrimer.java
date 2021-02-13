@@ -20,6 +20,7 @@ import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.biome.CubeBiomeContainer;
 import io.github.opencubicchunks.cubicchunks.chunk.heightmap.SurfaceTrackerSection;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
+import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
@@ -56,7 +57,7 @@ import net.minecraft.world.level.material.Fluids;
 import org.apache.logging.log4j.LogManager;
 
 //ProtoChunk
-public class CubePrimer implements IBigCube, ChunkAccess {
+public class CubePrimer implements IBigCube, ChunkAccess, CubicLevelHeightAccessor {
 
     private final CubePos cubePos;
     private final LevelChunkSection[] sections;
@@ -589,5 +590,9 @@ public class CubePrimer implements IBigCube, ChunkAccess {
 
     @Override public int getMinBuildHeight() {
         return levelHeightAccessor.getMinBuildHeight();
+    }
+
+    @Override public WorldStyle worldStyle() {
+        return ((CubicLevelHeightAccessor) this.levelHeightAccessor).worldStyle();
     }
 }

@@ -11,7 +11,7 @@ public class MixinNoiseSampler {
 
 
     @Inject(method = "applySlide", at = @At("HEAD"), cancellable = true)
-    private void dontSlide(double d, int i, CallbackInfoReturnable<Double> cir) {
-        cir.setReturnValue(d);
+    private void dontSlideInfiniteCubeGen(double noise, int y, CallbackInfoReturnable<Double> cir) {
+        cir.setReturnValue(noise);
     }
 }

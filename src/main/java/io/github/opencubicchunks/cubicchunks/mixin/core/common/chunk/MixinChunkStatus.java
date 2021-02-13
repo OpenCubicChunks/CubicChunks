@@ -14,10 +14,10 @@ import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.ICubeGenerator;
 import io.github.opencubicchunks.cubicchunks.chunk.NoiseAndSurfaceBuilderHelper;
 import io.github.opencubicchunks.cubicchunks.chunk.biome.ColumnBiomeContainer;
-import io.github.opencubicchunks.cubicchunks.chunk.biome.CubeBiomeContainer;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.CubePrimer;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.StructureFeatureManagerAccess;
+import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import io.github.opencubicchunks.cubicchunks.world.CubeWorldGenRegion;
 import io.github.opencubicchunks.cubicchunks.world.server.IServerWorldLightManager;
 import net.minecraft.core.Registry;
@@ -97,7 +97,7 @@ public class MixinChunkStatus {
         List<ChunkAccess> chunks, ChunkAccess chunk,
         CallbackInfoReturnable<CompletableFuture<Either<ChunkAccess, ChunkHolder.ChunkLoadingFailure>>> cir) {
 
-        if (CubicChunks.COLUMN_DIMENSION_MAP.contains(world.dimension().location().toString())) {
+        if (((CubicLevelHeightAccessor) world).generates2DChunks()) {
             if (!(chunk instanceof IBigCube)) {
                 return;
             }
@@ -137,7 +137,7 @@ public class MixinChunkStatus {
     private static void cubicChunksStructureReferences(ServerLevel world, ChunkGenerator generator, List<ChunkAccess> neighbors, ChunkAccess chunk,
                                                        CallbackInfo ci) {
 
-        if (CubicChunks.COLUMN_DIMENSION_MAP.contains(world.dimension().location().toString())) {
+        if (((CubicLevelHeightAccessor) world).generates2DChunks()) {
             return;
         }
 
@@ -153,7 +153,7 @@ public class MixinChunkStatus {
         at = @At("HEAD"), cancellable = true
     )
     private static void cubicChunksBiome(ServerLevel world, ChunkGenerator chunkGenerator, List<ChunkAccess> neighbors, ChunkAccess chunkAccess, CallbackInfo ci) {
-        if (CubicChunks.COLUMN_DIMENSION_MAP.contains(world.dimension().location().toString())) {
+        if (((CubicLevelHeightAccessor) world).generates2DChunks()) {
             if (chunkAccess instanceof IBigCube) {
 //                /* This can only be a  CubePrimer at this point due to the inject in MixinChunkStatus#cubicChunksBiome  */
 //                IBigCube iCube = (IBigCube) chunkAccess;
@@ -182,7 +182,7 @@ public class MixinChunkStatus {
                                          ThreadedLevelLightEngine lightEngine, Function<ChunkAccess, CompletableFuture<Either<ChunkAccess, ChunkHolder.ChunkLoadingFailure>>> function,
                                          List<ChunkAccess> neighbors, ChunkAccess chunk, CallbackInfoReturnable<CompletableFuture<Either<ChunkAccess, ChunkHolder.ChunkLoadingFailure>>> ci) {
 
-        if (CubicChunks.COLUMN_DIMENSION_MAP.contains(world.dimension().location().toString())) {
+        if (((CubicLevelHeightAccessor) world).generates2DChunks()) {
             if (chunk instanceof IBigCube) {
                 ci.setReturnValue(CompletableFuture.completedFuture(Either.left(chunk)));
             }
@@ -235,7 +235,7 @@ public class MixinChunkStatus {
     private static void cubicChunksSurface(ServerLevel world, ChunkGenerator generator, List<ChunkAccess> neighbors, ChunkAccess chunk,
                                            CallbackInfo ci) {
 
-        if (CubicChunks.COLUMN_DIMENSION_MAP.contains(world.dimension().location().toString())) {
+        if (((CubicLevelHeightAccessor) world).generates2DChunks()) {
             return;
         }
         ci.cancel();
@@ -252,7 +252,7 @@ public class MixinChunkStatus {
     private static void cubicChunksCarvers(ServerLevel world, ChunkGenerator generator, List<ChunkAccess> neighbors, ChunkAccess chunk,
                                            CallbackInfo ci) {
 
-        if (CubicChunks.COLUMN_DIMENSION_MAP.contains(world.dimension().location().toString())) {
+        if (((CubicLevelHeightAccessor) world).generates2DChunks()) {
             return;
         }
 
@@ -283,7 +283,7 @@ public class MixinChunkStatus {
     private static void cubicChunksLiquidCarvers(ServerLevel world, ChunkGenerator generator, List<ChunkAccess> neighbors, ChunkAccess chunk,
                                                  CallbackInfo ci) {
 
-        if (CubicChunks.COLUMN_DIMENSION_MAP.contains(world.dimension().location().toString())) {
+        if (((CubicLevelHeightAccessor) world).generates2DChunks()) {
             return;
         }
 
@@ -322,7 +322,7 @@ public class MixinChunkStatus {
         List<ChunkAccess> chunks, ChunkAccess chunk,
         CallbackInfoReturnable<CompletableFuture<Either<ChunkAccess, ChunkHolder.ChunkLoadingFailure>>> cir) {
 
-        if (CubicChunks.COLUMN_DIMENSION_MAP.contains(world.dimension().location().toString())) {
+        if (((CubicLevelHeightAccessor) world).generates2DChunks()) {
             if (!(chunk instanceof CubePrimer)) {
                 return;
             }
@@ -363,6 +363,11 @@ public class MixinChunkStatus {
     @Inject(method = "lightChunk", at = @At("HEAD"), cancellable = true)
     private static void lightChunkCC(ChunkStatus status, ThreadedLevelLightEngine lightManager, ChunkAccess chunk,
                                      CallbackInfoReturnable<CompletableFuture<Either<ChunkAccess, ChunkHolder.ChunkLoadingFailure>>> cir) {
+
+        if (((CubicLevelHeightAccessor) chunk).worldStyle() == CubicLevelHeightAccessor.WorldStyle.CHUNK) {
+            return;
+        }
+
         if (!(chunk instanceof CubePrimer)) {
             if (!chunk.getStatus().isOrAfter(status)) {
                 ((ProtoChunk) chunk).setStatus(status);
@@ -386,6 +391,9 @@ public class MixinChunkStatus {
     private static void cubicChunksSpawnMobs(ServerLevel world, ChunkGenerator generator, List<ChunkAccess> neighbors, ChunkAccess chunk,
                                              CallbackInfo ci) {
 
+        if (((CubicLevelHeightAccessor) world).worldStyle() == CubicLevelHeightAccessor.WorldStyle.CHUNK) {
+            return;
+        }
         ci.cancel();
         //if (chunk instanceof IBigCube) {
         //    generator.spawnMobs(new CubeWorldGenRegion(world, unsafeCast(neighbors)));

@@ -2,9 +2,12 @@ package io.github.opencubicchunks.cubicchunks.mixin.core.client.progress;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import io.github.opencubicchunks.cubicchunks.client.CubicWorldLoadScreen;
+import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.LevelLoadingScreen;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.progress.StoringChunkProgressListener;
 import net.minecraft.world.level.chunk.ChunkStatus;
@@ -28,14 +31,16 @@ public class MixinWorldLoadProgressScreen extends Screen {
     @Inject(method = "renderChunks", at = @At("HEAD"), cancellable = true)
     private static void onDraw(PoseStack mStack, StoringChunkProgressListener trackerParam,
                                int xBase, int yBase, int scale, int spacing, CallbackInfo ci) {
-        ci.cancel();
 
+        ClientLevel level = Minecraft.getInstance().level;
+        if (level != null) {
+            if (!((CubicLevelHeightAccessor) level).isCubic()) {
+                return;
+            }
+        }
+
+        ci.cancel();
         CubicWorldLoadScreen.doRender(mStack, trackerParam, xBase, yBase, scale, spacing, COLORS);
 
-    }
-
-    @Redirect(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/progress/StoringChunkProgressListener;getProgress()I"))
-    private int onGetProgress(StoringChunkProgressListener trackingChunkStatusListener) {
-        return trackingChunkStatusListener.getProgress();
     }
 }

@@ -1,6 +1,7 @@
 package io.github.opencubicchunks.cubicchunks.mixin.core.common.world.feature;
 
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
+import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import net.minecraft.world.level.levelgen.feature.FeaturePlaceContext;
 import net.minecraft.world.level.levelgen.feature.IcebergFeature;
 import net.minecraft.world.level.levelgen.feature.configurations.BlockStateConfiguration;
@@ -14,6 +15,10 @@ public class MixinIcebergFeature {
 
     @Inject(method = "place", at = @At("HEAD"), cancellable = true)
     private void checkIfSeaLevelIsInCube(FeaturePlaceContext<BlockStateConfiguration> featurePlaceContext, CallbackInfoReturnable<Boolean> cir) {
+        if (!((CubicLevelHeightAccessor) featurePlaceContext.level()).isCubic()) {
+            return;
+        }
+
         if (featurePlaceContext.origin().getY() > featurePlaceContext.chunkGenerator().getSeaLevel()
             || featurePlaceContext.origin().getY() + IBigCube.DIAMETER_IN_BLOCKS <= featurePlaceContext.chunkGenerator().getSeaLevel()) {
             cir.setReturnValue(true);

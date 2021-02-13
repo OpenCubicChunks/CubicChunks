@@ -18,6 +18,7 @@ import com.mojang.serialization.OptionalDynamic;
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.storage.ISectionStorage;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
+import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import io.github.opencubicchunks.cubicchunks.world.storage.RegionCubeIO;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
@@ -40,6 +41,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(SectionStorage.class) //TODO: Consider vanilla dimensions
 public abstract class MixinSectionStorage<R> implements ISectionStorage {
@@ -75,39 +77,44 @@ public abstract class MixinSectionStorage<R> implements ISectionStorage {
     @Inject(method = "<init>", at = @At("RETURN"))
     private void getServerLevel(File file, Function<Runnable, Codec<R>> function, Function<Runnable, R> function2, DataFixer dataFixer, DataFixTypes dataFixTypes, boolean bl,
                                 LevelHeightAccessor heightAccessor, CallbackInfo ci) throws IOException {
-        cubeWorker = new RegionCubeIO(file, file.getName() + "-chunk", file.getName());
+
+        if (((CubicLevelHeightAccessor) levelHeightAccessor).isCubic()) {
+            cubeWorker = new RegionCubeIO(file, file.getName() + "-chunk", file.getName());
+        }
     }
 
-    /**
-     * @author CorgiTaco
-     */
-    @Overwrite
-    protected void tick(BooleanSupplier shouldKeepTicking) {
+    @Inject(method = "tick", at = @At("HEAD"), cancellable = true)
+    private void tickCube(BooleanSupplier shouldKeepTicking, CallbackInfo ci) {
+        if (!((CubicLevelHeightAccessor) levelHeightAccessor).isCubic()) {
+            return;
+        }
         while (!this.dirty.isEmpty() && shouldKeepTicking.getAsBoolean()) {
             CubePos cubePos = CubePos.from(SectionPos.of(this.dirty.firstLong()));
             this.writeCube(cubePos);
         }
+        ci.cancel();
     }
 
-    /**
-     * @author CorgiTaco
-     */
-    @Overwrite
-    protected Optional<R> getOrLoad(long pos) {
+    @Inject(method = "getOrLoad", at = @At("HEAD"), cancellable = true)
+    private void getOrLoadCube(long pos, CallbackInfoReturnable<Optional<R>> cir) {
+        if (!((CubicLevelHeightAccessor) levelHeightAccessor).isCubic()) {
+            return;
+        }
+
         SectionPos sectionPos = SectionPos.of(pos);
         if (this.outsideStoredRange(pos)) {
-            return Optional.empty();
+            cir.setReturnValue(Optional.empty());
         } else {
             Optional<R> optional = this.get(pos);
             if (optional != null) {
-                return optional;
+                cir.setReturnValue(optional);
             } else {
                 this.readCube(CubePos.from(sectionPos));
                 optional = this.get(pos);
                 if (optional == null) {
                     throw Util.pauseInIde(new IllegalStateException());
                 } else {
-                    return optional;
+                    cir.setReturnValue(optional);
                 }
             }
         }

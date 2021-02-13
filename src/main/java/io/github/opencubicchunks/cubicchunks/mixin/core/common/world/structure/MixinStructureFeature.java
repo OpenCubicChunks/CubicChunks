@@ -2,6 +2,7 @@ package io.github.opencubicchunks.cubicchunks.mixin.core.common.world.structure;
 
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
+import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import io.github.opencubicchunks.cubicchunks.server.ICubicWorld;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import net.minecraft.core.BlockPos;
@@ -29,6 +30,12 @@ public abstract class MixinStructureFeature {
     @Inject(at = @At("HEAD"), method = "getNearestGeneratedFeature", cancellable = true)
     private void getNearestStructure3D(LevelReader level, StructureFeatureManager manager, BlockPos blockPos, int searchRadius, boolean skipExistingChunks, long seed,
                                        StructureFeatureConfiguration structureFeatureConfiguration, CallbackInfoReturnable<BlockPos> cir) {
+
+
+        if (((CubicLevelHeightAccessor) level).generates2DChunks()) {
+            return;
+        }
+
         int spacing = structureFeatureConfiguration.spacing();
         int ySpacing = IBigCube.DIAMETER_IN_SECTIONS;
 

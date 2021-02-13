@@ -1,5 +1,6 @@
 package io.github.opencubicchunks.cubicchunks.mixin.core.common.world.feature;
 
+import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import net.minecraft.world.level.levelgen.feature.BlockBlobFeature;
 import net.minecraft.world.level.levelgen.feature.FeaturePlaceContext;
 import net.minecraft.world.level.levelgen.feature.configurations.BlockStateConfiguration;
@@ -21,6 +22,11 @@ public class MixinBlockBlobFeature {
 
     @Inject(at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/WorldGenLevel;isEmptyBlock(Lnet/minecraft/core/BlockPos;)Z", ordinal = 0), method = "place", cancellable = true)
     private void checkIfInCubeBounds(FeaturePlaceContext<BlockStateConfiguration> featurePlaceContext, CallbackInfoReturnable<Boolean> cir) {
+        if (!((CubicLevelHeightAccessor) featurePlaceContext.level()).isCubic()) {
+            return;
+        }
+
+
         if (featurePlaceContext.origin().getY() < storedY) {
             cir.setReturnValue(true);
         }

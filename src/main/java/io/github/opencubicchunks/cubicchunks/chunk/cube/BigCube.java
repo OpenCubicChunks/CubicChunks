@@ -25,6 +25,8 @@ import io.github.opencubicchunks.cubicchunks.chunk.heightmap.SurfaceTrackerSecti
 import io.github.opencubicchunks.cubicchunks.chunk.heightmap.SurfaceTrackerWrapper;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.ChunkSectionAccess;
+import io.github.opencubicchunks.cubicchunks.mixin.core.common.world.MixinServerWorld;
+import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import io.github.opencubicchunks.cubicchunks.utils.MathUtil;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
@@ -68,7 +70,7 @@ import net.minecraft.world.level.material.Fluids;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class BigCube implements ChunkAccess, IBigCube {
+public class BigCube implements ChunkAccess, IBigCube, CubicLevelHeightAccessor {
 
     private static final TickingBlockEntity NULL_TICKER = new TickingBlockEntity() {
         public void tick() {
@@ -908,6 +910,10 @@ public class BigCube implements ChunkAccess, IBigCube {
 
     @Override public int getMinBuildHeight() {
         return level.getMinBuildHeight();
+    }
+
+    @Override public WorldStyle worldStyle() {
+        return ((CubicLevelHeightAccessor) this.level).worldStyle();
     }
 
     public static class RebindableTickingBlockEntityWrapper implements TickingBlockEntity {

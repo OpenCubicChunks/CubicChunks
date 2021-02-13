@@ -1,8 +1,11 @@
 package io.github.opencubicchunks.cubicchunks.mixin.core.client;
 
 import io.github.opencubicchunks.cubicchunks.mixin.access.client.ChunkRenderDispatcherAccess;
+import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import io.github.opencubicchunks.cubicchunks.server.ICubicWorld;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.chunk.ChunkRenderDispatcher;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -31,6 +34,13 @@ public abstract class MixinRenderChunk {
      */
     @Inject(method = "doesChunkExistAt", at = @At("HEAD"), cancellable = true)
     private void doesChunkAndCubeExistAt(BlockPos blockPos, CallbackInfoReturnable<Boolean> cir) {
+        ClientLevel level = Minecraft.getInstance().level;
+        if (level != null) {
+            if (!((CubicLevelHeightAccessor) level).isCubic()) {
+                return;
+            }
+        }
+
         cir.setReturnValue(
             ((ChunkRenderDispatcherAccess) this$0).getLevel().getChunk(
                 Coords.blockToSection(blockPos.getX()),
@@ -51,6 +61,13 @@ public abstract class MixinRenderChunk {
      */
     @Inject(method = "hasAllNeighbors", at = @At("HEAD"), cancellable = true)
     private void onHasAllNeighbors(CallbackInfoReturnable<Boolean> cir) {
+        ClientLevel level = Minecraft.getInstance().level;
+        if (level != null) {
+            if (!((CubicLevelHeightAccessor) level).isCubic()) {
+                return;
+            }
+        }
+
         if (!(this.getDistToPlayerSqr() > 576.0D)) {
             cir.setReturnValue(true);
         } else {

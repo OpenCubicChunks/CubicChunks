@@ -1,26 +1,41 @@
 package io.github.opencubicchunks.cubicchunks.mixin.core.common.world;
 
+import io.github.opencubicchunks.cubicchunks.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.ICubeProvider;
+import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import io.github.opencubicchunks.cubicchunks.server.ICubicWorld;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import net.minecraft.core.BlockPos;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelHeightAccessor;
+import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.chunk.ChunkStatus;
+import org.spongepowered.asm.mixin.Implements;
+import org.spongepowered.asm.mixin.Interface;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(Level.class)
-public abstract class MixinWorld implements ICubicWorld, LevelHeightAccessor {
+public abstract class MixinWorld implements ICubicWorld, LevelReader {
+
+    @Shadow public abstract ResourceKey<Level> dimension();
 
     @Override public int getHeight() {
+        if (!isCubic())
+            return LevelReader.super.getHeight();
+
         return 40000000;
     }
 
     @Override public int getMinBuildHeight() {
+        if (!isCubic())
+            return LevelReader.super.getMinBuildHeight();
+
         return -20000000;
     }
 
@@ -31,6 +46,11 @@ public abstract class MixinWorld implements ICubicWorld, LevelHeightAccessor {
 
     public IBigCube getCubeAt(BlockPos pos) {
         return this.getCube(Coords.blockToCube(pos.getX()), Coords.blockToCube(pos.getY()), Coords.blockToCube(pos.getZ()));
+    }
+
+    @Override
+    public CubicLevelHeightAccessor.WorldStyle worldStyle() {
+        return CubicChunks.DIMENSION_TO_WORLD_STYLE.get(dimension().location().toString());
     }
 
     @Override

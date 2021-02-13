@@ -1,6 +1,7 @@
 package io.github.opencubicchunks.cubicchunks.mixin.core.common.world.feature;
 
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
+import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import io.github.opencubicchunks.cubicchunks.server.ICubicWorld;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import net.minecraft.core.BlockPos;
@@ -20,6 +21,10 @@ public class MixinOreFeature {
 
     @Inject(method = "place", at = @At("HEAD"), cancellable = true)
     private void skipEmptyChunks(FeaturePlaceContext<OreConfiguration> featurePlaceContext, CallbackInfoReturnable<Boolean> cir) {
+        if (!((CubicLevelHeightAccessor) featurePlaceContext.level()).isCubic()) {
+            return;
+        }
+
         BlockPos blockPos = featurePlaceContext.origin();
         IBigCube cube = ((ICubicWorld) featurePlaceContext.level()).getCube(blockPos);
         LevelChunkSection section = cube.getCubeSections()[Coords.blockToIndex(blockPos.getX(), blockPos.getY(), blockPos.getZ())];

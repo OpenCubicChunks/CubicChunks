@@ -7,6 +7,7 @@ import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
+import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import io.github.opencubicchunks.cubicchunks.server.ICubicWorld;
 import net.minecraft.core.SectionPos;
 import net.minecraft.world.level.LevelAccessor;
@@ -32,8 +33,9 @@ public abstract class MixinStructureFeatureManager {
     @Inject(at = @At("HEAD"), method = "startsForFeature(Lnet/minecraft/core/SectionPos;Lnet/minecraft/world/level/levelgen/feature/StructureFeature;)Ljava/util/stream/Stream;",
         cancellable = true)
     private void useCubePos(SectionPos sectionPos, StructureFeature<?> structureFeature, CallbackInfoReturnable<Stream<? extends StructureStart<?>>> cir) {
-        if (!(level instanceof ICubicWorld))
+        if (((CubicLevelHeightAccessor) level).generates2DChunks()) {
             return;
+        }
 
         cir.setReturnValue(((ICubicWorld) this.level).getCube(sectionToCube(sectionPos.x()), sectionToCube(sectionPos.y()), sectionToCube(sectionPos.z()), ChunkStatus.STRUCTURE_REFERENCES)
             .getReferencesForFeature(structureFeature).stream().map((seed) -> {

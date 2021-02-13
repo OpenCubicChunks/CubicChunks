@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.Map;
 
 import io.github.opencubicchunks.cubicchunks.debug.DebugVisualization;
+import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;

@@ -5,6 +5,7 @@ import javax.annotation.Nullable;
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.SectionLightStorageAccess;
+import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import io.github.opencubicchunks.cubicchunks.world.lighting.ICubeLightProvider;
 import io.github.opencubicchunks.cubicchunks.world.lighting.ILightEngine;
 import io.github.opencubicchunks.cubicchunks.world.lighting.ISectionLightStorage;
@@ -21,11 +22,13 @@ import net.minecraft.world.level.lighting.LayerLightSectionStorage;
 import org.apache.commons.lang3.mutable.MutableInt;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(LayerLightEngine.class)
-public class MixinLightEngine<M extends DataLayerStorageMap<M>, S extends LayerLightSectionStorage<M>> implements ILightEngine {
+public abstract class MixinLightEngine<M extends DataLayerStorageMap<M>, S extends LayerLightSectionStorage<M>> implements ILightEngine {
 
     @Shadow @Final protected S storage;
 
@@ -36,6 +39,8 @@ public class MixinLightEngine<M extends DataLayerStorageMap<M>, S extends LayerL
     @Shadow @Final private long[] lastChunkPos;
 
     @Shadow @Final private BlockGetter[] lastChunk;
+
+    @Shadow @org.jetbrains.annotations.Nullable protected abstract BlockGetter getChunk(int chunkX, int chunkZ);
 
     @Override
     public void retainCubeData(CubePos posIn, boolean retain) {
@@ -59,14 +64,26 @@ public class MixinLightEngine<M extends DataLayerStorageMap<M>, S extends LayerL
      * @reason Vanilla lighting is gone
      */
     //TODO: make this into a redirect that calls getCubeReader taking arguments blockPosLong
-    @Overwrite
-    protected BlockState getStateAndOpacity(long blockPosLong, @Nullable MutableInt opacity) {
+    @Inject(method = "getStateAndOpacity", at = @At("HEAD"), cancellable = true)
+    private void getStateAndOpacity(long blockPosLong, @Nullable MutableInt opacity, CallbackInfoReturnable<BlockState> cir) {
+        int i = SectionPos.blockToSectionCoord(BlockPos.getX(blockPosLong));
+        int j = SectionPos.blockToSectionCoord(BlockPos.getZ(blockPosLong));
+
+        BlockGetter chunk = this.getChunk(i, j);
+        if (chunk == null) {
+            return;
+        }
+        
+        if (!((CubicLevelHeightAccessor) chunk).isCubic()) {
+            return;
+        }
+
         if (blockPosLong == Long.MAX_VALUE) {
             if (opacity != null) {
                 opacity.setValue(0);
             }
 
-            return Blocks.AIR.defaultBlockState();
+            cir.setReturnValue(Blocks.AIR.defaultBlockState());
         } else {
             int sectionX = SectionPos.blockToSectionCoord(BlockPos.getX(blockPosLong));
             int sectionY = SectionPos.blockToSectionCoord(BlockPos.getY(blockPosLong));
@@ -77,7 +94,7 @@ public class MixinLightEngine<M extends DataLayerStorageMap<M>, S extends LayerL
                     opacity.setValue(16);
                 }
 
-                return Blocks.BEDROCK.defaultBlockState();
+                cir.setReturnValue(Blocks.BEDROCK.defaultBlockState());
             } else {
                 this.pos.set(blockPosLong);
                 BlockState blockstate = iblockreader.getBlockState(this.pos);
@@ -86,7 +103,7 @@ public class MixinLightEngine<M extends DataLayerStorageMap<M>, S extends LayerL
                     opacity.setValue(blockstate.getLightBlock(this.chunkSource.getLevel(), this.pos));
                 }
 
-                return flag ? blockstate : Blocks.AIR.defaultBlockState();
+                cir.setReturnValue(flag ? blockstate : Blocks.AIR.defaultBlockState());
             }
         }
     }
