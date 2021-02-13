@@ -11,13 +11,13 @@ import net.minecraft.world.level.chunk.ChunkStatus;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Mutable;
-import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Constant;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyConstant;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(LoggerChunkProgressListener.class)
 public abstract class MixinLoggingChunkStatusListener implements ICubeStatusListener {
@@ -46,6 +46,8 @@ public abstract class MixinLoggingChunkStatusListener implements ICubeStatusList
     @Override public void startCubes(CubePos center) {
     }
 
+
+
     @Override public void onCubeStatusChange(CubePos cubePos, @Nullable ChunkStatus newStatus) {
         if (newStatus == ChunkStatus.FULL) {
             this.loadedCubes++;
@@ -61,10 +63,11 @@ public abstract class MixinLoggingChunkStatusListener implements ICubeStatusList
      * @author CursedFlames & NotStirred
      * @reason number of chunks is different due to rounding to chunks rounding to 1 cubes to 1, 2, 4, 8 depending on {@link IBigCube#DIAMETER_IN_SECTIONS}
      */
-    @Overwrite
-    public int getProgress() {
+    @Inject(method = "getProgress", at = @At("HEAD"), cancellable = true)
+    private void getProgress(CallbackInfoReturnable<Integer> cir) {
+        //TODO: Check and return for Cubic Worlds
         int loaded = count + loadedCubes;
         int total = maxCount + totalCubes;
-        return Mth.floor(loaded * 100.0F / total);
+        cir.setReturnValue(Mth.floor(loaded * 100.0F / total));
     }
 }

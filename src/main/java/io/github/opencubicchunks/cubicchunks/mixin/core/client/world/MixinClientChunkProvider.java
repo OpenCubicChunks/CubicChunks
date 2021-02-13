@@ -9,6 +9,7 @@ import io.github.opencubicchunks.cubicchunks.chunk.cube.BigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.EmptyCube;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.mixin.access.client.ClientChunkProviderChunkArrayAccess;
+import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import io.github.opencubicchunks.cubicchunks.world.client.IClientWorld;
 import io.github.opencubicchunks.cubicchunks.world.lighting.IWorldLightManager;
@@ -22,11 +23,11 @@ import net.minecraft.world.level.lighting.LevelLightEngine;
 import org.apache.logging.log4j.Logger;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(ClientChunkCache.class)
 public abstract class MixinClientChunkProvider implements IClientCubeProvider {
@@ -46,6 +47,10 @@ public abstract class MixinClientChunkProvider implements IClientCubeProvider {
 
     @Inject(method = "<init>", at = @At("RETURN"))
     private void onConstruct(ClientLevel clientWorldIn, int viewDistance, CallbackInfo ci) {
+        if (!((CubicLevelHeightAccessor) clientWorldIn).isCubic()) {
+            return;
+        }
+
         this.cubeArray = new ClientChunkProviderCubeArray(adjustCubeViewDistance(viewDistance), cube -> {});
         this.emptyCube = new EmptyCube(level);
     }
@@ -136,6 +141,12 @@ public abstract class MixinClientChunkProvider implements IClientCubeProvider {
 
     @Inject(method = "updateViewRadius", at = @At("HEAD"))
     private void updateViewRadius(int viewDistance, CallbackInfo ci) {
+        if (level != null) {
+            if (!((CubicLevelHeightAccessor) level).isCubic()) {
+                return;
+            }
+        }
+
         int old = this.cubeArray.viewDistance;
         int newDist = adjustCubeViewDistance(viewDistance);
         if (old == newDist) {
@@ -164,11 +175,15 @@ public abstract class MixinClientChunkProvider implements IClientCubeProvider {
      * @author Barteks2x
      * @reason Change the debug string
      */
-    @Overwrite
-    public String gatherStats() {
+    @Inject(method = "gatherStats", at = @At("HEAD"), cancellable = true)
+    public void gatherStats(CallbackInfoReturnable<String> cir) {
+        if (!((CubicLevelHeightAccessor) this.level).isCubic()) {
+            return;
+        }
+
         //noinspection ConstantConditions
-        return "Client Chunk Cache: " + ((ClientChunkProviderChunkArrayAccess) (Object) this.storage).getChunks().length() + ", " + this.getLoadedChunksCount() +
-            " | " + this.cubeArray.cubes.length() + ", " + getLoadedCubesCount();
+        cir.setReturnValue("Client Chunk Cache: " + ((ClientChunkProviderChunkArrayAccess) (Object) this.storage).getChunks().length() + ", " + this.getLoadedChunksCount() +
+            " | " + this.cubeArray.cubes.length() + ", " + getLoadedCubesCount());
     }
 
     public int getLoadedCubesCount() {

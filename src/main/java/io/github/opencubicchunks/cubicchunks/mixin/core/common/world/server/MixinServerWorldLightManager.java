@@ -11,6 +11,7 @@ import io.github.opencubicchunks.cubicchunks.chunk.IChunkManager;
 import io.github.opencubicchunks.cubicchunks.chunk.ticket.CubeTaskPriorityQueueSorter;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.mixin.core.common.world.lighting.MixinWorldLightManager;
+import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import io.github.opencubicchunks.cubicchunks.world.server.IServerWorldLightManager;
 import it.unimi.dsi.fastutil.objects.ObjectList;
@@ -25,8 +26,10 @@ import net.minecraft.world.level.chunk.DataLayer;
 import net.minecraft.world.level.chunk.LevelChunkSection;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(ThreadedLevelLightEngine.class)
 public abstract class MixinServerWorldLightManager extends MixinWorldLightManager implements IServerWorldLightManager {
@@ -50,8 +53,13 @@ public abstract class MixinServerWorldLightManager extends MixinWorldLightManage
      * @author NotStirred
      * @reason lambdas
      */
-    @Overwrite
-    public void checkBlock(BlockPos blockPosIn) {
+    @Inject(method = "checkBlock", at = @At("HEAD"), cancellable = true)
+    public void checkBlock(BlockPos blockPosIn, CallbackInfo ci) {
+        if (!((CubicLevelHeightAccessor) this.levelHeightAccessor).isCubic()) {
+            return;
+        }
+        ci.cancel();
+
         BlockPos blockpos = blockPosIn.immutable();
         this.addTask(
             Coords.blockToCube(blockPosIn.getX()),
@@ -137,8 +145,13 @@ public abstract class MixinServerWorldLightManager extends MixinWorldLightManage
      * @author NotStirred
      * @reason Vanilla lighting is gone
      */
-    @Overwrite
-    public void updateSectionStatus(SectionPos pos, boolean isEmpty) {
+    @Inject(method = "updateSectionStatus", at = @At("HEAD"), cancellable = true)
+    public void updateSectionStatus(SectionPos pos, boolean isEmpty, CallbackInfo ci) {
+        if (!((CubicLevelHeightAccessor) this.levelHeightAccessor).isCubic()) {
+            return;
+        }
+
+        ci.cancel();
         CubePos cubePos = CubePos.from(pos);
         this.addTask(cubePos.getX(), cubePos.getY(), cubePos.getZ(), () -> 0, ThreadedLevelLightEngine.TaskType.PRE_UPDATE, Util.name(() -> {
             super.updateSectionStatus(pos, isEmpty);
@@ -156,8 +169,14 @@ public abstract class MixinServerWorldLightManager extends MixinWorldLightManage
      * @author NotStirred
      * @reason Vanilla lighting is gone
      */
-    @Overwrite
-    public void queueSectionData(LightLayer type, SectionPos pos, @Nullable DataLayer array, boolean flag) {
+    @Inject(method = "queueSectionData", at = @At("HEAD"), cancellable = true)
+    public void queueSectionData(LightLayer type, SectionPos pos, @Nullable DataLayer array, boolean flag, CallbackInfo ci) {
+        if (!((CubicLevelHeightAccessor) this.levelHeightAccessor).isCubic()) {
+            return;
+        }
+
+        ci.cancel();
+
         CubePos cubePos = CubePos.from(pos);
         this.addTask(cubePos.getX(), cubePos.getY(), cubePos.getZ(), () -> 0, ThreadedLevelLightEngine.TaskType.PRE_UPDATE, Util.name(() -> {
             super.queueSectionData(type, pos, array, flag);

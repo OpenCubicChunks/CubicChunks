@@ -8,3 +8,4 @@ accessible class net/minecraft/server/level/ChunkMap$TrackedEntity
 accessible class net/minecraft/server/level/ServerChunkCache$MainThreadExecutor
 accessible class net/minecraft/server/level/ThreadedLevelLightEngine$TaskType
 extendable class net/minecraft/server/level/Ticket
+accessible method net/minecraft/server/level/ChunkMap$DistanceManager <init> (Lnet/minecraft/server/level/ChunkMap;Ljava/util/concurrent/Executor;Ljava/util/concurrent/Executor;)V

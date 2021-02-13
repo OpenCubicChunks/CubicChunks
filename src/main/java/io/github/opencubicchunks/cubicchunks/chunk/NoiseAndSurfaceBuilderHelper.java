@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
+import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import io.github.opencubicchunks.cubicchunks.world.DummyHeightmap;
 import net.minecraft.core.BlockPos;
@@ -24,22 +25,26 @@ import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.material.Fluids;
 import org.jetbrains.annotations.Nullable;
 
-public class NoiseAndSurfaceBuilderHelper extends ProtoChunk {
+public class NoiseAndSurfaceBuilderHelper extends ProtoChunk implements CubicLevelHeightAccessor {
 
 
     private final ChunkAccess[] delegates;
     private int columnX;
     private int columnZ;
     private final Map<Heightmap.Types, Heightmap> heightmaps;
-
+    private final boolean isCubic;
+    private final boolean generates2DChunks;
+    private final WorldStyle worldStyle;
 
     public NoiseAndSurfaceBuilderHelper(IBigCube delegate, IBigCube delegateAbove) {
-        super(delegate.getCubePos().asChunkPos(), UpgradeData.EMPTY, new HeightAccessor(delegate.getCubePos().minCubeY(), IBigCube.DIAMETER_IN_BLOCKS * 2));
+        super(delegate.getCubePos().asChunkPos(), UpgradeData.EMPTY, new HeightAccessor((ChunkAccess) delegate));
         this.delegates = new ChunkAccess[2];
         this.delegates[0] = (ChunkAccess) delegate;
         this.delegates[1] = (ChunkAccess) delegateAbove;
         this.heightmaps = Maps.newEnumMap(Heightmap.Types.class);
-
+        isCubic = ((CubicLevelHeightAccessor) delegate).isCubic();
+        generates2DChunks = ((CubicLevelHeightAccessor) delegate).generates2DChunks();
+        worldStyle = ((CubicLevelHeightAccessor) delegate).worldStyle();
     }
 
     public void moveColumn(int newColumnX, int newColumnZ) {
@@ -122,6 +127,18 @@ public class NoiseAndSurfaceBuilderHelper extends ProtoChunk {
 
     @Override public int getHeight() {
         return IBigCube.DIAMETER_IN_BLOCKS * 2;
+    }
+
+    @Override public WorldStyle worldStyle() {
+        return worldStyle;
+    }
+
+    @Override public boolean isCubic() {
+         return isCubic;
+    }
+
+    @Override public boolean generates2DChunks() {
+        return generates2DChunks;
     }
 
     @Override public void addLight(BlockPos pos) {
@@ -247,16 +264,23 @@ public class NoiseAndSurfaceBuilderHelper extends ProtoChunk {
         }
     }
 
-    private static class HeightAccessor implements LevelHeightAccessor {
+    private static class HeightAccessor implements LevelHeightAccessor, CubicLevelHeightAccessor {
 
 
         private final int minBuildHeight;
         private final int height;
+        private final boolean isCubic;
+        private final boolean generates2DChunks;
+        private final WorldStyle worldStyle;
 
-        private HeightAccessor(int minBuildHeight, int height) {
 
-            this.minBuildHeight = minBuildHeight;
-            this.height = height;
+        private HeightAccessor(ChunkAccess cube) {
+
+            this.minBuildHeight = ((IBigCube) cube).getCubePos().minCubeY();
+            this.height = IBigCube.DIAMETER_IN_BLOCKS * 2;
+            isCubic = ((CubicLevelHeightAccessor) cube).isCubic();
+            generates2DChunks = ((CubicLevelHeightAccessor) cube).generates2DChunks();
+            worldStyle = ((CubicLevelHeightAccessor) cube).worldStyle();
         }
 
         @Override public int getHeight() {
@@ -265,6 +289,18 @@ public class NoiseAndSurfaceBuilderHelper extends ProtoChunk {
 
         @Override public int getMinBuildHeight() {
             return minBuildHeight;
+        }
+
+        @Override public WorldStyle worldStyle() {
+        return worldStyle;
+        }
+
+        @Override public boolean isCubic() {
+            return isCubic;
+        }
+
+        @Override public boolean generates2DChunks() {
+        return generates2DChunks;
         }
     }
 }

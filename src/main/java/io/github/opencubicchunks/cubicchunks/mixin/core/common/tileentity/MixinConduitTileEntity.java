@@ -1,5 +1,10 @@
 package io.github.opencubicchunks.cubicchunks.mixin.core.common.tileentity;
 
+import java.util.List;
+
+import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.ConduitBlockEntity;
 import net.minecraft.world.phys.AABB;
 import org.spongepowered.asm.mixin.Mixin;
@@ -19,7 +24,12 @@ public class MixinConduitTileEntity {
 //        return 256;
 //    }
     @Redirect(method = "applyEffects", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/phys/AABB;expandTowards(DDD)Lnet/minecraft/world/phys/AABB;"))
-    private static AABB on$expand(AABB axisAlignedBB, double x, double y, double z) {
-        return axisAlignedBB.expandTowards(x, 256, z);
+    private static AABB on$expand(AABB axisAlignedBB, double x, double y, double z, Level world, BlockPos pos, List<BlockPos> activatingBlocks) {
+        if (!((CubicLevelHeightAccessor) world).isCubic()) {
+            return axisAlignedBB.expandTowards(x, y, z);
+        }
+
+
+        return axisAlignedBB.expandTowards(x, world.dimensionType().height(), z);
     }
 }

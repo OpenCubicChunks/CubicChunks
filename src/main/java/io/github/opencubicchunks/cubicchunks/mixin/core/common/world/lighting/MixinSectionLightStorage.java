@@ -2,6 +2,7 @@ package io.github.opencubicchunks.cubicchunks.mixin.core.common.world.lighting;
 
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.LevelBasedGraphAccess;
+import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import io.github.opencubicchunks.cubicchunks.world.lighting.ISectionLightStorage;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
@@ -12,13 +13,16 @@ import net.minecraft.core.Direction;
 import net.minecraft.core.SectionPos;
 import net.minecraft.server.level.SectionTracker;
 import net.minecraft.world.level.chunk.DataLayer;
+import net.minecraft.world.level.chunk.LightChunkGetter;
 import net.minecraft.world.level.lighting.DataLayerStorageMap;
 import net.minecraft.world.level.lighting.LayerLightEngine;
 import net.minecraft.world.level.lighting.LayerLightSectionStorage;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(LayerLightSectionStorage.class)
 public abstract class MixinSectionLightStorage<M extends DataLayerStorageMap<M>> extends SectionTracker implements ISectionLightStorage {
@@ -30,6 +34,7 @@ public abstract class MixinSectionLightStorage<M extends DataLayerStorageMap<M>>
     @Shadow protected volatile boolean hasToRemove;
     @Shadow @Final protected LongSet changedSections;
     @Shadow @Final private LongSet toRemove;
+    @Shadow @Final private LightChunkGetter chunkSource;
 
     private final LongSet cubesToRetain = new LongOpenHashSet();
 
@@ -45,6 +50,7 @@ public abstract class MixinSectionLightStorage<M extends DataLayerStorageMap<M>>
 
     @Shadow protected abstract boolean hasInconsistencies();
 
+
     @Override
     public void retainCubeData(long cubeSectionPos, boolean retain) {
         if (retain) {
@@ -58,8 +64,15 @@ public abstract class MixinSectionLightStorage<M extends DataLayerStorageMap<M>>
      * @author NotStirred
      * @reason entire method was chunk based
      */
-    @Overwrite
-    protected void markNewInconsistencies(LayerLightEngine<M, ?> engine, boolean updateSkyLight, boolean updateBlockLight) {
+    @Inject(method = "markNewInconsistencies", at = @At("HEAD"), cancellable = true)
+    protected void markNewInconsistenciesForCube(LayerLightEngine<M, ?> engine, boolean updateSkyLight, boolean updateBlockLight, CallbackInfo ci) {
+        if (!((CubicLevelHeightAccessor) this.chunkSource.getLevel()).isCubic()) {
+            return;
+        }
+
+        ci.cancel();
+
+
         if (this.hasInconsistencies() || !this.queuedSections.isEmpty()) {
             for (long noLightPos : this.toRemove) {
                 this.clearQueuedSectionBlocks(engine, noLightPos);

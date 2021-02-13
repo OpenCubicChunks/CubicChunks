@@ -1,5 +1,6 @@
 package io.github.opencubicchunks.cubicchunks.mixin.core.common.world.feature;
 
+import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import net.minecraft.world.level.levelgen.feature.FeaturePlaceContext;
 import net.minecraft.world.level.levelgen.feature.VinesFeature;
 import net.minecraft.world.level.levelgen.feature.configurations.NoneFeatureConfiguration;
@@ -15,6 +16,10 @@ public class MixinVineFeature {
         method = "place",
         cancellable = true)
     private void cancelVines(FeaturePlaceContext<NoneFeatureConfiguration> featurePlaceContext, CallbackInfoReturnable<Boolean> cir) {
+        if (!((CubicLevelHeightAccessor) featurePlaceContext.level()).isCubic()) {
+            return;
+        }
+
         cir.cancel();
     }
 }

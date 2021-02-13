@@ -28,6 +28,7 @@ public abstract class MixinStructureStart implements SetupCubeStructureStart {
     @Override
     public void placeInCube(WorldGenLevel worldGenLevel, StructureFeatureManager structureFeatureManager, ChunkGenerator chunkGenerator, Random random, BoundingBox boundingBox,
                             BlockPos cubePos) {
+
         synchronized(this.pieces) {
             if (!this.pieces.isEmpty()) {
                 BoundingBox firstPieceBoundingBox = this.pieces.get(0).getBoundingBox();

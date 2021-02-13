@@ -73,4 +73,7 @@ public interface ITicketManager {
     CubeTaskPriorityQueueSorter getCubeTicketThrottler();
 
     boolean hasCubePlayersNearby(long cubePos);
+
+    //TODO: Is there a better way of figuring out if this world is generating chunks or cubes?!
+    void hasCubicTickets(boolean world);
 }

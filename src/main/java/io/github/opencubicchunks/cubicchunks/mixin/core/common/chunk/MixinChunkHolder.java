@@ -25,6 +25,7 @@ import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.network.PacketCubeBlockChanges;
 import io.github.opencubicchunks.cubicchunks.network.PacketDispatcher;
 import io.github.opencubicchunks.cubicchunks.network.PacketHeightmapChanges;
+import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import io.github.opencubicchunks.cubicchunks.utils.AddressTools;
 import it.unimi.dsi.fastutil.shorts.ShortArrayList;
 import it.unimi.dsi.fastutil.shorts.ShortArraySet;
@@ -43,7 +44,6 @@ import org.spongepowered.asm.mixin.Dynamic;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Mutable;
-import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -71,6 +71,7 @@ public abstract class MixinChunkHolder implements ICubeHolder {
 
     @Shadow @Final private ChunkHolder.PlayerProvider playerProvider;
     @Shadow private CompletableFuture<Void> pendingFullStateConfirmation;
+    @Shadow @Final private LevelHeightAccessor levelHeightAccessor;
 
     private CubePos cubePos; // set from ASM
 
@@ -106,6 +107,10 @@ public abstract class MixinChunkHolder implements ICubeHolder {
             + "Lnet/minecraft/server/level/ChunkHolder$PlayerProvider;)V",
         at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/LevelHeightAccessor;getSectionsCount()I"))
     private int getFakeSectionCountCC(LevelHeightAccessor accessor) {
+        if (!((CubicLevelHeightAccessor) accessor).isCubic()) {
+            return accessor.getSectionsCount();
+        }
+
         return 0;
     }
 
@@ -115,6 +120,9 @@ public abstract class MixinChunkHolder implements ICubeHolder {
             + "Lnet/minecraft/server/level/ChunkHolder$PlayerProvider;)V",
         at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/LevelHeightAccessor;getSectionsCount()I"))
     private int getFakeSectionCountVanilla(LevelHeightAccessor accessor) {
+        if (!((CubicLevelHeightAccessor) accessor).isCubic()) {
+            return accessor.getSectionsCount();
+        }
         return 0;
     }
 
@@ -128,8 +136,13 @@ public abstract class MixinChunkHolder implements ICubeHolder {
         + "Lnet/minecraft/server/level/ChunkHolder$PlayerProvider;)V",
         at = @At("RETURN")
     )
-    public void onConstructCubeHolder(CubePos cubePosIn, int levelIn, LevelHeightAccessor levelHeightAccessor, LevelLightEngine lightManagerIn, ChunkHolder.LevelChangeListener p_i50716_4_,
+    public void onConstructCubeHolder(CubePos cubePosIn, int levelIn, LevelHeightAccessor heightAccessor, LevelLightEngine lightManagerIn, ChunkHolder.LevelChangeListener p_i50716_4_,
                                       ChunkHolder.PlayerProvider playerProviderIn, CallbackInfo ci) {
+
+        if (!((CubicLevelHeightAccessor) this.levelHeightAccessor).isCubic()) { //TODO: Vanilla Chunks - Figure out how to handle ASM Targets
+            return;
+        }
+
         this.pos = cubePosIn.asChunkPos();
     }
 
@@ -140,6 +153,10 @@ public abstract class MixinChunkHolder implements ICubeHolder {
 
     @Inject(method = "updateFutures", at = @At("HEAD"), cancellable = true)
     void updateFutures(ChunkMap chunkMap, Executor executor, CallbackInfo ci) {
+
+        if (!((CubicLevelHeightAccessor) this.levelHeightAccessor).isCubic()) {
+            return;
+        }
         /*
          If sectionPos == null, this is a ChunkManager
          else, this is a CubeManager.
@@ -162,6 +179,11 @@ public abstract class MixinChunkHolder implements ICubeHolder {
                                                                     ChunkMap chunkMap, CompletableFuture<Either<LevelChunk, ChunkHolder.ChunkLoadingFailure>> completableFutureParam,
                                                                     Executor executorParam,
                                                                     ChunkHolder.FullChunkStatus fullChunkStatus) {
+
+        if (!((CubicLevelHeightAccessor) this.levelHeightAccessor).isCubic()) {
+            return completableFuture.thenRunAsync(action, executor);
+        }
+
         if (cubePos == null) {
             return completableFuture.thenRunAsync(action, executor);
         }
@@ -177,7 +199,13 @@ public abstract class MixinChunkHolder implements ICubeHolder {
         target = "Ljava/util/concurrent/CompletableFuture;thenAccept(Ljava/util/function/Consumer;)Ljava/util/concurrent/CompletableFuture;"))
     private CompletableFuture<Void> onCompleteScheduleFullChunkPromotion(CompletableFuture<Either<LevelChunk, ChunkHolder.ChunkLoadingFailure>> completableFuture,
                                                                          Consumer<?> action) {
+
         CompletableFuture<Void> f2 = pendingFullStateConfirmation;
+        if (!((CubicLevelHeightAccessor) this.levelHeightAccessor).isCubic()) {
+            return completableFuture.thenAccept(unsafeCast(action));
+        }
+
+
         if (cubePos == null) {
             return completableFuture.thenAccept((either) -> {
                 either.ifLeft((levelChunk) -> {
@@ -200,6 +228,10 @@ public abstract class MixinChunkHolder implements ICubeHolder {
     @Inject(method = "demoteFullChunk", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ChunkMap;onFullChunkStatusChange"
         + "(Lnet/minecraft/world/level/ChunkPos;Lnet/minecraft/server/level/ChunkHolder$FullChunkStatus;)V"), cancellable = true)
     private void onDemoteFullChunk(ChunkMap chunkMap, ChunkHolder.FullChunkStatus fullChunkStatus, CallbackInfo ci) {
+        if (!((CubicLevelHeightAccessor) this.levelHeightAccessor).isCubic()) {
+            return;
+        }
+
         if (cubePos != null) {
             ci.cancel();
         }
@@ -249,6 +281,11 @@ public abstract class MixinChunkHolder implements ICubeHolder {
         target = "Lnet/minecraft/server/level/ChunkHolder;getStatus(I)Lnet/minecraft/world/level/chunk/ChunkStatus;"
     ))
     private ChunkStatus getChunkOrCubeStatus(int level) {
+
+        if (!((CubicLevelHeightAccessor) this.levelHeightAccessor).isCubic()) {
+            return getStatus(level);
+        }
+
         if (cubePos == null) {
             return getStatus(level);
         } else {
@@ -262,7 +299,7 @@ public abstract class MixinChunkHolder implements ICubeHolder {
             + "Ljava/util/concurrent/CompletableFuture;"
     ))
     private CompletableFuture<?> scheduleChunkOrCube(ChunkMap chunkManager, ChunkHolder _this, ChunkStatus status) {
-        if (cubePos == null) {
+        if (!((CubicLevelHeightAccessor) this.levelHeightAccessor).isCubic() || cubePos == null) {
             return chunkManager.schedule(_this, status);
         } else {
             return ((IChunkManager) chunkManager).scheduleCube(_this, status);
@@ -306,8 +343,13 @@ public abstract class MixinChunkHolder implements ICubeHolder {
      * @author Barteks2x**
      * @reason height limits
      */
-    @Overwrite
-    public void blockChanged(BlockPos blockPos) {
+    @Inject(method = "blockChanged", at = @At("HEAD"), cancellable = true)
+    public void blockChanged(BlockPos blockPos, CallbackInfo ci) {
+        if (!((CubicLevelHeightAccessor) this.levelHeightAccessor).isCubic()) {
+            return;
+        }
+        ci.cancel();
+
         if (cubePos == null) {
             ChunkAccess chunk = getTickingChunk();
             if (chunk == null) {
@@ -328,6 +370,7 @@ public abstract class MixinChunkHolder implements ICubeHolder {
             }
             return;
         }
+
         BigCube cube = getCubeIfComplete();
         if (cube == null) {
             return;
@@ -340,8 +383,14 @@ public abstract class MixinChunkHolder implements ICubeHolder {
      * @author Barteks2x
      * @reason replace packet classes with CC packets
      */
-    @Overwrite
-    public void broadcastChanges(LevelChunk chunkIn) {
+    @Inject(method = "broadcastChanges", at = @At("HEAD"), cancellable = true)
+    private void broadcastCubeChanges(LevelChunk levelChunk, CallbackInfo ci) {
+        if (!((CubicLevelHeightAccessor) this.levelHeightAccessor).isCubic()) {
+            return;
+        }
+        ci.cancel();
+
+
         if (cubePos != null) {
             throw new IllegalStateException("Why is this getting called?");
         }

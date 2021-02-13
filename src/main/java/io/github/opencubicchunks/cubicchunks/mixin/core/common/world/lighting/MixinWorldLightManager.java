@@ -7,6 +7,7 @@ import io.github.opencubicchunks.cubicchunks.world.lighting.ILightEngine;
 import io.github.opencubicchunks.cubicchunks.world.lighting.IWorldLightManager;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.SectionPos;
+import net.minecraft.world.level.LevelHeightAccessor;
 import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.level.chunk.DataLayer;
 import net.minecraft.world.level.lighting.LayerLightEngine;
@@ -18,6 +19,7 @@ import org.spongepowered.asm.mixin.Shadow;
 
 @Mixin(LevelLightEngine.class)
 public abstract class MixinWorldLightManager implements IWorldLightManager, LightEventListener {
+    @Shadow @Final protected LevelHeightAccessor levelHeightAccessor;
 
     @Shadow @Final @Nullable private LayerLightEngine<?, ?> blockEngine;
 
@@ -36,6 +38,7 @@ public abstract class MixinWorldLightManager implements IWorldLightManager, Ligh
 
     @Shadow public void onBlockEmissionIncrease(BlockPos blockPos, int lightValue) {
     }
+
 
     @Override
     public void retainData(CubePos cubePos, boolean retain) {

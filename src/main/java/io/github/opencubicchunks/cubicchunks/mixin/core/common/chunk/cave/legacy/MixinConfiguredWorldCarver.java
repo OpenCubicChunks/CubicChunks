@@ -5,6 +5,7 @@ import java.util.Random;
 import java.util.function.Function;
 
 import io.github.opencubicchunks.cubicchunks.chunk.carver.GenHeightSetter;
+import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.chunk.ChunkAccess;
@@ -26,6 +27,11 @@ public class MixinConfiguredWorldCarver {
     @Inject(method = "carve", at = @At("HEAD"), cancellable = true)
     private void dynamicallySetGenHeight(ChunkAccess chunk, Function<BlockPos, Biome> posToBiome, Random random, int seaLevel, int chunkX, int chunkZ, int mainChunkX, int mainChunkZ,
                                          BitSet carvingMask, CallbackInfoReturnable<Boolean> cir) {
+
+        if (((CubicLevelHeightAccessor) chunk).generates2DChunks()) {
+            return;
+        }
+
         ((GenHeightSetter) worldCarver).setGenHeight(chunk.getMaxBuildHeight());
     }
 }

@@ -28,7 +28,7 @@ public abstract class MixinDarkOakTreePlacementDecorator {
     private void placeCubic(DecorationContext decorationContext, Random random, NoneDecoratorConfiguration noneDecoratorConfiguration, BlockPos blockPos,
                             CallbackInfoReturnable<Stream<BlockPos>> cir) {
         CubicLevelHeightAccessor cubicLevelHeightAccessor = (CubicLevelHeightAccessor) decorationContext;
-        if (!cubicLevelHeightAccessor.isCubicWorld()) {
+        if (cubicLevelHeightAccessor.generates2DChunks()) {
             return;
         }
 

@@ -2,7 +2,7 @@ package io.github.opencubicchunks.cubicchunks.mixin.core.common.world.structure.
 
 import java.util.Random;
 
-import io.github.opencubicchunks.cubicchunks.world.CubeWorldGenRegion;
+import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.StructureFeatureManager;
@@ -34,7 +34,7 @@ public abstract class MixinOceanRuinPieces extends TemplateStructurePiece {
     @Inject(at = @At("HEAD"), method = "postProcess", cancellable = true)
     private void patchYPosition(WorldGenLevel worldGenLevel, StructureFeatureManager structureFeatureManager, ChunkGenerator chunkGenerator, Random random, BoundingBox boundingBox,
                                 ChunkPos chunkPos, BlockPos blockPos, CallbackInfoReturnable<Boolean> cir) {
-        if (!(worldGenLevel instanceof CubeWorldGenRegion)) {
+        if (((CubicLevelHeightAccessor) worldGenLevel).generates2DChunks()) {
             return;
         }
         cir.cancel();

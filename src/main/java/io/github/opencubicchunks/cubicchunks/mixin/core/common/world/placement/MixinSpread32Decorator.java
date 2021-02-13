@@ -27,7 +27,7 @@ public class MixinSpread32Decorator {
 
         CubicLevelHeightAccessor context = (CubicLevelHeightAccessor) decorationContext;
 
-        if (!context.isCubicWorld()) {
+        if (context.generates2DChunks()) {
             return;
         }
 

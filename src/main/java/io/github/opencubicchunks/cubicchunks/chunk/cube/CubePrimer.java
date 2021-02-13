@@ -20,6 +20,7 @@ import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.biome.CubeBiomeContainer;
 import io.github.opencubicchunks.cubicchunks.chunk.heightmap.SurfaceTrackerSection;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
+import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
@@ -56,7 +57,7 @@ import net.minecraft.world.level.material.Fluids;
 import org.apache.logging.log4j.LogManager;
 
 //ProtoChunk
-public class CubePrimer implements IBigCube, ChunkAccess {
+public class CubePrimer implements IBigCube, ChunkAccess, CubicLevelHeightAccessor {
 
     private final CubePos cubePos;
     private final LevelChunkSection[] sections;
@@ -87,6 +88,10 @@ public class CubePrimer implements IBigCube, ChunkAccess {
     private LevelLightEngine lightManager;
 
     private long inhabitedTime;
+
+    private final boolean isCubic;
+    private final boolean generates2DChunks;
+    private final WorldStyle worldStyle;
 
     public CubePrimer(CubePos cubePos, UpgradeData upgradeData, LevelHeightAccessor levelHeightAccessor) {
 //        this(cubePos, upgradeData, (ChunkSection[])null, new ChunkPrimerTickList<>((p_205332_0_) -> {
@@ -121,6 +126,10 @@ public class CubePrimer implements IBigCube, ChunkAccess {
                 throw new IllegalStateException("Number of Sections must equal BigCube.CUBESIZE");
             }
         }
+        isCubic = ((CubicLevelHeightAccessor) levelHeightAccessor).isCubic();
+        generates2DChunks = ((CubicLevelHeightAccessor) levelHeightAccessor).generates2DChunks();
+        worldStyle = ((CubicLevelHeightAccessor) levelHeightAccessor).worldStyle();
+
     }
 
     @Deprecated @Override public ChunkPos getPos() {
@@ -589,5 +598,17 @@ public class CubePrimer implements IBigCube, ChunkAccess {
 
     @Override public int getMinBuildHeight() {
         return levelHeightAccessor.getMinBuildHeight();
+    }
+
+    @Override public WorldStyle worldStyle() {
+         return worldStyle;
+    }
+
+    @Override public boolean isCubic() {
+         return isCubic;
+    }
+
+    @Override public boolean generates2DChunks() {
+        return generates2DChunks;
     }
 }
