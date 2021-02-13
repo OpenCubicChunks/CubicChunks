@@ -88,11 +88,12 @@ public abstract class MixinSectionStorage<R> implements ISectionStorage {
         if (!((CubicLevelHeightAccessor) levelHeightAccessor).isCubic()) {
             return;
         }
+        ci.cancel();
+
         while (!this.dirty.isEmpty() && shouldKeepTicking.getAsBoolean()) {
             CubePos cubePos = CubePos.from(SectionPos.of(this.dirty.firstLong()));
             this.writeCube(cubePos);
         }
-        ci.cancel();
     }
 
     @Inject(method = "getOrLoad", at = @At("HEAD"), cancellable = true)

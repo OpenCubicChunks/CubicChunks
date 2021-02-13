@@ -44,7 +44,6 @@ import org.spongepowered.asm.mixin.Dynamic;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Mutable;
-import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -204,11 +203,7 @@ public abstract class MixinChunkHolder implements ICubeHolder {
 
         CompletableFuture<Void> f2 = pendingFullStateConfirmation;
         if (!((CubicLevelHeightAccessor) this.levelHeightAccessor).isCubic()) {
-            return completableFuture.thenAccept((either) -> {
-                either.ifLeft((levelChunk) -> {
-                    f2.complete(null);
-                });
-            });
+            return completableFuture.thenAccept(unsafeCast(action));
         }
 
 
@@ -349,9 +344,14 @@ public abstract class MixinChunkHolder implements ICubeHolder {
      * @author Barteks2x**
      * @reason height limits
      */
-    @Overwrite
-    public void blockChanged(BlockPos blockPos) {
-        if (!((CubicLevelHeightAccessor) this.levelHeightAccessor).isCubic() || cubePos == null) {
+    @Inject(method = "blockChanged", at = @At("HEAD"), cancellable = true)
+    public void blockChanged(BlockPos blockPos, CallbackInfo ci) {
+        if (!((CubicLevelHeightAccessor) this.levelHeightAccessor).isCubic()) {
+            return;
+        }
+        ci.cancel();
+
+        if (cubePos == null) {
             ChunkAccess chunk = getTickingChunk();
             if (chunk == null) {
                 return;
@@ -371,6 +371,7 @@ public abstract class MixinChunkHolder implements ICubeHolder {
             }
             return;
         }
+
         BigCube cube = getCubeIfComplete();
         if (cube == null) {
             return;
@@ -388,6 +389,8 @@ public abstract class MixinChunkHolder implements ICubeHolder {
         if (!((CubicLevelHeightAccessor) this.levelHeightAccessor).isCubic()) {
             return;
         }
+        ci.cancel();
+
 
         if (cubePos != null) {
             throw new IllegalStateException("Why is this getting called?");
@@ -402,7 +405,6 @@ public abstract class MixinChunkHolder implements ICubeHolder {
         this.sendToTrackingColumn(new PacketHeightmapChanges(chunk, new ShortArrayList(changed)), false);
         changedLocalBlocks.clear();
         // noop
-        ci.cancel();
     }
 
     @Override

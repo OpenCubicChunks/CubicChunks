@@ -78,7 +78,7 @@ public abstract class MixinChunkGenerator implements ICubeGenerator {
     // TODO: check which one is which
     @Inject(method = "createStructures", at = @At("HEAD"), cancellable = true)
     public void onGenerateStructures(RegistryAccess registry, StructureFeatureManager featureManager, ChunkAccess chunkAccess, StructureManager manager, long seed, CallbackInfo ci) {
-        if (!((CubicLevelHeightAccessor) chunkAccess).isCubic()) {
+        if (((CubicLevelHeightAccessor) chunkAccess).generates2DChunks()) {
             return;
         }
         if (!(chunkAccess instanceof IBigCube)) {
@@ -122,7 +122,7 @@ public abstract class MixinChunkGenerator implements ICubeGenerator {
 
     @Inject(method = "createReferences", at = @At("HEAD"), cancellable = true)
     public void createReferences(WorldGenLevel worldGenLevel, StructureFeatureManager featureManager, ChunkAccess chunkAccess, CallbackInfo ci) {
-        if (!((CubicLevelHeightAccessor) chunkAccess).isCubic()) {
+        if (((CubicLevelHeightAccessor) chunkAccess).generates2DChunks()) {
             return;
         }
 
@@ -181,6 +181,10 @@ public abstract class MixinChunkGenerator implements ICubeGenerator {
         cancellable = true)
     private void do3DLocateStructure(ServerLevel serverLevel, StructureFeature<?> structureFeature, BlockPos blockPos, int radius, boolean skipExistingChunks,
                                      CallbackInfoReturnable<BlockPos> cir) {
+        if (((CubicLevelHeightAccessor) serverLevel).generates2DChunks()) {
+            return;
+        }
+
         if (!this.biomeSource.canGenerateStructure(structureFeature)) {
             cir.setReturnValue(null);
         } else if (structureFeature == StructureFeature.STRONGHOLD) {
@@ -211,6 +215,10 @@ public abstract class MixinChunkGenerator implements ICubeGenerator {
 
     @Inject(method = "createBiomes", at = @At("HEAD"), cancellable = true)
     public void generateBiomes(Registry<Biome> registry, ChunkAccess chunkIn, CallbackInfo ci) {
+        if (!((CubicLevelHeightAccessor) chunkIn).isCubic()) {
+            return;
+        }
+
         /* This can only be a  CubePrimer at this point due to the inject in MixinChunkStatus#cubicChunksBiome  */
         IBigCube iCube = (IBigCube) chunkIn;
         CubePos cubePos = ((IBigCube) chunkIn).getCubePos();

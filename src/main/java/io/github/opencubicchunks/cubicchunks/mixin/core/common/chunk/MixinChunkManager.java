@@ -99,6 +99,7 @@ import net.minecraft.world.level.chunk.ChunkStatus;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.chunk.LightChunkGetter;
 import net.minecraft.world.level.chunk.UpgradeData;
+import net.minecraft.world.level.chunk.storage.ChunkStorage;
 import net.minecraft.world.level.entity.ChunkStatusUpdateListener;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureManager;
 import net.minecraft.world.level.lighting.LevelLightEngine;
@@ -182,6 +183,8 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
 
     @Shadow public abstract Stream<ServerPlayer> getPlayers(ChunkPos chunkPos, boolean bl);
 
+
+    @Shadow @org.jetbrains.annotations.Nullable protected abstract CompoundTag readChunk(ChunkPos pos) throws IOException;
 
     @Inject(method = "<init>", at = @At("RETURN"), locals = LocalCapture.CAPTURE_FAILHARD)
     private void onConstruct(ServerLevel worldIn,
@@ -771,33 +774,21 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
     @Redirect(method = "save", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ChunkMap;write(Lnet/minecraft/world/level/ChunkPos;Lnet/minecraft/nbt/CompoundTag;)V"))
     private void on$writeChunk(ChunkMap chunkManager, ChunkPos chunkPos, CompoundTag chunkNBT) {
         if (!((CubicLevelHeightAccessor) this.level).isCubic()) {
+            chunkManager.write(chunkPos, chunkNBT);
             return;
         }
         regionCubeIO.saveChunkNBT(chunkPos, chunkNBT);
     }
 
-    @SuppressWarnings("UnresolvedMixinReference")
+    @SuppressWarnings({ "UnresolvedMixinReference", "ConstantConditions" })
     @Redirect(method = "lambda$scheduleChunkLoad$14(Lnet/minecraft/world/level/ChunkPos;)Lcom/mojang/datafixers/util/Either;",
         at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ChunkMap;readChunk(Lnet/minecraft/world/level/ChunkPos;)Lnet/minecraft/nbt/CompoundTag;"))
-    private CompoundTag on$readChunk(ChunkMap chunkManager, ChunkPos chunkPos) {
+    private CompoundTag on$readChunk(ChunkMap chunkManager, ChunkPos chunkPos) throws IOException {
         if (!((CubicLevelHeightAccessor) this.level).isCubic()) {
-            try {
-                return chunkManager.read(chunkPos);
-            } catch (IOException e) {
-                LOGGER.error("Couldn't load chunk {}", chunkPos, e);
-                //noinspection ConstantConditions
-                return null;
-            }
+            return this.readChunk(chunkPos);
         }
 
-        try {
-            //noinspection ConstantConditions
-            return regionCubeIO.loadChunkNBT(chunkPos);
-        } catch (IOException e) {
-            LOGGER.error("Couldn't load chunk {}", chunkPos, e);
-            //noinspection ConstantConditions
-            return null;
-        }
+        return regionCubeIO.loadChunkNBT(chunkPos);
     }
 
     //readChunk

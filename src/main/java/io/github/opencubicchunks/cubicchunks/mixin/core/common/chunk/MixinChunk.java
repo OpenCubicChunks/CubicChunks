@@ -21,7 +21,6 @@ import net.minecraft.core.Registry;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.LevelHeightAccessor;
 import net.minecraft.world.level.TickList;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -60,6 +59,10 @@ public abstract class MixinChunk implements ChunkAccess, CubicLevelHeightAccesso
 
     @Shadow private volatile boolean unsaved;
 
+    private boolean isCubic;
+    private boolean generates2DChunks;
+    private WorldStyle worldStyle;
+
     @Shadow protected abstract boolean isInLevel();
 
     @Override public boolean isYSpaceEmpty(int startY, int endY) {
@@ -73,6 +76,9 @@ public abstract class MixinChunk implements ChunkAccess, CubicLevelHeightAccesso
         at = @At("RETURN"))
     private void onInit(Level levelIn, ChunkPos pos, ChunkBiomeContainer chunkBiomeContainer, UpgradeData upgradeData, TickList<Block> tickList, TickList<Fluid> tickList2, long l,
                         LevelChunkSection[] levelChunkSections, Consumer<LevelChunk> consumer, CallbackInfo ci) {
+        isCubic = ((CubicLevelHeightAccessor) level).isCubic();
+        generates2DChunks = ((CubicLevelHeightAccessor) level).generates2DChunks();
+        worldStyle = ((CubicLevelHeightAccessor) level).worldStyle();
 
         if (!this.isCubic()) {
             return;
@@ -91,7 +97,7 @@ public abstract class MixinChunk implements ChunkAccess, CubicLevelHeightAccesso
             + "Ljava/util/function/Consumer;)V",
         at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;getSectionsCount()I"))
     private int getFakeSectionCount(Level levelIn) {
-        if (!this.isCubic()) {
+        if (!((CubicLevelHeightAccessor) levelIn).isCubic()) { // The fields are not initialized here yet.
             return levelIn.getSectionsCount();
         }
 
@@ -104,7 +110,7 @@ public abstract class MixinChunk implements ChunkAccess, CubicLevelHeightAccesso
             + "Ljava/util/function/Consumer;)V",
         at = @At(value = "NEW", target = "net/minecraft/world/level/levelgen/Heightmap"))
     private Heightmap getCCHeightmap(ChunkAccess chunkAccess, Heightmap.Types type) {
-        if (!this.isCubic()) {
+        if (!((CubicLevelHeightAccessor) this.level).isCubic()) { // The fields are not initialized here yet.
             return new Heightmap(chunkAccess, type);
         }
 
@@ -291,6 +297,15 @@ public abstract class MixinChunk implements ChunkAccess, CubicLevelHeightAccesso
     }
 
     @Override public WorldStyle worldStyle() {
-        return ((CubicLevelHeightAccessor) this.level).worldStyle();
+        return worldStyle;
     }
+
+    @Override public boolean isCubic() {
+        return isCubic;
+    }
+
+    @Override public boolean generates2DChunks() {
+        return generates2DChunks;
+    }
+
 }

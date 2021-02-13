@@ -20,10 +20,8 @@ public class MixinProtoTickList<T> {
     @Redirect(method = "<init>(Ljava/util/function/Predicate;Lnet/minecraft/world/level/ChunkPos;Lnet/minecraft/nbt/ListTag;Lnet/minecraft/world/level/LevelHeightAccessor;)V",
         at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/LevelHeightAccessor;getSectionsCount()I"))
     private int getFakeSectionCount(LevelHeightAccessor accessor) {
-        if (accessor instanceof Level) {
-            if (!((CubicLevelHeightAccessor) accessor).isCubic()) {
-                return accessor.getSectionsCount();
-            }
+        if (!((CubicLevelHeightAccessor) accessor).isCubic()) {
+            return accessor.getSectionsCount();
         }
 
         return 0;

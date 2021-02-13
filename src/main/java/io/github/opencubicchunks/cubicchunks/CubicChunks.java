@@ -65,8 +65,8 @@ public class CubicChunks implements ModInitializer {
 
     public static Map<String, CubicLevelHeightAccessor.WorldStyle> DIMENSION_TO_WORLD_STYLE = Util.make(new HashMap<>(), (set) -> {
         set.put("minecraft:overworld", CubicLevelHeightAccessor.WorldStyle.CUBIC);
-        set.put("minecraft:the_nether", CubicLevelHeightAccessor.WorldStyle.CUBIC);
-        set.put("minecraft:the_end", CubicLevelHeightAccessor.WorldStyle.CUBIC);
+        set.put("minecraft:the_nether", CubicLevelHeightAccessor.WorldStyle.CHUNK);
+        set.put("minecraft:the_end", CubicLevelHeightAccessor.WorldStyle.CHUNK);
     });
 
 

@@ -29,8 +29,15 @@ public abstract class MixinViewFrustum {
      * @author Barteks2x
      * @reason vertical view distance = horizontal
      */
-    @Overwrite
-    protected void setViewDistance(int renderDistanceChunks) {
+    @Inject(method = "setViewDistance", at = @At("HEAD"), cancellable = true)
+    protected void setViewDistance(int renderDistanceChunks, CallbackInfo ci) {
+        ClientLevel level = Minecraft.getInstance().level;
+        if (level != null) {
+            if (!((CubicLevelHeightAccessor) level).isCubic()) {
+                return;
+            }
+        }
+        ci.cancel();
         int d = renderDistanceChunks * 2 + 1;
         this.chunkGridSizeX = d;
         this.chunkGridSizeY = d;

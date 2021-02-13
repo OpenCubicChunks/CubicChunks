@@ -161,6 +161,7 @@ public class MixinChunkStatus {
 //                ((CubePrimer) iCube).setCubeBiomes(new CubeBiomeContainer(world.registryAccess().registryOrThrow(Registry.BIOME_REGISTRY), cubePos, this.runtimeBiomeSource));
                 return;
             }
+            return;
         }
         if (chunkAccess instanceof IBigCube) {
             chunkGenerator.createBiomes(world.registryAccess().registryOrThrow(Registry.BIOME_REGISTRY), chunkAccess);
@@ -364,7 +365,7 @@ public class MixinChunkStatus {
     private static void lightChunkCC(ChunkStatus status, ThreadedLevelLightEngine lightManager, ChunkAccess chunk,
                                      CallbackInfoReturnable<CompletableFuture<Either<ChunkAccess, ChunkHolder.ChunkLoadingFailure>>> cir) {
 
-        if (((CubicLevelHeightAccessor) chunk).worldStyle() == CubicLevelHeightAccessor.WorldStyle.CHUNK) {
+        if (!((CubicLevelHeightAccessor) chunk).isCubic()) {
             return;
         }
 

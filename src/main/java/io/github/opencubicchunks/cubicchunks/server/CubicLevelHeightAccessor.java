@@ -7,16 +7,33 @@ public interface CubicLevelHeightAccessor {
     }
 
     default boolean isCubic() {
-        return worldStyle() == WorldStyle.CUBIC || worldStyle() == WorldStyle.HYBRID;
+        return worldStyle().isCubic();
     }
 
     default boolean generates2DChunks() {
-        return worldStyle() == WorldStyle.CHUNK || worldStyle() == WorldStyle.HYBRID;
+        return worldStyle().generates2DChunks();
     }
 
     enum WorldStyle {
-        CUBIC, // Primary Implementation (Generate Chunks 3D, infinite world height)
-        HYBRID, // Soft implementation (Vanilla Chunk Generation, infinite world height)
-        CHUNK //Vanilla (2D Generation, World Height is NOT infinite)
+        CUBIC(true, false), // Primary Implementation (Generate Chunks 3D, infinite world height)
+        HYBRID(true, true), // Soft implementation (Vanilla Chunk Generation, infinite world height)
+        CHUNK(false, true); //Vanilla (2D Generation, World Height is NOT infinite)
+
+        private final boolean isCubic;
+        private final boolean generates2DChunks;
+
+        WorldStyle(boolean isCubic, boolean generates2DChunks) {
+
+            this.isCubic = isCubic;
+            this.generates2DChunks = generates2DChunks;
+        }
+
+        public boolean isCubic() {
+            return isCubic;
+        }
+
+        public boolean generates2DChunks() {
+            return generates2DChunks;
+        }
     }
 }

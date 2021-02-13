@@ -115,6 +115,10 @@ public class BigCube implements ChunkAccess, IBigCube, CubicLevelHeightAccessor 
     @Nullable private Consumer<BigCube> postLoadConsumer;
     @Nullable private Supplier<ChunkHolder.FullChunkStatus> fullStatus;
 
+    private final boolean isCubic;
+    private final boolean generates2DChunks;
+    private final WorldStyle worldStyle;
+
     public BigCube(Level worldIn, CubePos cubePosIn, CubeBiomeContainer biomeContainerIn) {
         this(worldIn, cubePosIn, biomeContainerIn, UpgradeData.EMPTY, EmptyTickList.empty(), EmptyTickList.empty(), 0L, null, null);
     }
@@ -166,6 +170,10 @@ public class BigCube implements ChunkAccess, IBigCube, CubicLevelHeightAccessor 
                 }
             }
         }
+
+        isCubic = ((CubicLevelHeightAccessor) worldIn).isCubic();
+        generates2DChunks = ((CubicLevelHeightAccessor) worldIn).generates2DChunks();
+        worldStyle = ((CubicLevelHeightAccessor) worldIn).worldStyle();
 
 //        this.gatherCapabilities();
     }
@@ -913,7 +921,15 @@ public class BigCube implements ChunkAccess, IBigCube, CubicLevelHeightAccessor 
     }
 
     @Override public WorldStyle worldStyle() {
-        return ((CubicLevelHeightAccessor) this.level).worldStyle();
+        return worldStyle;
+    }
+
+    @Override public boolean isCubic() {
+        return isCubic;
+    }
+
+    @Override public boolean generates2DChunks() {
+        return generates2DChunks;
     }
 
     public static class RebindableTickingBlockEntityWrapper implements TickingBlockEntity {

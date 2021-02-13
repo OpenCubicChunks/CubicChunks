@@ -89,6 +89,10 @@ public class CubePrimer implements IBigCube, ChunkAccess, CubicLevelHeightAccess
 
     private long inhabitedTime;
 
+    private final boolean isCubic;
+    private final boolean generates2DChunks;
+    private final WorldStyle worldStyle;
+
     public CubePrimer(CubePos cubePos, UpgradeData upgradeData, LevelHeightAccessor levelHeightAccessor) {
 //        this(cubePos, upgradeData, (ChunkSection[])null, new ChunkPrimerTickList<>((p_205332_0_) -> {
 //            return p_205332_0_ == null || p_205332_0_.defaultBlockState().isAir();
@@ -122,6 +126,10 @@ public class CubePrimer implements IBigCube, ChunkAccess, CubicLevelHeightAccess
                 throw new IllegalStateException("Number of Sections must equal BigCube.CUBESIZE");
             }
         }
+        isCubic = ((CubicLevelHeightAccessor) levelHeightAccessor).isCubic();
+        generates2DChunks = ((CubicLevelHeightAccessor) levelHeightAccessor).generates2DChunks();
+        worldStyle = ((CubicLevelHeightAccessor) levelHeightAccessor).worldStyle();
+
     }
 
     @Deprecated @Override public ChunkPos getPos() {
@@ -593,6 +601,14 @@ public class CubePrimer implements IBigCube, ChunkAccess, CubicLevelHeightAccess
     }
 
     @Override public WorldStyle worldStyle() {
-        return ((CubicLevelHeightAccessor) this.levelHeightAccessor).worldStyle();
+        return worldStyle;
+    }
+
+    @Override public boolean isCubic() {
+        return isCubic;
+    }
+
+    @Override public boolean generates2DChunks() {
+        return generates2DChunks;
     }
 }

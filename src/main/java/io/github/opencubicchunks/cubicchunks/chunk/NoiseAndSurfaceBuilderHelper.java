@@ -32,7 +32,9 @@ public class NoiseAndSurfaceBuilderHelper extends ProtoChunk implements CubicLev
     private int columnX;
     private int columnZ;
     private final Map<Heightmap.Types, Heightmap> heightmaps;
-
+    private final boolean isCubic;
+    private final boolean generates2DChunks;
+    private final WorldStyle worldStyle;
 
     public NoiseAndSurfaceBuilderHelper(IBigCube delegate, IBigCube delegateAbove) {
         super(delegate.getCubePos().asChunkPos(), UpgradeData.EMPTY, new HeightAccessor(delegate.getCubePos().minCubeY(), IBigCube.DIAMETER_IN_BLOCKS * 2));
@@ -40,7 +42,9 @@ public class NoiseAndSurfaceBuilderHelper extends ProtoChunk implements CubicLev
         this.delegates[0] = (ChunkAccess) delegate;
         this.delegates[1] = (ChunkAccess) delegateAbove;
         this.heightmaps = Maps.newEnumMap(Heightmap.Types.class);
-
+        isCubic = ((CubicLevelHeightAccessor) delegate).isCubic();
+        generates2DChunks = ((CubicLevelHeightAccessor) delegate).generates2DChunks();
+        worldStyle = ((CubicLevelHeightAccessor) delegate).worldStyle();
     }
 
     public void moveColumn(int newColumnX, int newColumnZ) {
@@ -126,7 +130,15 @@ public class NoiseAndSurfaceBuilderHelper extends ProtoChunk implements CubicLev
     }
 
     @Override public WorldStyle worldStyle() {
-        return ((CubicLevelHeightAccessor) this.delegates[0]).worldStyle();
+        return worldStyle;
+    }
+
+    @Override public boolean isCubic() {
+        return isCubic;
+    }
+
+    @Override public boolean generates2DChunks() {
+        return generates2DChunks;
     }
 
     @Override public void addLight(BlockPos pos) {
