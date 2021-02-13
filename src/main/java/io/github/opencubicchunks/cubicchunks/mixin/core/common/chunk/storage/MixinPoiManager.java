@@ -33,7 +33,7 @@ public class MixinPoiManager extends SectionStorage<PoiSection> {
 
     @Inject(method = "getInSquare", at = @At("HEAD"), cancellable = true)
     private void getInSquare(Predicate<PoiType> typePredicate, BlockPos pos, int radius, PoiManager.Occupancy occupancy, CallbackInfoReturnable<Stream<PoiRecord>> cir) {
-        if (((CubicLevelHeightAccessor) this.levelHeightAccessor).isCubic()) {
+        if (!((CubicLevelHeightAccessor) this.levelHeightAccessor).isCubic()) {
             return;
         }
 

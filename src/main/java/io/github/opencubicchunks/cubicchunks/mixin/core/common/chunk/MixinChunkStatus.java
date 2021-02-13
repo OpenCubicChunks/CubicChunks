@@ -392,7 +392,7 @@ public class MixinChunkStatus {
     private static void cubicChunksSpawnMobs(ServerLevel world, ChunkGenerator generator, List<ChunkAccess> neighbors, ChunkAccess chunk,
                                              CallbackInfo ci) {
 
-        if (((CubicLevelHeightAccessor) world).worldStyle() == CubicLevelHeightAccessor.WorldStyle.CHUNK) {
+        if (!((CubicLevelHeightAccessor) world).isCubic()) {
             return;
         }
         ci.cancel();

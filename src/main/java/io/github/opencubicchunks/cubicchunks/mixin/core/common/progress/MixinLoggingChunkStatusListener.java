@@ -1,7 +1,11 @@
 package io.github.opencubicchunks.cubicchunks.mixin.core.common.progress;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import javax.annotation.Nullable;
 
+import com.mojang.datafixers.util.Pair;
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.ICubeStatusListener;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
@@ -46,7 +50,14 @@ public abstract class MixinLoggingChunkStatusListener implements ICubeStatusList
     @Override public void startCubes(CubePos center) {
     }
 
+
+    private static Map<CubePos, Pair<ChunkStatus, Integer>> map = new HashMap<>();
+
     @Override public void onCubeStatusChange(CubePos cubePos, @Nullable ChunkStatus newStatus) {
+        Pair<ChunkStatus, Integer> statusIntegerPair = map.computeIfAbsent(cubePos, (cubePos2) -> new Pair<>(newStatus, 0));
+
+        map.put(cubePos, new Pair<>(newStatus, statusIntegerPair.getSecond() + 1));
+
         if (newStatus == ChunkStatus.FULL) {
             this.loadedCubes++;
         }
