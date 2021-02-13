@@ -25,8 +25,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(Level.class)
 public abstract class MixinWorld implements ICubicWorld, LevelReader {
 
-    private boolean isCubic;
-    private boolean generates2DChunks;
+    private Boolean isCubic;
+    private Boolean generates2DChunks;
     private WorldStyle worldStyle;
 
     @Inject(method = "<init>", at = @At("RETURN"))
@@ -64,14 +64,20 @@ public abstract class MixinWorld implements ICubicWorld, LevelReader {
     }
 
     @Override public WorldStyle worldStyle() {
+                if (worldStyle == null)
+            new Error().printStackTrace();
         return worldStyle;
     }
 
-    @Override public boolean isCubic() {
+    @Override public Boolean isCubic() {
+                if (isCubic == null)
+            new Error().printStackTrace();
         return isCubic;
     }
 
-    @Override public boolean generates2DChunks() {
+    @Override public Boolean generates2DChunks() {
+                if (generates2DChunks == null)
+            new Error().printStackTrace();
         return generates2DChunks;
     }
     @Override

@@ -63,7 +63,7 @@ public abstract class MixinTicketManager implements ITicketManager {
     private ProcessorHandle<CubeTaskPriorityQueueSorter.FunctionEntry<Runnable>> cubeTicketThrottlerInput;
     private ProcessorHandle<CubeTaskPriorityQueueSorter.RunnableEntry> cubeTicketThrottlerReleaser;
 
-    private boolean isCubic;
+    private Boolean isCubic;
 
     @Shadow private static int getTicketLevelAt(SortedArraySet<Ticket<?>> p_229844_0_) {
         throw new Error("Mixin did not apply correctly");

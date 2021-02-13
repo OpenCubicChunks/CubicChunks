@@ -32,12 +32,12 @@ public class NoiseAndSurfaceBuilderHelper extends ProtoChunk implements CubicLev
     private int columnX;
     private int columnZ;
     private final Map<Heightmap.Types, Heightmap> heightmaps;
-    private final boolean isCubic;
-    private final boolean generates2DChunks;
+    private final Boolean isCubic;
+    private final Boolean generates2DChunks;
     private final WorldStyle worldStyle;
 
     public NoiseAndSurfaceBuilderHelper(IBigCube delegate, IBigCube delegateAbove) {
-        super(delegate.getCubePos().asChunkPos(), UpgradeData.EMPTY, new HeightAccessor(delegate.getCubePos().minCubeY(), IBigCube.DIAMETER_IN_BLOCKS * 2));
+        super(delegate.getCubePos().asChunkPos(), UpgradeData.EMPTY, new HeightAccessor((ChunkAccess) delegate));
         this.delegates = new ChunkAccess[2];
         this.delegates[0] = (ChunkAccess) delegate;
         this.delegates[1] = (ChunkAccess) delegateAbove;
@@ -130,14 +130,20 @@ public class NoiseAndSurfaceBuilderHelper extends ProtoChunk implements CubicLev
     }
 
     @Override public WorldStyle worldStyle() {
+                if (worldStyle == null)
+            new Error().printStackTrace();
         return worldStyle;
     }
 
-    @Override public boolean isCubic() {
+    @Override public Boolean isCubic() {
+                if (isCubic == null)
+            new Error().printStackTrace();
         return isCubic;
     }
 
-    @Override public boolean generates2DChunks() {
+    @Override public Boolean generates2DChunks() {
+                if (generates2DChunks == null)
+            new Error().printStackTrace();
         return generates2DChunks;
     }
 
@@ -264,16 +270,23 @@ public class NoiseAndSurfaceBuilderHelper extends ProtoChunk implements CubicLev
         }
     }
 
-    private static class HeightAccessor implements LevelHeightAccessor {
+    private static class HeightAccessor implements LevelHeightAccessor, CubicLevelHeightAccessor {
 
 
         private final int minBuildHeight;
         private final int height;
+        private final Boolean isCubic;
+        private final Boolean generates2DChunks;
+        private final WorldStyle worldStyle;
 
-        private HeightAccessor(int minBuildHeight, int height) {
 
-            this.minBuildHeight = minBuildHeight;
-            this.height = height;
+        private HeightAccessor(ChunkAccess cube) {
+
+            this.minBuildHeight = ((IBigCube) cube).getCubePos().minCubeY();
+            this.height = IBigCube.DIAMETER_IN_BLOCKS * 2;
+            isCubic = ((CubicLevelHeightAccessor) cube).isCubic();
+            generates2DChunks = ((CubicLevelHeightAccessor) cube).generates2DChunks();
+            worldStyle = ((CubicLevelHeightAccessor) cube).worldStyle();
         }
 
         @Override public int getHeight() {
@@ -282,6 +295,24 @@ public class NoiseAndSurfaceBuilderHelper extends ProtoChunk implements CubicLev
 
         @Override public int getMinBuildHeight() {
             return minBuildHeight;
+        }
+
+        @Override public WorldStyle worldStyle() {
+                    if (worldStyle == null)
+            new Error().printStackTrace();
+        return worldStyle;
+        }
+
+        @Override public Boolean isCubic() {
+                    if (isCubic == null)
+            new Error().printStackTrace();
+        return isCubic;
+        }
+
+        @Override public Boolean generates2DChunks() {
+                    if (generates2DChunks == null)
+            new Error().printStackTrace();
+        return generates2DChunks;
         }
     }
 }

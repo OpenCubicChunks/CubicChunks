@@ -3,14 +3,14 @@ package io.github.opencubicchunks.cubicchunks.server;
 public interface CubicLevelHeightAccessor {
 
     default WorldStyle worldStyle() {
-        return WorldStyle.CHUNK;
+        return WorldStyle.CUBIC;
     }
 
-    default boolean isCubic() {
+    default Boolean isCubic() {
         return worldStyle().isCubic();
     }
 
-    default boolean generates2DChunks() {
+    default Boolean generates2DChunks() {
         return worldStyle().generates2DChunks();
     }
 
@@ -19,21 +19,25 @@ public interface CubicLevelHeightAccessor {
         HYBRID(true, true), // Soft implementation (Vanilla Chunk Generation, infinite world height)
         CHUNK(false, true); //Vanilla (2D Generation, World Height is NOT infinite)
 
-        private final boolean isCubic;
-        private final boolean generates2DChunks;
+        private final Boolean isCubic;
+        private final Boolean generates2DChunks;
 
-        WorldStyle(boolean isCubic, boolean generates2DChunks) {
+        WorldStyle(Boolean isCubic, Boolean generates2DChunks) {
 
             this.isCubic = isCubic;
             this.generates2DChunks = generates2DChunks;
         }
 
-        public boolean isCubic() {
-            return isCubic;
+        public Boolean isCubic() {
+                    if (isCubic == null)
+            new Error().printStackTrace();
+        return isCubic;
         }
 
-        public boolean generates2DChunks() {
-            return generates2DChunks;
+        public Boolean generates2DChunks() {
+                    if (generates2DChunks == null)
+            new Error().printStackTrace();
+        return generates2DChunks;
         }
     }
 }

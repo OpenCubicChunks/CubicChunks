@@ -89,8 +89,8 @@ public class CubePrimer implements IBigCube, ChunkAccess, CubicLevelHeightAccess
 
     private long inhabitedTime;
 
-    private final boolean isCubic;
-    private final boolean generates2DChunks;
+    private final Boolean isCubic;
+    private final Boolean generates2DChunks;
     private final WorldStyle worldStyle;
 
     public CubePrimer(CubePos cubePos, UpgradeData upgradeData, LevelHeightAccessor levelHeightAccessor) {
@@ -601,14 +601,20 @@ public class CubePrimer implements IBigCube, ChunkAccess, CubicLevelHeightAccess
     }
 
     @Override public WorldStyle worldStyle() {
+                if (worldStyle == null)
+            new Error().printStackTrace();
         return worldStyle;
     }
 
-    @Override public boolean isCubic() {
+    @Override public Boolean isCubic() {
+                if (isCubic == null)
+            new Error().printStackTrace();
         return isCubic;
     }
 
-    @Override public boolean generates2DChunks() {
+    @Override public Boolean generates2DChunks() {
+                if (generates2DChunks == null)
+            new Error().printStackTrace();
         return generates2DChunks;
     }
 }

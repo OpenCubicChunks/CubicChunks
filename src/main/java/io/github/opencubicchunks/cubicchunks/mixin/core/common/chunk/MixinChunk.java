@@ -59,8 +59,8 @@ public abstract class MixinChunk implements ChunkAccess, CubicLevelHeightAccesso
 
     @Shadow private volatile boolean unsaved;
 
-    private boolean isCubic;
-    private boolean generates2DChunks;
+    private Boolean isCubic;
+    private Boolean generates2DChunks;
     private WorldStyle worldStyle;
 
     @Shadow protected abstract boolean isInLevel();
@@ -207,7 +207,7 @@ public abstract class MixinChunk implements ChunkAccess, CubicLevelHeightAccesso
     @Redirect(method = "setBlockState", at = @At(value = "FIELD", target = "Lnet/minecraft/world/level/chunk/LevelChunk;unsaved:Z"))
     private void setIsModifiedFromSetBlockState_Field(LevelChunk chunk, boolean isModifiedIn, BlockPos pos, BlockState state, boolean isMoving) {
         if (!this.isCubic()) {
-            this.unsaved = true; //TODO: VANILLA CHUNKS: VERIFY THIS WORKS
+            this.unsaved = isModifiedIn;
             return;
         }
 
@@ -224,12 +224,10 @@ public abstract class MixinChunk implements ChunkAccess, CubicLevelHeightAccesso
     @Redirect(method = "*",
         at = @At(value = "INVOKE", target = "Ljava/util/Map;get(Ljava/lang/Object;)Ljava/lang/Object;"))
     private Object getTileEntity(Map map, Object key) {
-        if (!this.isCubic()) {
-            return map.get(key);
-        }
-
-
         if (map == this.blockEntities) {
+            if (!this.isCubic()) {
+                return map.get(key);
+            }
             BigCube cube = (BigCube) this.getCube(Coords.blockToSection(((BlockPos) key).getY()));
             return cube.getTileEntityMap().get(key);
         } else if (map == this.pendingBlockEntities) {
@@ -244,12 +242,10 @@ public abstract class MixinChunk implements ChunkAccess, CubicLevelHeightAccesso
         method = "*",
         at = @At(value = "INVOKE", target = "Ljava/util/Map;remove(Ljava/lang/Object;)Ljava/lang/Object;"))
     private Object removeTileEntity(Map map, Object key) {
-        if (!this.isCubic()) {
-            return map.remove(key);
-        }
-
-
         if (map == this.blockEntities) {
+            if (!this.isCubic()) {
+                return map.remove(key);
+            }
             BigCube cube = (BigCube) this.getCube(Coords.blockToSection(((BlockPos) key).getY()));
             return cube.getTileEntityMap().remove(key);
         } else if (map == this.pendingBlockEntities) {
@@ -263,11 +259,10 @@ public abstract class MixinChunk implements ChunkAccess, CubicLevelHeightAccesso
     @Redirect(method = "*",
         at = @At(value = "INVOKE", target = "Ljava/util/Map;put(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;"))
     private Object putTileEntity(Map map, Object key, Object value) {
-        if (!this.isCubic()) {
-            return map.put(key, value);
-        }
-
         if (map == this.blockEntities) {
+            if (!this.isCubic()) {
+                return map.put(key, value);
+            }
             BigCube cube = (BigCube) this.getCube(Coords.blockToSection(((BlockPos) key).getY()));
             return cube.getTileEntityMap().put((BlockPos) key, (BlockEntity) value);
         } else if (map == this.pendingBlockEntities) {
@@ -297,14 +292,20 @@ public abstract class MixinChunk implements ChunkAccess, CubicLevelHeightAccesso
     }
 
     @Override public WorldStyle worldStyle() {
+                if (worldStyle == null)
+            new Error().printStackTrace();
         return worldStyle;
     }
 
-    @Override public boolean isCubic() {
+    @Override public Boolean isCubic() {
+                if (isCubic == null)
+            new Error().printStackTrace();
         return isCubic;
     }
 
-    @Override public boolean generates2DChunks() {
+    @Override public Boolean generates2DChunks() {
+                if (generates2DChunks == null)
+            new Error().printStackTrace();
         return generates2DChunks;
     }
 

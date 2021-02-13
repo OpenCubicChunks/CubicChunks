@@ -27,8 +27,8 @@ public abstract class MixinProtoChunk implements LevelHeightAccessor, CubicLevel
     @Shadow public abstract ChunkStatus getStatus();
 
     @Shadow @Final private LevelHeightAccessor levelHeightAccessor;
-    private boolean isCubic;
-    private boolean generates2DChunks;
+    private Boolean isCubic;
+    private Boolean generates2DChunks;
     private WorldStyle worldStyle;
 
     @Inject(method = "<init>(Lnet/minecraft/world/level/ChunkPos;Lnet/minecraft/world/level/chunk/UpgradeData;[Lnet/minecraft/world/level/chunk/LevelChunkSection;"
@@ -86,14 +86,20 @@ public abstract class MixinProtoChunk implements LevelHeightAccessor, CubicLevel
     }
 
     @Override public WorldStyle worldStyle() {
+                if (worldStyle == null)
+            new Error().printStackTrace();
         return worldStyle;
     }
 
-    @Override public boolean isCubic() {
+    @Override public Boolean isCubic() {
+                if (isCubic == null)
+            new Error().printStackTrace();
         return isCubic;
     }
 
-    @Override public boolean generates2DChunks() {
+    @Override public Boolean generates2DChunks() {
+                if (generates2DChunks == null)
+            new Error().printStackTrace();
         return generates2DChunks;
     }
 }

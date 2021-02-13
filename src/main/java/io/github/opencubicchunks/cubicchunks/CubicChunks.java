@@ -69,12 +69,6 @@ public class CubicChunks implements ModInitializer {
         set.put("minecraft:the_end", CubicLevelHeightAccessor.WorldStyle.CHUNK);
     });
 
-
-
-    public static boolean isCubicChunk(ChunkAccess chunkAccess) {
-        return chunkAccess instanceof IBigCube || chunkAccess instanceof NoiseAndSurfaceBuilderHelper;
-    }
-
     @Override
     public void onInitialize() {
         PacketDispatcher.register();

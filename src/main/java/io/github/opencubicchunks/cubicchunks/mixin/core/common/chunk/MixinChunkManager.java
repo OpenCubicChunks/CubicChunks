@@ -186,6 +186,13 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
 
     @Shadow @org.jetbrains.annotations.Nullable protected abstract CompoundTag readChunk(ChunkPos pos) throws IOException;
 
+    @Redirect(method = "<init>", at = @At(value = "NEW", target = "net/minecraft/server/level/ChunkMap$DistanceManager"))
+    private ChunkMap.DistanceManager setIsCubic(ChunkMap chunkMap, Executor executor, Executor executor2, ServerLevel worldIn) {
+        ChunkMap.DistanceManager distanceManager = chunkMap.new DistanceManager(executor, executor2);
+        ((ITicketManager) distanceManager).hasCubicTickets(((CubicLevelHeightAccessor) this.level).isCubic());
+        return distanceManager;
+    }
+
     @Inject(method = "<init>", at = @At("RETURN"), locals = LocalCapture.CAPTURE_FAILHARD)
     private void onConstruct(ServerLevel worldIn,
                              LevelStorageSource.LevelStorageAccess levelSave,
