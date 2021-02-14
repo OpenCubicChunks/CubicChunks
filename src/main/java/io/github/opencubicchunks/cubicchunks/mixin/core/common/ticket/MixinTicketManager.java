@@ -19,6 +19,7 @@ import io.github.opencubicchunks.cubicchunks.chunk.ticket.PlayerCubeTracker;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.ChunkHolderAccess;
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.TicketAccess;
+import io.github.opencubicchunks.cubicchunks.chunk.IVerticalView;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
@@ -45,7 +46,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(DistanceManager.class)
-public abstract class MixinTicketManager implements ITicketManager {
+public abstract class MixinTicketManager implements ITicketManager, IVerticalView {
 
     @Final @Shadow private Executor mainThreadExecutor;
     @Shadow private long ticketTickCounter;
@@ -111,8 +112,6 @@ public abstract class MixinTicketManager implements ITicketManager {
         if (!isCubic) {
             return;
         }
-
-        this.playerCubeTicketTracker.updateCubeViewDistance(Coords.sectionToCubeRenderDistance(viewDistance));
     }
 
     //BEGIN INJECT
@@ -306,5 +305,9 @@ public abstract class MixinTicketManager implements ITicketManager {
 
     @Override public void hasCubicTickets(boolean hasCubicTickets) {
         this.isCubic = hasCubicTickets;
+    }
+
+    @Override public void setCubeViewDistance(int horizontalDistance, int verticalDistance) {
+        this.playerCubeTicketTracker.updateCubeViewDistance(Coords.sectionToCubeRenderDistance(horizontalDistance), Coords.sectionToCubeRenderDistance(verticalDistance));
     }
 }

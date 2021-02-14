@@ -48,6 +48,8 @@ import io.github.opencubicchunks.cubicchunks.chunk.ticket.ITicketManager;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.chunk.util.Utils;
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.EntityTrackerAccess;
+import io.github.opencubicchunks.cubicchunks.chunk.IVerticalView;
+import io.github.opencubicchunks.cubicchunks.mixin.access.common.TicketManagerAccess;
 import io.github.opencubicchunks.cubicchunks.network.PacketCubes;
 import io.github.opencubicchunks.cubicchunks.network.PacketDispatcher;
 import io.github.opencubicchunks.cubicchunks.network.PacketHeightmap;
@@ -117,7 +119,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 @Mixin(ChunkMap.class)
-public abstract class MixinChunkManager implements IChunkManager, IChunkMapInternal {
+public abstract class MixinChunkManager implements IChunkManager, IChunkMapInternal, IVerticalView {
 
     private static final double TICK_UPDATE_DISTANCE = 128.0;
 
@@ -161,6 +163,7 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
     @Shadow @Final private File storageFolder;
 
     @Shadow private int viewDistance;
+    private int verticalViewDistance;
 
     @Shadow @Final private Int2ObjectMap<ChunkMap.TrackedEntity> entityMap;
 
@@ -183,6 +186,10 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
 
 
     @Shadow @Nullable protected abstract CompoundTag readChunk(ChunkPos pos) throws IOException;
+
+    @Shadow @Final private Long2ObjectLinkedOpenHashMap<ChunkHolder> updatingChunkMap;
+
+    @Shadow protected abstract int checkerboardDistance(ChunkPos pos, ServerPlayer player, boolean useCameraPosition);
 
     @Redirect(method = "<init>", at = @At(value = "NEW", target = "net/minecraft/server/level/ChunkMap$DistanceManager"))
     private ChunkMap.DistanceManager setIsCubic(ChunkMap chunkMap, Executor executor, Executor executor2, ServerLevel worldIn) {
@@ -1067,24 +1074,45 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
         if (!((CubicLevelHeightAccessor) this.level).isCubic()) {
             return;
         }
+    }
 
+    @Override
+    public void setCubeViewDistance(int horizontalDistance, int verticalDistance) {
+        int clampedHorizontalDistance = Mth.clamp(horizontalDistance + 1, 3, 33);
+        int clampedVerticalDistance = Mth.clamp(verticalDistance + 1, 3, 33);
 
-        int viewDistanceSections = Mth.clamp(newViewDistance + 1, 3, 33);
-        int newViewDistanceCubes = Coords.sectionToCubeRenderDistance(viewDistanceSections);
-        int viewDistanceCubes = Coords.sectionToCubeRenderDistance(this.viewDistance);
-        if (newViewDistanceCubes != viewDistanceCubes) {
-            for (ChunkHolder chunkholder : this.updatingCubeMap.values()) {
-                CubePos cubePos = ((ICubeHolder) chunkholder).getCubePos();
-                Object[] objects = new Object[2];
-                this.getPlayers(cubePos, false).forEach((serverPlayerEntity) -> {
-                    int k = IChunkManager.getCubeChebyshevDistance(cubePos, serverPlayerEntity, true);
-                    boolean wasLoaded = k <= viewDistanceCubes;
-                    boolean isLoaded = k <= newViewDistanceCubes;
-                    this.updateCubeTracking(serverPlayerEntity, cubePos, objects, wasLoaded, isLoaded);
-                });
+        if (clampedHorizontalDistance != this.viewDistance || clampedVerticalDistance != this.verticalViewDistance) {
+            int oldHorizontalViewDistance = this.viewDistance;
+            int oldVerticalViewDistance = this.verticalViewDistance;
+
+            int tempViewDistance = clampedHorizontalDistance; //We don't change the viewDistance until vanilla calls setViewDistance
+
+            this.verticalViewDistance = clampedVerticalDistance;
+
+            ((TicketManagerAccess) this.distanceManager).invokeUpdatePlayerTicket(tempViewDistance);
+            ((IVerticalView) this.distanceManager).setCubeViewDistance(tempViewDistance, this.verticalViewDistance);
+
+            int newViewDistanceHorizontal = Coords.sectionToCubeRenderDistance(oldHorizontalViewDistance);
+            int viewDistanceHorizontal = Coords.sectionToCubeRenderDistance(tempViewDistance);
+
+            int newViewDistanceVertical = Coords.sectionToCubeRenderDistance(oldVerticalViewDistance);
+            int viewDistanceVertical = Coords.sectionToCubeRenderDistance(this.verticalViewDistance);
+
+            if (newViewDistanceHorizontal != viewDistanceHorizontal || newViewDistanceVertical != viewDistanceVertical) {
+                for (ChunkHolder chunkholder : this.updatingCubeMap.values()) {
+                    CubePos cubePos = ((ICubeHolder) chunkholder).getCubePos();
+                    Object[] objects = new Object[2];
+                    this.getPlayers(cubePos, false).forEach((player) -> {
+                        int xzDistance = Coords.sectionToCube(checkerboardDistance(cubePos.asChunkPos(), player, true));
+                        int yDistance = cubePos.getY() - Coords.sectionToCube(player.getLastSectionPos().y());
+
+                        boolean wasLoaded = xzDistance <= oldHorizontalViewDistance && yDistance < oldVerticalViewDistance;
+                        boolean isLoaded = xzDistance <= tempViewDistance  && yDistance < this.verticalViewDistance;
+                        this.updateCubeTracking(player, cubePos, objects, wasLoaded, isLoaded);
+                    });
+                }
             }
         }
-
     }
 
     // func_223489_c, updatePlayerPos

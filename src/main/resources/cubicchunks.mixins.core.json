@@ -85,13 +85,18 @@
         "client.debug.MixinMinecraftServer",
         "client.MixinClientPacketListener",
         "client.MixinDebugOverlayGui",
+        "client.MixinGameOptionsScreen",
         "client.MixinRenderChunk",
+        "client.MixinVideoSettingsScreen",
         "client.MixinViewFrustum",
         "client.progress.MixinChainedChunkStatusListener",
         "client.progress.MixinTrackingChunkStatusListener",
         "client.progress.MixinWorldLoadProgressScreen",
+        "client.server.MixinIntegratedServer",
         "client.world.MixinClientChunkProvider",
         "client.world.MixinClientWorld"
     ],
-    "server": []
+    "server": [
+        "server.MixinPlayerList"
+    ]
 }

@@ -1,5 +1,6 @@
 package io.github.opencubicchunks.cubicchunks.mixin.core.client;
 
+import io.github.opencubicchunks.cubicchunks.client.IVerticalViewDistance;
 import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -39,7 +40,7 @@ public abstract class MixinViewFrustum {
         ci.cancel();
         int d = renderDistanceChunks * 2 + 1;
         this.chunkGridSizeX = d;
-        this.chunkGridSizeY = d;
+        this.chunkGridSizeY = ((IVerticalViewDistance) Minecraft.getInstance().options).getVerticalViewDistance();
         this.chunkGridSizeZ = d;
     }
 

@@ -4,8 +4,20 @@ import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import net.minecraft.world.level.lighting.DynamicGraphMinFixedPoint;
 
 public abstract class CubeDistanceGraph extends DynamicGraphMinFixedPoint {
-    protected CubeDistanceGraph(int levelCount, int expectedUpdatesByLevel, int expectedPropagationLevels) {
+
+    private final int xR;
+    private final int yR;
+    private final int zR;
+
+    protected CubeDistanceGraph(int levelCount, int expectedUpdatesByLevel, int expectedPropagationLevels, int xR, int yR, int zR) {
         super(levelCount, expectedUpdatesByLevel, expectedPropagationLevels);
+        this.xR = xR;
+        this.yR = yR;
+        this.zR = zR;
+    }
+
+    protected CubeDistanceGraph(int levelCount, int expectedUpdatesByLevel, int expectedPropagationLevels) {
+        this(levelCount, expectedUpdatesByLevel, expectedPropagationLevels, 1, 1, 1);
     }
 
     @Override protected boolean isSource(long pos) {
@@ -18,12 +30,12 @@ public abstract class CubeDistanceGraph extends DynamicGraphMinFixedPoint {
         int y = cubePos.getY();
         int z = cubePos.getZ();
 
-        for (int x2 = -1; x2 <= 1; ++x2) {
-            for (int y2 = -1; y2 <= 1; ++y2) {
-                for (int z2 = -1; z2 <= 1; ++z2) {
-                    long i1 = CubePos.asLong(x + x2, y + y2, z + z2);
-                    if (i1 != pos) {
-                        this.checkNeighbor(pos, i1, level, isDecreasing);
+        for(int x2 = -xR; x2 <= xR; ++x2) {
+            for (int y2 = -yR; y2 <= yR; ++y2) {
+                for (int z2 = -zR; z2 <= zR; ++z2) {
+                    long cubeLong = CubePos.asLong(x + x2, y + y2, z + z2);
+                    if (cubeLong != pos) {
+                        this.checkNeighbor(pos, cubeLong, level, isDecreasing);
                     }
                 }
             }
@@ -40,16 +52,16 @@ public abstract class CubeDistanceGraph extends DynamicGraphMinFixedPoint {
         int y = cubePos.getY();
         int z = cubePos.getZ();
 
-        for (int x2 = -1; x2 <= 1; ++x2) {
-            for (int y2 = -1; y2 <= 1; ++y2) {
-                for (int z2 = -1; z2 <= 1; ++z2) {
-                    long j1 = CubePos.asLong(x + x2, y + y2, z + z2);
-                    if (j1 == pos) {
-                        j1 = Long.MAX_VALUE;
+        for(int x2 = -xR; x2 <= xR; ++x2) {
+            for (int y2 = -yR; y2 <= yR; ++y2) {
+                for (int z2 = -zR; z2 <= zR; ++z2) {
+                    long cubeLong = CubePos.asLong(x + x2, y + y2, z + z2);
+                    if (cubeLong == pos) {
+                        cubeLong = Long.MAX_VALUE;
                     }
 
-                    if (j1 != excludedSourcePos) {
-                        int k1 = this.computeLevelFromNeighbor(j1, pos, this.getLevel(j1));
+                    if (cubeLong != excludedSourcePos) {
+                        int k1 = this.computeLevelFromNeighbor(cubeLong, pos, this.getLevel(cubeLong));
                         if (i > k1) {
                             i = k1;
                         }
