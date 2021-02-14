@@ -36,6 +36,7 @@ import io.github.opencubicchunks.cubicchunks.chunk.IChunkManager;
 import io.github.opencubicchunks.cubicchunks.chunk.IChunkMapInternal;
 import io.github.opencubicchunks.cubicchunks.chunk.ICubeHolder;
 import io.github.opencubicchunks.cubicchunks.chunk.ICubeStatusListener;
+import io.github.opencubicchunks.cubicchunks.chunk.IVerticalView;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.BigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.CubePrimer;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.CubePrimerWrapper;
@@ -48,7 +49,6 @@ import io.github.opencubicchunks.cubicchunks.chunk.ticket.ITicketManager;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.chunk.util.Utils;
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.EntityTrackerAccess;
-import io.github.opencubicchunks.cubicchunks.chunk.IVerticalView;
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.TicketManagerAccess;
 import io.github.opencubicchunks.cubicchunks.network.PacketCubes;
 import io.github.opencubicchunks.cubicchunks.network.PacketDispatcher;
@@ -189,9 +189,11 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
 
     @Shadow @Final private Long2ObjectLinkedOpenHashMap<ChunkHolder> updatingChunkMap;
 
-    @Shadow protected abstract int checkerboardDistance(ChunkPos pos, ServerPlayer player, boolean useCameraPosition);
+    @Shadow private static int checkerboardDistance(ChunkPos pos, ServerPlayer player, boolean useCameraPosition) {
+        throw new Error("Mixin didn't apply");
+    }
 
-    @Redirect(method = "<init>", at = @At(value = "NEW", target = "net/minecraft/server/level/ChunkMap$DistanceManager"))
+    @SuppressWarnings("UnresolvedMixinReference") @Redirect(method = "<init>", at = @At(value = "NEW", target = "net/minecraft/server/level/ChunkMap$DistanceManager"))
     private ChunkMap.DistanceManager setIsCubic(ChunkMap chunkMap, Executor executor, Executor executor2, ServerLevel worldIn) {
         ChunkMap.DistanceManager distanceManager1 = chunkMap.new DistanceManager(executor, executor2);
         ((ITicketManager) distanceManager1).hasCubicTickets(((CubicLevelHeightAccessor) this.level).isCubic());
@@ -1068,32 +1070,32 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
         }
     }
 
+    int incomingVerticalViewDistance;
+
     // this needs to be at HEAD, otherwise we are not going to see the view distance being different
-    @Inject(method = "setViewDistance", at = @At("HEAD"))
-    protected void setViewDistance(int newViewDistance, CallbackInfo ci) {
+    @Inject(method = "setViewDistance", at = @At("HEAD"), cancellable = true)
+    protected void setViewDistance(int horizontalDistance, CallbackInfo ci) {
         if (!((CubicLevelHeightAccessor) this.level).isCubic()) {
             return;
         }
-    }
 
-    @Override
-    public void setCubeViewDistance(int horizontalDistance, int verticalDistance) {
+        ci.cancel();
+
         int clampedHorizontalDistance = Mth.clamp(horizontalDistance + 1, 3, 33);
-        int clampedVerticalDistance = Mth.clamp(verticalDistance + 1, 3, 33);
+        int clampedVerticalDistance = Mth.clamp(incomingVerticalViewDistance + 1, 3, 33);
 
         if (clampedHorizontalDistance != this.viewDistance || clampedVerticalDistance != this.verticalViewDistance) {
             int oldHorizontalViewDistance = this.viewDistance;
             int oldVerticalViewDistance = this.verticalViewDistance;
 
-            int tempViewDistance = clampedHorizontalDistance; //We don't change the viewDistance until vanilla calls setViewDistance
-
+            this.viewDistance = clampedHorizontalDistance;
             this.verticalViewDistance = clampedVerticalDistance;
 
-            ((TicketManagerAccess) this.distanceManager).invokeUpdatePlayerTicket(tempViewDistance);
-            ((IVerticalView) this.distanceManager).setCubeViewDistance(tempViewDistance, this.verticalViewDistance);
+            ((TicketManagerAccess) this.distanceManager).invokeUpdatePlayerTicket(this.viewDistance);
+            ((ITicketManager) this.distanceManager).updateCubeViewDistance(this.viewDistance, this.verticalViewDistance);
 
             int newViewDistanceHorizontal = Coords.sectionToCubeRenderDistance(oldHorizontalViewDistance);
-            int viewDistanceHorizontal = Coords.sectionToCubeRenderDistance(tempViewDistance);
+            int viewDistanceHorizontal = Coords.sectionToCubeRenderDistance(this.viewDistance);
 
             int newViewDistanceVertical = Coords.sectionToCubeRenderDistance(oldVerticalViewDistance);
             int viewDistanceVertical = Coords.sectionToCubeRenderDistance(this.verticalViewDistance);
@@ -1107,12 +1109,17 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
                         int yDistance = cubePos.getY() - Coords.sectionToCube(player.getLastSectionPos().y());
 
                         boolean wasLoaded = xzDistance <= oldHorizontalViewDistance && yDistance < oldVerticalViewDistance;
-                        boolean isLoaded = xzDistance <= tempViewDistance  && yDistance < this.verticalViewDistance;
+                        boolean isLoaded = xzDistance <= this.viewDistance && yDistance < this.verticalViewDistance;
                         this.updateCubeTracking(player, cubePos, objects, wasLoaded, isLoaded);
                     });
                 }
             }
         }
+    }
+
+    @Override
+    public void setIncomingVerticalViewDistance(int verticalDistance) {
+        this.incomingVerticalViewDistance = verticalDistance;
     }
 
     // func_223489_c, updatePlayerPos

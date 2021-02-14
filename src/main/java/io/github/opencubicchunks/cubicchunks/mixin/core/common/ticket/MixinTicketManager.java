@@ -107,13 +107,6 @@ public abstract class MixinTicketManager implements ITicketManager, IVerticalVie
         return this.cubeTickets.computeIfAbsent(cubePos, (p_229851_0_) -> SortedArraySet.create(4));
     }
 
-    @Inject(method = "updatePlayerTickets", at = @At("HEAD"))
-    protected void onUpdatePlayerTickets(int viewDistance, CallbackInfo ci) {
-        if (!isCubic) {
-            return;
-        }
-    }
-
     //BEGIN INJECT
 
     @Inject(method = "runAllUpdates", at = @At("RETURN"), cancellable = true)
@@ -307,7 +300,7 @@ public abstract class MixinTicketManager implements ITicketManager, IVerticalVie
         this.isCubic = hasCubicTickets;
     }
 
-    @Override public void setCubeViewDistance(int horizontalDistance, int verticalDistance) {
+    @Override public void updateCubeViewDistance(int horizontalDistance, int verticalDistance) {
         this.playerCubeTicketTracker.updateCubeViewDistance(Coords.sectionToCubeRenderDistance(horizontalDistance), Coords.sectionToCubeRenderDistance(verticalDistance));
     }
 }

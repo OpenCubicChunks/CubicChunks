@@ -33,5 +33,7 @@
         "client.OptionAccess",
         "client.ViewFrustumAccess"
     ],
-    "server": []
+    "server": [
+        "server.SettingsAccess"
+    ]
 }

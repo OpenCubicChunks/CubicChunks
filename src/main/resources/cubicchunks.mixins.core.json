@@ -92,11 +92,14 @@
         "client.progress.MixinChainedChunkStatusListener",
         "client.progress.MixinTrackingChunkStatusListener",
         "client.progress.MixinWorldLoadProgressScreen",
+        "client.server.MixinIntegratedPlayerList",
         "client.server.MixinIntegratedServer",
         "client.world.MixinClientChunkProvider",
         "client.world.MixinClientWorld"
     ],
     "server": [
+        "server.MixinDedicatedPlayerList",
+        "server.MixinDedicatedServerProperties",
         "server.MixinPlayerList"
     ]
 }

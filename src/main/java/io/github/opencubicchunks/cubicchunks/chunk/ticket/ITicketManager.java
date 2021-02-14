@@ -76,4 +76,6 @@ public interface ITicketManager {
 
     //TODO: Is there a better way of figuring out if this world is generating chunks or cubes?!
     void hasCubicTickets(boolean world);
+
+    void updateCubeViewDistance(int horizontalViewDistance, int verticalViewDistance);
 }

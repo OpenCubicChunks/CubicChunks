@@ -31,7 +31,8 @@ public class MixinIntegratedServer {
 
         if (verticalViewDistance != currentVerticalViewDistance1) {
             LOGGER.info("Changing vertical view distance to {}, from {}", verticalViewDistance, currentVerticalViewDistance1);
-            ((IVerticalView) ((IntegratedServer) (Object) this).getPlayerList()).setCubeViewDistance(horizontalViewDistance, verticalViewDistance);
+            ((IVerticalView) ((IntegratedServer) (Object) this).getPlayerList()).setIncomingVerticalViewDistance(verticalViewDistance);
+            ((IntegratedServer) (Object) this).getPlayerList().setViewDistance(horizontalViewDistance);
         }
     }
 }

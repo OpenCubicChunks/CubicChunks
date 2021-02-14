@@ -24,38 +24,30 @@ public abstract class MixinPlayerList implements IVerticalView {
     @Shadow @Final private MinecraftServer server;
     private int verticalViewDistance = 0;
 
-    //Should never be called by Vanilla
-    @Inject(method = "setViewDistance", at = @At("HEAD"))
+    @Inject(method = "setViewDistance", at = @At("HEAD"), cancellable = true)
     private void doVerticalChangesAswell(int viewDistance, CallbackInfo ci) {
         ci.cancel();
 
         this.viewDistance = viewDistance;
+        this.verticalViewDistance = incomingVerticalViewDistance;
+
         this.broadcastAll(new ClientboundSetChunkCacheRadiusPacket(viewDistance));
 
         for (ServerLevel serverLevel : this.server.getAllLevels()) {
             if (serverLevel != null) {
                 if (((CubicLevelHeightAccessor) serverLevel).isCubic()) {
-                    ((IVerticalView) serverLevel.getChunkSource()).setCubeViewDistance(this.viewDistance, this.verticalViewDistance);
+                    ((IVerticalView) serverLevel.getChunkSource()).setIncomingVerticalViewDistance(this.verticalViewDistance);
                 }
                 serverLevel.getChunkSource().setViewDistance(viewDistance);
             }
         }
-
     }
 
-    @Override public void setCubeViewDistance(int horizontalDistance, int verticalDistance) {
-        this.viewDistance = horizontalDistance;
-        this.verticalViewDistance = verticalDistance;
-        this.broadcastAll(new ClientboundSetChunkCacheRadiusPacket(viewDistance)); //TODO: Create a ClientboundSetCubeCacheRadiusPacket
+    private int incomingVerticalViewDistance;
 
-        for (ServerLevel serverLevel : this.server.getAllLevels()) {
-            if (serverLevel != null) {
-                if (((CubicLevelHeightAccessor) serverLevel).isCubic()) {
-                    ((IVerticalView) serverLevel.getChunkSource()).setCubeViewDistance(this.viewDistance, this.verticalViewDistance);
-                }
-                serverLevel.getChunkSource().setViewDistance(viewDistance);
-            }
-        }
+
+    @Override public void setIncomingVerticalViewDistance(int verticalDistance) {
+       this.incomingVerticalViewDistance = verticalDistance;
     }
 
     @Override public int getVerticalViewDistance() {

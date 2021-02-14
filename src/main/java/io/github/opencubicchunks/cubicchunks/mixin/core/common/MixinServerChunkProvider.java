@@ -203,8 +203,8 @@ public abstract class MixinServerChunkProvider implements IServerChunkProvider, 
         this.recentCubes[0] = newCubeIn;
     }
 
-    @Override public void setCubeViewDistance(int horizontalDistance, int verticalDistance) {
-        ((IVerticalView)this.chunkMap).setCubeViewDistance(horizontalDistance, verticalDistance);
+    @Override public void setIncomingVerticalViewDistance(int verticalDistance) {
+        ((IVerticalView)this.chunkMap).setIncomingVerticalViewDistance(verticalDistance);
     }
 
     @Inject(method = "runDistanceManagerUpdates", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerChunkCache;clearCache()V"))
