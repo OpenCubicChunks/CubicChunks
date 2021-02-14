@@ -10,7 +10,7 @@ import net.minecraft.world.level.levelgen.Heightmap;
 
 public class ClientSurfaceTracker extends Heightmap {
 
-    private final Predicate<BlockState> isOpaque;
+    protected final Predicate<BlockState> isOpaque;
 
     public ClientSurfaceTracker(ChunkAccess chunkAccess, Types types) {
         super(chunkAccess, types);

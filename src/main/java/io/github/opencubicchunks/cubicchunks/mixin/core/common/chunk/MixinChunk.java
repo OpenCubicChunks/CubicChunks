@@ -6,15 +6,19 @@ import java.util.function.Consumer;
 
 import javax.annotation.Nullable;
 
+import io.github.opencubicchunks.cubicchunks.chunk.CubeMap;
+import io.github.opencubicchunks.cubicchunks.chunk.CubeMapGetter;
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.ICubeProvider;
 import io.github.opencubicchunks.cubicchunks.chunk.LightHeightmapGetter;
 import io.github.opencubicchunks.cubicchunks.chunk.biome.ColumnBiomeContainer;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.BigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.EmptyCube;
+import io.github.opencubicchunks.cubicchunks.chunk.heightmap.ClientLightSurfaceTracker;
 import io.github.opencubicchunks.cubicchunks.chunk.heightmap.ClientSurfaceTracker;
 import io.github.opencubicchunks.cubicchunks.chunk.heightmap.LightSurfaceTrackerWrapper;
 import io.github.opencubicchunks.cubicchunks.chunk.heightmap.SurfaceTrackerWrapper;
+import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import io.github.opencubicchunks.cubicchunks.world.lighting.ISkyLightColumnChecker;
 import net.minecraft.core.BlockPos;
@@ -48,7 +52,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(LevelChunk.class)
-public abstract class MixinChunk implements ChunkAccess, LightHeightmapGetter {
+public abstract class MixinChunk implements ChunkAccess, LightHeightmapGetter, CubeMapGetter {
 
     @Shadow @Final private Level level;
     @Shadow @Final private ChunkPos chunkPos;
@@ -63,11 +67,17 @@ public abstract class MixinChunk implements ChunkAccess, LightHeightmapGetter {
         return false;
     }
 
-    private LightSurfaceTrackerWrapper lightHeightmap;
+    private Heightmap lightHeightmap;
+    private CubeMap cubeMap;
 
     @Override
-    public LightSurfaceTrackerWrapper getLightHeightmap() {
+    public Heightmap getLightHeightmap() {
         return lightHeightmap;
+    }
+
+    @Override
+    public CubeMap getCubeMap() {
+        return cubeMap;
     }
 
     @Inject(
@@ -83,7 +93,13 @@ public abstract class MixinChunk implements ChunkAccess, LightHeightmapGetter {
             this.biomes = new ColumnBiomeContainer(levelIn.registryAccess().registryOrThrow(Registry.BIOME_REGISTRY), levelIn, levelIn);
         }
 
-        lightHeightmap = new LightSurfaceTrackerWrapper(this);
+        if (levelIn.isClientSide) {
+            lightHeightmap = new ClientLightSurfaceTracker(this);
+        } else {
+            lightHeightmap = new LightSurfaceTrackerWrapper(this);
+        }
+        // TODO might want 4 columns that share the same BigCubes to have a reference to the same CubeMap?
+        cubeMap = new CubeMap();
     }
 
     @Inject(
@@ -100,10 +116,12 @@ public abstract class MixinChunk implements ChunkAccess, LightHeightmapGetter {
     )
     private void onSetBlock(BlockPos pos, BlockState state, boolean moved, CallbackInfoReturnable<BlockState> cir) {
         // TODO client side light heightmap stuff
-        if (!this.level.isClientSide) {
+        if (this.level.isClientSide) {
+            ClientLightSurfaceTracker lightHeightmap = ((LightHeightmapGetter) this).getClientLightHeightmap();
+        } else {
             int relX = pos.getX() & 15;
             int relZ = pos.getZ() & 15;
-            LightSurfaceTrackerWrapper lightHeightmap = ((LightHeightmapGetter) this).getLightHeightmap();
+            LightSurfaceTrackerWrapper lightHeightmap = ((LightHeightmapGetter) this).getServerLightHeightmap();
             int oldHeight = lightHeightmap.getFirstAvailable(relX, relZ);
             // Light heightmap update needs to occur before the light engine update.
             // LevelChunk.setBlockState is called before the light engine is updated, so this works fine currently, but if this update call is ever moved, that must still be the case.

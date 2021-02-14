@@ -19,6 +19,7 @@ import javax.annotation.Nullable;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import io.github.opencubicchunks.cubicchunks.CubicChunks;
+import io.github.opencubicchunks.cubicchunks.chunk.CubeMapGetter;
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.LightHeightmapGetter;
 import io.github.opencubicchunks.cubicchunks.chunk.biome.CubeBiomeContainer;
@@ -882,13 +883,17 @@ public class BigCube implements ChunkAccess, IBigCube {
                 // TODO we really, *really* shouldn't be force-loading columns here.
                 //      probably the easiest approach until we get a "columns before cubes" invariant though.
                 LevelChunk chunk = this.level.getChunk(pos.x + x, pos.z + z);
+                ((CubeMapGetter) chunk).getCubeMap().markLoaded(this.cubePos.getY());
                 for (Map.Entry<Heightmap.Types, Heightmap> entry : chunk.getHeightmaps()) {
                     Heightmap heightmap = entry.getValue();
                     SurfaceTrackerWrapper tracker = (SurfaceTrackerWrapper) heightmap;
                     tracker.loadCube(this);
                 }
                 // TODO probably don't want to do this if the cube was already loaded as a CubePrimer
-                ((LightHeightmapGetter) chunk).getLightHeightmap().loadCube(this);
+                // TODO what should we do on the client here?
+                if (!this.level.isClientSide) {
+                    ((LightHeightmapGetter) chunk).getServerLightHeightmap().loadCube(this);
+                }
             }
         }
     }

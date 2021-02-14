@@ -207,7 +207,7 @@ public class CubePrimer implements IBigCube, ChunkAccess {
                         //      not really feasible to fix until we get a "columns before cubes" invariant.
                         BlockGetter chunk = chunkSource.getChunkForLighting(chunkPos.x + dx, chunkPos.z + dz);
                         if (chunk instanceof LightHeightmapGetter) {
-                            LightSurfaceTrackerWrapper lightHeightmap = ((LightHeightmapGetter) chunk).getLightHeightmap();
+                            LightSurfaceTrackerWrapper lightHeightmap = ((LightHeightmapGetter) chunk).getServerLightHeightmap();
                             if (lightHeightmap != null) {
                                 // TODO this stuff is awful for performance; need to optimize it
                                 //      probably want to do the thing we do for other scale0 sections and store a reference to it
