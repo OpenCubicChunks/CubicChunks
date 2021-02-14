@@ -15,9 +15,13 @@ import io.github.opencubicchunks.cubicchunks.chunk.heightmap.ClientSurfaceTracke
 import io.github.opencubicchunks.cubicchunks.chunk.heightmap.SurfaceTrackerWrapper;
 import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientBlockEntityEvents;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerBlockEntityEvents;
+import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Registry;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.TickList;
@@ -42,7 +46,8 @@ import org.spongepowered.asm.mixin.injection.ModifyConstant;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(LevelChunk.class)
+@Mixin(value = LevelChunk.class, priority = 0) //Priority 0 to always ensure our redirects are on top. Should also prevent fabric api crashes that have occur(ed) here. See removeTileEntity
+
 public abstract class MixinChunk implements ChunkAccess, CubicLevelHeightAccessor {
 
     @Shadow @Final private Level level;
@@ -61,6 +66,8 @@ public abstract class MixinChunk implements ChunkAccess, CubicLevelHeightAccesso
     @Shadow public abstract ChunkStatus getStatus();
 
     @Shadow protected abstract boolean isInLevel();
+
+    @Shadow public abstract Level getLevel();
 
     @Override public boolean isYSpaceEmpty(int startY, int endY) {
         return false;
@@ -241,13 +248,34 @@ public abstract class MixinChunk implements ChunkAccess, CubicLevelHeightAccesso
     @Redirect(
         method = "*",
         at = @At(value = "INVOKE", target = "Ljava/util/Map;remove(Ljava/lang/Object;)Ljava/lang/Object;"))
-    private Object removeTileEntity(Map map, Object key) {
+    private Object removeTileEntity(Map map,
+                                    Object key) {
+        // TODO: Maybe Resolve redirect conflict with fabric-lifecycle-events-v1.mixins.json:client .WorldChunkMixin->@Redirect::onRemoveBlockEntity(Fabric API). We implement their events
+        // to respect our priority over theirs.
+
         if (map == this.blockEntities) {
             if (!this.isCubic()) {
-                return map.remove(key);
+                @Nullable
+                Object removed = map.remove(key);
+
+                if (this.getLevel() instanceof ServerLevel) {
+                    ServerBlockEntityEvents.BLOCK_ENTITY_UNLOAD.invoker().onUnload((BlockEntity) removed, (ServerLevel) this.getLevel());
+                } else if ((this.getLevel() instanceof ClientLevel)) {
+                    ClientBlockEntityEvents.BLOCK_ENTITY_UNLOAD.invoker().onUnload((BlockEntity) removed, (ClientLevel) this.getLevel());
+                }
+                return removed;
             }
             BigCube cube = (BigCube) this.getCube(Coords.blockToSection(((BlockPos) key).getY()));
-            return cube.getTileEntityMap().remove(key);
+
+            @Nullable
+            BlockEntity removed = cube.getTileEntityMap().remove(key);
+
+            if (this.getLevel() instanceof ServerLevel) {
+                ServerBlockEntityEvents.BLOCK_ENTITY_UNLOAD.invoker().onUnload(removed, (ServerLevel) this.getLevel());
+            } else if ((this.getLevel() instanceof ClientLevel)) {
+                ClientBlockEntityEvents.BLOCK_ENTITY_UNLOAD.invoker().onUnload(removed, (ClientLevel) this.getLevel());
+            }
+            return removed;
         } else if (map == this.pendingBlockEntities) {
             if (!this.isCubic()) {
                 return map.remove(key);
