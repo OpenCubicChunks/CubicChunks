@@ -2,6 +2,7 @@ package io.github.opencubicchunks.cubicchunks.mixin.core.client.server;
 
 import java.util.function.BooleanSupplier;
 
+import io.github.opencubicchunks.cubicchunks.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.chunk.IVerticalView;
 import io.github.opencubicchunks.cubicchunks.client.IVerticalViewDistance;
 import net.minecraft.client.Minecraft;
@@ -17,10 +18,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(IntegratedServer.class)
 public class MixinIntegratedServer {
 
-
     @Shadow @Final private Minecraft minecraft;
-
-    @Shadow @Final private static Logger LOGGER;
 
     @Inject(method = "tickServer", at = @At(value = "INVOKE", target = "Ljava/lang/Math;max(II)I"), cancellable = true)
     private void tickServer(BooleanSupplier shouldKeepTicking, CallbackInfo ci) {
@@ -30,7 +28,7 @@ public class MixinIntegratedServer {
         int currentVerticalViewDistance1 = ((IVerticalView) ((IntegratedServer) (Object) this).getPlayerList()).getVerticalViewDistance();
 
         if (verticalViewDistance != currentVerticalViewDistance1) {
-            LOGGER.info("Changing vertical view distance to {}, from {}", verticalViewDistance, currentVerticalViewDistance1);
+            CubicChunks.LOGGER.info("Changing vertical view distance to {}, from {}", verticalViewDistance, currentVerticalViewDistance1);
             ((IVerticalView) ((IntegratedServer) (Object) this).getPlayerList()).setIncomingVerticalViewDistance(verticalViewDistance);
             ((IntegratedServer) (Object) this).getPlayerList().setViewDistance(horizontalViewDistance);
         }

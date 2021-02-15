@@ -1,4 +1,4 @@
-package io.github.opencubicchunks.cubicchunks.mixin.core.server;
+package io.github.opencubicchunks.cubicchunks.mixin.core.common.server;
 
 import io.github.opencubicchunks.cubicchunks.chunk.IVerticalView;
 import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;

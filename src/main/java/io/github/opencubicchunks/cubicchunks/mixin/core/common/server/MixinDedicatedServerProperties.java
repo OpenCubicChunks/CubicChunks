@@ -1,4 +1,4 @@
-package io.github.opencubicchunks.cubicchunks.mixin.core.server;
+package io.github.opencubicchunks.cubicchunks.mixin.core.common.server;
 
 import java.util.Properties;
 

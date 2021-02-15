@@ -38,10 +38,12 @@ public abstract class MixinViewFrustum {
             }
         }
         ci.cancel();
-        int d = renderDistanceChunks * 2 + 1;
-        this.chunkGridSizeX = d;
-        this.chunkGridSizeY = ((IVerticalViewDistance) Minecraft.getInstance().options).getVerticalViewDistance();
-        this.chunkGridSizeZ = d;
+        int hDistance = renderDistanceChunks * 2 + 1;
+        int vDistance = ((IVerticalViewDistance) Minecraft.getInstance().options).getVerticalViewDistance() * 2 + 1;
+
+        this.chunkGridSizeX = hDistance;
+        this.chunkGridSizeY = vDistance;
+        this.chunkGridSizeZ = hDistance;
     }
 
     @Inject(method = "repositionCamera", at = @At(value = "HEAD"), cancellable = true, require = 1)
@@ -93,6 +95,7 @@ public abstract class MixinViewFrustum {
             }
         }
 
+        cbi.cancel();
         int x = Mth.intFloorDiv(pos.getX(), 16);
         int y = Mth.intFloorDiv(pos.getY(), 16);
         int z = Mth.intFloorDiv(pos.getZ(), 16);
@@ -100,7 +103,6 @@ public abstract class MixinViewFrustum {
         y = Mth.positiveModulo(y, this.chunkGridSizeY);
         z = Mth.positiveModulo(z, this.chunkGridSizeZ);
         ChunkRenderDispatcher.RenderChunk renderChunk = this.chunks[this.getChunkIndex(x, y, z)];
-        cbi.cancel();
         cbi.setReturnValue(renderChunk);
     }
 

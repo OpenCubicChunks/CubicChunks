@@ -37,6 +37,9 @@
         "common.MixinServerChunkProvider",
         "common.network.MixinClientboundLevelChunkPacket",
         "common.progress.MixinLoggingChunkStatusListener",
+        "common.server.MixinDedicatedPlayerList",
+        "common.server.MixinDedicatedServerProperties",
+        "common.server.MixinPlayerList",
         "common.ticket.MixinProxyTicketManager",
         "common.ticket.MixinTicketManager",
         "common.tileentity.MixinBeaconTileEntity",
@@ -97,9 +100,5 @@
         "client.world.MixinClientChunkProvider",
         "client.world.MixinClientWorld"
     ],
-    "server": [
-        "server.MixinDedicatedPlayerList",
-        "server.MixinDedicatedServerProperties",
-        "server.MixinPlayerList"
-    ]
+    "server": []
 }

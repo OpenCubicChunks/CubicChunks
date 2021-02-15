@@ -1091,7 +1091,7 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
             this.viewDistance = clampedHorizontalDistance;
             this.verticalViewDistance = clampedVerticalDistance;
 
-            ((TicketManagerAccess) this.distanceManager).invokeUpdatePlayerTicket(this.viewDistance);
+            ((TicketManagerAccess) this.distanceManager).invokeUpdatePlayerTickets(this.viewDistance);
             ((ITicketManager) this.distanceManager).updateCubeViewDistance(this.viewDistance, this.verticalViewDistance);
 
             int newViewDistanceHorizontal = Coords.sectionToCubeRenderDistance(oldHorizontalViewDistance);
