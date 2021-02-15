@@ -70,11 +70,11 @@ public class PlayerCubeTicketTracker extends PlayerCubeTracker {
      * Updates a ticket for a cube based on whether it entered or exited the view distances
      *
      * @param pos the cube's position
-     * @param horizDistance the cube's horizontal distance
+     * @param distance the cube's distance
      * @param oldWithinViewDistance whether it used to be in the view distance
      * @param withinViewDistance whether it is now in the view distance
      */
-    private void updateTicket(long pos, int horizDistance, boolean oldWithinViewDistance, boolean withinViewDistance) {
+    private void updateTicket(long pos, int distance, boolean oldWithinViewDistance, boolean withinViewDistance) {
         if (oldWithinViewDistance != withinViewDistance) {
             Ticket<?> ticket = TicketAccess.createNew(CCTicketType.CCPLAYER, ITicketManager.PLAYER_CUBE_TICKET_LEVEL, CubePos.from(pos));
             if (withinViewDistance) {
@@ -88,7 +88,7 @@ public class PlayerCubeTicketTracker extends PlayerCubeTracker {
                             }, pos, false));
                         }
 
-                    }), pos, () -> horizDistance));
+                    }), pos, () -> distance));
             } else {
                 iTicketManager.getCubeTicketThrottlerReleaser().tell(CubeTaskPriorityQueueSorter.createSorterMsg(() ->
                         iTicketManager.getMainThreadExecutor().execute(() ->
@@ -116,7 +116,7 @@ public class PlayerCubeTicketTracker extends PlayerCubeTracker {
 
                 if (oldHorizDistance != horizCurrentDistance || oldVertDistance != vertCurrentDistance) {
                     //func_219066_a = update level
-                    iTicketManager.getCubeTicketThrottler().onCubeLevelChange(CubePos.from(pos), () -> this.horizDistances.get(pos), horizCurrentDistance + verticalViewDistance,
+                    iTicketManager.getCubeTicketThrottler().onCubeLevelChange(CubePos.from(pos), () -> this.horizDistances.get(pos), Math.max(horizCurrentDistance, vertCurrentDistance),
                         (horizDistance) -> {
                             // They have the same return value and
                             if (horizCurrentDistance >= this.horizDistances.defaultReturnValue() || vertCurrentDistance >= this.vertDistances.defaultReturnValue()) {
@@ -128,14 +128,13 @@ public class PlayerCubeTicketTracker extends PlayerCubeTracker {
                             }
 
                         });
-                    this.updateTicket(pos, horizCurrentDistance, this.isWithinViewDistance(oldHorizDistance, oldVertDistance),
+                    this.updateTicket(pos, Math.max(horizCurrentDistance, vertCurrentDistance),
+                        this.isWithinViewDistance(oldHorizDistance, oldVertDistance),
                         this.isWithinViewDistance(horizCurrentDistance, vertCurrentDistance));
                 }
             }
-
             this.positionsAffected.clear();
         }
-
     }
 
     /**
