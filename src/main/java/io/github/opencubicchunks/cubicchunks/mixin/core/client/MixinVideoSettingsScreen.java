@@ -16,14 +16,14 @@ public class MixinVideoSettingsScreen {
 
     private static final Option[] MODIFIED_OPTIONS;
 
-    private static final ProgressOption VERTICAL_RENDER_DISTANCE = new ProgressOption("options.verticalRenderDistance", 2.0D, 16.0D, 1.0F, (gameOptions) -> {
+    private static final ProgressOption VERTICAL_RENDER_DISTANCE = new ProgressOption("options.renderDistance", 2.0D, 16.0D, 1.0F, (gameOptions) -> {
         return (double) ((IVerticalViewDistance) gameOptions).getVerticalViewDistance();
     }, (gameOptions, viewDistance) -> {
         ((IVerticalViewDistance) gameOptions).setVerticalViewDistance(viewDistance.intValue());
         Minecraft.getInstance().levelRenderer.needsUpdate();
     }, (gameOptions, option) -> {
         double value = option.get(gameOptions);
-        return ((OptionAccess) option).invokeGenericValueLabel(new TranslatableComponent("options.vertical_chunks", (int) value));
+        return ((OptionAccess) option).invokeGenericValueLabel(new TranslatableComponent("options.chunks", (int) value));
     });
 
 

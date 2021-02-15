@@ -54,9 +54,7 @@ public class PlayerCubeTicketTracker extends PlayerCubeTracker {
      * @param verticalViewDistance
      */
     public void updateCubeViewDistance(int viewDistance, int verticalViewDistance) {
-        verticalViewDistance = verticalViewDistance / 2;
-
-        CubicChunks.LOGGER.info("Horizontal dist: {}; Vertical dist: {}", viewDistance, verticalViewDistance);
+        CubicChunks.LOGGER.info("Horizontal dist(Cubes): {}; Vertical dist(Cubes): {}", viewDistance, verticalViewDistance);
         for (Long2ByteMap.Entry entry : this.horizontalGraphGroup.cubesInRange.long2ByteEntrySet()) {
             long pos = entry.getLongKey();
             byte horizDistance = entry.getByteValue();
