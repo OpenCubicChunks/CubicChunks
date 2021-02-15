@@ -96,8 +96,6 @@ public class CubePrimer implements IBigCube, ChunkAccess, CubicLevelHeightAccess
 
     private long inhabitedTime;
 
-    private boolean[] lightHeightmapLoaded;
-
     private final boolean isCubic;
     private final boolean generates2DChunks;
     private final WorldStyle worldStyle;
@@ -137,8 +135,6 @@ public class CubePrimer implements IBigCube, ChunkAccess, CubicLevelHeightAccess
             }
         }
 
-        this.lightHeightmapLoaded = new boolean[IBigCube.CHUNK_COUNT];
-
         isCubic = ((CubicLevelHeightAccessor) levelHeightAccessor).isCubic();
         generates2DChunks = ((CubicLevelHeightAccessor) levelHeightAccessor).generates2DChunks();
         worldStyle = ((CubicLevelHeightAccessor) levelHeightAccessor).worldStyle();
@@ -160,9 +156,32 @@ public class CubePrimer implements IBigCube, ChunkAccess, CubicLevelHeightAccess
         return this.sections;
     }
 
+    private ChunkSource getChunkSource() {
+		if (this.levelHeightAccessor instanceof CubeWorldGenRegion) {
+			return ((CubeWorldGenRegion) this.levelHeightAccessor).getChunkSource();
+		} else {
+			return ((ServerLevel) this.levelHeightAccessor).getChunkSource();
+		}
+	}
+
     //STATUS
     @Override public void setCubeStatus(ChunkStatus newStatus) {
         this.status = newStatus;
+
+        if (this.status == ChunkStatus.LIGHT) {
+        	ChunkSource chunkSource = getChunkSource();
+
+			ChunkPos chunkPos = this.cubePos.asChunkPos();
+			for (int dx = 0; dx < IBigCube.DIAMETER_IN_SECTIONS; dx++) {
+				for (int dz = 0; dz < IBigCube.DIAMETER_IN_SECTIONS; dz++) {
+					// TODO do we want to force-load chunks here? if not the chunk can be null, at least until we get the column->cube invariant
+					BlockGetter chunk = chunkSource.getChunkForLighting(chunkPos.x + dx, chunkPos.z + dz);
+					LightSurfaceTrackerWrapper lightHeightmap = ((LightHeightmapGetter) chunk).getServerLightHeightmap();
+					// TODO want to optimize this - probably want to do the thing we do for other scale0 sections and store a reference to it
+					lightHeightmap.loadCube(this);
+				}
+			}
+		}
     }
 
     @Deprecated @Override public ChunkStatus getStatus() {
@@ -202,34 +221,19 @@ public class CubePrimer implements IBigCube, ChunkAccess, CubicLevelHeightAccess
 
             LevelChunkSection chunksection = this.sections[index];
             BlockState blockstate = chunksection.setBlockState(x, y, z, state, false);
-            if (this.status.isOrAfter(ChunkStatus.FEATURES) && state != blockstate && (state.getLightBlock(this, pos) != blockstate.getLightBlock(this, pos)
+            if (this.status.isOrAfter(ChunkStatus.LIGHT) && state != blockstate && (state.getLightBlock(this, pos) != blockstate.getLightBlock(this, pos)
                     || state.getLightEmission() != blockstate.getLightEmission() || state.useShapeForLightOcclusion() || blockstate.useShapeForLightOcclusion())) {
-                ChunkSource chunkSource;
-                if (this.levelHeightAccessor instanceof CubeWorldGenRegion) {
-                    chunkSource = ((CubeWorldGenRegion) this.levelHeightAccessor).getChunkSource();
-                } else {
-                    chunkSource = ((ServerLevel) this.levelHeightAccessor).getChunkSource();
-                }
+				ChunkSource chunkSource = getChunkSource();
 
                 ChunkPos chunkPos = this.cubePos.asChunkPos();
                 for (int dx = 0; dx < IBigCube.DIAMETER_IN_SECTIONS; dx++) {
                     for (int dz = 0; dz < IBigCube.DIAMETER_IN_SECTIONS; dz++) {
-                        // TODO this can return null, leading to incorrect light heightmap values -> incorrect sky lighting on worldgen.
-                        //      not really feasible to fix until we get a "columns before cubes" invariant.
+						// TODO do we want to force-load chunks here? if not the chunk can be null, at least until we get the column->cube invariant
                         BlockGetter chunk = chunkSource.getChunkForLighting(chunkPos.x + dx, chunkPos.z + dz);
-                        if (chunk instanceof LightHeightmapGetter) {
-                            LightSurfaceTrackerWrapper lightHeightmap = ((LightHeightmapGetter) chunk).getServerLightHeightmap();
-                            if (lightHeightmap != null) {
-                                // TODO this stuff is awful for performance; need to optimize it
-                                //      probably want to do the thing we do for other scale0 sections and store a reference to it
-                                if (!lightHeightmapLoaded[dx + dz * IBigCube.DIAMETER_IN_SECTIONS]) {
-                                    lightHeightmapLoaded[dx + dz * IBigCube.DIAMETER_IN_SECTIONS] = true;
-                                    lightHeightmap.loadCube(this);
-                                }
-                                // Not sure if this is the right blockstate to pass in, but it doesn't actually matter since we don't use it
-                                lightHeightmap.update(x, pos.getY(), z, state);
-                            }
-                        }
+						LightSurfaceTrackerWrapper lightHeightmap = ((LightHeightmapGetter) chunk).getServerLightHeightmap();
+
+						// Not sure if this is the right blockstate to pass in, but it doesn't actually matter since we don't use it
+						lightHeightmap.update(x, pos.getY(), z, state);
                     }
                 }
 
