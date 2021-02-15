@@ -176,6 +176,7 @@ public class CubePrimer implements IBigCube, ChunkAccess, CubicLevelHeightAccess
 				for (int dz = 0; dz < IBigCube.DIAMETER_IN_SECTIONS; dz++) {
 					// TODO do we want to force-load chunks here? if not the chunk can be null, at least until we get the column->cube invariant
 					BlockGetter chunk = chunkSource.getChunkForLighting(chunkPos.x + dx, chunkPos.z + dz);
+//					BlockGetter chunk = chunkSource.getChunk(chunkPos.x + dx, chunkPos.z + dz, ChunkStatus.EMPTY, true);
 					LightSurfaceTrackerWrapper lightHeightmap = ((LightHeightmapGetter) chunk).getServerLightHeightmap();
 					// TODO want to optimize this - probably want to do the thing we do for other scale0 sections and store a reference to it
 					lightHeightmap.loadCube(this);

@@ -42,7 +42,7 @@ public abstract class MixinLightEngine<M extends DataLayerStorageMap<M>, S exten
 
     @Shadow @Final private BlockGetter[] lastChunk;
 
-    private boolean isCubic;
+    protected boolean isCubic;
     private boolean generates2DChunks;
     private CubicLevelHeightAccessor.WorldStyle worldStyle;
 

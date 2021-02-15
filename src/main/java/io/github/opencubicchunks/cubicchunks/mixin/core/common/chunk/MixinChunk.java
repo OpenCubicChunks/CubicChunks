@@ -87,15 +87,18 @@ public abstract class MixinChunk implements ChunkAccess, LightHeightmapGetter, C
 
     @Override
     public Heightmap getLightHeightmap() {
-    	// FIXME remove debug
-		if (lightHeightmap == null) {
-			System.out.println("late creation of light heightmap in MixinChunk");
-			if (level.isClientSide) {
-				lightHeightmap = new ClientLightSurfaceTracker(this);
-			} else {
-				lightHeightmap = new LightSurfaceTrackerWrapper(this);
-			}
-		}
+        if (!isCubic) {
+            throw new UnsupportedOperationException("Attempted to get light heightmap on a non-cubic chunk");
+        }
+        // FIXME remove debug
+        if (lightHeightmap == null) {
+            System.out.println("late creation of light heightmap in MixinChunk");
+            if (level.isClientSide) {
+                lightHeightmap = new ClientLightSurfaceTracker(this);
+            } else {
+                lightHeightmap = new LightSurfaceTrackerWrapper(this);
+            }
+        }
         return lightHeightmap;
     }
 
@@ -139,9 +142,9 @@ public abstract class MixinChunk implements ChunkAccess, LightHeightmapGetter, C
             at = @At("RETURN")
     )
     private void onInitFromProtoChunk(ServerLevel serverLevel, ProtoChunk protoChunk, Consumer<LevelChunk> consumer, CallbackInfo ci) {
-		if (!this.isCubic()) {
-			return;
-		}
+        if (!this.isCubic()) {
+            return;
+        }
         lightHeightmap = ((LightHeightmapGetter) protoChunk).getLightHeightmap();
     }
 
@@ -150,9 +153,9 @@ public abstract class MixinChunk implements ChunkAccess, LightHeightmapGetter, C
             at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/levelgen/Heightmap;update(IIILnet/minecraft/world/level/block/state/BlockState;)Z", ordinal = 0)
     )
     private void onSetBlock(BlockPos pos, BlockState state, boolean moved, CallbackInfoReturnable<BlockState> cir) {
-		if (!this.isCubic()) {
-			return;
-		}
+        if (!this.isCubic()) {
+            return;
+        }
         // TODO client side light heightmap stuff
         if (this.level.isClientSide) {
             ClientLightSurfaceTracker lightHeightmap = ((LightHeightmapGetter) this).getClientLightHeightmap();

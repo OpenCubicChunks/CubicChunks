@@ -1,11 +1,9 @@
 package io.github.opencubicchunks.cubicchunks.mixin.core.common.world.lighting;
 
-import io.github.opencubicchunks.cubicchunks.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.chunk.CubeMap;
 import io.github.opencubicchunks.cubicchunks.chunk.CubeMapGetter;
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.LightHeightmapGetter;
-import io.github.opencubicchunks.cubicchunks.chunk.heightmap.LightSurfaceTrackerWrapper;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.SectionLightStorageAccess;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
@@ -21,9 +19,9 @@ import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.lighting.SkyLightEngine;
 import net.minecraft.world.level.lighting.SkyLightSectionStorage;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(SkyLightEngine.class)
@@ -33,21 +31,18 @@ public abstract class MixinSkyLightEngine extends MixinLightEngine<SkyLightSecti
      * @author CursedFlames
      * @reason disable vanilla sky light logic
      */
-    @Overwrite
-    protected void checkNode(long id) {
+    @Inject(method = "checkNode", at = @At("HEAD"), cancellable = true)
+    protected void checkNode(long id, CallbackInfo ci) {
+        if (!this.isCubic) {
+            return;
+        }
+        ci.cancel();
         super.checkNode(id);
     }
 
     @Override public void checkSkyLightColumn(LevelChunk chunk, int x, int z, int oldHeight, int newHeight) {
         ((SectionLightStorageAccess) this.storage).invokeRunAllUpdates();
-        // FIXME another probably-unsafe chunk get
-        //       this should probably be in a helper method anyway
-//        BlockGetter blockGetter = this.chunkSource.getChunkForLighting(SectionPos.blockToSectionCoord(pos.getX()), SectionPos.blockToSectionCoord(pos.getZ()));
-//        LevelChunk chunk = (LevelChunk) blockGetter;
-//        if (chunk == null) {
-//        	System.out.println("warning: null chunk in checkSkyLightColumn");
-//		}
-        // TODO pass CubeMap and heightmap into method instead?
+        // TODO pass CubeMap into method instead?
         CubeMap cubeMap = ((CubeMapGetter) chunk).getCubeMap();
         int oldHeightCube = Coords.blockToCube(oldHeight-1);
         int newHeightCube = Coords.blockToCube(newHeight);
@@ -55,9 +50,8 @@ public abstract class MixinSkyLightEngine extends MixinLightEngine<SkyLightSecti
             // not sure if this is necessary - also maybe it should be done inside the loop? not sure if threaded stuff can result in storage becoming out of date inside the loop
             ((SectionLightStorageAccess) this.storage).invokeRunAllUpdates();
 
-//            for (int y = oldHeight-1; y >= newHeight; y--) {
-//            }
             // TODO cube iteration order might still be important here
+            //      (int y = oldHeight-1; y >= newHeight; y--)
             for (int cubeY : cubeMap.getLoaded()) {
                 if (oldHeightCube <= cubeY && cubeY <= newHeightCube) {
                     for (int dy = IBigCube.DIAMETER_IN_BLOCKS-1; dy >= 0; dy--) {
@@ -78,9 +72,8 @@ public abstract class MixinSkyLightEngine extends MixinLightEngine<SkyLightSecti
                 }
             }
         } else {
-//            for (int y = oldHeight; y < newHeight; y++) {
-//            }
             // TODO cube iteration order might still be important here
+            //      (int y = oldHeight; y < newHeight; y++)
             for (int cubeY : cubeMap.getLoaded()) {
                 if (oldHeightCube <= cubeY && cubeY <= newHeightCube) {
                     for (int dy = 0; dy < IBigCube.DIAMETER_IN_BLOCKS; dy++) {
@@ -106,18 +99,25 @@ public abstract class MixinSkyLightEngine extends MixinLightEngine<SkyLightSecti
         this.checkEdge(Long.MAX_VALUE, pos, 0, true);
     }
 
+    /**
+     * @author CursedFlames
+     * @reason Prevent getComputedLevel from ignoring skylight sources and decreasing light level - similar to BlockLightEngine's light source check
+     */
     @Inject(method = "getComputedLevel(JJI)I",
         at = @At("HEAD"), cancellable = true)
     private void onGetComputedLevel(long id, long excludedId, int maxLevel, CallbackInfoReturnable<Integer> cir) {
-        if (this.chunkSource.getLevel() instanceof ClientLevel) return;
+        // TODO do we want this mixin on client side too?
+        if (!this.isCubic || this.chunkSource.getLevel() instanceof ClientLevel) return;
         BlockPos pos = BlockPos.of(id);
-        // FIXME this may or may not be a horrendously unsafe way of getting the light heightmap. I'm not sure.
-        //       okay it is unsafe - it sometimes but rarely NPEs and I'm not sure where.
+        // TODO chunk is sometimes null
         BlockGetter chunk = this.chunkSource.getChunkForLighting(SectionPos.blockToSectionCoord(pos.getX()), SectionPos.blockToSectionCoord(pos.getZ()));
-        if (chunk == null) return;
+        if (chunk == null) {
+            System.out.println("onGetComputedLevel chunk was null " + (this.chunkSource.getLevel() instanceof ClientLevel ? "client" : "server"));
+            return;
+        }
         Heightmap heightmap = ((LightHeightmapGetter) chunk).getLightHeightmap();
         if (heightmap == null) {
-            System.out.println("onGetComputedLevel heightmap was null");
+            System.out.println("onGetComputedLevel heightmap was null " + (this.chunkSource.getLevel() instanceof ClientLevel ? "client" : "server"));
             return;
         }
         int height = heightmap.getFirstAvailable(pos.getX(), pos.getZ());
@@ -134,10 +134,10 @@ public abstract class MixinSkyLightEngine extends MixinLightEngine<SkyLightSecti
         int maxY = cubePos.maxCubeY();
         for (int sectionX = 0; sectionX < IBigCube.DIAMETER_IN_SECTIONS; sectionX++) {
             for (int sectionZ = 0; sectionZ < IBigCube.DIAMETER_IN_SECTIONS; sectionZ++) {
-                // FIXME possibly unsafe light heightmap access here too - rarely NPEs somewhere
+                // TODO this chunk is sometimes null
                 BlockGetter chunk = this.chunkSource.getChunkForLighting(chunkPos.x + sectionX, chunkPos.z + sectionZ);
                 if (chunk == null) {
-                    System.out.println("chunk null");
+                    System.out.println("null chunk in MixinSkyLightEngine.doSkyLightForCube");
                     return;
                 }
                 Heightmap heightmap = ((LightHeightmapGetter) chunk).getLightHeightmap();

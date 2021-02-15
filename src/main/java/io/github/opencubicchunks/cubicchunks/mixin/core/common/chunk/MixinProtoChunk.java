@@ -38,21 +38,25 @@ public abstract class MixinProtoChunk implements LightHeightmapGetter, LevelHeig
 
     @Shadow public abstract ChunkStatus getStatus();
 
-	private LightSurfaceTrackerWrapper lightHeightmap;
+    private LightSurfaceTrackerWrapper lightHeightmap;
 
-	@Override
-	public Heightmap getLightHeightmap() {
-		// FIXME remove debug
-		if (lightHeightmap == null) {
-			System.out.println("late creation of light heightmap in MixinProtoChunk");
-//			if (level.isClientSide) {
-//				lightHeightmap = new ClientLightSurfaceTracker(this);
-//			} else {
-				lightHeightmap = new LightSurfaceTrackerWrapper((ChunkAccess) this);
-//			}
-		}
-		return lightHeightmap;
-	}
+    @Override
+    public Heightmap getLightHeightmap() {
+        if (!isCubic) {
+            throw new UnsupportedOperationException("Attempted to get light heightmap on a non-cubic chunk");
+        }
+        // FIXME remove debug
+        if (lightHeightmap == null) {
+            System.out.println("late creation of light heightmap in MixinProtoChunk");
+            // TODO figure out how to make sure this only happens on server side - do ProtoChunks exist on client?
+//            if (level.isClientSide) {
+//                lightHeightmap = new ClientLightSurfaceTracker(this);
+//            } else {
+                lightHeightmap = new LightSurfaceTrackerWrapper((ChunkAccess) this);
+//            }
+        }
+        return lightHeightmap;
+    }
 
     @Inject(method = "<init>(Lnet/minecraft/world/level/ChunkPos;Lnet/minecraft/world/level/chunk/UpgradeData;[Lnet/minecraft/world/level/chunk/LevelChunkSection;"
         + "Lnet/minecraft/world/level/chunk/ProtoTickList;Lnet/minecraft/world/level/chunk/ProtoTickList;Lnet/minecraft/world/level/LevelHeightAccessor;)V", at = @At("RETURN"))
@@ -125,9 +129,9 @@ public abstract class MixinProtoChunk implements LightHeightmapGetter, LevelHeig
         at = @At("RETURN")
     )
     private void onSetStatus(ChunkStatus status, CallbackInfo ci) {
-		if (!this.isCubic()) {
-			return;
-		}
+        if (!this.isCubic()) {
+            return;
+        }
         // TODO can this run on the client? Will break things if so.
         if (lightHeightmap == null && this.getStatus().isOrAfter(ChunkStatus.FEATURES)) {
             // Lighting only starts happening after FEATURES, so we init here to avoid creating unnecessary heightmaps
