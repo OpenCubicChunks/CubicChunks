@@ -23,10 +23,13 @@ public class VerticalGraphGroup extends CubeDistanceGraph {
         this.iTicketManager = iTicketManager;
     }
 
+
+    @Override
     protected int getLevel(long cubePosIn) {
         return this.cubesInRange.get(cubePosIn);
     }
 
+    @Override
     protected void setLevel(long cubePosIn, int level) {
         byte b0;
         if (level > this.range) {
@@ -42,6 +45,7 @@ public class VerticalGraphGroup extends CubeDistanceGraph {
         ticketTracker.cubeAffected(cubePosIn);
     }
 
+    @Override
     protected int getSourceLevel(long pos) {
         return this.horizontal.cubesInRange.containsKey(pos) ? 0 : Integer.MAX_VALUE;
     }
@@ -70,10 +74,12 @@ public class VerticalGraphGroup extends CubeDistanceGraph {
             this.superior = VerticalGraphGroup.this;
         }
 
+        @Override
         protected int getLevel(long cubePosIn) {
             return this.cubesInRange.get(cubePosIn);
         }
 
+        @Override
         protected void setLevel(long cubePosIn, int level) {
             byte b0;
             if (level > this.range) {
@@ -91,6 +97,7 @@ public class VerticalGraphGroup extends CubeDistanceGraph {
             superior.updateSourceLevel(pos, actualNewLevel, contained);
         }
 
+        @Override
         protected int getSourceLevel(long pos) {
             return this.hasPlayerInChunk(pos) ? 0 : Integer.MAX_VALUE;
         }
