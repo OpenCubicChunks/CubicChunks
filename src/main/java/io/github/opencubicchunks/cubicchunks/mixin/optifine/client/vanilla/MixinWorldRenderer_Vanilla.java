@@ -51,7 +51,7 @@ public abstract class MixinWorldRenderer_Vanilla {
         }
     }
 
-    @Inject(method = "allChanged", at = @At("HEAD"))
+    @Inject(method = "allChanged", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/ItemBlockRenderTypes;setFancy(Z)V"))
     private void setLastVerticalViewDistance(CallbackInfo ci) {
         this.lastVerticalViewDistance = CubicChunks.config().client.verticalViewDistance;
     }
@@ -69,11 +69,14 @@ public abstract class MixinWorldRenderer_Vanilla {
             return;
         }
 
+        cir.cancel();
         BlockPos blockpos = renderChunkBase.getRelativeOrigin(facing);
         if (Mth.abs(playerPos.getX() - blockpos.getX()) <= this.lastViewDistance * 16
-            && Mth.abs(playerPos.getY() - blockpos.getY()) <= this.lastViewDistance * 16
+            && Mth.abs(playerPos.getY() - blockpos.getY()) <= this.lastVerticalViewDistance * 32
             && Mth.abs(playerPos.getZ() - blockpos.getZ()) <= this.lastViewDistance * 16) {
             cir.setReturnValue(((ViewFrustumAccess) this.viewArea).invokeGetRenderChunkAt(blockpos));
+        } else {
+            cir.setReturnValue(null);
         }
     }
 

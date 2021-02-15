@@ -87,7 +87,7 @@ public abstract class MixinViewFrustum {
     }
 
     @Inject(method = "getRenderChunkAt", at = @At(value = "HEAD"), cancellable = true)
-    private void getRenderChunkAt(BlockPos pos, CallbackInfoReturnable<ChunkRenderDispatcher.RenderChunk> cbi) {
+    private void getRenderChunkAt(BlockPos pos, CallbackInfoReturnable<ChunkRenderDispatcher.RenderChunk> cir) {
         ClientLevel level = Minecraft.getInstance().level;
         if (level != null) {
             if (!((CubicLevelHeightAccessor) level).isCubic()) {
@@ -95,7 +95,8 @@ public abstract class MixinViewFrustum {
             }
         }
 
-        cbi.cancel();
+        cir.cancel();
+
         int x = Mth.intFloorDiv(pos.getX(), 16);
         int y = Mth.intFloorDiv(pos.getY(), 16);
         int z = Mth.intFloorDiv(pos.getZ(), 16);
@@ -103,7 +104,7 @@ public abstract class MixinViewFrustum {
         y = Mth.positiveModulo(y, this.chunkGridSizeY);
         z = Mth.positiveModulo(z, this.chunkGridSizeZ);
         ChunkRenderDispatcher.RenderChunk renderChunk = this.chunks[this.getChunkIndex(x, y, z)];
-        cbi.setReturnValue(renderChunk);
+        cir.setReturnValue(renderChunk);
     }
 
     /**
