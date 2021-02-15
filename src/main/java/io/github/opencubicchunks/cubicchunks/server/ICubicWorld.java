@@ -8,7 +8,7 @@ import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.chunk.ChunkStatus;
 
-public interface ICubicWorld { //TODO: maybe rename this class? I think this name is reserved by the API
+public interface ICubicWorld extends CubicLevelHeightAccessor { //TODO: maybe rename this class? I think this name is reserved by the API
     IBigCube getCube(int cubeX, int cubeY, int cubeZ);
 
     default IBigCube getCube(CubePos cubePos) {

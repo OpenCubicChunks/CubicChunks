@@ -1,14 +1,18 @@
 package io.github.opencubicchunks.cubicchunks;
 
 import java.lang.reflect.InvocationTargetException;
+import java.util.HashMap;
+import java.util.Map;
 
 import io.github.opencubicchunks.cubicchunks.chunk.IChunkManager;
 import io.github.opencubicchunks.cubicchunks.meta.EarlyConfig;
 import io.github.opencubicchunks.cubicchunks.network.PacketDispatcher;
+import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import io.github.opencubicchunks.cubicchunks.world.biome.StripedBiomeSource;
 import io.github.opencubicchunks.cubicchunks.world.gen.feature.CCFeatures;
 import io.github.opencubicchunks.cubicchunks.world.gen.placement.CCPlacement;
 import net.fabricmc.api.ModInitializer;
+import net.minecraft.Util;
 import net.minecraft.core.Registry;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ChunkMap;
@@ -35,6 +39,13 @@ public class CubicChunks implements ModInitializer {
 
     public static final String PROTOCOL_VERSION = "0";
 
+    public static final Map<String, CubicLevelHeightAccessor.WorldStyle> DIMENSION_TO_WORLD_STYLE = Util.make(new HashMap<>(), (set) -> {
+        set.put("minecraft:overworld", CubicLevelHeightAccessor.WorldStyle.CUBIC);
+        set.put("minecraft:the_nether", CubicLevelHeightAccessor.WorldStyle.CHUNK);
+        set.put("minecraft:the_end", CubicLevelHeightAccessor.WorldStyle.CHUNK);
+    });
+
+
     public CubicChunks() {
         if (!(IChunkManager.class.isAssignableFrom(ChunkMap.class))) {
             throw new IllegalStateException("Mixin not applied!");
@@ -59,5 +70,6 @@ public class CubicChunks implements ModInitializer {
         PacketDispatcher.register();
 
         Registry.register(Registry.BIOME_SOURCE, new ResourceLocation(MODID, "stripes"), StripedBiomeSource.CODEC);
+//        Registry.register(Registry.CHUNK_GENERATOR, new ResourceLocation(MODID, "generator"), CCNoiseBasedChunkGenerator.CODEC);
     }
 }

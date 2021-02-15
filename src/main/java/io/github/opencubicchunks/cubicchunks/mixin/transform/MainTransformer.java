@@ -8,6 +8,7 @@ import static org.objectweb.asm.Type.getType;
 import static org.objectweb.asm.commons.Method.getMethod;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -100,13 +101,45 @@ public class MainTransformer {
     }
 
     public static void transformChunkManager(ClassNode targetClass) {
-        final ClassMethod targetMethod = new ClassMethod(getObjectType("net/minecraft/class_3898"), // ChunkMap
+        Map<ClassMethod, String> vanillaToCubic = new HashMap<>();
+        Set<String> makeSyntheticAccessor = new HashSet<>();
+
+        makeSyntheticAccessor.add("updateCubeScheduling");
+        vanillaToCubic.put(new ClassMethod(getObjectType("net/minecraft/class_3898"), // ChunkMap
             getMethod("net.minecraft.class_3193 " // ChunkHolder
                 + "method_17217(long, int, " // updateChunkScheduling
-                + "net.minecraft.class_3193, int)")); // ChunkHolder
-        final String newTargetName = "updateCubeScheduling";
+                + "net.minecraft.class_3193, int)")), "updateCubeScheduling"); // ChunkHolder
+
+        vanillaToCubic.put(new ClassMethod(getObjectType("net/minecraft/class_3898"), //ChunkMap
+            getMethod("boolean "
+                + "method_27055(" // isExistingChunkFull
+                + "net.minecraft.class_1923)" //ChunkPos
+            )), "isExistingCubeFull");
 
         Map<ClassMethod, String> methodRedirects = new HashMap<>();
+
+        methodRedirects.put(new ClassMethod(getObjectType("net/minecraft/class_3898"), // ChunkMap
+            getMethod("net.minecraft.class_2487 " // CompundTag
+                + "method_17979(" // readChunk
+                + "net.minecraft.class_1923)" // chunkPos
+            )), "readCubeNBT");
+
+        methodRedirects.put(new ClassMethod(getObjectType("net/minecraft/class_3898"), // ChunkMap
+            getMethod("void "
+                + "method_27054(" // markPositionReplaceable
+                + "net.minecraft.class_1923)" // chunkPos
+            )), "markCubePositionReplaceable");
+
+        methodRedirects.put(new ClassMethod(getObjectType("net/minecraft/class_3898"),
+            getMethod("byte "
+                + "method_27053(" // markPosition
+                + "net.minecraft.class_1923, " // chunkPos
+                + "net.minecraft.class_2806$class_2808)" // ChunkStatus.ChunkType
+            )), "markCubePosition");
+
+        methodRedirects.put(new ClassMethod(getObjectType("net/minecraft/class_1923"), // ChunkPos
+                getMethod("long method_8324()")), // toLong
+            "asLong");
 
         Map<ClassField, String> fieldRedirects = new HashMap<>();
         fieldRedirects.put(new ClassField(
@@ -129,7 +162,12 @@ public class MainTransformer {
                 getObjectType("net/minecraft/class_3898"), // net/minecraft/server/level/ChunkMap
                 "field_18239", Type.INT_TYPE), // MAX_CHUNK_DISTANCE
             "MAX_CUBE_DISTANCE");
-
+        fieldRedirects.put(new ClassField(
+                "net/minecraft/class_3898", // ChunkMap
+                "field_23786", // chunkTypeCache
+                "Lit/unimi/dsi/fastutil/longs/Long2ByteMap;"),
+            "cubeTypeCache"
+        );
 
         Map<Type, Type> typeRedirects = new HashMap<>();
         // TODO: create target constructor in ChunkHolder with CubePos
@@ -139,8 +177,12 @@ public class MainTransformer {
         typeRedirects.put(getObjectType("net/minecraft/class_3900"), // ChunkTaskPriorityQueueSorter
             getObjectType("io/github/opencubicchunks/cubicchunks/chunk/ticket/CubeTaskPriorityQueueSorter"));
 
-        MethodNode newMethod = cloneAndApplyRedirects(targetClass, targetMethod, newTargetName, methodRedirects, fieldRedirects, typeRedirects);
-        makeStaticSyntheticAccessor(targetClass, newMethod);
+        vanillaToCubic.forEach((old, newName) -> {
+            MethodNode newMethod = cloneAndApplyRedirects(targetClass, old, newName, methodRedirects, fieldRedirects, typeRedirects);
+            if (makeSyntheticAccessor.contains(newName)) {
+                makeStaticSyntheticAccessor(targetClass, newMethod);
+            }
+        });
     }
 
     public static void transformProxyTicketManager(ClassNode targetClass) {

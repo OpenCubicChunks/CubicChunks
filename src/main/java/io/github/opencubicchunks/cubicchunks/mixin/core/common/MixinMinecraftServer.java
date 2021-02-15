@@ -5,6 +5,7 @@ import java.util.Map;
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.ICubeStatusListener;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
+import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import io.github.opencubicchunks.cubicchunks.server.IServerChunkProvider;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import io.github.opencubicchunks.cubicchunks.world.ForcedCubesSaveData;
@@ -24,8 +25,10 @@ import net.minecraft.world.level.Level;
 import org.apache.logging.log4j.Logger;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(MinecraftServer.class)
 public abstract class MixinMinecraftServer {
@@ -42,9 +45,15 @@ public abstract class MixinMinecraftServer {
      * @author NotStirred
      * @reason Additional CC functionality and logging.
      */
-    @Overwrite
-    private void prepareLevels(ChunkProgressListener statusListener) {
+    @Inject(method = "prepareLevels", at = @At("HEAD"), cancellable = true)
+    private void prepareLevels(ChunkProgressListener statusListener, CallbackInfo ci) {
         ServerLevel serverworld = this.overworld();
+        if (!((CubicLevelHeightAccessor) serverworld).isCubic()) {
+            return;
+        }
+
+        ci.cancel();
+
         LOGGER.info("Preparing start region for dimension {}", serverworld.dimension().location());
         BlockPos spawnPos = serverworld.getSharedSpawnPos();
         CubePos spawnPosCube = CubePos.from(spawnPos);

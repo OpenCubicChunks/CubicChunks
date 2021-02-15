@@ -1,8 +1,13 @@
 package io.github.opencubicchunks.cubicchunks.mixin.core.common.tileentity;
 
 import io.github.opencubicchunks.cubicchunks.CubicChunks;
+import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.effect.MobEffect;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BeaconBlockEntity;
 import net.minecraft.world.phys.AABB;
+import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
@@ -20,9 +25,14 @@ public abstract class MixinBeaconTileEntity {
 //        return 256;
 //    }
     @Redirect(method = "applyEffects", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/phys/AABB;expandTowards(DDD)Lnet/minecraft/world/phys/AABB;"))
-    private static AABB on$expand(AABB axisAlignedBB, double x, double y, double z) {
+    private static AABB on$expand(AABB axisAlignedBB, double x, double y, double z, Level world, BlockPos pos, int beaconLevel, @Nullable MobEffect primaryEffect,
+                                  @Nullable MobEffect secondaryEffect) {
+        if (!((CubicLevelHeightAccessor) world).isCubic()) {
+            return axisAlignedBB.expandTowards(x, y, z);
+        }
+
         CubicChunks.LOGGER.warn("on$expand called");
-        return axisAlignedBB.expandTowards(x, 256, z);
+        return axisAlignedBB.expandTowards(x, world.dimensionType().height(), z);
     }
 
 }

@@ -18,6 +18,7 @@ import io.github.opencubicchunks.cubicchunks.chunk.graph.CCTicketType;
 import io.github.opencubicchunks.cubicchunks.chunk.ticket.ITicketManager;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.ChunkManagerAccess;
+import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import io.github.opencubicchunks.cubicchunks.server.IServerChunkProvider;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import io.github.opencubicchunks.cubicchunks.world.lighting.ICubeLightProvider;
@@ -37,7 +38,6 @@ import net.minecraft.world.level.chunk.ChunkStatus;
 import net.minecraft.world.level.storage.LevelData;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -203,7 +203,11 @@ public abstract class MixinServerChunkProvider implements IServerChunkProvider, 
     }
 
     @Inject(method = "runDistanceManagerUpdates", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerChunkCache;clearCache()V"))
-    private void onRefeshAndInvalidate(CallbackInfoReturnable<Boolean> cir) {
+    private void onRefreshAndInvalidate(CallbackInfoReturnable<Boolean> cir) {
+
+        if (!((CubicLevelHeightAccessor) this.level).isCubic()) {
+            return;
+        }
         this.clearCubeCache();
     }
 
@@ -257,6 +261,10 @@ public abstract class MixinServerChunkProvider implements IServerChunkProvider, 
      */
     @Inject(method = "blockChanged", at = @At("RETURN"))
     public void onBlockChanged(BlockPos pos, CallbackInfo ci) {
+        if (!((CubicLevelHeightAccessor) this.level).isCubic()) {
+            return;
+        }
+
         ChunkHolder chunkholder = ((IChunkManager) this.chunkMap).getCubeHolder(CubePos.from(pos).asLong());
         if (chunkholder != null) {
             // markBlockChanged
@@ -268,6 +276,10 @@ public abstract class MixinServerChunkProvider implements IServerChunkProvider, 
         locals = LocalCapture.CAPTURE_FAILHARD)
     private void tickSections(CallbackInfo ci, long l, long timePassed, LevelData levelData, boolean bl, boolean doMobSpawning, int randomTicks, boolean bl3, int j,
                               NaturalSpawner.SpawnState spawnState) {
+        if (!((CubicLevelHeightAccessor) this.level).isCubic()) {
+            return;
+        }
+
         ((IChunkManager) this.chunkMap).getCubes().forEach((cubeHolder) -> {
             Optional<BigCube> optional =
                 ((ICubeHolder) cubeHolder).getCubeEntityTickingFuture().getNow(ICubeHolder.UNLOADED_CUBE).left();
@@ -293,8 +305,11 @@ public abstract class MixinServerChunkProvider implements IServerChunkProvider, 
      * @author Barteks2x
      * @reason debug string
      */
-    @Overwrite
-    public String gatherStats() {
-        return "ServerChunkCache: " + this.getLoadedChunksCount() + " | " + ((IChunkManager) chunkMap).sizeCubes();
+    @Inject(method = "gatherStats", at = @At("HEAD"), cancellable = true)
+    public void gatherStats(CallbackInfoReturnable<String> cir) {
+        if (!((CubicLevelHeightAccessor) this.level).isCubic()) {
+            return;
+        }
+        cir.setReturnValue("ServerChunkCache: " + this.getLoadedChunksCount() + " | " + ((IChunkManager) chunkMap).sizeCubes());
     }
 }

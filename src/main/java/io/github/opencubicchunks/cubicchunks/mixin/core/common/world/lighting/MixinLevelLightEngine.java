@@ -10,8 +10,10 @@ import io.github.opencubicchunks.cubicchunks.world.lighting.ISkyLightColumnCheck
 import io.github.opencubicchunks.cubicchunks.world.lighting.IWorldLightManager;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.SectionPos;
+import net.minecraft.world.level.LevelHeightAccessor;
 import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.level.chunk.DataLayer;
+import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.lighting.LayerLightEngine;
 import net.minecraft.world.level.lighting.LevelLightEngine;
 import net.minecraft.world.level.lighting.LightEventListener;
@@ -21,6 +23,7 @@ import org.spongepowered.asm.mixin.Shadow;
 
 @Mixin(LevelLightEngine.class)
 public abstract class MixinLevelLightEngine implements IWorldLightManager, LightEventListener, ISkyLightColumnChecker {
+    @Shadow @Final protected LevelHeightAccessor levelHeightAccessor;
 
     @Shadow @Final @Nullable private LayerLightEngine<?, ?> blockEngine;
 
@@ -39,6 +42,7 @@ public abstract class MixinLevelLightEngine implements IWorldLightManager, Light
 
     @Shadow public void onBlockEmissionIncrease(BlockPos blockPos, int lightValue) {
     }
+
 
     @Override
     public void retainData(CubePos cubePos, boolean retain) {
@@ -69,9 +73,9 @@ public abstract class MixinLevelLightEngine implements IWorldLightManager, Light
     }
 
     @Override
-    public void checkSkyLightColumn(int x, int z, int oldHeight, int newHeight) {
+    public void checkSkyLightColumn(LevelChunk chunk, int x, int z, int oldHeight, int newHeight) {
         if (this.skyEngine != null) {
-            ((ISkyLightColumnChecker) skyEngine).checkSkyLightColumn(x, z, oldHeight, newHeight);
+            ((ISkyLightColumnChecker) skyEngine).checkSkyLightColumn(chunk, x, z, oldHeight, newHeight);
         }
     }
 }

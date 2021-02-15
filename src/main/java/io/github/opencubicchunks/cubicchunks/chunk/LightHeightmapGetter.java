@@ -17,6 +17,7 @@ public interface LightHeightmapGetter {
     default LightSurfaceTrackerWrapper getServerLightHeightmap() {
         Heightmap lightHeightmap = this.getLightHeightmap();
         if (!(lightHeightmap instanceof LightSurfaceTrackerWrapper)) {
+        	System.out.println(lightHeightmap);
             throw new Error("Kurst is dumb");
         }
         return (LightSurfaceTrackerWrapper) lightHeightmap;

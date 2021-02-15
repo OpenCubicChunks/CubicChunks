@@ -2,10 +2,12 @@ package io.github.opencubicchunks.cubicchunks.mixin.core.common.chunk;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
 import java.util.function.Function;
 
 import com.mojang.datafixers.util.Either;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.CubePrimer;
+import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import net.minecraft.server.level.ChunkHolder;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ThreadedLevelLightEngine;
@@ -21,7 +23,7 @@ import org.spongepowered.asm.mixin.Shadow;
 @Mixin(targets = "net.minecraft.world.level.chunk.ChunkStatus$SimpleGenerationTask")
 public interface MixinISelectiveWorker {
 
-    @Shadow void doWork(ServerLevel p_doWork_1_, ChunkGenerator p_doWork_2_, List<ChunkAccess> p_doWork_3_, ChunkAccess p_doWork_4_);
+    @Shadow void doWork(ServerLevel world, ChunkGenerator generator, List<ChunkAccess> neighbors, ChunkAccess chunk);
 
     /**
      * @author Batrteks2x
@@ -29,13 +31,23 @@ public interface MixinISelectiveWorker {
      */
     @Overwrite
     default CompletableFuture<Either<ChunkAccess, ChunkHolder.ChunkLoadingFailure>> doWork(
-        ChunkStatus status, ServerLevel p_doWork_2_, ChunkGenerator p_doWork_3_,
-        StructureManager p_doWork_4_, ThreadedLevelLightEngine p_doWork_5_,
-        Function<ChunkAccess, CompletableFuture<Either<ChunkAccess, ChunkHolder.ChunkLoadingFailure>>> p_doWork_6_,
-        List<ChunkAccess> p_doWork_7_, ChunkAccess chunk) {
+        ChunkStatus status, Executor executor, ServerLevel world, ChunkGenerator generator,
+        StructureManager structureManager, ThreadedLevelLightEngine lightEngine,
+        Function<ChunkAccess, CompletableFuture<Either<ChunkAccess, ChunkHolder.ChunkLoadingFailure>>> completableFuture,
+        List<ChunkAccess> neighbors, ChunkAccess chunk) {
+
+        if (!((CubicLevelHeightAccessor) chunk).isCubic()) {
+            if (!chunk.getStatus().isOrAfter(status)) {
+                this.doWork(world, generator, neighbors, chunk);
+                if (chunk instanceof ProtoChunk) {
+                    ((ProtoChunk) chunk).setStatus(status);
+                }
+            }
+            return CompletableFuture.completedFuture(Either.left(chunk));
+        }
 
         if (!chunk.getStatus().isOrAfter(status)) {
-            this.doWork(p_doWork_2_, p_doWork_3_, p_doWork_7_, chunk);
+            this.doWork(world, generator, neighbors, chunk);
             if (chunk instanceof ProtoChunk) {
                 ((ProtoChunk) chunk).setStatus(status);
             } else if (chunk instanceof CubePrimer) {

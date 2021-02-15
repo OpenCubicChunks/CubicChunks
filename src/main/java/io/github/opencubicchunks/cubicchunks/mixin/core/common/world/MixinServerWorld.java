@@ -8,6 +8,7 @@ import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.BigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.heightmap.SurfaceTrackerWrapper;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
+import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import io.github.opencubicchunks.cubicchunks.server.ICubicWorld;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import io.github.opencubicchunks.cubicchunks.world.server.IServerWorld;
@@ -39,6 +40,12 @@ public abstract class MixinServerWorld extends Level implements IServerWorld {
 
     @Redirect(method = "tickChunk", at = @At(value = "INVOKE", target = "Ljava/util/Random;nextInt(I)I", ordinal = 1))
     private int onRandNextInt(Random random, int bound, LevelChunk levelChunk, int i) {
+
+        if (!((CubicLevelHeightAccessor) levelChunk).isCubic()) {
+            return random.nextInt(bound);
+        }
+
+
         ChunkPos chunkPos = levelChunk.getPos();
         int x = chunkPos.getMinBlockX();
         int z = chunkPos.getMinBlockZ();

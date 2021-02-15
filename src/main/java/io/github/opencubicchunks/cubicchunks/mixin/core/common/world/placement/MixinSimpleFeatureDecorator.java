@@ -23,7 +23,7 @@ public abstract class MixinSimpleFeatureDecorator<DC extends DecoratorConfigurat
 
     @Inject(at = @At("HEAD"), method = "getPositions", cancellable = true)
     private void getCubicPositions(DecorationContext decorationContext, Random random, DC decoratorConfiguration, BlockPos blockPos, CallbackInfoReturnable<Stream<BlockPos>> cir) {
-        if (!((CubicLevelHeightAccessor) decorationContext).isCubicWorld()) {
+        if (((CubicLevelHeightAccessor) decorationContext).generates2DChunks()) {
             return;
         }
 

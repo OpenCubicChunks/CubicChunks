@@ -29,11 +29,9 @@ import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import net.minecraft.Util;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtIo;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.thread.ProcessorMailbox;
 import net.minecraft.util.thread.StrictQueue;
 import net.minecraft.world.level.ChunkPos;
-import net.minecraft.world.level.Level;
 import org.apache.logging.log4j.Logger;
 
 public class RegionCubeIO {
@@ -42,7 +40,6 @@ public class RegionCubeIO {
     private static final long MB = KB * 1024;
     private static final Logger LOGGER = CubicChunks.LOGGER;
 
-    @Nonnull private final Level world;
     private final File storageFolder;
 
     private SaveCubeColumns saveCubeColumns;
@@ -54,26 +51,18 @@ public class RegionCubeIO {
 
     private final AtomicBoolean shutdownRequested = new AtomicBoolean();
 
-    public RegionCubeIO(Level world, File storageFolder) throws IOException {
-        this.world = world;
+    public RegionCubeIO(File storageFolder, @Nullable String chunkWorkerName, String cubeWorkerName) throws IOException {
         this.storageFolder = storageFolder;
 
-        this.chunkExecutor = new ProcessorMailbox<>(new StrictQueue.FixedPriorityQueue(Priority.values().length), Util.ioPool(), "RegionCubeIO-chunk");
-        this.cubeExecutor = new ProcessorMailbox<>(new StrictQueue.FixedPriorityQueue(Priority.values().length), Util.ioPool(), "RegionCubeIO-cube");
+
+        this.chunkExecutor = new ProcessorMailbox<>(new StrictQueue.FixedPriorityQueue(Priority.values().length), Util.ioPool(), "RegionCubeIO-" + chunkWorkerName);
+        this.cubeExecutor = new ProcessorMailbox<>(new StrictQueue.FixedPriorityQueue(Priority.values().length), Util.ioPool(), "RegionCubeIO-" + cubeWorkerName);
 
         initSave();
     }
 
     private void initSave() throws IOException {
-        File file;
-        if (world instanceof ServerLevel) {
-            file = storageFolder;
-        } else {
-            //TODO: implement client world
-            throw new IOException("NOT IMPLEMENTED");
-            //            Path path = Paths.get(".").toAbsolutePath().resolve("clientCache").resolve("DIM" + world.dimension());
-        }
-        this.saveCubeColumns = SaveCubeColumns.create(file.toPath());
+        this.saveCubeColumns = SaveCubeColumns.create(storageFolder.toPath());
     }
 
     private synchronized void closeSave() throws IOException {

@@ -27,6 +27,7 @@ import io.github.opencubicchunks.cubicchunks.chunk.heightmap.SurfaceTrackerSecti
 import io.github.opencubicchunks.cubicchunks.chunk.heightmap.SurfaceTrackerWrapper;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.ChunkSectionAccess;
+import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import io.github.opencubicchunks.cubicchunks.utils.MathUtil;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
@@ -70,7 +71,7 @@ import net.minecraft.world.level.material.Fluids;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class BigCube implements ChunkAccess, IBigCube {
+public class BigCube implements ChunkAccess, IBigCube, CubicLevelHeightAccessor {
 
     private static final TickingBlockEntity NULL_TICKER = new TickingBlockEntity() {
         public void tick() {
@@ -114,6 +115,10 @@ public class BigCube implements ChunkAccess, IBigCube {
     private long inhabitedTime;
     @Nullable private Consumer<BigCube> postLoadConsumer;
     @Nullable private Supplier<ChunkHolder.FullChunkStatus> fullStatus;
+
+    private final boolean isCubic;
+    private final boolean generates2DChunks;
+    private final WorldStyle worldStyle;
 
     public BigCube(Level worldIn, CubePos cubePosIn, CubeBiomeContainer biomeContainerIn) {
         this(worldIn, cubePosIn, biomeContainerIn, UpgradeData.EMPTY, EmptyTickList.empty(), EmptyTickList.empty(), 0L, null, null);
@@ -166,6 +171,10 @@ public class BigCube implements ChunkAccess, IBigCube {
                 }
             }
         }
+
+        isCubic = ((CubicLevelHeightAccessor) worldIn).isCubic();
+        generates2DChunks = ((CubicLevelHeightAccessor) worldIn).generates2DChunks();
+        worldStyle = ((CubicLevelHeightAccessor) worldIn).worldStyle();
 
 //        this.gatherCapabilities();
     }
@@ -916,6 +925,18 @@ public class BigCube implements ChunkAccess, IBigCube {
 
     @Override public int getMinBuildHeight() {
         return level.getMinBuildHeight();
+    }
+
+    @Override public WorldStyle worldStyle() {
+        return worldStyle;
+    }
+
+    @Override public boolean isCubic() {
+        return isCubic;
+    }
+
+    @Override public boolean generates2DChunks() {
+        return generates2DChunks;
     }
 
     public static class RebindableTickingBlockEntityWrapper implements TickingBlockEntity {

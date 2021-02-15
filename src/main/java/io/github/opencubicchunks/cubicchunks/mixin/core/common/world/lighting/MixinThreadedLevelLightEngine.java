@@ -10,6 +10,7 @@ import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.IChunkManager;
 import io.github.opencubicchunks.cubicchunks.chunk.ticket.CubeTaskPriorityQueueSorter;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
+import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import io.github.opencubicchunks.cubicchunks.world.server.IServerWorldLightManager;
 import it.unimi.dsi.fastutil.objects.ObjectList;
@@ -21,11 +22,14 @@ import net.minecraft.server.level.ThreadedLevelLightEngine;
 import net.minecraft.util.thread.ProcessorHandle;
 import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.level.chunk.DataLayer;
+import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.chunk.LevelChunkSection;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(ThreadedLevelLightEngine.class)
 public abstract class MixinThreadedLevelLightEngine extends MixinLevelLightEngine implements IServerWorldLightManager {
@@ -51,8 +55,13 @@ public abstract class MixinThreadedLevelLightEngine extends MixinLevelLightEngin
      * @author NotStirred
      * @reason lambdas
      */
-    @Overwrite
-    public void checkBlock(BlockPos blockPosIn) {
+    @Inject(method = "checkBlock", at = @At("HEAD"), cancellable = true)
+    public void checkBlock(BlockPos blockPosIn, CallbackInfo ci) {
+        if (!((CubicLevelHeightAccessor) this.levelHeightAccessor).isCubic()) {
+            return;
+        }
+        ci.cancel();
+
         BlockPos blockpos = blockPosIn.immutable();
         this.addTask(
             Coords.blockToCube(blockPosIn.getX()),
@@ -137,10 +146,10 @@ public abstract class MixinThreadedLevelLightEngine extends MixinLevelLightEngin
     }
 
     @Override
-    public void checkSkyLightColumn(int x, int z, int oldHeight, int newHeight) {
+    public void checkSkyLightColumn(LevelChunk chunk, int x, int z, int oldHeight, int newHeight) {
         // FIXME figure out when this should actually be scheduled instead of just hoping for the best
         this.addTask(SectionPos.blockToSectionCoord(x), SectionPos.blockToSectionCoord(z), ThreadedLevelLightEngine.TaskType.POST_UPDATE, Util.name(() -> {
-            super.checkSkyLightColumn(x, z, oldHeight, newHeight);
+            super.checkSkyLightColumn(chunk, x, z, oldHeight, newHeight);
         }, () -> "checkSkyLightColumn " + x + " " + z));
     }
 
@@ -148,8 +157,13 @@ public abstract class MixinThreadedLevelLightEngine extends MixinLevelLightEngin
      * @author NotStirred
      * @reason Vanilla lighting is gone
      */
-    @Overwrite
-    public void updateSectionStatus(SectionPos pos, boolean isEmpty) {
+    @Inject(method = "updateSectionStatus", at = @At("HEAD"), cancellable = true)
+    public void updateSectionStatus(SectionPos pos, boolean isEmpty, CallbackInfo ci) {
+        if (!((CubicLevelHeightAccessor) this.levelHeightAccessor).isCubic()) {
+            return;
+        }
+
+        ci.cancel();
         CubePos cubePos = CubePos.from(pos);
         this.addTask(cubePos.getX(), cubePos.getY(), cubePos.getZ(), () -> 0, ThreadedLevelLightEngine.TaskType.PRE_UPDATE, Util.name(() -> {
             super.updateSectionStatus(pos, isEmpty);
@@ -167,8 +181,14 @@ public abstract class MixinThreadedLevelLightEngine extends MixinLevelLightEngin
      * @author NotStirred
      * @reason Vanilla lighting is gone
      */
-    @Overwrite
-    public void queueSectionData(LightLayer type, SectionPos pos, @Nullable DataLayer array, boolean flag) {
+    @Inject(method = "queueSectionData", at = @At("HEAD"), cancellable = true)
+    public void queueSectionData(LightLayer type, SectionPos pos, @Nullable DataLayer array, boolean flag, CallbackInfo ci) {
+        if (!((CubicLevelHeightAccessor) this.levelHeightAccessor).isCubic()) {
+            return;
+        }
+
+        ci.cancel();
+
         CubePos cubePos = CubePos.from(pos);
         this.addTask(cubePos.getX(), cubePos.getY(), cubePos.getZ(), () -> 0, ThreadedLevelLightEngine.TaskType.PRE_UPDATE, Util.name(() -> {
             super.queueSectionData(type, pos, array, flag);

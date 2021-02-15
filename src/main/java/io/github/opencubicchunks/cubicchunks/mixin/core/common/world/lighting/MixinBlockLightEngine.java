@@ -1,5 +1,6 @@
 package io.github.opencubicchunks.cubicchunks.mixin.core.common.world.lighting;
 
+import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import io.github.opencubicchunks.cubicchunks.world.lighting.ICubeLightProvider;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.SectionPos;
@@ -7,7 +8,9 @@ import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.lighting.BlockLightEngine;
 import net.minecraft.world.level.lighting.BlockLightSectionStorage;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(BlockLightEngine.class)
 public abstract class MixinBlockLightEngine extends MixinLightEngine<BlockLightSectionStorage.BlockDataLayerStorageMap, BlockLightSectionStorage> {
@@ -16,8 +19,13 @@ public abstract class MixinBlockLightEngine extends MixinLightEngine<BlockLightS
      * @author NotStirred
      * @reason Vanilla lighting is bye bye
      */
-    @Overwrite
-    private int getLightEmission(long worldPos) {
+    @Inject(method = "getLightEmission", at = @At("HEAD"), cancellable = true)
+    private void getLightEmission(long worldPos, CallbackInfoReturnable<Integer> cir) {
+        if (!((CubicLevelHeightAccessor) this.chunkSource.getLevel()).isCubic()) {
+            return;
+        }
+
+        cir.cancel();
         int blockX = BlockPos.getX(worldPos);
         int blockY = BlockPos.getY(worldPos);
         int blockZ = BlockPos.getZ(worldPos);
@@ -26,7 +34,7 @@ public abstract class MixinBlockLightEngine extends MixinLightEngine<BlockLightS
             SectionPos.blockToSectionCoord(blockY),
             SectionPos.blockToSectionCoord(blockZ)
         );
-        return iblockreader != null ? iblockreader.getLightEmission(this.pos.set(blockX, blockY, blockZ)) : 0;
+        cir.setReturnValue(iblockreader != null ? iblockreader.getLightEmission(this.pos.set(blockX, blockY, blockZ)) : 0);
     }
 
 }

@@ -33,6 +33,7 @@ import io.github.opencubicchunks.cubicchunks.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.chunk.CubeCollectorFuture;
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.IChunkManager;
+import io.github.opencubicchunks.cubicchunks.chunk.IChunkMapInternal;
 import io.github.opencubicchunks.cubicchunks.chunk.ICubeHolder;
 import io.github.opencubicchunks.cubicchunks.chunk.ICubeStatusListener;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.BigCube;
@@ -40,6 +41,7 @@ import io.github.opencubicchunks.cubicchunks.chunk.cube.CubePrimer;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.CubePrimerWrapper;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.CubeStatus;
 import io.github.opencubicchunks.cubicchunks.chunk.graph.CCTicketType;
+import io.github.opencubicchunks.cubicchunks.chunk.storage.ISectionStorage;
 import io.github.opencubicchunks.cubicchunks.chunk.ticket.CubeTaskPriorityQueue;
 import io.github.opencubicchunks.cubicchunks.chunk.ticket.CubeTaskPriorityQueueSorter;
 import io.github.opencubicchunks.cubicchunks.chunk.ticket.ITicketManager;
@@ -52,6 +54,7 @@ import io.github.opencubicchunks.cubicchunks.network.PacketHeightmap;
 import io.github.opencubicchunks.cubicchunks.network.PacketUnloadCube;
 import io.github.opencubicchunks.cubicchunks.network.PacketUpdateCubePosition;
 import io.github.opencubicchunks.cubicchunks.network.PacketUpdateLight;
+import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import io.github.opencubicchunks.cubicchunks.world.server.IServerWorld;
 import io.github.opencubicchunks.cubicchunks.world.server.IServerWorldLightManager;
@@ -88,6 +91,7 @@ import net.minecraft.util.thread.ProcessorHandle;
 import net.minecraft.util.thread.ProcessorMailbox;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.ai.village.poi.PoiManager;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.ChunkGenerator;
@@ -95,7 +99,6 @@ import net.minecraft.world.level.chunk.ChunkStatus;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.chunk.LightChunkGetter;
 import net.minecraft.world.level.chunk.UpgradeData;
-import net.minecraft.world.level.chunk.storage.ChunkSerializer;
 import net.minecraft.world.level.entity.ChunkStatusUpdateListener;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureManager;
 import net.minecraft.world.level.lighting.LevelLightEngine;
@@ -104,7 +107,6 @@ import net.minecraft.world.level.storage.LevelStorageSource;
 import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Group;
@@ -115,7 +117,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 @Mixin(ChunkMap.class)
-public abstract class MixinChunkManager implements IChunkManager {
+public abstract class MixinChunkManager implements IChunkManager, IChunkMapInternal {
 
     private static final double TICK_UPDATE_DISTANCE = 128.0;
 
@@ -164,6 +166,8 @@ public abstract class MixinChunkManager implements IChunkManager {
 
     @Shadow @Final private PlayerMap playerMap;
 
+    @Shadow @Final private PoiManager poiManager;
+
     @Shadow private volatile Long2ObjectLinkedOpenHashMap<ChunkHolder> visibleChunkMap;
 
     @Shadow protected abstract boolean skipPlayer(ServerPlayer player);
@@ -176,6 +180,16 @@ public abstract class MixinChunkManager implements IChunkManager {
     }
 
     @Shadow public abstract Stream<ServerPlayer> getPlayers(ChunkPos chunkPos, boolean bl);
+
+
+    @Shadow @Nullable protected abstract CompoundTag readChunk(ChunkPos pos) throws IOException;
+
+    @Redirect(method = "<init>", at = @At(value = "NEW", target = "net/minecraft/server/level/ChunkMap$DistanceManager"))
+    private ChunkMap.DistanceManager setIsCubic(ChunkMap chunkMap, Executor executor, Executor executor2, ServerLevel worldIn) {
+        ChunkMap.DistanceManager distanceManager1 = chunkMap.new DistanceManager(executor, executor2);
+        ((ITicketManager) distanceManager1).hasCubicTickets(((CubicLevelHeightAccessor) this.level).isCubic());
+        return distanceManager1;
+    }
 
     @Inject(method = "<init>", at = @At("RETURN"), locals = LocalCapture.CAPTURE_FAILHARD)
     private void onConstruct(ServerLevel worldIn,
@@ -193,6 +207,9 @@ public abstract class MixinChunkManager implements IChunkManager {
                              boolean p_i232602_12_,
                              CallbackInfo ci, ProcessorMailbox delegatedtaskexecutor,
                              ProcessorHandle itaskexecutor, ProcessorMailbox delegatedtaskexecutor1) {
+        if (!((CubicLevelHeightAccessor) this.level).isCubic()) {
+            return;
+        }
 
         this.cubeQueueSorter = new CubeTaskPriorityQueueSorter(ImmutableList.of(delegatedtaskexecutor,
             itaskexecutor, delegatedtaskexecutor1), p_i51538_5_, Integer.MAX_VALUE);
@@ -203,7 +220,7 @@ public abstract class MixinChunkManager implements IChunkManager {
             this.cubeQueueSorter.createExecutor(delegatedtaskexecutor1, false));
 
         try {
-            regionCubeIO = new RegionCubeIO(worldIn, storageFolder);
+            regionCubeIO = new RegionCubeIO(storageFolder, "chunk", "cube");
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
@@ -212,6 +229,10 @@ public abstract class MixinChunkManager implements IChunkManager {
     @Inject(method = "tick(Ljava/util/function/BooleanSupplier;)V",
         at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ChunkMap;processUnloads(Ljava/util/function/BooleanSupplier;)V"))
     protected void onTickScheduleUnloads(BooleanSupplier hasMoreTime, CallbackInfo ci) {
+        if (!((CubicLevelHeightAccessor) this.level).isCubic()) {
+            return;
+        }
+
         this.processCubeUnloads(hasMoreTime);
     }
 
@@ -224,6 +245,11 @@ public abstract class MixinChunkManager implements IChunkManager {
 
     @Inject(method = "saveAllChunks", at = @At("HEAD"))
     protected void save(boolean flush, CallbackInfo ci) {
+
+        if (!((CubicLevelHeightAccessor) this.level).isCubic()) {
+            return;
+        }
+
         if (flush) {
             List<ChunkHolder> list =
                 this.visibleCubeMap.values().stream().filter(ChunkHolder::wasAccessibleSinceLastSave).peek(ChunkHolder::refreshAccessibility).collect(
@@ -261,7 +287,7 @@ public abstract class MixinChunkManager implements IChunkManager {
 
     // chunkSave
     private boolean cubeSave(IBigCube cube) {
-//        this.poiManager.flush(cube.getCubePos());
+        ((ISectionStorage) this.poiManager).flush(cube.getCubePos());
         if (!cube.isDirty()) {
             return false;
         } else {
@@ -307,27 +333,8 @@ public abstract class MixinChunkManager implements IChunkManager {
         }
     }
 
-    private boolean isExistingCubeFull(CubePos cubePos) {
-        byte b0 = cubeTypeCache.get(cubePos.asLong());
-        if (b0 != 0) {
-            return b0 == 1;
-        } else {
-            CompoundTag compoundnbt;
-            try {
-                compoundnbt = regionCubeIO.loadCubeNBT(cubePos);
-                if (compoundnbt == null) {
-                    this.markCubePositionReplaceable(cubePos);
-                    return false;
-                }
-            } catch (Exception exception) {
-                LOGGER.error("Failed to read chunk {}", cubePos, exception);
-                this.markCubePositionReplaceable(cubePos);
-                return false;
-            }
-
-            ChunkStatus.ChunkType status = ChunkSerializer.getChunkTypeFromTag(compoundnbt);
-            return this.markCubePosition(cubePos, status) == 1;
-        }
+    private CompoundTag readCubeNBT(CubePos cubePos) throws IOException {
+        return regionCubeIO.loadCubeNBT(cubePos);
     }
 
     // processUnloads
@@ -420,6 +427,10 @@ public abstract class MixinChunkManager implements IChunkManager {
     @Group(name = "MixinChunkManager.on_func_219244_a_StatusChange", min = 1, max = 1)
     private void on_func_219244_a_StatusChange(ChunkStatus chunkStatusIn, ChunkPos chunkpos,
                                                ChunkHolder chunkHolderIn, Either<?, ?> p_223180_4_, CallbackInfoReturnable<CompletionStage<?>> cir) {
+        if (!((CubicLevelHeightAccessor) this.level).isCubic()) {
+            return;
+        }
+
         if (((ICubeHolder) chunkHolderIn).getCubePos() != null) {
             ((ICubeStatusListener) progressListener).onCubeStatusChange(
                 ((ICubeHolder) chunkHolderIn).getCubePos(),
@@ -436,23 +447,32 @@ public abstract class MixinChunkManager implements IChunkManager {
     @Group(name = "MixinChunkManager.onScheduleSaveStatusChange", min = 1, max = 1)
     private void onScheduleSaveStatusChange(ChunkHolder chunkHolderIn, CompletableFuture<?> completablefuture,
                                             long chunkPosIn, ChunkAccess p_219185_5_, CallbackInfo ci) {
+        if (!((CubicLevelHeightAccessor) this.level).isCubic()) {
+            return;
+        }
+
         if (((ICubeHolder) chunkHolderIn).getCubePos() != null) {
             ((ICubeStatusListener) progressListener).onCubeStatusChange(
                 ((ICubeHolder) chunkHolderIn).getCubePos(), null);
         }
     }
 
+
+    //A lamdba inside a lambda in the method scheduleChunkGeneration.
     @SuppressWarnings({ "UnresolvedMixinReference", "target" })
     @Inject(
-        method = "lambda$null$18(Lnet/minecraft/world/level/ChunkPos;Lnet/minecraft/server/level/ChunkHolder;Lnet/minecraft/world/level/chunk/ChunkStatus;Ljava/util/List;)"
-            + "Ljava/util/concurrent/CompletableFuture;",
+        method = "lambda$null$19(Lnet/minecraft/world/level/ChunkPos;Lnet/minecraft/server/level/ChunkHolder;Lnet/minecraft/world/level/chunk/ChunkStatus;Ljava/util/concurrent/Executor;"
+            + "Ljava/util/List;)Ljava/util/concurrent/CompletableFuture;",
         at = @At(
             value = "INVOKE",
             target = "Lnet/minecraft/server/level/progress/ChunkProgressListener;onStatusChange(Lnet/minecraft/world/level/ChunkPos;Lnet/minecraft/world/level/chunk/ChunkStatus;)V"
         )
     )
-    private void onGenerateStatusChange(ChunkPos chunkpos, ChunkHolder chunkHolderIn, ChunkStatus chunkStatusIn, List<?> p_223148_4_,
+    private void onGenerateStatusChange(ChunkPos chunkpos, ChunkHolder chunkHolderIn, ChunkStatus chunkStatusIn, Executor executor, List<?> p_223148_4_,
                                         CallbackInfoReturnable<CompletableFuture<?>> cir) {
+        if (!((CubicLevelHeightAccessor) this.level).isCubic()) {
+            return;
+        }
         if (((ICubeHolder) chunkHolderIn).getCubePos() != null) {
             ((ICubeStatusListener) progressListener).onCubeStatusChange(
                 ((ICubeHolder) chunkHolderIn).getCubePos(), null);
@@ -466,6 +486,9 @@ public abstract class MixinChunkManager implements IChunkManager {
         )
     )
     private void onPromoteChunkMap(CallbackInfoReturnable<Boolean> cir) {
+        if (!((CubicLevelHeightAccessor) this.level).isCubic()) {
+            return;
+        }
         this.visibleCubeMap = updatingCubeMap.clone();
     }
 
@@ -539,11 +562,14 @@ public abstract class MixinChunkManager implements IChunkManager {
         this.level.getProfiler().incrementCounter(() -> {
             return "cubeGenerate " + chunkStatusIn.getName();
         });
+
+        Executor executor = (runnable) -> this.cubeWorldgenMailbox.tell(CubeTaskPriorityQueueSorter.createMsg(chunkHolderIn, runnable));
+
         return future.thenComposeAsync((sectionOrError) -> {
             return sectionOrError.map((neighborSections) -> {
                 try {
                     CompletableFuture<Either<IBigCube, ChunkHolder.ChunkLoadingFailure>> finalFuture = Utils.unsafeCast(
-                        chunkStatusIn.generate(this.level, this.generator, this.structureManager, this.lightEngine, (chunk) -> {
+                        chunkStatusIn.generate(executor, this.level, this.generator, this.structureManager, this.lightEngine, (chunk) -> {
                             return Utils.unsafeCast(this.protoCubeToFullCube(chunkHolderIn));
                         }, Utils.unsafeCast(neighborSections)));
                     ((ICubeStatusListener) this.progressListener).onCubeStatusChange(cubePos, chunkStatusIn);
@@ -752,21 +778,22 @@ public abstract class MixinChunkManager implements IChunkManager {
 
     @Redirect(method = "save", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ChunkMap;write(Lnet/minecraft/world/level/ChunkPos;Lnet/minecraft/nbt/CompoundTag;)V"))
     private void on$writeChunk(ChunkMap chunkManager, ChunkPos chunkPos, CompoundTag chunkNBT) {
+        if (!((CubicLevelHeightAccessor) this.level).isCubic()) {
+            chunkManager.write(chunkPos, chunkNBT);
+            return;
+        }
         regionCubeIO.saveChunkNBT(chunkPos, chunkNBT);
     }
 
-    @SuppressWarnings("UnresolvedMixinReference")
+    @SuppressWarnings({ "UnresolvedMixinReference", "ConstantConditions" })
     @Redirect(method = "lambda$scheduleChunkLoad$14(Lnet/minecraft/world/level/ChunkPos;)Lcom/mojang/datafixers/util/Either;",
         at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ChunkMap;readChunk(Lnet/minecraft/world/level/ChunkPos;)Lnet/minecraft/nbt/CompoundTag;"))
-    private CompoundTag on$readChunk(ChunkMap chunkManager, ChunkPos chunkPos) {
-        try {
-            //noinspection ConstantConditions
-            return regionCubeIO.loadChunkNBT(chunkPos);
-        } catch (IOException e) {
-            LOGGER.error("Couldn't load chunk {}", chunkPos, e);
-            //noinspection ConstantConditions
-            return null;
+    private CompoundTag on$readChunk(ChunkMap chunkManager, ChunkPos chunkPos) throws IOException {
+        if (!((CubicLevelHeightAccessor) this.level).isCubic()) {
+            return this.readChunk(chunkPos);
         }
+
+        return regionCubeIO.loadChunkNBT(chunkPos);
     }
 
     //readChunk
@@ -830,8 +857,13 @@ public abstract class MixinChunkManager implements IChunkManager {
      * @author NotStirred
      * @reason Due to vanilla calling ChunkManager#updatePlayerPos, which updates player#managedSectionPos, this is required.
      */
-    @Overwrite
-    void updatePlayerStatus(ServerPlayer player, boolean track) {
+    @Inject(method = "updatePlayerStatus", at = @At("HEAD"), cancellable = true)
+    void updatePlayerStatus(ServerPlayer player, boolean track, CallbackInfo ci) {
+        if (!((CubicLevelHeightAccessor) this.level).isCubic()) {
+            return;
+        }
+
+        ci.cancel();
         boolean cannotGenerateChunks = this.skipPlayer(player);
         boolean cannotGenerateChunksTracker = this.playerMap.ignoredOrUnknown(player);
         int xFloor = Coords.getCubeXForEntity(player);
@@ -883,9 +915,12 @@ public abstract class MixinChunkManager implements IChunkManager {
      * @author NotStirred
      * @reason To fix crash when vanilla updated player#managedSectionPos
      */
-    @Overwrite
-    public void move(ServerPlayer player) {
-
+    @Inject(method = "move", at = @At("HEAD"), cancellable = true)
+    public void move(ServerPlayer player, CallbackInfo ci) {
+        if (!((CubicLevelHeightAccessor) this.level).isCubic()) {
+            return;
+        }
+        ci.cancel();
         for (ChunkMap.TrackedEntity trackedEntity : this.entityMap.values()) {
             if (((EntityTrackerAccess) trackedEntity).getEntity() == player) {
                 trackedEntity.updatePlayers(this.level.players());
@@ -1029,6 +1064,11 @@ public abstract class MixinChunkManager implements IChunkManager {
     // this needs to be at HEAD, otherwise we are not going to see the view distance being different
     @Inject(method = "setViewDistance", at = @At("HEAD"))
     protected void setViewDistance(int newViewDistance, CallbackInfo ci) {
+        if (!((CubicLevelHeightAccessor) this.level).isCubic()) {
+            return;
+        }
+
+
         int viewDistanceSections = Mth.clamp(newViewDistance + 1, 3, 33);
         int newViewDistanceCubes = Coords.sectionToCubeRenderDistance(viewDistanceSections);
         int viewDistanceCubes = Coords.sectionToCubeRenderDistance(this.viewDistance);
@@ -1123,6 +1163,10 @@ public abstract class MixinChunkManager implements IChunkManager {
     @Nullable
     @Redirect(method = "playerLoadedChunk", at = @At(value = "NEW", target = "net/minecraft/network/protocol/game/ClientboundLightUpdatePacket"))
     private ClientboundLightUpdatePacket onVanillaLightPacketConstruct(ChunkPos pos, LevelLightEngine lightManager, BitSet bits1, BitSet bits2, boolean bool) {
+        if (!((CubicLevelHeightAccessor) this.level).isCubic()) {
+            return new ClientboundLightUpdatePacket(pos, lightManager, bits1, bits2, bool);
+        }
+
         return new ClientboundLightUpdatePacket();
     }
 
@@ -1219,6 +1263,10 @@ public abstract class MixinChunkManager implements IChunkManager {
 
     @Inject(method = "close", at = @At("HEAD"))
     public void on$close(CallbackInfo ci) {
+        if (!((CubicLevelHeightAccessor) this.level).isCubic()) {
+            return;
+        }
+
         regionCubeIO.flush();
     }
 }

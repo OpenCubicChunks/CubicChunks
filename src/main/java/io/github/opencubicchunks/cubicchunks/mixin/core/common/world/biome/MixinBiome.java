@@ -5,11 +5,14 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 import java.util.function.Supplier;
 
 import io.github.opencubicchunks.cubicchunks.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
+import io.github.opencubicchunks.cubicchunks.chunk.NoiseAndSurfaceBuilderHelper;
+import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import io.github.opencubicchunks.cubicchunks.world.CubeWorldGenRandom;
 import io.github.opencubicchunks.cubicchunks.world.CubeWorldGenRegion;
@@ -25,14 +28,20 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.StructureFeatureManager;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.biome.BiomeGenerationSettings;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.ChunkGenerator;
 import net.minecraft.world.level.levelgen.GenerationStep;
 import net.minecraft.world.level.levelgen.feature.ConfiguredFeature;
 import net.minecraft.world.level.levelgen.feature.StructureFeature;
 import net.minecraft.world.level.levelgen.structure.BoundingBox;
+import net.minecraft.world.level.levelgen.surfacebuilders.ConfiguredSurfaceBuilder;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(Biome.class)
 public class MixinBiome implements BiomeGetter {
@@ -79,7 +88,7 @@ public class MixinBiome implements BiomeGetter {
             }
 
             if (featureBlacklist.isEmpty()) {
-                getBlacklist(region);
+                getBlacklist();
             }
 
 
@@ -115,8 +124,31 @@ public class MixinBiome implements BiomeGetter {
         }
     }
 
+    /**
+     * @author Corgitaco
+     * @reason Catch the surface builder
+     */
+    @Inject(method = "buildSurfaceAt", at = @At("HEAD"), cancellable = true)
+    public void buildSurfaceAt(Random random, ChunkAccess chunk, int x, int z, int worldHeight, double noise, BlockState defaultBlock, BlockState defaultFluid, int seaLevel, long seed,
+                               CallbackInfo ci) {
+
+        if (!((CubicLevelHeightAccessor) chunk).isCubic()) {
+            return;
+        }
+
+        ci.cancel();
+
+        ConfiguredSurfaceBuilder<?> configuredSurfaceBuilder = this.generationSettings.getSurfaceBuilder().get();
+        configuredSurfaceBuilder.initNoise(seed);
+        try {
+            configuredSurfaceBuilder.apply(random, chunk, (Biome) (Object) this, x, z, worldHeight, noise, defaultBlock, defaultFluid, seaLevel, seed);
+        } catch (NoiseAndSurfaceBuilderHelper.StopGeneratingThrowable ignored) {
+            // used as a way to stop the surface builder when it goes below the current cube
+        }
+    }
+
     //TODO: Remove this blacklist.
-    private void getBlacklist(CubeWorldGenRegion cubeWorldGenRegion) {
+    private void getBlacklist() {
 
         List<ResourceLocation> resourceLocationList = Arrays.asList(
 

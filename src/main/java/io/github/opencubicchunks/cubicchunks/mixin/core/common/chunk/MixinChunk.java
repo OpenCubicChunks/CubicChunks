@@ -21,6 +21,11 @@ import io.github.opencubicchunks.cubicchunks.chunk.heightmap.SurfaceTrackerWrapp
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import io.github.opencubicchunks.cubicchunks.world.lighting.ISkyLightColumnChecker;
+import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
+import io.github.opencubicchunks.cubicchunks.utils.Coords;
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientBlockEntityEvents;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerBlockEntityEvents;
+import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Registry;
 import net.minecraft.nbt.CompoundTag;
@@ -51,8 +56,8 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-@Mixin(LevelChunk.class)
-public abstract class MixinChunk implements ChunkAccess, LightHeightmapGetter, CubeMapGetter {
+@Mixin(value = LevelChunk.class, priority = 0) //Priority 0 to always ensure our redirects are on top. Should also prevent fabric api crashes that have occur(ed) here. See removeTileEntity
+public abstract class MixinChunk implements ChunkAccess, LightHeightmapGetter, CubeMapGetter, CubicLevelHeightAccessor {
 
     @Shadow @Final private Level level;
     @Shadow @Final private ChunkPos chunkPos;
@@ -61,7 +66,17 @@ public abstract class MixinChunk implements ChunkAccess, LightHeightmapGetter, C
     @Shadow @Final private Map<BlockPos, CompoundTag> pendingBlockEntities;
     @Shadow private ChunkBiomeContainer biomes;
 
+    @Shadow private volatile boolean unsaved;
+
+    private boolean isCubic;
+    private boolean generates2DChunks;
+    private WorldStyle worldStyle;
+
     @Shadow public abstract ChunkStatus getStatus();
+
+    @Shadow protected abstract boolean isInLevel();
+
+    @Shadow public abstract Level getLevel();
 
     @Override public boolean isYSpaceEmpty(int startY, int endY) {
         return false;
@@ -72,6 +87,15 @@ public abstract class MixinChunk implements ChunkAccess, LightHeightmapGetter, C
 
     @Override
     public Heightmap getLightHeightmap() {
+    	// FIXME remove debug
+		if (lightHeightmap == null) {
+			System.out.println("late creation of light heightmap in MixinChunk");
+			if (level.isClientSide) {
+				lightHeightmap = new ClientLightSurfaceTracker(this);
+			} else {
+				lightHeightmap = new LightSurfaceTrackerWrapper(this);
+			}
+		}
         return lightHeightmap;
     }
 
@@ -87,6 +111,14 @@ public abstract class MixinChunk implements ChunkAccess, LightHeightmapGetter, C
         at = @At("RETURN"))
     private void onInit(Level levelIn, ChunkPos pos, ChunkBiomeContainer chunkBiomeContainer, UpgradeData upgradeData, TickList<Block> tickList, TickList<Fluid> tickList2, long l,
                         LevelChunkSection[] levelChunkSections, Consumer<LevelChunk> consumer, CallbackInfo ci) {
+        isCubic = ((CubicLevelHeightAccessor) level).isCubic();
+        generates2DChunks = ((CubicLevelHeightAccessor) level).generates2DChunks();
+        worldStyle = ((CubicLevelHeightAccessor) level).worldStyle();
+
+        if (!this.isCubic()) {
+            return;
+        }
+
         //TODO: is cubicworld
         //Client will already supply a ColumnBiomeContainer, server will not
         if (!(biomes instanceof ColumnBiomeContainer)) {
@@ -107,6 +139,9 @@ public abstract class MixinChunk implements ChunkAccess, LightHeightmapGetter, C
             at = @At("RETURN")
     )
     private void onInitFromProtoChunk(ServerLevel serverLevel, ProtoChunk protoChunk, Consumer<LevelChunk> consumer, CallbackInfo ci) {
+		if (!this.isCubic()) {
+			return;
+		}
         lightHeightmap = ((LightHeightmapGetter) protoChunk).getLightHeightmap();
     }
 
@@ -115,6 +150,9 @@ public abstract class MixinChunk implements ChunkAccess, LightHeightmapGetter, C
             at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/levelgen/Heightmap;update(IIILnet/minecraft/world/level/block/state/BlockState;)Z", ordinal = 0)
     )
     private void onSetBlock(BlockPos pos, BlockState state, boolean moved, CallbackInfoReturnable<BlockState> cir) {
+		if (!this.isCubic()) {
+			return;
+		}
         // TODO client side light heightmap stuff
         if (this.level.isClientSide) {
             ClientLightSurfaceTracker lightHeightmap = ((LightHeightmapGetter) this).getClientLightHeightmap();
@@ -128,7 +166,7 @@ public abstract class MixinChunk implements ChunkAccess, LightHeightmapGetter, C
             lightHeightmap.update(relX, pos.getY(), relZ, state);
             int newHeight = lightHeightmap.getFirstAvailable(relX, relZ);
             if (newHeight != oldHeight) {
-                ((ISkyLightColumnChecker) this.level.getChunkSource().getLightEngine()).checkSkyLightColumn(pos.getX(), pos.getZ(), oldHeight, newHeight);
+                ((ISkyLightColumnChecker) this.level.getChunkSource().getLightEngine()).checkSkyLightColumn((LevelChunk) (Object) this, pos.getX(), pos.getZ(), oldHeight, newHeight);
             }
         }
     }
@@ -139,6 +177,10 @@ public abstract class MixinChunk implements ChunkAccess, LightHeightmapGetter, C
             + "Ljava/util/function/Consumer;)V",
         at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;getSectionsCount()I"))
     private int getFakeSectionCount(Level levelIn) {
+        if (!((CubicLevelHeightAccessor) levelIn).isCubic()) { // The fields are not initialized here yet.
+            return levelIn.getSectionsCount();
+        }
+
         return 16; // TODO: properly handle Chunk
     }
 
@@ -148,6 +190,10 @@ public abstract class MixinChunk implements ChunkAccess, LightHeightmapGetter, C
             + "Ljava/util/function/Consumer;)V",
         at = @At(value = "NEW", target = "net/minecraft/world/level/levelgen/Heightmap"))
     private Heightmap getCCHeightmap(ChunkAccess chunkAccess, Heightmap.Types type) {
+        if (!((CubicLevelHeightAccessor) this.level).isCubic()) { // The fields are not initialized here yet.
+            return new Heightmap(chunkAccess, type);
+        }
+
         if (this.level.isClientSide()) {
             return new ClientSurfaceTracker(chunkAccess, type);
         } else {
@@ -162,6 +208,10 @@ public abstract class MixinChunk implements ChunkAccess, LightHeightmapGetter, C
             args = "array=get"
         ))
     private LevelChunkSection getStorage(LevelChunkSection[] array, int sectionIndex) {
+        if (!this.isCubic()) {
+            return array[sectionIndex];
+        }
+
         int sectionY = getSectionYFromSectionIndex(sectionIndex);
         IBigCube cube = this.getCube(sectionY);
         if (cube instanceof EmptyCube) {
@@ -191,6 +241,10 @@ public abstract class MixinChunk implements ChunkAccess, LightHeightmapGetter, C
     @ModifyConstant(method = { "getBlockState", "getFluidState(III)Lnet/minecraft/world/level/material/FluidState;" },
         constant = @Constant(expandZeroConditions = Constant.Condition.GREATER_THAN_OR_EQUAL_TO_ZERO))
     private int getMinHeight(int _0) {
+        if (!this.isCubic()) {
+            return _0;
+        }
+
         return Integer.MIN_VALUE;
     }
 
@@ -201,6 +255,10 @@ public abstract class MixinChunk implements ChunkAccess, LightHeightmapGetter, C
             args = "array=length"
         ))
     private int getStorage(LevelChunkSection[] array) {
+        if (!this.isCubic()) {
+            return array.length;
+        }
+
         return Integer.MAX_VALUE;
     }
 
@@ -213,6 +271,11 @@ public abstract class MixinChunk implements ChunkAccess, LightHeightmapGetter, C
             args = "array=set"
         ))
     private void setStorage(LevelChunkSection[] array, int sectionIndex, LevelChunkSection newVal) {
+        if (!this.isCubic()) {
+            array[sectionIndex] = newVal;
+            return;
+        }
+
         int sectionY = getSectionYFromSectionIndex(sectionIndex);
         IBigCube cube = this.getCube(sectionY);
         if (cube instanceof EmptyCube) {
@@ -223,6 +286,12 @@ public abstract class MixinChunk implements ChunkAccess, LightHeightmapGetter, C
 
     @Redirect(method = "setBlockState", at = @At(value = "FIELD", target = "Lnet/minecraft/world/level/chunk/LevelChunk;unsaved:Z"))
     private void setIsModifiedFromSetBlockState_Field(LevelChunk chunk, boolean isModifiedIn, BlockPos pos, BlockState state, boolean isMoving) {
+        if (!this.isCubic()) {
+            this.unsaved = isModifiedIn;
+            return;
+        }
+
+
 //        if (isColumn) {
         this.getCube(Coords.blockToSection(pos.getY())).setDirty(isModifiedIn);
 //        } else {
@@ -236,9 +305,15 @@ public abstract class MixinChunk implements ChunkAccess, LightHeightmapGetter, C
         at = @At(value = "INVOKE", target = "Ljava/util/Map;get(Ljava/lang/Object;)Ljava/lang/Object;"))
     private Object getTileEntity(Map map, Object key) {
         if (map == this.blockEntities) {
+            if (!this.isCubic()) {
+                return map.get(key);
+            }
             BigCube cube = (BigCube) this.getCube(Coords.blockToSection(((BlockPos) key).getY()));
             return cube.getTileEntityMap().get(key);
         } else if (map == this.pendingBlockEntities) {
+            if (!this.isCubic()) {
+                return map.get(key);
+            }
             BigCube cube = (BigCube) this.getCube(Coords.blockToSection(((BlockPos) key).getY()));
             return cube.getDeferredTileEntityMap().get(key);
         }
@@ -249,11 +324,38 @@ public abstract class MixinChunk implements ChunkAccess, LightHeightmapGetter, C
     @Redirect(
         method = "*",
         at = @At(value = "INVOKE", target = "Ljava/util/Map;remove(Ljava/lang/Object;)Ljava/lang/Object;"))
-    private Object removeTileEntity(Map map, Object key) {
+    private Object removeTileEntity(Map map,
+                                    Object key) {
+        // TODO: Maybe Resolve redirect conflict with fabric-lifecycle-events-v1.mixins.json:client .WorldChunkMixin->@Redirect::onRemoveBlockEntity(Fabric API). We implement their events
+        // to respect our priority over theirs.
+
         if (map == this.blockEntities) {
+            if (!this.isCubic()) {
+                @Nullable
+                Object removed = map.remove(key);
+
+                if (this.getLevel() instanceof ServerLevel) {
+                    ServerBlockEntityEvents.BLOCK_ENTITY_UNLOAD.invoker().onUnload((BlockEntity) removed, (ServerLevel) this.getLevel());
+                } else if ((this.getLevel() instanceof ClientLevel)) {
+                    ClientBlockEntityEvents.BLOCK_ENTITY_UNLOAD.invoker().onUnload((BlockEntity) removed, (ClientLevel) this.getLevel());
+                }
+                return removed;
+            }
             BigCube cube = (BigCube) this.getCube(Coords.blockToSection(((BlockPos) key).getY()));
-            return cube.getTileEntityMap().remove(key);
+
+            @Nullable
+            BlockEntity removed = cube.getTileEntityMap().remove(key);
+
+            if (this.getLevel() instanceof ServerLevel) {
+                ServerBlockEntityEvents.BLOCK_ENTITY_UNLOAD.invoker().onUnload(removed, (ServerLevel) this.getLevel());
+            } else if ((this.getLevel() instanceof ClientLevel)) {
+                ClientBlockEntityEvents.BLOCK_ENTITY_UNLOAD.invoker().onUnload(removed, (ClientLevel) this.getLevel());
+            }
+            return removed;
         } else if (map == this.pendingBlockEntities) {
+            if (!this.isCubic()) {
+                return map.remove(key);
+            }
             BigCube cube = (BigCube) this.getCube(Coords.blockToSection(((BlockPos) key).getY()));
             return cube.getDeferredTileEntityMap().remove(key);
         }
@@ -265,9 +367,15 @@ public abstract class MixinChunk implements ChunkAccess, LightHeightmapGetter, C
         at = @At(value = "INVOKE", target = "Ljava/util/Map;put(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;"))
     private Object putTileEntity(Map map, Object key, Object value) {
         if (map == this.blockEntities) {
+            if (!this.isCubic()) {
+                return map.put(key, value);
+            }
             BigCube cube = (BigCube) this.getCube(Coords.blockToSection(((BlockPos) key).getY()));
             return cube.getTileEntityMap().put((BlockPos) key, (BlockEntity) value);
         } else if (map == this.pendingBlockEntities) {
+            if (!this.isCubic()) {
+                return map.put(key, value);
+            }
             BigCube cube = (BigCube) this.getCube(Coords.blockToSection(((BlockPos) key).getY()));
             return cube.getDeferredTileEntityMap().put((BlockPos) key, (CompoundTag) value);
         }
@@ -277,11 +385,32 @@ public abstract class MixinChunk implements ChunkAccess, LightHeightmapGetter, C
     @Redirect(method = "addAndRegisterBlockEntity",
         at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/chunk/LevelChunk;isInLevel()Z"))
     private boolean getLoadedFromBlockEntity(LevelChunk chunk, BlockEntity tileEntity) {
+        if (!this.isCubic()) {
+            return this.isInLevel();
+        }
+
         return ((BigCube) this.getCube(Coords.blockToSection(tileEntity.getBlockPos().getY()))).isInLevel();
     }
 
     @Redirect(method = "removeBlockEntity", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/chunk/LevelChunk;isInLevel()Z"))
     private boolean getLoadedFromBlockPos(LevelChunk chunk, BlockPos pos) {
+        if (!this.isCubic()) {
+            return this.isInLevel();
+        }
+
         return ((BigCube) this.getCube(Coords.blockToSection(pos.getY()))).isInLevel();
     }
+
+    @Override public WorldStyle worldStyle() {
+        return worldStyle;
+    }
+
+    @Override public boolean isCubic() {
+        return isCubic;
+    }
+
+    @Override public boolean generates2DChunks() {
+        return generates2DChunks;
+    }
+
 }

@@ -38,12 +38,16 @@ public abstract class MixinSkyLightEngine extends MixinLightEngine<SkyLightSecti
         super.checkNode(id);
     }
 
-    @Override public void checkSkyLightColumn(int x, int z, int oldHeight, int newHeight) {
+    @Override public void checkSkyLightColumn(LevelChunk chunk, int x, int z, int oldHeight, int newHeight) {
         ((SectionLightStorageAccess) this.storage).invokeRunAllUpdates();
         // FIXME another probably-unsafe chunk get
         //       this should probably be in a helper method anyway
-        BlockGetter blockGetter = this.chunkSource.getChunkForLighting(SectionPos.blockToSectionCoord(pos.getX()), SectionPos.blockToSectionCoord(pos.getZ()));
-        LevelChunk chunk = (LevelChunk) blockGetter;
+//        BlockGetter blockGetter = this.chunkSource.getChunkForLighting(SectionPos.blockToSectionCoord(pos.getX()), SectionPos.blockToSectionCoord(pos.getZ()));
+//        LevelChunk chunk = (LevelChunk) blockGetter;
+//        if (chunk == null) {
+//        	System.out.println("warning: null chunk in checkSkyLightColumn");
+//		}
+        // TODO pass CubeMap and heightmap into method instead?
         CubeMap cubeMap = ((CubeMapGetter) chunk).getCubeMap();
         int oldHeightCube = Coords.blockToCube(oldHeight-1);
         int newHeightCube = Coords.blockToCube(newHeight);
@@ -134,10 +138,12 @@ public abstract class MixinSkyLightEngine extends MixinLightEngine<SkyLightSecti
                 BlockGetter chunk = this.chunkSource.getChunkForLighting(chunkPos.x + sectionX, chunkPos.z + sectionZ);
                 if (chunk == null) {
                     System.out.println("chunk null");
+                    return;
                 }
                 Heightmap heightmap = ((LightHeightmapGetter) chunk).getLightHeightmap();
                 if (heightmap == null) {
                     System.out.println("heightmap null");
+                    return;
                 }
                 for (int z = 0; z < 16; z++) {
                     for (int x = 0; x < 16; x++) {

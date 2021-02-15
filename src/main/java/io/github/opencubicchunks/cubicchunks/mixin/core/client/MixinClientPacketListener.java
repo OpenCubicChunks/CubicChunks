@@ -1,6 +1,7 @@
 package io.github.opencubicchunks.cubicchunks.mixin.core.client;
 
 import io.github.opencubicchunks.cubicchunks.chunk.biome.ColumnBiomeContainer;
+import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.multiplayer.ClientPacketListener;
@@ -24,7 +25,11 @@ public abstract class MixinClientPacketListener {
 
     @Inject(method = "handleLevelChunk", at = @At("HEAD"), cancellable = true)
     public void handleLevelChunk(ClientboundLevelChunkPacket clientboundLevelChunkPacket, CallbackInfo ci) {
-        //TODO: implement non-cubic world, inject at head and cancel
+        if (level != null) {
+            if (!((CubicLevelHeightAccessor) level).isCubic()) {
+                return;
+            }
+        }
         ci.cancel();
 
         PacketUtils.ensureRunningOnSameThread(clientboundLevelChunkPacket, (ClientPacketListener) (Object) this, this.minecraft);
@@ -41,6 +46,10 @@ public abstract class MixinClientPacketListener {
     @Redirect(method = { "handleForgetLevelChunk", "handleLevelChunk" },
         at = @At(value = "INVOKE", target = "Lnet/minecraft/client/multiplayer/ClientLevel;getMaxSection()I"))
     private int getFakeMaxSectionY(ClientLevel clientLevel) {
+        if (!((CubicLevelHeightAccessor) clientLevel).isCubic()) {
+            return clientLevel.getMaxSection();
+        }
+
         return clientLevel.getMinSection() - 1; // disable the loop, cube packets do the necessary work
     }
 }

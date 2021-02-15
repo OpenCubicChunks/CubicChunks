@@ -66,7 +66,7 @@ public class PacketHeightmap {
                 // TODO is this safe on dedicated server?
                 long[] data = packet.heightmaps.getLongArray("light");
                 ClientLightSurfaceTracker heightmap = ((LightHeightmapGetter) chunk).getClientLightHeightmap();
-                heightmap.setRawData(data);
+                heightmap.setRawData(data, chunk);
             }
         }
     }

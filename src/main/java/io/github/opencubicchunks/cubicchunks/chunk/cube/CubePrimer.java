@@ -9,6 +9,7 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 
 import javax.annotation.Nullable;
@@ -22,6 +23,7 @@ import io.github.opencubicchunks.cubicchunks.chunk.biome.CubeBiomeContainer;
 import io.github.opencubicchunks.cubicchunks.chunk.heightmap.LightSurfaceTrackerWrapper;
 import io.github.opencubicchunks.cubicchunks.chunk.heightmap.SurfaceTrackerSection;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
+import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import io.github.opencubicchunks.cubicchunks.world.CubeWorldGenRegion;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
@@ -62,7 +64,7 @@ import net.minecraft.world.level.material.Fluids;
 import org.apache.logging.log4j.LogManager;
 
 //ProtoChunk
-public class CubePrimer implements IBigCube, ChunkAccess {
+public class CubePrimer implements IBigCube, ChunkAccess, CubicLevelHeightAccessor {
 
     private final CubePos cubePos;
     private final LevelChunkSection[] sections;
@@ -96,6 +98,10 @@ public class CubePrimer implements IBigCube, ChunkAccess {
 
     private boolean[] lightHeightmapLoaded;
 
+    private final boolean isCubic;
+    private final boolean generates2DChunks;
+    private final WorldStyle worldStyle;
+
     public CubePrimer(CubePos cubePos, UpgradeData upgradeData, LevelHeightAccessor levelHeightAccessor) {
 //        this(cubePos, upgradeData, (ChunkSection[])null, new ChunkPrimerTickList<>((p_205332_0_) -> {
 //            return p_205332_0_ == null || p_205332_0_.defaultBlockState().isAir();
@@ -112,7 +118,8 @@ public class CubePrimer implements IBigCube, ChunkAccess {
         this.carvingMasks = new Object2ObjectArrayMap<>();
 
         this.structureStarts = Maps.newHashMap();
-        this.structuresRefences = Maps.newHashMap();
+//        this.structuresRefences = Maps.newHashMap();
+		this.structuresRefences = new ConcurrentHashMap<>();
 
         this.cubePos = cubePosIn;
         this.levelHeightAccessor = levelHeightAccessor;
@@ -131,6 +138,10 @@ public class CubePrimer implements IBigCube, ChunkAccess {
         }
 
         this.lightHeightmapLoaded = new boolean[IBigCube.CHUNK_COUNT];
+
+        isCubic = ((CubicLevelHeightAccessor) levelHeightAccessor).isCubic();
+        generates2DChunks = ((CubicLevelHeightAccessor) levelHeightAccessor).generates2DChunks();
+        worldStyle = ((CubicLevelHeightAccessor) levelHeightAccessor).worldStyle();
     }
 
     @Deprecated @Override public ChunkPos getPos() {
@@ -518,7 +529,7 @@ public class CubePrimer implements IBigCube, ChunkAccess {
     }
 
     @Override public int getHeight(Heightmap.Types types, int x, int z) {
-        throw new UnsupportedOperationException("Not implemented");
+        return getCubeLocalHeight(types, x, z);
     }
 
     @org.jetbrains.annotations.Nullable
@@ -627,5 +638,17 @@ public class CubePrimer implements IBigCube, ChunkAccess {
 
     @Override public int getMinBuildHeight() {
         return levelHeightAccessor.getMinBuildHeight();
+    }
+
+    @Override public WorldStyle worldStyle() {
+         return worldStyle;
+    }
+
+    @Override public boolean isCubic() {
+         return isCubic;
+    }
+
+    @Override public boolean generates2DChunks() {
+        return generates2DChunks;
     }
 }

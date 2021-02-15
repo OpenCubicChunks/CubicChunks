@@ -10,6 +10,7 @@ import net.minecraft.util.BitStorage;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.ChunkAccess;
+import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
@@ -70,11 +71,14 @@ public class ClientLightSurfaceTracker extends ClientSurfaceTracker {
 
     @Override
     public void setRawData(long[] heightmap) {
+    	throw new UnsupportedOperationException("this shouldn't be called");
+	}
+    public void setRawData(long[] heightmap, LevelChunk chunk) {
         // We need to compare the old and new data here, hence the inefficiencies with making a new bitstorage
         BitStorage storage = ((HeightmapAccess) this).getData();
         BitStorage oldStorage = new BitStorage(bitsPerColumn, 256, storage.getRaw().clone());
         System.arraycopy(heightmap, 0, storage.getRaw(), 0, heightmap.length);
-        ChunkAccess chunk = ((HeightmapAccess) this).getChunk();
+//        ChunkAccess chunk = ((HeightmapAccess) this).getChunk();
         int baseX = chunk.getPos().getMinBlockX();
         int baseZ = chunk.getPos().getMinBlockZ();
         for (int z = 0; z < 16; z++) {
@@ -83,7 +87,7 @@ public class ClientLightSurfaceTracker extends ClientSurfaceTracker {
                 int oldHeight = oldStorage.get(index) + minHeight;
                 int newHeight = storage.get(index) + minHeight;
                 if (oldHeight != newHeight) {
-                    ((ISkyLightColumnChecker) Minecraft.getInstance().level.getLightEngine()).checkSkyLightColumn(baseX + x, baseZ + z, oldHeight, newHeight);
+                    ((ISkyLightColumnChecker) Minecraft.getInstance().level.getLightEngine()).checkSkyLightColumn(chunk, baseX + x, baseZ + z, oldHeight, newHeight);
                 }
             }
         }
