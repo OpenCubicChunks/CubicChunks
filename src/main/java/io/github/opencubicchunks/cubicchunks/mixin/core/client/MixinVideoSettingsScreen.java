@@ -1,6 +1,6 @@
 package io.github.opencubicchunks.cubicchunks.mixin.core.client;
 
-import io.github.opencubicchunks.cubicchunks.client.IVerticalViewDistance;
+import io.github.opencubicchunks.cubicchunks.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.mixin.access.client.OptionAccess;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Option;
@@ -17,9 +17,10 @@ public class MixinVideoSettingsScreen {
     private static final Option[] MODIFIED_OPTIONS;
 
     private static final ProgressOption VERTICAL_RENDER_DISTANCE = new ProgressOption("options.renderDistance", 2.0D, 16.0D, 1.0F, (gameOptions) -> {
-        return (double) ((IVerticalViewDistance) gameOptions).getVerticalViewDistance();
+        return (double) CubicChunks.config().client.verticalViewDistance;
     }, (gameOptions, viewDistance) -> {
-        ((IVerticalViewDistance) gameOptions).setVerticalViewDistance(viewDistance.intValue());
+        CubicChunks.config().client.verticalViewDistance = viewDistance.intValue();
+        CubicChunks.config().markDirty();
         Minecraft.getInstance().levelRenderer.needsUpdate();
     }, (gameOptions, option) -> {
         double value = option.get(gameOptions);

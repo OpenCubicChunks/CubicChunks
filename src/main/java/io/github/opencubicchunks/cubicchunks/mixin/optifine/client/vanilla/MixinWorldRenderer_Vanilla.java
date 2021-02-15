@@ -2,7 +2,7 @@ package io.github.opencubicchunks.cubicchunks.mixin.optifine.client.vanilla;
 
 import javax.annotation.Nullable;
 
-import io.github.opencubicchunks.cubicchunks.client.IVerticalViewDistance;
+import io.github.opencubicchunks.cubicchunks.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.mixin.access.client.ViewFrustumAccess;
 import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import net.minecraft.client.Camera;
@@ -39,7 +39,6 @@ public abstract class MixinWorldRenderer_Vanilla {
 
     private int lastVerticalViewDistance = -1;
 
-
     /**
      * @author AidanLovelace
      * @reason Make sure we load the renderers again if the vertical view distance changed but not if the normal render distance changed because then they'll be loaded again anyways.
@@ -47,14 +46,14 @@ public abstract class MixinWorldRenderer_Vanilla {
     @Inject(method = "setupRender", at = @At("HEAD"))
     private void setupVerticalViewDistance(Camera camera, Frustum frustum, boolean hasForcedFrustum, int frame, boolean spectator, CallbackInfo ci) {
         if (this.minecraft.options.renderDistance != this.lastViewDistance) return;
-        if (this.lastVerticalViewDistance != ((IVerticalViewDistance) this.minecraft.options).getVerticalViewDistance()) {
+        if (this.lastVerticalViewDistance != CubicChunks.config().client.verticalViewDistance) {
             this.allChanged();
         }
     }
 
     @Inject(method = "allChanged", at = @At("HEAD"))
     private void setLastVerticalViewDistance(CallbackInfo ci) {
-        this.lastVerticalViewDistance = ((IVerticalViewDistance) this.minecraft.options).getVerticalViewDistance();
+        this.lastVerticalViewDistance = CubicChunks.config().client.verticalViewDistance;
     }
 
     /**
@@ -81,7 +80,7 @@ public abstract class MixinWorldRenderer_Vanilla {
     @ModifyArg(method = "renderLevel", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/FogRenderer;setupFog(Lnet/minecraft/client/Camera;"
         + "Lnet/minecraft/client/renderer/FogRenderer$FogMode;FZ)V"))
     private float modifyFogDistance(float hFogDistance) {
-        int verticalViewDistance = ((IVerticalViewDistance) this.minecraft.options).getVerticalViewDistance();
+        int verticalViewDistance = CubicChunks.config().client.verticalViewDistance;
         float verticalFogDistance;
         if (verticalViewDistance >= 4) {
             verticalFogDistance = verticalViewDistance * 16;

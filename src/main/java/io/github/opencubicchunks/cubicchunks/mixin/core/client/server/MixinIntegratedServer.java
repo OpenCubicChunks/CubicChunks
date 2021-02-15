@@ -4,10 +4,8 @@ import java.util.function.BooleanSupplier;
 
 import io.github.opencubicchunks.cubicchunks.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.chunk.IVerticalView;
-import io.github.opencubicchunks.cubicchunks.client.IVerticalViewDistance;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.server.IntegratedServer;
-import org.apache.logging.log4j.Logger;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -24,7 +22,7 @@ public class MixinIntegratedServer {
     private void tickServer(BooleanSupplier shouldKeepTicking, CallbackInfo ci) {
         int horizontalViewDistance = Math.max(2, this.minecraft.options.renderDistance + -1);
 
-        int verticalViewDistance = Math.max(2, ((IVerticalViewDistance) this.minecraft.options).getVerticalViewDistance() + -1);
+        int verticalViewDistance = Math.max(2, CubicChunks.config().client.verticalViewDistance + -1);
         int currentVerticalViewDistance1 = ((IVerticalView) ((IntegratedServer) (Object) this).getPlayerList()).getVerticalViewDistance();
 
         if (verticalViewDistance != currentVerticalViewDistance1) {

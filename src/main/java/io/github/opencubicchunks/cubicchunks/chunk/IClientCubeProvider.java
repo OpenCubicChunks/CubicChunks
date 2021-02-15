@@ -13,6 +13,8 @@ public interface IClientCubeProvider extends ICubeProvider {
 
     void setCenter(int x, int y, int z);
 
+    void updateCubeViewRadius(int hDistance, int vDistance);
+
     BigCube replaceWithPacketData(int cubeX, int cubeY, int cubeZ, @Nullable CubeBiomeContainer biomes, FriendlyByteBuf readBuffer, CompoundTag nbtTagIn,
                                   boolean cubeExists);
 }

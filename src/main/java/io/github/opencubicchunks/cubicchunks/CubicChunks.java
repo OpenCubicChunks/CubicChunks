@@ -39,6 +39,12 @@ public class CubicChunks implements ModInitializer {
 
     public static final String PROTOCOL_VERSION = "0";
 
+    private static final Config config = new Config();
+
+    public static Config config() {
+        return config;
+    }
+
     public static final Map<String, CubicLevelHeightAccessor.WorldStyle> DIMENSION_TO_WORLD_STYLE = Util.make(new HashMap<>(), (set) -> {
         set.put("minecraft:overworld", CubicLevelHeightAccessor.WorldStyle.CUBIC);
         set.put("minecraft:the_nether", CubicLevelHeightAccessor.WorldStyle.CHUNK);
@@ -71,5 +77,21 @@ public class CubicChunks implements ModInitializer {
 
         Registry.register(Registry.BIOME_SOURCE, new ResourceLocation(MODID, "stripes"), StripedBiomeSource.CODEC);
 //        Registry.register(Registry.CHUNK_GENERATOR, new ResourceLocation(MODID, "generator"), CCNoiseBasedChunkGenerator.CODEC);
+    }
+
+    //TODO: Implement a file for this.
+    public static class Config {
+        public Client client = new Client();
+
+
+        public void markDirty() {
+
+        }
+
+
+
+        public static class Client {
+            public int verticalViewDistance = 8;
+        }
     }
 }
