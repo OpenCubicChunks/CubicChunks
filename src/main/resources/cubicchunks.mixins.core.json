@@ -87,6 +87,7 @@
         "client.MixinClientPacketListener",
         "client.MixinDebugOverlayGui",
         "client.MixinGameRenderer",
+        "client.MixinOptions",
         "client.MixinRenderChunk",
         "client.MixinVideoSettingsScreen",
         "client.MixinViewFrustum",

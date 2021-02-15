@@ -27,7 +27,6 @@ public abstract class MixinViewFrustum {
 
     /**
      * @author Barteks2x
-     * @reason vertical view distance = horizontal
      */
     @Inject(method = "setViewDistance", at = @At("HEAD"), cancellable = true)
     protected void setViewDistance(int renderDistanceChunks, CallbackInfo ci) {

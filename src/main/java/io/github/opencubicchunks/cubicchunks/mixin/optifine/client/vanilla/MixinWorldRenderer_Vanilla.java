@@ -21,6 +21,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyArg;
+import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
@@ -91,5 +92,10 @@ public abstract class MixinWorldRenderer_Vanilla {
             verticalFogDistance = Math.max((verticalViewDistance * 16) - 16.0F, 32.0F);
         }
         return Math.max(hFogDistance, verticalFogDistance);
+    }
+
+    @Redirect(method = "setupRender", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/Mth;clamp(DDD)D"))
+    private double considerVerticalRenderDistance(double value, double min, double max) {
+        return Mth.clamp(Math.max(value, CubicChunks.config().client.verticalViewDistance), min, max);
     }
 }
