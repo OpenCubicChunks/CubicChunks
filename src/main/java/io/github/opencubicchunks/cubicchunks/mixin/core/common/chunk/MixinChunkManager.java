@@ -49,7 +49,6 @@ import io.github.opencubicchunks.cubicchunks.chunk.ticket.ITicketManager;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.chunk.util.Utils;
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.EntityTrackerAccess;
-import io.github.opencubicchunks.cubicchunks.mixin.access.common.TicketManagerAccess;
 import io.github.opencubicchunks.cubicchunks.network.PacketCubes;
 import io.github.opencubicchunks.cubicchunks.network.PacketDispatcher;
 import io.github.opencubicchunks.cubicchunks.network.PacketHeightmap;
@@ -1072,47 +1071,37 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
 
     int incomingVerticalViewDistance;
 
-    // this needs to be at HEAD, otherwise we are not going to see the view distance being different
-    @Inject(method = "setViewDistance", at = @At("HEAD"), cancellable = true)
+    // this needs to be at HEAD, otherwise we are not going to see the view distance being different. Should not set view distance. Should NOT BE CANCELLED
+    @Inject(method = "setViewDistance", at = @At("HEAD"))
     protected void setViewDistance(int horizontalDistance, CallbackInfo ci) {
         if (!((CubicLevelHeightAccessor) this.level).isCubic()) {
             return;
         }
 
-        ci.cancel();
+        int hViewDistanceSections = Mth.clamp(horizontalDistance + 1, 3, 33);
+        int vViewDistanceSections = Mth.clamp(incomingVerticalViewDistance + 1, 3, 33);
 
-        int clampedHorizontalDistance = Mth.clamp(horizontalDistance + 1, 3, 33);
-        int clampedVerticalDistance = Mth.clamp(incomingVerticalViewDistance + 1, 3, 33);
+        int hNewViewDistanceCubes = Coords.sectionToCubeRenderDistance(hViewDistanceSections);
+        int vNewViewDistanceCubes = Coords.sectionToCubeRenderDistance(vViewDistanceSections);
+        int hViewDistanceCubes = Coords.sectionToCubeRenderDistance(this.viewDistance);
+        int vViewDistanceCubes = Coords.sectionToCubeRenderDistance(this.verticalViewDistance);
 
-        if (clampedHorizontalDistance != this.viewDistance || clampedVerticalDistance != this.verticalViewDistance) {
-            int oldHorizontalViewDistance = this.viewDistance;
-            int oldVerticalViewDistance = this.verticalViewDistance;
+        if (hNewViewDistanceCubes != hViewDistanceCubes || vNewViewDistanceCubes != vViewDistanceCubes) {
+            this.verticalViewDistance = vViewDistanceSections;
 
-            this.viewDistance = clampedHorizontalDistance;
-            this.verticalViewDistance = clampedVerticalDistance;
+            ((ITicketManager) this.distanceManager).updatePlayerCubeTickets(hViewDistanceSections, vViewDistanceSections);
 
-            ((TicketManagerAccess) this.distanceManager).invokeUpdatePlayerTickets(this.viewDistance);
-            ((ITicketManager) this.distanceManager).updateCubeViewDistance(this.viewDistance, this.verticalViewDistance);
+            for (ChunkHolder chunkholder : this.updatingCubeMap.values()) {
+                CubePos cubePos = ((ICubeHolder) chunkholder).getCubePos();
+                Object[] objects = new Object[2];
+                this.getPlayers(cubePos, false).forEach((player) -> {
+                    int xzDistance = Coords.sectionToCube(checkerboardDistance(cubePos.asChunkPos(), player, true));
+                    int yDistance = cubePos.getY() - Coords.sectionToCube(player.getLastSectionPos().y());
 
-            int newViewDistanceHorizontal = Coords.sectionToCubeRenderDistance(oldHorizontalViewDistance);
-            int viewDistanceHorizontal = Coords.sectionToCubeRenderDistance(this.viewDistance);
-
-            int newViewDistanceVertical = Coords.sectionToCubeRenderDistance(oldVerticalViewDistance);
-            int viewDistanceVertical = Coords.sectionToCubeRenderDistance(this.verticalViewDistance);
-
-            if (newViewDistanceHorizontal != viewDistanceHorizontal || newViewDistanceVertical != viewDistanceVertical) {
-                for (ChunkHolder chunkholder : this.updatingCubeMap.values()) {
-                    CubePos cubePos = ((ICubeHolder) chunkholder).getCubePos();
-                    Object[] objects = new Object[2];
-                    this.getPlayers(cubePos, false).forEach((player) -> {
-                        int xzDistance = Coords.sectionToCube(checkerboardDistance(cubePos.asChunkPos(), player, true));
-                        int yDistance = cubePos.getY() - Coords.sectionToCube(player.getLastSectionPos().y());
-
-                        boolean wasLoaded = xzDistance <= oldHorizontalViewDistance && yDistance < oldVerticalViewDistance;
-                        boolean isLoaded = xzDistance <= this.viewDistance && yDistance < this.verticalViewDistance;
-                        this.updateCubeTracking(player, cubePos, objects, wasLoaded, isLoaded);
-                    });
-                }
+                    boolean wasLoaded = xzDistance <= hViewDistanceCubes && yDistance < vViewDistanceCubes;
+                    boolean isLoaded = xzDistance <= hNewViewDistanceCubes && yDistance < vNewViewDistanceCubes;
+                    this.updateCubeTracking(player, cubePos, objects, wasLoaded, isLoaded);
+                });
             }
         }
     }

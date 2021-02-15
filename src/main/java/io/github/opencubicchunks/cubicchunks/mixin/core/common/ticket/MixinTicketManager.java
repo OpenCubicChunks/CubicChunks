@@ -300,7 +300,7 @@ public abstract class MixinTicketManager implements ITicketManager, IVerticalVie
         this.isCubic = hasCubicTickets;
     }
 
-    @Override public void updateCubeViewDistance(int horizontalDistance, int verticalDistance) {
+    @Override public void updatePlayerCubeTickets(int horizontalDistance, int verticalDistance) {
         this.playerCubeTicketTracker.updateCubeViewDistance(Coords.sectionToCubeRenderDistance(horizontalDistance), Coords.sectionToCubeRenderDistance(verticalDistance));
     }
 }
