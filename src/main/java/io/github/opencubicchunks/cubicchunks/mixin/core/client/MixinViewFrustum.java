@@ -60,8 +60,8 @@ public abstract class MixinViewFrustum {
         double y = view.getY();
         double z = view.getZ();
         int viewX = Mth.floor(x);
-        int viewZ = Mth.floor(z);
         int viewY = Mth.floor(y);
+        int viewZ = Mth.floor(z);
 
         for (int xIndex = 0; xIndex < this.chunkGridSizeX; ++xIndex) {
             int xBase = this.chunkGridSizeX * 16;
@@ -111,7 +111,7 @@ public abstract class MixinViewFrustum {
      * @reason correctly use y position
      */
     @Inject(method = "setDirty", at = @At("HEAD"), cancellable = true)
-    public void setDirty(int i, int j, int k, boolean bl, CallbackInfo ci) {
+    public void setDirty(int x, int y, int z, boolean important, CallbackInfo ci) {
         ClientLevel level = Minecraft.getInstance().level;
         if (level != null) {
             if (!((CubicLevelHeightAccessor) level).isCubic()) {
@@ -119,10 +119,10 @@ public abstract class MixinViewFrustum {
             }
         }
         ci.cancel();
-        int l = Math.floorMod(i, this.chunkGridSizeX);
-        int m = Math.floorMod(j, this.chunkGridSizeY);
-        int n = Math.floorMod(k, this.chunkGridSizeZ);
-        ChunkRenderDispatcher.RenderChunk renderChunk = this.chunks[this.getChunkIndex(l, m, n)];
-        renderChunk.setDirty(bl);
+        int xIdx = Math.floorMod(x, this.chunkGridSizeX);
+        int yIdx = Math.floorMod(y, this.chunkGridSizeY);
+        int zIdx = Math.floorMod(z, this.chunkGridSizeZ);
+        ChunkRenderDispatcher.RenderChunk renderChunk = this.chunks[this.getChunkIndex(xIdx, yIdx, zIdx)];
+        renderChunk.setDirty(important);
     }
 }
