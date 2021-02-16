@@ -188,6 +188,10 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
     @Shadow @Nullable protected abstract CompoundTag readChunk(ChunkPos pos) throws IOException;
 
 
+    @Shadow protected static void postLoadProtoChunk(ServerLevel serverLevel, List<CompoundTag> list) {
+        throw new Error("Mixin didn't apply");
+    }
+
     @SuppressWarnings("UnresolvedMixinReference") @Redirect(method = "<init>", at = @At(value = "NEW", target = "net/minecraft/server/level/ChunkMap$DistanceManager"))
     private ChunkMap.DistanceManager setIsCubic(ChunkMap chunkMap, Executor executor, Executor executor2, ServerLevel worldIn) {
         ChunkMap.DistanceManager distanceManager1 = chunkMap.new DistanceManager(executor, executor2);
@@ -703,8 +707,8 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
                     cube = ((CubePrimerWrapper) prevCube).getCube();
                 } else {
                     cube = new BigCube(this.level, (CubePrimer) prevCube, (bigCube) -> {
-                        //TODO: implement new entities consumer for cube
-//                        postLoadProtoChunk(this.level, protoChunk.getEntities());
+                        //TODO: Verify this is ok
+                        postLoadProtoChunk(this.level, ((CubePrimer) prevCube).getCubeEntities());
                     });
                     ((ICubeHolder) holder).replaceProtoCube(new CubePrimerWrapper(cube, level));
                 }
