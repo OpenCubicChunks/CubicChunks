@@ -406,7 +406,6 @@ public class MixinChunkStatus {
         ci.cancel();
         if (chunk instanceof IBigCube) {
             CubeWorldGenRegion cubeWorldGenRegion = new CubeWorldGenRegion(world, unsafeCast(neighbors), chunk);
-            cubeWorldGenRegion.spawnsMobs();
             for (int columnX = 0; columnX < IBigCube.DIAMETER_IN_SECTIONS; columnX++) {
                 for (int columnZ = 0; columnZ < IBigCube.DIAMETER_IN_SECTIONS; columnZ++) {
                     cubeWorldGenRegion.moveCenterCubeChunkPos(columnX, columnZ);
