@@ -78,12 +78,10 @@ public class CubeWorldGenRegion extends WorldGenRegion implements ICubicWorld {
     private final int mainCubeY;
     private final int mainCubeZ;
 
-    private final CubePos minCubePos;
     private final int minCubeX;
     private final int minCubeY;
     private final int minCubeZ;
 
-    private final CubePos maxCubePos;
     private final int maxCubeX;
     private final int maxCubeY;
     private final int maxCubeZ;
@@ -100,7 +98,6 @@ public class CubeWorldGenRegion extends WorldGenRegion implements ICubicWorld {
 
     private int cubeCenterColumnCenterX = 0;
     private int cubeCenterColumnCenterZ = 0;
-    private boolean spawnsMobs;
 
     public CubeWorldGenRegion(ServerLevel worldIn, List<IBigCube> cubesIn, ChunkAccess access) {
         super(worldIn, Collections.singletonList(new DummyChunkAccess()));
@@ -129,12 +126,10 @@ public class CubeWorldGenRegion extends WorldGenRegion implements ICubicWorld {
             IBigCube maxCube = this.cubePrimers[this.cubePrimers.length - 1];
 
 
-            this.minCubePos = minCube.getCubePos();
             this.minCubeX = minCube.getCubePos().getX();
             this.minCubeY = minCube.getCubePos().getY();
             this.minCubeZ = minCube.getCubePos().getZ();
 
-            this.maxCubePos = maxCube.getCubePos();
             this.maxCubeX = maxCube.getCubePos().getX();
             this.maxCubeY = maxCube.getCubePos().getY();
             this.maxCubeZ = maxCube.getCubePos().getZ();
@@ -146,10 +141,6 @@ public class CubeWorldGenRegion extends WorldGenRegion implements ICubicWorld {
     public void moveCenterCubeChunkPos(int newX, int newZ) {
         this.cubeCenterColumnCenterX = newX;
         this.cubeCenterColumnCenterZ = newZ;
-    }
-
-    public void spawnsMobs() {
-        spawnsMobs = true;
     }
 
     @Override public ChunkPos getCenter() {
@@ -494,21 +485,6 @@ public class CubeWorldGenRegion extends WorldGenRegion implements ICubicWorld {
 
     @Override public int getHeight() {
         return getLevel().getHeight();
-    }
-
-    public CubePos getMaxCubePos() {
-        return maxCubePos;
-    }
-
-    public CubePos getMinCubePos() {
-        return minCubePos;
-    }
-
-    @Override public int getRawBrightness(BlockPos pos, int ambientDarkness) {
-        if (spawnsMobs) { // TODO: Reimplement when light engine works properly
-            return 15;
-        }
-        return super.getRawBrightness(pos, ambientDarkness);
     }
 
     private static class DummyChunkAccess implements ChunkAccess {
