@@ -851,15 +851,16 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
 
 
     // getPlayers
-    public Stream<ServerPlayer> getPlayers(CubePos pos, boolean boundaryOnly) {//TODO: Verify this
+    public Stream<ServerPlayer> getPlayers(CubePos pos, boolean boundaryOnly) {
         int hViewDistanceCubes = Coords.sectionToCubeRenderDistance(this.viewDistance);
         int vViewDistanceCubes = Coords.sectionToCubeRenderDistance(this.verticalViewDistance);
         return this.playerMap.getPlayers(pos.asLong()).filter((serverPlayerEntity) -> {
-            int i = IChunkManager.getCubeChebyshevDistance(pos, serverPlayerEntity, true);
-            if (i > hViewDistanceCubes || i > vViewDistanceCubes) {
+            int hDist = IChunkManager.getCubeCheckerboardDistanceXZ(pos, serverPlayerEntity, true);
+            int vDist = IChunkManager.getCubeCheckerboardDistanceY(pos, serverPlayerEntity, true);
+            if (hDist > hViewDistanceCubes || vDist > vViewDistanceCubes) {
                 return false;
             } else {
-                return !boundaryOnly || (i == hViewDistanceCubes || i == vViewDistanceCubes);
+                return !boundaryOnly || (hDist == hViewDistanceCubes && vDist == vViewDistanceCubes);
             }
         });
     }
@@ -990,7 +991,7 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
             }
         }
         int hViewDistanceCubes = Coords.sectionToCubeRenderDistance(this.viewDistance);
-        int vViewDistanceCubes = Coords.sectionToCubeRenderDistance(this.viewDistance);
+        int vViewDistanceCubes = Coords.sectionToCubeRenderDistance(this.verticalViewDistance);
 
         int newCubeX = Coords.getCubeXForEntity(player);
         int newCubeY = Coords.getCubeYForEntity(player);
@@ -1014,8 +1015,8 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
                 for (int iz = minZ; iz <= maxZ; ++iz) {
                     for (int iy = minY; iy <= maxY; ++iy) {
                         CubePos cubePos1 = CubePos.of(ix, iy, iz);
-                        boolean loadedBefore = IChunkManager.getCubeDistance(cubePos1, managedX, managedY, managedZ) <= hViewDistanceCubes;
-                        boolean loadedNow = IChunkManager.getCubeDistance(cubePos1, newCubeX, newCubeY, newCubeZ) <= hViewDistanceCubes;
+                        boolean loadedBefore = IChunkManager.isInCubeDistance(cubePos1, managedX, managedY, managedZ, hViewDistanceCubes, vViewDistanceCubes);
+                        boolean loadedNow = IChunkManager.isInCubeDistance(cubePos1, newCubeX, newCubeY, newCubeZ, hViewDistanceCubes, vViewDistanceCubes);
                         this.updateCubeTracking(player, cubePos1, new Object[2], loadedBefore, loadedNow);
                     }
                 }
@@ -1102,11 +1103,8 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
                 CubePos cubePos = ((ICubeHolder) chunkholder).getCubePos();
                 Object[] objects = new Object[2];
                 this.getPlayers(cubePos, false).forEach((player) -> {
-                    int xzDistance = Coords.sectionToCube(checkerboardDistance(cubePos.asChunkPos(), player, true));
-                    int yDistance = cubePos.getY() - Coords.sectionToCube(player.getLastSectionPos().y());
-
-                    boolean wasLoaded = xzDistance <= hViewDistanceCubes && yDistance < vViewDistanceCubes;
-                    boolean isLoaded = xzDistance <= hNewViewDistanceCubes && yDistance < vNewViewDistanceCubes;
+                    boolean wasLoaded = IChunkManager.isInViewDistance(cubePos, player, true, hViewDistanceCubes, vViewDistanceCubes);
+                    boolean isLoaded = IChunkManager.isInViewDistance(cubePos, player, true, hNewViewDistanceCubes, vNewViewDistanceCubes);
                     this.updateCubeTracking(player, cubePos, objects, wasLoaded, isLoaded);
                 });
             }

@@ -116,18 +116,17 @@ public class PlayerCubeTicketTracker extends PlayerCubeTracker {
 
                 if (oldHorizDistance != horizCurrentDistance || oldVertDistance != vertCurrentDistance) {
                     //func_219066_a = update level
-                    iTicketManager.getCubeTicketThrottler().onCubeLevelChange(CubePos.from(pos), () -> this.horizDistances.get(pos), Math.max(horizCurrentDistance, vertCurrentDistance),
-                        (horizDistance) -> {
-                            // They have the same return value and
-                            if (horizCurrentDistance >= this.horizDistances.defaultReturnValue() || vertCurrentDistance >= this.vertDistances.defaultReturnValue()) {
-                                this.horizDistances.remove(pos);
-                                this.vertDistances.remove(pos);
-                            } else {
-                                this.horizDistances.put(pos, horizCurrentDistance);
-                                this.vertDistances.put(pos, vertCurrentDistance);
-                            }
-
-                        });
+                    iTicketManager.getCubeTicketThrottler()
+                        .onCubeLevelChange(CubePos.from(pos), () -> Math.max(this.horizDistances.get(pos), this.vertDistances.get(pos)), Math.max(horizCurrentDistance, vertCurrentDistance),
+                            (distance) -> {
+                                if (horizCurrentDistance >= this.horizDistances.defaultReturnValue() || vertCurrentDistance >= this.vertDistances.defaultReturnValue()) {
+                                    this.horizDistances.remove(pos);
+                                    this.vertDistances.remove(pos);
+                                } else {
+                                    this.horizDistances.put(pos, horizCurrentDistance);
+                                    this.vertDistances.put(pos, vertCurrentDistance);
+                                }
+                            });
                     this.updateTicket(pos, Math.max(horizCurrentDistance, vertCurrentDistance),
                         this.isWithinViewDistance(oldHorizDistance, oldVertDistance),
                         this.isWithinViewDistance(horizCurrentDistance, vertCurrentDistance));
