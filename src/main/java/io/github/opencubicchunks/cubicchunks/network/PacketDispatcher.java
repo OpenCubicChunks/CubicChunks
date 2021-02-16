@@ -1,11 +1,13 @@
 package io.github.opencubicchunks.cubicchunks.network;
 
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import io.netty.buffer.Unpooled;
 import net.fabricmc.fabric.api.network.ClientSidePacketRegistry;
 import net.fabricmc.fabric.api.network.PacketContext;
@@ -36,6 +38,8 @@ public class PacketDispatcher {
             PacketCubeBlockChanges::new, mainThreadHandler(PacketCubeBlockChanges.Handler::handle));
         registerMessage("cubepos", PacketUpdateCubePosition.class, PacketUpdateCubePosition::encode,
             PacketUpdateCubePosition::new, mainThreadHandler(PacketUpdateCubePosition.Handler::handle));
+        registerMessage("cube_radius", PacketCubeCacheRadius.class, PacketCubeCacheRadius::encode,
+            PacketCubeCacheRadius::new, mainThreadHandler(PacketCubeCacheRadius.Handler::handle));
         registerMessage("light", PacketUpdateLight.class, PacketUpdateLight::encode,
             PacketUpdateLight::new, mainThreadHandler(PacketUpdateLight.Handler::handle));
         registerMessage("heightmap", PacketHeightmap.class, PacketHeightmap::encode,
@@ -67,6 +71,20 @@ public class PacketDispatcher {
         FriendlyByteBuf buf = new FriendlyByteBuf(Unpooled.buffer());
         encoder.accept(packet, buf);
         ServerSidePacketRegistry.INSTANCE.sendToPlayer(player, packetId, buf);
+    }
+
+    public static <MSG> void sendTo(MSG packet, List<ServerPlayer> players) {
+        ResourceLocation packetId = PACKET_IDS.get(packet.getClass());
+        @SuppressWarnings("unchecked")
+        BiConsumer<MSG, FriendlyByteBuf> encoder = (BiConsumer<MSG, FriendlyByteBuf>) ENCODERS.get(packet.getClass());
+        FriendlyByteBuf buf = new FriendlyByteBuf(Unpooled.buffer());
+        encoder.accept(packet, buf);
+
+        players.forEach(player -> {
+            if (((CubicLevelHeightAccessor) player.getLevel()).isCubic()) {
+                ServerSidePacketRegistry.INSTANCE.sendToPlayer(player, packetId, buf);
+            }
+        });
     }
 
     private static <T> BiConsumer<T, PacketContext> mainThreadHandler(Consumer<? super T> handler) {

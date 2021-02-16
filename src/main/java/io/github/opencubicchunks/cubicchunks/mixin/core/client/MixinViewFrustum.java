@@ -1,5 +1,6 @@
 package io.github.opencubicchunks.cubicchunks.mixin.core.client;
 
+import io.github.opencubicchunks.cubicchunks.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -26,7 +27,6 @@ public abstract class MixinViewFrustum {
 
     /**
      * @author Barteks2x
-     * @reason vertical view distance = horizontal
      */
     @Inject(method = "setViewDistance", at = @At("HEAD"), cancellable = true)
     protected void setViewDistance(int renderDistanceChunks, CallbackInfo ci) {
@@ -37,10 +37,12 @@ public abstract class MixinViewFrustum {
             }
         }
         ci.cancel();
-        int d = renderDistanceChunks * 2 + 1;
-        this.chunkGridSizeX = d;
-        this.chunkGridSizeY = d;
-        this.chunkGridSizeZ = d;
+        int hDistance = renderDistanceChunks * 2 + 1;
+        int vDistance = CubicChunks.config().client.verticalViewDistance * 2 + 1;
+
+        this.chunkGridSizeX = hDistance;
+        this.chunkGridSizeY = vDistance;
+        this.chunkGridSizeZ = hDistance;
     }
 
     @Inject(method = "repositionCamera", at = @At(value = "HEAD"), cancellable = true, require = 1)
@@ -58,8 +60,8 @@ public abstract class MixinViewFrustum {
         double y = view.getY();
         double z = view.getZ();
         int viewX = Mth.floor(x);
-        int viewZ = Mth.floor(z);
         int viewY = Mth.floor(y);
+        int viewZ = Mth.floor(z);
 
         for (int xIndex = 0; xIndex < this.chunkGridSizeX; ++xIndex) {
             int xBase = this.chunkGridSizeX * 16;
@@ -84,7 +86,7 @@ public abstract class MixinViewFrustum {
     }
 
     @Inject(method = "getRenderChunkAt", at = @At(value = "HEAD"), cancellable = true)
-    private void getRenderChunkAt(BlockPos pos, CallbackInfoReturnable<ChunkRenderDispatcher.RenderChunk> cbi) {
+    private void getRenderChunkAt(BlockPos pos, CallbackInfoReturnable<ChunkRenderDispatcher.RenderChunk> cir) {
         ClientLevel level = Minecraft.getInstance().level;
         if (level != null) {
             if (!((CubicLevelHeightAccessor) level).isCubic()) {
@@ -99,8 +101,7 @@ public abstract class MixinViewFrustum {
         y = Mth.positiveModulo(y, this.chunkGridSizeY);
         z = Mth.positiveModulo(z, this.chunkGridSizeZ);
         ChunkRenderDispatcher.RenderChunk renderChunk = this.chunks[this.getChunkIndex(x, y, z)];
-        cbi.cancel();
-        cbi.setReturnValue(renderChunk);
+        cir.setReturnValue(renderChunk);
     }
 
     /**
@@ -108,7 +109,7 @@ public abstract class MixinViewFrustum {
      * @reason correctly use y position
      */
     @Inject(method = "setDirty", at = @At("HEAD"), cancellable = true)
-    public void setDirty(int i, int j, int k, boolean bl, CallbackInfo ci) {
+    public void setDirty(int x, int y, int z, boolean important, CallbackInfo ci) {
         ClientLevel level = Minecraft.getInstance().level;
         if (level != null) {
             if (!((CubicLevelHeightAccessor) level).isCubic()) {
@@ -116,10 +117,10 @@ public abstract class MixinViewFrustum {
             }
         }
         ci.cancel();
-        int l = Math.floorMod(i, this.chunkGridSizeX);
-        int m = Math.floorMod(j, this.chunkGridSizeY);
-        int n = Math.floorMod(k, this.chunkGridSizeZ);
-        ChunkRenderDispatcher.RenderChunk renderChunk = this.chunks[this.getChunkIndex(l, m, n)];
-        renderChunk.setDirty(bl);
+        int xIdx = Math.floorMod(x, this.chunkGridSizeX);
+        int yIdx = Math.floorMod(y, this.chunkGridSizeY);
+        int zIdx = Math.floorMod(z, this.chunkGridSizeZ);
+        ChunkRenderDispatcher.RenderChunk renderChunk = this.chunks[this.getChunkIndex(xIdx, yIdx, zIdx)];
+        renderChunk.setDirty(important);
     }
 }

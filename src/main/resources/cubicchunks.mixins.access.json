@@ -30,6 +30,7 @@
     "client": [
         "client.ChunkRenderDispatcherAccess",
         "client.ClientChunkProviderChunkArrayAccess",
+        "client.OptionAccess",
         "client.ViewFrustumAccess"
     ],
     "server": []

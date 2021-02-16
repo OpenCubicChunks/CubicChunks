@@ -9,6 +9,7 @@ import com.google.common.collect.ImmutableList;
 import com.mojang.datafixers.util.Either;
 import io.github.opencubicchunks.cubicchunks.chunk.IChunkManager;
 import io.github.opencubicchunks.cubicchunks.chunk.ICubeHolder;
+import io.github.opencubicchunks.cubicchunks.chunk.IVerticalView;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.BigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.graph.CCTicketType;
 import io.github.opencubicchunks.cubicchunks.chunk.ticket.CubeTaskPriorityQueueSorter;
@@ -45,7 +46,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(DistanceManager.class)
-public abstract class MixinTicketManager implements ITicketManager {
+public abstract class MixinTicketManager implements ITicketManager, IVerticalView {
 
     @Final @Shadow private Executor mainThreadExecutor;
     @Shadow private long ticketTickCounter;
@@ -104,15 +105,6 @@ public abstract class MixinTicketManager implements ITicketManager {
 
     private SortedArraySet<Ticket<?>> getCubeTickets(long cubePos) {
         return this.cubeTickets.computeIfAbsent(cubePos, (p_229851_0_) -> SortedArraySet.create(4));
-    }
-
-    @Inject(method = "updatePlayerTickets", at = @At("HEAD"))
-    protected void onUpdatePlayerTickets(int viewDistance, CallbackInfo ci) {
-        if (!isCubic) {
-            return;
-        }
-
-        this.playerCubeTicketTracker.updateCubeViewDistance(Coords.sectionToCubeRenderDistance(viewDistance));
     }
 
     //BEGIN INJECT
@@ -306,5 +298,9 @@ public abstract class MixinTicketManager implements ITicketManager {
 
     @Override public void hasCubicTickets(boolean hasCubicTickets) {
         this.isCubic = hasCubicTickets;
+    }
+
+    @Override public void updatePlayerCubeTickets(int horizontalDistance, int verticalDistance) {
+        this.playerCubeTicketTracker.updateCubeViewDistance(Coords.sectionToCubeRenderDistance(horizontalDistance), Coords.sectionToCubeRenderDistance(verticalDistance));
     }
 }

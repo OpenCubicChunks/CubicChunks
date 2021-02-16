@@ -45,6 +45,7 @@ public class CubicChunks implements ModInitializer {
         set.put("minecraft:the_end", CubicLevelHeightAccessor.WorldStyle.CHUNK);
     });
 
+    private static final Config CONFIG = new Config();
 
     public CubicChunks() {
         if (!(IChunkManager.class.isAssignableFrom(ChunkMap.class))) {
@@ -65,11 +66,31 @@ public class CubicChunks implements ModInitializer {
         CCFeatures.init();
     }
 
+    public static Config config() {
+        return CONFIG;
+    }
+
     @Override
     public void onInitialize() {
         PacketDispatcher.register();
 
         Registry.register(Registry.BIOME_SOURCE, new ResourceLocation(MODID, "stripes"), StripedBiomeSource.CODEC);
 //        Registry.register(Registry.CHUNK_GENERATOR, new ResourceLocation(MODID, "generator"), CCNoiseBasedChunkGenerator.CODEC);
+    }
+
+    //TODO: Implement a file for this.
+    public static class Config {
+        public Client client = new Client();
+
+
+        public void markDirty() {
+
+        }
+
+
+
+        public static class Client {
+            public int verticalViewDistance = 8;
+        }
     }
 }

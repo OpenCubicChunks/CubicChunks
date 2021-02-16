@@ -2,6 +2,7 @@ package io.github.opencubicchunks.cubicchunks.mixin.core.client.world;
 
 import javax.annotation.Nullable;
 
+import io.github.opencubicchunks.cubicchunks.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.chunk.ClientChunkProviderCubeArray;
 import io.github.opencubicchunks.cubicchunks.chunk.IClientCubeProvider;
 import io.github.opencubicchunks.cubicchunks.chunk.biome.CubeBiomeContainer;
@@ -51,7 +52,7 @@ public abstract class MixinClientChunkProvider implements IClientCubeProvider {
             return;
         }
 
-        this.cubeArray = new ClientChunkProviderCubeArray(adjustCubeViewDistance(viewDistance), cube -> {});
+        this.cubeArray = new ClientChunkProviderCubeArray(adjustCubeViewDistance(viewDistance), adjustCubeViewDistance(CubicChunks.config().client.verticalViewDistance), cube -> {});
         this.emptyCube = new EmptyCube(level);
     }
 
@@ -139,20 +140,24 @@ public abstract class MixinClientChunkProvider implements IClientCubeProvider {
         this.cubeArray.centerZ = Coords.sectionToCube(sectionZ);
     }
 
-    @Inject(method = "updateViewRadius", at = @At("HEAD"))
-    private void updateViewRadius(int viewDistance, CallbackInfo ci) {
+    @Override
+    public void updateCubeViewRadius(int hDistance, int vDistance) {
         if (level != null) {
             if (!((CubicLevelHeightAccessor) level).isCubic()) {
-                return;
+                throw new UnsupportedOperationException("Attempting to set a cubeViewRange in a noncubic world.");
             }
         }
 
-        int old = this.cubeArray.viewDistance;
-        int newDist = adjustCubeViewDistance(viewDistance);
-        if (old == newDist) {
+        int oldHDistance = this.cubeArray.horizontalViewDistance;
+        int oldVDistance = this.cubeArray.verticalViewDistance;
+
+        int newHDistance = adjustCubeViewDistance(hDistance);
+        int newVDistance = adjustCubeViewDistance(vDistance);
+
+        if (oldHDistance == newHDistance && oldVDistance == newVDistance) {
             return;
         }
-        ClientChunkProviderCubeArray array = new ClientChunkProviderCubeArray(newDist, cube -> {});
+        ClientChunkProviderCubeArray array = new ClientChunkProviderCubeArray(newHDistance, newVDistance, cube -> {});
         array.centerX = this.cubeArray.centerX;
         array.centerY = this.cubeArray.centerY;
         array.centerZ = this.cubeArray.centerZ;
