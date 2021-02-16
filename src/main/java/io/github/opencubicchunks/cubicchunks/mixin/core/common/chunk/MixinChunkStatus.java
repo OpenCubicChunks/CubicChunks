@@ -394,12 +394,14 @@ public class MixinChunkStatus {
         method = "lambda$static$13(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/level/chunk/ChunkGenerator;Ljava/util/List;Lnet/minecraft/world/level/chunk/ChunkAccess;)V",
         at = @At("HEAD"), cancellable = true
     )
+    //TODO: Expose the above and bottom cubes via neighbors or thing else.
     private static void cubicChunksSpawnMobs(ServerLevel world, ChunkGenerator generator, List<ChunkAccess> neighbors, ChunkAccess chunk,
                                              CallbackInfo ci) {
 
         if (!((CubicLevelHeightAccessor) world).isCubic()) {
             return;
         }
+
 
         ci.cancel();
         if (chunk instanceof IBigCube) {

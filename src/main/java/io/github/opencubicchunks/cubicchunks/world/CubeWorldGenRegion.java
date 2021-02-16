@@ -354,7 +354,8 @@ public class CubeWorldGenRegion extends WorldGenRegion implements ICubicWorld {
         int yStart = Coords.cubeToMinBlock(mainCubeY + 1);
         int yEnd = Coords.cubeToMinBlock(mainCubeY);
 
-        if (spawnsMobs) {
+
+        if (maxCubeY == mainCubeY) {
             IBigCube cube1 = getCube(new BlockPos(x, yEnd, z));
             int height = cube1.getCubeLocalHeight(heightmapType, x, z);
 
@@ -501,6 +502,13 @@ public class CubeWorldGenRegion extends WorldGenRegion implements ICubicWorld {
 
     public CubePos getMinCubePos() {
         return minCubePos;
+    }
+
+    @Override public int getRawBrightness(BlockPos pos, int ambientDarkness) {
+        if (spawnsMobs) { // TODO: Reimplement when light engine works properly
+            return 15;
+        }
+        return super.getRawBrightness(pos, ambientDarkness);
     }
 
     private static class DummyChunkAccess implements ChunkAccess {

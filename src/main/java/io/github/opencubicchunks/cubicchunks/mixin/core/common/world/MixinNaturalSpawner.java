@@ -1,6 +1,7 @@
 package io.github.opencubicchunks.cubicchunks.mixin.core.common.world;
 
 import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
+import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import io.github.opencubicchunks.cubicchunks.world.CubeWorldGenRegion;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
@@ -17,7 +18,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(value = NaturalSpawner.class, priority = 0)// Assume absolute priority because of Y checks found here, we should always WANT to run first
-public class MixinNaturalSpawner {
+public abstract class MixinNaturalSpawner {
+
     @Inject(method = "spawnForChunk", at = @At("HEAD"), cancellable = true)
     private static void cancelSpawnForChunk(ServerLevel serverLevel, LevelChunk levelChunk, NaturalSpawner.SpawnState spawnState, boolean bl,
                                             boolean bl2, boolean bl3, CallbackInfo ci) {
@@ -38,8 +40,8 @@ public class MixinNaturalSpawner {
 
         if (reader instanceof CubeWorldGenRegion) {
             CubeWorldGenRegion world = (CubeWorldGenRegion) reader;
-            int lowestAllowedY = world.getMinCubePos().minCubeY();
-            int highestAllowedY = world.getMinCubePos().maxCubeY();
+            int lowestAllowedY = Coords.cubeToMinBlock(world.getMainCubeY());
+            int highestAllowedY = Coords.cubeToMaxBlock(world.getMainCubeY());
             if (pos.getY() < lowestAllowedY + 1 || pos.getY() > highestAllowedY - 1) {
                 cir.setReturnValue(false);
             }
@@ -56,8 +58,8 @@ public class MixinNaturalSpawner {
         if (reader instanceof CubeWorldGenRegion) {
             CubeWorldGenRegion world = (CubeWorldGenRegion) reader;
             BlockPos newPos = new BlockPos(x, world.getHeight(SpawnPlacements.getHeightmapType(entityType), x, z), z);
-            int lowestAllowedY = world.getMinCubePos().minCubeY();
-            int highestAllowedY = world.getMinCubePos().maxCubeY();
+            int lowestAllowedY = Coords.cubeToMinBlock(world.getMainCubeY());
+            int highestAllowedY = Coords.cubeToMaxBlock(world.getMainCubeY());
 
             if (newPos.getY() < lowestAllowedY + 1 || newPos.getY() > highestAllowedY - 1) {
                 cir.setReturnValue(newPos);
