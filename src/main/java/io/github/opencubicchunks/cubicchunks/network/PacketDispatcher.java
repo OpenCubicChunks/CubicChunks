@@ -14,7 +14,6 @@ import net.fabricmc.fabric.api.network.PacketContext;
 import net.fabricmc.fabric.api.network.ServerSidePacketRegistry;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.network.protocol.Packet;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.Level;
@@ -82,8 +81,9 @@ public class PacketDispatcher {
         encoder.accept(packet, buf);
 
         players.forEach(player -> {
-            if (((CubicLevelHeightAccessor) player.getLevel()).isCubic())
+            if (((CubicLevelHeightAccessor) player.getLevel()).isCubic()) {
                 ServerSidePacketRegistry.INSTANCE.sendToPlayer(player, packetId, buf);
+            }
         });
     }
 

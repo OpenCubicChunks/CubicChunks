@@ -94,8 +94,6 @@ public abstract class MixinViewFrustum {
             }
         }
 
-        cir.cancel();
-
         int x = Mth.intFloorDiv(pos.getX(), 16);
         int y = Mth.intFloorDiv(pos.getY(), 16);
         int z = Mth.intFloorDiv(pos.getZ(), 16);

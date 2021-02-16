@@ -40,7 +40,6 @@ public abstract class MixinRenderChunk {
                 return;
             }
         }
-        cir.cancel();
 
         cir.setReturnValue(
             ((ChunkRenderDispatcherAccess) this$0).getLevel().getChunk(
@@ -68,8 +67,6 @@ public abstract class MixinRenderChunk {
                 return;
             }
         }
-
-        cir.cancel();
 
         if (!(this.getDistToPlayerSqr() > 576.0D)) {
             cir.setReturnValue(true);

@@ -15,7 +15,7 @@ import it.unimi.dsi.fastutil.longs.LongSet;
 import net.minecraft.server.level.Ticket;
 
 public class PlayerCubeTicketTracker extends PlayerCubeTracker {
-    private int viewDistance;
+    private int horizontalViewDistance;
     private int verticalViewDistance;
 
     private final Long2IntMap horizDistances = Long2IntMaps.synchronize(new Long2IntOpenHashMap());
@@ -32,7 +32,7 @@ public class PlayerCubeTicketTracker extends PlayerCubeTracker {
         horizontalGraphGroup = new HorizontalGraphGroup(iTicketManager, (32 / IBigCube.DIAMETER_IN_SECTIONS) + 1, this);
         verticalGraphGroup = new VerticalGraphGroup(iTicketManager, (32 / IBigCube.DIAMETER_IN_SECTIONS) + 1, this);
         this.iTicketManager = iTicketManager;
-        this.viewDistance = 0;
+        this.horizontalViewDistance = 0;
         this.verticalViewDistance = 0;
         this.horizDistances.defaultReturnValue(i + 2);
         this.vertDistances.defaultReturnValue(i + 2);
@@ -48,22 +48,19 @@ public class PlayerCubeTicketTracker extends PlayerCubeTracker {
     }
 
     /**
-     * Updates which cubes are to be loaded based on a new viewDistance or verticalViewDistance
-     *
-     * @param viewDistance
-     * @param verticalViewDistance
+     * Updates which cubes are to be loaded based on a new hViewDistance or vViewDistance
      */
-    public void updateCubeViewDistance(int viewDistance, int verticalViewDistance) {
-        CubicChunks.LOGGER.info("Horizontal dist(Cubes): {}; Vertical dist(Cubes): {}", viewDistance, verticalViewDistance);
+    public void updateCubeViewDistance(int hViewDistance, int vViewDistance) {
+        CubicChunks.LOGGER.info("Horizontal dist(Cubes): {}; Vertical dist(Cubes): {}", hViewDistance, vViewDistance);
         for (Long2ByteMap.Entry entry : this.horizontalGraphGroup.cubesInRange.long2ByteEntrySet()) {
             long pos = entry.getLongKey();
             byte horizDistance = entry.getByteValue();
             byte vertDistance = this.verticalGraphGroup.cubesInRange.get(pos);
-            this.updateTicket(pos, horizDistance, this.isWithinViewDistance(horizDistance, vertDistance), horizDistance <= viewDistance - 2 && vertDistance <= verticalViewDistance - 2);
+            this.updateTicket(pos, horizDistance, this.isWithinViewDistance(horizDistance, vertDistance), horizDistance <= hViewDistance - 2 && vertDistance <= vViewDistance - 2);
         }
 
-        this.viewDistance = viewDistance;
-        this.verticalViewDistance = verticalViewDistance;
+        this.horizontalViewDistance = hViewDistance;
+        this.verticalViewDistance = vViewDistance;
     }
 
     /**
@@ -143,7 +140,7 @@ public class PlayerCubeTicketTracker extends PlayerCubeTracker {
      * @return Whether the distances are within the view distance bounds
      */
     private boolean isWithinViewDistance(int horizDistance, int vertDistance) {
-        return horizDistance <= this.viewDistance - 2 && vertDistance <= this.verticalViewDistance - 2;
+        return horizDistance <= this.horizontalViewDistance - 2 && vertDistance <= this.verticalViewDistance - 2;
     }
 
     /**

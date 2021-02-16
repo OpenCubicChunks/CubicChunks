@@ -30,7 +30,7 @@ public abstract class CubeDistanceGraph extends DynamicGraphMinFixedPoint {
         int y = cubePos.getY();
         int z = cubePos.getZ();
 
-        for(int x2 = -xR; x2 <= xR; ++x2) {
+        for (int x2 = -xR; x2 <= xR; ++x2) {
             for (int y2 = -yR; y2 <= yR; ++y2) {
                 for (int z2 = -zR; z2 <= zR; ++z2) {
                     long cubeLong = CubePos.asLong(x + x2, y + y2, z + z2);
@@ -52,7 +52,7 @@ public abstract class CubeDistanceGraph extends DynamicGraphMinFixedPoint {
         int y = cubePos.getY();
         int z = cubePos.getZ();
 
-        for(int x2 = -xR; x2 <= xR; ++x2) {
+        for (int x2 = -xR; x2 <= xR; ++x2) {
             for (int y2 = -yR; y2 <= yR; ++y2) {
                 for (int z2 = -zR; z2 <= zR; ++z2) {
                     long cubeLong = CubePos.asLong(x + x2, y + y2, z + z2);

@@ -6,7 +6,6 @@ import io.github.opencubicchunks.cubicchunks.chunk.IVerticalView;
 import io.github.opencubicchunks.cubicchunks.network.PacketCubeCacheRadius;
 import io.github.opencubicchunks.cubicchunks.network.PacketDispatcher;
 import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
-import net.minecraft.network.protocol.Packet;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -21,11 +20,19 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(PlayerList.class)
 public abstract class MixinPlayerList implements IVerticalView {
 
-    @Shadow public abstract void broadcastAll(Packet<?> packet);
-
     @Shadow @Final private MinecraftServer server;
     @Shadow @Final private List<ServerPlayer> players;
-    private int verticalViewDistance = 0;
+    private int verticalViewDistance;
+    private int incomingVerticalViewDistance;
+
+
+    @Override public void setIncomingVerticalViewDistance(int verticalDistance) {
+        this.incomingVerticalViewDistance = verticalDistance;
+    }
+
+    @Override public int getVerticalViewDistance() {
+        return this.verticalViewDistance;
+    }
 
     @Inject(method = "setViewDistance", at = @At("HEAD"), cancellable = true)
     private void doVerticalChangesAswell(int viewDistance, CallbackInfo ci) {
@@ -40,16 +47,5 @@ public abstract class MixinPlayerList implements IVerticalView {
                 }
             }
         }
-    }
-
-    private int incomingVerticalViewDistance;
-
-
-    @Override public void setIncomingVerticalViewDistance(int verticalDistance) {
-       this.incomingVerticalViewDistance = verticalDistance;
-    }
-
-    @Override public int getVerticalViewDistance() {
-        return this.verticalViewDistance;
     }
 }

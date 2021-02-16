@@ -163,6 +163,8 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
 
     @Shadow private int viewDistance;
     private int verticalViewDistance;
+    private int incomingVerticalViewDistance;
+
 
     @Shadow @Final private Int2ObjectMap<ChunkMap.TrackedEntity> entityMap;
 
@@ -183,14 +185,8 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
 
     @Shadow public abstract Stream<ServerPlayer> getPlayers(ChunkPos chunkPos, boolean bl);
 
-
     @Shadow @Nullable protected abstract CompoundTag readChunk(ChunkPos pos) throws IOException;
 
-    @Shadow @Final private Long2ObjectLinkedOpenHashMap<ChunkHolder> updatingChunkMap;
-
-    @Shadow private static int checkerboardDistance(ChunkPos pos, ServerPlayer player, boolean useCameraPosition) {
-        throw new Error("Mixin didn't apply");
-    }
 
     @SuppressWarnings("UnresolvedMixinReference") @Redirect(method = "<init>", at = @At(value = "NEW", target = "net/minecraft/server/level/ChunkMap$DistanceManager"))
     private ChunkMap.DistanceManager setIsCubic(ChunkMap chunkMap, Executor executor, Executor executor2, ServerLevel worldIn) {
@@ -1076,8 +1072,6 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
             }
         }
     }
-
-    int incomingVerticalViewDistance;
 
     // this needs to be at HEAD, otherwise we are not going to see the view distance being different. Should not set view distance. Should NOT BE CANCELLED
     @Inject(method = "setViewDistance", at = @At("HEAD"))

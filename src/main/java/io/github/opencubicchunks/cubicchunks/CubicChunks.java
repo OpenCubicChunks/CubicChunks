@@ -39,18 +39,13 @@ public class CubicChunks implements ModInitializer {
 
     public static final String PROTOCOL_VERSION = "0";
 
-    private static final Config config = new Config();
-
-    public static Config config() {
-        return config;
-    }
-
     public static final Map<String, CubicLevelHeightAccessor.WorldStyle> DIMENSION_TO_WORLD_STYLE = Util.make(new HashMap<>(), (set) -> {
         set.put("minecraft:overworld", CubicLevelHeightAccessor.WorldStyle.CUBIC);
         set.put("minecraft:the_nether", CubicLevelHeightAccessor.WorldStyle.CHUNK);
         set.put("minecraft:the_end", CubicLevelHeightAccessor.WorldStyle.CHUNK);
     });
 
+    private static final Config CONFIG = new Config();
 
     public CubicChunks() {
         if (!(IChunkManager.class.isAssignableFrom(ChunkMap.class))) {
@@ -69,6 +64,10 @@ public class CubicChunks implements ModInitializer {
         //Custom CC Features
         CCPlacement.init();
         CCFeatures.init();
+    }
+
+    public static Config config() {
+        return CONFIG;
     }
 
     @Override

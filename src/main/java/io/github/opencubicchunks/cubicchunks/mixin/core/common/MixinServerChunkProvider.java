@@ -12,13 +12,13 @@ import io.github.opencubicchunks.cubicchunks.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.IChunkManager;
 import io.github.opencubicchunks.cubicchunks.chunk.ICubeHolder;
+import io.github.opencubicchunks.cubicchunks.chunk.IVerticalView;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.BigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.CubeStatus;
 import io.github.opencubicchunks.cubicchunks.chunk.graph.CCTicketType;
 import io.github.opencubicchunks.cubicchunks.chunk.ticket.ITicketManager;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.ChunkManagerAccess;
-import io.github.opencubicchunks.cubicchunks.chunk.IVerticalView;
 import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import io.github.opencubicchunks.cubicchunks.server.IServerChunkProvider;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
@@ -204,7 +204,7 @@ public abstract class MixinServerChunkProvider implements IServerChunkProvider, 
     }
 
     @Override public void setIncomingVerticalViewDistance(int verticalDistance) {
-        ((IVerticalView)this.chunkMap).setIncomingVerticalViewDistance(verticalDistance);
+        ((IVerticalView) this.chunkMap).setIncomingVerticalViewDistance(verticalDistance);
     }
 
     @Inject(method = "runDistanceManagerUpdates", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerChunkCache;clearCache()V"))

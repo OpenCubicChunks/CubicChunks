@@ -12,7 +12,7 @@ public class HorizontalGraphGroup extends CubeDistanceGraph {
 
     private final ITicketManager iTicketManager;
     private final PlayerCubeTicketTracker ticketTracker;
-    private Vertical vertical;
+    private final Vertical vertical;
 
     public HorizontalGraphGroup(ITicketManager iTicketManager, int i, PlayerCubeTicketTracker ticketTracker) {
         super(i + 2, 16, 256, 1, 0, 1);
@@ -59,16 +59,15 @@ public class HorizontalGraphGroup extends CubeDistanceGraph {
     }
 
     private class Vertical extends CubeDistanceGraph {
-        public final Long2ByteMap cubesInRange = new Long2ByteOpenHashMap();
-        protected final int range;
-
+        private final int range;
+        private final Long2ByteMap cubesInRange = new Long2ByteOpenHashMap();
         private final ITicketManager iTicketManager;
         private final HorizontalGraphGroup superior;
 
-        public Vertical(ITicketManager iTicketManager, int i) {
-            super(i + 2, 16, 256, 0, 1, 0);
-            this.range = i;
-            this.cubesInRange.defaultReturnValue((byte) (i + 2));
+        Vertical(ITicketManager iTicketManager, int range) {
+            super(range + 2, 16, 256, 0, 1, 0);
+            this.range = range;
+            this.cubesInRange.defaultReturnValue((byte) (range + 2));
             this.iTicketManager = iTicketManager;
             this.superior = HorizontalGraphGroup.this;
 

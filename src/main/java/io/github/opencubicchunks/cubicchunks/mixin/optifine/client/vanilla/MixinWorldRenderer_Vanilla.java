@@ -36,9 +36,10 @@ public abstract class MixinWorldRenderer_Vanilla {
 
     @Shadow @Final private Minecraft minecraft;
 
+    private int lastVerticalViewDistance = -1;
+
     @Shadow public abstract void allChanged();
 
-    private int lastVerticalViewDistance = -1;
 
     /**
      * @author AidanLovelace

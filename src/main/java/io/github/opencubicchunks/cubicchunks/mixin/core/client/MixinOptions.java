@@ -15,8 +15,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(Options.class)
 public class MixinOptions {
 
-    @Shadow public int renderDistance;
-
     @Shadow public CloudStatus renderClouds;
 
     @Inject(method = "getCloudsType", at = @At("HEAD"), cancellable = true)
@@ -27,9 +25,7 @@ public class MixinOptions {
                 return;
             }
         }
-        cir.cancel();
-
-        cir.setReturnValue(Math.max(this.renderDistance, CubicChunks.config().client.verticalViewDistance) >= 4 ? this.renderClouds : CloudStatus.OFF);
+        cir.setReturnValue(CubicChunks.config().client.verticalViewDistance >= 4 ? this.renderClouds : CloudStatus.OFF);
 
     }
 }

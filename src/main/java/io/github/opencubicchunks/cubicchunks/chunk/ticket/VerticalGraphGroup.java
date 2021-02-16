@@ -66,7 +66,7 @@ public class VerticalGraphGroup extends CubeDistanceGraph {
         private final ITicketManager iTicketManager;
         private final VerticalGraphGroup superior;
 
-        public Horizontal(ITicketManager iTicketManager, int i) {
+        Horizontal(ITicketManager iTicketManager, int i) {
             super(i + 2, 16, 256, 1, 0, 1);
             this.range = i;
             this.cubesInRange.defaultReturnValue((byte) (i + 2));
