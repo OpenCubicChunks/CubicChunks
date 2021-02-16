@@ -72,19 +72,21 @@ public class CubeWorldGenRegion extends WorldGenRegion implements ICubicWorld {
 
     private static final Logger LOGGER = LogManager.getLogger();
     private final IBigCube[] cubePrimers;
+
+    private final CubePos centerCubePos;
     private final int mainCubeX;
     private final int mainCubeY;
     private final int mainCubeZ;
 
-
+    private final CubePos minCubePos;
     private final int minCubeX;
     private final int minCubeY;
     private final int minCubeZ;
 
+    private final CubePos maxCubePos;
     private final int maxCubeX;
     private final int maxCubeY;
     private final int maxCubeZ;
-
 
     private final int diameter;
     private final long seed;
@@ -94,46 +96,64 @@ public class CubeWorldGenRegion extends WorldGenRegion implements ICubicWorld {
     private final DimensionType dimension;
     private final ChunkAccess access;
 
-    //    private final ITickList<Block> pendingBlockTickList = new WorldGenTickList<>((blockPos) -> {
-    //        return this.getCube(blockPos).getBlocksToBeTicked();
-    //    });
-    //    private final ITickList<Fluid> pendingFluidTickList = new WorldGenTickList<>((blockPos) -> {
-    //        return this.getCube(blockPos).getFluidsToBeTicked();
-    //    });
     private final BiomeManager biomeManager;
+
+    private int cubeCenterColumnCenterX = 0;
+    private int cubeCenterColumnCenterZ = 0;
+    private boolean spawnsMobs;
 
     public CubeWorldGenRegion(ServerLevel worldIn, List<IBigCube> cubesIn, ChunkAccess access) {
         super(worldIn, Collections.singletonList(new DummyChunkAccess()));
 
-        int i = Mth.floor(Math.cbrt(cubesIn.size()));
-        if (i * i * i != cubesIn.size()) {
-            throw Util.pauseInIde(new IllegalStateException("Cache size is not a square."));
+        int cubeRoot = Mth.floor(Math.cbrt(cubesIn.size()));
+        if (cubeRoot * cubeRoot * cubeRoot != cubesIn.size()) {
+            throw Util.pauseInIde(new IllegalStateException("Cube World Gen Region Cache size is not a cube."));
         } else {
-
-            CubePos cubePos = cubesIn.get(cubesIn.size() / 2).getCubePos();
+            this.centerCubePos = cubesIn.get(cubesIn.size() / 2).getCubePos();
             this.cubePrimers = cubesIn.toArray(new IBigCube[0]);
 
-            this.mainCubeX = cubePos.getX();
-            this.mainCubeY = cubePos.getY();
-            this.mainCubeZ = cubePos.getZ();
-            this.diameter = i;
+            this.mainCubeX = this.centerCubePos.getX();
+            this.mainCubeY = this.centerCubePos.getY();
+            this.mainCubeZ = this.centerCubePos.getZ();
+            this.diameter = cubeRoot;
+
             this.seed = worldIn.getSeed();
             this.seaLevel = worldIn.getSeaLevel();
             this.worldInfo = worldIn.getLevelData();
             this.random = worldIn.getRandom();
             this.dimension = worldIn.dimensionType();
+
             this.biomeManager = new BiomeManager(this, BiomeManager.obfuscateSeed(this.seed), worldIn.dimensionType().getBiomeZoomer());
+
             IBigCube minCube = this.cubePrimers[0];
             IBigCube maxCube = this.cubePrimers[this.cubePrimers.length - 1];
+
+
+            this.minCubePos = minCube.getCubePos();
             this.minCubeX = minCube.getCubePos().getX();
             this.minCubeY = minCube.getCubePos().getY();
             this.minCubeZ = minCube.getCubePos().getZ();
+
+            this.maxCubePos = maxCube.getCubePos();
             this.maxCubeX = maxCube.getCubePos().getX();
             this.maxCubeY = maxCube.getCubePos().getY();
             this.maxCubeZ = maxCube.getCubePos().getZ();
 
             this.access = access;
         }
+    }
+
+    public void moveCenterCubeChunkPos(int newX, int newZ) {
+        this.cubeCenterColumnCenterX = newX;
+        this.cubeCenterColumnCenterZ = newZ;
+    }
+
+    public void spawnsMobs() {
+        spawnsMobs = true;
+    }
+
+    @Override public ChunkPos getCenter() {
+        return this.centerCubePos.asChunkPos(cubeCenterColumnCenterX, cubeCenterColumnCenterZ);
     }
 
     public int getMainCubeX() {
@@ -146,6 +166,10 @@ public class CubeWorldGenRegion extends WorldGenRegion implements ICubicWorld {
 
     public int getMainCubeZ() {
         return this.mainCubeZ;
+    }
+
+    public CubePos getCenterCubePos() {
+        return this.getCenterCubePos();
     }
 
     public IBigCube getCube(int cubeX, int cubeY, int cubeZ) {
@@ -329,6 +353,23 @@ public class CubeWorldGenRegion extends WorldGenRegion implements ICubicWorld {
     @Override public int getHeight(Heightmap.Types heightmapType, int x, int z) {
         int yStart = Coords.cubeToMinBlock(mainCubeY + 1);
         int yEnd = Coords.cubeToMinBlock(mainCubeY);
+
+        if (spawnsMobs) {
+            IBigCube cube1 = getCube(new BlockPos(x, yEnd, z));
+            int height = cube1.getCubeLocalHeight(heightmapType, x, z);
+
+            if (cube1.getCubeLocalHeight(heightmapType, x, z) >= yStart) {
+                return yStart + 2;
+            }
+
+            if (height <= getLevel().getMinBuildHeight()) {
+                return yEnd - 1;
+            }
+            return height + 1;
+        }
+
+
+
         IBigCube cube1 = getCube(new BlockPos(x, yStart, z));
         if (cube1.getCubeLocalHeight(heightmapType, x, z) >= yStart) {
             return yStart + 2;
@@ -337,7 +378,7 @@ public class CubeWorldGenRegion extends WorldGenRegion implements ICubicWorld {
         int height = cube2.getCubeLocalHeight(heightmapType, x, z);
 
         //Check whether or not height was found for this cube. If height wasn't found, move to the next cube under the current cube
-        if (height <= getMinBuildHeight()) {
+        if (height <= getLevel().getMinBuildHeight()) {
             return yEnd - 1;
         }
         return height + 1;
@@ -452,6 +493,14 @@ public class CubeWorldGenRegion extends WorldGenRegion implements ICubicWorld {
 
     @Override public int getHeight() {
         return getLevel().getHeight();
+    }
+
+    public CubePos getMaxCubePos() {
+        return maxCubePos;
+    }
+
+    public CubePos getMinCubePos() {
+        return minCubePos;
     }
 
     private static class DummyChunkAccess implements ChunkAccess {

@@ -94,11 +94,6 @@ public class CubePrimer implements IBigCube, ChunkAccess, CubicLevelHeightAccess
     private final WorldStyle worldStyle;
 
     public CubePrimer(CubePos cubePos, UpgradeData upgradeData, LevelHeightAccessor levelHeightAccessor) {
-//        this(cubePos, upgradeData, (ChunkSection[])null, new ChunkPrimerTickList<>((p_205332_0_) -> {
-//            return p_205332_0_ == null || p_205332_0_.defaultBlockState().isAir();
-//        }, cubePos), new ChunkPrimerTickList<>((p_205766_0_) -> {
-//            return p_205766_0_ == null || p_205766_0_ == Fluids.EMPTY;
-//        }, cubePos));
         this(cubePos, upgradeData, null, null, null, levelHeightAccessor);
     }
 

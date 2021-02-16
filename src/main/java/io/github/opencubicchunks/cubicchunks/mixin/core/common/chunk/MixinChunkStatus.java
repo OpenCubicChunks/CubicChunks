@@ -400,9 +400,17 @@ public class MixinChunkStatus {
         if (!((CubicLevelHeightAccessor) world).isCubic()) {
             return;
         }
+
         ci.cancel();
-        //if (chunk instanceof IBigCube) {
-        //    generator.spawnMobs(new CubeWorldGenRegion(world, unsafeCast(neighbors)));
-        //}
+        if (chunk instanceof IBigCube) {
+            CubeWorldGenRegion cubeWorldGenRegion = new CubeWorldGenRegion(world, unsafeCast(neighbors), chunk);
+            cubeWorldGenRegion.spawnsMobs();
+            for (int columnX = 0; columnX < IBigCube.DIAMETER_IN_SECTIONS; columnX++) {
+                for (int columnZ = 0; columnZ < IBigCube.DIAMETER_IN_SECTIONS; columnZ++) {
+                    cubeWorldGenRegion.moveCenterCubeChunkPos(columnX, columnZ);
+                    generator.spawnOriginalMobs(cubeWorldGenRegion);
+                }
+            }
+        }
     }
 }
