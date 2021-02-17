@@ -1,5 +1,8 @@
 package io.github.opencubicchunks.cubicchunks.mixin.core.client.debug;
 
+import io.github.opencubicchunks.cubicchunks.chunk.LightHeightmapGetter;
+import io.github.opencubicchunks.cubicchunks.chunk.heightmap.LightSurfaceTrackerWrapper;
+import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import net.minecraft.client.gui.components.DebugScreenOverlay;
 import net.minecraft.core.BlockPos;
@@ -25,12 +28,22 @@ public abstract class MixinDebugScreenOverlay {
 	@Inject(method = "getGameInformation",
 			at = @At(value = "INVOKE", target = "Lnet/minecraft/client/multiplayer/ClientLevel;getBrightness(Lnet/minecraft/world/level/LightLayer;Lnet/minecraft/core/BlockPos;)I", ordinal = 0),
 			locals = LocalCapture.CAPTURE_FAILHARD)
-	private void onGetGameInformation(CallbackInfoReturnable<List<String>> cir, String string2, BlockPos blockPos, Entity entity, Direction direction, String string7, Level level, LongSet longSet, List list, LevelChunk levelChunk, int i) {
-		LevelChunk worldChunk2 = this.getServerChunk();
-		if (worldChunk2 != null) {
+	private void onGetGameInformation(CallbackInfoReturnable<List<String>> cir, String string2, BlockPos pos, Entity entity, Direction direction, String string7, Level level, LongSet longSet, List<String> list, LevelChunk clientChunk, int i) {
+		LevelChunk serverChunk = this.getServerChunk();
+		String serverHeight = "???";
+		if (serverChunk != null) {
+			LightSurfaceTrackerWrapper heightmap = ((LightHeightmapGetter) serverChunk).getServerLightHeightmap();
+			int height = heightmap.getFirstAvailable(pos.getX() & 0xF, pos.getZ() & 0xF);
+			serverHeight = "" + height;
+		}
+		list.add("Server light heightmap height: " + serverHeight);
+		int clientHeight = ((LightHeightmapGetter) clientChunk).getClientLightHeightmap().getFirstAvailable(pos.getX() & 0xF, pos.getZ() & 0xF);
+		list.add("Client light heightmap height: " + clientHeight);
+
+		if (serverChunk != null) {
 			LevelLightEngine lightingProvider = level.getChunkSource().getLightEngine();
-			list.add("Server Light: (" + lightingProvider.getLayerListener(LightLayer.SKY).getLightValue(blockPos) + " sky, "
-					+ lightingProvider.getLayerListener(LightLayer.BLOCK).getLightValue(blockPos) + " block)");
+			list.add("Server Light: (" + lightingProvider.getLayerListener(LightLayer.SKY).getLightValue(pos) + " sky, "
+					+ lightingProvider.getLayerListener(LightLayer.BLOCK).getLightValue(pos) + " block)");
 		} else {
 			list.add("Server Light: (?? sky, ?? block)");
 		}
