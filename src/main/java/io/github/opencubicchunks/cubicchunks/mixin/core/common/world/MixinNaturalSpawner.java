@@ -11,6 +11,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.SpawnPlacements;
+import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.NaturalSpawner;
@@ -127,6 +128,34 @@ public abstract class MixinNaturalSpawner {
 //    private static void createCubicState(int spawningChunkCount, Iterable entities, CubicNaturalSpawner.CubeGetter cubeGetter, CallbackInfoReturnable<NaturalSpawner.SpawnState> cir) {
 //
 //    }
+
+    // The above doesn't work yet, so instead we redirect all the methods involved in ChunkPos.asLong
+    // and put the least significant bits of cube pos long serialization into the Z coordinate for ChunkPos.asLong
+    // and the most significant bits into the X coordinate for ChunkPos.asLong
+
+    @Dynamic
+    @Redirect(method = "createCubicState", at = @At(value = "INVOKE", target = "Lio/github/opencubicchunks/cubicchunks/chunk/util/CubePos;asLong(II)J"))
+    private static long packCubePosLongNoSectionPos(int x, int z) {
+        return ChunkPos.asLong(x, z);
+    }
+
+    @Dynamic
+    @Redirect(method = "createCubicState", at = @At(value = "INVOKE", target = "Lnet/minecraft/core/SectionPos;blockToSectionCoord(I)I"))
+    private static int packCubePosLongNoSectionPos(int val) {
+        return val;
+    }
+
+    @Dynamic
+    @Redirect(method = "createCubicState", at = @At(value = "INVOKE", target = "Lnet/minecraft/core/BlockPos;getZ()I"))
+    private static int getCubePosMSB(BlockPos pos) {
+        return (int) (CubePos.from(pos).asLong() >>> 32);
+    }
+
+    @Dynamic
+    @Redirect(method = "createCubicState", at = @At(value = "INVOKE", target = "Lnet/minecraft/core/BlockPos;getX()I"))
+    private static int getCubePosLSB(BlockPos pos) {
+        return (int) CubePos.from(pos).asLong();
+    }
 
     // Mixin AP doesn't see mappings for the target because this method doesn't actually exist anywhere
     // so it can't remap the class names, so we have to provide redirects with both intermediary and mapped names
