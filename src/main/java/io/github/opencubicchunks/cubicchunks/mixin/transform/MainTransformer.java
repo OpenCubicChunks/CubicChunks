@@ -227,6 +227,21 @@ public class MainTransformer {
                 + " net.minecraft.class_2818,"
                 + " net.minecraft.class_1948$class_5261,"
                 + " net.minecraft.class_1948$class_5259)")), "spawnCategoryForCube");
+
+        vanillaToCubic.put(new ClassMethod(getObjectType("net/minecraft/class_1948"), // NaturalSpawner
+            getMethod("boolean method_24933("
+                + "net.minecraft.class_3218,"
+                + " net.minecraft.class_2791,"
+                + " net.minecraft.class_2338$class_2339,"
+                + " double)")), "isRightDistanceToPlayerAndSpawnPointForCube");
+
+        vanillaToCubic.put(new ClassMethod(getObjectType("net/minecraft/class_1948"), // NaturalSpawner
+            getMethod("net.minecraft.class_1948$class_5262 method_27815(" //NaturalSpawner.SpawnState createState
+                + "int," //spawningChunkCount
+                + " java.lang.Iterable," // entities
+                + " net.minecraft.class_1948$class_5260)" // NaturalSpawner.ChunkGetter
+            )), "createCubicState");
+
         Map<ClassMethod, String> methodRedirects = new HashMap<>();
         methodRedirects.put(new ClassMethod(getObjectType("net/minecraft/class_1948"), // NaturalSpawner
             getMethod("void method_8663(" // spawnCategoryForChunk
@@ -237,17 +252,29 @@ public class MainTransformer {
                 + " net.minecraft.class_1948$class_5259)") // NaturalSpawner.AfterSpawnCallback
         ), "spawnCategoryForCube");
 
-        // TODO: Make bridge method for static calls
-//        methodRedirects.put(new ClassMethod(getObjectType("net/minecraft/class_1948"),
-//            getMethod("net.minecraft.class_2338" // BlockPos
-//                + " method_8657(" // getRandomPosWithin
-//                + "net.minecraft.class_1937," // Level
-//                + "net.minecraft.class_2818)" // LevelChunk
-//            )), "getRandomPosWithinCube");
+        methodRedirects.put(new ClassMethod(getObjectType("net/minecraft/class_1948"),
+            getMethod("net.minecraft.class_2338" // BlockPos
+                + " method_8657(" // getRandomPosWithin
+                + "net.minecraft.class_1937," // Level
+                + "net.minecraft.class_2818)" // LevelChunk
+            )), "getRandomPosWithinCube");
+
+        methodRedirects.put(new ClassMethod(getObjectType("net/minecraft/class_3215"), // ServerChunkCache
+            getMethod("boolean method_20591(" // isEntityTickingChunk
+                + "net.minecraft.class_1923)" // ChunkPos
+            ), getObjectType("net/minecraft/class_2802")), // ChunkSource
+            "isEntityTickingCube");
+
 
         Map<ClassField, String> fieldRedirects = new HashMap<>();
 
         Map<Type, Type> typeRedirects = new HashMap<>();
+
+        typeRedirects.put(getObjectType("net/minecraft/class_1923"), // ChunkPos
+            getObjectType("io/github/opencubicchunks/cubicchunks/chunk/util/CubePos"));
+
+        typeRedirects.put(getObjectType("net/minecraft/class_1948$class_5260"), // ChunkGetter
+            getObjectType("io/github/opencubicchunks/cubicchunks/world/CubicNaturalSpawner$CubeGetter"));
 
         typeRedirects.put(getObjectType("net/minecraft/class_2818"), // LevelChunk
             getObjectType("net/minecraft/class_2791")); // ChunkAccess
@@ -438,7 +465,7 @@ public class MainTransformer {
 
         Type mappedType = remapType(clMethod.owner);
         String mappedName = mappingResolver.mapMethodName("intermediary",
-            clMethod.owner.getClassName(), clMethod.method.getName(), clMethod.method.getDescriptor());
+            clMethod.mappingOwner.getClassName(), clMethod.method.getName(), clMethod.method.getDescriptor());
         if (clMethod.method.getName().contains("method") && IS_DEV && mappedName.equals(clMethod.method.getName())) {
             throw new Error("Fail! Mapping method " + clMethod.method.getName() + " failed in dev!");
         }
@@ -517,32 +544,37 @@ public class MainTransformer {
     private static final class ClassMethod {
         final Type owner;
         final Method method;
+        final Type mappingOwner;
 
         ClassMethod(Type owner, Method method) {
             this.owner = owner;
             this.method = method;
+            this.mappingOwner = owner;
+        }
+
+        // mapping owner because mappings owner may not be the same as in the call site
+        ClassMethod(Type owner, Method method, Type mappingOwner) {
+            this.owner = owner;
+            this.method = method;
+            this.mappingOwner = mappingOwner;
         }
 
         @Override public boolean equals(Object o) {
-            if (this == o) {
-                return true;
-            }
-            if (o == null || getClass() != o.getClass()) {
-                return false;
-            }
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
             ClassMethod that = (ClassMethod) o;
-            return owner.equals(that.owner) &&
-                method.equals(that.method);
+            return owner.equals(that.owner) && method.equals(that.method) && mappingOwner.equals(that.mappingOwner);
         }
 
         @Override public int hashCode() {
-            return Objects.hash(owner, method);
+            return Objects.hash(owner, method, mappingOwner);
         }
 
         @Override public String toString() {
             return "ClassMethod{" +
                 "owner=" + owner +
                 ", method=" + method +
+                ", mappingOwner=" + mappingOwner +
                 '}';
         }
     }
