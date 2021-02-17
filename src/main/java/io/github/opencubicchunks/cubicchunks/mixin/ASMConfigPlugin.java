@@ -40,6 +40,7 @@ public class ASMConfigPlugin implements IMixinConfigPlugin {
         String chunkMapDistanceManager = map.mapClassName("intermediary", "net.minecraft.class_3898$class_3216");
         String chunkMap = map.mapClassName("intermediary", "net.minecraft.class_3898");
         String chunkHolder = map.mapClassName("intermediary", "net.minecraft.class_3193");
+        String naturalSpawner = map.mapClassName("intermediary", "net.minecraft.class_1948");
 
         if (targetClassName.equals(chunkMapDistanceManager)) {
             MainTransformer.transformProxyTicketManager(targetClass);
@@ -47,6 +48,8 @@ public class ASMConfigPlugin implements IMixinConfigPlugin {
             MainTransformer.transformChunkManager(targetClass);
         } else if (targetClassName.equals(chunkHolder)) {
             MainTransformer.transformChunkHolder(targetClass);
+        } else if (targetClassName.equals(naturalSpawner)) {
+            MainTransformer.transformNaturalSpawner(targetClass);
         }
     }
 

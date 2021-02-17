@@ -4,6 +4,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
 import javax.annotation.Nullable;
 
@@ -18,10 +20,12 @@ import io.github.opencubicchunks.cubicchunks.chunk.cube.CubeStatus;
 import io.github.opencubicchunks.cubicchunks.chunk.graph.CCTicketType;
 import io.github.opencubicchunks.cubicchunks.chunk.ticket.ITicketManager;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
+import io.github.opencubicchunks.cubicchunks.chunk.util.Utils;
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.ChunkManagerAccess;
 import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import io.github.opencubicchunks.cubicchunks.server.IServerChunkProvider;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
+import io.github.opencubicchunks.cubicchunks.world.CubicNaturalSpawner;
 import io.github.opencubicchunks.cubicchunks.world.lighting.ICubeLightProvider;
 import io.github.opencubicchunks.cubicchunks.world.server.IServerWorld;
 import net.minecraft.Util;
@@ -35,6 +39,7 @@ import net.minecraft.server.level.TicketType;
 import net.minecraft.util.profiling.ProfilerFiller;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.NaturalSpawner;
+import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.ChunkStatus;
 import net.minecraft.world.level.storage.LevelData;
 import org.spongepowered.asm.mixin.Final;
@@ -55,6 +60,9 @@ public abstract class MixinServerChunkProvider implements IServerChunkProvider, 
     @Shadow @Final private DistanceManager distanceManager;
     @Shadow @Final private ServerChunkCache.MainThreadExecutor mainThreadProcessor;
     @Shadow @Final private Thread mainThread;
+
+    @Shadow private boolean spawnEnemies;
+    @Shadow private boolean spawnFriendlies;
 
     private final long[] recentCubePositions = new long[4];
     private final ChunkStatus[] recentCubeStatuses = new ChunkStatus[4];
@@ -285,6 +293,11 @@ public abstract class MixinServerChunkProvider implements IServerChunkProvider, 
             return;
         }
 
+        int naturalSpawnCountForColumns = ((ITicketManager) this.distanceManager).getNaturalSpawnCubeCount()
+            * IBigCube.DIAMETER_IN_SECTIONS * IBigCube.DIAMETER_IN_SECTIONS / (CubicNaturalSpawner.SPAWN_RADIUS * 2 / IBigCube.DIAMETER_IN_BLOCKS + 1);
+
+        NaturalSpawner.SpawnState cubeSpawnState = CubicNaturalSpawner.createState(naturalSpawnCountForColumns, this.level.getAllEntities(), this::getFullCube);
+
         ((IChunkManager) this.chunkMap).getCubes().forEach((cubeHolder) -> {
             Optional<BigCube> optional =
                 ((ICubeHolder) cubeHolder).getCubeEntityTickingFuture().getNow(ICubeHolder.UNLOADED_CUBE).left();
@@ -298,12 +311,38 @@ public abstract class MixinServerChunkProvider implements IServerChunkProvider, 
                     // TODO probably want to make sure column-based inhabited time works too
                     cube.setCubeInhabitedTime(cube.getCubeInhabitedTime() + timePassed);
 
-                    // TODO mob spawning - refer to tickChunks implementation
-
+                    if (this.level.random.nextInt(((CubicNaturalSpawner.SPAWN_RADIUS / IBigCube.DIAMETER_IN_BLOCKS) * 2) + 1) == 0) {
+                        if (doMobSpawning && (this.spawnEnemies || this.spawnFriendlies) && this.level.getWorldBorder().isWithinBounds(cube.getCubePos().asChunkPos())) {
+                            CubicNaturalSpawner.spawnForCube(this.level, cube, cubeSpawnState, this.spawnFriendlies, this.spawnEnemies, bl3);
+                        }
+                    }
                     ((IServerWorld) this.level).tickCube(cube, randomTicks);
                 }
             }
         });
+    }
+
+    private void getFullCube(long pos, Consumer<ChunkAccess> chunkConsumer) {
+        ChunkHolder chunkHolder = this.getVisibleCubeIfPresent(pos);
+        if (chunkHolder != null) {
+            CompletableFuture<Either<BigCube, ChunkHolder.ChunkLoadingFailure>> o = Utils.unsafeCast((chunkHolder.getFullChunkFuture()));
+            o.getNow(ICubeHolder.UNLOADED_CUBE).left().ifPresent(chunkConsumer);
+        }
+
+    }
+
+    @Override public boolean isEntityTickingCube(CubePos pos) {
+        return this.checkCubeFuture(pos.asLong(), chunkHolder -> ((ICubeHolder) chunkHolder).getCubeEntityTickingFuture());
+    }
+
+    @Override public boolean checkCubeFuture(long cubePosLong, Function<ChunkHolder, CompletableFuture<Either<BigCube, ChunkHolder.ChunkLoadingFailure>>> futureFunction) {
+        ChunkHolder chunkHolder = this.getVisibleCubeIfPresent(cubePosLong);
+        if (chunkHolder == null) {
+            return false;
+        } else {
+            Either<BigCube, ChunkHolder.ChunkLoadingFailure> either = (Either) ((CompletableFuture) futureFunction.apply(chunkHolder)).getNow(ChunkHolder.UNLOADED_LEVEL_CHUNK);
+            return either.left().isPresent();
+        }
     }
 
     /**

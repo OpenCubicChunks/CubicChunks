@@ -37,6 +37,7 @@
         "common.MixinServerChunkProvider",
         "common.network.MixinClientboundLevelChunkPacket",
         "common.progress.MixinLoggingChunkStatusListener",
+        "common.server.MixinLocateCommand",
         "common.server.MixinPlayerList",
         "common.ticket.MixinProxyTicketManager",
         "common.ticket.MixinTicketManager",
@@ -76,7 +77,8 @@
         "common.world.structure.MixinStructureFeatureManager",
         "common.world.structure.MixinStructurePiece",
         "common.world.structure.MixinStructureStart",
-        "common.world.structure.pieces.MixinOceanRuinPieces"
+        "common.world.structure.pieces.MixinOceanRuinPieces",
+        "common.world.structure.vanilla.MixinMineshaftFeature"
     ],
     "client": [
         "client.chunk.MixinRenderChunkRegion",

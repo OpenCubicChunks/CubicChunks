@@ -209,6 +209,57 @@ public class MainTransformer {
         cloneAndApplyRedirects(targetClass, setChunkLevel, updateCubeScheduling, methodRedirects, fieldRedirects, typeRedirects);
     }
 
+    public static void transformNaturalSpawner(ClassNode targetClass) {
+        Map<ClassMethod, String> vanillaToCubic = new HashMap<>();
+        Set<String> makeSyntheticAccessor = new HashSet<>();
+
+        vanillaToCubic.put(new ClassMethod(getObjectType("net/minecraft/class_1948"), // NaturalSpawner
+            getMethod("void method_27821(" //spawnForChunk
+                + "net.minecraft.class_3218," //ServerLevel
+                + " net.minecraft.class_2818," //LevelChunk
+                + " net.minecraft.class_1948$class_5262," //NaturalSpawner.SpawnState
+                + " boolean, boolean, boolean)")), "spawnForCube");
+
+        vanillaToCubic.put(new ClassMethod(getObjectType("net/minecraft/class_1948"), // NaturalSpawner
+            getMethod("void method_8663("
+                + "net.minecraft.class_1311,"
+                + " net.minecraft.class_3218,"
+                + " net.minecraft.class_2818,"
+                + " net.minecraft.class_1948$class_5261,"
+                + " net.minecraft.class_1948$class_5259)")), "spawnCategoryForCube");
+        Map<ClassMethod, String> methodRedirects = new HashMap<>();
+        methodRedirects.put(new ClassMethod(getObjectType("net/minecraft/class_1948"), // NaturalSpawner
+            getMethod("void method_8663(" // spawnCategoryForChunk
+                + "net.minecraft.class_1311," // MobCategory
+                + " net.minecraft.class_3218," // ServerLevel
+                + " net.minecraft.class_2818," // LevelChunk
+                + " net.minecraft.class_1948$class_5261," // NaturalSpawner.SpawnPredicate
+                + " net.minecraft.class_1948$class_5259)") // NaturalSpawner.AfterSpawnCallback
+        ), "spawnCategoryForCube");
+
+        // TODO: Make bridge method for static calls
+//        methodRedirects.put(new ClassMethod(getObjectType("net/minecraft/class_1948"),
+//            getMethod("net.minecraft.class_2338" // BlockPos
+//                + " method_8657(" // getRandomPosWithin
+//                + "net.minecraft.class_1937," // Level
+//                + "net.minecraft.class_2818)" // LevelChunk
+//            )), "getRandomPosWithinCube");
+
+        Map<ClassField, String> fieldRedirects = new HashMap<>();
+
+        Map<Type, Type> typeRedirects = new HashMap<>();
+
+        typeRedirects.put(getObjectType("net/minecraft/class_2818"), // LevelChunk
+            getObjectType("net/minecraft/class_2791")); // ChunkAccess
+
+        vanillaToCubic.forEach((old, newName) -> {
+            MethodNode newMethod = cloneAndApplyRedirects(targetClass, old, newName, methodRedirects, fieldRedirects, typeRedirects);
+            if (makeSyntheticAccessor.contains(newName)) {
+                makeStaticSyntheticAccessor(targetClass, newMethod);
+            }
+        });
+    }
+
     private static void makeStaticSyntheticAccessor(ClassNode node, MethodNode newMethod) {
         Type[] params = Type.getArgumentTypes(newMethod.desc);
         Type[] newParams = new Type[params.length + 1];
