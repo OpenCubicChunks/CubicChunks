@@ -18,6 +18,7 @@ import com.mojang.datafixers.util.Either;
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.IChunkManager;
 import io.github.opencubicchunks.cubicchunks.chunk.ICubeHolder;
+import io.github.opencubicchunks.cubicchunks.chunk.LightHeightmapGetter;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.BigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.CubePrimer;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.CubePrimerWrapper;
@@ -365,8 +366,15 @@ public abstract class MixinChunkHolder implements ICubeHolder {
                 // TODO: replace heuristics with proper tracking
                 if (blockPos.getY() >= topY) {
                     // TODO: don't use heightmap type as "height" for address
-                    changedLocalBlocks.add((short) AddressTools.getLocalAddress(blockPos.getX() & 0xF, value.ordinal() & 0xF, blockPos.getZ()));
+                    changedLocalBlocks.add((short) AddressTools.getLocalAddress(blockPos.getX() & 0xF, value.ordinal() & 0xF, blockPos.getZ() & 0xF));
                 }
+            }
+            int topY = ((LightHeightmapGetter) chunk).getLightHeightmap().getFirstAvailable(blockPos.getX(), blockPos.getZ()) - 1;
+            // Same logic as above for heightmap updates
+            // TODO: replace heuristics with proper tracking
+            if (blockPos.getY() >= topY) {
+                // TODO: don't use heightmap type as "height" for address
+                changedLocalBlocks.add((short) AddressTools.getLocalAddress(blockPos.getX() & 0xF, 0xF, blockPos.getZ() & 0xF));
             }
             return;
         }
