@@ -1,20 +1,25 @@
 package io.github.opencubicchunks.cubicchunks.mixin.core.common.world;
 
+import java.util.Iterator;
+
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import io.github.opencubicchunks.cubicchunks.world.CubeWorldGenRegion;
 import io.github.opencubicchunks.cubicchunks.world.CubicNaturalSpawner;
+import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.Mth;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.entity.SpawnPlacements;
-import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.NaturalSpawner;
+import net.minecraft.world.level.PotentialCalculator;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.LevelChunk;
@@ -28,6 +33,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 @Mixin(value = NaturalSpawner.class, priority = 0)// Assume absolute priority because of Y checks found here, we should always WANT to run first
 public abstract class MixinNaturalSpawner {
@@ -120,41 +126,25 @@ public abstract class MixinNaturalSpawner {
         cir.setReturnValue(CubicNaturalSpawner.getRoughBiomeForCube(pos, chunk));
     }
 
+    private static final ThreadLocal<BlockPos> capturedPos = new ThreadLocal<>();
 
-    //Disabled until we can capture locals
-//    //Generated from ASM
-//    @Dynamic
-//    @Inject(method = "createCubicState", at = @At(value = "INVOKE", target = "Lio/github/opencubicchunks/cubicchunks/chunk/util/CubePos;asLong(II)J"), locals = LocalCapture.PRINT)
-//    private static void createCubicState(int spawningChunkCount, Iterable entities, CubicNaturalSpawner.CubeGetter cubeGetter, CallbackInfoReturnable<NaturalSpawner.SpawnState> cir) {
-//
-//    }
-
-    // The above doesn't work yet, so instead we redirect all the methods involved in ChunkPos.asLong
-    // and put the least significant bits of cube pos long serialization into the Z coordinate for ChunkPos.asLong
-    // and the most significant bits into the X coordinate for ChunkPos.asLong
+    @Dynamic
+    @Inject(method = "createCubicState", at = @At(value = "INVOKE", target = "Lio/github/opencubicchunks/cubicchunks/chunk/util/CubePos;asLong(II)J"), locals = LocalCapture.CAPTURE_FAILHARD)
+    private static void createCubicState(int spawningChunkCount, Iterable<?> entities, CubicNaturalSpawner.CubeGetter chunkSource, CallbackInfoReturnable<NaturalSpawner.SpawnState> cir,
+                                         PotentialCalculator potentialCalculator, Object2IntOpenHashMap<?> object2IntOpenHashMap, Iterator<?> var5, Entity entity, MobCategory mobCategory,
+                                         BlockPos blockPos) {
+        capturedPos.set(blockPos);
+    }
 
     @Dynamic
     @Redirect(method = "createCubicState", at = @At(value = "INVOKE", target = "Lio/github/opencubicchunks/cubicchunks/chunk/util/CubePos;asLong(II)J"))
     private static long packCubePosLongNoSectionPos(int x, int z) {
-        return ChunkPos.asLong(x, z);
-    }
-
-    @Dynamic
-    @Redirect(method = "createCubicState", at = @At(value = "INVOKE", target = "Lnet/minecraft/core/SectionPos;blockToSectionCoord(I)I"))
-    private static int packCubePosLongNoSectionPos(int val) {
-        return val;
-    }
-
-    @Dynamic
-    @Redirect(method = "createCubicState", at = @At(value = "INVOKE", target = "Lnet/minecraft/core/BlockPos;getZ()I"))
-    private static int getCubePosMSB(BlockPos pos) {
-        return (int) (CubePos.from(pos).asLong() >>> 32);
-    }
-
-    @Dynamic
-    @Redirect(method = "createCubicState", at = @At(value = "INVOKE", target = "Lnet/minecraft/core/BlockPos;getX()I"))
-    private static int getCubePosLSB(BlockPos pos) {
-        return (int) CubePos.from(pos).asLong();
+        BlockPos pos = capturedPos.get();
+        return CubePos.asLong(
+            Coords.blockToCube(pos.getX()),
+            Coords.blockToCube(pos.getY()),
+            Coords.blockToCube(pos.getZ())
+        );
     }
 
     // Mixin AP doesn't see mappings for the target because this method doesn't actually exist anywhere

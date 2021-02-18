@@ -1,22 +1,29 @@
 package io.github.opencubicchunks.gradle;
 
 
-import com.google.gson.stream.JsonWriter;
-import org.gradle.api.Action;
-import org.gradle.api.file.SourceDirectorySet;
-import org.gradle.api.plugins.JavaPluginConvention;
-import org.gradle.api.tasks.SourceSet;
+import static org.apache.tools.ant.util.StringUtils.removePrefix;
+import static org.apache.tools.ant.util.StringUtils.removeSuffix;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 
-import static org.apache.tools.ant.util.StringUtils.removePrefix;
-import static org.apache.tools.ant.util.StringUtils.removeSuffix;
+import com.google.gson.stream.JsonWriter;
+import org.gradle.api.Action;
+import org.gradle.api.file.SourceDirectorySet;
+import org.gradle.api.plugins.JavaPluginConvention;
+import org.gradle.api.tasks.SourceSet;
 
 // Note: this intentionally only contains the parts that I actually use
 @SuppressWarnings("unused") public class MixinGenExtension {
@@ -85,6 +92,7 @@ import static org.apache.tools.ant.util.StringUtils.removeSuffix;
         private String compatibilityLevel;
         private String minVersion;
         private String configurationPlugin;
+        private Integer mixinPriority;
 
         private Integer injectorsDefaultRequire;
         private Boolean conformVisibility;
@@ -152,6 +160,14 @@ import static org.apache.tools.ant.util.StringUtils.removeSuffix;
         public void setConformVisibility(boolean conformVisibility) {
             this.conformVisibility = conformVisibility;
         }
+
+        public Integer getMixinPriority() {
+            return mixinPriority;
+        }
+
+        public void setMixinPriority(Integer mixinPriority) {
+            this.mixinPriority = mixinPriority;
+        }
     }
 
     void generateFiles(JavaPluginConvention convention) throws IOException {
@@ -197,6 +213,9 @@ import static org.apache.tools.ant.util.StringUtils.removeSuffix;
                 }
                 if (config.minVersion != null) {
                     writer.name("minVersion").value(config.minVersion);
+                }
+                if (config.mixinPriority != null) {
+                    writer.name("mixinPriority").value(config.mixinPriority);
                 }
                 if (config.injectorsDefaultRequire != null) {
                     writer.name("injectors").beginObject();

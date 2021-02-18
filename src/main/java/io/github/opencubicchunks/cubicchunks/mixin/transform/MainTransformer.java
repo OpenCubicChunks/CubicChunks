@@ -427,7 +427,15 @@ public class MainTransformer {
         }
         String mappedDesc = Type.getMethodDescriptor(ret, params);
 
-        MethodNode output = new MethodNode(m.access, newName, mappedDesc, null, m.exceptions.toArray(new String[0]));
+        MethodNode existingOutput = findExistingMethod(node, newName, mappedDesc);
+        MethodNode output;
+        if (existingOutput != null) {
+            LOGGER.info("Copying code into existing method " + newName + " " + mappedDesc);
+            output = existingOutput;
+        } else {
+            output = new MethodNode(m.access, newName, mappedDesc, null, m.exceptions.toArray(new String[0]));
+        }
+
         MethodVisitor mv = new MethodVisitor(ASM7, output) {
             @Override public void visitLineNumber(int line, Label start) {
                 super.visitLineNumber(line + 10000, start);
@@ -443,6 +451,10 @@ public class MainTransformer {
         node.methods.add(output);
 
         return output;
+    }
+
+    private static MethodNode findExistingMethod(ClassNode node, String name, String desc) {
+        return node.methods.stream().filter(m -> m.name.equals(name) && m.desc.equals(desc)).findAny().orElse(null);
     }
 
     private static ClassField remapField(ClassField clField) {
