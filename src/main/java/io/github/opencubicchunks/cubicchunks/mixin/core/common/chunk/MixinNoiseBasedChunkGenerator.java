@@ -3,6 +3,7 @@ package io.github.opencubicchunks.cubicchunks.mixin.core.common.chunk;
 import java.util.Random;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
+import java.util.function.Supplier;
 
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.NoiseGeneratorSettingsAccess;
 import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
@@ -11,6 +12,7 @@ import net.minecraft.world.level.StructureFeatureManager;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.levelgen.Aquifer;
+import net.minecraft.world.level.levelgen.BaseStoneSource;
 import net.minecraft.world.level.levelgen.Beardifier;
 import net.minecraft.world.level.levelgen.NoiseBasedChunkGenerator;
 import net.minecraft.world.level.levelgen.NoiseGeneratorSettings;
@@ -39,6 +41,8 @@ public abstract class MixinNoiseBasedChunkGenerator {
 
     @Mutable @Shadow @Final private int height;
 
+
+    @Shadow @Final protected Supplier<NoiseGeneratorSettings> settings;
 
     @Redirect(method = "fillFromNoise", at = @At(value = "INVOKE", target = "Ljava/lang/Math;max(II)I"))
     private int alwaysUseChunkMinBuildHeight(int a, int b, Executor executor, StructureFeatureManager accessor, ChunkAccess chunk) {
@@ -116,7 +120,7 @@ public abstract class MixinNoiseBasedChunkGenerator {
             generatorSettings.getBedrockRoofPosition(), generatorSettings.getBedrockFloorPosition(), generatorSettings.seaLevel(),
             generatorSettingsAccess.isDisableMobGeneration(),
             generatorSettingsAccess.isAquifersEnabled(),
-            generatorSettingsAccess.isNoiseCavesEnabled()
+            generatorSettingsAccess.isNoiseCavesEnabled(), generatorSettingsAccess.isGrimstoneEnabled()
         );
 
         return new Aquifer(i, j, normalNoise, normalNoise2, cubeGeneratorSettings, noiseSampler, k);
@@ -136,11 +140,12 @@ public abstract class MixinNoiseBasedChunkGenerator {
         locals = LocalCapture.CAPTURE_FAILHARD,
         cancellable = true
     )
-    private void computeAquifer(Beardifier beardifier, Aquifer aquifer, int x, int y, int z, double noise, CallbackInfoReturnable<BlockState> ci, double density) {
+    private void computeAquifer(Beardifier beardifier, Aquifer aquifer, BaseStoneSource stoneSource, int x, int y, int z, double noise, CallbackInfoReturnable<BlockState> ci,
+                                double density) {
         // optimization: we don't need to compute aquifer if we know that this block is already solid
         if (density > 0.0) {
             ci.cancel();
-            ci.setReturnValue(this.defaultBlock);
+            ci.setReturnValue(stoneSource.getBaseStone(x, y, z, this.settings.get()));
         }
     }
 }

@@ -13,7 +13,7 @@ public interface NoiseGeneratorSettingsAccess {
     @Invoker(value = "<init>", remap = false)
     static NoiseGeneratorSettings create(
         StructureSettings structures, NoiseSettings noise, BlockState defaultBlock, BlockState defaultFluid,
-        int bedrockRoof, int bedrockFloor, int seaLevel, boolean disableMobGeneration, boolean aquifersEnabled, boolean noiseCavesEnabled
+        int bedrockRoof, int bedrockFloor, int seaLevel, boolean disableMobGeneration, boolean aquifersEnabled, boolean noiseCavesEnabled, boolean grimstoneEnabled
     ) {
         throw new UnsupportedOperationException();
     }
@@ -26,4 +26,7 @@ public interface NoiseGeneratorSettingsAccess {
 
     @Accessor("noiseCavesEnabled")
     boolean isNoiseCavesEnabled();
+
+    @Accessor("grimstoneEnabled")
+    boolean isGrimstoneEnabled();
 }
