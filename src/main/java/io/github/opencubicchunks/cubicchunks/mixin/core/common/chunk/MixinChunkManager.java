@@ -15,6 +15,7 @@ import java.util.concurrent.CompletionStage;
 import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BooleanSupplier;
+import java.util.function.Function;
 import java.util.function.IntFunction;
 import java.util.function.IntSupplier;
 import java.util.function.Supplier;
@@ -81,6 +82,7 @@ import net.minecraft.server.level.PlayerMap;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.level.ThreadedLevelLightEngine;
+import net.minecraft.server.level.TicketType;
 import net.minecraft.server.level.progress.ChunkProgressListener;
 import net.minecraft.util.Mth;
 import net.minecraft.util.thread.BlockableEventLoop;
@@ -100,6 +102,7 @@ import net.minecraft.world.level.levelgen.structure.templatesystem.StructureMana
 import net.minecraft.world.level.lighting.LevelLightEngine;
 import net.minecraft.world.level.storage.DimensionDataStorage;
 import net.minecraft.world.level.storage.LevelStorageSource;
+import org.spongepowered.asm.mixin.Dynamic;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -370,47 +373,31 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
         return Iterables.unmodifiableIterable(this.visibleCubeMap.values());
     }
 
-    // func_219244_a, schedule
-    @Override
-    public CompletableFuture<Either<IBigCube, ChunkHolder.ChunkLoadingFailure>> scheduleCube(ChunkHolder chunkHolderIn, ChunkStatus chunkStatusIn) {
-        CubePos cubePos = ((ICubeHolder) chunkHolderIn).getCubePos();
-        if (chunkStatusIn == ChunkStatus.EMPTY) {
-            return this.scheduleCubeLoad(cubePos);
-        } else {
-            CompletableFuture<Either<IBigCube, ChunkHolder.ChunkLoadingFailure>> completablefuture = Utils.unsafeCast(
-                ((ICubeHolder) chunkHolderIn).getOrScheduleCubeFuture(chunkStatusIn.getParent(), (ChunkMap) (Object) this)
-            );
-            return Utils.unsafeCast(completablefuture.thenComposeAsync(
-                (Either<IBigCube, ChunkHolder.ChunkLoadingFailure> inputSection) -> {
-                    Optional<IBigCube> optional = inputSection.left();
-                    if (!optional.isPresent()) {
-                        return CompletableFuture.completedFuture(inputSection);
-                    } else {
-                        if (chunkStatusIn == ChunkStatus.LIGHT) {
-                            ((ITicketManager) this.distanceManager).addCubeTicket(CCTicketType.CCLIGHT, cubePos,
-                                33 + CubeStatus.getDistance(ChunkStatus.FEATURES), cubePos);
-                        }
+    // TODO: add these fields directly to TicketType with mixin to make this a field redirect in ASM
+    @Dynamic
+    @Redirect(method = "cc$redirect$lambda$schedule$13", at = @At(value = "FIELD", target = "Lnet/minecraft/server/level/TicketType;LIGHT:Lnet/minecraft/server/level/TicketType;"))
+    private TicketType<?> getCcLightTicketType() {
+        return CCTicketType.CCLIGHT;
+    }
 
-                        IBigCube cube = optional.get();
-                        if (cube.getCubeStatus().isOrAfter(chunkStatusIn)) {
-                            CompletableFuture<Either<IBigCube, ChunkHolder.ChunkLoadingFailure>> completablefuture1;
-                            if (chunkStatusIn == ChunkStatus.LIGHT) {
-                                completablefuture1 = this.scheduleCubeGeneration(chunkHolderIn, chunkStatusIn);
-                            } else {
-                                completablefuture1 = Utils.unsafeCast(
-                                    chunkStatusIn.load(this.level, this.structureManager, this.lightEngine, (chunk) -> {
-                                        return Utils.unsafeCast(this.protoCubeToFullCube(chunkHolderIn));
-                                    }, (ChunkAccess) cube));
-                            }
+    // TODO: generate necessary methods in ChunkStatus to just make it a method redirect in ASM
+    @Dynamic
+    @Redirect(method = "cc$redirect$lambda$schedule$13",
+        at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/chunk/ChunkStatus;getDistance(Lnet/minecraft/world/level/chunk/ChunkStatus;)I"))
+    private int getCubeDistance(ChunkStatus status) {
+        return CubeStatus.getDistance(status);
+    }
 
-                            ((ICubeStatusListener) this.progressListener).onCubeStatusChange(cubePos, chunkStatusIn);
-                            return completablefuture1;
-                        } else {
-                            return this.scheduleCubeGeneration(chunkHolderIn, chunkStatusIn);
-                        }
-                    }
-                }, this.mainThreadExecutor));
-        }
+    // TODO: add that method to ChunkStatus? JVM won't resolve that method because types don't match exactly
+    @Dynamic
+    @Redirect(method = "cc$redirect$lambda$schedule$13", at = @At(value = "INVOKE",
+        target = "Lnet/minecraft/world/level/chunk/ChunkStatus;load(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/level/levelgen/structure/templatesystem/StructureManager;"
+            + "Lnet/minecraft/server/level/ThreadedLevelLightEngine;Ljava/util/function/Function;Lio/github/opencubicchunks/cubicchunks/chunk/IBigCube;)"
+            + "Ljava/util/concurrent/CompletableFuture;"))
+    private CompletableFuture<Either<ChunkAccess, ChunkHolder.ChunkLoadingFailure>> loadChunkStatus(ChunkStatus status, ServerLevel world, StructureManager structureManager,
+                                                                                                    ThreadedLevelLightEngine lightingProvider, Function<ChunkAccess,
+        CompletableFuture<Either<ChunkAccess, ChunkHolder.ChunkLoadingFailure>>> function, IBigCube chunk) {
+        return status.load(world, structureManager, lightingProvider, function, chunk);
     }
 
     // func_219205_a, getDependencyStatus
