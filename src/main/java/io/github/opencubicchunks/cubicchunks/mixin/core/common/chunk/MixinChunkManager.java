@@ -57,7 +57,6 @@ import io.github.opencubicchunks.cubicchunks.network.PacketUpdateCubePosition;
 import io.github.opencubicchunks.cubicchunks.network.PacketUpdateLight;
 import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
-import io.github.opencubicchunks.cubicchunks.world.server.IServerWorld;
 import io.github.opencubicchunks.cubicchunks.world.server.IServerWorldLightManager;
 import io.github.opencubicchunks.cubicchunks.world.storage.CubeSerializer;
 import io.github.opencubicchunks.cubicchunks.world.storage.RegionCubeIO;
@@ -345,38 +344,7 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
         return regionCubeIO.loadCubeNBT(cubePos);
     }
 
-    private void scheduleCubeUnload(long cubePos, ChunkHolder chunkHolderIn) {
-        CompletableFuture<IBigCube> completablefuture = ((ICubeHolder) chunkHolderIn).getCubeToSave();
-        completablefuture.thenAcceptAsync((icube) -> {
-            CompletableFuture<IBigCube> completablefuture1 = ((ICubeHolder) chunkHolderIn).getCubeToSave();
-            if (completablefuture1 != completablefuture) {
-                this.scheduleCubeUnload(cubePos, chunkHolderIn);
-            } else {
-                if (this.pendingCubeUnloads.remove(cubePos, chunkHolderIn) && icube != null) {
-                    if (icube instanceof BigCube) {
-                        ((BigCube) icube).setLoaded(false);
-                        //TODO: reimplement forge event ChunkEvent#Unload.
-                        //net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.event.world.ChunkEvent.Unload((Chunk)cube));
-                    }
-
-                    this.cubeSave(icube);
-                    if (this.cubeEntitiesInLevel.remove(cubePos) && icube instanceof BigCube) {
-                        ((IServerWorld) this.level).onCubeUnloading((BigCube) icube);
-                    }
-
-                    ((IServerWorldLightManager) this.lightEngine).setCubeStatusEmpty(icube.getCubePos());
-                    this.lightEngine.tryScheduleUpdate();
-                    ((ICubeStatusListener) this.progressListener).onCubeStatusChange(icube.getCubePos(), null);
-                }
-
-            }
-        }, this.cubeUnloadQueue::add).whenComplete((p_223171_1_, p_223171_2_) -> {
-            if (p_223171_2_ != null) {
-                LOGGER.error("Failed to save cube " + ((ICubeHolder) chunkHolderIn).getCubePos(), p_223171_2_);
-            }
-        });
-    }
-
+    // used from ASM
     private void markCubePositionReplaceable(CubePos cubePos) {
         this.cubeTypeCache.put(cubePos.asLong(), (byte) -1);
     }
