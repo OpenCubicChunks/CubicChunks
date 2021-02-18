@@ -9,7 +9,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -18,6 +17,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import com.google.gson.stream.JsonWriter;
 import org.gradle.api.Action;
@@ -254,36 +254,28 @@ import org.gradle.api.tasks.SourceSet;
                 commonSet.add(relative);
             }
         }
-        List<Path> common = new ArrayList<>(commonSet);
-        common.sort(Comparator.comparing(a -> a.toString().toLowerCase(Locale.ROOT)));
-
-        List<Path> client = new ArrayList<>(clientSet);
-        client.sort(Comparator.comparing(a -> a.toString().toLowerCase(Locale.ROOT)));
-
-        List<Path> server = new ArrayList<>(serverSet);
-        server.sort(Comparator.comparing(a -> a.toString().toLowerCase(Locale.ROOT)));
-
         Function<Path, String> transform = path ->
-                removeSuffix(removePrefix(path.toString().replace(File.separatorChar, '.'), name + "."), ".java");
+            removeSuffix(removePrefix(path.toString().replace(File.separatorChar, '.'), name + "."), ".java");
+
+        List<String> common = commonSet.stream().map(transform).sorted(Comparator.comparing(a -> a.toLowerCase(Locale.ROOT))).collect(Collectors.toList());
+        List<String> client = clientSet.stream().map(transform).sorted(Comparator.comparing(a -> a.toLowerCase(Locale.ROOT))).collect(Collectors.toList());
+        List<String> server = serverSet.stream().map(transform).sorted(Comparator.comparing(a -> a.toLowerCase(Locale.ROOT))).collect(Collectors.toList());
 
         writer.name("mixins").beginArray();
-        for (Path path : common) {
-            String s = transform.apply(path);
-            writer.value(s);
+        for (String path : common) {
+            writer.value(path);
         }
         writer.endArray();
 
         writer.name("client").beginArray();
-        for (Path path : client) {
-            String s = transform.apply(path);
-            writer.value(s);
+        for (String path : client) {
+            writer.value(path);
         }
         writer.endArray();
 
         writer.name("server").beginArray();
-        for (Path path : server) {
-            String s = transform.apply(path);
-            writer.value(s);
+        for (String path : server) {
+            writer.value(path);
         }
         writer.endArray();
     }
