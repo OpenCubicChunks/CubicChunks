@@ -1,3 +1,5 @@
+
+
 package io.github.opencubicchunks.cubicchunks.chunk.cube;
 
 import static net.minecraft.world.level.chunk.LevelChunk.EMPTY_SECTION;
@@ -35,7 +37,6 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.LevelHeightAccessor;
-import net.minecraft.world.level.TickList;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -44,6 +45,7 @@ import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.ChunkBiomeContainer;
 import net.minecraft.world.level.chunk.ChunkStatus;
 import net.minecraft.world.level.chunk.LevelChunkSection;
+import net.minecraft.world.level.chunk.ProtoChunk;
 import net.minecraft.world.level.chunk.ProtoTickList;
 import net.minecraft.world.level.chunk.UpgradeData;
 import net.minecraft.world.level.levelgen.GenerationStep;
@@ -57,7 +59,7 @@ import net.minecraft.world.level.material.Fluids;
 import org.apache.logging.log4j.LogManager;
 
 //ProtoChunk
-public class CubePrimer implements IBigCube, ChunkAccess, CubicLevelHeightAccessor {
+public class CubePrimer extends ProtoChunk implements IBigCube, ChunkAccess, CubicLevelHeightAccessor {
 
     private final CubePos cubePos;
     private final LevelChunkSection[] sections;
@@ -93,13 +95,18 @@ public class CubePrimer implements IBigCube, ChunkAccess, CubicLevelHeightAccess
     private final boolean generates2DChunks;
     private final WorldStyle worldStyle;
 
+    private int columnX;
+    private int columnZ;
+
     public CubePrimer(CubePos cubePos, UpgradeData upgradeData, LevelHeightAccessor levelHeightAccessor) {
         this(cubePos, upgradeData, null, null, null, levelHeightAccessor);
     }
 
     //TODO: add TickList<Block> and TickList<Fluid>
-    public CubePrimer(CubePos cubePosIn, UpgradeData p_i49941_2_, @Nullable LevelChunkSection[] sectionsIn, ProtoTickList<Block> blockTickListIn, ProtoTickList<Fluid> p_i49941_5_,
+    public CubePrimer(CubePos cubePosIn, UpgradeData upgradeData, @Nullable LevelChunkSection[] sectionsIn, ProtoTickList<Block> blockProtoTickList, ProtoTickList<Fluid> fluidProtoTickList,
                       LevelHeightAccessor levelHeightAccessor) {
+        super(cubePosIn.asChunkPos(), upgradeData, sectionsIn, blockProtoTickList, fluidProtoTickList, new FakeSectionCount(levelHeightAccessor));
+
         this.heightmaps = Maps.newEnumMap(Heightmap.Types.class);
         this.carvingMasks = new Object2ObjectArrayMap<>();
 
@@ -109,16 +116,13 @@ public class CubePrimer implements IBigCube, ChunkAccess, CubicLevelHeightAccess
         this.cubePos = cubePosIn;
         this.levelHeightAccessor = levelHeightAccessor;
 
-        //        this.upgradeData = upgradeData;
-//        this.pendingBlockTicks = blockTickListIn;
-//        this.pendingFluidTicks = fluidTickListIn;
         if (sectionsIn == null) {
             this.sections = new LevelChunkSection[IBigCube.SECTION_COUNT];
         } else {
             if (sectionsIn.length == IBigCube.SECTION_COUNT) {
                 this.sections = sectionsIn;
             } else {
-                throw new IllegalStateException("Number of Sections must equal BigCube.CUBESIZE");
+                throw new IllegalStateException("Number of Sections must equal IBigCube.CUBESIZE | " + IBigCube.SECTION_COUNT);
             }
         }
         isCubic = ((CubicLevelHeightAccessor) levelHeightAccessor).isCubic();
@@ -127,8 +131,13 @@ public class CubePrimer implements IBigCube, ChunkAccess, CubicLevelHeightAccess
 
     }
 
+    public void moveColumns(int newColumnX, int newColumnZ) {
+        this.columnX = newColumnX;
+        this.columnZ = newColumnZ;
+    }
+
     @Deprecated @Override public ChunkPos getPos() {
-        throw new UnsupportedOperationException("This should never be called!");
+        return this.cubePos.asChunkPos(columnX, columnZ);
     }
 
     @Override public CubePos getCubePos() {
@@ -136,7 +145,8 @@ public class CubePrimer implements IBigCube, ChunkAccess, CubicLevelHeightAccess
     }
 
     @Deprecated @Override public LevelChunkSection[] getSections() {
-        throw new UnsupportedOperationException("This should never be called!");
+        new UnsupportedOperationException("This should never be called!").printStackTrace();
+        return getCubeSections();
     }
 
     @Override public LevelChunkSection[] getCubeSections() {
@@ -324,7 +334,7 @@ public class CubePrimer implements IBigCube, ChunkAccess, CubicLevelHeightAccess
         return this.deferredTileEntities.get(pos);
     }
 
-    public Map<BlockPos, BlockEntity> getTileEntities() {
+    public Map<BlockPos, BlockEntity> getBlockEntities() {
         return this.getCubeTileEntities();
     }
 
@@ -362,8 +372,8 @@ public class CubePrimer implements IBigCube, ChunkAccess, CubicLevelHeightAccess
         return this.lightPositions.stream();
     }
 
-    public void addCubeLightValue(short packedPosition, int lightValue) {
-        this.addCubeLightPosition(unpackToWorld(packedPosition, lightValue, this.cubePos));
+    public void addCubeLightValue(short packedPosition, int yOffset) {
+        this.addCubeLightPosition(unpackToWorld(packedPosition, yOffset, this.cubePos));
     }
 
     public void addCubeLightPosition(BlockPos lightPos) {
@@ -523,9 +533,9 @@ public class CubePrimer implements IBigCube, ChunkAccess, CubicLevelHeightAccess
     }
 
     public void addReferenceForFeature(StructureFeature<?> structureFeature, long l) {
-        ((LongSet) this.structuresRefences.computeIfAbsent(structureFeature, (structureFeaturex) -> {
+        this.structuresRefences.computeIfAbsent(structureFeature, (structureFeaturex) -> {
             return new LongOpenHashSet();
-        })).add(l);
+        }).add(l);
         this.isDirty = true;
     }
 
@@ -537,13 +547,6 @@ public class CubePrimer implements IBigCube, ChunkAccess, CubicLevelHeightAccess
         throw new UnsupportedOperationException("For later implementation");
     }
 
-    @Override public TickList<Block> getBlockTicks() {
-        throw new UnsupportedOperationException("For later implementation");
-    }
-
-    @Override public TickList<Fluid> getLiquidTicks() {
-        throw new UnsupportedOperationException("For later implementation");
-    }
 
     @Override public UpgradeData getUpgradeData() {
         throw new UnsupportedOperationException("For later implementation");
@@ -565,11 +568,12 @@ public class CubePrimer implements IBigCube, ChunkAccess, CubicLevelHeightAccess
     }
 
     @Nullable
+    @Override
     public BitSet getCarvingMask(GenerationStep.Carving type) {
         return this.carvingMasks.get(type);
     }
 
-    public BitSet getOrSetCarvingMask(GenerationStep.Carving type) {
+    @Override public BitSet getOrCreateCarvingMask(GenerationStep.Carving type) {
         return this.carvingMasks.computeIfAbsent(type, (carvingx) -> {
             return new BitSet(IBigCube.BLOCK_COUNT);
         });
@@ -587,6 +591,54 @@ public class CubePrimer implements IBigCube, ChunkAccess, CubicLevelHeightAccess
         }
     }
 
+    @Override public BlockState getBlockState(BlockPos pos) {
+        return this.getBlockState(pos.getX(), pos.getY(), pos.getZ());
+    }
+
+    @Override public ShortList[] getPackedLights() {
+        return super.getPackedLights();
+    }
+
+    @Override public void addLight(short chunkSliceRel, int sectionY) {
+        this.addCubeLightValue(chunkSliceRel, Coords.sectionToIndex(columnX, sectionY, columnZ));
+    }
+
+    @Override public void addLight(BlockPos pos) {
+        this.addCubeLightPosition(pos);
+    }
+
+    @Override public void addEntity(CompoundTag entityTag) {
+        this.addCubeEntity(entityTag);
+    }
+
+    @Override public List<CompoundTag> getEntities() {
+        return this.getCubeEntities();
+    }
+
+    @Override public void setStatus(ChunkStatus status) {
+        this.setCubeStatus(status);
+    }
+
+    @Override public void addPackedPostProcess(short packedPos, int index) {
+        throw new UnsupportedOperationException("For later implementation");
+    }
+
+    @Override public Map<BlockPos, CompoundTag> getBlockEntityNbts() {
+        throw new UnsupportedOperationException("For later implementation");
+    }
+
+    @Override public void setLightEngine(LevelLightEngine lightingProvider) {
+        this.setCubeLightManager(lightingProvider);
+    }
+
+    @Override public ProtoTickList<Block> getBlockTicks() {
+        throw new UnsupportedOperationException("For later implementation");
+    }
+
+    @Override public ProtoTickList<Fluid> getLiquidTicks() {
+        throw new UnsupportedOperationException("For later implementation");
+    }
+
     @Override public int getHeight() {
         return levelHeightAccessor.getHeight();
     }
@@ -596,14 +648,42 @@ public class CubePrimer implements IBigCube, ChunkAccess, CubicLevelHeightAccess
     }
 
     @Override public WorldStyle worldStyle() {
-         return worldStyle;
+        return worldStyle;
     }
 
     @Override public boolean isCubic() {
-         return isCubic;
+        return isCubic;
     }
 
     @Override public boolean generates2DChunks() {
         return generates2DChunks;
+    }
+
+    public static class FakeSectionCount implements LevelHeightAccessor {
+        private final int height;
+        private final int minHeight;
+        private final int fakeSectionCount;
+
+        public FakeSectionCount(LevelHeightAccessor levelHeightAccessor) {
+            this(levelHeightAccessor.getHeight(), levelHeightAccessor.getMinBuildHeight(), IBigCube.SECTION_COUNT);
+        }
+
+        private FakeSectionCount(int height, int minHeight, int fakeSectionCount) {
+            this.height = height;
+            this.minHeight = minHeight;
+            this.fakeSectionCount = fakeSectionCount;
+        }
+
+        @Override public int getHeight() {
+            return this.height;
+        }
+
+        @Override public int getMinBuildHeight() {
+            return this.minHeight;
+        }
+
+        @Override public int getSectionsCount() {
+            return this.fakeSectionCount;
+        }
     }
 }

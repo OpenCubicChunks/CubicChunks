@@ -1,6 +1,7 @@
 package io.github.opencubicchunks.cubicchunks.mixin.core.common.chunk;
 
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
+import io.github.opencubicchunks.cubicchunks.chunk.cube.CubePrimer;
 import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import net.minecraft.core.SectionPos;
 import net.minecraft.world.level.ChunkPos;
@@ -49,6 +50,11 @@ public abstract class MixinProtoChunk implements LevelHeightAccessor, CubicLevel
         if (!((CubicLevelHeightAccessor) accessor).isCubic()) {
             return levelHeightAccessor.getSectionsCount();
         }
+
+        if (accessor instanceof CubePrimer.FakeSectionCount) {
+            return accessor.getSectionsCount();
+        }
+
         if (accessor instanceof Level) {
             if (((CubicLevelHeightAccessor) accessor).generates2DChunks()) {
                 int height = ((Level) accessor).dimensionType().height();
