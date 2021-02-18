@@ -783,8 +783,22 @@ public class BigCube implements ChunkAccess, IBigCube, CubicLevelHeightAccessor 
         return surfaceTrackerSection.getHeight(blockToLocal(x), blockToLocal(z));
     }
 
-    @Override public int getHeight(Heightmap.Types heightmapType, int x, int z) {
-        return 0;
+    @Override public int getHeight(Heightmap.Types type, int x, int z) { //TODO: Use heightmap sections from column instead.
+        SurfaceTrackerSection[] surfaceTrackerSections = this.heightmaps.get(type);
+        if (surfaceTrackerSections == null) {
+            throw new IllegalStateException("Trying to access heightmap of type " + type + " for cube " + cubePos + " before it's loaded!");
+        }
+        int xSection = blockToCubeLocalSection(x);
+        int zSection = blockToCubeLocalSection(z);
+
+        int idx = xSection + zSection * DIAMETER_IN_SECTIONS;
+
+        SurfaceTrackerSection surfaceTrackerSection = surfaceTrackerSections[idx];
+
+        while (surfaceTrackerSection.getParent() != null) {
+            surfaceTrackerSection = surfaceTrackerSection.getParent();
+        }
+        return surfaceTrackerSection.getHeight(blockToLocal(x), blockToLocal(z));
     }
 
     @Override public ShortList[] getPostProcessing() {

@@ -7,6 +7,7 @@ import java.util.concurrent.Executor;
 
 import com.google.common.collect.ImmutableList;
 import com.mojang.datafixers.util.Either;
+import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.IChunkManager;
 import io.github.opencubicchunks.cubicchunks.chunk.ICubeHolder;
 import io.github.opencubicchunks.cubicchunks.chunk.IVerticalView;
@@ -58,7 +59,7 @@ public abstract class MixinTicketManager implements ITicketManager, IVerticalVie
     private final LongSet cubeTicketsToRelease = new LongOpenHashSet();
 
     private final CubeTicketTracker cubeTicketTracker = new CubeTicketTracker(this);
-    private final PlayerCubeTracker naturalSpawnCubeCounter = new PlayerCubeTracker(this, 8);
+    private final PlayerCubeTracker naturalSpawnCubeCounter = new PlayerCubeTracker(this, 8 / IBigCube.DIAMETER_IN_SECTIONS);
     private final PlayerCubeTicketTracker playerCubeTicketTracker = new PlayerCubeTicketTracker(this, 33);
     private CubeTaskPriorityQueueSorter cubeTicketThrottler;
     private ProcessorHandle<CubeTaskPriorityQueueSorter.FunctionEntry<Runnable>> cubeTicketThrottlerInput;

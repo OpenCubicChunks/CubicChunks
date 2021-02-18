@@ -34,4 +34,5 @@
     <suppress checks="StaticVariableName" files=".*Mixin.*\.java"/>
     <!-- Mixins may have an underscore to separate target from functionality -->
     <suppress checks="TypeName" files=".*Mixin.*\.java"/>
+    <suppress checks="DeclarationOrder" files="MixinNaturalSpawner.java"/>
 </suppressions>

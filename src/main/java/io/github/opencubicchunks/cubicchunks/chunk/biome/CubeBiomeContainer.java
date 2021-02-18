@@ -9,9 +9,10 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.core.IdMap;
 import net.minecraft.world.level.biome.Biome;
+import net.minecraft.world.level.biome.BiomeManager;
 import net.minecraft.world.level.biome.BiomeSource;
 
-public class CubeBiomeContainer {
+public class CubeBiomeContainer implements BiomeManager.NoiseBiomeSource {
 
     private static final int SIZE_BITS = (int) Math.round(Math.log(IBigCube.DIAMETER_IN_BLOCKS) / Math.log(2.0D)) - 2;
     public static final int CUBE_BIOMES_SIZE = 1 << SIZE_BITS + SIZE_BITS + SIZE_BITS;
