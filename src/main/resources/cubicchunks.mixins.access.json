@@ -13,6 +13,7 @@
         "common.ChunkManagerAccess",
         "common.ChunkSectionAccess",
         "common.ChunkTicketTrackerFactoryAccess",
+        "common.DecorationContextAccess",
         "common.EntityTrackerAccess",
         "common.HeightmapAccess",
         "common.LevelBasedGraphAccess",

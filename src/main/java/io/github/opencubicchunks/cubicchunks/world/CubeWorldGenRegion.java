@@ -159,6 +159,15 @@ public class CubeWorldGenRegion extends WorldGenRegion implements ICubicWorld {
         return this.mainCubeZ;
     }
 
+    public int getMinCubeY() {
+        return this.minCubeY;
+    }
+
+    public int getMaxCubeY() {
+        return this.maxCubeY;
+    }
+
+
     public CubePos getCenterCubePos() {
         return this.getCenterCubePos();
     }
