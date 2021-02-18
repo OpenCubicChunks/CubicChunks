@@ -79,7 +79,7 @@
         "common.world.surfacebuilder.MixinErodedBadlandsSurfaceBuilder",
         "common.world.surfacebuilder.MixinFrozenOceanSurfaceBuilder",
         "common.world.surfacebuilder.MixinSwampSurfaceBuilder",
-        "common.world.surfacebuilder.WoodedBadlandsSurfaceBuilder"
+        "common.world.surfacebuilder.MixinWoodedBadlandsSurfaceBuilder"
     ],
     "client": [
         "client.chunk.MixinRenderChunkRegion",
