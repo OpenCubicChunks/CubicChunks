@@ -206,6 +206,11 @@ public class MixinChunkStatus {
 
             for (int columnX = 0; columnX < IBigCube.DIAMETER_IN_SECTIONS; columnX++) {
                 for (int columnZ = 0; columnZ < IBigCube.DIAMETER_IN_SECTIONS; columnZ++) {
+                    cubeAbove.moveColumns(columnX, columnZ);
+                    if (chunk instanceof CubePrimer) {
+                        ((CubePrimer) chunk).moveColumns(columnX, columnZ);
+                    }
+
                     NoiseAndSurfaceBuilderHelper cubeAccessWrapper = new NoiseAndSurfaceBuilderHelper((IBigCube) chunk, cubeAbove);
                     cubeAccessWrapper.moveColumn(columnX, columnZ);
                     CompletableFuture<ChunkAccess> chunkAccessCompletableFuture =
@@ -273,6 +278,10 @@ public class MixinChunkStatus {
 
             for (int columnX = 0; columnX < IBigCube.DIAMETER_IN_SECTIONS; columnX++) {
                 for (int columnZ = 0; columnZ < IBigCube.DIAMETER_IN_SECTIONS; columnZ++) {
+                    cubeAbove.moveColumns(columnX, columnZ);
+                    if (chunk instanceof CubePrimer) {
+                        ((CubePrimer) chunk).moveColumns(columnX, columnZ);
+                    }
                     noiseAndSurfaceBuilderHelper.moveColumn(columnX, columnZ);
                     generator.applyCarvers(world.getSeed(), world.getBiomeManager(), noiseAndSurfaceBuilderHelper, GenerationStep.Carving.AIR);
                     noiseAndSurfaceBuilderHelper.applySections();
@@ -305,6 +314,10 @@ public class MixinChunkStatus {
             //TODO: Verify liquid carvers are generating appropriately
             for (int columnX = 0; columnX < IBigCube.DIAMETER_IN_SECTIONS; columnX++) {
                 for (int columnZ = 0; columnZ < IBigCube.DIAMETER_IN_SECTIONS; columnZ++) {
+                    cubeAbove.moveColumns(columnX, columnZ);
+                    if (chunk instanceof CubePrimer) {
+                        ((CubePrimer) chunk).moveColumns(columnX, columnZ);
+                    }
                     noiseAndSurfaceBuilderHelper.moveColumn(columnX, columnZ);
                     generator.applyCarvers(world.getSeed(), world.getBiomeManager(), noiseAndSurfaceBuilderHelper, GenerationStep.Carving.LIQUID);
                     noiseAndSurfaceBuilderHelper.applySections();
