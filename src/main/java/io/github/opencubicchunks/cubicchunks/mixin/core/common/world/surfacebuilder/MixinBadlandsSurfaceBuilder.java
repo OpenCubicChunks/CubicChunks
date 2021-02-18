@@ -11,7 +11,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.Constant;
 import org.spongepowered.asm.mixin.injection.ModifyConstant;
 
-@Mixin(value = BadlandsSurfaceBuilder.class)
+@Mixin(BadlandsSurfaceBuilder.class)
 public class MixinBadlandsSurfaceBuilder {
 
     @ModifyConstant(method = "apply", constant = @Constant(expandZeroConditions = Constant.Condition.GREATER_THAN_OR_EQUAL_TO_ZERO))
