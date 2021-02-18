@@ -9,4 +9,6 @@ public interface IChunkMapInternal {
     boolean isExistingCubeFull(CubePos pos);
 
     void processCubeUnloads(BooleanSupplier shouldKeepTicking);
+
+    void saveAllCubes(boolean flush);
 }

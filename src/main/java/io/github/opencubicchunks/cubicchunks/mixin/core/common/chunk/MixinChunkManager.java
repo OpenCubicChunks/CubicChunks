@@ -18,7 +18,6 @@ import java.util.function.BooleanSupplier;
 import java.util.function.IntFunction;
 import java.util.function.IntSupplier;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javax.annotation.Nullable;
@@ -103,7 +102,6 @@ import net.minecraft.world.level.levelgen.structure.templatesystem.StructureMana
 import net.minecraft.world.level.lighting.LevelLightEngine;
 import net.minecraft.world.level.storage.DimensionDataStorage;
 import net.minecraft.world.level.storage.LevelStorageSource;
-import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -127,6 +125,7 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
 
     private final LongSet cubesToDrop = new LongOpenHashSet();
     private final LongSet cubeEntitiesInLevel = new LongOpenHashSet();
+    // used from ASM
     private final Long2ObjectLinkedOpenHashMap<ChunkHolder> pendingCubeUnloads = new Long2ObjectLinkedOpenHashMap<>();
 
     // field_219264_r, worldgenMailbox
@@ -137,13 +136,12 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
     private final AtomicInteger tickingGeneratedCubes = new AtomicInteger();
 
     private final Long2ByteMap cubeTypeCache = new Long2ByteOpenHashMap();
+    // used from ASM
     private final Queue<Runnable> cubeUnloadQueue = Queues.newConcurrentLinkedQueue();
 
     private RegionCubeIO regionCubeIO;
 
     @Shadow @Final private ThreadedLevelLightEngine lightEngine;
-
-    @Shadow private boolean modified;
 
     @Shadow @Final private ChunkMap.DistanceManager distanceManager;
 
@@ -251,44 +249,14 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
 
     @Inject(method = "saveAllChunks", at = @At("HEAD"))
     protected void save(boolean flush, CallbackInfo ci) {
-
-        if (!((CubicLevelHeightAccessor) this.level).isCubic()) {
-            return;
+        if (((CubicLevelHeightAccessor) this.level).isCubic()) {
+            saveAllCubes(flush);
         }
+    }
 
-        if (flush) {
-            List<ChunkHolder> list =
-                this.visibleCubeMap.values().stream().filter(ChunkHolder::wasAccessibleSinceLastSave).peek(ChunkHolder::refreshAccessibility).collect(
-                    Collectors.toList());
-            MutableBoolean savedAny = new MutableBoolean();
-
-            do {
-                savedAny.setFalse();
-                list.stream().map((cubeHolder) -> {
-                    CompletableFuture<IBigCube> cubeFuture;
-                    do {
-                        cubeFuture = ((ICubeHolder) cubeHolder).getCubeToSave();
-                        this.mainThreadExecutor.managedBlock(cubeFuture::isDone);
-                    } while (cubeFuture != ((ICubeHolder) cubeHolder).getCubeToSave());
-
-                    return cubeFuture.join();
-                }).filter((cube) -> cube instanceof CubePrimerWrapper || cube instanceof BigCube)
-                    .filter(this::cubeSave).forEach((unsavedCube) -> savedAny.setTrue());
-            } while (savedAny.isTrue());
-
-            this.processCubeUnloads(() -> true);
-            regionCubeIO.flush();
-            LOGGER.info("Cube Storage ({}): All cubes are saved", this.storageFolder.getName());
-        } else {
-            this.visibleCubeMap.values().stream().filter(ChunkHolder::wasAccessibleSinceLastSave).forEach((cubeHolder) -> {
-                IBigCube cube = ((ICubeHolder) cubeHolder).getCubeToSave().getNow(null);
-                if (cube instanceof CubePrimerWrapper || cube instanceof BigCube) {
-                    this.cubeSave(cube);
-                    cubeHolder.refreshAccessibility();
-                }
-            });
-        }
-
+    // used from ASM
+    private void flushCubeWorker() {
+        regionCubeIO.flush();
     }
 
     // chunkSave
@@ -312,23 +280,11 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
 //                    }
                 }
 
-                if (status.getChunkType() != ChunkStatus.ChunkType.LEVELCHUNK) {
-                    CompoundTag compoundnbt = regionCubeIO.loadCubeNBT(cubePos);
-                    if (compoundnbt != null && CubeSerializer.getChunkStatus(compoundnbt) == ChunkStatus.ChunkType.LEVELCHUNK) {
-                        return false;
-                    }
-
-                    //TODO: SAVE FORMAT : reimplement structures
-//                    if (status == ChunkStatus.EMPTY && cube.getStructureStarts().values().stream().noneMatch(StructureStart::isValid)) {
-//                        return false;
-//                    }
-                }
-
                 CompoundTag compoundnbt = CubeSerializer.write(this.level, cube);
                 //TODO: FORGE EVENT : reimplement ChunkDataEvent#Save
 //                net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.event.world.ChunkDataEvent.Save(p_219229_1_, p_219229_1_.getWorldForge() != null ?
 //                p_219229_1_.getWorldForge() : this.level, compoundnbt));
-                regionCubeIO.saveCubeNBT(cubePos, compoundnbt);
+                this.writeCube(cubePos, compoundnbt);
                 this.markCubePosition(cubePos, status.getChunkType());
                 return true;
 
@@ -342,6 +298,11 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
     // used from ASM
     private CompoundTag readCubeNBT(CubePos cubePos) throws IOException {
         return regionCubeIO.loadCubeNBT(cubePos);
+    }
+
+    // used from ASM
+    private void writeCube(CubePos pos, CompoundTag tag) {
+        regionCubeIO.saveCubeNBT(pos, tag);
     }
 
     // used from ASM
