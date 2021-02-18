@@ -65,7 +65,6 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.longs.Long2ByteMap;
 import it.unimi.dsi.fastutil.longs.Long2ByteOpenHashMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectLinkedOpenHashMap;
-import it.unimi.dsi.fastutil.longs.LongIterator;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import net.minecraft.CrashReport;
@@ -341,31 +340,10 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
         }
     }
 
+    // used from ASM
     private CompoundTag readCubeNBT(CubePos cubePos) throws IOException {
         return regionCubeIO.loadCubeNBT(cubePos);
     }
-
-    // processUnloads
-    private void processCubeUnloads(BooleanSupplier hasMoreTime) {
-        LongIterator longiterator = this.cubesToDrop.iterator();
-
-        for (int i = 0; longiterator.hasNext() && (hasMoreTime.getAsBoolean() || i < 200 || this.cubesToDrop.size() > 2000); longiterator.remove()) {
-            long j = longiterator.nextLong();
-            ChunkHolder chunkholder = this.updatingCubeMap.remove(j);
-            if (chunkholder != null) {
-                this.pendingCubeUnloads.put(j, chunkholder);
-                this.modified = true;
-                ++i;
-                this.scheduleCubeUnload(j, chunkholder);
-            }
-        }
-
-        Runnable runnable;
-        while ((hasMoreTime.getAsBoolean() || this.cubeUnloadQueue.size() > 2000) && (runnable = this.cubeUnloadQueue.poll()) != null) {
-            runnable.run();
-        }
-    }
-
 
     private void scheduleCubeUnload(long cubePos, ChunkHolder chunkHolderIn) {
         CompletableFuture<IBigCube> completablefuture = ((ICubeHolder) chunkHolderIn).getCubeToSave();

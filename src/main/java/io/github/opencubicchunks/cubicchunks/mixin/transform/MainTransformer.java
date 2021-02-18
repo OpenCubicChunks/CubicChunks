@@ -116,6 +116,12 @@ public class MainTransformer {
                 + "net.minecraft.class_1923)" //ChunkPos
             )), "isExistingCubeFull");
 
+        vanillaToCubic.put(new ClassMethod(getObjectType("net/minecraft/class_3898"), //ChunkMap
+            getMethod("void "
+                + "method_20605(" // processUnloads
+                + "java.util.function.BooleanSupplier)" //ChunkPos
+            )), "processCubeUnloads");
+
         Map<ClassMethod, String> methodRedirects = new HashMap<>();
 
         methodRedirects.put(new ClassMethod(getObjectType("net/minecraft/class_3898"), // ChunkMap
@@ -130,7 +136,7 @@ public class MainTransformer {
                 + "net.minecraft.class_1923)" // chunkPos
             )), "markCubePositionReplaceable");
 
-        methodRedirects.put(new ClassMethod(getObjectType("net/minecraft/class_3898"),
+        methodRedirects.put(new ClassMethod(getObjectType("net/minecraft/class_3898"), // ChunkMap
             getMethod("byte "
                 + "method_27053(" // markPosition
                 + "net.minecraft.class_1923, " // chunkPos
@@ -141,11 +147,19 @@ public class MainTransformer {
                 getMethod("long method_8324()")), // toLong
             "asLong");
 
+        methodRedirects.put(new ClassMethod(getObjectType("net/minecraft/class_3898"), // ChunkMap
+                getMethod("void method_20458(long, net.minecraft.class_3193)")), // scheduleUnload(long, ChunkHolder)
+            "scheduleCubeUnload");
+
         Map<ClassField, String> fieldRedirects = new HashMap<>();
         fieldRedirects.put(new ClassField(
                 "net/minecraft/class_3898", // net/minecraft/server/level/ChunkMap
                 "field_17221", "Lit/unimi/dsi/fastutil/longs/LongSet;"), // toDrop
             "cubesToDrop");
+        fieldRedirects.put(new ClassField(
+                "net/minecraft/class_3898", // net/minecraft/server/level/ChunkMap
+                "field_19343", "Ljava/util/Queue;"), // unloadQueue
+            "cubeUnloadQueue");
         fieldRedirects.put(new ClassField(
                 "net/minecraft/class_3898", // net/minecraft/server/level/ChunkMap
                 "field_18807", "Lit/unimi/dsi/fastutil/longs/Long2ObjectLinkedOpenHashMap;"), // pendingUnloads
