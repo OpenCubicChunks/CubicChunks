@@ -63,7 +63,6 @@ public abstract class MixinNaturalSpawner {
             if (pos.getY() < lowestAllowedY + 1 || pos.getY() > highestAllowedY - 1) {
                 cir.setReturnValue(false);
             }
-
         }
     }
 
@@ -126,7 +125,7 @@ public abstract class MixinNaturalSpawner {
         cir.setReturnValue(CubicNaturalSpawner.getRoughBiomeForCube(pos, chunk));
     }
 
-    private static final ThreadLocal<BlockPos> capturedPos = new ThreadLocal<>();
+    private static ThreadLocal<BlockPos> capturedPos = new ThreadLocal<>();
 
     @Dynamic
     @Inject(method = "createCubicState", at = @At(value = "INVOKE", target = "Lio/github/opencubicchunks/cubicchunks/chunk/util/CubePos;asLong(II)J"), locals = LocalCapture.CAPTURE_FAILHARD)
@@ -153,7 +152,7 @@ public abstract class MixinNaturalSpawner {
     @Dynamic
     @Group(name = "isRightDistanceToPlayerAndSpawnPointForCube", min = 1, max = 1)
     @Redirect(method = "isRightDistanceToPlayerAndSpawnPointForCube", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/chunk/ChunkAccess;getPos()"
-        + "Lio/github/opencubicchunks/cubicchunks/chunk/util/CubePos;"), require = 0, remap = false)
+        + "Lio/github/opencubicchunks/cubicchunks/chunk/util/CubePos;", remap = false), require = 0, remap = false)
     private static CubePos useGetCubePos(ChunkAccess chunkAccess) {
         return ((IBigCube) chunkAccess).getCubePos();
     }
@@ -161,7 +160,7 @@ public abstract class MixinNaturalSpawner {
     @Dynamic
     @Group(name = "isRightDistanceToPlayerAndSpawnPointForCube", min = 1, max = 1)
     @Redirect(method = "isRightDistanceToPlayerAndSpawnPointForCube", at = @At(value = "INVOKE", target = "Lnet/minecraft/class_2791;method_12004()"
-        + "Lio/github/opencubicchunks/cubicchunks/chunk/util/CubePos;"), require = 0, remap = false)
+        + "Lio/github/opencubicchunks/cubicchunks/chunk/util/CubePos;", remap = false), require = 0, remap = false)
     private static CubePos useGetCubePosMapping(ChunkAccess chunkAccess) {
         return ((IBigCube) chunkAccess).getCubePos();
     }
