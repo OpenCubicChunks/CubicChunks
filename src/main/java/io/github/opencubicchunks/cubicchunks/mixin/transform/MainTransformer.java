@@ -127,18 +127,22 @@ public class MainTransformer {
             )), "scheduleCubeUnload");
         vanillaToCubic.put(new ClassMethod(getObjectType("net/minecraft/class_3898"), //ChunkMap
             getMethod("void method_17242(boolean)")), "saveAllCubes"); // saveAllChunks
+        vanillaToCubic.put(new ClassMethod(getObjectType("net/minecraft/class_3898"), // ChunkMap
+            getMethod("boolean method_17228(" // save
+                + "net.minecraft.class_2791)" // ChunkAccess
+            )), "cubeSave");
 
         Map<ClassMethod, String> methodRedirects = new HashMap<>();
 
         methodRedirects.put(new ClassMethod(getObjectType("net/minecraft/class_3898"), // ChunkMap
             getMethod("net.minecraft.class_2487 " // CompundTag
                 + "method_17979(" // readChunk
-                + "net.minecraft.class_1923)" // chunkPos
+                + "net.minecraft.class_1923)" // ChunkPos
             )), "readCubeNBT");
         methodRedirects.put(new ClassMethod(getObjectType("net/minecraft/class_3898"), // ChunkMap
             getMethod("void "
                 + "method_27054(" // markPositionReplaceable
-                + "net.minecraft.class_1923)" // chunkPos
+                + "net.minecraft.class_1923)" // ChunkPos
             )), "markCubePositionReplaceable");
         methodRedirects.put(new ClassMethod(getObjectType("net/minecraft/class_3898"), // ChunkMap
             getMethod("byte "
@@ -150,14 +154,15 @@ public class MainTransformer {
             getMethod("long method_8324()" // toLong
             )), "asLong");
         methodRedirects.put(new ClassMethod(getObjectType("net/minecraft/class_3898"), // ChunkMap
-            getMethod("boolean method_17228(" // save
-                + "net.minecraft.class_2791)" // ChunkAccess
-            )), "cubeSave");
-        methodRedirects.put(new ClassMethod(getObjectType("net/minecraft/class_3898"), // ChunkMap
             getMethod("void method_20605(java.util.function.BooleanSupplier)")), "processCubeUnloads"); // processUnloads
         methodRedirects.put(new ClassMethod(getObjectType("net/minecraft/class_3898"), // ChunkMap
             getMethod("void method_23697()"), // flushWorker
             getObjectType("net/minecraft/class_3977")), "flushCubeWorker"); // ChunkStorage
+        methodRedirects.put(new ClassMethod(getObjectType("net/minecraft/class_3898"), // ChunkMap
+            getMethod("void method_17910(" // write
+                + "net.minecraft.class_1923, " // ChunkPos
+                + "net.minecraft.class_2487)" // CompoundTag
+            ), getObjectType("net/minecraft/class_3977")), "writeCube"); // ChunkStorage
         methodRedirects.put(new ClassMethod(getObjectType("net/minecraft/class_3193"), // ChunkHolder
             getMethod("java.util.concurrent.CompletableFuture "
                 + "method_14000()"  // getChunkToSave
@@ -173,6 +178,16 @@ public class MainTransformer {
             getMethod("net.minecraft.class_1923 " // ChunkPos
                 + "method_12004()" // getPos
             )), "getCubePos");
+        methodRedirects.put(new ClassMethod(getObjectType("net/minecraft/class_2791"), // ChunkAccess
+            getMethod("void method_12008(boolean)" // setUnsaved
+            )), "setDirty");
+        methodRedirects.put(new ClassMethod(getObjectType("net/minecraft/class_2791"), // ChunkAccess
+            getMethod("net.minecraft.class_2806 " // ChunkStatus
+                + "method_12009()" // getStatus
+            )), "getCubeStatus");
+        methodRedirects.put(new ClassMethod(getObjectType("net/minecraft/class_2791"), // ChunkAccess
+            getMethod("java.util.Map method_12016()")), "getAllCubeStructureStarts"); // getAllStarts
+
         methodRedirects.put(new ClassMethod(getObjectType("net/minecraft/class_3218"), // ServerLevel
             getMethod("void method_18764(" // unload
                 + "net.minecraft.class_2818)" // LevelChunk
@@ -186,6 +201,12 @@ public class MainTransformer {
                 + "net.minecraft.class_1923, " // ChunkPos
                 + "net.minecraft.class_2806)" // ChunkStatus
             )), "onCubeStatusChange");
+        methodRedirects.put(new ClassMethod(getObjectType("net/minecraft/class_2852"), // ChunkSerializer
+            getMethod("net.minecraft.class_2487 " // CompoundTag
+                + "method_12410(" // write
+                + "net.minecraft.class_3218, " // ServerLevel
+                + "net.minecraft.class_2791)" // ChunkAccess
+            )), "write");
         methodRedirects.putAll(vanillaToCubic);
 
         Map<ClassField, String> fieldRedirects = new HashMap<>();
@@ -246,6 +267,8 @@ public class MainTransformer {
             getObjectType("io/github/opencubicchunks/cubicchunks/chunk/IBigCube"));
         typeRedirects.put(getObjectType("net/minecraft/class_2821"), // ImposterProtoChunk
             getObjectType("io/github/opencubicchunks/cubicchunks/chunk/cube/CubePrimerWrapper"));
+        typeRedirects.put(getObjectType("net/minecraft/class_2852"), // ChunkSerializer
+            getObjectType("io/github/opencubicchunks/cubicchunks/world/storage/CubeSerializer"));
         vanillaToCubic.forEach((old, newName) -> {
             MethodNode newMethod = cloneAndApplyRedirects(targetClass, old, newName, methodRedirects, fieldRedirects, typeRedirects);
             if (makeSyntheticAccessor.contains(newName)) {

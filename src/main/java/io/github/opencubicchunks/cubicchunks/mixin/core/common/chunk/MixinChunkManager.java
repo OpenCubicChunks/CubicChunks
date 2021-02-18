@@ -41,7 +41,6 @@ import io.github.opencubicchunks.cubicchunks.chunk.cube.CubePrimer;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.CubePrimerWrapper;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.CubeStatus;
 import io.github.opencubicchunks.cubicchunks.chunk.graph.CCTicketType;
-import io.github.opencubicchunks.cubicchunks.chunk.storage.ISectionStorage;
 import io.github.opencubicchunks.cubicchunks.chunk.ticket.CubeTaskPriorityQueue;
 import io.github.opencubicchunks.cubicchunks.chunk.ticket.CubeTaskPriorityQueueSorter;
 import io.github.opencubicchunks.cubicchunks.chunk.ticket.ITicketManager;
@@ -89,7 +88,6 @@ import net.minecraft.util.thread.ProcessorHandle;
 import net.minecraft.util.thread.ProcessorMailbox;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.Mob;
-import net.minecraft.world.entity.ai.village.poi.PoiManager;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.ChunkGenerator;
@@ -166,8 +164,6 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
 
     @Shadow @Final private PlayerMap playerMap;
 
-    @Shadow @Final private PoiManager poiManager;
-
     @Shadow private volatile Long2ObjectLinkedOpenHashMap<ChunkHolder> visibleChunkMap;
 
     @Shadow protected abstract boolean skipPlayer(ServerPlayer player);
@@ -233,11 +229,9 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
     @Inject(method = "tick(Ljava/util/function/BooleanSupplier;)V",
         at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ChunkMap;processUnloads(Ljava/util/function/BooleanSupplier;)V"))
     protected void onTickScheduleUnloads(BooleanSupplier hasMoreTime, CallbackInfo ci) {
-        if (!((CubicLevelHeightAccessor) this.level).isCubic()) {
-            return;
+        if (((CubicLevelHeightAccessor) this.level).isCubic()) {
+            this.processCubeUnloads(hasMoreTime);
         }
-
-        this.processCubeUnloads(hasMoreTime);
     }
 
     // Forge dimension stuff gone in 1.16, TODO when forge readds dimension code
@@ -257,42 +251,6 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
     // used from ASM
     private void flushCubeWorker() {
         regionCubeIO.flush();
-    }
-
-    // chunkSave
-    private boolean cubeSave(IBigCube cube) {
-        ((ISectionStorage) this.poiManager).flush(cube.getCubePos());
-        if (!cube.isDirty()) {
-            return false;
-        } else {
-            cube.setDirty(false);
-            CubePos cubePos = cube.getCubePos();
-
-            try {
-                //TODO: implement isExistingCubeFull and by extension cubeTypeCache
-                ChunkStatus status = cube.getCubeStatus();
-                if (status.getChunkType() != ChunkStatus.ChunkType.LEVELCHUNK) {
-                    if (isExistingCubeFull(cubePos)) {
-                        return false;
-                    }
-//                    if (status == ChunkStatus.EMPTY && p_219229_1_.getAllStarts().values().stream().noneMatch(StructureStart::isValid)) {
-//                        return false;
-//                    }
-                }
-
-                CompoundTag compoundnbt = CubeSerializer.write(this.level, cube);
-                //TODO: FORGE EVENT : reimplement ChunkDataEvent#Save
-//                net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.event.world.ChunkDataEvent.Save(p_219229_1_, p_219229_1_.getWorldForge() != null ?
-//                p_219229_1_.getWorldForge() : this.level, compoundnbt));
-                this.writeCube(cubePos, compoundnbt);
-                this.markCubePosition(cubePos, status.getChunkType());
-                return true;
-
-            } catch (Exception exception) {
-                LOGGER.error("Failed to save chunk {},{},{}", cubePos.getX(), cubePos.getY(), cubePos.getZ(), exception);
-                return false;
-            }
-        }
     }
 
     // used from ASM

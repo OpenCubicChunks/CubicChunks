@@ -11,4 +11,6 @@ public interface IChunkMapInternal {
     void processCubeUnloads(BooleanSupplier shouldKeepTicking);
 
     void saveAllCubes(boolean flush);
+
+    boolean cubeSave(IBigCube cube);
 }
