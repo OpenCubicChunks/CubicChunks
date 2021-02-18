@@ -73,7 +73,13 @@
         "common.world.structure.MixinStructureFeatureManager",
         "common.world.structure.MixinStructurePiece",
         "common.world.structure.MixinStructureStart",
-        "common.world.structure.pieces.MixinOceanRuinPieces"
+        "common.world.structure.pieces.MixinOceanRuinPieces",
+        "common.world.surfacebuilder.MixinBadlandsSurfaceBuilder",
+        "common.world.surfacebuilder.MixinDefaultSurfaceBuilder",
+        "common.world.surfacebuilder.MixinErodedBadlandsSurfaceBuilder",
+        "common.world.surfacebuilder.MixinFrozenOceanSurfaceBuilder",
+        "common.world.surfacebuilder.MixinSwampSurfaceBuilder",
+        "common.world.surfacebuilder.WoodedBadlandsSurfaceBuilder"
     ],
     "client": [
         "client.chunk.MixinRenderChunkRegion",
