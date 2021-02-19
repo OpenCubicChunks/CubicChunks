@@ -60,7 +60,10 @@ public class SurfaceTrackerSection {
         this.heightmapType = (byte) types.ordinal();
     }
 
-    /** Get the height for a given position. Recomputes the height if the column is marked dirty in this section. */
+    /**
+     * Get the height for a given position. Recomputes the height if the column is marked dirty in this section.
+     * x and z are global coordinates.
+     */
     public int getHeight(int x, int z) {
         int idx = index(x, z);
         if (!isDirty(idx)) {
@@ -221,6 +224,7 @@ public class SurfaceTrackerSection {
         return new SurfaceTrackerSection(sectionScale, newScaledY, this, HEIGHTMAP_TYPES[this.heightmapType]);
     }
 
+    /** Get position x/z index within a column, from global/local pos */
     protected int index(int x, int z) {
         return (z & 0xF) * WIDTH_BLOCKS + (x & 0xF);
     }

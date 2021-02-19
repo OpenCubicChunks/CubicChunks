@@ -17,6 +17,7 @@ import javax.annotation.Nullable;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import io.github.opencubicchunks.cubicchunks.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.LightHeightmapGetter;
 import io.github.opencubicchunks.cubicchunks.chunk.biome.CubeBiomeContainer;
@@ -174,9 +175,15 @@ public class CubePrimer implements IBigCube, ChunkAccess, CubicLevelHeightAccess
 			ChunkPos chunkPos = this.cubePos.asChunkPos();
 			for (int dx = 0; dx < IBigCube.DIAMETER_IN_SECTIONS; dx++) {
 				for (int dz = 0; dz < IBigCube.DIAMETER_IN_SECTIONS; dz++) {
-					// TODO do we want to force-load chunks here? if not the chunk can be null, at least until we get the column->cube invariant
+					// TODO chunk can be null, at least until we get the column->cube invariant
 					BlockGetter chunk = chunkSource.getChunkForLighting(chunkPos.x + dx, chunkPos.z + dz);
+					// force-loading like this causes lighting to init incorrectly for some reason
 //					BlockGetter chunk = chunkSource.getChunk(chunkPos.x + dx, chunkPos.z + dz, ChunkStatus.EMPTY, true);
+                    if (chunk == null) {
+                        CubicChunks.LOGGER.warn("Got a null column at " + (chunkPos.x + dx) + ", " + (chunkPos.z + dz)
+                                + " while adding cube to light heightmap; lighting will not be initialized correctly");
+                        return;
+                    }
 					LightSurfaceTrackerWrapper lightHeightmap = ((LightHeightmapGetter) chunk).getServerLightHeightmap();
 					// TODO want to optimize this - probably want to do the thing we do for other scale0 sections and store a reference to it
 					lightHeightmap.loadCube(this);

@@ -40,6 +40,7 @@ public abstract class MixinSkyLightEngine extends MixinLightEngine<SkyLightSecti
         super.checkNode(id);
     }
 
+    /** all parameters are global coordinates */
     @Override public void checkSkyLightColumn(LevelChunk chunk, int x, int z, int oldHeight, int newHeight) {
         ((SectionLightStorageAccess) this.storage).invokeRunAllUpdates();
         // TODO pass CubeMap into method instead?
@@ -120,7 +121,7 @@ public abstract class MixinSkyLightEngine extends MixinLightEngine<SkyLightSecti
             System.out.println("onGetComputedLevel heightmap was null " + (this.chunkSource.getLevel() instanceof ClientLevel ? "client" : "server"));
             return;
         }
-        int height = heightmap.getFirstAvailable(pos.getX(), pos.getZ());
+        int height = heightmap.getFirstAvailable(pos.getX() & 0xF, pos.getZ() & 0xF);
         if (height <= pos.getY()) {
             cir.setReturnValue(0);
         }

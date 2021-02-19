@@ -17,6 +17,11 @@ public class ClientSurfaceTracker extends Heightmap {
         this.isOpaque = ((HeightmapAccess) this).getIsOpaque();
     }
 
+    /**
+     * @param x column-local x
+     * @param y global y
+     * @param z column-local z
+     */
     @Override public boolean update(int x, int y, int z, BlockState blockState) {
         int previous = getFirstAvailable(x, z);
         if (y <= previous - 2) {

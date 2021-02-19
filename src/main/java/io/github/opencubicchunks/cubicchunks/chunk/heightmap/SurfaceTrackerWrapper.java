@@ -11,7 +11,9 @@ import net.minecraft.world.level.levelgen.Heightmap;
 
 public class SurfaceTrackerWrapper extends Heightmap {
     protected final SurfaceTrackerSection surfaceTracker;
+    /** global x of min block in column */
     protected final int dx;
+    /** global z of min block in column */
     protected final int dz;
 
     public SurfaceTrackerWrapper(ChunkAccess chunkAccess, Types types) {
@@ -30,6 +32,14 @@ public class SurfaceTrackerWrapper extends Heightmap {
         this.dz = sectionToMinBlock(chunkAccess.getPos().z);
     }
 
+    /**
+     *
+     * @param x column-local x
+     * @param y global y
+     * @param z column-local z
+     * @param blockState unused.
+     * @return currently unused; always false
+     */
     @Override
     public boolean update(int x, int y, int z, BlockState blockState) {
 //        // TODO do we need to do anything else here?
@@ -46,6 +56,7 @@ public class SurfaceTrackerWrapper extends Heightmap {
         return false;
     }
 
+    /** x/z are column-local. */
     @Override
     public int getFirstAvailable(int x, int z) {
         return surfaceTracker.getHeight(x + dx, z + dz) + 1;

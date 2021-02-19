@@ -351,6 +351,9 @@ public abstract class MixinChunkHolder implements ICubeHolder {
         }
         ci.cancel();
 
+        int localX = blockPos.getX() & 0xF;
+        int localZ = blockPos.getZ() & 0xF;
+
         if (cubePos == null) {
             ChunkAccess chunk = getTickingChunk();
             if (chunk == null) {
@@ -366,15 +369,15 @@ public abstract class MixinChunkHolder implements ICubeHolder {
                 // TODO: replace heuristics with proper tracking
                 if (blockPos.getY() >= topY) {
                     // TODO: don't use heightmap type as "height" for address
-                    changedLocalBlocks.add((short) AddressTools.getLocalAddress(blockPos.getX() & 0xF, value.ordinal() & 0xF, blockPos.getZ() & 0xF));
+                    changedLocalBlocks.add((short) AddressTools.getLocalAddress(localX, value.ordinal() & 0xF, localZ));
                 }
             }
-            int topY = ((LightHeightmapGetter) chunk).getLightHeightmap().getFirstAvailable(blockPos.getX(), blockPos.getZ()) - 1;
+            int topY = ((LightHeightmapGetter) chunk).getLightHeightmap().getFirstAvailable(localX, localZ) - 1;
             // Same logic as above for heightmap updates
             // TODO: replace heuristics with proper tracking
             if (blockPos.getY() >= topY) {
                 // TODO: don't use heightmap type as "height" for address
-                changedLocalBlocks.add((short) AddressTools.getLocalAddress(blockPos.getX() & 0xF, 0xF, blockPos.getZ() & 0xF));
+                changedLocalBlocks.add((short) AddressTools.getLocalAddress(localX, 0xF, localZ));
             }
             return;
         }
