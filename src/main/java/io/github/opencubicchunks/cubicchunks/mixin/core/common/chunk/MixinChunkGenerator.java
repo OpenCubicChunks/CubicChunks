@@ -7,8 +7,6 @@ import java.util.function.Supplier;
 
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.ICubeGenerator;
-import io.github.opencubicchunks.cubicchunks.chunk.biome.CubeBiomeContainer;
-import io.github.opencubicchunks.cubicchunks.chunk.cube.CubePrimer;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.OverworldBiomeSourceAccess;
 import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
@@ -212,20 +210,6 @@ public abstract class MixinChunkGenerator implements ICubeGenerator {
                 .getNearestGeneratedFeature(serverLevel, serverLevel.structureFeatureManager(), blockPos, radius, skipExistingChunks, serverLevel.getSeed(), structureFeatureConfiguration));
         }
     }
-
-    @Inject(method = "createBiomes", at = @At("HEAD"), cancellable = true)
-    public void generateBiomes(Registry<Biome> registry, ChunkAccess chunkIn, CallbackInfo ci) {
-        if (!((CubicLevelHeightAccessor) chunkIn).isCubic()) {
-            return;
-        }
-
-        /* This can only be a  CubePrimer at this point due to the inject in MixinChunkStatus#cubicChunksBiome  */
-        IBigCube iCube = (IBigCube) chunkIn;
-        CubePos cubePos = ((IBigCube) chunkIn).getCubePos();
-        ((CubePrimer) iCube).setCubeBiomes(new CubeBiomeContainer(registry, cubePos, this.runtimeBiomeSource));
-        ci.cancel();
-    }
-
 
     @Override
     public void decorate(CubeWorldGenRegion region, StructureFeatureManager structureManager) {

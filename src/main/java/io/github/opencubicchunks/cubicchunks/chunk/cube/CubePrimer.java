@@ -22,6 +22,7 @@ import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.biome.CubeBiomeContainer;
 import io.github.opencubicchunks.cubicchunks.chunk.heightmap.SurfaceTrackerSection;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
+import io.github.opencubicchunks.cubicchunks.mixin.access.common.BiomeContainerAccess;
 import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
@@ -66,7 +67,8 @@ public class CubePrimer extends ProtoChunk implements IBigCube, CubicLevelHeight
     private ChunkStatus status = ChunkStatus.EMPTY;
 
     @Nullable
-    private CubeBiomeContainer biomes;
+    private CubeBiomeContainer cubeBiomeContainer;
+
 
     private final Map<Heightmap.Types, SurfaceTrackerSection[]> heightmaps;
 
@@ -97,6 +99,9 @@ public class CubePrimer extends ProtoChunk implements IBigCube, CubicLevelHeight
     private int columnX;
     private int columnZ;
 
+    private int minBuildHeight;
+    private int height;
+
     public CubePrimer(CubePos cubePos, UpgradeData upgradeData, LevelHeightAccessor levelHeightAccessor) {
         this(cubePos, upgradeData, null, null, null, levelHeightAccessor);
     }
@@ -104,7 +109,7 @@ public class CubePrimer extends ProtoChunk implements IBigCube, CubicLevelHeight
     //TODO: add TickList<Block> and TickList<Fluid>
     public CubePrimer(CubePos cubePosIn, UpgradeData upgradeData, @Nullable LevelChunkSection[] sectionsIn, ProtoTickList<Block> blockProtoTickList, ProtoTickList<Fluid> fluidProtoTickList,
                       LevelHeightAccessor levelHeightAccessor) {
-        super(cubePosIn.asChunkPos(), upgradeData, sectionsIn, blockProtoTickList, fluidProtoTickList, new FakeSectionCount(levelHeightAccessor));
+        super(cubePosIn.asChunkPos(), upgradeData, sectionsIn, blockProtoTickList, fluidProtoTickList, new FakeSectionCount(levelHeightAccessor, IBigCube.SECTION_COUNT));
 
         this.heightmaps = Maps.newEnumMap(Heightmap.Types.class);
         this.carvingMasks = new Object2ObjectArrayMap<>();
@@ -128,11 +133,23 @@ public class CubePrimer extends ProtoChunk implements IBigCube, CubicLevelHeight
         generates2DChunks = ((CubicLevelHeightAccessor) levelHeightAccessor).generates2DChunks();
         worldStyle = ((CubicLevelHeightAccessor) levelHeightAccessor).worldStyle();
 
+        this.minBuildHeight = levelHeightAccessor.getMinBuildHeight();
+        this.height = levelHeightAccessor.getHeight();
     }
 
     public void moveColumns(int newColumnX, int newColumnZ) {
         this.columnX = newColumnX;
         this.columnZ = newColumnZ;
+    }
+
+    public void setHeightToCubeBounds(boolean cubeBounds) {
+        if (cubeBounds) {
+            this.minBuildHeight = this.cubePos.minCubeY();
+            this.height = IBigCube.DIAMETER_IN_BLOCKS;
+        } else {
+            this.minBuildHeight = this.levelHeightAccessor.getMinBuildHeight();
+            this.height = this.levelHeightAccessor.getHeight();
+        }
     }
 
     @Override public CubePos getCubePos() {
@@ -339,13 +356,6 @@ public class CubePrimer extends ProtoChunk implements IBigCube, CubicLevelHeight
         return this.inhabitedTime;
     }
 
-    public void setCubeBiomes(CubeBiomeContainer biomesIn) {
-        this.biomes = biomesIn;
-    }
-
-    @Nullable @Override public CubeBiomeContainer getCubeBiomes() {
-        return this.biomes;
-    }
 
     @Override public FluidState getFluidState(BlockPos pos) {
         int x = pos.getX();
@@ -440,18 +450,28 @@ public class CubePrimer extends ProtoChunk implements IBigCube, CubicLevelHeight
         return this.getBlockState(pos.getX(), pos.getY(), pos.getZ());
     }
 
+    // Called from CubeSerializer
+    public void setCubeBiomeContainer(CubeBiomeContainer container) {
+        this.cubeBiomeContainer = container;
+    }
+
     /*****ChunkPrimer Overrides*****/
 
     @Override public ShortList[] getPackedLights() {
         return super.getPackedLights();
     }
 
-    @Override @Deprecated public void setBiomes(ChunkBiomeContainer biomes) {
-        throw new UnsupportedOperationException("For later implementation");
+
+    @Override public void setBiomes(ChunkBiomeContainer biomes) {
+        if (cubeBiomeContainer == null) {
+            cubeBiomeContainer = new CubeBiomeContainer(((BiomeContainerAccess) biomes).getBiomeRegistry(), this.levelHeightAccessor);
+        }
+
+        cubeBiomeContainer.setContainerForColumn(columnX, columnZ, biomes);
     }
 
-    @Deprecated @Nullable @Override public ChunkBiomeContainer getBiomes() {
-        throw new UnsupportedOperationException("For later implementation");
+    @Nullable @Override public ChunkBiomeContainer getBiomes() {
+         return this.cubeBiomeContainer;
     }
 
     @Override public void addLight(short chunkSliceRel, int sectionY) {
@@ -641,13 +661,12 @@ public class CubePrimer extends ProtoChunk implements IBigCube, CubicLevelHeight
         return this.cubePos.asChunkPos(columnX, columnZ);
     }
 
-
     @Override public int getHeight() {
-        return levelHeightAccessor.getHeight();
+        return this.height;
     }
 
     @Override public int getMinBuildHeight() {
-        return levelHeightAccessor.getMinBuildHeight();
+        return this.minBuildHeight;
     }
 
     @Override public WorldStyle worldStyle() {
@@ -670,15 +689,15 @@ public class CubePrimer extends ProtoChunk implements IBigCube, CubicLevelHeight
         private final boolean generates2DChunks;
         private final WorldStyle worldStyle;
 
-        public FakeSectionCount(LevelHeightAccessor levelHeightAccessor) {
-            this(levelHeightAccessor.getHeight(), levelHeightAccessor.getMinBuildHeight(), IBigCube.SECTION_COUNT, ((CubicLevelHeightAccessor) levelHeightAccessor).isCubic(),
+        public FakeSectionCount(LevelHeightAccessor levelHeightAccessor, int sectionCount) {
+            this(levelHeightAccessor.getHeight(), levelHeightAccessor.getMinBuildHeight(), sectionCount, ((CubicLevelHeightAccessor) levelHeightAccessor).isCubic(),
                 ((CubicLevelHeightAccessor) levelHeightAccessor).generates2DChunks(), ((CubicLevelHeightAccessor) levelHeightAccessor).worldStyle());
         }
 
-        private FakeSectionCount(int height, int minHeight, int fakeSectionCount, boolean isCubic, boolean generates2DChunks, WorldStyle worldStyle) {
+        private FakeSectionCount(int height, int minHeight, int sectionCount, boolean isCubic, boolean generates2DChunks, WorldStyle worldStyle) {
             this.height = height;
             this.minHeight = minHeight;
-            this.fakeSectionCount = fakeSectionCount;
+            this.fakeSectionCount = sectionCount;
             this.isCubic = isCubic;
             this.generates2DChunks = generates2DChunks;
             this.worldStyle = worldStyle;

@@ -20,7 +20,6 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.NaturalSpawner;
 import net.minecraft.world.level.PotentialCalculator;
-import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.levelgen.Heightmap;
@@ -113,16 +112,6 @@ public abstract class MixinNaturalSpawner {
         }
 
         cir.setReturnValue(CubicNaturalSpawner.isRightDistanceToPlayerAndSpawnPoint(world, chunk, pos, squaredDistance));
-    }
-
-
-    @Inject(method = "getRoughBiome", at = @At("HEAD"), cancellable = true)
-    private static void getRoughCubicBiome(BlockPos pos, ChunkAccess chunk, CallbackInfoReturnable<Biome> cir) {
-        if (!((CubicLevelHeightAccessor) chunk).isCubic() || !(chunk instanceof IBigCube)) {
-            return;
-        }
-
-        cir.setReturnValue(CubicNaturalSpawner.getRoughBiomeForCube(pos, chunk));
     }
 
     private static ThreadLocal<BlockPos> capturedPos = new ThreadLocal<>();

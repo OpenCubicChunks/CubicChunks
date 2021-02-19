@@ -13,7 +13,9 @@ import io.github.opencubicchunks.cubicchunks.chunk.IClientCubeProvider;
 import io.github.opencubicchunks.cubicchunks.chunk.biome.CubeBiomeContainer;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.BigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
+import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import io.github.opencubicchunks.cubicchunks.utils.MathUtil;
+import io.github.opencubicchunks.cubicchunks.world.storage.CubeSerializer;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import net.minecraft.client.Minecraft;
@@ -24,6 +26,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.chunk.ChunkBiomeContainer;
 
 public class PacketCubes {
     // vanilla has max chunk size of 2MB, it works out to be 128kB for a 32^3 cube
@@ -125,7 +128,7 @@ public class PacketCubes {
     private List<int[]> fillBiomeData() {
         List<int[]> dataArrays = new ArrayList<>(cubes.length);
         for (BigCube cube : cubes) {
-            CubeBiomeContainer cubeBiomeContainer = cube.getCubeBiomes();
+            ChunkBiomeContainer cubeBiomeContainer = cube.getBiomes();
             if (cubeBiomeContainer != null) {
                 dataArrays.add(cubeBiomeContainer.writeBiomes());
             } else {
@@ -150,7 +153,8 @@ public class PacketCubes {
                 int z = pos.getZ();
 
                 CubeBiomeContainer cubeBiomeContainer =
-                    new CubeBiomeContainer(Minecraft.getInstance().level.registryAccess().registryOrThrow(Registry.BIOME_REGISTRY), packet.biomeDataArrays.get(i));
+                    new CubeBiomeContainer(Minecraft.getInstance().level.registryAccess().registryOrThrow(Registry.BIOME_REGISTRY),
+                        new CubeSerializer.CubeBoundsLevelHeightAccessor(IBigCube.DIAMETER_IN_BLOCKS, pos.minCubeY(), (CubicLevelHeightAccessor) world), packet.biomeDataArrays.get(i));
 
                 ((IClientCubeProvider) world.getChunkSource()).replaceWithPacketData(
                     x, y, z, cubeBiomeContainer, dataReader, new CompoundTag(), cubeExists.get(i));

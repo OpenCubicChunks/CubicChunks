@@ -7,12 +7,14 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+import io.github.opencubicchunks.cubicchunks.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import io.netty.buffer.Unpooled;
 import net.fabricmc.fabric.api.network.ClientSidePacketRegistry;
 import net.fabricmc.fabric.api.network.PacketContext;
 import net.fabricmc.fabric.api.network.ServerSidePacketRegistry;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
@@ -88,10 +90,28 @@ public class PacketDispatcher {
     }
 
     private static <T> BiConsumer<T, PacketContext> mainThreadHandler(Consumer<? super T> handler) {
-        return (packet, ctx) -> ctx.getTaskQueue().submit(() -> handler.accept(packet));
+        return (packet, ctx) -> ctx.getTaskQueue().submit(() -> {
+            try {
+                handler.accept(packet);
+            } catch (Throwable throwable) {
+                CubicChunks.LOGGER.error("Packet failed: ", throwable);
+                throw throwable;
+            }
+        });
     }
 
     private static <T> BiConsumer<T, PacketContext> mainThreadHandler(BiConsumer<? super T, ? super Level> handler) {
-        return (packet, ctx) -> ctx.getTaskQueue().submit(() -> handler.accept(packet, Minecraft.getInstance().level));
+        return (packet, ctx) -> ctx.getTaskQueue().submit(() -> {
+            ClientLevel level = Minecraft.getInstance().level;
+            if (level == null) {
+                return;
+            }
+            try {
+                handler.accept(packet, level);
+            } catch (Throwable throwable) {
+                CubicChunks.LOGGER.error("Packet failed: ", throwable);
+                throw throwable;
+            }
+        });
     }
 }

@@ -4,14 +4,11 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.function.Consumer;
 
-import io.github.opencubicchunks.cubicchunks.chunk.cube.BigCube;
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.NaturalSpawnerAccess;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.NaturalSpawner;
-import net.minecraft.world.level.biome.Biome;
-import net.minecraft.world.level.biome.NearestNeighborBiomeZoomer;
 import net.minecraft.world.level.chunk.ChunkAccess;
 
 @SuppressWarnings("JavaReflectionMemberAccess")
@@ -36,7 +33,7 @@ public class CubicNaturalSpawner {
 
     public static boolean isRightDistanceToPlayerAndSpawnPoint(ServerLevel world, ChunkAccess chunk, BlockPos.MutableBlockPos pos, double squaredDistance) {
         try {
-           return (boolean) IS_RIGHT_DISTANCE_TO_PLAYER_AND_SPAWN_POINT_FOR_CUBE.invoke(null, world, chunk, pos, squaredDistance);
+            return (boolean) IS_RIGHT_DISTANCE_TO_PLAYER_AND_SPAWN_POINT_FOR_CUBE.invoke(null, world, chunk, pos, squaredDistance);
         } catch (IllegalAccessException e) {
             throw new Error(e);
         } catch (InvocationTargetException e) {
@@ -57,10 +54,6 @@ public class CubicNaturalSpawner {
         } catch (InvocationTargetException e) {
             throw new RuntimeException(e);
         }
-    }
-
-    public static Biome getRoughBiomeForCube(BlockPos pos, ChunkAccess chunk) {
-        return NearestNeighborBiomeZoomer.INSTANCE.getBiome(0L, pos.getX(), pos.getY(), pos.getZ(), ((BigCube) chunk).getCubeBiomes());
     }
 
     static {

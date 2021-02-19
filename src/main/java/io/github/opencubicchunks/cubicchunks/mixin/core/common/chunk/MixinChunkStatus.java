@@ -157,20 +157,25 @@ public class MixinChunkStatus {
     private static void cubicChunksBiome(ServerLevel world, ChunkGenerator chunkGenerator, List<ChunkAccess> neighbors, ChunkAccess chunkAccess, CallbackInfo ci) {
         if (((CubicLevelHeightAccessor) world).generates2DChunks()) {
             if (chunkAccess instanceof IBigCube) {
-//                /* This can only be a  CubePrimer at this point due to the inject in MixinChunkStatus#cubicChunksBiome  */
-//                IBigCube iCube = (IBigCube) chunkAccess;
-//                CubePos cubePos = ((IBigCube) chunkAccess).getCubePos();
-//                ((CubePrimer) iCube).setCubeBiomes(new CubeBiomeContainer(world.registryAccess().registryOrThrow(Registry.BIOME_REGISTRY), cubePos, this.runtimeBiomeSource));
                 return;
             }
             return;
         }
-        if (chunkAccess instanceof IBigCube) {
-            chunkGenerator.createBiomes(world.registryAccess().registryOrThrow(Registry.BIOME_REGISTRY), chunkAccess);
+
+        if (chunkAccess instanceof CubePrimer) {
+            ci.cancel();
+            CubePrimer cube = ((CubePrimer) chunkAccess);
+            cube.setHeightToCubeBounds(true);
+            for (int columnX = 0; columnX < IBigCube.DIAMETER_IN_SECTIONS; columnX++) {
+                for (int columnZ = 0; columnZ < IBigCube.DIAMETER_IN_SECTIONS; columnZ++) {
+                    cube.moveColumns(columnX, columnZ);
+                    chunkGenerator.createBiomes(world.registryAccess().registryOrThrow(Registry.BIOME_REGISTRY), chunkAccess);
+                }
+            }
+            cube.setHeightToCubeBounds(false);
             return;
         }
         ci.cancel();
-        //noinspection ConstantConditions
         ColumnBiomeContainer biomeContainer = new ColumnBiomeContainer(world.registryAccess().registryOrThrow(BIOME_REGISTRY), world, world);
         ((ProtoChunk) chunkAccess).setBiomes(biomeContainer);
     }

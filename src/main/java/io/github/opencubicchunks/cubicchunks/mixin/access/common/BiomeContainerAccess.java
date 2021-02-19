@@ -11,4 +11,8 @@ public interface BiomeContainerAccess {
     @Accessor Biome[] getBiomes();
 
     @Accessor IdMap<Biome> getBiomeRegistry();
+
+    @Accessor("WIDTH_BITS") static int getWidthBits() {
+        throw new Error("Mixin did not apply");
+    }
 }
