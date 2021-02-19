@@ -6,7 +6,6 @@ import java.util.stream.Stream;
 
 import javax.annotation.Nullable;
 
-import io.github.opencubicchunks.cubicchunks.chunk.biome.CubeBiomeContainer;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import net.minecraft.Util;
@@ -174,12 +173,8 @@ public class CubePrimerWrapper extends CubePrimer {
         return this.cube.isEmptyCube();
     }
 
-    @Deprecated @Override public ChunkBiomeContainer getBiomes() {
+    @Override public ChunkBiomeContainer getBiomes() {
         return this.cube.getBiomes();
-    }
-
-    @Override public CubeBiomeContainer getCubeBiomes() {
-        return this.cube.getCubeBiomes();
     }
 
     @Override public void setHeightmap(Heightmap.Types type, long[] data) {

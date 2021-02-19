@@ -20,7 +20,6 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import io.github.opencubicchunks.cubicchunks.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
-import io.github.opencubicchunks.cubicchunks.chunk.biome.CubeBiomeContainer;
 import io.github.opencubicchunks.cubicchunks.chunk.heightmap.SurfaceTrackerSection;
 import io.github.opencubicchunks.cubicchunks.chunk.heightmap.SurfaceTrackerWrapper;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
@@ -102,7 +101,7 @@ public class BigCube implements ChunkAccess, IBigCube, CubicLevelHeightAccessor 
 
     private final Map<Heightmap.Types, SurfaceTrackerSection[]> heightmaps;
 
-    private CubeBiomeContainer biomes;
+    private ChunkBiomeContainer cubeBiomeContainer;
 
     private boolean dirty = true; // todo: change back to false?
     private boolean loaded = false;
@@ -118,11 +117,11 @@ public class BigCube implements ChunkAccess, IBigCube, CubicLevelHeightAccessor 
     private final boolean generates2DChunks;
     private final WorldStyle worldStyle;
 
-    public BigCube(Level worldIn, CubePos cubePosIn, CubeBiomeContainer biomeContainerIn) {
+    public BigCube(Level worldIn, CubePos cubePosIn, ChunkBiomeContainer biomeContainerIn) {
         this(worldIn, cubePosIn, biomeContainerIn, UpgradeData.EMPTY, EmptyTickList.empty(), EmptyTickList.empty(), 0L, null, null);
     }
 
-    public BigCube(Level worldIn, CubePos cubePosIn, CubeBiomeContainer biomeContainerIn, UpgradeData upgradeDataIn, TickList<Block> tickBlocksIn,
+    public BigCube(Level worldIn, CubePos cubePosIn, ChunkBiomeContainer biomeContainerIn, UpgradeData upgradeDataIn, TickList<Block> tickBlocksIn,
                    TickList<Fluid> tickFluidsIn, long inhabitedTimeIn, @Nullable LevelChunkSection[] sectionsIn, @Nullable Consumer<BigCube> postLoadConsumerIn) {
         this.level = worldIn;
         this.cubePos = cubePosIn;
@@ -144,7 +143,7 @@ public class BigCube implements ChunkAccess, IBigCube, CubicLevelHeightAccessor 
             this.entityLists[i] = new ClassInstanceMultiMap<>(Entity.class);
         }
 
-        this.biomes = biomeContainerIn;
+        this.cubeBiomeContainer = biomeContainerIn;
 //        this.blockBiomeArray = biomeContainerIn;
 //        this.blocksToBeTicked = tickBlocksIn;
 //        this.fluidsToBeTicked = tickFluidsIn;
@@ -181,7 +180,7 @@ public class BigCube implements ChunkAccess, IBigCube, CubicLevelHeightAccessor 
         //TODO: reimplement full BigCube constructor from CubePrimer
 //        this(worldIn, cubePrimerIn.getCubePos(), cubePrimerIn.getCubeBiomes(), cubePrimerIn.getUpgradeData(), cubePrimerIn.getBlocksToBeTicked(),
 //            cubePrimerIn.getFluidsToBeTicked(), cubePrimerIn.getInhabitedTime(), cubePrimerIn.getSections(), (Consumer<BigCube>)null);
-        this(worldIn, cubePrimerIn.getCubePos(), cubePrimerIn.getCubeBiomes(), null, null,
+        this(worldIn, cubePrimerIn.getCubePos(), cubePrimerIn.getBiomes(), null, null,
             null, cubePrimerIn.getCubeInhabitedTime(), cubePrimerIn.getCubeSections(), postLoadConsumerIn);
 
         for (CompoundTag compoundnbt : cubePrimerIn.getCubeEntities()) {
@@ -629,11 +628,7 @@ public class BigCube implements ChunkAccess, IBigCube, CubicLevelHeightAccessor 
     }
 
     @Deprecated @Nullable @Override public ChunkBiomeContainer getBiomes() {
-        throw new UnsupportedOperationException("Chunk method called on a cube");
-    }
-
-    @Nullable @Override public CubeBiomeContainer getCubeBiomes() {
-        return this.biomes;
+        return this.cubeBiomeContainer;
     }
 
     public int getSize() {
@@ -664,7 +659,7 @@ public class BigCube implements ChunkAccess, IBigCube, CubicLevelHeightAccessor 
         }
     }
 
-    public void read(@Nullable CubeBiomeContainer biomesIn, FriendlyByteBuf readBuffer, CompoundTag nbtTagIn, boolean cubeExists) {
+    public void read(@Nullable ChunkBiomeContainer biomesIn, FriendlyByteBuf readBuffer, CompoundTag nbtTagIn, boolean cubeExists) {
         if (!cubeExists) {
             Arrays.fill(sections, null);
             return;
@@ -674,7 +669,7 @@ public class BigCube implements ChunkAccess, IBigCube, CubicLevelHeightAccessor 
         BitSet emptyFlags = BitSet.valueOf(emptyFlagsBytes);
 
         if (biomesIn != null) {
-            this.biomes = biomesIn;
+            this.cubeBiomeContainer = biomesIn;
         }
 
         // TODO: support partial updates
@@ -712,7 +707,7 @@ public class BigCube implements ChunkAccess, IBigCube, CubicLevelHeightAccessor 
         this.tickersInLevel.remove(blockEntity.getBlockPos());
     }
 
-    private void readSection(int sectionIdx, int sectionY, @Nullable CubeBiomeContainer biomeContainerIn, FriendlyByteBuf packetBufferIn, CompoundTag nbtIn,
+    private void readSection(int sectionIdx, int sectionY, @Nullable ChunkBiomeContainer biomeContainerIn, FriendlyByteBuf packetBufferIn, CompoundTag nbtIn,
                              boolean sectionExists) {
 
         LevelChunkSection section = this.sections[sectionIdx];
@@ -725,7 +720,7 @@ public class BigCube implements ChunkAccess, IBigCube, CubicLevelHeightAccessor 
         }
 
         if (biomeContainerIn != null) {
-            this.biomes = biomeContainerIn;
+            this.cubeBiomeContainer = biomeContainerIn;
         }
 
         for (Heightmap.Types type : Heightmap.Types.values()) {

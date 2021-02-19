@@ -16,6 +16,7 @@ import io.github.opencubicchunks.cubicchunks.chunk.cube.BigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.CubePrimer;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.CubePrimerWrapper;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
+import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import it.unimi.dsi.fastutil.shorts.ShortList;
 import net.minecraft.core.BlockPos;
@@ -28,9 +29,11 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.ai.village.poi.PoiManager;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LevelHeightAccessor;
 import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.level.biome.BiomeSource;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.chunk.ChunkBiomeContainer;
 import net.minecraft.world.level.chunk.ChunkGenerator;
 import net.minecraft.world.level.chunk.ChunkSource;
 import net.minecraft.world.level.chunk.ChunkStatus;
@@ -56,7 +59,8 @@ public class CubeSerializer {
 
         boolean biomes = level.contains("Biomes", 11);
         int[] biomes1 = level.getIntArray("Biomes");
-        CubeBiomeContainer biomecontainer = new CubeBiomeContainer(worldIn.registryAccess().registryOrThrow(Registry.BIOME_REGISTRY), cubePos, biomeprovider, biomes ? biomes1 : null);
+        CubeBiomeContainer cubeBiomeContainer = new CubeBiomeContainer(worldIn.registryAccess().registryOrThrow(Registry.BIOME_REGISTRY),
+            new CubeBoundsLevelHeightAccessor(BigCube.DIAMETER_IN_BLOCKS, expectedCubePos.minCubeY(), ((CubicLevelHeightAccessor) worldIn)), biomes1);
 //            UpgradeData upgradedata = level.contains("UpgradeData", 10) ? new UpgradeData(level.getCompound("UpgradeData")) : UpgradeData.EMPTY;
         //TODO: reimplement ticklists
 //            ChunkPrimerTickList<Block> chunkprimerticklist = new ChunkPrimerTickList<>((p_222652_0_) -> {
@@ -127,7 +131,7 @@ public class CubeSerializer {
 //                icube = new BigCube(worldIn.getWorld(), cubePos, biomecontainer, upgradedata, iticklist, iticklist1, inhabitedTime, sections, (p_222648_1_) -> {
 //                    readEntities(level, p_222648_1_);
 //                });
-            icube = new BigCube(worldIn.getLevel(), cubePos, biomecontainer, null, null, null, inhabitedTime, sections, (p_222648_1_) -> {
+            icube = new BigCube(worldIn.getLevel(), cubePos, cubeBiomeContainer, null, null, null, inhabitedTime, sections, (p_222648_1_) -> {
                 readEntities(worldIn, level, p_222648_1_);
             });
             //TODO: reimplement forge capabilities in save format
@@ -136,7 +140,8 @@ public class CubeSerializer {
             //TODO: reimplement ticklists, updatedata
 //                CubePrimer cubePrimer = new CubePrimer(cubePos, upgradedata, sections, chunkprimerticklist, chunkprimerticklist1);
             CubePrimer cubePrimer = new CubePrimer(cubePos, null, sections, null, null, worldIn);
-            cubePrimer.setCubeBiomes(biomecontainer);
+            cubePrimer.setCubeBiomeContainer(cubeBiomeContainer);
+
             icube = cubePrimer;
             cubePrimer.setInhabitedTime(inhabitedTime);
             cubePrimer.setCubeStatus(ChunkStatus.byName(level.getString("Status")));
@@ -278,7 +283,7 @@ public class CubeSerializer {
             level.putBoolean("isLightOn", true);
         }
 
-        CubeBiomeContainer biomecontainer = icube.getCubeBiomes();
+        ChunkBiomeContainer biomecontainer = icube.getBiomes();
         if (biomecontainer != null) {
             level.putIntArray("Biomes", biomecontainer.writeBiomes());
         }
@@ -404,7 +409,7 @@ public class CubeSerializer {
             level.putBoolean("isLightOn", true);
         }
 
-        CubeBiomeContainer biomecontainer = icube.getCubeBiomes();
+        ChunkBiomeContainer biomecontainer = icube.getBiomes();
         if (biomecontainer != null) {
             level.putIntArray("Biomes", biomecontainer.writeBiomes());
         }
@@ -549,5 +554,43 @@ public class CubeSerializer {
             }
         }
 
+    }
+
+    public static class CubeBoundsLevelHeightAccessor implements LevelHeightAccessor, CubicLevelHeightAccessor {
+
+        private final int height;
+        private final int minBuildHeight;
+        private final WorldStyle worldStyle;
+        private final boolean isCubic;
+        private final boolean generates2DChunks;
+
+        public CubeBoundsLevelHeightAccessor(int height, int minBuildHeight, CubicLevelHeightAccessor accessor) {
+            this.height = height;
+            this.minBuildHeight = minBuildHeight;
+            this.worldStyle = accessor.worldStyle();
+            this.isCubic = accessor.isCubic();
+            this.generates2DChunks = accessor.generates2DChunks();
+        }
+
+
+        @Override public int getHeight() {
+            return this.height;
+        }
+
+        @Override public int getMinBuildHeight() {
+            return this.minBuildHeight;
+        }
+
+        @Override public WorldStyle worldStyle() {
+            return worldStyle;
+        }
+
+        @Override public boolean isCubic() {
+            return isCubic;
+        }
+
+        @Override public boolean generates2DChunks() {
+            return generates2DChunks;
+        }
     }
 }
