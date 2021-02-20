@@ -4,6 +4,7 @@ import java.util.BitSet;
 import java.util.Random;
 import java.util.function.Function;
 
+import io.github.opencubicchunks.cubicchunks.chunk.NonAtomicWorldgenRandom;
 import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.biome.Biome;
@@ -52,5 +53,10 @@ public abstract class MixinCaveWorldCarver {
         } else {
             return random.nextInt(random.nextInt(chunk.getHeight()) + 1);
         }
+    }
+
+    @Redirect(method = "genTunnel", at = @At(value = "NEW", target = "java/util/Random", remap = false))
+    private Random createRandom(long seed) {
+        return new NonAtomicWorldgenRandom(seed);
     }
 }

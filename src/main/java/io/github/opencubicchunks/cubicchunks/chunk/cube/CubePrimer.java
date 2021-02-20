@@ -29,9 +29,6 @@ import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap;
 import it.unimi.dsi.fastutil.shorts.ShortList;
-import net.minecraft.CrashReport;
-import net.minecraft.CrashReportCategory;
-import net.minecraft.ReportedException;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.SectionPos;
 import net.minecraft.nbt.CompoundTag;
@@ -60,6 +57,9 @@ import org.apache.logging.log4j.LogManager;
 
 //ProtoChunk
 public class CubePrimer extends ProtoChunk implements IBigCube, CubicLevelHeightAccessor {
+
+    private static final BlockState EMPTY_BLOCK = Blocks.AIR.defaultBlockState();
+    private static final FluidState EMPTY_FLUID = Fluids.EMPTY.defaultFluidState();
 
     private final CubePos cubePos;
     private final LevelChunkSection[] sections;
@@ -175,62 +175,62 @@ public class CubePrimer extends ProtoChunk implements IBigCube, CubicLevelHeight
         int z = pos.getZ() & 0xF;
         int index = Coords.blockToIndex(pos.getX(), pos.getY(), pos.getZ());
 
-        if (this.sections[index] == EMPTY_SECTION && state.getBlock() == Blocks.AIR) {
+        LevelChunkSection section = this.sections[index];
+        if (section == EMPTY_SECTION && state == EMPTY_BLOCK) {
             return state;
-        } else {
-            if (this.sections[index] == EMPTY_SECTION) {
-                this.sections[index] = new LevelChunkSection(Coords.cubeToMinBlock(this.cubePos.getY() + Coords.sectionToMinBlock(Coords.indexToY(index))));
-            }
-
-            if (state.getLightEmission() > 0) {
-                SectionPos sectionPosAtIndex = Coords.sectionPosByIndex(this.cubePos, index);
-                this.lightPositions.add(new BlockPos(
-                    x + Coords.sectionToMinBlock(sectionPosAtIndex.getX()),
-                    y + Coords.sectionToMinBlock(sectionPosAtIndex.getY()),
-                    z + Coords.sectionToMinBlock(sectionPosAtIndex.getZ()))
-                );
-            }
-
-            LevelChunkSection chunksection = this.sections[index];
-            BlockState blockstate = chunksection.setBlockState(x, y, z, state, false);
-            if (this.status.isOrAfter(ChunkStatus.FEATURES) && state != blockstate && (state.getLightBlock(this, pos) != blockstate.getLightBlock(this, pos)
-                || state.getLightEmission() != blockstate.getLightEmission() || state.useShapeForLightOcclusion() || blockstate.useShapeForLightOcclusion())) {
-
-                lightManager.checkBlock(pos);
-            }
-
-            EnumSet<Heightmap.Types> heightMapsAfter = this.getStatus().heightmapsAfter();
-            EnumSet<Heightmap.Types> toInitialize = null;
-
-            for (Heightmap.Types type : heightMapsAfter) {
-                SurfaceTrackerSection[] heightmapArray = this.heightmaps.get(type);
-
-                if (heightmapArray == null) {
-                    if (toInitialize == null) {
-                        toInitialize = EnumSet.noneOf(Heightmap.Types.class);
-                    }
-
-                    toInitialize.add(type);
-                }
-            }
-
-            if (toInitialize != null) {
-                primeHeightMaps(toInitialize);
-            }
-
-            for (Heightmap.Types types : heightMapsAfter) {
-
-                int xSection = Coords.blockToCubeLocalSection(pos.getX());
-                int zSection = Coords.blockToCubeLocalSection(pos.getZ());
-
-                int idx = xSection + zSection * DIAMETER_IN_SECTIONS;
-
-                SurfaceTrackerSection surfaceTrackerSection = this.heightmaps.get(types)[idx];
-                surfaceTrackerSection.markDirty(x, z);
-            }
-
-            return blockstate;
         }
+
+        if (section == EMPTY_SECTION) {
+            this.sections[index] = section = new LevelChunkSection(Coords.cubeToMinBlock(this.cubePos.getY() + Coords.sectionToMinBlock(Coords.indexToY(index))));
+        }
+
+        if (state.getLightEmission() > 0) {
+            SectionPos sectionPosAtIndex = Coords.sectionPosByIndex(this.cubePos, index);
+            this.lightPositions.add(new BlockPos(
+                x + Coords.sectionToMinBlock(sectionPosAtIndex.getX()),
+                y + Coords.sectionToMinBlock(sectionPosAtIndex.getY()),
+                z + Coords.sectionToMinBlock(sectionPosAtIndex.getZ()))
+            );
+        }
+
+        BlockState lastState = section.setBlockState(x, y, z, state, false);
+        if (this.status.isOrAfter(ChunkStatus.FEATURES) && state != lastState && (state.getLightBlock(this, pos) != lastState.getLightBlock(this, pos)
+            || state.getLightEmission() != lastState.getLightEmission() || state.useShapeForLightOcclusion() || lastState.useShapeForLightOcclusion())) {
+
+            lightManager.checkBlock(pos);
+        }
+
+        EnumSet<Heightmap.Types> heightMapsAfter = this.getStatus().heightmapsAfter();
+        EnumSet<Heightmap.Types> toInitialize = null;
+
+        for (Heightmap.Types type : heightMapsAfter) {
+            SurfaceTrackerSection[] heightmapArray = this.heightmaps.get(type);
+
+            if (heightmapArray == null) {
+                if (toInitialize == null) {
+                    toInitialize = EnumSet.noneOf(Heightmap.Types.class);
+                }
+
+                toInitialize.add(type);
+            }
+        }
+
+        if (toInitialize != null) {
+            primeHeightMaps(toInitialize);
+        }
+
+        for (Heightmap.Types types : heightMapsAfter) {
+
+            int xSection = Coords.blockToCubeLocalSection(pos.getX());
+            int zSection = Coords.blockToCubeLocalSection(pos.getZ());
+
+            int idx = xSection + zSection * DIAMETER_IN_SECTIONS;
+
+            SurfaceTrackerSection surfaceTrackerSection = this.heightmaps.get(types)[idx];
+            surfaceTrackerSection.markDirty(x, z);
+        }
+
+        return lastState;
     }
 
     private void primeHeightMaps(EnumSet<Heightmap.Types> toInitialize) {
@@ -341,7 +341,7 @@ public class CubePrimer extends ProtoChunk implements IBigCube, CubicLevelHeight
 
     @Override public boolean isEmptyCube() {
         for (LevelChunkSection section : this.sections) {
-            if (section != EMPTY_SECTION && !section.isEmpty()) {
+            if (!LevelChunkSection.isEmpty(section)) {
                 return false;
             }
         }
@@ -361,19 +361,12 @@ public class CubePrimer extends ProtoChunk implements IBigCube, CubicLevelHeight
         int x = pos.getX();
         int y = pos.getY();
         int z = pos.getZ();
-        try {
-            int index = Coords.blockToIndex(x, y, z);
-            if (!LevelChunkSection.isEmpty(this.sections[index])) {
-                return this.sections[index].getFluidState(x & 15, y & 15, z & 15);
-            }
-            return Fluids.EMPTY.defaultFluidState();
-        } catch (Throwable var7) {
-            CrashReport crashReport = CrashReport.forThrowable(var7, "Getting fluid state");
-            CrashReportCategory crashReportCategory = crashReport.addCategory("Block being got");
-            crashReportCategory.setDetail("Location", () -> {
-                return CrashReportCategory.formatLocation(this, x, y, z);
-            });
-            throw new ReportedException(crashReport);
+        int index = Coords.blockToIndex(x, y, z);
+        LevelChunkSection section = this.sections[index];
+        if (!LevelChunkSection.isEmpty(section)) {
+            return section.getFluidState(x & 15, y & 15, z & 15);
+        } else {
+            return EMPTY_FLUID;
         }
     }
 
@@ -632,9 +625,8 @@ public class CubePrimer extends ProtoChunk implements IBigCube, CubicLevelHeight
 
     @Override public BlockState getBlockState(int x, int y, int z) {
         int index = Coords.blockToIndex(x, y, z);
-        return LevelChunkSection.isEmpty(this.sections[index]) ?
-            Blocks.AIR.defaultBlockState() :
-            this.sections[index].getBlockState(x & 15, y & 15, z & 15);
+        LevelChunkSection section = this.sections[index];
+        return LevelChunkSection.isEmpty(section) ? EMPTY_BLOCK : section.getBlockState(x & 15, y & 15, z & 15);
     }
 
     //ENTITY
