@@ -75,6 +75,8 @@
         "common.world.placement.MixinUniformHeight",
         "common.world.placement.MixinVerticalDecorator",
         "common.world.server.MixinServerWorldLightManager",
+        "common.world.structure.MixinLocateCommand",
+        "common.world.structure.MixinMineshaftFeature",
         "common.world.structure.MixinStructureFeature",
         "common.world.structure.MixinStructureFeatureManager",
         "common.world.structure.MixinStructurePiece",
