@@ -37,10 +37,10 @@ public class NoiseAndSurfaceBuilderHelper extends ProtoChunk implements CubicLev
     private final WorldStyle worldStyle;
 
     public NoiseAndSurfaceBuilderHelper(IBigCube delegate, IBigCube delegateAbove) {
-        super(delegate.getCubePos().asChunkPos(), UpgradeData.EMPTY, new HeightAccessor((ChunkAccess) delegate));
+        super(delegate.getCubePos().asChunkPos(), UpgradeData.EMPTY, new HeightAccessor(delegate));
         this.delegates = new ChunkAccess[2];
-        this.delegates[0] = (ChunkAccess) delegate;
-        this.delegates[1] = (ChunkAccess) delegateAbove;
+        this.delegates[0] = delegate;
+        this.delegates[1] = delegateAbove;
         this.heightmaps = Maps.newEnumMap(Heightmap.Types.class);
         isCubic = ((CubicLevelHeightAccessor) delegate).isCubic();
         generates2DChunks = ((CubicLevelHeightAccessor) delegate).generates2DChunks();
@@ -91,12 +91,6 @@ public class NoiseAndSurfaceBuilderHelper extends ProtoChunk implements CubicLev
     }
 
     @Override public LevelChunkSection getOrCreateSection(int sectionIndex) {
-        if (sectionIndex < 0) {
-            String s = "aaaaa";
-            System.out.println(s);
-        }
-
-
         LevelChunkSection[] cubeSections = this.getSections();
 
         if (cubeSections[sectionIndex] == LevelChunk.EMPTY_SECTION) {
@@ -126,7 +120,7 @@ public class NoiseAndSurfaceBuilderHelper extends ProtoChunk implements CubicLev
 
 
     @Override public int getHeight() {
-        return IBigCube.DIAMETER_IN_BLOCKS * 2;
+        return IBigCube.DIAMETER_IN_BLOCKS + 8;
     }
 
     @Override public WorldStyle worldStyle() {

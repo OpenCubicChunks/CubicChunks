@@ -222,6 +222,9 @@ public class MixinChunkStatus {
                         generator.fillFromNoise(executor, world.structureFeatureManager().forWorldGenRegion(cubeWorldGenRegion), cubeAccessWrapper).thenApply(chunkAccess -> {
                             cubeAccessWrapper.applySections();
                             generator.buildSurfaceAndBedrock(cubeWorldGenRegion, chunkAccess);
+                            // Carvers
+                            generator.applyCarvers(world.getSeed(), world.getBiomeManager(), cubeAccessWrapper, GenerationStep.Carving.AIR);
+                            generator.applyCarvers(world.getSeed(), world.getBiomeManager(), cubeAccessWrapper, GenerationStep.Carving.LIQUID);
                             return chunkAccess;
                         });
                     if (completableFuture == null) {
@@ -273,26 +276,25 @@ public class MixinChunkStatus {
         }
 
         ci.cancel();
-        if (chunk instanceof IBigCube) {
-            CubeWorldGenRegion cubeWorldGenRegion = new CubeWorldGenRegion(world, unsafeCast(neighbors), chunk);
-
-            CubePrimer cubeAbove = new CubePrimer(CubePos.of(((IBigCube) chunk).getCubePos().getX(), ((IBigCube) chunk).getCubePos().getY() + 1,
-                ((IBigCube) chunk).getCubePos().getZ()), UpgradeData.EMPTY, cubeWorldGenRegion);
-
-            NoiseAndSurfaceBuilderHelper noiseAndSurfaceBuilderHelper = new NoiseAndSurfaceBuilderHelper((IBigCube) chunk, cubeAbove);
-
-            for (int columnX = 0; columnX < IBigCube.DIAMETER_IN_SECTIONS; columnX++) {
-                for (int columnZ = 0; columnZ < IBigCube.DIAMETER_IN_SECTIONS; columnZ++) {
-                    cubeAbove.moveColumns(columnX, columnZ);
-                    if (chunk instanceof CubePrimer) {
-                        ((CubePrimer) chunk).moveColumns(columnX, columnZ);
-                    }
-                    noiseAndSurfaceBuilderHelper.moveColumn(columnX, columnZ);
-                    generator.applyCarvers(world.getSeed(), world.getBiomeManager(), noiseAndSurfaceBuilderHelper, GenerationStep.Carving.AIR);
-                    noiseAndSurfaceBuilderHelper.applySections();
-                }
-            }
-        }
+//        if (chunk instanceof IBigCube) {
+//            CubeWorldGenRegion cubeWorldGenRegion = new CubeWorldGenRegion(world, unsafeCast(neighbors), chunk);
+//
+//            CubePrimer cubeAbove = new CubePrimer(CubePos.of(((IBigCube) chunk).getCubePos().getX(), ((IBigCube) chunk).getCubePos().getY() + 1,
+//                ((IBigCube) chunk).getCubePos().getZ()), UpgradeData.EMPTY, cubeWorldGenRegion);
+//
+//            NoiseAndSurfaceBuilderHelper noiseAndSurfaceBuilderHelper = new NoiseAndSurfaceBuilderHelper((IBigCube) chunk, cubeAbove);
+//
+//            for (int columnX = 0; columnX < IBigCube.DIAMETER_IN_SECTIONS; columnX++) {
+//                for (int columnZ = 0; columnZ < IBigCube.DIAMETER_IN_SECTIONS; columnZ++) {
+//                    cubeAbove.moveColumns(columnX, columnZ);
+//                    if (chunk instanceof CubePrimer) {
+//                        ((CubePrimer) chunk).moveColumns(columnX, columnZ);
+//                    }
+//                    noiseAndSurfaceBuilderHelper.moveColumn(columnX, columnZ);
+//                    noiseAndSurfaceBuilderHelper.applySections();
+//                }
+//            }
+//        }
     }
 
     @SuppressWarnings({ "UnresolvedMixinReference", "target" })
@@ -308,27 +310,26 @@ public class MixinChunkStatus {
         }
 
         ci.cancel();
-        if (chunk instanceof IBigCube) {
-            CubeWorldGenRegion cubeWorldGenRegion = new CubeWorldGenRegion(world, unsafeCast(neighbors), chunk);
-
-            CubePrimer cubeAbove = new CubePrimer(CubePos.of(((IBigCube) chunk).getCubePos().getX(), ((IBigCube) chunk).getCubePos().getY() + 1,
-                ((IBigCube) chunk).getCubePos().getZ()), UpgradeData.EMPTY, cubeWorldGenRegion);
-
-            NoiseAndSurfaceBuilderHelper noiseAndSurfaceBuilderHelper = new NoiseAndSurfaceBuilderHelper((IBigCube) chunk, cubeAbove);
-
-            //TODO: Verify liquid carvers are generating appropriately
-            for (int columnX = 0; columnX < IBigCube.DIAMETER_IN_SECTIONS; columnX++) {
-                for (int columnZ = 0; columnZ < IBigCube.DIAMETER_IN_SECTIONS; columnZ++) {
-                    cubeAbove.moveColumns(columnX, columnZ);
-                    if (chunk instanceof CubePrimer) {
-                        ((CubePrimer) chunk).moveColumns(columnX, columnZ);
-                    }
-                    noiseAndSurfaceBuilderHelper.moveColumn(columnX, columnZ);
-                    generator.applyCarvers(world.getSeed(), world.getBiomeManager(), noiseAndSurfaceBuilderHelper, GenerationStep.Carving.LIQUID);
-                    noiseAndSurfaceBuilderHelper.applySections();
-                }
-            }
-        }
+//        if (chunk instanceof IBigCube) {
+//            CubeWorldGenRegion cubeWorldGenRegion = new CubeWorldGenRegion(world, unsafeCast(neighbors), chunk);
+//
+//            CubePrimer cubeAbove = new CubePrimer(CubePos.of(((IBigCube) chunk).getCubePos().getX(), ((IBigCube) chunk).getCubePos().getY() + 1,
+//                ((IBigCube) chunk).getCubePos().getZ()), UpgradeData.EMPTY, cubeWorldGenRegion);
+//
+//            NoiseAndSurfaceBuilderHelper noiseAndSurfaceBuilderHelper = new NoiseAndSurfaceBuilderHelper((IBigCube) chunk, cubeAbove);
+//
+//            //TODO: Verify liquid carvers are generating appropriately
+//            for (int columnX = 0; columnX < IBigCube.DIAMETER_IN_SECTIONS; columnX++) {
+//                for (int columnZ = 0; columnZ < IBigCube.DIAMETER_IN_SECTIONS; columnZ++) {
+//                    cubeAbove.moveColumns(columnX, columnZ);
+//                    if (chunk instanceof CubePrimer) {
+//                        ((CubePrimer) chunk).moveColumns(columnX, columnZ);
+//                    }
+//                    noiseAndSurfaceBuilderHelper.moveColumn(columnX, columnZ);
+//                    noiseAndSurfaceBuilderHelper.applySections();
+//                }
+//            }
+//        }
     }
 
     @SuppressWarnings({ "UnresolvedMixinReference", "target" })
