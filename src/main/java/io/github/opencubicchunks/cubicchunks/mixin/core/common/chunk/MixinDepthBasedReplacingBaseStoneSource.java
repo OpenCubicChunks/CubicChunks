@@ -10,6 +10,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(DepthBasedReplacingBaseStoneSource.class)
@@ -23,17 +24,30 @@ public class MixinDepthBasedReplacingBaseStoneSource {
 
     @Shadow @Final private long seed;
 
+    private long seedX, seedY, seedZ;
+
+    @Inject(method = "<init>", at = @At("RETURN"))
+    private void init(long seed, BlockState normalBlock, BlockState replacementBlock, CallbackInfo ci) {
+        // precompute axis seeds
+        WorldgenRandom random = this.random;
+        this.seedX = random.nextLong();
+        this.seedY = random.nextLong();
+        this.seedZ = random.nextLong();
+        random.setSeed(seed);
+    }
+
     @Inject(method = "getBaseStone", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/levelgen/WorldgenRandom;setBaseStoneSeed(JIII)J", shift = At.Shift.BEFORE),
         cancellable = true)
-    private void dontCalculateBaseStone(int i, int j, int k, NoiseGeneratorSettings noiseGeneratorSettings, CallbackInfoReturnable<BlockState> cir) {
-        double probability = Mth.clampedMap(j, -8.0D, 0.0D, 1.0D, 0.0D);
+    private void dontCalculateBaseStone(int x, int y, int z, NoiseGeneratorSettings noiseGeneratorSettings, CallbackInfoReturnable<BlockState> cir) {
+        double probability = Mth.clampedMap(y, -8.0D, 0.0D, 1.0D, 0.0D);
         if (probability <= 0) {
             cir.setReturnValue(this.normalBlock);
         } else if (probability >= 1) {
             cir.setReturnValue(this.replacementBlock);
         } else {
-            this.random.setBaseStoneSeed(this.seed, i, j, k);
-            cir.setReturnValue((double) this.random.nextFloat() < probability ? this.replacementBlock : this.normalBlock);
+            long seed = x * this.seedX ^ y * this.seedY ^ z * this.seedZ ^ this.seed;
+            this.random.setSeed(seed);
+            cir.setReturnValue(this.random.nextFloat() < probability ? this.replacementBlock : this.normalBlock);
         }
     }
 }
