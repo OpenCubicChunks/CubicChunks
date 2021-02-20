@@ -44,7 +44,8 @@ public class MixinDepthBasedReplacingBaseStoneSource {
         } else if (probability >= 1) {
             cir.setReturnValue(this.replacementBlock);
         } else {
-            long seed = NonAtomicWorldgenRandom.next(x * this.seedX ^ y * this.seedY ^ z * this.seedZ ^ this.seed);
+            long seed = NonAtomicWorldgenRandom.scramble(x * this.seedX ^ y * this.seedY ^ z * this.seedZ ^ this.seed);
+            seed = NonAtomicWorldgenRandom.next(seed);
             float sample = NonAtomicWorldgenRandom.sampleFloat(seed);
             cir.setReturnValue(sample < probability ? this.replacementBlock : this.normalBlock);
         }

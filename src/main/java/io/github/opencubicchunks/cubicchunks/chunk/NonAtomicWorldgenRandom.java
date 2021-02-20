@@ -16,12 +16,12 @@ public class NonAtomicWorldgenRandom extends WorldgenRandom {
 
     public NonAtomicWorldgenRandom(long seed) {
         super(0);
-        this.seed = seed;
+        this.seed = scramble(seed);
     }
 
     @Override
     public void setSeed(long seed) {
-        this.seed = seed;
+        this.seed = scramble(seed);
     }
 
     @Override
@@ -29,6 +29,10 @@ public class NonAtomicWorldgenRandom extends WorldgenRandom {
         long nextSeed = next(this.seed);
         this.seed = nextSeed;
         return sample(nextSeed, bits);
+    }
+
+    public static long scramble(long seed) {
+        return (seed ^ MULTIPLIER) & MASK;
     }
 
     public static long next(long seed) {
