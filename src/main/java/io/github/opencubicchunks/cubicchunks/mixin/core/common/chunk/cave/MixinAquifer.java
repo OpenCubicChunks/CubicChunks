@@ -7,6 +7,7 @@ import net.minecraft.world.level.levelgen.Aquifer;
 import net.minecraft.world.level.levelgen.NoiseGeneratorSettings;
 import net.minecraft.world.level.levelgen.NoiseSampler;
 import net.minecraft.world.level.levelgen.synth.NormalNoise;
+import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Mutable;
@@ -33,6 +34,8 @@ public abstract class MixinAquifer {
     @Shadow protected abstract double similarity(int i, int j);
     @Shadow protected abstract int computeAquifer(int x, int y, int z);
 
+    @Shadow @Final private NoiseGeneratorSettings noiseGeneratorSettings;
+
     private static final double NOISE_MIN = transformBarrierNoise(-1.5);
     private static final double NOISE_MAX = transformBarrierNoise(1.5);
 
@@ -49,24 +52,25 @@ public abstract class MixinAquifer {
     private int levelGridSizeX;
     private int levelGridSizeZ;
 
-    @Inject(method = "<init>", at = @At(value = "INVOKE", target = "Ljava/util/Arrays;fill([II)V", shift = At.Shift.BEFORE, remap = false))
+    @Inject(method = "<init>", at = @At(value = "FIELD", target = "Lnet/minecraft/world/level/levelgen/Aquifer;aquiferCache:[I", opcode = Opcodes.PUTFIELD, shift = At.Shift.AFTER, remap = false))
     private void init(int chunkX, int chunkZ, NormalNoise barrierNoise, NormalNoise waterLevelNoise, NoiseGeneratorSettings noiseSettings, NoiseSampler sampler, int sizeY, CallbackInfo ci) {
         int minX = chunkX << 4;
         int maxX = (chunkX << 4) + 15;
         int minZ = chunkZ << 4;
         int maxZ = (chunkZ << 4) + 15;
         int minY = noiseSettings.noiseSettings().minY();
+        int maxY = minY + sizeY;
 
         int minGridX = levelGridX(minX) - 1;
         int maxGridX = levelGridX(maxX) + 1;
         int minGridY = this.gridY(minY) - 1;
-        int maxGridY = this.gridY(minY + sizeY) + 1;
+        int maxGridY = this.gridY(maxY) + 1;
         int minGridZ = levelGridZ(minZ) - 1;
         int maxGridZ = levelGridZ(maxZ) + 1;
 
         this.minLevelGridX = minGridX;
-        this.levelGridSizeX = maxGridX - minGridX + 1;
         this.minLevelGridZ = minGridZ;
+        this.levelGridSizeX = maxGridX - minGridX + 1;
         this.levelGridSizeZ = maxGridZ - minGridZ + 1;
 
         int gridSizeY = maxGridY - minGridY + 1;
@@ -98,8 +102,16 @@ public abstract class MixinAquifer {
      */
     @Overwrite
     protected void computeAt(int x, int y, int z) {
-        int gridX = this.gridX(x - 5);
         int gridY = this.gridY(y + 1);
+
+        // if the bottom of the furthest grid cell we can sample is above y=30, our water level is consistently at sea level
+        if ((gridY - 1) * 12 > 30) {
+            this.lastBarrierDensity = 0.0;
+            this.lastWaterLevel = this.noiseGeneratorSettings.seaLevel();
+            return;
+        }
+
+        int gridX = this.gridX(x - 5);
         int gridZ = this.gridZ(z - 5);
 
         // find closest 3 aquifer sources
