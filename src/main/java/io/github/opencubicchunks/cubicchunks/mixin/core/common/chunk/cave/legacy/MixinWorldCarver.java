@@ -4,6 +4,7 @@ import java.util.BitSet;
 import java.util.Random;
 import java.util.function.Function;
 
+import io.github.opencubicchunks.cubicchunks.chunk.NonAtomicWorldgenRandom;
 import io.github.opencubicchunks.cubicchunks.chunk.carver.GenHeightSetter;
 import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import net.minecraft.core.BlockPos;
@@ -82,5 +83,10 @@ public class MixinWorldCarver implements GenHeightSetter {
         if (y >= chunk.getMaxBuildHeight() || y < chunk.getMinBuildHeight()) {
             cir.setReturnValue(false);
         }
+    }
+
+    @Redirect(method = "carveSphere", at = @At(value = "NEW", target = "java/util/Random", remap = false))
+    private Random createRandom(long seed) {
+        return new NonAtomicWorldgenRandom(seed);
     }
 }

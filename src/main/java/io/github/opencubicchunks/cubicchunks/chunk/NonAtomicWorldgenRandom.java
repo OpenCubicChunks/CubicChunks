@@ -26,8 +26,20 @@ public class NonAtomicWorldgenRandom extends WorldgenRandom {
 
     @Override
     public int next(int bits) {
-        long nextSeed = (this.seed * MULTIPLIER + ADDEND) & MASK;
+        long nextSeed = next(this.seed);
         this.seed = nextSeed;
-        return (int) (nextSeed >>> (48 - bits));
+        return sample(nextSeed, bits);
+    }
+
+    public static long next(long seed) {
+        return (seed * MULTIPLIER + ADDEND) & MASK;
+    }
+
+    public static int sample(long seed, int bits) {
+        return (int) (seed >>> (48 - bits));
+    }
+
+    public static float sampleFloat(long seed) {
+        return sample(seed, 24) / (float) (1 << 24);
     }
 }
