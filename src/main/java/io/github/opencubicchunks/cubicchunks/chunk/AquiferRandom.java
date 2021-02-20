@@ -20,9 +20,29 @@ public final class AquiferRandom extends WorldgenRandom {
     }
 
     @Override
+    public int nextInt(int bound) {
+        // simplify method for aquifer's case to encourage inlining
+        // namely, we remove the check for power of two bounds
+
+        int bits;
+        int result;
+        int mod = bound - 1;
+
+        do {
+            long nextSeed = (this.seed * MULTIPLIER + ADDEND) & MASK;
+            this.seed = nextSeed;
+            bits = (int) (nextSeed >>> (48 - 31));
+
+            result = bits % bound;
+        } while (bits + mod < result);
+
+        return result;
+    }
+
+    @Override
     public int next(int bits) {
-        long localSeed = (this.seed * MULTIPLIER + ADDEND) & MASK;
-        this.seed = localSeed;
-        return (int) (localSeed >>> (48 - bits));
+        long nextSeed = (this.seed * MULTIPLIER + ADDEND) & MASK;
+        this.seed = nextSeed;
+        return (int) (nextSeed >>> (48 - bits));
     }
 }
