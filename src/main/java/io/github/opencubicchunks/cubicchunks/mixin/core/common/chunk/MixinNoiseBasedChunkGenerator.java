@@ -10,6 +10,7 @@ import io.github.opencubicchunks.cubicchunks.mixin.access.common.NoiseGeneratorS
 import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.StructureFeatureManager;
+import net.minecraft.world.level.biome.BiomeSource;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.levelgen.Aquifer;
@@ -34,7 +35,7 @@ import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 @Mixin(NoiseBasedChunkGenerator.class)
 public abstract class MixinNoiseBasedChunkGenerator {
-    @Shadow @Final protected Supplier<NoiseGeneratorSettings> settings;
+    @Mutable @Shadow @Final protected Supplier<NoiseGeneratorSettings> settings;
 
     @Shadow @Final private int cellHeight;
 
@@ -42,6 +43,12 @@ public abstract class MixinNoiseBasedChunkGenerator {
 
     @Mutable @Shadow @Final private int height;
 
+    @Inject(method = "<init>(Lnet/minecraft/world/level/biome/BiomeSource;Lnet/minecraft/world/level/biome/BiomeSource;JLjava/util/function/Supplier;)V", at = @At("RETURN"))
+    private void init(BiomeSource biomeSource, BiomeSource biomeSource2, long l, Supplier<NoiseGeneratorSettings> supplier, CallbackInfo ci) {
+        // access to through the registry is slow: vanilla accesses settings directly from the supplier in the constructor anyway
+        NoiseGeneratorSettings settings = this.settings.get();
+        this.settings = () -> settings;
+    }
 
     @Redirect(method = "fillFromNoise", at = @At(value = "INVOKE", target = "Ljava/lang/Math;max(II)I"))
     private int alwaysUseChunkMinBuildHeight(int a, int b, Executor executor, StructureFeatureManager accessor, ChunkAccess chunk) {
