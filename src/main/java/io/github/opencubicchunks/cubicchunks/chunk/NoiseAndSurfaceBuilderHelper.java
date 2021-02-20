@@ -36,6 +36,8 @@ public class NoiseAndSurfaceBuilderHelper extends ProtoChunk implements CubicLev
     private final boolean generates2DChunks;
     private final WorldStyle worldStyle;
 
+    private final BlockPos.MutableBlockPos mutablePos = new BlockPos.MutableBlockPos();
+
     public NoiseAndSurfaceBuilderHelper(IBigCube delegate, IBigCube delegateAbove) {
         super(delegate.getCubePos().asChunkPos(), UpgradeData.EMPTY, new HeightAccessor(delegate));
         this.delegates = new ChunkAccess[2];
@@ -148,9 +150,11 @@ public class NoiseAndSurfaceBuilderHelper extends ProtoChunk implements CubicLev
     }
 
     private BlockPos correctPos(BlockPos pos) {
-        int x = Coords.blockToSectionLocal(pos.getX()) + Coords.sectionToMinBlock(columnX);
-        int z = Coords.blockToSectionLocal(pos.getZ()) + Coords.sectionToMinBlock(columnZ);
-        return new BlockPos(x, pos.getY(), z);
+        return this.mutablePos.set(
+            Coords.blockToSectionLocal(pos.getX()) + Coords.sectionToMinBlock(columnX),
+            pos.getY(),
+            Coords.blockToSectionLocal(pos.getZ()) + Coords.sectionToMinBlock(columnZ)
+        );
     }
 
     @Override public BlockState getBlockState(BlockPos blockPos) {

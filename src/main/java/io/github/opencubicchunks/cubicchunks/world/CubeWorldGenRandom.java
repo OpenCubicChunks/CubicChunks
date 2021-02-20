@@ -1,9 +1,8 @@
 package io.github.opencubicchunks.cubicchunks.world;
 
-import net.minecraft.world.level.levelgen.WorldgenRandom;
+import io.github.opencubicchunks.cubicchunks.chunk.NonAtomicWorldgenRandom;
 
-public class CubeWorldGenRandom extends WorldgenRandom {
-
+public class CubeWorldGenRandom extends NonAtomicWorldgenRandom {
     public long setDecorationSeed(long worldSeed, int x, int y, int z) {
         this.setSeed(worldSeed);
         long sX = this.nextLong() | 1L;
