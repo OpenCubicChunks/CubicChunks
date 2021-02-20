@@ -5,16 +5,30 @@ import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import io.github.opencubicchunks.cubicchunks.server.ICubicWorld;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
+import io.github.opencubicchunks.cubicchunks.world.CubeWorldGenRandom;
+import io.github.opencubicchunks.cubicchunks.world.ICubicStructureStart;
+import io.github.opencubicchunks.cubicchunks.world.gen.structure.ICubicStructureFeature;
+import io.github.opencubicchunks.cubicchunks.world.gen.structure.ICubicStructureFeatureConfiguration;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.SectionPos;
 import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.LevelHeightAccessor;
 import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.StructureFeatureManager;
+import net.minecraft.world.level.biome.Biome;
+import net.minecraft.world.level.biome.BiomeSource;
+import net.minecraft.world.level.chunk.ChunkGenerator;
 import net.minecraft.world.level.chunk.ChunkStatus;
 import net.minecraft.world.level.levelgen.WorldgenRandom;
+import net.minecraft.world.level.levelgen.feature.StrongholdFeature;
 import net.minecraft.world.level.levelgen.feature.StructureFeature;
+import net.minecraft.world.level.levelgen.feature.configurations.FeatureConfiguration;
 import net.minecraft.world.level.levelgen.feature.configurations.StructureFeatureConfiguration;
+import net.minecraft.world.level.levelgen.structure.BoundingBox;
+import net.minecraft.world.level.levelgen.structure.StructurePiece;
 import net.minecraft.world.level.levelgen.structure.StructureStart;
+import net.minecraft.world.level.levelgen.structure.templatesystem.StructureManager;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -22,10 +36,15 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(StructureFeature.class)
-public abstract class MixinStructureFeature {
+public abstract class MixinStructureFeature<C extends FeatureConfiguration> implements ICubicStructureFeature<C> {
 
 
     @Shadow protected abstract boolean linearSeparation();
+
+    @Shadow protected abstract StructureStart<C> createStart(int chunkX, int chunkZ, BoundingBox boundingBox, int referenceCount, long worldSeed);
+
+    @Shadow protected abstract boolean isFeatureChunk(ChunkGenerator chunkGenerator, BiomeSource biomeSource, long worldSeed, WorldgenRandom random, int chunkX, int chunkZ,
+                                                      Biome biome, ChunkPos chunkPos, C config, LevelHeightAccessor levelHeightAccessor);
 
     @Inject(at = @At("HEAD"), method = "getNearestGeneratedFeature", cancellable = true)
     private void getNearestStructure3D(LevelReader level, StructureFeatureManager manager, BlockPos blockPos, int searchRadius, boolean skipExistingChunks, long seed,
@@ -42,7 +61,7 @@ public abstract class MixinStructureFeature {
         int mainSectionX = SectionPos.blockToSectionCoord(blockPos.getX());
         int mainSectionY = SectionPos.blockToSectionCoord(blockPos.getY());
         int mainSectionZ = SectionPos.blockToSectionCoord(blockPos.getZ());
-        WorldgenRandom worldgenRandom = new WorldgenRandom();
+        WorldgenRandom worldgenRandom = new CubeWorldGenRandom();
 
         for (int radius = 0; radius <= 100; ++radius) {
             for (int dx = -radius; dx <= radius; ++dx) {
@@ -62,7 +81,8 @@ public abstract class MixinStructureFeature {
                         int yPos = mainSectionY + ySpacing * dy;
                         int zPos = mainSectionZ + spacing * dz;
 
-                        CubePos pos = this.getPotentialFeatureChunk(structureFeatureConfiguration, seed, worldgenRandom, xPos, yPos, zPos);
+                        // TODO: make it use section pos directly
+                        CubePos pos = CubePos.from(this.getPotentialFeatureCube(structureFeatureConfiguration, seed, worldgenRandom, xPos, yPos, zPos));
                         IBigCube cube = null;
                         for (int sectionX = 0; sectionX < IBigCube.DIAMETER_IN_SECTIONS; sectionX++) {
                             for (int sectionZ = 0; sectionZ < IBigCube.DIAMETER_IN_SECTIONS; sectionZ++) {
@@ -114,23 +134,74 @@ public abstract class MixinStructureFeature {
     }
 
 
-    public final CubePos getPotentialFeatureChunk(StructureFeatureConfiguration config, long seed, WorldgenRandom rand, int sectionX, int sectionY, int sectionZ) {
+    public final SectionPos getPotentialFeatureCube(StructureFeatureConfiguration config, long seed, WorldgenRandom rand, int sectionX, int sectionY, int sectionZ) {
         int spacing = config.spacing();
+        int ySpacing = ((ICubicStructureFeatureConfiguration) config).ySpacing();
         int separation = config.separation();
+        int ySeparation = ((ICubicStructureFeatureConfiguration) config).ySeparation();
         int gridX = Math.floorDiv(sectionX, spacing);
+        int gridY = Math.floorDiv(sectionY, ySpacing);
         int gridZ = Math.floorDiv(sectionZ, spacing);
-        rand.setLargeFeatureWithSalt(seed, gridX, gridZ, config.salt());
+        ((CubeWorldGenRandom) rand).setLargeFeatureWithSalt(seed, gridX, gridY, gridZ, config.salt());
         int dx;
+        int dy;
         int dz;
         // TODO: 3d structure placement?
         if (this.linearSeparation()) {
             dx = rand.nextInt(spacing - separation);
+            dy = rand.nextInt(ySpacing - ySeparation);
             dz = rand.nextInt(spacing - separation);
         } else {
             dx = (rand.nextInt(spacing - separation) + rand.nextInt(spacing - separation)) / 2;
+            dy = (rand.nextInt(ySpacing - ySeparation) + rand.nextInt(ySpacing - ySeparation)) / 2;
             dz = (rand.nextInt(spacing - separation) + rand.nextInt(spacing - separation)) / 2;
         }
 
-        return CubePos.of(Coords.sectionToCube(gridX * spacing + dx), sectionY, Coords.sectionToCube(gridZ * spacing + dz));
+        return SectionPos.of(gridX * spacing + dx, gridY * ySpacing + dy, gridZ * spacing + dz);
     }
+
+    @Override
+    public boolean isFeatureSection(ChunkGenerator chunkGenerator, BiomeSource biomeSource, long worldSeed, WorldgenRandom random, int sectionX, int sectionY, int sectionZ,
+                                    Biome biome, SectionPos chunkPos, C config, LevelHeightAccessor levelHeightAccessor) {
+        return isFeatureChunk(chunkGenerator, biomeSource, worldSeed + sectionY, random, sectionX, sectionZ, biome, chunkPos.chunk(), config, levelHeightAccessor);
+    }
+
+    @Override
+    public StructureStart<?> generateCC(RegistryAccess registryAccess, ChunkGenerator chunkGenerator, BiomeSource biomeSource, StructureManager structureManager, long worldSeed,
+                                        SectionPos sectionPos, Biome biome, int referenceCount, WorldgenRandom worldgenRandom, StructureFeatureConfiguration structureFeatureConfiguration,
+                                        C featureConfiguration, LevelHeightAccessor levelHeightAccessor) {
+        SectionPos outSection = this.getPotentialFeatureCube(structureFeatureConfiguration, worldSeed, worldgenRandom, sectionPos.x(), sectionPos.y(), sectionPos.z());
+
+        if (sectionPos.x() == outSection.x() && sectionPos.y() == outSection.y() && sectionPos.z() == outSection.z() &&
+            this.isFeatureSection(chunkGenerator, biomeSource, worldSeed, worldgenRandom, sectionPos.x(), sectionPos.y(), sectionPos.z(), biome,
+                outSection, featureConfiguration, levelHeightAccessor)) {
+
+            StructureStart<C> structureStart = this.createStart(sectionPos.x(), sectionPos.z(), BoundingBox.getUnknownBox(), referenceCount, worldSeed);
+            ((ICubicStructureStart) structureStart).init3dPlacement(sectionPos.y());
+
+            structureStart.generatePieces(registryAccess, chunkGenerator, structureManager, sectionPos.x(), sectionPos.z(), biome, featureConfiguration, levelHeightAccessor);
+            movePieces(structureStart, sectionPos.y());
+            if (structureStart.isValid()) {
+                return structureStart;
+            }
+        }
+
+        return StructureStart.INVALID_START;
+    }
+
+    private void movePieces(StructureStart<?> start, int sectionY) {
+        if (start instanceof StrongholdFeature.StrongholdStart) { // TODO: configurable?
+            return;
+        }
+        BoundingBox boundingBox = start.getBoundingBox();
+        int currentY = (boundingBox.y0 + boundingBox.y1) >> 1;
+        int targetY = Coords.sectionToMinBlock(sectionY);
+        int dy = targetY - currentY;
+
+        boundingBox.move(0, dy, 0);
+        for (StructurePiece piece : start.getPieces()) {
+            piece.getBoundingBox().move(0, dy, 0);
+        }
+    }
+
 }

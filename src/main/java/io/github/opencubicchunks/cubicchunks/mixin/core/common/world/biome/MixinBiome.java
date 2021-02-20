@@ -16,7 +16,7 @@ import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import io.github.opencubicchunks.cubicchunks.world.CubeWorldGenRandom;
 import io.github.opencubicchunks.cubicchunks.world.CubeWorldGenRegion;
-import io.github.opencubicchunks.cubicchunks.world.SetupCubeStructureStart;
+import io.github.opencubicchunks.cubicchunks.world.ICubicStructureStart;
 import io.github.opencubicchunks.cubicchunks.world.biome.BiomeGetter;
 import io.github.opencubicchunks.cubicchunks.world.gen.feature.CCFeatures;
 import net.minecraft.CrashReport;
@@ -74,7 +74,7 @@ public class MixinBiome implements BiomeGetter {
 
                     try {
                         structureManager.startsForFeature(SectionPos.of(blockPos), structure).forEach((structureStart) -> {
-                            ((SetupCubeStructureStart) structureStart).placeInCube(region, structureManager, chunkGenerator, random,
+                            ((ICubicStructureStart) structureStart).placeInCube(region, structureManager, chunkGenerator, random,
                                 new BoundingBox(minSectionX, minSectionY, minSectionZ, minSectionX + 15, minSectionY + IBigCube.DIAMETER_IN_BLOCKS - 1, minSectionZ + 15), blockPos);
                         });
                     } catch (Exception e) {
