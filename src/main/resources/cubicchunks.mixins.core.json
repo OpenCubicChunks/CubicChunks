@@ -77,7 +77,6 @@
         "common.world.server.MixinServerWorldLightManager",
         "common.world.structure.MixinConfiguredStructureFeature",
         "common.world.structure.MixinLocateCommand",
-        "common.world.structure.MixinMineshaftFeature",
         "common.world.structure.MixinStructureFeature",
         "common.world.structure.MixinStructureFeatureConfiguration",
         "common.world.structure.MixinStructureFeatureManager",
