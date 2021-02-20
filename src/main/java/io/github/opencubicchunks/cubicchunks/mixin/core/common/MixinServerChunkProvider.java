@@ -111,11 +111,11 @@ public abstract class MixinServerChunkProvider implements IServerChunkProvider, 
                 requiredStatus,
                 load);
             this.mainThreadProcessor.managedBlock(completablefuture::isDone);
-            IBigCube icube = completablefuture.join().map((p_222874_0_) -> {
-                return p_222874_0_;
+            IBigCube icube = completablefuture.join().map((cube) -> {
+                return cube;
             }, (p_222870_1_) -> {
                 if (load) {
-                    throw Util.pauseInIde(new IllegalStateException("Chunk not there when requested: " + p_222870_1_));
+                    throw Util.pauseInIde(new IllegalStateException("Cube not there when requested: " + p_222870_1_));
                 } else {
                     return null;
                 }

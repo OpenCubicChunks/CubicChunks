@@ -590,7 +590,7 @@ public class CubePrimer extends ProtoChunk implements IBigCube, CubicLevelHeight
     }
 
     @Deprecated @Override public Stream<BlockPos> getLights() {
-        throw new UnsupportedOperationException("Chunk method called on a cube!");
+        return getCubeLightSources();
     }
 
     @Deprecated @Override public void setLightCorrect(boolean lightCorrectIn) {
@@ -617,7 +617,6 @@ public class CubePrimer extends ProtoChunk implements IBigCube, CubicLevelHeight
     @Deprecated @Nullable @Override public CompoundTag getBlockEntityNbtForSaving(BlockPos pos) {
         return this.getCubeBlockEntityNbtForSaving(pos);
     }
-
 
     @Deprecated @Override public void removeBlockEntity(BlockPos pos) {
         this.removeCubeBlockEntity(pos);
