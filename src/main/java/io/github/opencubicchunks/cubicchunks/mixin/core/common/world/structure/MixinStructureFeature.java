@@ -7,6 +7,7 @@ import io.github.opencubicchunks.cubicchunks.server.ICubicWorld;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import io.github.opencubicchunks.cubicchunks.world.CubeWorldGenRandom;
 import io.github.opencubicchunks.cubicchunks.world.ICubicStructureStart;
+import io.github.opencubicchunks.cubicchunks.world.gen.structure.CubicStructureConfiguration;
 import io.github.opencubicchunks.cubicchunks.world.gen.structure.ICubicStructureFeature;
 import io.github.opencubicchunks.cubicchunks.world.gen.structure.ICubicStructureFeatureConfiguration;
 import net.minecraft.core.BlockPos;
@@ -45,6 +46,8 @@ public abstract class MixinStructureFeature<C extends FeatureConfiguration> impl
 
     @Shadow protected abstract boolean isFeatureChunk(ChunkGenerator chunkGenerator, BiomeSource biomeSource, long worldSeed, WorldgenRandom random, int chunkX, int chunkZ,
                                                       Biome biome, ChunkPos chunkPos, C config, LevelHeightAccessor levelHeightAccessor);
+
+    @Shadow public abstract ChunkPos getPotentialFeatureChunk(StructureFeatureConfiguration config, long worldSeed, WorldgenRandom placementRandom, int chunkX, int chunkY);
 
     @Inject(at = @At("HEAD"), method = "getNearestGeneratedFeature", cancellable = true)
     private void getNearestStructure3D(LevelReader level, StructureFeatureManager manager, BlockPos blockPos, int searchRadius, boolean skipExistingChunks, long seed,
@@ -135,10 +138,14 @@ public abstract class MixinStructureFeature<C extends FeatureConfiguration> impl
 
 
     public final SectionPos getPotentialFeatureCube(StructureFeatureConfiguration config, long seed, WorldgenRandom rand, int sectionX, int sectionY, int sectionZ) {
+        CubicStructureConfiguration verticalSettings = ((ICubicStructureFeatureConfiguration) config).getVerticalSettings();
+
+
+
         int spacing = config.spacing();
-        int ySpacing = ((ICubicStructureFeatureConfiguration) config).ySpacing();
+        int ySpacing = verticalSettings.getYSpacing();
         int separation = config.separation();
-        int ySeparation = ((ICubicStructureFeatureConfiguration) config).ySeparation();
+        int ySeparation = verticalSettings.getYSeparation();
         int gridX = Math.floorDiv(sectionX, spacing);
         int gridY = Math.floorDiv(sectionY, ySpacing);
         int gridZ = Math.floorDiv(sectionZ, spacing);
@@ -146,7 +153,7 @@ public abstract class MixinStructureFeature<C extends FeatureConfiguration> impl
         int dx;
         int dy;
         int dz;
-        // TODO: 3d structure placement?
+
         if (this.linearSeparation()) {
             dx = rand.nextInt(spacing - separation);
             dy = rand.nextInt(ySpacing - ySeparation);

@@ -1,7 +1,11 @@
 package io.github.opencubicchunks.cubicchunks.world.gen.structure;
 
-public interface ICubicStructureFeatureConfiguration {
-    int ySpacing();
+import javax.annotation.Nullable;
 
-    int ySeparation();
+public interface ICubicStructureFeatureConfiguration {
+
+    @Nullable
+    CubicStructureConfiguration getVerticalSettings();
+
+    void setVerticalSettings(@Nullable CubicStructureConfiguration cubicStructureConfiguration);
 }
