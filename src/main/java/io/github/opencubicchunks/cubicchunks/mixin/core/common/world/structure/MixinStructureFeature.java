@@ -140,6 +140,9 @@ public abstract class MixinStructureFeature<C extends FeatureConfiguration> impl
     public final SectionPos getPotentialFeatureCube(StructureFeatureConfiguration config, long seed, WorldgenRandom rand, int sectionX, int sectionY, int sectionZ) {
         CubicStructureConfiguration verticalSettings = ((ICubicStructureFeatureConfiguration) config).getVerticalSettings();
 
+        if (verticalSettings == null) {
+            return SectionPos.of(this.getPotentialFeatureChunk(config, seed, rand, sectionX, sectionZ), 0);
+        }
 
 
         int spacing = config.spacing();
