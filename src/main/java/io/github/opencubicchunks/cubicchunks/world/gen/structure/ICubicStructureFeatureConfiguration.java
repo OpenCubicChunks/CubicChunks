@@ -1,11 +1,11 @@
 package io.github.opencubicchunks.cubicchunks.world.gen.structure;
 
-import javax.annotation.Nullable;
+import java.util.Optional;
 
+@SuppressWarnings("OptionalUsedAsFieldOrParameterType")
 public interface ICubicStructureFeatureConfiguration {
 
-    @Nullable
-    CubicStructureConfiguration getVerticalSettings();
+    Optional<CubicStructureConfiguration> getVerticalSettings();
 
-    void setVerticalSettings(@Nullable CubicStructureConfiguration cubicStructureConfiguration);
+    void setVerticalSettings(Optional<CubicStructureConfiguration> cubicStructureConfiguration);
 }

@@ -1,5 +1,7 @@
 package io.github.opencubicchunks.cubicchunks.mixin.core.common.world.structure;
 
+import java.util.Optional;
+
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
@@ -138,11 +140,13 @@ public abstract class MixinStructureFeature<C extends FeatureConfiguration> impl
 
 
     public final SectionPos getPotentialFeatureCube(StructureFeatureConfiguration config, long seed, WorldgenRandom rand, int sectionX, int sectionY, int sectionZ) {
-        CubicStructureConfiguration verticalSettings = ((ICubicStructureFeatureConfiguration) config).getVerticalSettings();
+        Optional<CubicStructureConfiguration> verticalSettingsOptional = ((ICubicStructureFeatureConfiguration) config).getVerticalSettings();
 
-        if (verticalSettings == null) {
+        if (!verticalSettingsOptional.isPresent()) {
             return SectionPos.of(this.getPotentialFeatureChunk(config, seed, rand, sectionX, sectionZ), 0);
         }
+
+        CubicStructureConfiguration verticalSettings = verticalSettingsOptional.get();
 
 
         int spacing = config.spacing();

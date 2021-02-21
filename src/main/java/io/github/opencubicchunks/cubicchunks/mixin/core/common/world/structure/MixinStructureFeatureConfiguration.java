@@ -19,19 +19,19 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+@SuppressWarnings("OptionalUsedAsFieldOrParameterType")
 @Mixin(StructureFeatureConfiguration.class)
 public abstract class MixinStructureFeatureConfiguration implements ICubicStructureFeatureConfiguration {
 
     @Mutable @Shadow @Final public static Codec<StructureFeatureConfiguration> CODEC;
 
-    @Nullable
-    private CubicStructureConfiguration cubicStructureConfiguration;
+    private Optional<CubicStructureConfiguration>  cubicStructureConfiguration = Optional.empty();
 
-    @Override public void setVerticalSettings(@Nullable CubicStructureConfiguration cubicStructureConfiguration) {
+    @Override public void setVerticalSettings(Optional<CubicStructureConfiguration> cubicStructureConfiguration) {
         this.cubicStructureConfiguration = cubicStructureConfiguration;
     }
 
-    @Nullable @Override public CubicStructureConfiguration getVerticalSettings() {
+    @Nullable @Override public Optional<CubicStructureConfiguration>  getVerticalSettings() {
         return this.cubicStructureConfiguration;
     }
 
@@ -42,13 +42,13 @@ public abstract class MixinStructureFeatureConfiguration implements ICubicStruct
                 return config.spacing();
             }), Codec.intRange(0, 4096).fieldOf("separation").forGetter((config) -> {
                 return config.separation();
-            }), Codec.optionalField("vertical_settings", CubicStructureConfiguration.CODEC).forGetter((config) -> {
-                return Optional.of(((ICubicStructureFeatureConfiguration) config).getVerticalSettings());
+            }), Codec.optionalField("vertical_settings", CubicStructureConfiguration.CODEC).orElse(Optional.empty()).forGetter((config) -> {
+                return ((ICubicStructureFeatureConfiguration) config).getVerticalSettings();
             }), Codec.intRange(0, Integer.MAX_VALUE).fieldOf("salt").forGetter((config) -> {
                 return config.salt();
             })).apply(instance, (hSpacing, hSeparation, verticalSettings, salt) -> {
                 StructureFeatureConfiguration structureFeatureConfiguration = new StructureFeatureConfiguration(hSpacing, hSeparation, salt);
-                ((ICubicStructureFeatureConfiguration) structureFeatureConfiguration).setVerticalSettings(verticalSettings.orElse(null));
+                ((ICubicStructureFeatureConfiguration) structureFeatureConfiguration).setVerticalSettings(verticalSettings);
                 return structureFeatureConfiguration;
             });
         }).comapFlatMap((config) -> {
