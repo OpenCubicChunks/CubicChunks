@@ -139,14 +139,22 @@ public abstract class MixinStructureFeature<C extends FeatureConfiguration> impl
     }
 
 
+    @SuppressWarnings({ "RedundantCast", "ConstantConditions" })
     public final SectionPos getPotentialFeatureCube(StructureFeatureConfiguration config, long seed, WorldgenRandom rand, int sectionX, int sectionY, int sectionZ) {
-        Optional<CubicStructureConfiguration> verticalSettingsOptional = ((ICubicStructureFeatureConfiguration) config).getVerticalSettings();
+        CubicStructureConfiguration verticalSettings = null;
 
-        if (!verticalSettingsOptional.isPresent()) {
-            return SectionPos.of(this.getPotentialFeatureChunk(config, seed, rand, sectionX, sectionZ), 0);
+        if (CubicStructureConfiguration.DATA_FEATURE_VERTICAL_SETTINGS.containsKey((StructureFeature<?>) (Object) this)) {
+            verticalSettings = CubicStructureConfiguration.DATA_FEATURE_VERTICAL_SETTINGS.get((StructureFeature<?>) (Object) this);
         }
 
-        CubicStructureConfiguration verticalSettings = verticalSettingsOptional.get();
+        Optional<CubicStructureConfiguration> verticalSettingsOptional = ((ICubicStructureFeatureConfiguration) config).getVerticalSettings();
+        if (verticalSettingsOptional.isPresent()) {
+            verticalSettings = verticalSettingsOptional.get();
+        }
+
+        if (verticalSettings == null) {
+            return SectionPos.of(this.getPotentialFeatureChunk(config, seed, rand, sectionX, sectionZ), 0);
+        }
 
         int currentBlockY = SectionPos.sectionToBlockCoord(sectionY);
 

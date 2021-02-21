@@ -1,11 +1,15 @@
 package io.github.opencubicchunks.cubicchunks.world.gen.structure;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import io.github.opencubicchunks.cubicchunks.CubicChunks;
+import net.minecraft.world.level.levelgen.feature.StructureFeature;
 
 public class CubicStructureConfiguration {
 
@@ -29,12 +33,11 @@ public class CubicStructureConfiguration {
     private final int maxYCutoff;
     private final int minYCutoff;
 
-    public CubicStructureConfiguration(int verticalSpacing, int verticalSeparation) {
-        this(verticalSpacing, verticalSeparation, Optional.empty(), Optional.empty());
-    }
+    public static Map<StructureFeature<?>, CubicStructureConfiguration> DATA_FEATURE_VERTICAL_SETTINGS = new HashMap<>();
+
 
     @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
-    public CubicStructureConfiguration(int verticalSpacing, int verticalSeparation, Optional<Integer> maxYCutoff, Optional<Integer> minYCutoff) {
+    private CubicStructureConfiguration(int verticalSpacing, int verticalSeparation, Optional<Integer> maxYCutoff, Optional<Integer> minYCutoff) {
         this.verticalSpacing = verticalSpacing;
         this.verticalSeparation = verticalSeparation;
         this.maxYCutoff = maxYCutoff.orElse(Integer.MAX_VALUE);
@@ -55,5 +58,46 @@ public class CubicStructureConfiguration {
 
     public int getMinY() {
         return minYCutoff;
+    }
+
+    @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
+    public static class CubicStructureConfigurationBuilder {
+        int ySpacing = 0;
+        int ySeparation = 0;
+        Optional<Integer> maxY = Optional.empty();
+        Optional<Integer> minY = Optional.empty();
+
+
+        public CubicStructureConfigurationBuilder setYSpacing(int ySpacing) {
+            this.ySpacing = ySpacing;
+            return this;
+        }
+
+        public CubicStructureConfigurationBuilder setYSeparation(int ySeparation) {
+            this.ySeparation = ySeparation;
+            return this;
+        }
+
+        public CubicStructureConfigurationBuilder setMaxY(int maxY) {
+            this.maxY = Optional.of(maxY);
+            return this;
+        }
+
+        public CubicStructureConfigurationBuilder setMinY(int minY) {
+            this.minY = Optional.of(minY);
+            return this;
+        }
+
+        public boolean test() {
+            if (ySpacing <= ySeparation) {
+                CubicChunks.LOGGER.error("Vertical spacing has to be smaller than vertical separation!");
+                return false;
+            }
+            return true;
+        }
+
+        public CubicStructureConfiguration build() {
+            return new CubicStructureConfiguration(ySpacing, ySeparation, maxY, minY);
+        }
     }
 }
