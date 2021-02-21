@@ -25,13 +25,13 @@ public abstract class MixinStructureFeatureConfiguration implements ICubicStruct
 
     @Mutable @Shadow @Final public static Codec<StructureFeatureConfiguration> CODEC;
 
-    private Optional<CubicStructureConfiguration>  cubicStructureConfiguration = Optional.empty();
+    private Optional<CubicStructureConfiguration> cubicStructureConfiguration = Optional.empty();
 
     @Override public void setVerticalSettings(Optional<CubicStructureConfiguration> cubicStructureConfiguration) {
         this.cubicStructureConfiguration = cubicStructureConfiguration;
     }
 
-    @Nullable @Override public Optional<CubicStructureConfiguration>  getVerticalSettings() {
+    @Nullable @Override public Optional<CubicStructureConfiguration> getVerticalSettings() {
         return this.cubicStructureConfiguration;
     }
 
@@ -52,8 +52,7 @@ public abstract class MixinStructureFeatureConfiguration implements ICubicStruct
                 return structureFeatureConfiguration;
             });
         }).comapFlatMap((config) -> {
-            return config.spacing() <= config.separation() ? DataResult.error("Spacing has to be smaller than separation") :
-                DataResult.success(config);
+            return config.spacing() <= config.separation() ? DataResult.error("Spacing has to be smaller than separation") : DataResult.success(config);
         }, Function.identity());
     }
 }

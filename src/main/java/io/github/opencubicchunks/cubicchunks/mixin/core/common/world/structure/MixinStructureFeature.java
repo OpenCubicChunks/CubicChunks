@@ -148,6 +148,11 @@ public abstract class MixinStructureFeature<C extends FeatureConfiguration> impl
 
         CubicStructureConfiguration verticalSettings = verticalSettingsOptional.get();
 
+        int currentBlockY = SectionPos.sectionToBlockCoord(sectionY);
+
+        if (currentBlockY >= verticalSettings.getMaxY() || currentBlockY <= verticalSettings.getMinY()) {
+            return SectionPos.of(this.getPotentialFeatureChunk(config, seed, rand, sectionX, sectionZ), 0);
+        }
 
         int spacing = config.spacing();
         int ySpacing = verticalSettings.getYSpacing();
