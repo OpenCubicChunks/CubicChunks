@@ -15,4 +15,5 @@ public interface ICubicStructureStart {
     //We use a BlockPos as our final parameter in place of a chunk position.
     void placeInCube(WorldGenLevel worldGenLevel, StructureFeatureManager structureFeatureManager, ChunkGenerator chunkGenerator, Random random, BoundingBox boundingBox, BlockPos chunkPos);
 
+    boolean has3DPlacement();
 }

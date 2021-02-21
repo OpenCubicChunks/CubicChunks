@@ -6,6 +6,7 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.IdentityHashMap;
 import java.util.Map;
 
 import com.google.gson.JsonElement;
@@ -25,7 +26,7 @@ import net.minecraft.world.level.levelgen.feature.StructureFeature;
 public class VerticalSettingsReloadListener implements SimpleSynchronousResourceReloadListener {
 
     @Override public void onResourceManagerReload(ResourceManager manager) {
-        Map<StructureFeature<?>, CubicStructureConfiguration> newMap = new HashMap<>();
+        IdentityHashMap<StructureFeature<?>, CubicStructureConfiguration> newMap = new IdentityHashMap<>();
 
         ResourceLocation location = new ResourceLocation(CubicChunks.MODID, "vertical_settings.json");
         try {

@@ -14,6 +14,7 @@ import io.github.opencubicchunks.cubicchunks.mixin.access.common.OverworldBiomeS
 import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import io.github.opencubicchunks.cubicchunks.world.CubeWorldGenRandom;
 import io.github.opencubicchunks.cubicchunks.world.CubeWorldGenRegion;
+import io.github.opencubicchunks.cubicchunks.world.ICubicStructureStart;
 import io.github.opencubicchunks.cubicchunks.world.biome.BiomeGetter;
 import io.github.opencubicchunks.cubicchunks.world.biome.StripedBiomeSource;
 import io.github.opencubicchunks.cubicchunks.world.gen.structure.ICubicConfiguredStructureFeature;
@@ -41,8 +42,6 @@ import net.minecraft.world.level.levelgen.StructureSettings;
 import net.minecraft.world.level.levelgen.WorldgenRandom;
 import net.minecraft.world.level.levelgen.carver.CarvingContext;
 import net.minecraft.world.level.levelgen.feature.ConfiguredStructureFeature;
-import net.minecraft.world.level.levelgen.feature.MineshaftFeature;
-import net.minecraft.world.level.levelgen.feature.StrongholdFeature;
 import net.minecraft.world.level.levelgen.feature.StructureFeature;
 import net.minecraft.world.level.levelgen.feature.configurations.StructureFeatureConfiguration;
 import net.minecraft.world.level.levelgen.structure.BoundingBox;
@@ -103,9 +102,7 @@ public abstract class MixinChunkGenerator implements ICubeGenerator {
         if (config != null) {
             StructureStart<?> newStart = ((ICubicConfiguredStructureFeature) structure).generate(registryAccess, ((ChunkGenerator) (Object) this), this.biomeSource, structureManager,
                 worldSeed, pos, biome, referenceCount, config, chunk);
-            if (newStart instanceof MineshaftFeature.MineShaftStart || newStart instanceof StrongholdFeature.StrongholdStart) { // TODO remove checks
-                structureFeatureManager.setStartForFeature(pos, structure.feature, newStart, chunk);
-            }
+            structureFeatureManager.setStartForFeature(pos, structure.feature, newStart, chunk);
         }
     }
 
@@ -139,6 +136,11 @@ public abstract class MixinChunkGenerator implements ICubeGenerator {
                     long cubePosAsLong = CubePos.asLong(x, y, z);
 
                     for (StructureStart<?> structureStart : world.getCube(CubePos.of(x, y, z)).getAllCubeStructureStarts().values()) {
+
+                        if (!((ICubicStructureStart) structureStart).has3DPlacement() && y != cubeY) {
+                            continue;
+                        }
+
                         try {
                             if (structureStart != StructureStart.INVALID_START && structureStart.getBoundingBox().intersects(
                                 //We use a new Bounding Box and check if it intersects a given cube.

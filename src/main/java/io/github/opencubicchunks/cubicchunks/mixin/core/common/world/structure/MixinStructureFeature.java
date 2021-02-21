@@ -2,6 +2,8 @@ package io.github.opencubicchunks.cubicchunks.mixin.core.common.world.structure;
 
 import java.util.Optional;
 
+import javax.annotation.Nullable;
+
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
@@ -24,7 +26,6 @@ import net.minecraft.world.level.biome.BiomeSource;
 import net.minecraft.world.level.chunk.ChunkGenerator;
 import net.minecraft.world.level.chunk.ChunkStatus;
 import net.minecraft.world.level.levelgen.WorldgenRandom;
-import net.minecraft.world.level.levelgen.feature.StrongholdFeature;
 import net.minecraft.world.level.levelgen.feature.StructureFeature;
 import net.minecraft.world.level.levelgen.feature.configurations.FeatureConfiguration;
 import net.minecraft.world.level.levelgen.feature.configurations.StructureFeatureConfiguration;
@@ -50,6 +51,11 @@ public abstract class MixinStructureFeature<C extends FeatureConfiguration> impl
                                                       Biome biome, ChunkPos chunkPos, C config, LevelHeightAccessor levelHeightAccessor);
 
     @Shadow public abstract ChunkPos getPotentialFeatureChunk(StructureFeatureConfiguration config, long worldSeed, WorldgenRandom placementRandom, int chunkX, int chunkY);
+
+    @Shadow public abstract StructureStart<?> generate(RegistryAccess registryAccess, ChunkGenerator chunkGenerator, BiomeSource biomeSource,
+                                                       StructureManager structureManager, long worldSeed, ChunkPos chunkPos, Biome biome, int referenceCount,
+                                                       WorldgenRandom worldgenRandom, StructureFeatureConfiguration structureFeatureConfiguration, C featureConfiguration,
+                                                       LevelHeightAccessor levelHeightAccessor);
 
     @Inject(at = @At("HEAD"), method = "getNearestGeneratedFeature", cancellable = true)
     private void getNearestStructure3D(LevelReader level, StructureFeatureManager manager, BlockPos blockPos, int searchRadius, boolean skipExistingChunks, long seed,
@@ -140,6 +146,7 @@ public abstract class MixinStructureFeature<C extends FeatureConfiguration> impl
 
 
     @SuppressWarnings({ "RedundantCast", "ConstantConditions" })
+    @Nullable
     public final SectionPos getPotentialFeatureCube(StructureFeatureConfiguration config, long seed, WorldgenRandom rand, int sectionX, int sectionY, int sectionZ) {
         CubicStructureConfiguration verticalSettings = null;
 
@@ -153,13 +160,12 @@ public abstract class MixinStructureFeature<C extends FeatureConfiguration> impl
         }
 
         if (verticalSettings == null) {
-            return SectionPos.of(this.getPotentialFeatureChunk(config, seed, rand, sectionX, sectionZ), 0);
+            return null;
         }
 
-        int currentBlockY = SectionPos.sectionToBlockCoord(sectionY);
-
-        if (currentBlockY >= verticalSettings.getMaxY() || currentBlockY <= verticalSettings.getMinY()) {
-            return SectionPos.of(this.getPotentialFeatureChunk(config, seed, rand, sectionX, sectionZ), 0);
+        // We return 3 Max Values to ensure that the feature never generates
+        if (sectionY >= Coords.blockToSection(verticalSettings.getMaxY()) || sectionY <= Coords.blockToSection(verticalSettings.getMinY())) {
+            return SectionPos.of(Integer.MAX_VALUE, Integer.MAX_VALUE, Integer.MAX_VALUE);
         }
 
         int spacing = config.spacing();
@@ -199,6 +205,12 @@ public abstract class MixinStructureFeature<C extends FeatureConfiguration> impl
                                         C featureConfiguration, LevelHeightAccessor levelHeightAccessor) {
         SectionPos outSection = this.getPotentialFeatureCube(structureFeatureConfiguration, worldSeed, worldgenRandom, sectionPos.x(), sectionPos.y(), sectionPos.z());
 
+
+        if (outSection == null) {
+            return this.generate(registryAccess, chunkGenerator, biomeSource, structureManager, worldSeed, sectionPos.chunk(), biome, referenceCount, worldgenRandom,
+                structureFeatureConfiguration, featureConfiguration, levelHeightAccessor);
+        }
+
         if (sectionPos.x() == outSection.x() && sectionPos.y() == outSection.y() && sectionPos.z() == outSection.z() &&
             this.isFeatureSection(chunkGenerator, biomeSource, worldSeed, worldgenRandom, sectionPos.x(), sectionPos.y(), sectionPos.z(), biome,
                 outSection, featureConfiguration, levelHeightAccessor)) {
@@ -217,9 +229,6 @@ public abstract class MixinStructureFeature<C extends FeatureConfiguration> impl
     }
 
     private void movePieces(StructureStart<?> start, int sectionY) {
-        if (start instanceof StrongholdFeature.StrongholdStart) { // TODO: configurable?
-            return;
-        }
         BoundingBox boundingBox = start.getBoundingBox();
         int currentY = (boundingBox.y0 + boundingBox.y1) >> 1;
         int targetY = Coords.sectionToMinBlock(sectionY);

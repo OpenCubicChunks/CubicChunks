@@ -35,6 +35,10 @@ public abstract class MixinStructureStart implements ICubicStructureStart {
         this.has3dPlacement = true;
     }
 
+    @Override public boolean has3DPlacement() {
+        return this.has3dPlacement;
+    }
+
     @Override
     public void placeInCube(WorldGenLevel worldGenLevel, StructureFeatureManager structureFeatureManager, ChunkGenerator chunkGenerator, Random random, BoundingBox boundingBox,
                             BlockPos cubePos) {

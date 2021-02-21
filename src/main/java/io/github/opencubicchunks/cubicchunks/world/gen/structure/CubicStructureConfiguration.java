@@ -1,6 +1,7 @@
 package io.github.opencubicchunks.cubicchunks.world.gen.structure;
 
 import java.util.HashMap;
+import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
@@ -33,7 +34,7 @@ public class CubicStructureConfiguration {
     private final int maxYCutoff;
     private final int minYCutoff;
 
-    public static Map<StructureFeature<?>, CubicStructureConfiguration> DATA_FEATURE_VERTICAL_SETTINGS = new HashMap<>();
+    public static IdentityHashMap<StructureFeature<?>, CubicStructureConfiguration> DATA_FEATURE_VERTICAL_SETTINGS = new IdentityHashMap<>();
 
 
     @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
