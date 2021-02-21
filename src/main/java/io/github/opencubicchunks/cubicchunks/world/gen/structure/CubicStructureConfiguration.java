@@ -88,9 +88,9 @@ public class CubicStructureConfiguration {
             return this;
         }
 
-        public boolean test() {
+        public boolean test(String structureID) {
             if (ySpacing <= ySeparation) {
-                CubicChunks.LOGGER.error("Vertical spacing has to be smaller than vertical separation!");
+                CubicChunks.LOGGER.error("Vertical spacing has to be smaller than vertical separation for + " + structureID + " !");
                 return false;
             }
             return true;

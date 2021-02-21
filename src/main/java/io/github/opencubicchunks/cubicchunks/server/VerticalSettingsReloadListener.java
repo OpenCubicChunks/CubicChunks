@@ -57,7 +57,7 @@ public class VerticalSettingsReloadListener implements SimpleSynchronousResource
                                 cubicStructureConfigurationBuilder.setMinY(data.get("maxY").getAsInt());
                             }
 
-                            if (cubicStructureConfigurationBuilder.test()) {
+                            if (cubicStructureConfigurationBuilder.test(structureID.toString())) {
                                 newMap.put(Registry.STRUCTURE_FEATURE.get(structureID), cubicStructureConfigurationBuilder.build());
                             }
                         } else {
