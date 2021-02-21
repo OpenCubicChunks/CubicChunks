@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Map;
 
 import com.google.gson.JsonElement;
@@ -19,10 +20,13 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.PackType;
 import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.server.packs.resources.ResourceManager;
+import net.minecraft.world.level.levelgen.feature.StructureFeature;
 
 public class VerticalSettingsReloadListener implements SimpleSynchronousResourceReloadListener {
 
     @Override public void onResourceManagerReload(ResourceManager manager) {
+        Map<StructureFeature<?>, CubicStructureConfiguration> newMap = new HashMap<>();
+
         ResourceLocation location = new ResourceLocation(CubicChunks.MODID, "vertical_settings.json");
         try {
             Collection<Resource> verticalSettings = manager.getResources(location);
@@ -54,8 +58,7 @@ public class VerticalSettingsReloadListener implements SimpleSynchronousResource
                             }
 
                             if (cubicStructureConfigurationBuilder.test()) {
-                                CubicStructureConfiguration.DATA_FEATURE_VERTICAL_SETTINGS
-                                    .put(Registry.STRUCTURE_FEATURE.get(structureID), cubicStructureConfigurationBuilder.build());
+                                newMap.put(Registry.STRUCTURE_FEATURE.get(structureID), cubicStructureConfigurationBuilder.build());
                             }
                         } else {
                             CubicChunks.LOGGER.error("\"" + structureID.toString() + "\" was not found in the \"STRUCTURE_FEATURE\" registry, skipping vertical settings...");
@@ -68,7 +71,7 @@ public class VerticalSettingsReloadListener implements SimpleSynchronousResource
             }
         } catch (IOException e) {
             CubicChunks.LOGGER.error("Could not get resources for: " + location.toString());
-
+            CubicStructureConfiguration.DATA_FEATURE_VERTICAL_SETTINGS = newMap;
         }
     }
 
