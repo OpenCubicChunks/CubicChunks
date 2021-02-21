@@ -71,8 +71,8 @@ public class VerticalSettingsReloadListener implements SimpleSynchronousResource
             }
         } catch (IOException e) {
             CubicChunks.LOGGER.error("Could not get resources for: " + location.toString());
-            CubicStructureConfiguration.DATA_FEATURE_VERTICAL_SETTINGS = newMap;
         }
+        CubicStructureConfiguration.DATA_FEATURE_VERTICAL_SETTINGS = newMap;
     }
 
     @Override public ResourceLocation getFabricId() {
