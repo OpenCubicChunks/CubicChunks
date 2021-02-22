@@ -93,7 +93,13 @@ public abstract class MixinStructureFeature<C extends FeatureConfiguration> impl
                         int zPos = mainSectionZ + spacing * dz;
 
                         // TODO: make it use section pos directly
-                        CubePos pos = CubePos.from(this.getPotentialFeatureCube(structureFeatureConfiguration, seed, worldgenRandom, xPos, yPos, zPos));
+                        SectionPos potentialFeature = this.getPotentialFeatureCube(structureFeatureConfiguration, seed, worldgenRandom, xPos, yPos, zPos);
+                        if (potentialFeature == null) {
+                            potentialFeature = SectionPos.of(this.getPotentialFeatureChunk(structureFeatureConfiguration, seed, worldgenRandom, xPos, zPos), yPos);
+                        }
+
+                        CubePos pos = CubePos.from(potentialFeature);
+
                         IBigCube cube = null;
                         for (int sectionX = 0; sectionX < IBigCube.DIAMETER_IN_SECTIONS; sectionX++) {
                             for (int sectionZ = 0; sectionZ < IBigCube.DIAMETER_IN_SECTIONS; sectionZ++) {
@@ -150,8 +156,13 @@ public abstract class MixinStructureFeature<C extends FeatureConfiguration> impl
     public final SectionPos getPotentialFeatureCube(StructureFeatureConfiguration config, long seed, WorldgenRandom rand, int sectionX, int sectionY, int sectionZ) {
         CubicStructureConfiguration verticalSettings = null;
 
-        if (CubicStructureConfiguration.DATA_FEATURE_VERTICAL_SETTINGS.containsKey((StructureFeature<?>) (Object) this)) {
-            verticalSettings = CubicStructureConfiguration.DATA_FEATURE_VERTICAL_SETTINGS.get((StructureFeature<?>) (Object) this);
+        StructureFeature<?> structureFeature = (StructureFeature<?>) (Object) this;
+        if (structureFeature != StructureFeature.MINESHAFT && structureFeature != StructureFeature.STRONGHOLD) {
+            String s = "";
+        }
+
+        if (CubicStructureConfiguration.DATA_FEATURE_VERTICAL_SETTINGS.containsKey(structureFeature)) {
+            verticalSettings = CubicStructureConfiguration.DATA_FEATURE_VERTICAL_SETTINGS.get(structureFeature);
         }
 
         Optional<CubicStructureConfiguration> verticalSettingsOptional = ((ICubicStructureFeatureConfiguration) config).getVerticalSettings();
