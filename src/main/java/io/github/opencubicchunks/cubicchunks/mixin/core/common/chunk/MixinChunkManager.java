@@ -61,6 +61,8 @@ import io.github.opencubicchunks.cubicchunks.world.server.IServerWorld;
 import io.github.opencubicchunks.cubicchunks.world.server.IServerWorldLightManager;
 import io.github.opencubicchunks.cubicchunks.world.storage.CubeSerializer;
 import io.github.opencubicchunks.cubicchunks.world.storage.RegionCubeIO;
+import io.netty.buffer.EmptyByteBuf;
+import io.netty.buffer.Unpooled;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.longs.Long2ByteMap;
 import it.unimi.dsi.fastutil.longs.Long2ByteOpenHashMap;
@@ -74,6 +76,7 @@ import net.minecraft.ReportedException;
 import net.minecraft.Util;
 import net.minecraft.core.SectionPos;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientboundLightUpdatePacket;
 import net.minecraft.network.protocol.game.ClientboundSetChunkCacheCenterPacket;
@@ -1193,8 +1196,19 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
         if (!((CubicLevelHeightAccessor) this.level).isCubic()) {
             return new ClientboundLightUpdatePacket(pos, lightManager, bits1, bits2, bool);
         }
+        FriendlyByteBuf buf = new FriendlyByteBuf(Unpooled.buffer());
+        buf.writeVarInt(0);
+        buf.writeVarInt(0);
+        buf.writeBoolean(false);
+        buf.writeBitSet(new BitSet());
+        buf.writeBitSet(new BitSet());
+        buf.writeBitSet(new BitSet());
+        buf.writeBitSet(new BitSet());
+        buf.writeByteArray(new byte[2048]);
+        buf.writeByteArray(new byte[2048]);
 
-        return new ClientboundLightUpdatePacket();
+
+        return new ClientboundLightUpdatePacket(buf);
     }
 
     // playerLoadedChunk

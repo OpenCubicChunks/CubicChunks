@@ -27,6 +27,6 @@ public interface NoiseGeneratorSettingsAccess {
     @Accessor("noiseCavesEnabled")
     boolean isNoiseCavesEnabled();
 
-    @Accessor("grimstoneEnabled")
-    boolean isGrimstoneEnabled();
+    @Accessor("deepslateEnabled")
+    boolean isDeepSlateEnabled();
 }

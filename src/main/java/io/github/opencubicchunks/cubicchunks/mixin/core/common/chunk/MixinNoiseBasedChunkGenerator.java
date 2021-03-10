@@ -126,7 +126,7 @@ public abstract class MixinNoiseBasedChunkGenerator {
             generatorSettings.getBedrockRoofPosition(), generatorSettings.getBedrockFloorPosition(), generatorSettings.seaLevel(),
             generatorSettingsAccess.isDisableMobGeneration(),
             generatorSettingsAccess.isAquifersEnabled(),
-            generatorSettingsAccess.isNoiseCavesEnabled(), generatorSettingsAccess.isGrimstoneEnabled()
+            generatorSettingsAccess.isNoiseCavesEnabled(), generatorSettingsAccess.isDeepSlateEnabled()
         );
 
         return new Aquifer(i, j, normalNoise, normalNoise2, cubeGeneratorSettings, noiseSampler, k);

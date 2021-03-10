@@ -44,38 +44,38 @@ public class CubicWorldLoadScreen {
 
         float scaleWithCineSize = scale * IBigCube.DIAMETER_IN_SECTIONS / 2.0f;
 
-        RenderSystem.matrixMode(GL11.GL_PROJECTION);
-        RenderSystem.pushMatrix();
-        RenderSystem.loadIdentity();
-        RenderSystem.multMatrix(Matrix4f.perspective(60, aspectRatio, 0.01f, -10));
-        // TODO: config option
-        //RenderSystem.multMatrix(Matrix4f.orthographic(10 * aspectRatio, 10, 0.01f, 1000));
-        //RenderSystem.translatef(10 * aspectRatio / 2, 10 / 2.f, 0);
-        RenderSystem.matrixMode(GL11.GL_MODELVIEW);
-
-        RenderSystem.pushMatrix();
-        RenderSystem.loadIdentity();
-
-        RenderSystem.translatef(0, 0, -20);
-
-        RenderSystem.rotatef(30, 1, 0, 0);
-
-        RenderSystem.rotatef((float) ((System.currentTimeMillis() * 0.04) % 360), 0, 1, 0);
-
-        render3dDrawCubes(trackerParam, xBase, yBase, scaleWithCineSize, spacing, colors);
-
-        RenderSystem.popMatrix();
-
-        RenderSystem.matrixMode(GL11.GL_PROJECTION);
-        RenderSystem.popMatrix();
-        RenderSystem.matrixMode(GL11.GL_MODELVIEW);
+//        RenderSystem.matrixMode(GL11.GL_PROJECTION);
+//        RenderSystem.pushMatrix();
+//        RenderSystem.loadIdentity();
+//        RenderSystem.multMatrix(Matrix4f.perspective(60, aspectRatio, 0.01f, -10));
+//        // TODO: config option
+//        //RenderSystem.multMatrix(Matrix4f.orthographic(10 * aspectRatio, 10, 0.01f, 1000));
+//        //RenderSystem.translatef(10 * aspectRatio / 2, 10 / 2.f, 0);
+//        RenderSystem.matrixMode(GL11.GL_MODELVIEW);
+//
+//        RenderSystem.pushMatrix();
+//        RenderSystem.loadIdentity();
+//
+//        RenderSystem.translatef(0, 0, -20);
+//
+//        RenderSystem.rotatef(30, 1, 0, 0);
+//
+//        RenderSystem.rotatef((float) ((System.currentTimeMillis() * 0.04) % 360), 0, 1, 0);
+//
+//        render3dDrawCubes(trackerParam, xBase, yBase, scaleWithCineSize, spacing, colors);
+//
+//        RenderSystem.popMatrix();
+//
+//        RenderSystem.matrixMode(GL11.GL_PROJECTION);
+//        RenderSystem.popMatrix();
+//        RenderSystem.matrixMode(GL11.GL_MODELVIEW);
     }
 
     private static void render3dDrawCubes(StoringChunkProgressListener trackerParam, int xBase, int yBase, float scale, int spacing,
                                           Object2IntMap<ChunkStatus> colors) {
         RenderSystem.disableTexture();
         RenderSystem.enableBlend();
-        RenderSystem.enableAlphaTest();
+//        RenderSystem.enableAlphaTest();
 
         BufferBuilder buffer = Tesselator.getInstance().getBuilder();
 
