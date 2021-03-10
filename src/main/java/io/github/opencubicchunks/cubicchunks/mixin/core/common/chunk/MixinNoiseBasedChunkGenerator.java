@@ -47,8 +47,7 @@ public abstract class MixinNoiseBasedChunkGenerator {
     @Inject(method = "<init>(Lnet/minecraft/world/level/biome/BiomeSource;Lnet/minecraft/world/level/biome/BiomeSource;JLjava/util/function/Supplier;)V", at = @At("RETURN"))
     private void init(BiomeSource biomeSource, BiomeSource biomeSource2, long l, Supplier<NoiseGeneratorSettings> supplier, CallbackInfo ci) {
         // access to through the registry is slow: vanilla accesses settings directly from the supplier in the constructor anyway
-        NoiseGeneratorSettings settings = this.settings.get();
-        this.settings = () -> settings;
+        this.settings = () -> settings.get();
     }
 
     @Redirect(method = "fillFromNoise", at = @At(value = "INVOKE", target = "Ljava/lang/Math;max(II)I"))
@@ -156,7 +155,7 @@ public abstract class MixinNoiseBasedChunkGenerator {
     }
 
     @Redirect(method = "updateNoiseAndGenerateBaseState", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/levelgen/NoiseBasedChunkGenerator;getMinY()I"))
-    private int useCCMinY(NoiseBasedChunkGenerator noiseBasedChunkGenerator){
+    private int useCCMinY(NoiseBasedChunkGenerator noiseBasedChunkGenerator) {
         return CubicChunks.MIN_SUPPORTED_HEIGHT;
     }
 

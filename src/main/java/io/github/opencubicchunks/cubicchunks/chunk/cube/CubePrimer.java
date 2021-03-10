@@ -181,7 +181,8 @@ public class CubePrimer extends ProtoChunk implements IBigCube, CubicLevelHeight
         }
 
         if (section == EMPTY_SECTION) {
-            this.sections[index] = section = new LevelChunkSection(Coords.cubeToMinBlock(this.cubePos.getY() + Coords.sectionToMinBlock(Coords.indexToY(index))));
+            section = new LevelChunkSection(Coords.cubeToMinBlock(this.cubePos.getY() + Coords.sectionToMinBlock(Coords.indexToY(index))));
+            this.sections[index] = section;
         }
 
         if (state.getLightEmission() > 0) {

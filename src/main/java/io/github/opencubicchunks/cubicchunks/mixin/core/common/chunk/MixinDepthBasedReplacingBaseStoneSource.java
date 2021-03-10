@@ -26,13 +26,12 @@ public class MixinDepthBasedReplacingBaseStoneSource {
     private long seedX, seedY, seedZ;
 
     @Inject(method = "<init>", at = @At("RETURN"))
-    private void init(long seed, BlockState normalBlock, BlockState replacementBlock, CallbackInfo ci) {
+    private void init(long newSeed, BlockState newNormalBlock, BlockState newReplacementBlock, CallbackInfo ci) {
         // precompute axis seeds
-        WorldgenRandom random = this.random;
         this.seedX = random.nextLong();
         this.seedY = random.nextLong();
         this.seedZ = random.nextLong();
-        random.setSeed(seed);
+        random.setSeed(newSeed);
     }
 
     @Inject(method = "getBaseStone", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/levelgen/WorldgenRandom;setBaseStoneSeed(JIII)J", shift = At.Shift.BEFORE),
@@ -44,9 +43,9 @@ public class MixinDepthBasedReplacingBaseStoneSource {
         } else if (probability >= 1) {
             cir.setReturnValue(this.replacementBlock);
         } else {
-            long seed = NonAtomicWorldgenRandom.scramble(x * this.seedX ^ y * this.seedY ^ z * this.seedZ ^ this.seed);
-            seed = NonAtomicWorldgenRandom.next(seed);
-            float sample = NonAtomicWorldgenRandom.sampleFloat(seed);
+            long newSeed = NonAtomicWorldgenRandom.scramble(x * this.seedX ^ y * this.seedY ^ z * this.seedZ ^ this.seed);
+            newSeed = NonAtomicWorldgenRandom.nextSeed(newSeed);
+            float sample = NonAtomicWorldgenRandom.sampleFloat(newSeed);
             cir.setReturnValue(sample < probability ? this.replacementBlock : this.normalBlock);
         }
     }

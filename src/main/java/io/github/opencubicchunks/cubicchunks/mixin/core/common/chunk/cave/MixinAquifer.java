@@ -19,6 +19,12 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(Aquifer.class)
 public abstract class MixinAquifer {
+
+    private static final double NOISE_MIN = transformBarrierNoise(-1.5);
+    private static final double NOISE_MAX = transformBarrierNoise(1.5);
+
+    private final AquiferRandom random = new AquiferRandom();
+    private double barrierNoiseCache = Double.NaN;
     @Shadow @Final private NormalNoise barrierNoise;
 
     @Shadow @Final private int minGridY;
@@ -29,31 +35,26 @@ public abstract class MixinAquifer {
     @Shadow private int lastWaterLevel;
     @Shadow private double lastBarrierDensity;
 
-    @Shadow protected abstract int gridY(int i);
-    @Shadow protected abstract int getIndex(int x, int y, int z);
-    @Shadow protected abstract double similarity(int i, int j);
-    @Shadow protected abstract int computeAquifer(int x, int y, int z);
-
     @Shadow @Final private NoiseGeneratorSettings noiseGeneratorSettings;
-
-    private static final double NOISE_MIN = transformBarrierNoise(-1.5);
-    private static final double NOISE_MAX = transformBarrierNoise(1.5);
-
-    private static double transformBarrierNoise(double noise) {
-        return 1.0 + (noise + 0.1) / 4.0;
-    }
-
-    private final AquiferRandom random = new AquiferRandom();
-
-    private double barrierNoiseCache = Double.NaN;
 
     private int minLevelGridX;
     private int minLevelGridZ;
     private int levelGridSizeX;
     private int levelGridSizeZ;
 
-    @Inject(method = "<init>", at = @At(value = "FIELD", target = "Lnet/minecraft/world/level/levelgen/Aquifer;aquiferCache:[I", opcode = Opcodes.PUTFIELD, shift = At.Shift.AFTER, remap = false))
-    private void init(int chunkX, int chunkZ, NormalNoise barrierNoise, NormalNoise waterLevelNoise, NoiseGeneratorSettings noiseSettings, NoiseSampler sampler, int sizeY, CallbackInfo ci) {
+    private static double transformBarrierNoise(double noise) {
+        return 1.0 + (noise + 0.1) / 4.0;
+    }
+
+    @Shadow protected abstract int gridY(int i);
+    @Shadow protected abstract int getIndex(int x, int y, int z);
+    @Shadow protected abstract double similarity(int i, int j);
+    @Shadow protected abstract int computeAquifer(int x, int y, int z);
+
+    @Inject(method = "<init>",
+        at = @At(value = "FIELD", target = "Lnet/minecraft/world/level/levelgen/Aquifer;aquiferCache:[I", opcode = Opcodes.PUTFIELD, shift = At.Shift.AFTER, remap = false))
+    private void init(int chunkX, int chunkZ, NormalNoise newBarrierNoise, NormalNoise waterLevelNoise, NoiseGeneratorSettings noiseSettings, NoiseSampler sampler, int sizeY,
+                      CallbackInfo ci) {
         int minX = chunkX << 4;
         int maxX = (chunkX << 4) + 15;
         int minZ = chunkZ << 4;
@@ -63,7 +64,7 @@ public abstract class MixinAquifer {
 
         int minGridX = levelGridX(minX) - 1;
         int maxGridX = levelGridX(maxX) + 1;
-        int minGridY = this.gridY(minY) - 1;
+        int minGridYForMinY = this.gridY(minY) - 1;
         int maxGridY = this.gridY(maxY) + 1;
         int minGridZ = levelGridZ(minZ) - 1;
         int maxGridZ = levelGridZ(maxZ) + 1;
@@ -73,7 +74,7 @@ public abstract class MixinAquifer {
         this.levelGridSizeX = maxGridX - minGridX + 1;
         this.levelGridSizeZ = maxGridZ - minGridZ + 1;
 
-        int gridSizeY = maxGridY - minGridY + 1;
+        int gridSizeY = maxGridY - minGridYForMinY + 1;
         int levelCacheSize = this.levelGridSizeX * gridSizeY * this.levelGridSizeZ;
 
         // TODO: we have to reinitialize the array because we can't redirect int array construction.. what other options?
@@ -212,8 +213,8 @@ public abstract class MixinAquifer {
             if (targetDistanceFromMean * NOISE_MIN <= distanceFromMean && targetDistanceFromMean * NOISE_MAX <= distanceFromMean) {
                 return 0.0;
             }
-
-            this.barrierNoiseCache = noise = transformBarrierNoise(this.barrierNoise.getValue(x, y, z));
+            noise = transformBarrierNoise(this.barrierNoise.getValue(x, y, z));
+            this.barrierNoiseCache = noise;
         }
 
         return (targetDistanceFromMean * noise) - distanceFromMean;
@@ -224,7 +225,6 @@ public abstract class MixinAquifer {
 
         long sourcePos = this.aquiferLocationCache[index];
         if (sourcePos == Long.MAX_VALUE) {
-            AquiferRandom random = this.random;
             random.setSeed(Mth.getSeed(x, y * 3, z) + 1L);
             sourcePos = BlockPos.asLong(
                 x * 16 + random.nextInt(10),

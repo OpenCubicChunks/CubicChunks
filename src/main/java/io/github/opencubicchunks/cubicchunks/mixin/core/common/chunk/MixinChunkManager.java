@@ -61,7 +61,6 @@ import io.github.opencubicchunks.cubicchunks.world.server.IServerWorld;
 import io.github.opencubicchunks.cubicchunks.world.server.IServerWorldLightManager;
 import io.github.opencubicchunks.cubicchunks.world.storage.CubeSerializer;
 import io.github.opencubicchunks.cubicchunks.world.storage.RegionCubeIO;
-import io.netty.buffer.EmptyByteBuf;
 import io.netty.buffer.Unpooled;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.longs.Long2ByteMap;
@@ -850,7 +849,6 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
     protected ChunkHolder getUpdatingCubeIfPresent(long cubePosIn) {
         return this.updatingCubeMap.get(cubePosIn);
     }
-
 
 
     // getPlayers
