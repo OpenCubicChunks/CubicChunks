@@ -5,6 +5,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.function.Supplier;
 
+import io.github.opencubicchunks.cubicchunks.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.chunk.NonAtomicWorldgenRandom;
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.NoiseGeneratorSettingsAccess;
 import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
@@ -152,6 +153,11 @@ public abstract class MixinNoiseBasedChunkGenerator {
         if (density > 0.0) {
             ci.setReturnValue(stoneSource.getBaseStone(x, y, z, this.settings.get()));
         }
+    }
+
+    @Redirect(method = "updateNoiseAndGenerateBaseState", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/levelgen/NoiseBasedChunkGenerator;getMinY()I"))
+    private int useCCMinY(NoiseBasedChunkGenerator noiseBasedChunkGenerator){
+        return CubicChunks.MIN_SUPPORTED_HEIGHT;
     }
 
     // replace with non-atomic random for optimized random number generation
