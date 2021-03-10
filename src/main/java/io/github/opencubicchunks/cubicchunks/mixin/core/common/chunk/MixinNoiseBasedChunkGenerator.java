@@ -47,7 +47,7 @@ public abstract class MixinNoiseBasedChunkGenerator {
     @Inject(method = "<init>(Lnet/minecraft/world/level/biome/BiomeSource;Lnet/minecraft/world/level/biome/BiomeSource;JLjava/util/function/Supplier;)V", at = @At("RETURN"))
     private void init(BiomeSource biomeSource, BiomeSource biomeSource2, long l, Supplier<NoiseGeneratorSettings> supplier, CallbackInfo ci) {
         // access to through the registry is slow: vanilla accesses settings directly from the supplier in the constructor anyway
-        this.settings = () -> settings.get();
+        this.settings = supplier;
     }
 
     @Redirect(method = "fillFromNoise", at = @At(value = "INVOKE", target = "Ljava/lang/Math;max(II)I"))
