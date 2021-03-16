@@ -6,12 +6,11 @@ import java.util.stream.Stream;
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import net.minecraft.core.BlockPos;
-import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.levelgen.feature.configurations.DecoratorConfiguration;
+import net.minecraft.world.level.levelgen.feature.configurations.HeightmapConfiguration;
 import net.minecraft.world.level.levelgen.placement.DecorationContext;
 import net.minecraft.world.level.levelgen.placement.HeightmapDoubleDecorator;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
@@ -19,10 +18,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(HeightmapDoubleDecorator.class)
 public abstract class MixinHeightMapDoubleDecorator<DC extends DecoratorConfiguration> {
 
-    @Shadow protected abstract Heightmap.Types type(DC decoratorConfiguration);
-
     @Inject(method = "getPositions", at = @At(value = "HEAD"), cancellable = true)
-    private void allowNegativeCoords(DecorationContext decorationContext, Random random, DC decoratorConfiguration, BlockPos blockPos, CallbackInfoReturnable<Stream<BlockPos>> cir) {
+    private void allowNegativeCoords(DecorationContext decorationContext, Random random, HeightmapConfiguration heightmapConfiguration, BlockPos blockPos,
+                                     CallbackInfoReturnable<Stream<BlockPos>> cir) {
         CubicLevelHeightAccessor context = (CubicLevelHeightAccessor) decorationContext;
 
         if (!context.isCubic()) {
@@ -36,7 +34,7 @@ public abstract class MixinHeightMapDoubleDecorator<DC extends DecoratorConfigur
         int x = blockPos.getX();
         int z = blockPos.getZ();
 
-        int yHeightMap = decorationContext.getHeight(this.type(decoratorConfiguration), x, z);
+        int yHeightMap = decorationContext.getHeight(heightmapConfiguration.heightmap, x, z);
         if (yHeightMap <= decorationContext.getMinBuildHeight()) {
             cir.setReturnValue(Stream.of());
         } else {

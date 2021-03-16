@@ -5,6 +5,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.function.Supplier;
 
+import io.github.opencubicchunks.cubicchunks.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.chunk.NonAtomicWorldgenRandom;
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.NoiseGeneratorSettingsAccess;
 import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
@@ -46,8 +47,8 @@ public abstract class MixinNoiseBasedChunkGenerator {
     @Inject(method = "<init>(Lnet/minecraft/world/level/biome/BiomeSource;Lnet/minecraft/world/level/biome/BiomeSource;JLjava/util/function/Supplier;)V", at = @At("RETURN"))
     private void init(BiomeSource biomeSource, BiomeSource biomeSource2, long l, Supplier<NoiseGeneratorSettings> supplier, CallbackInfo ci) {
         // access to through the registry is slow: vanilla accesses settings directly from the supplier in the constructor anyway
-        NoiseGeneratorSettings settings = this.settings.get();
-        this.settings = () -> settings;
+        NoiseGeneratorSettings suppliedSettings = this.settings.get();
+        this.settings = () -> suppliedSettings;
     }
 
     @Redirect(method = "fillFromNoise", at = @At(value = "INVOKE", target = "Ljava/lang/Math;max(II)I"))
@@ -126,7 +127,7 @@ public abstract class MixinNoiseBasedChunkGenerator {
             generatorSettings.getBedrockRoofPosition(), generatorSettings.getBedrockFloorPosition(), generatorSettings.seaLevel(),
             generatorSettingsAccess.isDisableMobGeneration(),
             generatorSettingsAccess.isAquifersEnabled(),
-            generatorSettingsAccess.isNoiseCavesEnabled(), generatorSettingsAccess.isGrimstoneEnabled()
+            generatorSettingsAccess.isNoiseCavesEnabled(), generatorSettingsAccess.isDeepSlateEnabled()
         );
 
         return new Aquifer(i, j, normalNoise, normalNoise2, cubeGeneratorSettings, noiseSampler, k);
@@ -152,6 +153,11 @@ public abstract class MixinNoiseBasedChunkGenerator {
         if (density > 0.0) {
             ci.setReturnValue(stoneSource.getBaseStone(x, y, z, this.settings.get()));
         }
+    }
+
+    @Redirect(method = "updateNoiseAndGenerateBaseState", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/levelgen/NoiseBasedChunkGenerator;getMinY()I"))
+    private int useCCMinY(NoiseBasedChunkGenerator noiseBasedChunkGenerator) {
+        return CubicChunks.MIN_SUPPORTED_HEIGHT;
     }
 
     // replace with non-atomic random for optimized random number generation

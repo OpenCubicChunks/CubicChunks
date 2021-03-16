@@ -19,23 +19,11 @@ public class NonAtomicWorldgenRandom extends WorldgenRandom {
         this.seed = scramble(seed);
     }
 
-    @Override
-    public void setSeed(long seed) {
-        this.seed = scramble(seed);
-    }
-
-    @Override
-    public int next(int bits) {
-        long nextSeed = next(this.seed);
-        this.seed = nextSeed;
-        return sample(nextSeed, bits);
-    }
-
     public static long scramble(long seed) {
         return (seed ^ MULTIPLIER) & MASK;
     }
 
-    public static long next(long seed) {
+    public static long nextSeed(long seed) {
         return (seed * MULTIPLIER + ADDEND) & MASK;
     }
 
@@ -45,5 +33,17 @@ public class NonAtomicWorldgenRandom extends WorldgenRandom {
 
     public static float sampleFloat(long seed) {
         return sample(seed, 24) / (float) (1 << 24);
+    }
+
+    @Override
+    public void setSeed(long seed) {
+        this.seed = scramble(seed);
+    }
+
+    @Override
+    public int next(int bits) {
+        long nextSeed = nextSeed(this.seed);
+        this.seed = nextSeed;
+        return sample(nextSeed, bits);
     }
 }

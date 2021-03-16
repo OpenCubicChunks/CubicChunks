@@ -11,12 +11,10 @@
         "conformVisibility": true
     },
     "mixins": [
-        "common.chunk.cave.legacy.MixinCanyonWorldCarver",
-        "common.chunk.cave.legacy.MixinCaveWorldCarver",
-        "common.chunk.cave.legacy.MixinConfiguredWorldCarver",
         "common.chunk.cave.legacy.MixinWorldCarver",
         "common.chunk.cave.MixinAquifer",
         "common.chunk.MixinBeardifier",
+        "common.chunk.MixinBlendedNoise",
         "common.chunk.MixinChunk",
         "common.chunk.MixinChunkGenerator",
         "common.chunk.MixinChunkHolder",
@@ -80,8 +78,7 @@
         "common.world.surfacebuilder.MixinErodedBadlandsSurfaceBuilder",
         "common.world.surfacebuilder.MixinFrozenOceanSurfaceBuilder",
         "common.world.surfacebuilder.MixinSwampSurfaceBuilder",
-        "common.world.surfacebuilder.MixinWoodedBadlandsSurfaceBuilder",
-        "common.chunk.MixinBlendedNoise"
+        "common.world.surfacebuilder.MixinWoodedBadlandsSurfaceBuilder"
     ],
     "client": [
         "client.chunk.MixinRenderChunkRegion",

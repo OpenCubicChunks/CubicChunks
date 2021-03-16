@@ -26,7 +26,6 @@ public class MixinBlendedNoise {
         double z = iz;
 
         double main = 0.0;
-        PerlinNoise mainNoise = this.mainNoise;
 
         for (int octave = 0; octave < 8; octave++) {
             double unwrappedY = y * verticalStretch;
@@ -41,9 +40,6 @@ public class MixinBlendedNoise {
         }
 
         double mix = (main / 10.0 + 1.0) / 2.0;
-
-        PerlinNoise minLimitNoise = this.minLimitNoise;
-        PerlinNoise maxLimitNoise = this.maxLimitNoise;
 
         amplitude = 1.0 / 512.0;
 
