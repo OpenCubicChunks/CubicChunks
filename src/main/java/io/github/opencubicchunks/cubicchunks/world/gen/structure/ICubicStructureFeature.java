@@ -14,7 +14,7 @@ import net.minecraft.world.level.levelgen.structure.templatesystem.StructureMana
 
 public interface ICubicStructureFeature<C extends FeatureConfiguration> {
 
-    boolean isFeatureSection(ChunkGenerator chunkGenerator, BiomeSource biomeSource, long worldSeed, WorldgenRandom random, int sectionX, int sectionY, int sectionZ,
+    boolean isFeatureSection(ChunkGenerator chunkGenerator, BiomeSource biomeSource, long worldSeed, WorldgenRandom random, SectionPos sectionPos,
                              Biome biome, SectionPos chunkPos, C config, LevelHeightAccessor levelHeightAccessor);
 
     StructureStart<?> generateCC(RegistryAccess registryAccess, ChunkGenerator chunkGenerator, BiomeSource biomeSource, StructureManager structureManager, long worldSeed,

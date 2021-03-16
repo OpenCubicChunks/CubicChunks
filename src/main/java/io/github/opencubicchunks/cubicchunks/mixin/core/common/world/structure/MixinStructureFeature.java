@@ -45,9 +45,9 @@ public abstract class MixinStructureFeature<C extends FeatureConfiguration> impl
 
     @Shadow protected abstract boolean linearSeparation();
 
-    @Shadow protected abstract StructureStart<C> createStart(int chunkX, int chunkZ, BoundingBox boundingBox, int referenceCount, long worldSeed);
+    @Shadow protected abstract StructureStart<C> createStart(ChunkPos pos, BoundingBox boundingBox, int referenceCount, long worldSeed);
 
-    @Shadow protected abstract boolean isFeatureChunk(ChunkGenerator chunkGenerator, BiomeSource biomeSource, long worldSeed, WorldgenRandom random, int chunkX, int chunkZ,
+    @Shadow protected abstract boolean isFeatureChunk(ChunkGenerator chunkGenerator, BiomeSource biomeSource, long worldSeed, WorldgenRandom random, ChunkPos pos,
                                                       Biome biome, ChunkPos chunkPos, C config, LevelHeightAccessor levelHeightAccessor);
 
     @Shadow public abstract ChunkPos getPotentialFeatureChunk(StructureFeatureConfiguration config, long worldSeed, WorldgenRandom placementRandom, int chunkX, int chunkY);
@@ -205,9 +205,9 @@ public abstract class MixinStructureFeature<C extends FeatureConfiguration> impl
     }
 
     @Override
-    public boolean isFeatureSection(ChunkGenerator chunkGenerator, BiomeSource biomeSource, long worldSeed, WorldgenRandom random, int sectionX, int sectionY, int sectionZ,
+    public boolean isFeatureSection(ChunkGenerator chunkGenerator, BiomeSource biomeSource, long worldSeed, WorldgenRandom random, SectionPos sectionPos,
                                     Biome biome, SectionPos chunkPos, C config, LevelHeightAccessor levelHeightAccessor) {
-        return isFeatureChunk(chunkGenerator, biomeSource, worldSeed + sectionY, random, sectionX, sectionZ, biome, chunkPos.chunk(), config, levelHeightAccessor);
+        return isFeatureChunk(chunkGenerator, biomeSource, worldSeed + sectionPos.y(), random, sectionPos.chunk(), biome, chunkPos.chunk(), config, levelHeightAccessor);
     }
 
     @Override
@@ -223,13 +223,13 @@ public abstract class MixinStructureFeature<C extends FeatureConfiguration> impl
         }
 
         if (sectionPos.x() == outSection.x() && sectionPos.y() == outSection.y() && sectionPos.z() == outSection.z() &&
-            this.isFeatureSection(chunkGenerator, biomeSource, worldSeed, worldgenRandom, sectionPos.x(), sectionPos.y(), sectionPos.z(), biome,
+            this.isFeatureSection(chunkGenerator, biomeSource, worldSeed, worldgenRandom, sectionPos, biome,
                 outSection, featureConfiguration, levelHeightAccessor)) {
 
-            StructureStart<C> structureStart = this.createStart(sectionPos.x(), sectionPos.z(), BoundingBox.getUnknownBox(), referenceCount, worldSeed);
+            StructureStart<C> structureStart = this.createStart(sectionPos.chunk(), BoundingBox.getUnknownBox(), referenceCount, worldSeed);
             ((ICubicStructureStart) structureStart).init3dPlacement(sectionPos.y());
 
-            structureStart.generatePieces(registryAccess, chunkGenerator, structureManager, sectionPos.x(), sectionPos.z(), biome, featureConfiguration, levelHeightAccessor);
+            structureStart.generatePieces(registryAccess, chunkGenerator, structureManager, sectionPos.chunk(), biome, featureConfiguration, levelHeightAccessor);
             movePieces(structureStart, sectionPos.y());
             if (structureStart.isValid()) {
                 return structureStart;
