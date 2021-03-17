@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.Map;
 
@@ -40,26 +39,26 @@ public class VerticalSettingsReloadListener implements SimpleSynchronousResource
                         ResourceLocation structureID = new ResourceLocation(entry.getKey());
 
                         if (Registry.STRUCTURE_FEATURE.keySet().contains(structureID)) {
-                            CubicStructureConfiguration.CubicStructureConfigurationBuilder cubicStructureConfigurationBuilder =
-                                new CubicStructureConfiguration.CubicStructureConfigurationBuilder();
+                            CubicStructureConfiguration.Builder builder =
+                                new CubicStructureConfiguration.Builder();
 
                             JsonObject data = entry.getValue().getAsJsonObject();
 
                             if (data.has("vertical_spacing")) {
-                                cubicStructureConfigurationBuilder.setYSpacing(data.get("vertical_spacing").getAsInt());
+                                builder.setYSpacing(data.get("vertical_spacing").getAsInt());
                             }
                             if (data.has("vertical_separation")) {
-                                cubicStructureConfigurationBuilder.setYSeparation(data.get("vertical_separation").getAsInt());
+                                builder.setYSeparation(data.get("vertical_separation").getAsInt());
                             }
-                            if (data.has("maxY")) {
-                                cubicStructureConfigurationBuilder.setMaxY(data.get("maxY").getAsInt());
+                            if (data.has("max_y")) {
+                                builder.setMaxY(data.get("max_y").getAsInt());
                             }
-                            if (data.has("minY")) {
-                                cubicStructureConfigurationBuilder.setMinY(data.get("maxY").getAsInt());
+                            if (data.has("min_y")) {
+                                builder.setMinY(data.get("min_y").getAsInt());
                             }
 
-                            if (cubicStructureConfigurationBuilder.test(structureID.toString())) {
-                                newMap.put(Registry.STRUCTURE_FEATURE.get(structureID), cubicStructureConfigurationBuilder.build());
+                            if (builder.test(structureID.toString())) {
+                                newMap.put(Registry.STRUCTURE_FEATURE.get(structureID), builder.build());
                             }
                         } else {
                             CubicChunks.LOGGER.error("\"" + structureID.toString() + "\" was not found in the \"STRUCTURE_FEATURE\" registry, skipping vertical settings...");

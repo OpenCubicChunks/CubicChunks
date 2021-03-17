@@ -1,8 +1,6 @@
 package io.github.opencubicchunks.cubicchunks.world.gen.structure;
 
-import java.util.HashMap;
 import java.util.IdentityHashMap;
-import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 
@@ -62,29 +60,29 @@ public class CubicStructureConfiguration {
     }
 
     @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
-    public static class CubicStructureConfigurationBuilder {
+    public static class Builder {
         int ySpacing = 0;
         int ySeparation = 0;
         Optional<Integer> maxY = Optional.empty();
         Optional<Integer> minY = Optional.empty();
 
 
-        public CubicStructureConfigurationBuilder setYSpacing(int ySpacing) {
+        public Builder setYSpacing(int ySpacing) {
             this.ySpacing = ySpacing;
             return this;
         }
 
-        public CubicStructureConfigurationBuilder setYSeparation(int ySeparation) {
+        public Builder setYSeparation(int ySeparation) {
             this.ySeparation = ySeparation;
             return this;
         }
 
-        public CubicStructureConfigurationBuilder setMaxY(int maxY) {
+        public Builder setMaxY(int maxY) {
             this.maxY = Optional.of(maxY);
             return this;
         }
 
-        public CubicStructureConfigurationBuilder setMinY(int minY) {
+        public Builder setMinY(int minY) {
             this.minY = Optional.of(minY);
             return this;
         }

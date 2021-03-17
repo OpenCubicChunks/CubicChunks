@@ -2,6 +2,6 @@
     "minecraft:mineshaft": {
         "vertical_spacing": 4,
         "vertical_separation": 2,
-        "maxy": 40
+        "max_y": 40
     }
 }
