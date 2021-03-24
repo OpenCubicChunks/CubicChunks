@@ -55,6 +55,7 @@ import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkPrimer;
 import net.minecraft.world.gen.ChunkProviderServer;
 import net.minecraftforge.common.ForgeChunkManager;
+import net.minecraftforge.fml.common.StartupQuery;
 import net.minecraftforge.fml.common.registry.GameRegistry;
 
 import java.io.IOException;
@@ -121,8 +122,8 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
 
             StorageFormatBase format = StorageFormatBase.REGISTRY.getValue(savedData.storageFormat);
             if (format == null) {
-                //TODO: display an error message on the client rather than crashing
-                throw new IllegalStateException("unsupported storage format \"" + savedData.storageFormat + '"');
+                StartupQuery.notify("unsupported storage format \"" + savedData.storageFormat + '"');
+                StartupQuery.abort();
             }
 
             this.cubeIO = new AsyncBatchingCubeIO(worldServer, format.provideStorage(worldServer, path));
