@@ -230,7 +230,7 @@ public interface ICubicStorage extends Flushable, AutoCloseable {
     }
 
     /**
-     * A group of position -> NBT data pairs for both column and cube data.
+     * A group of position+NBT data pairs for both column and cube data.
      * <p>
      * Used for bulk I/O operations.
      *
