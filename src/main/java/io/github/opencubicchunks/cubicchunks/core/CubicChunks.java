@@ -26,11 +26,14 @@ package io.github.opencubicchunks.cubicchunks.core;
 
 import static io.github.opencubicchunks.cubicchunks.core.util.ReflectionUtil.cast;
 
+import io.github.opencubicchunks.cubicchunks.api.world.storage.ICubicStorage;
+import io.github.opencubicchunks.cubicchunks.api.world.storage.StorageFormatBase;
 import io.github.opencubicchunks.cubicchunks.api.worldgen.VanillaCompatibilityGeneratorProviderBase;
 import io.github.opencubicchunks.cubicchunks.core.asm.mixin.ICubicWorldSettings;
 import io.github.opencubicchunks.cubicchunks.core.asm.mixin.core.common.IIntegratedServer;
 import io.github.opencubicchunks.cubicchunks.core.client.ClientEventHandler;
 import io.github.opencubicchunks.cubicchunks.core.network.PacketDispatcher;
+import io.github.opencubicchunks.cubicchunks.core.server.chunkio.RegionCubeStorage;
 import io.github.opencubicchunks.cubicchunks.core.util.CompatHandler;
 import io.github.opencubicchunks.cubicchunks.core.util.SideUtils;
 import io.github.opencubicchunks.cubicchunks.core.world.type.VanillaCubicWorldType;
@@ -64,6 +67,8 @@ import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Map;
 
 import javax.annotation.Nonnull;
@@ -156,12 +161,13 @@ public class CubicChunks {
                 }
         );
     }
-    
+
     @SubscribeEvent
     public static void registerRegistries(RegistryEvent.NewRegistry evt) {
         VanillaCompatibilityGeneratorProviderBase.init();
+        StorageFormatBase.init();
     }
-    
+
     @SubscribeEvent
     public static void registerVanillaCompatibilityGeneratorProvider(RegistryEvent.Register<VanillaCompatibilityGeneratorProviderBase> event) {
         event.getRegistry().register(new VanillaCompatibilityGeneratorProviderBase() {
@@ -172,6 +178,17 @@ public class CubicChunks {
             }
         }.setRegistryName(VanillaCompatibilityGeneratorProviderBase.DEFAULT)
                 .setUnlocalizedName("cubicchunks.gui.worldmenu.cc_default"));
+    }
+
+    @SubscribeEvent
+    public static void registerAnvil3dStorageFormatProvider(RegistryEvent.Register<StorageFormatBase> event) {
+        event.getRegistry().register(new StorageFormatBase() {
+            @Override
+            public ICubicStorage provideStorage(World world, Path path) throws IOException {
+                return new RegionCubeStorage(path);
+            }
+        }.setRegistryName(StorageFormatBase.DEFAULT)
+                .setUnlocalizedName("cubicchunks.gui.storagefmt.anvil3d"));
     }
     
     @NetworkCheckHandler

@@ -100,7 +100,7 @@ public class CubicAnvilChunkLoader extends AnvilChunkLoader {
     }
 
     @Override public boolean writeNextIO() {
-        return getCubeIO().writeNextIO();
+        throw new UnsupportedOperationException();
     }
 
     @Override public void saveExtraChunkData(World worldIn, Chunk chunkIn) {

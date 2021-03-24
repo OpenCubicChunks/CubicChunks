@@ -34,7 +34,9 @@ import io.github.opencubicchunks.cubicchunks.core.network.PacketCubicWorldData;
 import io.github.opencubicchunks.cubicchunks.core.network.PacketDispatcher;
 import io.github.opencubicchunks.cubicchunks.core.server.SpawnCubes;
 import io.github.opencubicchunks.cubicchunks.core.server.VanillaNetworkHandler;
+import io.github.opencubicchunks.cubicchunks.core.server.chunkio.ICubeIO;
 import io.github.opencubicchunks.cubicchunks.core.util.ReflectionUtil;
+import io.github.opencubicchunks.cubicchunks.core.world.ICubeProviderInternal;
 import io.github.opencubicchunks.cubicchunks.core.world.WorldSavedCubicChunksData;
 import io.github.opencubicchunks.cubicchunks.core.world.provider.ICubicWorldProvider;
 import mcp.MethodsReturnNonnullByDefault;
@@ -54,6 +56,7 @@ import net.minecraftforge.fml.common.gameevent.PlayerEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.relauncher.Side;
 
+import java.io.IOException;
 import java.util.List;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -175,5 +178,24 @@ public class CommonEventHandler {
     private boolean shouldSkipWorld(World world) {
         return !allowedServerWorldClasses.contains(world.getClass())
                 || !allowedServerChunkProviderClasses.contains(world.getChunkProvider().getClass());
+    }
+
+    @SubscribeEvent
+    public void onWorldUnload(WorldEvent.Unload event) {
+        if (event.getWorld().isRemote || !((ICubicWorld) event.getWorld()).isCubicWorld()) {
+            return;
+        }
+
+        ICubicWorld world = (ICubicWorld) event.getWorld();
+        if (!world.isCubicWorld()) {
+            return;
+        }
+
+        ICubeIO io = ((ICubeProviderInternal.Server) world.getCubeCache()).getCubeIO();
+        try {
+            io.close();
+        } catch (IOException e) {
+            CubicChunks.LOGGER.catching(e);
+        }
     }
 }

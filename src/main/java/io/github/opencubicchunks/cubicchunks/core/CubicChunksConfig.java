@@ -132,6 +132,10 @@ public class CubicChunksConfig {
     @Config.Comment("Vanilla compatibility generator type, which will convert vanilla world type generators output in cubic")
     public static String compatibilityGeneratorType = "cubicchunks:default";
 
+    @Config.LangKey("cubicchunks.config.storage_format")
+    @Config.Comment("Storage format type. Warning: changing this WILL break existing worlds!")
+    public static String storageFormat = "cubicchunks:anvil3d";
+
     @Config.LangKey("cubicchunks.config.spawn_generate_distance_horizontal")
     @Config.Comment("Horizontal distance for initially generated spawn area")
     @Config.RequiresWorldRestart
