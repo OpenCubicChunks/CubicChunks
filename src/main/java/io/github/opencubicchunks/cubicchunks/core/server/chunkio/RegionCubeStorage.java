@@ -122,7 +122,8 @@ public class RegionCubeStorage implements ICubicStorage {
     public NBTTagCompound readColumn(ChunkPos pos) throws IOException {
         this.lock.readLock().lock();
         try {
-            Optional<ByteBuffer> data = this.save.load(new EntryLocation2D(pos.x, pos.z), false);
+            //TODO: i'm pretty sure this should be false
+            Optional<ByteBuffer> data = this.save.load(new EntryLocation2D(pos.x, pos.z), true);
             return data.isPresent()
                     ? CompressedStreamTools.readCompressed(new ByteArrayInputStream(data.get().array())) //decompress and parse NBT
                     : null; //column doesn't exist
@@ -135,7 +136,8 @@ public class RegionCubeStorage implements ICubicStorage {
     public NBTTagCompound readCube(CubePos pos) throws IOException {
         this.lock.readLock().lock();
         try {
-            Optional<ByteBuffer> data = this.save.load(new EntryLocation3D(pos.getX(), pos.getY(), pos.getZ()), false);
+            //TODO: i'm pretty sure this should be false
+            Optional<ByteBuffer> data = this.save.load(new EntryLocation3D(pos.getX(), pos.getY(), pos.getZ()), true);
             return data.isPresent()
                     ? CompressedStreamTools.readCompressed(new ByteArrayInputStream(data.get().array())) //decompress and parse NBT
                     : null; //cube doesn't exist
