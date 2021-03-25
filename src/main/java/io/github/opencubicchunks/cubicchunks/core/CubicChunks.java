@@ -27,7 +27,7 @@ package io.github.opencubicchunks.cubicchunks.core;
 import static io.github.opencubicchunks.cubicchunks.core.util.ReflectionUtil.cast;
 
 import io.github.opencubicchunks.cubicchunks.api.world.storage.ICubicStorage;
-import io.github.opencubicchunks.cubicchunks.api.world.storage.StorageFormatBase;
+import io.github.opencubicchunks.cubicchunks.api.world.storage.StorageFormatProviderBase;
 import io.github.opencubicchunks.cubicchunks.api.worldgen.VanillaCompatibilityGeneratorProviderBase;
 import io.github.opencubicchunks.cubicchunks.core.asm.mixin.ICubicWorldSettings;
 import io.github.opencubicchunks.cubicchunks.core.asm.mixin.core.common.IIntegratedServer;
@@ -165,7 +165,7 @@ public class CubicChunks {
     @SubscribeEvent
     public static void registerRegistries(RegistryEvent.NewRegistry evt) {
         VanillaCompatibilityGeneratorProviderBase.init();
-        StorageFormatBase.init();
+        StorageFormatProviderBase.init();
     }
 
     @SubscribeEvent
@@ -181,13 +181,13 @@ public class CubicChunks {
     }
 
     @SubscribeEvent
-    public static void registerAnvil3dStorageFormatProvider(RegistryEvent.Register<StorageFormatBase> event) {
-        event.getRegistry().register(new StorageFormatBase() {
+    public static void registerAnvil3dStorageFormatProvider(RegistryEvent.Register<StorageFormatProviderBase> event) {
+        event.getRegistry().register(new StorageFormatProviderBase() {
             @Override
             public ICubicStorage provideStorage(World world, Path path) throws IOException {
                 return new RegionCubeStorage(path);
             }
-        }.setRegistryName(StorageFormatBase.DEFAULT)
+        }.setRegistryName(StorageFormatProviderBase.DEFAULT)
                 .setUnlocalizedName("cubicchunks.gui.storagefmt.anvil3d"));
     }
     

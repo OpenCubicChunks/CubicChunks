@@ -24,7 +24,7 @@
  */
 package io.github.opencubicchunks.cubicchunks.core.server;
 
-import io.github.opencubicchunks.cubicchunks.api.world.storage.StorageFormatBase;
+import io.github.opencubicchunks.cubicchunks.api.world.storage.StorageFormatProviderBase;
 import io.github.opencubicchunks.cubicchunks.core.CubicChunksConfig;
 import io.github.opencubicchunks.cubicchunks.core.lighting.LightingManager;
 import io.github.opencubicchunks.cubicchunks.core.server.chunkio.AsyncBatchingCubeIO;
@@ -120,7 +120,7 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
             WorldSavedCubicChunksData savedData =
                     (WorldSavedCubicChunksData) worldServer.getPerWorldStorage().getOrLoadData(WorldSavedCubicChunksData.class, "cubicChunksData");
 
-            StorageFormatBase format = StorageFormatBase.REGISTRY.getValue(savedData.storageFormat);
+            StorageFormatProviderBase format = StorageFormatProviderBase.REGISTRY.getValue(savedData.storageFormat);
             if (format == null) {
                 StartupQuery.notify("unsupported storage format \"" + savedData.storageFormat + '"');
                 StartupQuery.abort();

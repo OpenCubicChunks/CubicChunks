@@ -24,7 +24,7 @@
  */
 package io.github.opencubicchunks.cubicchunks.core.world;
 
-import io.github.opencubicchunks.cubicchunks.api.world.storage.StorageFormatBase;
+import io.github.opencubicchunks.cubicchunks.api.world.storage.StorageFormatProviderBase;
 import io.github.opencubicchunks.cubicchunks.api.worldgen.VanillaCompatibilityGeneratorProviderBase;
 import io.github.opencubicchunks.cubicchunks.core.CubicChunksConfig;
 import net.minecraft.nbt.NBTTagCompound;
@@ -36,7 +36,7 @@ public class WorldSavedCubicChunksData extends WorldSavedData {
     public boolean isCubicChunks = false;
     public int minHeight = 0, maxHeight = 256;
     public ResourceLocation compatibilityGeneratorType = VanillaCompatibilityGeneratorProviderBase.DEFAULT;
-    public ResourceLocation storageFormat = StorageFormatBase.DEFAULT;
+    public ResourceLocation storageFormat = StorageFormatProviderBase.DEFAULT;
 
     public WorldSavedCubicChunksData(String name) {
         super(name);
@@ -65,7 +65,7 @@ public class WorldSavedCubicChunksData extends WorldSavedData {
         if(nbt.hasKey("storageFormat"))
             storageFormat = new ResourceLocation(nbt.getString("storageFormat"));
         else
-            storageFormat = StorageFormatBase.DEFAULT;
+            storageFormat = StorageFormatProviderBase.DEFAULT;
     }
 
     @Override

@@ -52,8 +52,6 @@ import java.nio.file.Path;
 import java.util.Collections;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Consumer;
 
 /**
@@ -115,7 +113,6 @@ public class RegionCubeStorage implements ICubicStorage {
 
     private final Path path;
     private SaveCubeColumns save;
-    private final ReadWriteLock lock = new ReentrantReadWriteLock();
 
     public RegionCubeStorage(Path path) throws IOException {
         this.path = Objects.requireNonNull(path, "path");
@@ -124,56 +121,35 @@ public class RegionCubeStorage implements ICubicStorage {
 
     @Override
     public boolean columnExists(ChunkPos pos) throws IOException {
-        this.lock.readLock().lock();
-        try {
-            return this.save.getSaveSection2D().hasEntry(new EntryLocation2D(pos.x, pos.z));
-        } finally {
-            this.lock.readLock().unlock();
-        }
+        return this.save.getSaveSection2D().hasEntry(new EntryLocation2D(pos.x, pos.z));
     }
 
     @Override
     public boolean cubeExists(CubePos pos) throws IOException {
-        this.lock.readLock().lock();
-        try {
-            return this.save.getSaveSection3D().hasEntry(new EntryLocation3D(pos.getX(), pos.getY(), pos.getZ()));
-        } finally {
-            this.lock.readLock().unlock();
-        }
+        return this.save.getSaveSection3D().hasEntry(new EntryLocation3D(pos.getX(), pos.getY(), pos.getZ()));
     }
 
     @Override
     public NBTTagCompound readColumn(ChunkPos pos) throws IOException {
-        this.lock.readLock().lock();
-        try {
-            //TODO: i'm pretty sure this should be false
-            Optional<ByteBuffer> data = this.save.load(new EntryLocation2D(pos.x, pos.z), true);
-            return data.isPresent()
-                    ? CompressedStreamTools.readCompressed(new ByteArrayInputStream(data.get().array())) //decompress and parse NBT
-                    : null; //column doesn't exist
-        } finally {
-            this.lock.readLock().unlock();
-        }
+        //TODO: i'm pretty sure this should be false
+        Optional<ByteBuffer> data = this.save.load(new EntryLocation2D(pos.x, pos.z), true);
+        return data.isPresent()
+                ? CompressedStreamTools.readCompressed(new ByteArrayInputStream(data.get().array())) //decompress and parse NBT
+                : null; //column doesn't exist
     }
 
     @Override
     public NBTTagCompound readCube(CubePos pos) throws IOException {
-        this.lock.readLock().lock();
-        try {
-            //TODO: i'm pretty sure this should be false
-            Optional<ByteBuffer> data = this.save.load(new EntryLocation3D(pos.getX(), pos.getY(), pos.getZ()), true);
-            return data.isPresent()
-                    ? CompressedStreamTools.readCompressed(new ByteArrayInputStream(data.get().array())) //decompress and parse NBT
-                    : null; //cube doesn't exist
-        } finally {
-            this.lock.readLock().unlock();
-        }
+        //TODO: i'm pretty sure this should be false
+        Optional<ByteBuffer> data = this.save.load(new EntryLocation3D(pos.getX(), pos.getY(), pos.getZ()), true);
+        return data.isPresent()
+                ? CompressedStreamTools.readCompressed(new ByteArrayInputStream(data.get().array())) //decompress and parse NBT
+                : null; //cube doesn't exist
     }
 
     @Override
     public void writeColumn(ChunkPos pos, NBTTagCompound nbt) throws IOException {
         ByteBuf compressedBuf = ByteBufAllocator.DEFAULT.ioBuffer();
-        this.lock.readLock().lock();
         try {
             //compress NBT data
             CompressedStreamTools.writeCompressed(nbt, new ByteBufOutputStream(compressedBuf));
@@ -181,7 +157,6 @@ public class RegionCubeStorage implements ICubicStorage {
             //write compressed data to disk
             this.save.save2d(new EntryLocation2D(pos.x, pos.z), compressedBuf.internalNioBuffer(compressedBuf.readerIndex(), compressedBuf.readableBytes()));
         } finally {
-            this.lock.readLock().unlock();
             compressedBuf.release();
         }
     }
@@ -189,7 +164,6 @@ public class RegionCubeStorage implements ICubicStorage {
     @Override
     public void writeCube(CubePos pos, NBTTagCompound nbt) throws IOException {
         ByteBuf compressedBuf = ByteBufAllocator.DEFAULT.ioBuffer();
-        this.lock.readLock().lock();
         try {
             //compress NBT data
             CompressedStreamTools.writeCompressed(nbt, new ByteBufOutputStream(compressedBuf));
@@ -197,52 +171,28 @@ public class RegionCubeStorage implements ICubicStorage {
             //write compressed data to disk
             this.save.save3d(new EntryLocation3D(pos.getX(), pos.getY(), pos.getZ()), compressedBuf.internalNioBuffer(compressedBuf.readerIndex(), compressedBuf.readableBytes()));
         } finally {
-            this.lock.readLock().unlock();
             compressedBuf.release();
         }
     }
 
     @Override
     public void forEachColumn(Consumer<ChunkPos> callback) throws IOException {
-        this.lock.readLock().lock();
-        try {
-            this.save.getSaveSection2D().forAllKeys(pos -> callback.accept(new ChunkPos(pos.getEntryX(), pos.getEntryZ())));
-        } finally {
-            this.lock.readLock().unlock();
-        }
+        this.save.getSaveSection2D().forAllKeys(pos -> callback.accept(new ChunkPos(pos.getEntryX(), pos.getEntryZ())));
     }
 
     @Override
     public void forEachCube(Consumer<CubePos> callback) throws IOException {
-        this.lock.readLock().lock();
-        try {
-            this.save.getSaveSection3D().forAllKeys(pos -> callback.accept(new CubePos(pos.getEntryX(), pos.getEntryY(), pos.getEntryZ())));
-        } finally {
-            this.lock.readLock().unlock();
-        }
+        this.save.getSaveSection3D().forAllKeys(pos -> callback.accept(new CubePos(pos.getEntryX(), pos.getEntryY(), pos.getEntryZ())));
     }
 
     @Override
     public void flush() throws IOException {
-        this.lock.writeLock().lock();
-        try {
-            //close and re-open save
-            //this will also close all the region files, which should ensure that their contents are written to disk
-            this.save.close();
-            this.save = saveForPath(this.path);
-        } finally {
-            this.lock.writeLock().unlock();
-        }
+        this.save.flush();
     }
 
     @Override
     public void close() throws IOException {
-        this.lock.writeLock().lock();
-        try {
-            this.save.close();
-            this.save = null;
-        } finally {
-            this.lock.writeLock().unlock();
-        }
+        this.save.close();
+        this.save = null;
     }
 }

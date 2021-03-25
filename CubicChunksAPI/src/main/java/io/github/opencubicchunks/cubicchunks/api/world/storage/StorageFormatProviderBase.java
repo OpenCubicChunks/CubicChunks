@@ -33,13 +33,13 @@ import net.minecraftforge.registries.RegistryBuilder;
 import java.io.IOException;
 import java.nio.file.Path;
 
-public abstract class StorageFormatBase implements IForgeRegistryEntry<StorageFormatBase> {
+public abstract class StorageFormatProviderBase implements IForgeRegistryEntry<StorageFormatProviderBase> {
     public static final ResourceLocation DEFAULT = new ResourceLocation("cubicchunks", "anvil3d");
-    public static IForgeRegistry<StorageFormatBase> REGISTRY;
+    public static IForgeRegistry<StorageFormatProviderBase> REGISTRY;
 
     public static void init() {
-        REGISTRY = new RegistryBuilder<StorageFormatBase>()
-                .setType(StorageFormatBase.class)
+        REGISTRY = new RegistryBuilder<StorageFormatProviderBase>()
+                .setType(StorageFormatProviderBase.class)
                 .setIDRange(0, 256)
                 .setName(new ResourceLocation("cubicchunks", "storage_format_provider_registry"))
                 .create();
@@ -49,7 +49,7 @@ public abstract class StorageFormatBase implements IForgeRegistryEntry<StorageFo
     public String unlocalizedName;
 
     @Override
-    public StorageFormatBase setRegistryName(ResourceLocation registryNameIn) {
+    public StorageFormatProviderBase setRegistryName(ResourceLocation registryNameIn) {
         this.registryName = registryNameIn;
         return this;
     }
@@ -60,11 +60,11 @@ public abstract class StorageFormatBase implements IForgeRegistryEntry<StorageFo
     }
 
     @Override
-    public Class<StorageFormatBase> getRegistryType() {
-        return StorageFormatBase.class;
+    public Class<StorageFormatProviderBase> getRegistryType() {
+        return StorageFormatProviderBase.class;
     }
 
-    public StorageFormatBase setUnlocalizedName(String nameIn) {
+    public StorageFormatProviderBase setUnlocalizedName(String nameIn) {
         this.unlocalizedName = nameIn;
         return this;
     }
