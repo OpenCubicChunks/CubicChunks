@@ -131,7 +131,8 @@ public class RegionCubeStorage implements ICubicStorage {
 
     @Override
     public NBTTagCompound readColumn(ChunkPos pos) throws IOException {
-        //TODO: i'm pretty sure this should be false
+        //we use a true here in order to force creation and caching of the new region, thus avoiding an expensive Files.exists() check for every cube/column (which
+        // is really expensive on windows)
         Optional<ByteBuffer> data = this.save.load(new EntryLocation2D(pos.x, pos.z), true);
         return data.isPresent()
                 ? CompressedStreamTools.readCompressed(new ByteArrayInputStream(data.get().array())) //decompress and parse NBT
@@ -140,7 +141,7 @@ public class RegionCubeStorage implements ICubicStorage {
 
     @Override
     public NBTTagCompound readCube(CubePos pos) throws IOException {
-        //TODO: i'm pretty sure this should be false
+        //see comment in readColumn
         Optional<ByteBuffer> data = this.save.load(new EntryLocation3D(pos.getX(), pos.getY(), pos.getZ()), true);
         return data.isPresent()
                 ? CompressedStreamTools.readCompressed(new ByteArrayInputStream(data.get().array())) //decompress and parse NBT

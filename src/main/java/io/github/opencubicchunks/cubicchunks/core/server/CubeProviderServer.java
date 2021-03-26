@@ -117,8 +117,11 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
                 path = path.resolve(worldServer.provider.getSaveFolder());
             }
 
+            //use the save format stored in the server's default world as the global world storage type
+            World overworld = worldServer.getMinecraftServer().getEntityWorld();
+
             WorldSavedCubicChunksData savedData =
-                    (WorldSavedCubicChunksData) worldServer.getPerWorldStorage().getOrLoadData(WorldSavedCubicChunksData.class, "cubicChunksData");
+                    (WorldSavedCubicChunksData) overworld.getPerWorldStorage().getOrLoadData(WorldSavedCubicChunksData.class, "cubicChunksData");
 
             StorageFormatProviderBase format = StorageFormatProviderBase.REGISTRY.getValue(savedData.storageFormat);
             if (format == null) {

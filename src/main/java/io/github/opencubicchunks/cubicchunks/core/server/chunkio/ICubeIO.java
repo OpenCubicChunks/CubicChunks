@@ -39,8 +39,9 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
+import net.minecraft.world.storage.IThreadedFileIO;
 
-public interface ICubeIO extends Flushable, AutoCloseable {
+public interface ICubeIO extends Flushable, AutoCloseable, IThreadedFileIO {
 	@Override
 	void flush() throws IOException;
 

@@ -50,11 +50,11 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import static com.google.common.base.Preconditions.*;
 
 /**
- * Implementation of {@link ICubeIO} which internally batches cubes/columns together, and forwards them alogn to a {@link ICubicStorage} on the I/O thread.
+ * Implementation of {@link ICubeIO} which internally batches cubes/columns together, and forwards them along to a {@link ICubicStorage} on the I/O thread.
  *
  * @author DaPorkchop_
  */
-public class AsyncBatchingCubeIO implements ICubeIO, IThreadedFileIO {
+public class AsyncBatchingCubeIO implements ICubeIO {
     protected final ReadWriteLock lock = new ReentrantReadWriteLock();
 
     protected final World world;
