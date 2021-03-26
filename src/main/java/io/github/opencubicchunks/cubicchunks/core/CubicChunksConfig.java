@@ -133,8 +133,9 @@ public class CubicChunksConfig {
     public static String compatibilityGeneratorType = "cubicchunks:default";
 
     @Config.LangKey("cubicchunks.config.storage_format")
-    @Config.Comment("The storage format. Note: this will be used for all newly created worlds. Existing worlds will continue to use the format they were created with.")
-    public static String storageFormat = "cubicchunks:anvil3d";
+    @Config.Comment("The storage format. Note: this will be used for all newly created worlds. Existing worlds will continue to use the format they were created with.\n"
+                    + "If empty, the storage format for new worlds will be determined automatically.")
+    public static String storageFormat = "";
 
     @Config.LangKey("cubicchunks.config.spawn_generate_distance_horizontal")
     @Config.Comment("Horizontal distance for initially generated spawn area")

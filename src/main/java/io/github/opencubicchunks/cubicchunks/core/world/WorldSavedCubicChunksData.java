@@ -49,7 +49,7 @@ public class WorldSavedCubicChunksData extends WorldSavedData {
             this.maxHeight = maxHeight;
             isCubicChunks = true;
             compatibilityGeneratorType = new ResourceLocation(CubicChunksConfig.compatibilityGeneratorType);
-            storageFormat = new ResourceLocation(CubicChunksConfig.storageFormat);
+            storageFormat = CubicChunksConfig.storageFormat.isEmpty() ? StorageFormatProviderBase.defaultStorageFormatProviderName() : new ResourceLocation(CubicChunksConfig.storageFormat);
         }
     }
 
@@ -65,7 +65,7 @@ public class WorldSavedCubicChunksData extends WorldSavedData {
         if(nbt.hasKey("storageFormat"))
             storageFormat = new ResourceLocation(nbt.getString("storageFormat"));
         else
-            storageFormat = StorageFormatProviderBase.DEFAULT;
+            storageFormat = CubicChunksConfig.storageFormat.isEmpty() ? StorageFormatProviderBase.defaultStorageFormatProviderName() : new ResourceLocation(CubicChunksConfig.storageFormat);
     }
 
     @Override

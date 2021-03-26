@@ -187,6 +187,11 @@ public class CubicChunks {
             public ICubicStorage provideStorage(World world, Path path) throws IOException {
                 return new RegionCubeStorage(path);
             }
+
+            @Override
+            public int defaultPriority() {
+                return 1;
+            }
         }.setRegistryName(StorageFormatProviderBase.DEFAULT)
                 .setUnlocalizedName("cubicchunks.gui.storagefmt.anvil3d"));
     }

@@ -32,8 +32,11 @@ import net.minecraftforge.registries.RegistryBuilder;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Comparator;
 
 public abstract class StorageFormatProviderBase implements IForgeRegistryEntry<StorageFormatProviderBase> {
+    public static final Comparator<StorageFormatProviderBase> COMPARATOR = Comparator.comparingInt(StorageFormatProviderBase::defaultPriority);
+
     public static final ResourceLocation DEFAULT = new ResourceLocation("cubicchunks", "anvil3d");
     public static IForgeRegistry<StorageFormatProviderBase> REGISTRY;
 
@@ -45,8 +48,17 @@ public abstract class StorageFormatProviderBase implements IForgeRegistryEntry<S
                 .create();
     }
 
+    public static ResourceLocation defaultStorageFormatProviderName() {
+        return REGISTRY.getValuesCollection().stream().max(COMPARATOR).get().getRegistryName();
+    }
+
     public ResourceLocation registryName;
     public String unlocalizedName;
+
+    @Override
+    public ResourceLocation getRegistryName() {
+        return this.registryName;
+    }
 
     @Override
     public StorageFormatProviderBase setRegistryName(ResourceLocation registryNameIn) {
@@ -55,13 +67,12 @@ public abstract class StorageFormatProviderBase implements IForgeRegistryEntry<S
     }
 
     @Override
-    public ResourceLocation getRegistryName() {
-        return this.registryName;
-    }
-
-    @Override
     public Class<StorageFormatProviderBase> getRegistryType() {
         return StorageFormatProviderBase.class;
+    }
+
+    public String getUnlocalizedName() {
+        return this.unlocalizedName;
     }
 
     public StorageFormatProviderBase setUnlocalizedName(String nameIn) {
@@ -69,9 +80,16 @@ public abstract class StorageFormatProviderBase implements IForgeRegistryEntry<S
         return this;
     }
 
-    public String getUnlocalizedName() {
-        return this.unlocalizedName;
-    }
-
     public abstract ICubicStorage provideStorage(World world, Path path) throws IOException;
+
+    /**
+     * Gets the priority with which this storage format will be used as the default storage format when creating a new world. Lower values indicate a lower priority.
+     * <p>
+     * The default {@code cubicchunks:anvil3d} format uses a priority of 1.
+     *
+     * @return the priority with which this storage format will be used as the default storage format
+     */
+    public int defaultPriority() {
+        return 0;
+    }
 }
