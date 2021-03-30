@@ -45,12 +45,13 @@ public abstract class StorageFormatProviderBase implements IForgeRegistryEntry<S
                 .create();
     }
 
-    public static ResourceLocation defaultStorageFormatProviderName(ResourceLocation fallback) {
+    public static ResourceLocation defaultStorageFormatProviderName(String fallback) {
         ResourceLocation[] providersThatCanBeDefault = REGISTRY.getValuesCollection().stream()
                 .filter(StorageFormatProviderBase::canBeDefault)
                 .map(StorageFormatProviderBase::getRegistryName)
                 .toArray(ResourceLocation[]::new);
-        return providersThatCanBeDefault.length == 1 ? providersThatCanBeDefault[0] : fallback;
+        return providersThatCanBeDefault.length == 1 ? providersThatCanBeDefault[0] :
+                fallback.isEmpty() ? DEFAULT : new ResourceLocation(fallback);
     }
 
     public ResourceLocation registryName;
