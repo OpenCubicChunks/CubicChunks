@@ -45,6 +45,7 @@ import cubicchunks.regionlib.lib.header.IKeyIdToSectorMap;
 import cubicchunks.regionlib.lib.header.IntPackedSectorMap;
 import cubicchunks.regionlib.util.CheckedConsumer;
 import cubicchunks.regionlib.util.CorruptedDataException;
+import cubicchunks.regionlib.util.Utils;
 import cubicchunks.regionlib.util.WrappedException;
 
 import static java.nio.file.StandardOpenOption.CREATE;
@@ -87,11 +88,11 @@ public class ShadowPagingRegion<K extends IKey<K>> implements IRegion<K> {
 
 		int bytesOffset = location.getOffset()*sectorSize;
 
-		file.position(bytesOffset).write(ByteBuffer.allocate(Integer.BYTES).putInt(0, size));
-		file.write(value);
+		Utils.writeFully(file.position(bytesOffset), ByteBuffer.allocate(Integer.BYTES).putInt(0, size));
+		Utils.writeFully(file, value);
 		file.force(false);
 		updateHeaders(key);
-		file.force(false);
+		//no need to flush channel a second time after headers update, as doing so won't affect data integrity
 	}
 
 	@Override public void writeSpecial(K key, Object marker) throws IOException {
@@ -105,7 +106,7 @@ public class ShadowPagingRegion<K extends IKey<K>> implements IRegion<K> {
 		ByteBuffer buf = ByteBuffer.allocate(entryByteCount);
 		headerEntryProvider.apply(key).write(buf);
 		buf.flip();
-		file.position((long) key.getId() * entryByteCount).write(buf);
+		Utils.writeFully(file.position((long) key.getId() * entryByteCount), buf);
 	}
 
 	@Override public synchronized Optional<ByteBuffer> readValue(K key) throws IOException {
@@ -127,7 +128,7 @@ public class ShadowPagingRegion<K extends IKey<K>> implements IRegion<K> {
 
 				ByteBuffer buf = ByteBuffer.allocate(Integer.BYTES);
 
-				file.position((long) sectorOffset * sectorSize).read(buf);
+				Utils.readFully(file.position((long) sectorOffset * sectorSize), buf);
 
 				int dataLength = buf.getInt(0);
 				if (dataLength > sectorCount * sectorSize) {
@@ -136,7 +137,7 @@ public class ShadowPagingRegion<K extends IKey<K>> implements IRegion<K> {
 				}
 
 				ByteBuffer bytes = ByteBuffer.allocate(dataLength);
-				file.read(bytes);
+				Utils.readFully(file, bytes);
 				bytes.flip();
 				return Optional.of(bytes);
 			} catch (IOException e) {
@@ -168,15 +169,25 @@ public class ShadowPagingRegion<K extends IKey<K>> implements IRegion<K> {
 		return ceilDiv(bytes, sectorSize);
 	}
 
+	@Override
+	public void flush() throws IOException {
+		this.ensureSectorSizeAligned();
+		this.file.force(false);
+	}
+
 	@Override public void close() throws IOException {
+		this.ensureSectorSizeAligned();
+		this.file.close();
+	}
+
+	private void ensureSectorSizeAligned() throws IOException {
 		if (file.size() % sectorSize != 0) {
 			int extra = (int) (sectorSize - (file.size() % sectorSize));
 			ByteBuffer buffer = ByteBuffer.allocateDirect(extra);
 			this.file.position(this.file.size());
-			this.file.write(buffer);
+			Utils.writeFully(this.file, buffer);
 			assert this.file.size() % sectorSize == 0;
 		}
-		this.file.close();
 	}
 
 	private static int ceilDiv(int x, int y) {

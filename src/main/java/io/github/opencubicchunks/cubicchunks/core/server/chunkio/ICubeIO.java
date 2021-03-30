@@ -24,6 +24,7 @@
  */
 package io.github.opencubicchunks.cubicchunks.core.server.chunkio;
 
+import java.io.Flushable;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.function.BiConsumer;
@@ -40,8 +41,12 @@ import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.storage.IThreadedFileIO;
 
-public interface ICubeIO extends IThreadedFileIO {
+public interface ICubeIO extends Flushable, AutoCloseable, IThreadedFileIO {
+	@Override
 	void flush() throws IOException;
+
+	@Override
+	void close() throws IOException;
 
 	default PartialData<Chunk> loadColumnAsyncPart(World world, int chunkX, int chunkZ) throws IOException {
 		PartialData<Chunk> data = loadColumnNbt(chunkX, chunkZ);

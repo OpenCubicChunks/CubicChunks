@@ -24,10 +24,11 @@
  */
 package io.github.opencubicchunks.cubicchunks.core.server;
 
+import io.github.opencubicchunks.cubicchunks.api.world.storage.StorageFormatProviderBase;
 import io.github.opencubicchunks.cubicchunks.core.CubicChunksConfig;
 import io.github.opencubicchunks.cubicchunks.core.lighting.LightingManager;
+import io.github.opencubicchunks.cubicchunks.core.server.chunkio.AsyncBatchingCubeIO;
 import io.github.opencubicchunks.cubicchunks.core.server.chunkio.ICubeIO;
-import io.github.opencubicchunks.cubicchunks.core.server.chunkio.RegionCubeIO;
 import io.github.opencubicchunks.cubicchunks.core.server.chunkio.async.forge.AsyncWorldIOExecutor;
 import io.github.opencubicchunks.cubicchunks.api.worldgen.CubePrimer;
 import io.github.opencubicchunks.cubicchunks.api.world.ICube;
@@ -39,6 +40,7 @@ import io.github.opencubicchunks.cubicchunks.api.util.XYZMap;
 import io.github.opencubicchunks.cubicchunks.core.world.ICubeProviderInternal;
 import io.github.opencubicchunks.cubicchunks.core.asm.mixin.ICubicWorldInternal;
 import io.github.opencubicchunks.cubicchunks.api.world.IColumn;
+import io.github.opencubicchunks.cubicchunks.core.world.WorldSavedCubicChunksData;
 import io.github.opencubicchunks.cubicchunks.core.world.cube.BlankCube;
 import io.github.opencubicchunks.cubicchunks.core.world.cube.Cube;
 import mcp.MethodsReturnNonnullByDefault;
@@ -53,10 +55,12 @@ import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkPrimer;
 import net.minecraft.world.gen.ChunkProviderServer;
 import net.minecraftforge.common.ForgeChunkManager;
+import net.minecraftforge.fml.common.StartupQuery;
 import net.minecraftforge.fml.common.registry.GameRegistry;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.nio.file.Path;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
@@ -108,7 +112,24 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
         this.worldServer = worldServer;
         this.profiler = worldServer.profiler;
         try {
-            this.cubeIO = new RegionCubeIO(worldServer);
+            Path path = worldServer.getSaveHandler().getWorldDirectory().toPath();
+            if (worldServer.provider.getSaveFolder() != null) {
+                path = path.resolve(worldServer.provider.getSaveFolder());
+            }
+
+            //use the save format stored in the server's default world as the global world storage type
+            World overworld = worldServer.getMinecraftServer().getEntityWorld();
+
+            WorldSavedCubicChunksData savedData =
+                    (WorldSavedCubicChunksData) overworld.getPerWorldStorage().getOrLoadData(WorldSavedCubicChunksData.class, "cubicChunksData");
+
+            StorageFormatProviderBase format = StorageFormatProviderBase.REGISTRY.getValue(savedData.storageFormat);
+            if (format == null) {
+                StartupQuery.notify("unsupported storage format \"" + savedData.storageFormat + '"');
+                StartupQuery.abort();
+            }
+
+            this.cubeIO = new AsyncBatchingCubeIO(worldServer, format.provideStorage(worldServer, path));
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
