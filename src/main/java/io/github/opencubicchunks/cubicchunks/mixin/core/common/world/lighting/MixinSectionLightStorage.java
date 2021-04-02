@@ -78,13 +78,15 @@ public abstract class MixinSectionLightStorage<M extends DataLayerStorageMap<M>>
                 this.clearQueuedSectionBlocks(engine, noLightPos);
                 DataLayer nibblearray = this.queuedSections.remove(noLightPos);
                 DataLayer nibblearray1 = this.updatingSectionData.removeLayer(noLightPos);
-                if (this.cubesToRetain.contains(CubePos.sectionToCubeSectionLong(noLightPos))) {
+                // FIXME this commented out check is probably important, but also breaks client-side lighting
+                //       should investigate why it breaks things instead of just disabling it.
+//                if (this.cubesToRetain.contains(CubePos.sectionToCubeSectionLong(noLightPos))) {
                     if (nibblearray != null) {
                         this.queuedSections.put(noLightPos, nibblearray);
                     } else if (nibblearray1 != null) {
                         this.queuedSections.put(noLightPos, nibblearray1);
                     }
-                }
+//                }
             }
 
             this.updatingSectionData.clearCache();
@@ -99,14 +101,16 @@ public abstract class MixinSectionLightStorage<M extends DataLayerStorageMap<M>>
 
             for (Long2ObjectMap.Entry<DataLayer> entry : this.queuedSections.long2ObjectEntrySet()) {
                 long entryPos = entry.getLongKey();
-                if (this.storingLightForSection(entryPos)) {
+                // FIXME this commented out check is also probably important, but this one breaks *server-side* lighting
+                //       should investigate why it breaks things instead of just disabling it.
+//                if (this.storingLightForSection(entryPos)) {
                     DataLayer nibblearray2 = entry.getValue();
                     if (this.updatingSectionData.getLayer(entryPos) != nibblearray2) {
                         this.clearQueuedSectionBlocks(engine, entryPos);
                         this.updatingSectionData.setLayer(entryPos, nibblearray2);
                         this.changedSections.add(entryPos);
                     }
-                }
+//                }
             }
 
             LevelBasedGraphAccess engineAccess = ((LevelBasedGraphAccess) engine);
