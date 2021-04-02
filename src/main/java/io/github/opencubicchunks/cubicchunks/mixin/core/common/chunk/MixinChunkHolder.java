@@ -199,20 +199,16 @@ public abstract class MixinChunkHolder implements ICubeHolder {
         value = "INVOKE",
         target = "Ljava/util/concurrent/CompletableFuture;thenAccept(Ljava/util/function/Consumer;)Ljava/util/concurrent/CompletableFuture;"))
     private CompletableFuture<Void> onCompleteScheduleFullChunkPromotion(CompletableFuture<Either<LevelChunk, ChunkHolder.ChunkLoadingFailure>> completableFuture,
-                                                                         Consumer<?> action) {
+                                                                         Consumer<? super Either<LevelChunk, ChunkHolder.ChunkLoadingFailure>> action) {
 
         CompletableFuture<Void> f2 = pendingFullStateConfirmation;
         if (!((CubicLevelHeightAccessor) this.levelHeightAccessor).isCubic()) {
-            return completableFuture.thenAccept(unsafeCast(action));
+            return completableFuture.thenAccept(action);
         }
 
 
         if (cubePos == null) {
-            return completableFuture.thenAccept((either) -> {
-                either.ifLeft((levelChunk) -> {
-                    f2.complete(null);
-                });
-            });
+            return completableFuture.thenAccept(action);
         }
         //noinspection unchecked
         return ((CompletableFuture<Either<BigCube, ChunkHolder.ChunkLoadingFailure>>) unsafeCast(completableFuture)).thenAccept((either) -> {

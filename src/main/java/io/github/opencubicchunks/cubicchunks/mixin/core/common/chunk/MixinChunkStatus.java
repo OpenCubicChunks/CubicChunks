@@ -157,20 +157,25 @@ public class MixinChunkStatus {
     private static void cubicChunksBiome(ServerLevel world, ChunkGenerator chunkGenerator, List<ChunkAccess> neighbors, ChunkAccess chunkAccess, CallbackInfo ci) {
         if (((CubicLevelHeightAccessor) world).generates2DChunks()) {
             if (chunkAccess instanceof IBigCube) {
-//                /* This can only be a  CubePrimer at this point due to the inject in MixinChunkStatus#cubicChunksBiome  */
-//                IBigCube iCube = (IBigCube) chunkAccess;
-//                CubePos cubePos = ((IBigCube) chunkAccess).getCubePos();
-//                ((CubePrimer) iCube).setCubeBiomes(new CubeBiomeContainer(world.registryAccess().registryOrThrow(Registry.BIOME_REGISTRY), cubePos, this.runtimeBiomeSource));
                 return;
             }
             return;
         }
-        if (chunkAccess instanceof IBigCube) {
-            chunkGenerator.createBiomes(world.registryAccess().registryOrThrow(Registry.BIOME_REGISTRY), chunkAccess);
+
+        if (chunkAccess instanceof CubePrimer) {
+            ci.cancel();
+            CubePrimer cube = ((CubePrimer) chunkAccess);
+            cube.setHeightToCubeBounds(true);
+            for (int columnX = 0; columnX < IBigCube.DIAMETER_IN_SECTIONS; columnX++) {
+                for (int columnZ = 0; columnZ < IBigCube.DIAMETER_IN_SECTIONS; columnZ++) {
+                    cube.moveColumns(columnX, columnZ);
+                    chunkGenerator.createBiomes(world.registryAccess().registryOrThrow(Registry.BIOME_REGISTRY), chunkAccess);
+                }
+            }
+            cube.setHeightToCubeBounds(false);
             return;
         }
         ci.cancel();
-        //noinspection ConstantConditions
         ColumnBiomeContainer biomeContainer = new ColumnBiomeContainer(world.registryAccess().registryOrThrow(BIOME_REGISTRY), world, world);
         ((ProtoChunk) chunkAccess).setBiomes(biomeContainer);
     }
@@ -206,12 +211,20 @@ public class MixinChunkStatus {
 
             for (int columnX = 0; columnX < IBigCube.DIAMETER_IN_SECTIONS; columnX++) {
                 for (int columnZ = 0; columnZ < IBigCube.DIAMETER_IN_SECTIONS; columnZ++) {
+                    cubeAbove.moveColumns(columnX, columnZ);
+                    if (chunk instanceof CubePrimer) {
+                        ((CubePrimer) chunk).moveColumns(columnX, columnZ);
+                    }
+
                     NoiseAndSurfaceBuilderHelper cubeAccessWrapper = new NoiseAndSurfaceBuilderHelper((IBigCube) chunk, cubeAbove);
                     cubeAccessWrapper.moveColumn(columnX, columnZ);
                     CompletableFuture<ChunkAccess> chunkAccessCompletableFuture =
                         generator.fillFromNoise(executor, world.structureFeatureManager().forWorldGenRegion(cubeWorldGenRegion), cubeAccessWrapper).thenApply(chunkAccess -> {
                             cubeAccessWrapper.applySections();
                             generator.buildSurfaceAndBedrock(cubeWorldGenRegion, chunkAccess);
+                            // Carvers
+                            generator.applyCarvers(world.getSeed(), world.getBiomeManager(), cubeAccessWrapper, GenerationStep.Carving.AIR);
+                            generator.applyCarvers(world.getSeed(), world.getBiomeManager(), cubeAccessWrapper, GenerationStep.Carving.LIQUID);
                             return chunkAccess;
                         });
                     if (completableFuture == null) {
@@ -263,22 +276,25 @@ public class MixinChunkStatus {
         }
 
         ci.cancel();
-        if (chunk instanceof IBigCube) {
-            CubeWorldGenRegion cubeWorldGenRegion = new CubeWorldGenRegion(world, unsafeCast(neighbors), chunk);
-
-            CubePrimer cubeAbove = new CubePrimer(CubePos.of(((IBigCube) chunk).getCubePos().getX(), ((IBigCube) chunk).getCubePos().getY() + 1,
-                ((IBigCube) chunk).getCubePos().getZ()), UpgradeData.EMPTY, cubeWorldGenRegion);
-
-            NoiseAndSurfaceBuilderHelper noiseAndSurfaceBuilderHelper = new NoiseAndSurfaceBuilderHelper((IBigCube) chunk, cubeAbove);
-
-            for (int columnX = 0; columnX < IBigCube.DIAMETER_IN_SECTIONS; columnX++) {
-                for (int columnZ = 0; columnZ < IBigCube.DIAMETER_IN_SECTIONS; columnZ++) {
-                    noiseAndSurfaceBuilderHelper.moveColumn(columnX, columnZ);
-                    generator.applyCarvers(world.getSeed(), world.getBiomeManager(), noiseAndSurfaceBuilderHelper, GenerationStep.Carving.AIR);
-                    noiseAndSurfaceBuilderHelper.applySections();
-                }
-            }
-        }
+//        if (chunk instanceof IBigCube) {
+//            CubeWorldGenRegion cubeWorldGenRegion = new CubeWorldGenRegion(world, unsafeCast(neighbors), chunk);
+//
+//            CubePrimer cubeAbove = new CubePrimer(CubePos.of(((IBigCube) chunk).getCubePos().getX(), ((IBigCube) chunk).getCubePos().getY() + 1,
+//                ((IBigCube) chunk).getCubePos().getZ()), UpgradeData.EMPTY, cubeWorldGenRegion);
+//
+//            NoiseAndSurfaceBuilderHelper noiseAndSurfaceBuilderHelper = new NoiseAndSurfaceBuilderHelper((IBigCube) chunk, cubeAbove);
+//
+//            for (int columnX = 0; columnX < IBigCube.DIAMETER_IN_SECTIONS; columnX++) {
+//                for (int columnZ = 0; columnZ < IBigCube.DIAMETER_IN_SECTIONS; columnZ++) {
+//                    cubeAbove.moveColumns(columnX, columnZ);
+//                    if (chunk instanceof CubePrimer) {
+//                        ((CubePrimer) chunk).moveColumns(columnX, columnZ);
+//                    }
+//                    noiseAndSurfaceBuilderHelper.moveColumn(columnX, columnZ);
+//                    noiseAndSurfaceBuilderHelper.applySections();
+//                }
+//            }
+//        }
     }
 
     @SuppressWarnings({ "UnresolvedMixinReference", "target" })
@@ -294,23 +310,26 @@ public class MixinChunkStatus {
         }
 
         ci.cancel();
-        if (chunk instanceof IBigCube) {
-            CubeWorldGenRegion cubeWorldGenRegion = new CubeWorldGenRegion(world, unsafeCast(neighbors), chunk);
-
-            CubePrimer cubeAbove = new CubePrimer(CubePos.of(((IBigCube) chunk).getCubePos().getX(), ((IBigCube) chunk).getCubePos().getY() + 1,
-                ((IBigCube) chunk).getCubePos().getZ()), UpgradeData.EMPTY, cubeWorldGenRegion);
-
-            NoiseAndSurfaceBuilderHelper noiseAndSurfaceBuilderHelper = new NoiseAndSurfaceBuilderHelper((IBigCube) chunk, cubeAbove);
-
-            //TODO: Verify liquid carvers are generating appropriately
-            for (int columnX = 0; columnX < IBigCube.DIAMETER_IN_SECTIONS; columnX++) {
-                for (int columnZ = 0; columnZ < IBigCube.DIAMETER_IN_SECTIONS; columnZ++) {
-                    noiseAndSurfaceBuilderHelper.moveColumn(columnX, columnZ);
-                    generator.applyCarvers(world.getSeed(), world.getBiomeManager(), noiseAndSurfaceBuilderHelper, GenerationStep.Carving.LIQUID);
-                    noiseAndSurfaceBuilderHelper.applySections();
-                }
-            }
-        }
+//        if (chunk instanceof IBigCube) {
+//            CubeWorldGenRegion cubeWorldGenRegion = new CubeWorldGenRegion(world, unsafeCast(neighbors), chunk);
+//
+//            CubePrimer cubeAbove = new CubePrimer(CubePos.of(((IBigCube) chunk).getCubePos().getX(), ((IBigCube) chunk).getCubePos().getY() + 1,
+//                ((IBigCube) chunk).getCubePos().getZ()), UpgradeData.EMPTY, cubeWorldGenRegion);
+//
+//            NoiseAndSurfaceBuilderHelper noiseAndSurfaceBuilderHelper = new NoiseAndSurfaceBuilderHelper((IBigCube) chunk, cubeAbove);
+//
+//            //TODO: Verify liquid carvers are generating appropriately
+//            for (int columnX = 0; columnX < IBigCube.DIAMETER_IN_SECTIONS; columnX++) {
+//                for (int columnZ = 0; columnZ < IBigCube.DIAMETER_IN_SECTIONS; columnZ++) {
+//                    cubeAbove.moveColumns(columnX, columnZ);
+//                    if (chunk instanceof CubePrimer) {
+//                        ((CubePrimer) chunk).moveColumns(columnX, columnZ);
+//                    }
+//                    noiseAndSurfaceBuilderHelper.moveColumn(columnX, columnZ);
+//                    noiseAndSurfaceBuilderHelper.applySections();
+//                }
+//            }
+//        }
     }
 
     @SuppressWarnings({ "UnresolvedMixinReference", "target" })
@@ -394,15 +413,24 @@ public class MixinChunkStatus {
         method = "lambda$static$13(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/level/chunk/ChunkGenerator;Ljava/util/List;Lnet/minecraft/world/level/chunk/ChunkAccess;)V",
         at = @At("HEAD"), cancellable = true
     )
+    //TODO: Expose the above and bottom cubes via neighbors or thing else. Check if chunk generator overrides "spawnOriginalMobs" and redirect to our spawner instead.
     private static void cubicChunksSpawnMobs(ServerLevel world, ChunkGenerator generator, List<ChunkAccess> neighbors, ChunkAccess chunk,
                                              CallbackInfo ci) {
 
         if (!((CubicLevelHeightAccessor) world).isCubic()) {
             return;
         }
+
+
         ci.cancel();
-        //if (chunk instanceof IBigCube) {
-        //    generator.spawnMobs(new CubeWorldGenRegion(world, unsafeCast(neighbors)));
-        //}
+        if (chunk instanceof IBigCube) {
+            CubeWorldGenRegion cubeWorldGenRegion = new CubeWorldGenRegion(world, unsafeCast(neighbors), chunk);
+            for (int columnX = 0; columnX < IBigCube.DIAMETER_IN_SECTIONS; columnX++) {
+                for (int columnZ = 0; columnZ < IBigCube.DIAMETER_IN_SECTIONS; columnZ++) {
+                    cubeWorldGenRegion.moveCenterCubeChunkPos(columnX, columnZ);
+                    generator.spawnOriginalMobs(cubeWorldGenRegion);
+                }
+            }
+        }
     }
 }

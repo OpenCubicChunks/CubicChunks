@@ -13,15 +13,18 @@
         "common.ChunkManagerAccess",
         "common.ChunkSectionAccess",
         "common.ChunkTicketTrackerFactoryAccess",
+        "common.DecorationContextAccess",
         "common.EntityTrackerAccess",
         "common.HeightmapAccess",
         "common.LevelBasedGraphAccess",
         "common.Matrix4fAccess",
+        "common.NaturalSpawnerAccess",
         "common.NoiseGeneratorSettingsAccess",
         "common.OverworldBiomeSourceAccess",
         "common.PlayerChunkTrackerFactoryAccess",
         "common.PlayerTicketTrackerFactoryAccess",
         "common.SectionLightStorageAccess",
+        "common.SpawnStateAccess",
         "common.StructureFeatureManagerAccess",
         "common.TicketAccess",
         "common.TicketManagerAccess",
@@ -30,6 +33,7 @@
     "client": [
         "client.ChunkRenderDispatcherAccess",
         "client.ClientChunkProviderChunkArrayAccess",
+        "client.OptionAccess",
         "client.ViewFrustumAccess"
     ],
     "server": []

@@ -24,7 +24,6 @@ public class MixinOreFeature {
         if (!((CubicLevelHeightAccessor) featurePlaceContext.level()).isCubic()) {
             return;
         }
-
         BlockPos blockPos = featurePlaceContext.origin();
         IBigCube cube = ((ICubicWorld) featurePlaceContext.level()).getCube(blockPos);
         LevelChunkSection section = cube.getCubeSections()[Coords.blockToIndex(blockPos.getX(), blockPos.getY(), blockPos.getZ())];

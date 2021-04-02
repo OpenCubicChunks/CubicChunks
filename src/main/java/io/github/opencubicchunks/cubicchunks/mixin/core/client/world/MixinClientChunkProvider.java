@@ -2,9 +2,9 @@ package io.github.opencubicchunks.cubicchunks.mixin.core.client.world;
 
 import javax.annotation.Nullable;
 
+import io.github.opencubicchunks.cubicchunks.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.chunk.ClientChunkProviderCubeArray;
 import io.github.opencubicchunks.cubicchunks.chunk.IClientCubeProvider;
-import io.github.opencubicchunks.cubicchunks.chunk.biome.CubeBiomeContainer;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.BigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.EmptyCube;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
@@ -17,6 +17,7 @@ import net.minecraft.client.multiplayer.ClientChunkCache;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.world.level.chunk.ChunkBiomeContainer;
 import net.minecraft.world.level.chunk.ChunkStatus;
 import net.minecraft.world.level.chunk.LevelChunkSection;
 import net.minecraft.world.level.lighting.LevelLightEngine;
@@ -51,7 +52,7 @@ public abstract class MixinClientChunkProvider implements IClientCubeProvider {
             return;
         }
 
-        this.cubeArray = new ClientChunkProviderCubeArray(adjustCubeViewDistance(viewDistance), cube -> {});
+        this.cubeArray = new ClientChunkProviderCubeArray(adjustCubeViewDistance(viewDistance), adjustCubeViewDistance(CubicChunks.config().client.verticalViewDistance), cube -> {});
         this.emptyCube = new EmptyCube(level);
     }
 
@@ -97,7 +98,7 @@ public abstract class MixinClientChunkProvider implements IClientCubeProvider {
 
     @Override
     public BigCube replaceWithPacketData(int cubeX, int cubeY, int cubeZ,
-                                         @Nullable CubeBiomeContainer biomes, FriendlyByteBuf readBuffer, CompoundTag nbtTagIn, boolean cubeExists) {
+                                         @Nullable ChunkBiomeContainer biomes, FriendlyByteBuf readBuffer, CompoundTag nbtTagIn, boolean cubeExists) {
 
         if (!this.cubeArray.inView(cubeX, cubeY, cubeZ)) {
             LOGGER.warn("Ignoring cube since it's not in the view range: {}, {}, {}", cubeX, cubeY, cubeZ);
@@ -139,20 +140,24 @@ public abstract class MixinClientChunkProvider implements IClientCubeProvider {
         this.cubeArray.centerZ = Coords.sectionToCube(sectionZ);
     }
 
-    @Inject(method = "updateViewRadius", at = @At("HEAD"))
-    private void updateViewRadius(int viewDistance, CallbackInfo ci) {
+    @Override
+    public void updateCubeViewRadius(int hDistance, int vDistance) {
         if (level != null) {
             if (!((CubicLevelHeightAccessor) level).isCubic()) {
-                return;
+                throw new UnsupportedOperationException("Attempting to set a cubeViewRange in a noncubic world.");
             }
         }
 
-        int old = this.cubeArray.viewDistance;
-        int newDist = adjustCubeViewDistance(viewDistance);
-        if (old == newDist) {
+        int oldHDistance = this.cubeArray.horizontalViewDistance;
+        int oldVDistance = this.cubeArray.verticalViewDistance;
+
+        int newHDistance = adjustCubeViewDistance(hDistance);
+        int newVDistance = adjustCubeViewDistance(vDistance);
+
+        if (oldHDistance == newHDistance && oldVDistance == newVDistance) {
             return;
         }
-        ClientChunkProviderCubeArray array = new ClientChunkProviderCubeArray(newDist, cube -> {});
+        ClientChunkProviderCubeArray array = new ClientChunkProviderCubeArray(newHDistance, newVDistance, cube -> {});
         array.centerX = this.cubeArray.centerX;
         array.centerY = this.cubeArray.centerY;
         array.centerZ = this.cubeArray.centerZ;

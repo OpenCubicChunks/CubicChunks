@@ -6,6 +6,7 @@ import io.github.opencubicchunks.cubicchunks.chunk.heightmap.LightSurfaceTracker
 import net.minecraft.world.level.LevelHeightAccessor;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
+import io.github.opencubicchunks.cubicchunks.chunk.cube.CubePrimer;
 import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import net.minecraft.core.SectionPos;
 import net.minecraft.world.level.ChunkPos;
@@ -72,12 +73,14 @@ public abstract class MixinProtoChunk implements LightHeightmapGetter, LevelHeig
             + "Lnet/minecraft/world/level/chunk/ProtoTickList;Lnet/minecraft/world/level/chunk/ProtoTickList;Lnet/minecraft/world/level/LevelHeightAccessor;)V",
         at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/LevelHeightAccessor;getSectionsCount()I"))
     private int getFakeSectionCount(LevelHeightAccessor accessor) {
-
-
-
         if (!((CubicLevelHeightAccessor) accessor).isCubic()) {
             return levelHeightAccessor.getSectionsCount();
         }
+
+        if (accessor instanceof CubePrimer.FakeSectionCount) {
+            return accessor.getSectionsCount();
+        }
+
         if (accessor instanceof Level) {
             if (((CubicLevelHeightAccessor) accessor).generates2DChunks()) {
                 int height = ((Level) accessor).dimensionType().height();
@@ -89,6 +92,9 @@ public abstract class MixinProtoChunk implements LightHeightmapGetter, LevelHeig
                 int sectionCount = maxSectionY - minSectionY;
                 return sectionCount;
             }
+        }
+        if (accessor.getMaxBuildHeight() > 2048) {
+            return 16;
         }
 
         return Math.min(IBigCube.SECTION_COUNT * 2, accessor.getSectionsCount()); // TODO: properly handle ProtoChunk

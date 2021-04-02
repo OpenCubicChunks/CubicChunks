@@ -44,7 +44,7 @@ public class ColumnBiomeContainer extends ChunkBiomeContainer {
             return DUMMY_BIOME;
         }
 
-        CubeBiomeContainer cubeBiomes = icube.getCubeBiomes();
+        ChunkBiomeContainer cubeBiomes = icube.getBiomes();
         if (cubeBiomes != null) {
             return cubeBiomes.getNoiseBiome(biomeX, biomeY, biomeZ);
         }

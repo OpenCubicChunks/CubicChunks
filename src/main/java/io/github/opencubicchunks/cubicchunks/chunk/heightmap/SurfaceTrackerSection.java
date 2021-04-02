@@ -179,6 +179,7 @@ public class SurfaceTrackerSection {
         nodes[idx].loadCube(sectionX, sectionZ, newCube, markDirty);
     }
 
+    @Nullable
     public SurfaceTrackerSection getParent() {
         return parent;
     }

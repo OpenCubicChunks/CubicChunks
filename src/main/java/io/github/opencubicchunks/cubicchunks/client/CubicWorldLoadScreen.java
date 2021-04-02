@@ -15,19 +15,20 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import com.mojang.math.Matrix4f;
+import com.mojang.math.Quaternion;
 import com.mojang.math.Transformation;
+import com.mojang.math.Vector3f;
 import com.mojang.math.Vector4f;
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.ITrackingCubeStatusListener;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
-import io.github.opencubicchunks.cubicchunks.utils.MathUtil;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiComponent;
+import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.core.Direction;
 import net.minecraft.server.level.progress.StoringChunkProgressListener;
 import net.minecraft.world.level.chunk.ChunkStatus;
-import org.lwjgl.opengl.GL11;
 
 public class CubicWorldLoadScreen {
 
@@ -44,39 +45,26 @@ public class CubicWorldLoadScreen {
 
         float scaleWithCineSize = scale * IBigCube.DIAMETER_IN_SECTIONS / 2.0f;
 
-        RenderSystem.matrixMode(GL11.GL_PROJECTION);
-        RenderSystem.pushMatrix();
-        RenderSystem.loadIdentity();
-        RenderSystem.multMatrix(Matrix4f.perspective(60, aspectRatio, 0.01f, -10));
-        // TODO: config option
-        //RenderSystem.multMatrix(Matrix4f.orthographic(10 * aspectRatio, 10, 0.01f, 1000));
-        //RenderSystem.translatef(10 * aspectRatio / 2, 10 / 2.f, 0);
-        RenderSystem.matrixMode(GL11.GL_MODELVIEW);
+        RenderSystem.setShader(GameRenderer::getPositionColorShader);
+        RenderSystem.disableTexture();
+        RenderSystem.enableBlend();
+        RenderSystem.defaultBlendFunc();
 
-        RenderSystem.pushMatrix();
-        RenderSystem.loadIdentity();
+        RenderSystem.setProjectionMatrix(Matrix4f.perspective(60, aspectRatio, 0.01f, -10));
 
-        RenderSystem.translatef(0, 0, -20);
-
-        RenderSystem.rotatef(30, 1, 0, 0);
-
-        RenderSystem.rotatef((float) ((System.currentTimeMillis() * 0.04) % 360), 0, 1, 0);
+        Matrix4f modelViewMatrix = RenderSystem.getModelViewMatrix();
+        modelViewMatrix.setIdentity();
+        modelViewMatrix.translate(new Vector3f(0, 0, -20));
+        modelViewMatrix.multiply(new Quaternion(30, (float) ((System.currentTimeMillis() * 0.04) % 360), 0, true));
 
         render3dDrawCubes(trackerParam, xBase, yBase, scaleWithCineSize, spacing, colors);
 
-        RenderSystem.popMatrix();
-
-        RenderSystem.matrixMode(GL11.GL_PROJECTION);
-        RenderSystem.popMatrix();
-        RenderSystem.matrixMode(GL11.GL_MODELVIEW);
+        RenderSystem.enableTexture();
+        RenderSystem.disableBlend();
     }
 
     private static void render3dDrawCubes(StoringChunkProgressListener trackerParam, int xBase, int yBase, float scale, int spacing,
                                           Object2IntMap<ChunkStatus> colors) {
-        RenderSystem.disableTexture();
-        RenderSystem.enableBlend();
-        RenderSystem.enableAlphaTest();
-
         BufferBuilder buffer = Tesselator.getInstance().getBuilder();
 
         buffer.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
@@ -124,10 +112,7 @@ public class CubicWorldLoadScreen {
             }
         }
 
-        float[] modelviewMatrix = new float[16];
-        GL11.glGetFloatv(GL11.GL_MODELVIEW_MATRIX, modelviewMatrix);
-        Matrix4f m = MathUtil.createMatrix(modelviewMatrix);
-        m.transpose();
+        Matrix4f m = RenderSystem.getModelViewMatrix().copy();
         m.invert();
         Vector4f vec = new Vector4f(0, 0, 0, 1);
         vec.transform(m);
@@ -135,9 +120,6 @@ public class CubicWorldLoadScreen {
         buffer.setQuadSortOrigin(vec.x(), vec.y(), vec.z());
         buffer.end();
         BufferUploader.end(buffer);
-
-        RenderSystem.enableTexture();
-        RenderSystem.disableBlend();
     }
 
     private static void drawCube(BufferBuilder buffer, int x, int y, int z, float scale, int color, EnumSet<Direction> renderFaces) {

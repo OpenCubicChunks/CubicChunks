@@ -209,6 +209,84 @@ public class MainTransformer {
         cloneAndApplyRedirects(targetClass, setChunkLevel, updateCubeScheduling, methodRedirects, fieldRedirects, typeRedirects);
     }
 
+    public static void transformNaturalSpawner(ClassNode targetClass) {
+        Map<ClassMethod, String> vanillaToCubic = new HashMap<>();
+        Set<String> makeSyntheticAccessor = new HashSet<>();
+
+        vanillaToCubic.put(new ClassMethod(getObjectType("net/minecraft/class_1948"), // NaturalSpawner
+            getMethod("void method_27821(" //spawnForChunk
+                + "net.minecraft.class_3218," //ServerLevel
+                + " net.minecraft.class_2818," //LevelChunk
+                + " net.minecraft.class_1948$class_5262," //NaturalSpawner.SpawnState
+                + " boolean, boolean, boolean)")), "spawnForCube");
+
+        vanillaToCubic.put(new ClassMethod(getObjectType("net/minecraft/class_1948"), // NaturalSpawner
+            getMethod("void method_8663("
+                + "net.minecraft.class_1311,"
+                + " net.minecraft.class_3218,"
+                + " net.minecraft.class_2818,"
+                + " net.minecraft.class_1948$class_5261,"
+                + " net.minecraft.class_1948$class_5259)")), "spawnCategoryForCube");
+
+        vanillaToCubic.put(new ClassMethod(getObjectType("net/minecraft/class_1948"), // NaturalSpawner
+            getMethod("boolean method_24933("
+                + "net.minecraft.class_3218,"
+                + " net.minecraft.class_2791,"
+                + " net.minecraft.class_2338$class_2339,"
+                + " double)")), "isRightDistanceToPlayerAndSpawnPointForCube");
+
+        vanillaToCubic.put(new ClassMethod(getObjectType("net/minecraft/class_1948"), // NaturalSpawner
+            getMethod("net.minecraft.class_1948$class_5262 method_27815(" //NaturalSpawner.SpawnState createState
+                + "int," //spawningChunkCount
+                + " java.lang.Iterable," // entities
+                + " net.minecraft.class_1948$class_5260)" // NaturalSpawner.ChunkGetter
+            )), "createCubicState");
+
+        Map<ClassMethod, String> methodRedirects = new HashMap<>();
+        methodRedirects.put(new ClassMethod(getObjectType("net/minecraft/class_1948"), // NaturalSpawner
+            getMethod("void method_8663(" // spawnCategoryForChunk
+                + "net.minecraft.class_1311," // MobCategory
+                + " net.minecraft.class_3218," // ServerLevel
+                + " net.minecraft.class_2818," // LevelChunk
+                + " net.minecraft.class_1948$class_5261," // NaturalSpawner.SpawnPredicate
+                + " net.minecraft.class_1948$class_5259)") // NaturalSpawner.AfterSpawnCallback
+        ), "spawnCategoryForCube");
+
+        methodRedirects.put(new ClassMethod(getObjectType("net/minecraft/class_1948"),
+            getMethod("net.minecraft.class_2338" // BlockPos
+                + " method_8657(" // getRandomPosWithin
+                + "net.minecraft.class_1937," // Level
+                + "net.minecraft.class_2818)" // LevelChunk
+            )), "getRandomPosWithinCube");
+
+        methodRedirects.put(new ClassMethod(getObjectType("net/minecraft/class_3215"), // ServerChunkCache
+            getMethod("boolean method_20591(" // isEntityTickingChunk
+                + "net.minecraft.class_1923)" // ChunkPos
+            ), getObjectType("net/minecraft/class_2802")), // ChunkSource
+            "isEntityTickingCube");
+
+
+        Map<ClassField, String> fieldRedirects = new HashMap<>();
+
+        Map<Type, Type> typeRedirects = new HashMap<>();
+
+        typeRedirects.put(getObjectType("net/minecraft/class_1923"), // ChunkPos
+            getObjectType("io/github/opencubicchunks/cubicchunks/chunk/util/CubePos"));
+
+        typeRedirects.put(getObjectType("net/minecraft/class_1948$class_5260"), // ChunkGetter
+            getObjectType("io/github/opencubicchunks/cubicchunks/world/CubicNaturalSpawner$CubeGetter"));
+
+        typeRedirects.put(getObjectType("net/minecraft/class_2818"), // LevelChunk
+            getObjectType("net/minecraft/class_2791")); // ChunkAccess
+
+        vanillaToCubic.forEach((old, newName) -> {
+            MethodNode newMethod = cloneAndApplyRedirects(targetClass, old, newName, methodRedirects, fieldRedirects, typeRedirects);
+            if (makeSyntheticAccessor.contains(newName)) {
+                makeStaticSyntheticAccessor(targetClass, newMethod);
+            }
+        });
+    }
+
     private static void makeStaticSyntheticAccessor(ClassNode node, MethodNode newMethod) {
         Type[] params = Type.getArgumentTypes(newMethod.desc);
         Type[] newParams = new Type[params.length + 1];
@@ -349,7 +427,15 @@ public class MainTransformer {
         }
         String mappedDesc = Type.getMethodDescriptor(ret, params);
 
-        MethodNode output = new MethodNode(m.access, newName, mappedDesc, null, m.exceptions.toArray(new String[0]));
+        MethodNode existingOutput = findExistingMethod(node, newName, mappedDesc);
+        MethodNode output;
+        if (existingOutput != null) {
+            LOGGER.info("Copying code into existing method " + newName + " " + mappedDesc);
+            output = existingOutput;
+        } else {
+            output = new MethodNode(m.access, newName, mappedDesc, null, m.exceptions.toArray(new String[0]));
+        }
+
         MethodVisitor mv = new MethodVisitor(ASM7, output) {
             @Override public void visitLineNumber(int line, Label start) {
                 super.visitLineNumber(line + 10000, start);
@@ -365,6 +451,10 @@ public class MainTransformer {
         node.methods.add(output);
 
         return output;
+    }
+
+    private static MethodNode findExistingMethod(ClassNode node, String name, String desc) {
+        return node.methods.stream().filter(m -> m.name.equals(name) && m.desc.equals(desc)).findAny().orElse(null);
     }
 
     private static ClassField remapField(ClassField clField) {
@@ -387,7 +477,7 @@ public class MainTransformer {
 
         Type mappedType = remapType(clMethod.owner);
         String mappedName = mappingResolver.mapMethodName("intermediary",
-            clMethod.owner.getClassName(), clMethod.method.getName(), clMethod.method.getDescriptor());
+            clMethod.mappingOwner.getClassName(), clMethod.method.getName(), clMethod.method.getDescriptor());
         if (clMethod.method.getName().contains("method") && IS_DEV && mappedName.equals(clMethod.method.getName())) {
             throw new Error("Fail! Mapping method " + clMethod.method.getName() + " failed in dev!");
         }
@@ -466,32 +556,37 @@ public class MainTransformer {
     private static final class ClassMethod {
         final Type owner;
         final Method method;
+        final Type mappingOwner;
 
         ClassMethod(Type owner, Method method) {
             this.owner = owner;
             this.method = method;
+            this.mappingOwner = owner;
+        }
+
+        // mapping owner because mappings owner may not be the same as in the call site
+        ClassMethod(Type owner, Method method, Type mappingOwner) {
+            this.owner = owner;
+            this.method = method;
+            this.mappingOwner = mappingOwner;
         }
 
         @Override public boolean equals(Object o) {
-            if (this == o) {
-                return true;
-            }
-            if (o == null || getClass() != o.getClass()) {
-                return false;
-            }
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
             ClassMethod that = (ClassMethod) o;
-            return owner.equals(that.owner) &&
-                method.equals(that.method);
+            return owner.equals(that.owner) && method.equals(that.method) && mappingOwner.equals(that.mappingOwner);
         }
 
         @Override public int hashCode() {
-            return Objects.hash(owner, method);
+            return Objects.hash(owner, method, mappingOwner);
         }
 
         @Override public String toString() {
             return "ClassMethod{" +
                 "owner=" + owner +
                 ", method=" + method +
+                ", mappingOwner=" + mappingOwner +
                 '}';
         }
     }

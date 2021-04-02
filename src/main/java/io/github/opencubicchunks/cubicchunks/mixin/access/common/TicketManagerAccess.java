@@ -8,4 +8,6 @@ import org.spongepowered.asm.mixin.gen.Invoker;
 @Mixin(DistanceManager.class)
 public interface TicketManagerAccess {
     @Invoker void invokeAddTicket(long chunkPosIn, Ticket<?> ticketIn);
+
+    @Invoker void invokeUpdatePlayerTickets(int viewDistance);
 }
