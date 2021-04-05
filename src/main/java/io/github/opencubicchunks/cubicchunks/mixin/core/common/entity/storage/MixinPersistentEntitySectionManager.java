@@ -30,7 +30,6 @@ public abstract class MixinPersistentEntitySectionManager<T extends EntityAccess
         this.isCubic = isCubic;
     }
 
-
     @Inject(method = "updateChunkStatus(Lnet/minecraft/world/level/ChunkPos;Lnet/minecraft/server/level/ChunkHolder$FullChunkStatus;)V", at = @At("HEAD"), cancellable = true)
     private void updateCubeStatus(ChunkPos pos, ChunkHolder.FullChunkStatus fullChunkStatus, CallbackInfo ci) {
         if (isCubic) {

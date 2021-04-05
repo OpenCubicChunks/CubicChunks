@@ -33,7 +33,7 @@
         "common.entity.MixinServerPlayerEntity",
         "common.entity.storage.MixinChunkEntities",
         "common.entity.storage.MixinEntitySectionStorage",
-        "common.entity.storage.MixinEntityStorage",
+        "common.chunk.storage.MixinEntityStorage",
         "common.entity.storage.MixinPersistentEntitySectionManager",
         "common.entity.storage.MixinTransientEntitySectionManager",
         "common.MixinBlockPos",
