@@ -1,7 +1,10 @@
 package io.github.opencubicchunks.cubicchunks.mixin.core.common.world;
 
+import java.io.File;
+import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.concurrent.Executor;
 import java.util.function.Supplier;
 
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
@@ -11,31 +14,59 @@ import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import io.github.opencubicchunks.cubicchunks.server.ICubicWorld;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
+import io.github.opencubicchunks.cubicchunks.world.entity.IsCubicContextPersistentEntitySectionManager;
 import io.github.opencubicchunks.cubicchunks.world.server.IServerWorld;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.SectionPos;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.progress.ChunkProgressListener;
 import net.minecraft.util.profiling.ProfilerFiller;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.CustomSpawner;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.chunk.ChunkGenerator;
 import net.minecraft.world.level.chunk.ChunkStatus;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.chunk.LevelChunkSection;
 import net.minecraft.world.level.dimension.DimensionType;
+import net.minecraft.world.level.entity.PersistentEntitySectionManager;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.material.FluidState;
+import net.minecraft.world.level.storage.LevelStorageSource;
+import net.minecraft.world.level.storage.ServerLevelData;
 import net.minecraft.world.level.storage.WritableLevelData;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(ServerLevel.class)
 public abstract class MixinServerWorld extends Level implements IServerWorld {
+    @Shadow @Final private PersistentEntitySectionManager<Entity> entityManager;
+
     protected MixinServerWorld(WritableLevelData p_i231617_1_, ResourceKey<Level> p_i231617_2_, DimensionType p_i231617_4_,
                                Supplier<ProfilerFiller> p_i231617_5_, boolean p_i231617_6_, boolean p_i231617_7_, long p_i231617_8_) {
         super(p_i231617_1_, p_i231617_2_, p_i231617_4_, p_i231617_5_, p_i231617_6_, p_i231617_7_, p_i231617_8_);
+    }
+
+
+    @Redirect(method = "<init>", at = @At(value = "NEW", target = "java/io/File"))
+    private File entities(File dimPath, String directoryName) {
+        return new File(dimPath, ((CubicLevelHeightAccessor) this).isCubic() ? directoryName + "-3d" : directoryName);
+    }
+
+    @Inject(method = "<init>", at = @At(value = "RETURN"))
+    private void markCubic(MinecraftServer minecraftServer, Executor executor, LevelStorageSource.LevelStorageAccess levelStorageAccess, ServerLevelData serverLevelData,
+                           ResourceKey<Level> resourceKey, DimensionType dimensionType, ChunkProgressListener chunkProgressListener, ChunkGenerator chunkGenerator, boolean bl, long l,
+                           List<CustomSpawner> list, boolean bl2, CallbackInfo ci) {
+        ((IsCubicContextPersistentEntitySectionManager) this.entityManager).setIsCubic(((CubicLevelHeightAccessor) this).isCubic());
     }
 
     @Redirect(method = "tickChunk", at = @At(value = "INVOKE", target = "Ljava/util/Random;nextInt(I)I", ordinal = 1))

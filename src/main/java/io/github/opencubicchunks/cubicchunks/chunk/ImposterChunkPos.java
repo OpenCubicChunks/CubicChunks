@@ -19,4 +19,8 @@ public class ImposterChunkPos extends ChunkPos {
     public CubePos toCubePos() {
         return CubePos.of(this.x, this.y, this.z);
     }
+
+    @Override public long toLong() {
+        return toCubePos().asLong();
+    }
 }
