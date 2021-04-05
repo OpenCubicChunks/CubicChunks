@@ -56,12 +56,6 @@ public abstract class MixinServerWorld extends Level implements IServerWorld {
         super(p_i231617_1_, p_i231617_2_, p_i231617_4_, p_i231617_5_, p_i231617_6_, p_i231617_7_, p_i231617_8_);
     }
 
-
-    @Redirect(method = "<init>", at = @At(value = "NEW", target = "java/io/File"))
-    private File entities(File dimPath, String directoryName) {
-        return new File(dimPath, ((CubicLevelHeightAccessor) this).isCubic() ? directoryName + "-3d" : directoryName);
-    }
-
     @Inject(method = "<init>", at = @At(value = "RETURN"))
     private void markCubic(MinecraftServer minecraftServer, Executor executor, LevelStorageSource.LevelStorageAccess levelStorageAccess, ServerLevelData serverLevelData,
                            ResourceKey<Level> resourceKey, DimensionType dimensionType, ChunkProgressListener chunkProgressListener, ChunkGenerator chunkGenerator, boolean bl, long l,

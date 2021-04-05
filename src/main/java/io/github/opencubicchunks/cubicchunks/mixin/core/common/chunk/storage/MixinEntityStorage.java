@@ -102,7 +102,7 @@ public abstract class MixinEntityStorage implements CubicEntityStorage {
         CubePos cubePos = ((ImposterChunkPos) dataList.getPos()).toCubePos();
         if (dataList.isEmpty()) {
             if (this.emptyChunks.add(cubePos.asLong())) {
-                this.cubeWorker.saveCubeNBT(cubePos, (CompoundTag) new CompoundTag());
+                this.cubeWorker.saveCubeNBT(cubePos, new CompoundTag());
             }
 
         } else {
