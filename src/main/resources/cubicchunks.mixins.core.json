@@ -82,6 +82,7 @@
     ],
     "client": [
         "client.chunk.MixinRenderChunkRegion",
+        "client.debug.MixinChunkBorderRenderer",
         "client.debug.MixinClientWorld",
         "client.debug.MixinGameRenderer",
         "client.debug.MixinMinecraft",
