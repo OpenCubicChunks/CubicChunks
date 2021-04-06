@@ -385,7 +385,7 @@ public class BigCube implements ChunkAccess, IBigCube, CubicLevelHeightAccessor 
         }
 
         return mutableBlockPos != null ? mutableBlockPos.immutable() : new BlockPos.MutableBlockPos().set(this.cubePos.minCubeX(), this.getHeight(type, this.cubePos.minCubeX() & 15,
-            this.cubePos.minCubeZ() & 15), this.cubePos.minCubeZ());
+            this.cubePos.minCubeZ() & 15), this.cubePos.minCubeZ() & 15);
     }
 
     @Override public void setCubeBlockEntity(BlockEntity tileEntityIn) {
