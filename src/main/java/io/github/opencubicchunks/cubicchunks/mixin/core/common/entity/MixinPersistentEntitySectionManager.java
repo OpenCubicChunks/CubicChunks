@@ -28,10 +28,11 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public abstract class MixinPersistentEntitySectionManager<T extends EntityAccess> implements IsCubicEntityContext {
 
 
-    @Shadow @Final private Long2ObjectMap<PersistentEntitySectionManager.ChunkLoadStatus> chunkLoadStatuses;
+    @Shadow @Final private Long2ObjectMap<Object> chunkLoadStatuses;
     @Shadow @Final private EntityPersistentStorage<T> permanentStorage;
     @Shadow @Final private Queue<ChunkEntities<T>> loadingInbox;
     @Shadow @Final private EntitySectionStorage<T> sectionStorage;
+
     private boolean isCubic;
 
     @Shadow public abstract void updateChunkStatus(ChunkPos chunkPos, Visibility visibility);
@@ -63,7 +64,10 @@ public abstract class MixinPersistentEntitySectionManager<T extends EntityAccess
         }
         ci.cancel();
 
-        this.chunkLoadStatuses.put(pos, PersistentEntitySectionManager.ChunkLoadStatus.PENDING);
+        //Used to avoid access Widening PersistentEntitySectionManager.ChunkLoadStatus.
+        @SuppressWarnings({ "unchecked", "rawtypes" })
+        Enum<?> pending = Enum.valueOf((Class) chunkLoadStatuses.defaultReturnValue().getClass(), "PENDING");
+        this.chunkLoadStatuses.put(pos, pending);
         CubePos cubePos = new CubePos(pos);
 
         ((CubicEntityStorage) this.permanentStorage).loadCubeEntities(cubePos).thenAccept(((Queue) this.loadingInbox)::add).exceptionally((throwable) -> {
