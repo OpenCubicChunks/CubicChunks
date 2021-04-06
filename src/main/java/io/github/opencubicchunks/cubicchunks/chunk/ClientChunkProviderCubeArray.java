@@ -6,6 +6,8 @@ import java.util.function.Consumer;
 import javax.annotation.Nullable;
 
 import io.github.opencubicchunks.cubicchunks.chunk.cube.BigCube;
+import io.github.opencubicchunks.cubicchunks.world.client.IClientWorld;
+import net.minecraft.client.multiplayer.ClientLevel;
 
 public class ClientChunkProviderCubeArray {
 
@@ -19,14 +21,16 @@ public class ClientChunkProviderCubeArray {
 
     private final int horizontalSideLength;
     private final int verticalSideLength;
+    private final ClientLevel world;
     private final int sideArea;
     private final Consumer<BigCube> onUnload;
 
-    public ClientChunkProviderCubeArray(int horizontalViewDistance, int verticalViewDistance, Consumer<BigCube> onUnload) {
+    public ClientChunkProviderCubeArray(int horizontalViewDistance, int verticalViewDistance, Consumer<BigCube> onUnload, ClientLevel world) {
         this.horizontalViewDistance = horizontalViewDistance;
         this.verticalViewDistance = verticalViewDistance;
         this.horizontalSideLength = horizontalViewDistance * 2 + 1;
         this.verticalSideLength = verticalViewDistance * 2 + 1;
+        this.world = world;
         this.sideArea = this.horizontalSideLength * this.horizontalSideLength;
         this.onUnload = onUnload;
         this.cubes = new AtomicReferenceArray<>(this.horizontalSideLength * this.verticalSideLength * this.horizontalSideLength);
@@ -51,13 +55,13 @@ public class ClientChunkProviderCubeArray {
 
     }
 
-    public BigCube unload(int chunkIndex, BigCube chunkIn, @Nullable BigCube replaceWith) {
-        if (this.cubes.compareAndSet(chunkIndex, chunkIn, replaceWith) && replaceWith == null) {
+    public BigCube unload(int chunkIndex, BigCube cube, @Nullable BigCube replaceWith) {
+        if (this.cubes.compareAndSet(chunkIndex, cube, replaceWith) && replaceWith == null) {
             --this.loaded;
         }
-
-        onUnload.accept(chunkIn);
-        return chunkIn;
+        ((IClientWorld) this.world).onCubeUnload(cube);
+        onUnload.accept(cube);
+        return cube;
     }
 
     public boolean inView(int x, int y, int z) {

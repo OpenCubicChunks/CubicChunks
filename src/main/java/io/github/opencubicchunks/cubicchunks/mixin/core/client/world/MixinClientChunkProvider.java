@@ -52,7 +52,7 @@ public abstract class MixinClientChunkProvider implements IClientCubeProvider {
             return;
         }
 
-        this.cubeArray = new ClientChunkProviderCubeArray(adjustCubeViewDistance(viewDistance), adjustCubeViewDistance(CubicChunks.config().client.verticalViewDistance), cube -> {});
+        this.cubeArray = new ClientChunkProviderCubeArray(adjustCubeViewDistance(viewDistance), adjustCubeViewDistance(CubicChunks.config().client.verticalViewDistance), cube -> {}, this.level);
         this.emptyCube = new EmptyCube(level);
     }
 
@@ -157,7 +157,7 @@ public abstract class MixinClientChunkProvider implements IClientCubeProvider {
         if (oldHDistance == newHDistance && oldVDistance == newVDistance) {
             return;
         }
-        ClientChunkProviderCubeArray array = new ClientChunkProviderCubeArray(newHDistance, newVDistance, cube -> {});
+        ClientChunkProviderCubeArray array = new ClientChunkProviderCubeArray(newHDistance, newVDistance, cube -> {}, this.level);
         array.centerX = this.cubeArray.centerX;
         array.centerY = this.cubeArray.centerY;
         array.centerZ = this.cubeArray.centerZ;
