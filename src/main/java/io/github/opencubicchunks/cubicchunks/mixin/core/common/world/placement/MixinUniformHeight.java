@@ -27,7 +27,7 @@ public abstract class MixinUniformHeight {
         if (min >= max) {
             cir.setReturnValue(min);
         } else {
-            cir.setReturnValue(min);
+            cir.setReturnValue(min); // TODO? this.sample(random, worldGenerationContext)
         }
     }
 }
