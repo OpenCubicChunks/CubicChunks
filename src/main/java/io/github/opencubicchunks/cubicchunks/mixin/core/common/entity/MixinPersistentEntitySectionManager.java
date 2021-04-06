@@ -27,13 +27,14 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(PersistentEntitySectionManager.class)
 public abstract class MixinPersistentEntitySectionManager<T extends EntityAccess> implements IsCubicEntityContext {
 
-    @Shadow public abstract void updateChunkStatus(ChunkPos chunkPos, Visibility visibility);
 
     @Shadow @Final private Long2ObjectMap<PersistentEntitySectionManager.ChunkLoadStatus> chunkLoadStatuses;
     @Shadow @Final private EntityPersistentStorage<T> permanentStorage;
     @Shadow @Final private Queue<ChunkEntities<T>> loadingInbox;
     @Shadow @Final private EntitySectionStorage<T> sectionStorage;
     private boolean isCubic;
+
+    @Shadow public abstract void updateChunkStatus(ChunkPos chunkPos, Visibility visibility);
 
     @Override public boolean isCubic() {
         return this.isCubic;
@@ -66,8 +67,7 @@ public abstract class MixinPersistentEntitySectionManager<T extends EntityAccess
         this.chunkLoadStatuses.put(pos, PersistentEntitySectionManager.ChunkLoadStatus.PENDING);
         CubePos cubePos = new CubePos(pos);
 
-        Queue loadingInbox = this.loadingInbox;
-        ((CubicEntityStorage) this.permanentStorage).loadCubeEntities(cubePos).thenAccept(loadingInbox::add).exceptionally((throwable) -> {
+        ((CubicEntityStorage) this.permanentStorage).loadCubeEntities(cubePos).thenAccept(((Queue) this.loadingInbox)::add).exceptionally((throwable) -> {
             CubicChunks.LOGGER.error("Failed to read cube {}", cubePos, throwable);
             return null;
         });
