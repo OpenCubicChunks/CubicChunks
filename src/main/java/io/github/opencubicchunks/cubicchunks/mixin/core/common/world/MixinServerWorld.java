@@ -1,6 +1,5 @@
 package io.github.opencubicchunks.cubicchunks.mixin.core.common.world;
 
-import java.io.File;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -14,7 +13,7 @@ import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import io.github.opencubicchunks.cubicchunks.server.ICubicWorld;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
-import io.github.opencubicchunks.cubicchunks.world.entity.IsCubicContextPersistentEntitySectionManager;
+import io.github.opencubicchunks.cubicchunks.world.entity.IsCubicEntityContext;
 import io.github.opencubicchunks.cubicchunks.world.server.IServerWorld;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.SectionPos;
@@ -60,7 +59,7 @@ public abstract class MixinServerWorld extends Level implements IServerWorld {
     private void markCubic(MinecraftServer minecraftServer, Executor executor, LevelStorageSource.LevelStorageAccess levelStorageAccess, ServerLevelData serverLevelData,
                            ResourceKey<Level> resourceKey, DimensionType dimensionType, ChunkProgressListener chunkProgressListener, ChunkGenerator chunkGenerator, boolean bl, long l,
                            List<CustomSpawner> list, boolean bl2, CallbackInfo ci) {
-        ((IsCubicContextPersistentEntitySectionManager) this.entityManager).setIsCubic(((CubicLevelHeightAccessor) this).isCubic());
+        ((IsCubicEntityContext) this.entityManager).setIsCubic(((CubicLevelHeightAccessor) this).isCubic());
     }
 
     @Redirect(method = "tickChunk", at = @At(value = "INVOKE", target = "Ljava/util/Random;nextInt(I)I", ordinal = 1))

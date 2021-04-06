@@ -1,4 +1,4 @@
-package io.github.opencubicchunks.cubicchunks.mixin.core.common.entity.storage;
+package io.github.opencubicchunks.cubicchunks.mixin.core.common.entity;
 
 import java.util.Queue;
 
@@ -6,13 +6,14 @@ import io.github.opencubicchunks.cubicchunks.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.chunk.ImposterChunkPos;
 import io.github.opencubicchunks.cubicchunks.chunk.storage.CubicEntityStorage;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
-import io.github.opencubicchunks.cubicchunks.world.entity.IsCubicContextPersistentEntitySectionManager;
+import io.github.opencubicchunks.cubicchunks.world.entity.IsCubicEntityContext;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import net.minecraft.server.level.ChunkHolder;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.entity.ChunkEntities;
 import net.minecraft.world.level.entity.EntityAccess;
 import net.minecraft.world.level.entity.EntityPersistentStorage;
+import net.minecraft.world.level.entity.EntitySectionStorage;
 import net.minecraft.world.level.entity.PersistentEntitySectionManager;
 import net.minecraft.world.level.entity.Visibility;
 import org.spongepowered.asm.mixin.Final;
@@ -24,13 +25,14 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(PersistentEntitySectionManager.class)
-public abstract class MixinPersistentEntitySectionManager<T extends EntityAccess> implements IsCubicContextPersistentEntitySectionManager {
+public abstract class MixinPersistentEntitySectionManager<T extends EntityAccess> implements IsCubicEntityContext {
 
     @Shadow public abstract void updateChunkStatus(ChunkPos chunkPos, Visibility visibility);
 
     @Shadow @Final private Long2ObjectMap<PersistentEntitySectionManager.ChunkLoadStatus> chunkLoadStatuses;
     @Shadow @Final private EntityPersistentStorage<T> permanentStorage;
     @Shadow @Final private Queue<ChunkEntities<T>> loadingInbox;
+    @Shadow @Final private EntitySectionStorage<T> sectionStorage;
     private boolean isCubic;
 
     @Override public boolean isCubic() {
@@ -39,6 +41,7 @@ public abstract class MixinPersistentEntitySectionManager<T extends EntityAccess
 
     @Override public void setIsCubic(boolean isCubic) {
         this.isCubic = isCubic;
+        ((IsCubicEntityContext) this.sectionStorage).setIsCubic(isCubic);
     }
 
     @Inject(method = "updateChunkStatus(Lnet/minecraft/world/level/ChunkPos;Lnet/minecraft/server/level/ChunkHolder$FullChunkStatus;)V", at = @At("HEAD"), cancellable = true)

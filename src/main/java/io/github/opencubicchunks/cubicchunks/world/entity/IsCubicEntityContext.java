@@ -1,6 +1,6 @@
 package io.github.opencubicchunks.cubicchunks.world.entity;
 
-public interface IsCubicContextPersistentEntitySectionManager {
+public interface IsCubicEntityContext {
 
     boolean isCubic();
 
