@@ -23,7 +23,6 @@ public abstract class MixinStructureStart implements SetupCubeStructureStart {
 
     @Shadow @Final protected List<StructurePiece> pieces;
 
-    @Shadow protected abstract void calculateBoundingBox();
 
     @Override
     public void placeInCube(WorldGenLevel worldGenLevel, StructureFeatureManager structureFeatureManager, ChunkGenerator chunkGenerator, Random random, BoundingBox boundingBox,
@@ -33,7 +32,7 @@ public abstract class MixinStructureStart implements SetupCubeStructureStart {
             if (!this.pieces.isEmpty()) {
                 BoundingBox firstPieceBoundingBox = this.pieces.get(0).getBoundingBox();
                 Vec3i centerPos = firstPieceBoundingBox.getCenter();
-                BlockPos blockPos = new BlockPos(centerPos.getX(), firstPieceBoundingBox.y0, centerPos.getZ());
+                BlockPos blockPos = new BlockPos(centerPos.getX(), firstPieceBoundingBox.minY(), centerPos.getZ());
                 Iterator<StructurePiece> iterator = this.pieces.iterator();
 
 
@@ -44,7 +43,7 @@ public abstract class MixinStructureStart implements SetupCubeStructureStart {
                         iterator.remove();
                     }
                 }
-                this.calculateBoundingBox();
+//                this.calculateBoundingBox();
             }
         }
     }
