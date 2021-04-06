@@ -1,6 +1,7 @@
 package io.github.opencubicchunks.cubicchunks.mixin.core.common.entity.storage;
 
 import java.util.PrimitiveIterator;
+import java.util.Spliterator;
 import java.util.Spliterators;
 import java.util.stream.LongStream;
 import java.util.stream.StreamSupport;
@@ -58,8 +59,8 @@ public abstract class MixinEntitySectionStorage<T extends EntityAccess> implemen
             cir.setReturnValue(LongStream.empty());
         } else {
             PrimitiveIterator.OfLong ofLong = longSortedSet.iterator();
-            // 1301 == Spliterator.IMMUTABLE | Spliterator.NONNULL | Spliterator.ORDERED | Spliterator.SORTED | Spliterator.DISTINCT
-            cir.setReturnValue(StreamSupport.longStream(Spliterators.spliteratorUnknownSize(ofLong, 1301), false));
+            cir.setReturnValue(StreamSupport.longStream(Spliterators.spliteratorUnknownSize(ofLong,
+                Spliterator.ORDERED | Spliterator.DISTINCT | Spliterator.SORTED | Spliterator.NONNULL | Spliterator.IMMUTABLE), false));
         }
     }
 

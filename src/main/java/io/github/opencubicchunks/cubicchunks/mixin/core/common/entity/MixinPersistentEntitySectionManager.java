@@ -48,7 +48,6 @@ public abstract class MixinPersistentEntitySectionManager<T extends EntityAccess
     @Inject(method = "updateChunkStatus(Lnet/minecraft/world/level/ChunkPos;Lnet/minecraft/server/level/ChunkHolder$FullChunkStatus;)V", at = @At("HEAD"), cancellable = true)
     private void updateCubeStatus(ChunkPos pos, ChunkHolder.FullChunkStatus fullChunkStatus, CallbackInfo ci) {
         if (isCubic) {
-            //TODO: Figure what's going wrong here.
             ci.cancel();
             if (pos instanceof ImposterChunkPos) {
                 Visibility visibility = Visibility.fromFullChunkStatus(fullChunkStatus);
