@@ -535,6 +535,10 @@ public class CubeWorldGenRegion extends WorldGenRegion implements ICubicWorld {
             return 0;
         }
 
+        @Override public BlockPos getHeighestPosition(Heightmap.Types types) {
+            return null;
+        }
+
         @Override public ChunkPos getPos() {
             return new ChunkPos(0, 0);
         }

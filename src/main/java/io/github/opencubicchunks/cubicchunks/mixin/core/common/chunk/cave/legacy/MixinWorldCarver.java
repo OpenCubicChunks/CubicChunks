@@ -4,6 +4,8 @@ import java.util.Random;
 
 import io.github.opencubicchunks.cubicchunks.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.chunk.NonAtomicWorldgenRandom;
+import net.minecraft.world.level.levelgen.VerticalAnchor;
+import net.minecraft.world.level.levelgen.WorldGenerationContext;
 import net.minecraft.world.level.levelgen.carver.CarvingContext;
 import net.minecraft.world.level.levelgen.carver.WorldCarver;
 import org.spongepowered.asm.mixin.Mixin;
@@ -18,8 +20,8 @@ public class MixinWorldCarver {
         return new NonAtomicWorldgenRandom(seed);
     }
 
-    @Redirect(method = "carveBlock", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/levelgen/carver/CarvingContext;getMinGenY()I"))
-    private int returnMinIntValue(CarvingContext carvingContext) {
+    @Redirect(method = "carveBlock", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/levelgen/VerticalAnchor;resolveY(Lnet/minecraft/world/level/levelgen/WorldGenerationContext;)I"))
+    private int returnMinIntValue(VerticalAnchor verticalAnchor, WorldGenerationContext context) {
         return CubicChunks.MIN_SUPPORTED_HEIGHT;
     }
 }

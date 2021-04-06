@@ -650,6 +650,10 @@ public class CubePrimer extends ProtoChunk implements IBigCube, CubicLevelHeight
         return getCubeSections();
     }
 
+    @Override public BlockPos getHeighestPosition(Heightmap.Types types) {
+        return super.getHeighestPosition(types);
+    }
+
     @Deprecated @Override public ChunkPos getPos() {
         return this.cubePos.asChunkPos(columnX, columnZ);
     }
