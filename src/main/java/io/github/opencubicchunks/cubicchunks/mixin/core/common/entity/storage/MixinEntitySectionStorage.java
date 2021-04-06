@@ -8,6 +8,7 @@ import java.util.stream.StreamSupport;
 
 import io.github.opencubicchunks.cubicchunks.chunk.cube.BigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
+import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.longs.LongAVLTreeSet;
 import it.unimi.dsi.fastutil.longs.LongSortedSet;
@@ -34,8 +35,8 @@ public class MixinEntitySectionStorage<T extends EntityAccess> {
      * @reason UseCubePos
      */
     @Overwrite
-    private static long getChunkKeyFromSectionKey(long l) {
-        return CubePos.asLong(SectionPos.x(l), SectionPos.y(l), SectionPos.z(l));
+    private static long getChunkKeyFromSectionKey(long sectionKey) {
+        return CubePos.asLong(Coords.sectionToCube(SectionPos.x(sectionKey)), Coords.sectionToCube(SectionPos.y(sectionKey)), Coords.sectionToCube(SectionPos.z(sectionKey)));
     }
 
     /**
@@ -79,7 +80,7 @@ public class MixinEntitySectionStorage<T extends EntityAccess> {
     @Overwrite
     public LongStream getExistingSectionPositionsInChunk(long cubePos) {
         int x = CubePos.extractX(cubePos);
-        int y = CubePos.extractX(cubePos);
+        int y = CubePos.extractY(cubePos);
         int z = CubePos.extractZ(cubePos);
         LongSortedSet longSortedSet = this.getCubeSections(x, y, z);
         if (longSortedSet.isEmpty()) {
@@ -103,7 +104,8 @@ public class MixinEntitySectionStorage<T extends EntityAccess> {
         for (int relX = 0; relX < BigCube.DIAMETER_IN_SECTIONS; relX++) {
             for (int relZ = 0; relZ < BigCube.DIAMETER_IN_SECTIONS; relZ++) {
                 for (int relY = 0; relY < BigCube.DIAMETER_IN_SECTIONS; relY++) {
-                    long sectionPos = pos.offset(relX, relY, relZ).asLong();
+                    SectionPos offset = pos.offset(relX, relY, relZ);
+                    long sectionPos = offset.asLong();
                     if (this.sectionIds.contains(sectionPos)) {
                         set.add(sectionPos);
                     }

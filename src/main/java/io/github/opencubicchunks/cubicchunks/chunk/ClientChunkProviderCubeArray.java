@@ -1,7 +1,6 @@
 package io.github.opencubicchunks.cubicchunks.chunk;
 
 import java.util.concurrent.atomic.AtomicReferenceArray;
-import java.util.function.Consumer;
 
 import javax.annotation.Nullable;
 
@@ -23,16 +22,14 @@ public class ClientChunkProviderCubeArray {
     private final int verticalSideLength;
     private final ClientLevel world;
     private final int sideArea;
-    private final Consumer<BigCube> onUnload;
 
-    public ClientChunkProviderCubeArray(int horizontalViewDistance, int verticalViewDistance, Consumer<BigCube> onUnload, ClientLevel world) {
+    public ClientChunkProviderCubeArray(int horizontalViewDistance, int verticalViewDistance, ClientLevel world) {
         this.horizontalViewDistance = horizontalViewDistance;
         this.verticalViewDistance = verticalViewDistance;
         this.horizontalSideLength = horizontalViewDistance * 2 + 1;
         this.verticalSideLength = verticalViewDistance * 2 + 1;
         this.world = world;
         this.sideArea = this.horizontalSideLength * this.horizontalSideLength;
-        this.onUnload = onUnload;
         this.cubes = new AtomicReferenceArray<>(this.horizontalSideLength * this.verticalSideLength * this.horizontalSideLength);
     }
 
@@ -46,7 +43,7 @@ public class ClientChunkProviderCubeArray {
         BigCube cube = this.cubes.getAndSet(cubeIdx, chunkIn);
         if (cube != null) {
             --this.loaded;
-            onUnload.accept(cube);
+            ((IClientWorld) this.world).onCubeUnload(cube);
         }
 
         if (chunkIn != null) {
@@ -60,7 +57,6 @@ public class ClientChunkProviderCubeArray {
             --this.loaded;
         }
         ((IClientWorld) this.world).onCubeUnload(cube);
-        onUnload.accept(cube);
         return cube;
     }
 
