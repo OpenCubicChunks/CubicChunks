@@ -5,17 +5,11 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.levelgen.Aquifer;
 import net.minecraft.world.level.levelgen.NoiseGeneratorSettings;
-import net.minecraft.world.level.levelgen.NoiseSampler;
 import net.minecraft.world.level.levelgen.synth.NormalNoise;
-import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Mutable;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(Aquifer.class)
 public abstract class MixinAquifer {
@@ -25,11 +19,9 @@ public abstract class MixinAquifer {
 
     private final AquiferRandom random = new AquiferRandom();
     private double barrierNoiseCache = Double.NaN;
-    @Shadow @Final private NormalNoise barrierNoise;
 
-    @Shadow @Final private int minGridY;
+    @Shadow @Final private NormalNoise barrierNoise;
     @Shadow @Final private long[] aquiferLocationCache;
-    @Mutable @Shadow @Final private int[] aquiferCache;
 
     @Shadow private boolean shouldScheduleWaterUpdate;
     @Shadow private int lastWaterLevel;
@@ -37,64 +29,13 @@ public abstract class MixinAquifer {
 
     @Shadow @Final private NoiseGeneratorSettings noiseGeneratorSettings;
 
-    private int minLevelGridX;
-    private int minLevelGridZ;
-    private int levelGridSizeX;
-    private int levelGridSizeZ;
-
-    private static double transformBarrierNoise(double noise) {
-        return 1.0 + (noise + 0.1) / 4.0;
-    }
-
     @Shadow protected abstract int gridY(int i);
     @Shadow protected abstract int getIndex(int x, int y, int z);
     @Shadow protected abstract double similarity(int i, int j);
-    @Shadow protected abstract int computeAquifer(int x, int y, int z);
+    @Shadow protected abstract int getWaterLevel(long pos);
 
-    @Inject(method = "<init>",
-        at = @At(value = "FIELD", target = "Lnet/minecraft/world/level/levelgen/Aquifer;aquiferCache:[I", opcode = Opcodes.PUTFIELD, shift = At.Shift.AFTER, remap = false))
-    private void init(int chunkX, int chunkZ, NormalNoise newBarrierNoise, NormalNoise waterLevelNoise, NoiseGeneratorSettings noiseSettings, NoiseSampler sampler, int sizeY,
-                      CallbackInfo ci) {
-        int minX = chunkX << 4;
-        int maxX = (chunkX << 4) + 15;
-        int minZ = chunkZ << 4;
-        int maxZ = (chunkZ << 4) + 15;
-        int minY = noiseSettings.noiseSettings().minY();
-        int maxY = minY + sizeY;
-
-        int minGridX = levelGridX(minX) - 1;
-        int maxGridX = levelGridX(maxX) + 1;
-        int minGridYForMinY = this.gridY(minY) - 1;
-        int maxGridY = this.gridY(maxY) + 1;
-        int minGridZ = levelGridZ(minZ) - 1;
-        int maxGridZ = levelGridZ(maxZ) + 1;
-
-        this.minLevelGridX = minGridX;
-        this.minLevelGridZ = minGridZ;
-        this.levelGridSizeX = maxGridX - minGridX + 1;
-        this.levelGridSizeZ = maxGridZ - minGridZ + 1;
-
-        int gridSizeY = maxGridY - minGridYForMinY + 1;
-        int levelCacheSize = this.levelGridSizeX * gridSizeY * this.levelGridSizeZ;
-
-        // TODO: we have to reinitialize the array because we can't redirect int array construction.. what other options?
-        this.aquiferCache = new int[levelCacheSize];
-    }
-
-    private static int levelGridX(int x) {
-        return x >> 6;
-    }
-
-    private static int levelGridZ(int z) {
-        return z >> 6;
-    }
-
-    // we aren't able to reduce the grid on the y-axis because they don't match; can we change this?
-    private int getLevelIndex(int x, int y, int z) {
-        int localX = x - this.minLevelGridX;
-        int localY = y - this.minGridY;
-        int localZ = z - this.minLevelGridZ;
-        return (localY * this.levelGridSizeZ + localZ) * this.levelGridSizeX + localX;
+    private static double transformBarrierNoise(double noise) {
+        return 1.0 + (noise + 0.05) / 4.0;
     }
 
     /**
@@ -162,7 +103,7 @@ public abstract class MixinAquifer {
         this.lastWaterLevel = closestWaterLevel;
         this.shouldScheduleWaterUpdate = closestToSecond > 0.0;
 
-        if (closestToSecond <= -1.0) {
+        if (closestToSecond <= -1.0 || (closestWaterLevel >= y && Aquifer.isLavaLevel(y - this.noiseGeneratorSettings.noiseSettings().minY() - 1))) {
             this.lastBarrierDensity = 0.0;
             return;
         }
@@ -225,39 +166,17 @@ public abstract class MixinAquifer {
 
         long sourcePos = this.aquiferLocationCache[index];
         if (sourcePos == Long.MAX_VALUE) {
-            random.setSeed(Mth.getSeed(x, y * 3, z) + 1L);
+            AquiferRandom localRandom = this.random;
+            localRandom.setSeed(Mth.getSeed(x, y * 3, z) + 1L);
             sourcePos = BlockPos.asLong(
-                x * 16 + random.nextInt(10),
-                y * 12 + random.nextInt(9),
-                z * 16 + random.nextInt(10)
+                x * 16 + localRandom.nextInt(10),
+                y * 12 + localRandom.nextInt(9),
+                z * 16 + localRandom.nextInt(10)
             );
             this.aquiferLocationCache[index] = sourcePos;
         }
 
         return sourcePos;
-    }
-
-    /**
-     * @reason replace with smaller cache to avoid recomputing the same values
-     * @author Gegy
-     */
-    @Overwrite
-    private int getWaterLevel(long pos) {
-        int x = BlockPos.getX(pos);
-        int y = BlockPos.getY(pos);
-        int z = BlockPos.getZ(pos);
-        int gridX = levelGridX(x);
-        int gridY = this.gridY(y);
-        int gridZ = levelGridZ(z);
-
-        int cacheIndex = this.getLevelIndex(gridX, gridY, gridZ);
-        int level = this.aquiferCache[cacheIndex];
-        if (level == Integer.MAX_VALUE) {
-            level = this.computeAquifer(x, y, z);
-            this.aquiferCache[cacheIndex] = level;
-        }
-
-        return level;
     }
 
     /**
@@ -278,3 +197,4 @@ public abstract class MixinAquifer {
         return z >> 4;
     }
 }
+
