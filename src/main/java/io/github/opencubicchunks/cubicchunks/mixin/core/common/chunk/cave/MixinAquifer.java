@@ -1,5 +1,3 @@
-
-
 package io.github.opencubicchunks.cubicchunks.mixin.core.common.chunk.cave;
 
 import io.github.opencubicchunks.cubicchunks.chunk.AquiferRandom;
