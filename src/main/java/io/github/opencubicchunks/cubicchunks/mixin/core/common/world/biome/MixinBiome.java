@@ -129,7 +129,8 @@ public class MixinBiome implements BiomeGetter {
      * @reason Catch the surface builder
      */
     @Inject(method = "buildSurfaceAt", at = @At("HEAD"), cancellable = true)
-    public void buildSurfaceAt(Random random, ChunkAccess chunk, int x, int z, int worldHeight, double noise, BlockState defaultBlock, BlockState defaultFluid, int seaLevel, long seed,
+    public void buildSurfaceAt(Random random, ChunkAccess chunk, int x, int z, int worldHeight, double noise, BlockState defaultBlock, BlockState defaultFluid, int seaLevel,
+                               int surfaceMinHeight, long seed,
                                CallbackInfo ci) {
 
         if (!((CubicLevelHeightAccessor) chunk).isCubic()) {
@@ -141,9 +142,19 @@ public class MixinBiome implements BiomeGetter {
         ConfiguredSurfaceBuilder<?> configuredSurfaceBuilder = this.generationSettings.getSurfaceBuilder().get();
         configuredSurfaceBuilder.initNoise(seed);
         try {
-            configuredSurfaceBuilder.apply(random, chunk, (Biome) (Object) this, x, z, worldHeight, noise, defaultBlock, defaultFluid, seaLevel, seed);
+            int cubicChunksSurfaceHeight;
+            if (chunk.getMinBuildHeight() > surfaceMinHeight) {
+                cubicChunksSurfaceHeight = chunk.getMinBuildHeight();
+            } else if (chunk.getMaxBuildHeight() < surfaceMinHeight) {
+                cubicChunksSurfaceHeight = Integer.MAX_VALUE;
+            } else {
+                cubicChunksSurfaceHeight = surfaceMinHeight;
+            }
+
+            configuredSurfaceBuilder.apply(random, chunk, (Biome) (Object) this, x, z, worldHeight, noise, defaultBlock, defaultFluid, seaLevel, cubicChunksSurfaceHeight, seed);
         } catch (NoiseAndSurfaceBuilderHelper.StopGeneratingThrowable ignored) {
             // used as a way to stop the surface builder when it goes below the current cube
+            String s = "";
         }
     }
 

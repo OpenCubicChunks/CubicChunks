@@ -15,8 +15,9 @@ public class MixinBlockBlobFeature {
 
     private int storedY;
 
-    @Inject(at = @At(value = "HEAD"), method = "place")
+    @Inject(at = @At(value = "HEAD"), method = "place", cancellable = true)
     private void storeMinCubeY(FeaturePlaceContext<BlockStateConfiguration> featurePlaceContext, CallbackInfoReturnable<Boolean> cir) {
+        cir.setReturnValue(false); // TODO: Actually handle this heh
         storedY = featurePlaceContext.origin().getY();
     }
 
