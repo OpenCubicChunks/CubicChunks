@@ -16,6 +16,12 @@ import org.spongepowered.asm.mixin.Shadow;
 @Mixin(Aquifer.class)
 public abstract class MixinAquifer {
 
+    private static final double NOISE_MIN = transformBarrierNoise(-1.5);
+    private static final double NOISE_MAX = transformBarrierNoise(1.5);
+
+    private final AquiferRandom random = new AquiferRandom();
+    private double barrierNoiseCache = Double.NaN;
+
     @Shadow @Final private NormalNoise barrierNoise;
     @Shadow @Final private long[] aquiferLocationCache;
 
@@ -29,12 +35,6 @@ public abstract class MixinAquifer {
     @Shadow protected abstract int getIndex(int x, int y, int z);
     @Shadow protected abstract double similarity(int i, int j);
     @Shadow protected abstract int getWaterLevel(long pos);
-
-    private static final double NOISE_MIN = transformBarrierNoise(-1.5);
-    private static final double NOISE_MAX = transformBarrierNoise(1.5);
-
-    private final AquiferRandom random = new AquiferRandom();
-    private double barrierNoiseCache = Double.NaN;
 
     private static double transformBarrierNoise(double noise) {
         return 1.0 + (noise + 0.05) / 4.0;
@@ -168,12 +168,12 @@ public abstract class MixinAquifer {
 
         long sourcePos = this.aquiferLocationCache[index];
         if (sourcePos == Long.MAX_VALUE) {
-            AquiferRandom random = this.random;
-            random.setSeed(Mth.getSeed(x, y * 3, z) + 1L);
+            AquiferRandom localRandom = this.random;
+            localRandom.setSeed(Mth.getSeed(x, y * 3, z) + 1L);
             sourcePos = BlockPos.asLong(
-                x * 16 + random.nextInt(10),
-                y * 12 + random.nextInt(9),
-                z * 16 + random.nextInt(10)
+                x * 16 + localRandom.nextInt(10),
+                y * 12 + localRandom.nextInt(9),
+                z * 16 + localRandom.nextInt(10)
             );
             this.aquiferLocationCache[index] = sourcePos;
         }

@@ -154,7 +154,6 @@ public class MixinBiome implements BiomeGetter {
             configuredSurfaceBuilder.apply(random, chunk, (Biome) (Object) this, x, z, worldHeight, noise, defaultBlock, defaultFluid, seaLevel, cubicChunksSurfaceHeight, seed);
         } catch (NoiseAndSurfaceBuilderHelper.StopGeneratingThrowable ignored) {
             // used as a way to stop the surface builder when it goes below the current cube
-            String s = "";
         }
     }
 
