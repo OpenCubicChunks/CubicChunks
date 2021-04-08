@@ -382,4 +382,8 @@ public class Coords {
     public static int cubeLocalSection(int section) {
         return section & (IBigCube.DIAMETER_IN_SECTIONS - 1);
     }
+
+    public static BlockPos sectionPosToMinBlockPos(SectionPos sectionPos) {
+        return new BlockPos(sectionToMinBlock(sectionPos.getX()), sectionToMinBlock(sectionPos.getY()), sectionToMinBlock(sectionPos.getZ()));
+    }
 }

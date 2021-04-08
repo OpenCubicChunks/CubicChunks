@@ -30,6 +30,7 @@ import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.WorldGenRegion;
+import net.minecraft.server.level.WorldGenTickList;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Mth;
@@ -38,7 +39,6 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.ChunkPos;
-import net.minecraft.world.level.EmptyTickList;
 import net.minecraft.world.level.TickList;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.biome.BiomeManager;
@@ -98,6 +98,9 @@ public class CubeWorldGenRegion extends WorldGenRegion implements ICubicWorld {
 
     private int cubeCenterColumnCenterX = 0;
     private int cubeCenterColumnCenterZ = 0;
+
+    private final TickList<Block> blockTicks = new WorldGenTickList<>((pos) -> this.getCube(pos).getBlockTicks());
+    private final TickList<Fluid> liquidTicks = new WorldGenTickList<>((pos) -> this.getCube(pos).getLiquidTicks());
 
     public CubeWorldGenRegion(ServerLevel worldIn, List<IBigCube> cubesIn, ChunkAccess access) {
         super(worldIn, Collections.singletonList(new DummyChunkAccess()));
@@ -235,11 +238,11 @@ public class CubeWorldGenRegion extends WorldGenRegion implements ICubicWorld {
     }
 
     @Override public TickList<Block> getBlockTicks() {
-        return new EmptyTickList<>();
+        return this.blockTicks;
     }
 
     @Override public TickList<Fluid> getLiquidTicks() {
-        return new EmptyTickList<>();
+        return this.liquidTicks;
     }
 
     @Override public LevelData getLevelData() {
@@ -347,7 +350,7 @@ public class CubeWorldGenRegion extends WorldGenRegion implements ICubicWorld {
 
     @Deprecated
     @Nullable @Override public ChunkAccess getChunk(int x, int z, ChunkStatus requiredStatus, boolean nonnull) {
-       return this.access; //TODO: Do not do this.
+        return this.access; //TODO: Do not do this.
     }
 
     @Override public int getHeight(Heightmap.Types heightmapType, int x, int z) {
@@ -368,7 +371,6 @@ public class CubeWorldGenRegion extends WorldGenRegion implements ICubicWorld {
             }
             return height + 1;
         }
-
 
 
         IBigCube cube1 = getCube(new BlockPos(x, yStart, z));

@@ -1162,12 +1162,7 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
     @Override
     public CompletableFuture<Void> packCubeTicks(BigCube cubeIn) {
         return this.mainThreadExecutor.submit(() -> {
-            //TODO: implement saveCubeScheduleTicks
-            /*
-            This means adding a method to MixinChunkSection to handle the ticking of blocks,
-            chunksection needs a blocksToBeTickedField, and that will probably need to be initialised in a secondary afterInit method
-             */
-            //sectionIn.saveScheduledTicks(this.world);
+            cubeIn.packTicks(this.level);
         });
     }
 

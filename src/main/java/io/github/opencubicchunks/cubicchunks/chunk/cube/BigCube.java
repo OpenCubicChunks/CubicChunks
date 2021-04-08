@@ -20,6 +20,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import io.github.opencubicchunks.cubicchunks.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
+import io.github.opencubicchunks.cubicchunks.chunk.ImposterChunkPos;
 import io.github.opencubicchunks.cubicchunks.chunk.heightmap.SurfaceTrackerSection;
 import io.github.opencubicchunks.cubicchunks.chunk.heightmap.SurfaceTrackerWrapper;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
@@ -33,15 +34,18 @@ import net.minecraft.CrashReport;
 import net.minecraft.CrashReportCategory;
 import net.minecraft.ReportedException;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Registry;
 import net.minecraft.core.SectionPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ChunkHolder;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.ClassInstanceMultiMap;
 import net.minecraft.util.profiling.ProfilerFiller;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.ChunkTickList;
 import net.minecraft.world.level.EmptyTickList;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.TickList;
@@ -89,6 +93,9 @@ public class BigCube implements ChunkAccess, IBigCube, CubicLevelHeightAccessor 
     private static final Logger LOGGER = LogManager.getLogger(BigCube.class);
 
     private final CubePos cubePos;
+    private final UpgradeData upgradeDataIn;
+    private TickList<Block> blockTicks;
+    private TickList<Fluid> fluidTicks;
     private final LevelChunkSection[] sections = new LevelChunkSection[SECTION_COUNT];
 
     private final HashMap<BlockPos, BlockEntity> blockEntities = new HashMap<>();
@@ -121,10 +128,13 @@ public class BigCube implements ChunkAccess, IBigCube, CubicLevelHeightAccessor 
         this(worldIn, cubePosIn, biomeContainerIn, UpgradeData.EMPTY, EmptyTickList.empty(), EmptyTickList.empty(), 0L, null, null);
     }
 
-    public BigCube(Level worldIn, CubePos cubePosIn, ChunkBiomeContainer biomeContainerIn, UpgradeData upgradeDataIn, TickList<Block> tickBlocksIn,
-                   TickList<Fluid> tickFluidsIn, long inhabitedTimeIn, @Nullable LevelChunkSection[] sectionsIn, @Nullable Consumer<BigCube> postLoadConsumerIn) {
+    public BigCube(Level worldIn, CubePos cubePosIn, ChunkBiomeContainer biomeContainerIn, UpgradeData upgradeDataIn, TickList<Block> blockTicks,
+                   TickList<Fluid> fluidTicks, long inhabitedTimeIn, @Nullable LevelChunkSection[] sectionsIn, @Nullable Consumer<BigCube> postLoadConsumerIn) {
         this.level = worldIn;
         this.cubePos = cubePosIn;
+        this.upgradeDataIn = upgradeDataIn;
+        this.blockTicks = blockTicks;
+        this.fluidTicks = fluidTicks;
         this.heightmaps = Maps.newEnumMap(Heightmap.Types.class);
 //        this.upgradeData = upgradeDataIn;
 
@@ -821,11 +831,11 @@ public class BigCube implements ChunkAccess, IBigCube, CubicLevelHeightAccessor 
     }
 
     @Override public TickList<Block> getBlockTicks() {
-        throw new UnsupportedOperationException("Not implemented");
+        return this.blockTicks;
     }
 
     @Override public TickList<Fluid> getLiquidTicks() {
-        throw new UnsupportedOperationException("Not implemented");
+        return this.fluidTicks;
     }
 
     @Override public UpgradeData getUpgradeData() {
@@ -905,6 +915,18 @@ public class BigCube implements ChunkAccess, IBigCube, CubicLevelHeightAccessor 
 
     public boolean getLoaded() {
         return this.loaded;
+    }
+
+    public void packTicks(ServerLevel world) {
+        if (this.blockTicks ==  EmptyTickList.<Block>empty()) {
+            this.blockTicks = new ChunkTickList<>(Registry.BLOCK::getKey, world.getBlockTicks().fetchTicksInChunk(new ImposterChunkPos(this.cubePos), true, false), world.getGameTime());
+            this.setUnsaved(true);
+        }
+
+        if (this.fluidTicks == EmptyTickList.<Fluid>empty()) {
+            this.fluidTicks = new ChunkTickList<>(Registry.FLUID::getKey, world.getLiquidTicks().fetchTicksInChunk(new ImposterChunkPos(this.cubePos), true, false), world.getGameTime());
+            this.setUnsaved(true);
+        }
     }
 
     public void postLoad() {

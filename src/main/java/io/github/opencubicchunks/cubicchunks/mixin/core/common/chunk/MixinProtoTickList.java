@@ -1,6 +1,7 @@
 package io.github.opencubicchunks.cubicchunks.mixin.core.common.chunk;
 
 import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
+import io.github.opencubicchunks.cubicchunks.world.storage.CubeProtoTickList;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.LevelHeightAccessor;
 import net.minecraft.world.level.TickPriority;
@@ -19,7 +20,8 @@ public class MixinProtoTickList<T> {
     @Redirect(method = "<init>(Ljava/util/function/Predicate;Lnet/minecraft/world/level/ChunkPos;Lnet/minecraft/nbt/ListTag;Lnet/minecraft/world/level/LevelHeightAccessor;)V",
         at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/LevelHeightAccessor;getSectionsCount()I"))
     private int getFakeSectionCount(LevelHeightAccessor accessor) {
-        if (!((CubicLevelHeightAccessor) accessor).isCubic()) {
+        //This is gross but due to vanilla chunks and cubes being pushed through together in cubic worlds, we have to specifically check for our implementation
+        if (!((CubicLevelHeightAccessor) accessor).isCubic() || accessor instanceof CubeProtoTickList.CubeProtoTickListHeightAccess) {
             return accessor.getSectionsCount();
         }
 
@@ -32,8 +34,8 @@ public class MixinProtoTickList<T> {
      */
     @Inject(method = "scheduleTick", at = @At("HEAD"), cancellable = true)
     public void scheduleTick(BlockPos blockPos, T object, int i, TickPriority tickPriority, CallbackInfo ci) {
-
-        if (!((CubicLevelHeightAccessor) this.levelHeightAccessor).isCubic()) {
+        //This is gross but due to vanilla chunks and cubes being pushed through together in cubic worlds, we have to specifically check for our implementation
+        if (!((CubicLevelHeightAccessor) this.levelHeightAccessor).isCubic() || this.levelHeightAccessor instanceof CubeProtoTickList.CubeProtoTickListHeightAccess) {
             return;
         }
 
