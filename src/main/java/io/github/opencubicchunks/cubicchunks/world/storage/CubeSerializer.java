@@ -334,7 +334,7 @@ public class CubeSerializer {
         if (tickList instanceof CubeProtoTickList) {
             level.put("ToBeTicked", ((ProtoTickList) tickList).save());
         } else if (tickList instanceof ChunkTickList) {
-            level.put("TileTicks", ((ChunkTickList)tickList).save());
+            level.put("TileTicks", ((ChunkTickList) tickList).save());
         } else {
             level.put("TileTicks", world.getBlockTicks().save(new ImposterChunkPos(icube.getCubePos())));
         }
@@ -343,7 +343,7 @@ public class CubeSerializer {
         if (tickList2 instanceof ProtoTickList) {
             level.put("LiquidsToBeTicked", ((ProtoTickList) tickList2).save());
         } else if (tickList2 instanceof ChunkTickList) {
-            level.put("LiquidTicks", ((ChunkTickList)tickList2).save());
+            level.put("LiquidTicks", ((ChunkTickList) tickList2).save());
         } else {
             level.put("LiquidTicks", world.getLiquidTicks().save(new ImposterChunkPos(icube.getCubePos())));
         }
