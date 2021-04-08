@@ -239,11 +239,6 @@ public class BigCube implements ChunkAccess, IBigCube, CubicLevelHeightAccessor 
         return this.sections;
     }
 
-    //STATUS
-    @Override public void setCubeStatus(ChunkStatus status) {
-        throw new UnsupportedOperationException("BigCube does not have a setter for setCubeStatus");
-    }
-
     @Deprecated @Override public ChunkStatus getStatus() {
         return this.getCubeStatus();
     }

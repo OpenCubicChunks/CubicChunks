@@ -167,7 +167,7 @@ public class CubePrimer extends ProtoChunk implements IBigCube, CubicLevelHeight
     }
 
     //STATUS
-    @Override public void setCubeStatus(ChunkStatus newStatus) {
+    public void setCubeStatus(ChunkStatus newStatus) {
         this.status = newStatus;
     }
 
