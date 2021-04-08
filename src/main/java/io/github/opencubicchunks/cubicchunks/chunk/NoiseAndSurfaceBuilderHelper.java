@@ -8,10 +8,12 @@ import com.google.common.collect.Maps;
 import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import io.github.opencubicchunks.cubicchunks.world.DummyHeightmap;
+import io.github.opencubicchunks.cubicchunks.world.storage.CubeProtoTickList;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.LevelHeightAccessor;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
@@ -21,6 +23,7 @@ import net.minecraft.world.level.chunk.LevelChunkSection;
 import net.minecraft.world.level.chunk.ProtoChunk;
 import net.minecraft.world.level.chunk.UpgradeData;
 import net.minecraft.world.level.levelgen.Heightmap;
+import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.material.Fluids;
 import org.jetbrains.annotations.Nullable;
@@ -39,7 +42,8 @@ public class NoiseAndSurfaceBuilderHelper extends ProtoChunk implements CubicLev
     private final BlockPos.MutableBlockPos mutablePos = new BlockPos.MutableBlockPos();
 
     public NoiseAndSurfaceBuilderHelper(IBigCube delegate, IBigCube delegateAbove) {
-        super(delegate.getCubePos().asChunkPos(), UpgradeData.EMPTY, new HeightAccessor(delegate));
+        super(delegate.getCubePos().asChunkPos(), UpgradeData.EMPTY, null, ((CubeProtoTickList<Block>) delegate.getBlockTicks()), ((CubeProtoTickList<Fluid>) delegate.getLiquidTicks()),
+            new HeightAccessor(delegate));
         this.delegates = new ChunkAccess[2];
         this.delegates[0] = delegate;
         this.delegates[1] = delegateAbove;
@@ -130,7 +134,7 @@ public class NoiseAndSurfaceBuilderHelper extends ProtoChunk implements CubicLev
     }
 
     @Override public boolean isCubic() {
-         return isCubic;
+        return isCubic;
     }
 
     @Override public boolean generates2DChunks() {
@@ -290,7 +294,7 @@ public class NoiseAndSurfaceBuilderHelper extends ProtoChunk implements CubicLev
         }
 
         @Override public WorldStyle worldStyle() {
-        return worldStyle;
+            return worldStyle;
         }
 
         @Override public boolean isCubic() {
@@ -298,7 +302,7 @@ public class NoiseAndSurfaceBuilderHelper extends ProtoChunk implements CubicLev
         }
 
         @Override public boolean generates2DChunks() {
-        return generates2DChunks;
+            return generates2DChunks;
         }
     }
 }

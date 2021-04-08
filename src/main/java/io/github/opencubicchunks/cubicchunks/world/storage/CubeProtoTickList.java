@@ -12,7 +12,6 @@ import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.ListTag;
-import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.LevelHeightAccessor;
 import net.minecraft.world.level.TickList;
 import net.minecraft.world.level.TickPriority;
@@ -22,7 +21,7 @@ import net.minecraft.world.level.chunk.ProtoTickList;
 
 public class CubeProtoTickList<T> extends ProtoTickList<T> {
 
-    public CubeProtoTickList(Predicate<T> predicate, ChunkPos chunkPos, ListTag listTag, CubeProtoTickListHeightAccess levelHeightAccessor) {
+    public CubeProtoTickList(Predicate<T> predicate, ImposterChunkPos chunkPos, ListTag listTag, CubeProtoTickListHeightAccess levelHeightAccessor) {
         super(predicate, chunkPos, listTag, levelHeightAccessor);
     }
 
@@ -40,8 +39,7 @@ public class CubeProtoTickList<T> extends ProtoTickList<T> {
             if (((ProtoTickListAccess) this).getToBeTicked()[tickListIDX] != null) {
 
                 for (Short sectionRel : ((ProtoTickListAccess) this).getToBeTicked()[tickListIDX]) {
-                    BlockPos blockPos = CubePrimer.unpackToWorld(sectionRel, ((ProtoTickListAccess) this).getLevelHeightAccessor().getSectionYFromSectionIndex(tickListIDX),
-                        ((ImposterChunkPos) ((ProtoTickListAccess) this).getChunkPos()).toCubePos());
+                    BlockPos blockPos = CubePrimer.unpackToWorld(sectionRel, tickListIDX, ((ImposterChunkPos) ((ProtoTickListAccess) this).getChunkPos()).toCubePos());
                     scheduler.scheduleTick(blockPos, dataMapper.apply(blockPos), 0);
                 }
 
