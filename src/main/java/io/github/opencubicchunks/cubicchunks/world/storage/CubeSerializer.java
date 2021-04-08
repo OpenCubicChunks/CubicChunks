@@ -123,32 +123,27 @@ public class CubeSerializer {
         ChunkStatus.ChunkType chunkType = getChunkStatus(root);
         IBigCube icube;
         if (chunkType == ChunkStatus.ChunkType.LEVELCHUNK) {
-            //TODO: reimplement ticklists
-//                ITickList<Block> iticklist;
-//                if (level.contains("TileTicks", 9)) {
-//                    iticklist = SerializableTickList.create(level.getList("TileTicks", 10), Registry.BLOCK::getKey, Registry.BLOCK::getOrDefault);
-//                } else {
-//                    iticklist = chunkprimerticklist;
-//                }
-//
-//                ITickList<Fluid> iticklist1;
-//                if (level.contains("LiquidTicks", 9)) {
-//                    iticklist1 = SerializableTickList.create(level.getList("LiquidTicks", 10), Registry.FLUID::getKey, Registry.FLUID::getOrDefault);
-//                } else {
-//                    iticklist1 = chunkprimerticklist1;
-//                }
+            TickList<Block> blockTickList;
+            if (level.contains("TileTicks", 9)) {
+                blockTickList = ChunkTickList.create(level.getList("TileTicks", 10), Registry.BLOCK::getKey, Registry.BLOCK::get);
+            } else {
+                blockTickList = blockProtoTickList;
+            }
 
-//                icube = new BigCube(world.getWorld(), cubePos, biomecontainer, upgradedata, iticklist, iticklist1, inhabitedTime, sections, (p_222648_1_) -> {
-//                    readEntities(level, p_222648_1_);
-//                });
-            icube = new BigCube(world.getLevel(), cubePos, cubeBiomeContainer, null, blockProtoTickList, fluidProtoTickList, inhabitedTime, sections, (p_222648_1_) -> {
-                readEntities(world, level, p_222648_1_);
+            TickList<Fluid> fluidTickList;
+            if (level.contains("LiquidTicks", 9)) {
+                fluidTickList = ChunkTickList.create(level.getList("LiquidTicks", 10), Registry.FLUID::getKey, Registry.FLUID::get);
+            } else {
+                fluidTickList = fluidProtoTickList;
+            }
+
+            icube = new BigCube(world.getLevel(), cubePos, cubeBiomeContainer, null, blockTickList, fluidTickList, inhabitedTime, sections, (cube) -> {
+                readEntities(world, level, cube);
             });
             //TODO: reimplement forge capabilities in save format
 //                if (level.contains("ForgeCaps")) ((LevelChunk)icube).readCapsFromNBT(level.getCompound("ForgeCaps"));
         } else {
-            //TODO: reimplement ticklists, updatedata
-//                CubePrimer cubePrimer = new CubePrimer(cubePos, upgradedata, sections, chunkprimerticklist, chunkprimerticklist1);
+            //TODO: updatedata
             CubePrimer cubePrimer = new CubePrimer(cubePos, null, sections, blockProtoTickList, fluidProtoTickList, world);
             cubePrimer.setCubeBiomeContainer(cubeBiomeContainer);
 

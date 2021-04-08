@@ -6,7 +6,10 @@ import java.util.stream.Stream;
 
 import javax.annotation.Nullable;
 
+import io.github.opencubicchunks.cubicchunks.chunk.ImposterChunkPos;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
+import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
+import io.github.opencubicchunks.cubicchunks.world.storage.CubeProtoTickList;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import net.minecraft.Util;
 import net.minecraft.core.BlockPos;
@@ -19,19 +22,28 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.ChunkBiomeContainer;
 import net.minecraft.world.level.chunk.ChunkStatus;
 import net.minecraft.world.level.chunk.LevelChunkSection;
+import net.minecraft.world.level.chunk.UpgradeData;
 import net.minecraft.world.level.levelgen.GenerationStep;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.levelgen.feature.StructureFeature;
 import net.minecraft.world.level.levelgen.structure.StructureStart;
 import net.minecraft.world.level.material.FluidState;
+import net.minecraft.world.level.material.Fluids;
 
 @SuppressWarnings("deprecation")
 public class CubePrimerWrapper extends CubePrimer {
 
     private final BigCube cube;
 
-    public CubePrimerWrapper(BigCube cubeIn, LevelHeightAccessor accessor) {
-        super(cubeIn.getCubePos(), null, cubeIn.getCubeSections(), null, null, accessor);
+    public CubePrimerWrapper(BigCube cubeIn, LevelHeightAccessor levelHeightAccessor) {
+        super(cubeIn.getCubePos(), UpgradeData.EMPTY, cubeIn.getCubeSections(), new CubeProtoTickList<>((block) -> {
+                return block == null || block.defaultBlockState().isAir();
+            }, new ImposterChunkPos(cubeIn.getCubePos()), new CubeProtoTickList.CubeProtoTickListHeightAccess(cubeIn.getCubePos(), (CubicLevelHeightAccessor) levelHeightAccessor)),
+            new CubeProtoTickList<>((fluid) -> {
+                return fluid == null || fluid == Fluids.EMPTY;
+            }, new ImposterChunkPos(cubeIn.getCubePos()), new CubeProtoTickList.CubeProtoTickListHeightAccess(cubeIn.getCubePos(), (CubicLevelHeightAccessor) levelHeightAccessor)),
+            levelHeightAccessor);
+
         this.cube = cubeIn;
     }
 
