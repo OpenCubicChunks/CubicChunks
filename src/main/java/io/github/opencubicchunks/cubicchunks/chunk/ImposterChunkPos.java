@@ -1,5 +1,7 @@
 package io.github.opencubicchunks.cubicchunks.chunk;
 
+import java.util.Objects;
+
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import net.minecraft.world.level.ChunkPos;
 
@@ -26,5 +28,21 @@ public class ImposterChunkPos extends ChunkPos {
 
     @Override public long toLong() {
         return toCubePos().asLong();
+    }
+
+    @Override public String toString() {
+        return "[" + this.x + ", " + this.y + ", " + this.z + "]";
+    }
+
+    @Override public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        if (!super.equals(o)) return false;
+        ImposterChunkPos that = (ImposterChunkPos) o;
+        return y == that.y;
+    }
+
+    @Override public int hashCode() {
+        return Objects.hash(super.hashCode(), y);
     }
 }

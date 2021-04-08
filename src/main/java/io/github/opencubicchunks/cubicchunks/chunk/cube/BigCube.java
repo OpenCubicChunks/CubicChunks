@@ -16,16 +16,19 @@ import java.util.stream.StreamSupport;
 
 import javax.annotation.Nullable;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import io.github.opencubicchunks.cubicchunks.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
+import io.github.opencubicchunks.cubicchunks.chunk.ImposterChunkPos;
 import io.github.opencubicchunks.cubicchunks.chunk.heightmap.SurfaceTrackerSection;
 import io.github.opencubicchunks.cubicchunks.chunk.heightmap.SurfaceTrackerWrapper;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.ChunkSectionAccess;
 import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import io.github.opencubicchunks.cubicchunks.utils.MathUtil;
+import io.github.opencubicchunks.cubicchunks.world.storage.CubeProtoTickList;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import it.unimi.dsi.fastutil.shorts.ShortList;
@@ -33,15 +36,18 @@ import net.minecraft.CrashReport;
 import net.minecraft.CrashReportCategory;
 import net.minecraft.ReportedException;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Registry;
 import net.minecraft.core.SectionPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ChunkHolder;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.ClassInstanceMultiMap;
 import net.minecraft.util.profiling.ProfilerFiller;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.ChunkTickList;
 import net.minecraft.world.level.EmptyTickList;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.TickList;
@@ -89,7 +95,11 @@ public class BigCube implements ChunkAccess, IBigCube, CubicLevelHeightAccessor 
     private static final Logger LOGGER = LogManager.getLogger(BigCube.class);
 
     private final CubePos cubePos;
+    private final UpgradeData upgradeData;
+    private TickList<Block> blockTicks;
+    private TickList<Fluid> fluidTicks;
     private final LevelChunkSection[] sections = new LevelChunkSection[SECTION_COUNT];
+    private final ShortList[] postProcessing;
 
     private final HashMap<BlockPos, BlockEntity> blockEntities = new HashMap<>();
     private final Map<BlockPos, RebindableTickingBlockEntityWrapper> tickersInLevel = new HashMap<>();
@@ -121,10 +131,13 @@ public class BigCube implements ChunkAccess, IBigCube, CubicLevelHeightAccessor 
         this(worldIn, cubePosIn, biomeContainerIn, UpgradeData.EMPTY, EmptyTickList.empty(), EmptyTickList.empty(), 0L, null, null);
     }
 
-    public BigCube(Level worldIn, CubePos cubePosIn, ChunkBiomeContainer biomeContainerIn, UpgradeData upgradeDataIn, TickList<Block> tickBlocksIn,
-                   TickList<Fluid> tickFluidsIn, long inhabitedTimeIn, @Nullable LevelChunkSection[] sectionsIn, @Nullable Consumer<BigCube> postLoadConsumerIn) {
+    public BigCube(Level worldIn, CubePos cubePosIn, ChunkBiomeContainer biomeContainerIn, UpgradeData upgradeData, TickList<Block> blockTicks,
+                   TickList<Fluid> fluidTicks, long inhabitedTimeIn, @Nullable LevelChunkSection[] sectionsIn, @Nullable Consumer<BigCube> postLoadConsumerIn) {
         this.level = worldIn;
         this.cubePos = cubePosIn;
+        this.upgradeData = upgradeData;
+        this.blockTicks = blockTicks;
+        this.fluidTicks = fluidTicks;
         this.heightmaps = Maps.newEnumMap(Heightmap.Types.class);
 //        this.upgradeData = upgradeDataIn;
 
@@ -168,6 +181,7 @@ public class BigCube implements ChunkAccess, IBigCube, CubicLevelHeightAccessor 
                 }
             }
         }
+        this.postProcessing = new ShortList[IBigCube.SECTION_COUNT];
 
         isCubic = ((CubicLevelHeightAccessor) worldIn).isCubic();
         generates2DChunks = ((CubicLevelHeightAccessor) worldIn).generates2DChunks();
@@ -176,36 +190,36 @@ public class BigCube implements ChunkAccess, IBigCube, CubicLevelHeightAccessor 
 //        this.gatherCapabilities();
     }
 
-    public BigCube(Level worldIn, CubePrimer cubePrimerIn, @Nullable Consumer<BigCube> postLoadConsumerIn) {
+    public BigCube(Level worldIn, CubePrimer cubePrimer, @Nullable Consumer<BigCube> postLoadConsumerIn) {
         //TODO: reimplement full BigCube constructor from CubePrimer
-//        this(worldIn, cubePrimerIn.getCubePos(), cubePrimerIn.getCubeBiomes(), cubePrimerIn.getUpgradeData(), cubePrimerIn.getBlocksToBeTicked(),
-//            cubePrimerIn.getFluidsToBeTicked(), cubePrimerIn.getInhabitedTime(), cubePrimerIn.getSections(), (Consumer<BigCube>)null);
-        this(worldIn, cubePrimerIn.getCubePos(), cubePrimerIn.getBiomes(), null, null,
-            null, cubePrimerIn.getCubeInhabitedTime(), cubePrimerIn.getCubeSections(), postLoadConsumerIn);
+//        this(worldIn, cubePrimer.getCubePos(), cubePrimer.getCubeBiomes(), cubePrimer.getUpgradeData(), cubePrimer.getBlocksToBeTicked(),
+//            cubePrimer.getFluidsToBeTicked(), cubePrimer.getInhabitedTime(), cubePrimer.getSections(), (Consumer<BigCube>)null);
+        this(worldIn, cubePrimer.getCubePos(), cubePrimer.getBiomes(), null, cubePrimer.getBlockTicks(),
+            cubePrimer.getLiquidTicks(), cubePrimer.getCubeInhabitedTime(), cubePrimer.getCubeSections(), postLoadConsumerIn);
 
-        for (CompoundTag compoundnbt : cubePrimerIn.getCubeEntities()) {
+        for (CompoundTag compoundnbt : cubePrimer.getCubeEntities()) {
             EntityType.loadEntityRecursive(compoundnbt, worldIn, (entity) -> {
                 this.addEntity(entity);
                 return entity;
             });
         }
 
-        for (BlockEntity tileentity : cubePrimerIn.getCubeTileEntities().values()) {
+        for (BlockEntity tileentity : cubePrimer.getCubeTileEntities().values()) {
             this.setBlockEntity(tileentity);
         }
 
-        this.deferredTileEntities.putAll(cubePrimerIn.getDeferredTileEntities());
+        this.deferredTileEntities.putAll(cubePrimer.getDeferredTileEntities());
 
         //TODO: reimplement missing BigCube methods
 //        for(int i = 0; i < protoChunk.getPostProcessing().length; ++i) {
 //            this.postProcessing[i] = protoChunk.getPostProcessing()[i];
 //        }
 
-        this.setAllStarts(cubePrimerIn.getAllCubeStructureStarts());
-        this.setAllReferences(cubePrimerIn.getAllReferences());
+        this.setAllStarts(cubePrimer.getAllCubeStructureStarts());
+        this.setAllReferences(cubePrimer.getAllReferences());
 //        var4 = protoChunk.getHeightmaps().iterator();
 
-        this.setCubeLight(cubePrimerIn.hasCubeLight());
+        this.setCubeLight(cubePrimer.hasCubeLight());
         this.dirty = true;
     }
 
@@ -560,6 +574,31 @@ public class BigCube implements ChunkAccess, IBigCube, CubicLevelHeightAccessor 
         }
     }
 
+    public void postProcessGeneration() {
+        for (int i = 0; i < this.postProcessing.length; ++i) {
+            if (this.postProcessing[i] != null) {
+
+                for (Short sectionRel : this.postProcessing[i]) {
+                    BlockPos blockPos = CubePrimer.unpackToWorld(sectionRel, this.getSectionYFromSectionIndex(i), this.cubePos);
+                    BlockState blockState = this.getBlockState(blockPos);
+                    BlockState blockState2 = Block.updateFromNeighbourShapes(blockState, this.level, blockPos);
+                    this.level.setBlock(blockPos, blockState2, 20);
+                }
+                this.postProcessing[i].clear();
+            }
+        }
+
+        this.unpackTicks();
+
+        for (BlockPos blockPos2 : ImmutableList.copyOf(this.deferredTileEntities.keySet())) {
+            this.getBlockEntity(blockPos2);
+        }
+
+        this.deferredTileEntities.clear();
+//        this.upgradeData.upgrade(this); //TODO: DFU
+    }
+
+
     @Deprecated @Nullable @Override public CompoundTag getBlockEntityNbt(BlockPos pos) {
         return this.getCubeDeferredTileEntity(pos);
     }
@@ -821,11 +860,11 @@ public class BigCube implements ChunkAccess, IBigCube, CubicLevelHeightAccessor 
     }
 
     @Override public TickList<Block> getBlockTicks() {
-        throw new UnsupportedOperationException("Not implemented");
+        return this.blockTicks;
     }
 
     @Override public TickList<Fluid> getLiquidTicks() {
-        throw new UnsupportedOperationException("Not implemented");
+        return this.fluidTicks;
     }
 
     @Override public UpgradeData getUpgradeData() {
@@ -905,6 +944,40 @@ public class BigCube implements ChunkAccess, IBigCube, CubicLevelHeightAccessor 
 
     public boolean getLoaded() {
         return this.loaded;
+    }
+
+    public void packTicks(ServerLevel world) {
+        if (this.blockTicks == EmptyTickList.<Block>empty()) {
+            this.blockTicks = new ChunkTickList<>(Registry.BLOCK::getKey, world.getBlockTicks().fetchTicksInChunk(new ImposterChunkPos(this.cubePos), true, false), world.getGameTime());
+            this.setUnsaved(true);
+        }
+
+        if (this.fluidTicks == EmptyTickList.<Fluid>empty()) {
+            this.fluidTicks = new ChunkTickList<>(Registry.FLUID::getKey, world.getLiquidTicks().fetchTicksInChunk(new ImposterChunkPos(this.cubePos), true, false), world.getGameTime());
+            this.setUnsaved(true);
+        }
+    }
+
+    public void unpackTicks() {
+        if (this.blockTicks instanceof CubeProtoTickList) {
+            ((CubeProtoTickList<Block>) this.blockTicks).copyOut(this.level.getBlockTicks(), (pos) -> {
+                return this.getBlockState(pos).getBlock();
+            });
+            this.blockTicks = EmptyTickList.empty();
+        } else if (this.blockTicks instanceof ChunkTickList) {
+            ((ChunkTickList<Block>) this.blockTicks).copyOut(this.level.getBlockTicks());
+            this.blockTicks = EmptyTickList.empty();
+        }
+
+        if (this.fluidTicks instanceof CubeProtoTickList) {
+            ((CubeProtoTickList<Fluid>) this.fluidTicks).copyOut(this.level.getLiquidTicks(), (pos) -> {
+                return this.getFluidState(pos).getType();
+            });
+            this.fluidTicks = EmptyTickList.empty();
+        } else if (this.fluidTicks instanceof ChunkTickList) {
+            ((ChunkTickList<Fluid>) this.fluidTicks).copyOut(this.level.getLiquidTicks());
+            this.fluidTicks = EmptyTickList.empty();
+        }
     }
 
     public void postLoad() {

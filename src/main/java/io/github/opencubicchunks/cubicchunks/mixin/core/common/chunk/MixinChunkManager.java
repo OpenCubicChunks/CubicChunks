@@ -732,15 +732,14 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
     // func_222961_b, unpackTicks
     @Override
     public CompletableFuture<Either<BigCube, ChunkHolder.ChunkLoadingFailure>> unpackCubeTicks(ChunkHolder chunkHolder) {
-        return ((ICubeHolder) chunkHolder).getOrScheduleCubeFuture(ChunkStatus.FULL, (ChunkMap) (Object) this).thenApplyAsync((p_222976_0_) -> {
-            return p_222976_0_.mapLeft((icube) -> {
+        return ((ICubeHolder) chunkHolder).getOrScheduleCubeFuture(ChunkStatus.FULL, (ChunkMap) (Object) this).thenApplyAsync((o) -> {
+            return o.mapLeft((icube) -> {
                 BigCube cube = (BigCube) icube;
-                //TODO: implement rescheduleTicks for cube
-                //cube.unpackTicks();
+                cube.unpackTicks();
                 return cube;
             });
-        }, (p_222962_2_) -> {
-            this.cubeMainThreadMailbox.tell(CubeTaskPriorityQueueSorter.createMsg(chunkHolder, p_222962_2_));
+        }, (runnable) -> {
+            this.cubeMainThreadMailbox.tell(CubeTaskPriorityQueueSorter.createMsg(chunkHolder, runnable));
         });
     }
 
@@ -749,19 +748,18 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
     public CompletableFuture<Either<BigCube, ChunkHolder.ChunkLoadingFailure>> postProcessCube(ChunkHolder chunkHolder) {
         CubePos cubePos = ((ICubeHolder) chunkHolder).getCubePos();
         CompletableFuture<Either<List<IBigCube>, ChunkHolder.ChunkLoadingFailure>> completablefuture = this.getCubeRangeFuture(cubePos, 1,
-            (p_219172_0_) -> {
+            (i) -> {
                 return ChunkStatus.FULL;
             });
         CompletableFuture<Either<BigCube, ChunkHolder.ChunkLoadingFailure>> completablefuture1 =
-            completablefuture.thenApplyAsync((p_219239_0_) -> {
-                return p_219239_0_.flatMap((p_219208_0_) -> {
+            completablefuture.thenApplyAsync((o) -> {
+                return o.flatMap((p_219208_0_) -> {
                     BigCube cube = (BigCube) p_219208_0_.get(p_219208_0_.size() / 2);
-                    //TODO: implement cube#postProcess
-                    //cube.postProcess();
+                    cube.postProcessGeneration();
                     return Either.left(cube);
                 });
-            }, (p_219230_2_) -> {
-                this.cubeMainThreadMailbox.tell(CubeTaskPriorityQueueSorter.createMsg(chunkHolder, p_219230_2_));
+            }, (runnable) -> {
+                this.cubeMainThreadMailbox.tell(CubeTaskPriorityQueueSorter.createMsg(chunkHolder, runnable));
             });
         completablefuture1.thenAcceptAsync((cubeLoadingErrorEither) -> {
             cubeLoadingErrorEither.mapLeft((cube) -> {
@@ -1162,12 +1160,7 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
     @Override
     public CompletableFuture<Void> packCubeTicks(BigCube cubeIn) {
         return this.mainThreadExecutor.submit(() -> {
-            //TODO: implement saveCubeScheduleTicks
-            /*
-            This means adding a method to MixinChunkSection to handle the ticking of blocks,
-            chunksection needs a blocksToBeTickedField, and that will probably need to be initialised in a secondary afterInit method
-             */
-            //sectionIn.saveScheduledTicks(this.world);
+            cubeIn.packTicks(this.level);
         });
     }
 

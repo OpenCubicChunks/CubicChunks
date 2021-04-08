@@ -20,12 +20,14 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
+import io.github.opencubicchunks.cubicchunks.chunk.ImposterChunkPos;
 import io.github.opencubicchunks.cubicchunks.chunk.biome.CubeBiomeContainer;
 import io.github.opencubicchunks.cubicchunks.chunk.heightmap.SurfaceTrackerSection;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.BiomeContainerAccess;
 import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
+import io.github.opencubicchunks.cubicchunks.world.storage.CubeProtoTickList;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap;
@@ -104,10 +106,13 @@ public class CubePrimer extends ProtoChunk implements IBigCube, CubicLevelHeight
     private int height;
 
     public CubePrimer(CubePos cubePos, UpgradeData upgradeData, LevelHeightAccessor levelHeightAccessor) {
-        this(cubePos, upgradeData, null, null, null, levelHeightAccessor);
+        this(cubePos, upgradeData, null, new CubeProtoTickList<>((block) -> {
+            return block == null || block.defaultBlockState().isAir();
+        }, new ImposterChunkPos(cubePos), new CubeProtoTickList.CubeProtoTickListHeightAccess(cubePos, (CubicLevelHeightAccessor) levelHeightAccessor)), new CubeProtoTickList<>((fluid) -> {
+            return fluid == null || fluid == Fluids.EMPTY;
+        }, new ImposterChunkPos(cubePos), new CubeProtoTickList.CubeProtoTickListHeightAccess(cubePos, (CubicLevelHeightAccessor) levelHeightAccessor)), levelHeightAccessor);
     }
 
-    //TODO: add TickList<Block> and TickList<Fluid>
     public CubePrimer(CubePos cubePosIn, UpgradeData upgradeData, @Nullable LevelChunkSection[] sectionsIn, ProtoTickList<Block> blockProtoTickList, ProtoTickList<Fluid> fluidProtoTickList,
                       LevelHeightAccessor levelHeightAccessor) {
         super(cubePosIn.asChunkPos(), upgradeData, sectionsIn, blockProtoTickList, fluidProtoTickList, new FakeSectionCount(levelHeightAccessor, IBigCube.SECTION_COUNT));
@@ -426,11 +431,11 @@ public class CubePrimer extends ProtoChunk implements IBigCube, CubicLevelHeight
         return Collections.unmodifiableMap(this.structuresRefences);
     }
 
-    public static BlockPos unpackToWorld(short packedPos, int yOffset, CubePos cubePosIn) {
-        BlockPos pos = cubePosIn.asBlockPos();
-        int xPos = (packedPos & 15) + pos.getX();
-        int yPos = (packedPos >>> 4 & 15) + pos.getY();
-        int zPos = (packedPos >>> 8 & 15) + pos.getZ();
+    public static BlockPos unpackToWorld(short sectionRel, int sectionIdx, CubePos cubePosIn) {
+        BlockPos pos = Coords.sectionPosToMinBlockPos(Coords.sectionPosByIndex(cubePosIn, sectionIdx));
+        int xPos = (sectionRel & 15) + pos.getX();
+        int yPos = (sectionRel >>> 4 & 15) + pos.getY();
+        int zPos = (sectionRel >>> 8 & 15) + pos.getZ();
         return new BlockPos(xPos, yPos, zPos);
     }
 
@@ -499,14 +504,6 @@ public class CubePrimer extends ProtoChunk implements IBigCube, CubicLevelHeight
 
     @Override public void setLightEngine(LevelLightEngine lightingProvider) {
         this.setCubeLightManager(lightingProvider);
-    }
-
-    @Override public ProtoTickList<Block> getBlockTicks() {
-        throw new UnsupportedOperationException("For later implementation");
-    }
-
-    @Override public ProtoTickList<Fluid> getLiquidTicks() {
-        throw new UnsupportedOperationException("For later implementation");
     }
 
     @Nullable
