@@ -306,7 +306,6 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
             CubePos cubePos = cube.getCubePos();
 
             try {
-                //TODO: implement isExistingCubeFull and by extension cubeTypeCache
                 ChunkStatus status = cube.getCubeStatus();
                 if (status.getChunkType() != ChunkStatus.ChunkType.LEVELCHUNK) {
                     if (isExistingCubeFull(cubePos)) {
