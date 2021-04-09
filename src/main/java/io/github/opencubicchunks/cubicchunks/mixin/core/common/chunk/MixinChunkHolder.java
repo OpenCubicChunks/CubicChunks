@@ -338,9 +338,6 @@ public abstract class MixinChunkHolder implements ICubeHolder {
         }
     }
 
-
-    // TODO: this needs to be completely replaced for proper section handling
-
     /**
      * @author Barteks2x**
      * @reason height limits
