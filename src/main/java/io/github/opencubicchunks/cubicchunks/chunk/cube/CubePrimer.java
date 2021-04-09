@@ -121,7 +121,7 @@ public class CubePrimer extends ProtoChunk implements IBigCube, CubicLevelHeight
         this.carvingMasks = new Object2ObjectArrayMap<>();
 
         this.structureStarts = Maps.newHashMap();
-        this.structuresRefences = Maps.newHashMap(); //TODO: This should NOT be a ConcurrentHashMap
+        this.structuresRefences = Maps.newHashMap();
 
         this.cubePos = cubePosIn;
         this.levelHeightAccessor = levelHeightAccessor;
