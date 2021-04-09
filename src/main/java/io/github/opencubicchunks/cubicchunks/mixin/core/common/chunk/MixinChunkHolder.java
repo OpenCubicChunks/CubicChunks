@@ -416,7 +416,7 @@ public abstract class MixinChunkHolder implements ICubeHolder {
         }
         Level world = cube.getLevel();
 
-        //TODO: Broad light engine changes.
+        //TODO: Broadcast light engine changes.
         // if (this.skyLightChangeMask != 0 || this.blockLightChangeMask != 0) {
         //     this.sendToTracking(new SUpdateLightPacket(section.getPos(), this.lightManager, this.skyLightChangeMask & ~this.boundaryMask,
         //             this.blockLightChangeMask & ~this.boundaryMask), true);
