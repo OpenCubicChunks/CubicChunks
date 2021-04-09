@@ -65,10 +65,6 @@ public class CubeSerializer {
             CubicChunks.LOGGER.error("LevelCube file at {} is in the wrong location; relocating. (Expected {}, got {})", cubePos, expectedCubePos, cubePos);
         }
 
-        ChunkGenerator chunkgenerator = world.getChunkSource().getGenerator();
-        BiomeSource biomeprovider = chunkgenerator.getBiomeSource();
-
-        boolean biomes = level.contains("Biomes", 11);
         int[] biomes1 = level.getIntArray("Biomes");
         CubeBiomeContainer cubeBiomeContainer = new CubeBiomeContainer(world.registryAccess().registryOrThrow(Registry.BIOME_REGISTRY),
             new CubeBoundsLevelHeightAccessor(BigCube.DIAMETER_IN_BLOCKS, expectedCubePos.minCubeY(), ((CubicLevelHeightAccessor) world)), biomes1);
@@ -189,7 +185,6 @@ public class CubeSerializer {
             icube.setDirty(true);
         }
 
-        //TODO: reimplement post processing in save format
         ListTag postProcessingNBTList = level.getList("PostProcessing", 9);
 
         for (int l1 = 0; l1 < postProcessingNBTList.size(); ++l1) {
