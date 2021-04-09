@@ -224,6 +224,7 @@ public class MixinChunkStatus {
                             generator.buildSurfaceAndBedrock(cubeWorldGenRegion, chunkAccess);
                             // Carvers
                             generator.applyCarvers(world.getSeed(), world.getBiomeManager(), cubeAccessWrapper, GenerationStep.Carving.AIR);
+                            //As it stands in vanilla, no biome has carvers at the GenerationStep.Carving.LIQUID step.
                             generator.applyCarvers(world.getSeed(), world.getBiomeManager(), cubeAccessWrapper, GenerationStep.Carving.LIQUID);
                             return chunkAccess;
                         });
@@ -318,7 +319,6 @@ public class MixinChunkStatus {
 //
 //            NoiseAndSurfaceBuilderHelper noiseAndSurfaceBuilderHelper = new NoiseAndSurfaceBuilderHelper((IBigCube) chunk, cubeAbove);
 //
-//            //TODO: Verify liquid carvers are generating appropriately
 //            for (int columnX = 0; columnX < IBigCube.DIAMETER_IN_SECTIONS; columnX++) {
 //                for (int columnZ = 0; columnZ < IBigCube.DIAMETER_IN_SECTIONS; columnZ++) {
 //                    cubeAbove.moveColumns(columnX, columnZ);
