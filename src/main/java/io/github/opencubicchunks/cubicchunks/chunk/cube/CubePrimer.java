@@ -535,11 +535,6 @@ public class CubePrimer extends ProtoChunk implements IBigCube, CubicLevelHeight
         throw new UnsupportedOperationException("For later implementation");
     }
 
-
-    @Override public UpgradeData getUpgradeData() {
-        throw new UnsupportedOperationException("For later implementation");
-    }
-
     @Override
     public Map<StructureFeature<?>, StructureStart<?>> getAllStarts() {
         return getAllCubeStructureStarts();
