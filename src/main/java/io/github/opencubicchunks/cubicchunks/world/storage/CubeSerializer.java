@@ -1,10 +1,14 @@
 package io.github.opencubicchunks.cubicchunks.world.storage;
 
+import java.util.Arrays;
 import java.util.BitSet;
+import java.util.Locale;
+import java.util.Map;
 import java.util.Objects;
 
 import javax.annotation.Nullable;
 
+import com.google.common.collect.Maps;
 import io.github.opencubicchunks.cubicchunks.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.ImposterChunkPos;
@@ -16,6 +20,8 @@ import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.ChunkSerializerAccess;
 import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
+import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
+import it.unimi.dsi.fastutil.longs.LongSet;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Registry;
 import net.minecraft.nbt.CompoundTag;
@@ -23,6 +29,7 @@ import net.minecraft.nbt.ListTag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.ai.village.poi.PoiManager;
+import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.ChunkTickList;
 import net.minecraft.world.level.LevelHeightAccessor;
 import net.minecraft.world.level.LightLayer;
@@ -40,6 +47,7 @@ import net.minecraft.world.level.chunk.LevelChunkSection;
 import net.minecraft.world.level.chunk.ProtoTickList;
 import net.minecraft.world.level.chunk.storage.ChunkSerializer;
 import net.minecraft.world.level.levelgen.GenerationStep;
+import net.minecraft.world.level.levelgen.feature.StructureFeature;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureManager;
 import net.minecraft.world.level.lighting.LevelLightEngine;
 import net.minecraft.world.level.material.Fluid;
@@ -98,7 +106,7 @@ public class CubeSerializer {
                 }
 
                 //TODO: reimplement poi in save format
-                //poiManager.checkConsistencyWithBlocks(cubePos, chunksection);
+//                poiManager.checkConsistencyWithBlocks(cubePos, chunksection);
             }
 
             if (isLightOn) {
@@ -174,7 +182,7 @@ public class CubeSerializer {
 //            Heightmap.updateChunkHeightmaps(icube, enumset);
         CompoundTag structures = level.getCompound("Structures");
         icube.setAllStarts(ChunkSerializerAccess.invokeUnpackStructureStart(world, structures, world.getSeed()));
-        icube.setAllReferences(ChunkSerializerAccess.invokeUnpackStructureReferences(new ImposterChunkPos(cubePos), structures));
+        icube.setAllReferences(unpackCubeStructureReferences(new ImposterChunkPos(cubePos), structures));
         if (level.getBoolean("shouldSave")) {
             icube.setDirty(true);
         }
@@ -385,7 +393,25 @@ public class CubeSerializer {
                 }
             }
         }
+    }
 
+    private static Map<StructureFeature<?>, LongSet> unpackCubeStructureReferences(ChunkPos pos, CompoundTag nbt) {
+        Map<StructureFeature<?>, LongSet> map = Maps.newHashMap();
+        CompoundTag compoundTag = nbt.getCompound("References");
+
+        for (String nbtKey : compoundTag.getAllKeys()) {
+            map.put(StructureFeature.STRUCTURES_REGISTRY.get(nbtKey.toLowerCase(Locale.ROOT)), new LongOpenHashSet(Arrays.stream(compoundTag.getLongArray(nbtKey)).filter((packedPos) -> {
+                ChunkPos chunkPos2 = new ImposterChunkPos(CubePos.from(packedPos));
+                if (chunkPos2.getChessboardDistance(pos) > 8) {
+                    CubicChunks.LOGGER.warn("Found invalid structure reference [ {} @ {} ] for chunk {}.", nbtKey, chunkPos2, pos);
+                    return false;
+                } else {
+                    return true;
+                }
+            }).toArray()));
+        }
+
+        return map;
     }
 
     public static class CubeBoundsLevelHeightAccessor implements LevelHeightAccessor, CubicLevelHeightAccessor {
