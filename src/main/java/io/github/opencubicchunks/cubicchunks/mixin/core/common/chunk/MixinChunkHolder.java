@@ -15,6 +15,7 @@ import java.util.function.Consumer;
 import javax.annotation.Nullable;
 
 import com.mojang.datafixers.util.Either;
+import io.github.opencubicchunks.cubicchunks.chunk.CubePlayerProvider;
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.IChunkManager;
 import io.github.opencubicchunks.cubicchunks.chunk.ICubeHolder;
@@ -457,8 +458,7 @@ public abstract class MixinChunkHolder implements ICubeHolder {
     }
 
     private void sendToTracking(Object packetIn, boolean boundaryOnly) {
-        // TODO: fix block update tracking
-        this.playerProvider.getPlayers(this.cubePos.asChunkPos(), boundaryOnly)
+        ((CubePlayerProvider) this.playerProvider).getPlayers(this.cubePos, boundaryOnly)
             .forEach(player -> PacketDispatcher.sendTo(packetIn, player));
     }
 
