@@ -1,5 +1,6 @@
 package io.github.opencubicchunks.cubicchunks.world.storage;
 
+import java.util.BitSet;
 import java.util.Objects;
 
 import javax.annotation.Nullable;
@@ -37,6 +38,7 @@ import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.chunk.LevelChunkSection;
 import net.minecraft.world.level.chunk.ProtoTickList;
 import net.minecraft.world.level.chunk.storage.ChunkSerializer;
+import net.minecraft.world.level.levelgen.GenerationStep;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureManager;
 import net.minecraft.world.level.lighting.LevelLightEngine;
 import net.minecraft.world.level.material.Fluid;
@@ -216,11 +218,11 @@ public class CubeSerializer {
                 }
             }
 
-//                CompoundTag compoundnbt5 = level.getCompound("CarvingMasks");
-//                for(String s1 : compoundnbt5.keySet()) {
-//                    GenerationStage.Carving generationstage$carving = GenerationStage.Carving.valueOf(s1);
-//                    cubePrimer.setCubeCarvingMask(generationstage$carving, BitSet.valueOf(compoundnbt5.getByteArray(s1)));
-//                }
+            CompoundTag compoundnbt5 = level.getCompound("CarvingMasks");
+            for (String key : compoundnbt5.getAllKeys()) {
+                GenerationStep.Carving carvingStage = GenerationStep.Carving.valueOf(key);
+                cubePrimer.setCarvingMask(carvingStage, BitSet.valueOf(compoundnbt5.getByteArray(key)));
+            }
 
             //TODO: reimplement forge ChunkDataEvent
 //                net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.event.world.ChunkDataEvent.Load(icube, level, chunkstatus$type));
@@ -302,17 +304,17 @@ public class CubeSerializer {
             level.put("Entities", listTag3);
 //            level.put("Lights", packOffsets(cubePrimer.getPackedLights()));
 
-//            CompoundTag carvingMasksNBT = new CompoundTag();
-//            GenerationStep.Carving[] carvingSteps = GenerationStep.Carving.values();
-//
-//            for (GenerationStep.Carving carving : carvingSteps) {
-//                BitSet bitSet = cubePrimer.getCarvingMask(carving);
-//                if (bitSet != null) {
-//                    carvingMasksNBT.putByteArray(carving.toString(), bitSet.toByteArray());
-//                }
-//            }
-//
-//            level.put("CarvingMasks", carvingMasksNBT);
+            CompoundTag carvingMasksNBT = new CompoundTag();
+            GenerationStep.Carving[] carvingSteps = GenerationStep.Carving.values();
+
+            for (GenerationStep.Carving carving : carvingSteps) {
+                BitSet bitSet = cubePrimer.getCarvingMask(carving);
+                if (bitSet != null) {
+                    carvingMasksNBT.putByteArray(carving.toString(), bitSet.toByteArray());
+                }
+            }
+
+            level.put("CarvingMasks", carvingMasksNBT);
         }
 
         TickList<Block> tickList = icube.getBlockTicks();
