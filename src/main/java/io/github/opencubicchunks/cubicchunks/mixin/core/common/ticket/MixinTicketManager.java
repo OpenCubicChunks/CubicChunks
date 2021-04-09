@@ -101,7 +101,7 @@ public abstract class MixinTicketManager implements ITicketManager, IVerticalVie
         }
 
         this.cubeTicketTracker.updateSourceLevel(cubePosIn, getTicketLevelAt(sortedarrayset), false);
-        // TODO: release chunk tickets when releasing cube tickets
+        // TODO: release chunk tickets when releasing cube tickets. Discuss whether or not this should be done.
     }
 
     private SortedArraySet<Ticket<?>> getCubeTickets(long cubePos) {
