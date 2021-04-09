@@ -15,7 +15,9 @@ import java.util.stream.Stream;
 
 import javax.annotation.Nullable;
 
+import io.github.opencubicchunks.cubicchunks.chunk.CubeWorldRegionColumn;
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
+import io.github.opencubicchunks.cubicchunks.chunk.cube.BigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.server.ICubicWorld;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
@@ -53,7 +55,6 @@ import net.minecraft.world.level.chunk.ChunkStatus;
 import net.minecraft.world.level.chunk.LevelChunkSection;
 import net.minecraft.world.level.chunk.UpgradeData;
 import net.minecraft.world.level.dimension.DimensionType;
-import net.minecraft.world.level.entity.EntityTypeTest;
 import net.minecraft.world.level.gameevent.GameEvent;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.levelgen.feature.StructureFeature;
@@ -62,7 +63,6 @@ import net.minecraft.world.level.lighting.LevelLightEngine;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.storage.LevelData;
-import net.minecraft.world.phys.AABB;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -114,6 +114,13 @@ public class CubeWorldGenRegion extends WorldGenRegion implements ICubicWorld {
             this.mainCubeY = this.centerCubePos.getY();
             this.mainCubeZ = this.centerCubePos.getZ();
             this.diameter = cubeRoot;
+
+
+            for (IBigCube cube : cubesIn) {
+                if (cube instanceof BigCube) {
+                    break;
+                }
+            }
 
             this.seed = worldIn.getSeed();
             this.seaLevel = worldIn.getSeaLevel();
@@ -167,7 +174,6 @@ public class CubeWorldGenRegion extends WorldGenRegion implements ICubicWorld {
     public int getMaxCubeY() {
         return this.maxCubeY;
     }
-
 
     public CubePos getCenterCubePos() {
         return this.getCenterCubePos();
@@ -328,27 +334,13 @@ public class CubeWorldGenRegion extends WorldGenRegion implements ICubicWorld {
         return this.getCube(pos).getFluidState(pos);
     }
 
-    @Override public List<Entity> getEntities(@Nullable Entity entityIn, AABB boundingBox,
-                                              @Nullable Predicate<? super Entity> predicate) {
-        return Collections.emptyList();
-    }
-
-    @Override public <T extends Entity> List<T> getEntities(EntityTypeTest<Entity, T> entityTypeTest, AABB aABB, Predicate<? super T> predicate) {
-        return Collections.emptyList();
-    }
-
-    @Override
-    public <T extends Entity> List<T> getEntitiesOfClass(Class<T> clazz, AABB aabb, @Nullable Predicate<? super T> filter) {
-        return Collections.emptyList();
-    }
-
     @Override public List<Player> players() {
         return /*level.players()*/ Collections.emptyList();
     }
 
     @Deprecated
     @Nullable @Override public ChunkAccess getChunk(int x, int z, ChunkStatus requiredStatus, boolean nonnull) {
-        return this.access; //TODO: Do not do this.
+        return new CubeWorldRegionColumn(new ChunkPos(x, z), this.access.getUpgradeData(), this);
     }
 
     @Override public int getHeight(Heightmap.Types heightmapType, int x, int z) {

@@ -1088,9 +1088,8 @@ public class BigCube implements ChunkAccess, IBigCube, CubicLevelHeightAccessor 
                             this.loggedInvalidBlockState = false;
                         } else if (!this.loggedInvalidBlockState) {
                             this.loggedInvalidBlockState = true;
-                            BigCube.LOGGER.warn("Block entity {} @ {} state {} invalid for ticking:", new org.apache.logging.log4j.util.Supplier[] { this::getType, this::getPos, () -> {
-                                return blockState;
-                            } });
+                            BigCube.LOGGER
+                                .warn("Block entity {} @ {} state {} invalid for ticking:", new org.apache.logging.log4j.util.Supplier[] { this::getType, this::getPos, () -> blockState });
                         }
 
                         profilerFiller.pop();
