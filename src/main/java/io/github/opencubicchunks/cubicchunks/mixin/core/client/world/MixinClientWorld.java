@@ -45,7 +45,7 @@ public abstract class MixinClientWorld extends Level implements IClientWorld {
 
     @Override
     public void onCubeLoaded(int cubeX, int cubeY, int cubeZ) {
-        //TODO: implement colorCaches in onCubeLoaded
+        //TODO: Implement colorCaches in onCubeLoaded. Wait for Mojang to see if they make it 3D in 1.17
 //        this.colorCaches.forEach((p_228316_2_, p_228316_3_) -> {
 //            p_228316_3_.invalidateChunk(chunkX, chunkZ);
 //        });
