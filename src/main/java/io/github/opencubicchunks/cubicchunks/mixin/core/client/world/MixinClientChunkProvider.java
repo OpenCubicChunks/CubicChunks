@@ -76,7 +76,7 @@ public abstract class MixinClientChunkProvider implements IClientCubeProvider {
         int index = this.cubeArray.getIndex(x, y, z);
         BigCube cube = this.cubeArray.get(index);
         if (isCubeValid(cube, x, y, z)) {
-            // TODO: forge cube unload event
+            //FORGE: cube unload event
             // net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.event.world.ChunkEvent.Unload(chunk));
             this.cubeArray.unload(index, cube, null);
         }
@@ -129,7 +129,7 @@ public abstract class MixinClientChunkProvider implements IClientCubeProvider {
         }
 
         ((IClientWorld) this.level).onCubeLoaded(cubeX, cubeY, cubeZ);
-        // TODO: forge client cube load event
+        // FORGE: client cube load event
         // net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.event.world.ChunkEvent.Load(cube));
         return cube;
     }
