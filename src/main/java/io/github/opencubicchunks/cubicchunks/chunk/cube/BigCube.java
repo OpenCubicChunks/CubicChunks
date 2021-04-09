@@ -210,7 +210,7 @@ public class BigCube implements ChunkAccess, IBigCube, CubicLevelHeightAccessor 
 
         this.deferredTileEntities.putAll(cubePrimer.getDeferredTileEntities());
 
-        for(int i = 0; i < cubePrimer.getPostProcessing().length; ++i) {
+        for (int i = 0; i < cubePrimer.getPostProcessing().length; ++i) {
             this.postProcessing[i] = cubePrimer.getPostProcessing()[i];
         }
 

@@ -36,11 +36,9 @@ import net.minecraft.world.level.ChunkTickList;
 import net.minecraft.world.level.LevelHeightAccessor;
 import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.level.TickList;
-import net.minecraft.world.level.biome.BiomeSource;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.chunk.ChunkBiomeContainer;
-import net.minecraft.world.level.chunk.ChunkGenerator;
 import net.minecraft.world.level.chunk.ChunkSource;
 import net.minecraft.world.level.chunk.ChunkStatus;
 import net.minecraft.world.level.chunk.DataLayer;
@@ -188,10 +186,10 @@ public class CubeSerializer {
         ListTag postProcessingNBTList = level.getList("PostProcessing", 9);
 
         for (int l1 = 0; l1 < postProcessingNBTList.size(); ++l1) {
-            ListTag ListTag1 = postProcessingNBTList.getList(l1);
+            ListTag listTag1 = postProcessingNBTList.getList(l1);
 
-            for (int l = 0; l < ListTag1.size(); ++l) {
-                icube.addPackedPostProcess(ListTag1.getShort(l), l1);
+            for (int l = 0; l < listTag1.size(); ++l) {
+                icube.addPackedPostProcess(listTag1.getShort(l), l1);
             }
         }
 
