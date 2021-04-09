@@ -172,8 +172,6 @@ public abstract class MixinChunkHolder implements ICubeHolder {
         updateCubeFutures(chunkMap, executor);
     }
 
-    // TODO: currently entity tracking is done on columns only, the next 3 methods cancel it for cube holders
-
     @Redirect(method = "scheduleFullChunkPromotion", at = @At(
         value = "INVOKE",
         target = "Ljava/util/concurrent/CompletableFuture;thenRunAsync(Ljava/lang/Runnable;Ljava/util/concurrent/Executor;)Ljava/util/concurrent/CompletableFuture;"))
@@ -189,7 +187,6 @@ public abstract class MixinChunkHolder implements ICubeHolder {
         if (cubePos == null) {
             return completableFuture.thenRunAsync(action, executor);
         }
-        // TODO: this is for entity tracking, the runnable goes to PersistentEntitySectionManager#updateChunkStatus
         return completableFuture.thenRunAsync(() -> {
             ((ChunkManagerAccess) chunkMap).invokeOnFullChunkStatusChange(new ImposterChunkPos(this.cubePos), fullChunkStatus);
         }, executor);
