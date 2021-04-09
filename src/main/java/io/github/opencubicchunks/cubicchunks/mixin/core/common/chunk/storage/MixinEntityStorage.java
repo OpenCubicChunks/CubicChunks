@@ -2,7 +2,6 @@ package io.github.opencubicchunks.cubicchunks.mixin.core.common.chunk.storage;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
@@ -44,6 +43,8 @@ public abstract class MixinEntityStorage implements CubicEntityStorage {
 
     @Shadow protected abstract CompoundTag upgradeChunkTag(CompoundTag chunkTag);
 
+    @Shadow @Final private Executor mainThreadExecutor;
+
     @Inject(method = "<init>", at = @At("RETURN"))
     private void setupCubeIO(ServerLevel serverLevel, File file, DataFixer dataFixer, boolean bl, Executor executor, CallbackInfo ci) throws IOException {
         if (((CubicLevelHeightAccessor) serverLevel).isCubic()) {
@@ -56,11 +57,10 @@ public abstract class MixinEntityStorage implements CubicEntityStorage {
             return CompletableFuture.completedFuture(emptyCube(pos));
         }
 
-        try {
-            CompoundTag compoundTag = this.cubeWorker.loadCubeNBT(pos);
+        return this.cubeWorker.loadCubeAsync(pos).thenApplyAsync((compoundTag) -> {
             if (compoundTag == null) {
                 this.emptyChunks.add(pos.asLong());
-                return CompletableFuture.completedFuture(emptyCube(pos));
+                return emptyCube(pos);
             } else {
                 try {
                     CubePos cubePos = readCubePos(compoundTag);
@@ -74,12 +74,9 @@ public abstract class MixinEntityStorage implements CubicEntityStorage {
                 CompoundTag compoundTag2 = this.upgradeChunkTag(compoundTag);
                 ListTag listTag = compoundTag2.getList("Entities", 10);
                 List<Entity> list = EntityType.loadEntitiesRecursive(listTag, this.level).collect(ImmutableList.toImmutableList());
-                return CompletableFuture.completedFuture(new ChunkEntities(new ImposterChunkPos(pos), list));
+                return new ChunkEntities<>(new ImposterChunkPos(pos), list);
             }
-            //TODO: Do Async file loading instead.
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
+        }, this.mainThreadExecutor);
     }
 
     private static ChunkEntities<Entity> emptyCube(CubePos pos) {
