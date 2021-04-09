@@ -210,10 +210,9 @@ public class BigCube implements ChunkAccess, IBigCube, CubicLevelHeightAccessor 
 
         this.deferredTileEntities.putAll(cubePrimer.getDeferredTileEntities());
 
-        //TODO: reimplement missing BigCube methods
-//        for(int i = 0; i < protoChunk.getPostProcessing().length; ++i) {
-//            this.postProcessing[i] = protoChunk.getPostProcessing()[i];
-//        }
+        for(int i = 0; i < cubePrimer.getPostProcessing().length; ++i) {
+            this.postProcessing[i] = cubePrimer.getPostProcessing()[i];
+        }
 
         this.setAllStarts(cubePrimer.getAllCubeStructureStarts());
         this.setAllReferences(cubePrimer.getAllReferences());
@@ -851,7 +850,7 @@ public class BigCube implements ChunkAccess, IBigCube, CubicLevelHeightAccessor 
     }
 
     @Override public ShortList[] getPostProcessing() {
-        throw new UnsupportedOperationException("Not implemented");
+        return this.postProcessing;
     }
 
     @Override public TickList<Block> getBlockTicks() {
@@ -888,7 +887,7 @@ public class BigCube implements ChunkAccess, IBigCube, CubicLevelHeightAccessor 
     }
 
 
-    @org.jetbrains.annotations.Nullable
+    @Nullable
     public StructureStart<?> getStartForFeature(StructureFeature<?> structureFeature) {
         return this.structureStarts.get(structureFeature);
     }

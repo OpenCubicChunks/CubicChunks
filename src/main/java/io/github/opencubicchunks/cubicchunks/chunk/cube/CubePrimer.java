@@ -42,6 +42,7 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.ChunkBiomeContainer;
 import net.minecraft.world.level.chunk.ChunkStatus;
 import net.minecraft.world.level.chunk.LevelChunkSection;
@@ -494,12 +495,8 @@ public class CubePrimer extends ProtoChunk implements IBigCube, CubicLevelHeight
         this.setCubeStatus(status);
     }
 
-    @Override public void addPackedPostProcess(short packedPos, int index) {
-        throw new UnsupportedOperationException("For later implementation");
-    }
-
     @Override public Map<BlockPos, CompoundTag> getBlockEntityNbts() {
-        throw new UnsupportedOperationException("For later implementation");
+        return this.deferredTileEntities;
     }
 
     @Override public void setLightEngine(LevelLightEngine lightingProvider) {
@@ -524,17 +521,11 @@ public class CubePrimer extends ProtoChunk implements IBigCube, CubicLevelHeight
     }
 
     @Override
-    public void markPosForPostprocessing(BlockPos blockPos) {
-        if (System.currentTimeMillis() % 15000 == 0) {
-            LogManager.getLogger().warn("Trying to mark a block for PostProcessing @ {}, but this operation is not supported.", blockPos);
-
+    public void markPosForPostprocessing(BlockPos pos) {
+        if (!this.isOutsideBuildHeight(pos)) {
+            ChunkAccess.getOrCreateOffsetList(this.getPostProcessing(), Coords.blockToIndex(pos.getX(), pos.getY(), pos.getZ())).add(packOffsetCoordinates(pos));
         }
     }
-
-    @Override public ShortList[] getPostProcessing() {
-        throw new UnsupportedOperationException("For later implementation");
-    }
-
 
     @Override public UpgradeData getUpgradeData() {
         throw new UnsupportedOperationException("For later implementation");
