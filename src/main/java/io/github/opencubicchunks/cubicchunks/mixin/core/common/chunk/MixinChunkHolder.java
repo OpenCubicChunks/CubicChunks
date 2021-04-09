@@ -220,10 +220,6 @@ public abstract class MixinChunkHolder implements ICubeHolder {
                 f2.complete(null);
             });
         });
-        // TODO: this is for entity tracking, the runnable goes to PersistentEntitySectionManager#updateChunkStatus
-        //return completableFuture.thenRunAsync(() -> {
-        //    chunkMap.onFullCubeStatusChange(this.cubePos, fullChunkStatus);
-        //}, executor);
     }
 
     @Inject(method = "demoteFullChunk", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ChunkMap;onFullChunkStatusChange"
