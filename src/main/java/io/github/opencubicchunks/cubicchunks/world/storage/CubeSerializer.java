@@ -16,6 +16,7 @@ import io.github.opencubicchunks.cubicchunks.chunk.biome.CubeBiomeContainer;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.BigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.CubePrimer;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.CubePrimerWrapper;
+import io.github.opencubicchunks.cubicchunks.chunk.storage.POIDeserializationContext;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.ChunkSerializerAccess;
 import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
@@ -24,6 +25,7 @@ import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Registry;
+import net.minecraft.core.SectionPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.server.level.ServerLevel;
@@ -96,8 +98,9 @@ public class CubeSerializer {
             CompoundTag sectionNBT = sectionsNBTList.getCompound(i);
             int cubeIndex = sectionNBT.getShort("i");
 
+            SectionPos sectionPos = Coords.sectionPosByIndex(cubePos, cubeIndex);
             if (sectionNBT.contains("Palette", 9) && sectionNBT.contains("BlockStates", 12)) {
-                int sectionY = Coords.sectionPosByIndex(cubePos, cubeIndex).getY();
+                int sectionY = sectionPos.getY();
                 LevelChunkSection chunksection = new LevelChunkSection(sectionY);
                 chunksection.getStates().read(sectionNBT.getList("Palette", 10), sectionNBT.getLongArray("BlockStates"));
                 chunksection.recalcBlockCounts();
@@ -105,18 +108,17 @@ public class CubeSerializer {
                     sections[cubeIndex] = chunksection;
                 }
 
-                //TODO: reimplement poi in save format
-//                poiManager.checkConsistencyWithBlocks(cubePos, chunksection);
+                ((POIDeserializationContext) poiManager).checkConsistencyWithBlocksForCube(sectionPos, chunksection);
             }
 
             if (isLightOn) {
                 if (sectionNBT.contains("BlockLight", 7)) {
-                    worldlightmanager.queueSectionData(LightLayer.BLOCK, Coords.sectionPosByIndex(cubePos, cubeIndex), new DataLayer(sectionNBT.getByteArray("BlockLight")), true);
+                    worldlightmanager.queueSectionData(LightLayer.BLOCK, sectionPos, new DataLayer(sectionNBT.getByteArray("BlockLight")), true);
                 }
 
                 //TODO: reimplement
                 if (/*worldHasSkylight &&*/ sectionNBT.contains("SkyLight", 7)) {
-                    worldlightmanager.queueSectionData(LightLayer.SKY, Coords.sectionPosByIndex(cubePos, cubeIndex), new DataLayer(sectionNBT.getByteArray("SkyLight")), true);
+                    worldlightmanager.queueSectionData(LightLayer.SKY, sectionPos, new DataLayer(sectionNBT.getByteArray("SkyLight")), true);
                 }
             }
         }
