@@ -12,6 +12,7 @@
         "common.ChunkHolderAccess",
         "common.ChunkManagerAccess",
         "common.ChunkSectionAccess",
+        "common.ChunkSerializerAccess",
         "common.ChunkTicketTrackerFactoryAccess",
         "common.DecorationContextAccess",
         "common.EntityTrackerAccess",

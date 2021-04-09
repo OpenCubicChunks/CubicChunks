@@ -45,4 +45,11 @@ public class ImposterChunkPos extends ChunkPos {
     @Override public int hashCode() {
         return Objects.hash(super.hashCode(), y);
     }
+
+    @Override public int getChessboardDistance(ChunkPos pos) {
+        if (pos instanceof ImposterChunkPos) {
+            return Math.max(super.getChessboardDistance(pos), Math.abs(this.y - ((ImposterChunkPos) pos).y));
+        }
+        return super.getChessboardDistance(pos);
+    }
 }

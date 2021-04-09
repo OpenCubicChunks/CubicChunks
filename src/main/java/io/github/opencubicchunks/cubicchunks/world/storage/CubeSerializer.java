@@ -13,6 +13,7 @@ import io.github.opencubicchunks.cubicchunks.chunk.cube.BigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.CubePrimer;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.CubePrimerWrapper;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
+import io.github.opencubicchunks.cubicchunks.mixin.access.common.ChunkSerializerAccess;
 import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import net.minecraft.core.BlockPos;
@@ -171,9 +172,9 @@ public class CubeSerializer {
 //            }
 //
 //            Heightmap.updateChunkHeightmaps(icube, enumset);
-//            CompoundTag structures = level.getCompound("Structures");
-//            icube.setStructureStarts(unpackStructureStart(chunkgenerator, templateManagerIn, structures));
-//            icube.setStructureReferences(unpackStructureReferences(cubePos, structures));
+        CompoundTag structures = level.getCompound("Structures");
+        icube.setAllStarts(ChunkSerializerAccess.invokeUnpackStructureStart(world, structures, world.getSeed()));
+        icube.setAllReferences(ChunkSerializerAccess.invokeUnpackStructureReferences(new ImposterChunkPos(cubePos), structures));
         if (level.getBoolean("shouldSave")) {
             icube.setDirty(true);
         }
@@ -346,7 +347,7 @@ public class CubeSerializer {
 //        }
 //
 //        level.put("Heightmaps", compoundnbt6);
-//        level.put("Structures", writeStructures(chunkpos, icube.getStructureStarts(), icube.getStructureReferences()));
+        level.put("Structures", ChunkSerializerAccess.invokePackStructureData(world, new ImposterChunkPos(icube.getCubePos()), icube.getAllStarts(), icube.getAllReferences()));
 
         return root;
     }

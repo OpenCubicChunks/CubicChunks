@@ -1,12 +1,15 @@
 package io.github.opencubicchunks.cubicchunks.mixin.core.common.world.structure;
 
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
+import io.github.opencubicchunks.cubicchunks.chunk.ImposterChunkPos;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import io.github.opencubicchunks.cubicchunks.server.ICubicWorld;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.SectionPos;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.StructureFeatureManager;
@@ -19,6 +22,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(StructureFeature.class)
@@ -111,6 +115,16 @@ public abstract class MixinStructureFeature {
         }
 
         cir.setReturnValue(null);
+    }
+
+    @Redirect(method = "loadStaticStart", at = @At(value = "NEW", target = "net/minecraft/world/level/ChunkPos"))
+    private static ChunkPos loadStaticCubeStart(int x, int z, ServerLevel world, CompoundTag nbt, long worldSeed) {
+        ChunkPos original = new ChunkPos(x, z);
+        if (!((CubicLevelHeightAccessor) world).isCubic()) {
+            return original;
+        } else {
+            return nbt.contains("ChunkY") ? new ImposterChunkPos(x, nbt.getInt("ChunkY"), z) : original;
+        }
     }
 
 
