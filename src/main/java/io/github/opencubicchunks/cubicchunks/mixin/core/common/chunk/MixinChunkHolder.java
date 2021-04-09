@@ -27,17 +27,18 @@ import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.ChunkManagerAccess;
 import io.github.opencubicchunks.cubicchunks.network.PacketCubeBlockChanges;
 import io.github.opencubicchunks.cubicchunks.network.PacketDispatcher;
-import io.github.opencubicchunks.cubicchunks.network.PacketHeightmapChanges;
 import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
-import io.github.opencubicchunks.cubicchunks.utils.AddressTools;
+import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import it.unimi.dsi.fastutil.shorts.ShortArrayList;
 import it.unimi.dsi.fastutil.shorts.ShortArraySet;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.SectionPos;
 import net.minecraft.server.level.ChunkHolder;
 import net.minecraft.server.level.ChunkMap;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelHeightAccessor;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.ChunkStatus;
 import net.minecraft.world.level.chunk.LevelChunk;
@@ -78,7 +79,7 @@ public abstract class MixinChunkHolder implements ICubeHolder {
 
     private CubePos cubePos; // set from ASM
 
-    private final ShortArraySet changedLocalBlocks = new ShortArraySet();
+    private final ShortArraySet[] changedLocalBlocks = new ShortArraySet[IBigCube.SECTION_COUNT];
 
     //@formatter:off SPLITTING THIS LINE BREAKS MIXIN https://github.com/SpongePowered/Mixin/issues/418
     @SuppressWarnings("LineLengthCode") private final AtomicReferenceArray<ArrayList<BiConsumer<Either<IBigCube, ChunkHolder.ChunkLoadingFailure>, Throwable>>> listenerLists = new AtomicReferenceArray<>(ChunkStatus.getStatusList().size());
@@ -102,6 +103,10 @@ public abstract class MixinChunkHolder implements ICubeHolder {
     //BEGIN INJECTS:
 
     // targetting <init>* seems to break when running with gradle for the copied constructor
+
+    @Shadow private boolean hasChangedSections;
+
+    @Shadow protected abstract void broadcastBlockEntityIfNeeded(Level world, BlockPos pos, BlockState state);
 
     @Dynamic
     @Redirect(
@@ -345,6 +350,8 @@ public abstract class MixinChunkHolder implements ICubeHolder {
         if (!((CubicLevelHeightAccessor) this.levelHeightAccessor).isCubic()) {
             return;
         }
+        int sectionIDX = Coords.blockToIndex(blockPos);
+
         ci.cancel();
 
         if (cubePos == null) {
@@ -362,7 +369,11 @@ public abstract class MixinChunkHolder implements ICubeHolder {
                 // TODO: replace heuristics with proper tracking
                 if (blockPos.getY() >= topY) {
                     // TODO: don't use heightmap type as "height" for address
-                    changedLocalBlocks.add((short) AddressTools.getLocalAddress(blockPos.getX() & 0xF, value.ordinal() & 0xF, blockPos.getZ()));
+
+                    if (this.changedLocalBlocks[sectionIDX] == null) {
+                        this.changedLocalBlocks[sectionIDX] = new ShortArraySet();
+                    }
+                    changedLocalBlocks[sectionIDX].add(SectionPos.sectionRelativePos(blockPos));
                 }
             }
             return;
@@ -372,8 +383,14 @@ public abstract class MixinChunkHolder implements ICubeHolder {
         if (cube == null) {
             return;
         }
-        // TODO: per section addresses and changed block tracking
-        changedLocalBlocks.add((short) AddressTools.getLocalAddress(blockPos.getX(), blockPos.getY(), blockPos.getZ()));
+
+        if (this.changedLocalBlocks[sectionIDX] == null) {
+            this.changedLocalBlocks[sectionIDX] = new ShortArraySet();
+        }
+
+        this.hasChangedSections = true;
+
+        this.changedLocalBlocks[sectionIDX].add(SectionPos.sectionRelativePos(blockPos));
     }
 
     /**
@@ -387,20 +404,27 @@ public abstract class MixinChunkHolder implements ICubeHolder {
         }
         ci.cancel();
 
-
         if (cubePos != null) {
             throw new IllegalStateException("Why is this getting called?");
         }
-        if (this.changedLocalBlocks.isEmpty()) {
-            return;
+
+        for (ShortArraySet changedLocalBlock : changedLocalBlocks) {
+            if (changedLocalBlock == null || changedLocalBlock.isEmpty()) {
+                continue;
+            }
+
+            ChunkAccess chunk = this.getTickingChunk();
+//            this.sendToTrackingColumn(new PacketHeightmapChanges(chunk, new ShortArrayList(changedLocalBlock)), false); //TODO: Fix sending heightmap
+            //java.lang.NullPointerException: Exception ticking world
+            //	at net.minecraft.world.level.chunk.LevelChunk.getHeight(LevelChunk.java:339)
+            //	at io.github.opencubicchunks.cubicchunks.network.PacketHeightmapChanges.<init>(PacketHeightmapChanges.java:30)
+            //	at net.minecraft.server.level.ChunkHolder.handler$zze000$broadcastCubeChanges(ChunkHolder.java:1435)
+            //	at net.minecraft.server.level.ChunkHolder.broadcastChanges(ChunkHolder.java)
+            //	at net.minecraft.server.level.ServerChunkCache.lambda$tickChunks$5(ServerChunkCache.java:367)
+
+
+            changedLocalBlock.clear();
         }
-        ShortArraySet changed = changedLocalBlocks;
-
-        ChunkAccess chunk = this.getTickingChunk();
-
-        this.sendToTrackingColumn(new PacketHeightmapChanges(chunk, new ShortArrayList(changed)), false);
-        changedLocalBlocks.clear();
-        // noop
     }
 
     @Override
@@ -408,7 +432,7 @@ public abstract class MixinChunkHolder implements ICubeHolder {
         if (cubePos == null) {
             throw new IllegalStateException("broadcastChanges(BigCube) called on column holder!");
         }
-        if (this.changedLocalBlocks.isEmpty() && this.skyChangedLightSectionFilter.isEmpty() && this.blockChangedLightSectionFilter.isEmpty()) {
+        if (!hasChangedSections && this.skyChangedLightSectionFilter.isEmpty() && this.blockChangedLightSectionFilter.isEmpty()) {
             return;
         }
         Level world = cube.getLevel();
@@ -427,8 +451,27 @@ public abstract class MixinChunkHolder implements ICubeHolder {
         //     this.boundaryMask &= ~(this.skyLightChangeMask & this.blockLightChangeMask);
         // }
 
-        ShortArraySet changedPositions = changedLocalBlocks;
-        int changedBlocks = changedPositions.size();
+
+        for (int idx = 0; idx < changedLocalBlocks.length; idx++) {
+            ShortArraySet changedPositions = changedLocalBlocks[idx];
+            if (changedPositions == null) {
+                continue;
+            }
+
+            SectionPos sectionPos = Coords.sectionPosByIndex(this.cubePos, idx);
+            int changedBlocks = changedPositions.size();
+
+            if (changedBlocks != 0) {
+                this.sendToTracking(new PacketCubeBlockChanges(cube, sectionPos, new ShortArrayList(changedPositions)), false);
+                for (short changed : changedPositions) {
+                    BlockPos changedPos = sectionPos.relativeToBlockPos(changed);
+                    broadcastBlockEntityIfNeeded(world, changedPos, world.getBlockState(changedPos));
+                }
+            }
+            changedPositions.clear();
+        }
+        this.hasChangedSections = false;
+
         //FORGE:
 //        if (changedPositions.size() >= net.minecraftforge.common.ForgeConfig.SERVER.clumpingThreshold.get()) {
 //            this.queueLevel = -1;// boundaryMask
@@ -437,20 +480,6 @@ public abstract class MixinChunkHolder implements ICubeHolder {
 //        if (changedBlocks >= net.minecraftforge.common.ForgeConfig.SERVER.clumpingThreshold.get()) {
 //            this.sendToTracking(new PacketCubes(Collections.singletonList(cube)), false);
 //        }
-
-        if (changedBlocks != 0) {
-            this.sendToTracking(new PacketCubeBlockChanges(cube, new ShortArrayList(changedPositions)), false);
-            for (short changed : changedPositions) {
-                BlockPos blockpos1 = new BlockPos(
-                    this.cubePos.blockX(AddressTools.getLocalX(changed)),
-                    this.cubePos.blockY(AddressTools.getLocalY(changed)),
-                    this.cubePos.blockZ(AddressTools.getLocalZ(changed)));
-                if (world.getBlockState(blockpos1).hasBlockEntity()) {
-                    this.broadcastBlockEntity(world, blockpos1);
-                }
-            }
-        }
-        changedLocalBlocks.clear();
     }
 
     private void sendToTracking(Object packetIn, boolean boundaryOnly) {
