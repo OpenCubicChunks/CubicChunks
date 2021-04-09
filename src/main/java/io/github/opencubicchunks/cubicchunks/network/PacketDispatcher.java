@@ -22,7 +22,7 @@ import net.minecraft.world.level.Level;
 
 public class PacketDispatcher {
 
-    // TODO: network compatibility check on fabric?
+    //Forge only.
     //private static SimpleChannel CHANNEL = NetworkRegistry.newSimpleChannel(
     //        new ResourceLocation("ocbc", "net"),
     //        () -> CubicChunks.PROTOCOL_VERSION,
