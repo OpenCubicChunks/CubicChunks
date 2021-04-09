@@ -246,7 +246,8 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
         this.processCubeUnloads(hasMoreTime);
     }
 
-    // Forge dimension stuff gone in 1.16, TODO when forge readds dimension code
+    //FORGE:
+    // Forge dimension stuff gone in 1.16, when forge readds dimension code
     // @Redirect(method = "tick", at = @At(value = "INVOKE", target = "Lit/unimi/dsi/fastutil/longs/Long2ObjectLinkedOpenHashMap;isEmpty()Z"))
     // private boolean canUnload(Long2ObjectLinkedOpenHashMap<ChunkHolder> loadedChunks)
     // {
