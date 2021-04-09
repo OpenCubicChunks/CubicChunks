@@ -8,6 +8,7 @@ import java.util.Set;
 import java.util.stream.Stream;
 
 import io.github.opencubicchunks.cubicchunks.chunk.cube.CubePrimer;
+import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import io.github.opencubicchunks.cubicchunks.world.CubeWorldGenRegion;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import it.unimi.dsi.fastutil.shorts.ShortList;
@@ -31,6 +32,7 @@ import net.minecraft.world.level.levelgen.structure.StructureStart;
 import net.minecraft.world.level.lighting.LevelLightEngine;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.FluidState;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 //TODO: Implement this properly for mods. Vanilla is fine.
@@ -44,11 +46,23 @@ public class CubeWorldRegionColumn extends ProtoChunk {
     }
 
     @Override public BlockState getBlockState(BlockPos pos) {
-        return this.cubeWorldGenRegion.getCube(pos).getBlockState(pos);
+        pos = getRealPosition(pos);
+        return getCube(pos).getBlockState(pos);
+    }
+
+    private BlockPos getRealPosition(BlockPos pos) {
+        int x = Coords.blockToSectionLocal(pos.getX());
+        int z = Coords.blockToSectionLocal(pos.getZ());
+        return this.getPos().getWorldPosition().offset(x, pos.getY(), z);
+    }
+
+    @NotNull private IBigCube getCube(BlockPos pos) {
+        return this.cubeWorldGenRegion.getCube(pos);
     }
 
     @Override public FluidState getFluidState(BlockPos pos) {
-        return this.cubeWorldGenRegion.getCube(pos).getFluidState(pos);
+        pos = getRealPosition(pos);
+        return getCube(pos).getFluidState(pos);
     }
 
     @Override public Stream<BlockPos> getLights() {
@@ -64,15 +78,17 @@ public class CubeWorldRegionColumn extends ProtoChunk {
     }
 
     @Override public void addLight(BlockPos pos) {
-        ((CubePrimer) this.cubeWorldGenRegion.getCube(pos)).addLight(pos);
+        pos = getRealPosition(pos);
+        ((CubePrimer) getCube(pos)).addLight(pos);
     }
 
     @Nullable @Override public BlockState setBlockState(BlockPos pos, BlockState state, boolean moved) {
-        return this.cubeWorldGenRegion.getCube(pos).setBlockState(pos, state, moved);
+        pos = getRealPosition(pos);
+        return getCube(pos).setBlockState(pos, state, moved);
     }
 
     @Override public void setBlockEntity(BlockEntity blockEntity) {
-        this.cubeWorldGenRegion.getCube(blockEntity.getBlockPos()).setBlockEntity(blockEntity);
+        getCube(blockEntity.getBlockPos()).setBlockEntity(blockEntity);
     }
 
     @Override public Set<BlockPos> getBlockEntitiesPos() {
@@ -80,7 +96,8 @@ public class CubeWorldRegionColumn extends ProtoChunk {
     }
 
     @Nullable @Override public BlockEntity getBlockEntity(BlockPos pos) {
-        return this.cubeWorldGenRegion.getCube(pos).getBlockEntity(pos);
+        pos = getRealPosition(pos);
+        return getCube(pos).getBlockEntity(pos);
     }
 
     @Override public Map<BlockPos, BlockEntity> getBlockEntities() {
@@ -92,7 +109,7 @@ public class CubeWorldRegionColumn extends ProtoChunk {
     }
 
     @Override public void addEntity(Entity entity) {
-        this.cubeWorldGenRegion.getCube(entity.blockPosition()).addEntity(entity);
+        getCube(entity.blockPosition()).addEntity(entity);
     }
 
     @Override public List<CompoundTag> getEntities() {
@@ -180,7 +197,8 @@ public class CubeWorldRegionColumn extends ProtoChunk {
     }
 
     @Override public void markPosForPostprocessing(BlockPos pos) {
-        this.cubeWorldGenRegion.getCube(pos).markPosForPostprocessing(pos);
+        pos = getRealPosition(pos);
+        getCube(pos).markPosForPostprocessing(pos);
     }
 
     @Override public ShortList[] getPostProcessing() {
@@ -220,15 +238,18 @@ public class CubeWorldRegionColumn extends ProtoChunk {
     }
 
     @Override public CompoundTag getBlockEntityNbt(BlockPos pos) {
-        return this.cubeWorldGenRegion.getCube(pos).getBlockEntityNbt(pos);
+        pos = getRealPosition(pos);
+        return getCube(pos).getBlockEntityNbt(pos);
     }
 
     @Nullable @Override public CompoundTag getBlockEntityNbtForSaving(BlockPos pos) {
-        return this.cubeWorldGenRegion.getCube(pos).getBlockEntityNbt(pos);
+        pos = getRealPosition(pos);
+        return getCube(pos).getBlockEntityNbt(pos);
     }
 
     @Override public void removeBlockEntity(BlockPos pos) {
-        this.cubeWorldGenRegion.getCube(pos).getBlockEntityNbt(pos);
+        pos = getRealPosition(pos);
+        getCube(pos).getBlockEntityNbt(pos);
     }
 
     @Nullable @Override public BitSet getCarvingMask(GenerationStep.Carving carver) {

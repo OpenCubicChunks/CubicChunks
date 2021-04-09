@@ -432,23 +432,6 @@ public class CubeSerializer {
         level.put("TileEntities", tileEntitiesNBTList);
         ListTag entitiesNBTList = new ListTag();
         if (icube.getCubeStatus().getChunkType() == ChunkStatus.ChunkType.LEVELCHUNK) {
-            BigCube cube = (BigCube) icube;
-//            cube.setHasEntities(false);
-
-            for (int k = 0; k < cube.getCubeEntityLists().length; ++k) {
-                for (Entity entity : cube.getCubeEntityLists()[k]) {
-                    CompoundTag entityNBT = new CompoundTag();
-                    try {
-                        if (entity.save(entityNBT)) {
-//                            cube.setHasEntities(true);
-                            entitiesNBTList.add(entityNBT);
-                        }
-                    } catch (Exception e) {
-                        LogManager.getLogger()
-                            .error("An Entity type {} has thrown an exception trying to write state. It will not persist. Report this to the mod author", entity.getType(), e);
-                    }
-                }
-            }
             //FORGE: Reimplement forge capabilities
 //            try {
 //                final CompoundTag capTag = cube.writeCapsToNBT();
