@@ -24,8 +24,6 @@ import it.unimi.dsi.fastutil.shorts.ShortList;
 import net.minecraft.Util;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.core.RegistryAccess;
-import net.minecraft.core.SectionPos;
 import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
@@ -475,18 +473,6 @@ public class CubeWorldGenRegion extends WorldGenRegion implements ICubicWorld {
 
     @Override public boolean isStateAtPosition(BlockPos pos, Predicate<BlockState> blockstate) {
         return blockstate.test(this.getBlockState(pos));
-    }
-
-    //TODO: DOUBLE CHECK THESE
-
-    @Override
-    public RegistryAccess registryAccess() {
-        return this.getLevel().registryAccess();
-    }
-
-    @Override
-    public Stream<? extends StructureStart<?>> startsForFeature(SectionPos sectionPos, StructureFeature<?> structure) {
-        return this.getLevel().startsForFeature(sectionPos, structure);
     }
 
     @Override public int getMinBuildHeight() {
