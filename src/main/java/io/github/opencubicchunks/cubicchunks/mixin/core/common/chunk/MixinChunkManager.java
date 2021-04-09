@@ -103,6 +103,7 @@ import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.chunk.LightChunkGetter;
 import net.minecraft.world.level.chunk.UpgradeData;
 import net.minecraft.world.level.entity.ChunkStatusUpdateListener;
+import net.minecraft.world.level.levelgen.structure.StructureStart;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureManager;
 import net.minecraft.world.level.lighting.LevelLightEngine;
 import net.minecraft.world.level.storage.DimensionDataStorage;
@@ -305,15 +306,14 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
             CubePos cubePos = cube.getCubePos();
 
             try {
-                //TODO: implement isExistingCubeFull and by extension cubeTypeCache
                 ChunkStatus status = cube.getCubeStatus();
                 if (status.getChunkType() != ChunkStatus.ChunkType.LEVELCHUNK) {
                     if (isExistingCubeFull(cubePos)) {
                         return false;
                     }
-//                    if (status == ChunkStatus.EMPTY && p_219229_1_.getAllStarts().values().stream().noneMatch(StructureStart::isValid)) {
-//                        return false;
-//                    }
+                    if (status == ChunkStatus.EMPTY && cube.getAllStarts().values().stream().noneMatch(StructureStart::isValid)) {
+                        return false;
+                    }
                 }
 
                 if (status.getChunkType() != ChunkStatus.ChunkType.LEVELCHUNK) {
@@ -322,10 +322,9 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
                         return false;
                     }
 
-                    //TODO: SAVE FORMAT : reimplement structures
-//                    if (status == ChunkStatus.EMPTY && cube.getStructureStarts().values().stream().noneMatch(StructureStart::isValid)) {
-//                        return false;
-//                    }
+                    if (status == ChunkStatus.EMPTY && cube.getAllStarts().values().stream().noneMatch(StructureStart::isValid)) {
+                        return false;
+                    }
                 }
 
                 CompoundTag compoundnbt = CubeSerializer.write(this.level, cube);
