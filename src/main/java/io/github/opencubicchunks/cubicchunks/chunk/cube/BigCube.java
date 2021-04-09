@@ -111,7 +111,7 @@ public class BigCube implements ChunkAccess, IBigCube, CubicLevelHeightAccessor 
 
     private ChunkBiomeContainer cubeBiomeContainer;
 
-    private boolean dirty = true; // todo: change back to false?
+    private boolean dirty = true; // todo: change back to false? Why do we need this?
     private boolean loaded = false;
 
     private volatile boolean lightCorrect;
