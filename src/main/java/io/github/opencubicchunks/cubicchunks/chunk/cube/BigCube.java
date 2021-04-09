@@ -191,10 +191,7 @@ public class BigCube implements ChunkAccess, IBigCube, CubicLevelHeightAccessor 
     }
 
     public BigCube(Level worldIn, CubePrimer cubePrimer, @Nullable Consumer<BigCube> postLoadConsumerIn) {
-        //TODO: reimplement full BigCube constructor from CubePrimer
-//        this(worldIn, cubePrimer.getCubePos(), cubePrimer.getCubeBiomes(), cubePrimer.getUpgradeData(), cubePrimer.getBlocksToBeTicked(),
-//            cubePrimer.getFluidsToBeTicked(), cubePrimer.getInhabitedTime(), cubePrimer.getSections(), (Consumer<BigCube>)null);
-        this(worldIn, cubePrimer.getCubePos(), cubePrimer.getBiomes(), null, cubePrimer.getBlockTicks(),
+        this(worldIn, cubePrimer.getCubePos(), cubePrimer.getBiomes(), cubePrimer.getUpgradeData(), cubePrimer.getBlockTicks(),
             cubePrimer.getLiquidTicks(), cubePrimer.getCubeInhabitedTime(), cubePrimer.getCubeSections(), postLoadConsumerIn);
 
         for (CompoundTag compoundnbt : cubePrimer.getCubeEntities()) {
