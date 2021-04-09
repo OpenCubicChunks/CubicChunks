@@ -686,13 +686,26 @@ public class BigCube implements ChunkAccess, IBigCube, CubicLevelHeightAccessor 
         readBuffer.readBytes(emptyFlagsBytes);
         BitSet emptyFlags = BitSet.valueOf(emptyFlagsBytes);
 
-        if (biomesIn != null) {
+        boolean fullUpdate = biomesIn != null;
+        if (fullUpdate) {
             this.cubeBiomeContainer = biomesIn;
         }
 
-        // TODO: support partial updates
-        this.blockEntities.values().forEach(this::onBlockEntityRemove);
-        this.blockEntities.clear();
+        // TODO: Support partial updates
+        if (fullUpdate) {
+            this.blockEntities.values().forEach(this::onBlockEntityRemove);
+            this.blockEntities.clear();
+        } else {
+            this.blockEntities.values().removeIf((blockEntity) -> {
+                int i = this.getSectionIndex(blockEntity.getBlockPos().getY());
+                if (emptyFlags.get(i)) {
+                    blockEntity.setRemoved();
+                    return true;
+                } else {
+                    return false;
+                }
+            });
+        }
 
         for (int i = 0; i < IBigCube.SECTION_COUNT; i++) {
             boolean exists = emptyFlags.get(i);
