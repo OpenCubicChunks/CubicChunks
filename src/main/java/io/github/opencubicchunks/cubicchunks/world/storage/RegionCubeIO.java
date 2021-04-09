@@ -138,6 +138,27 @@ public class RegionCubeIO {
         }
     }
 
+    public CompletableFuture<CompoundTag> loadCubeAsync(CubePos pos) {
+        return this.submitCubeTask(() -> {
+            SaveEntry pendingStore = this.pendingCubeWrites.get(pos);
+            if (pendingStore != null) {
+                return Either.left(pendingStore.data);
+            } else {
+                try {
+                    Optional<ByteBuffer> buf = this.saveCubeColumns.load(new EntryLocation3D(pos.getX(), pos.getY(), pos.getZ()), true);
+                    if (!buf.isPresent()) {
+                        return Either.left(null);
+                    }
+                    CompoundTag compoundTag = NbtIo.readCompressed(new ByteArrayInputStream(buf.get().array()));
+                    return Either.left(compoundTag);
+                } catch (Exception var4) {
+                    LOGGER.warn("Failed to read cube {}", pos, var4);
+                    return Either.right(var4);
+                }
+            }
+        });
+    }
+
     public CompletableFuture<Void> saveChunkNBT(ChunkPos chunkPos, CompoundTag cubeNBT) {
         return this.submitChunkTask(() -> {
             SaveEntry entry = this.pendingChunkWrites.computeIfAbsent(chunkPos, (pos) -> new SaveEntry(cubeNBT));
