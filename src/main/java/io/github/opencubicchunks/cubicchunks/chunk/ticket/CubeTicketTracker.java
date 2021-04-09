@@ -10,7 +10,7 @@ public class CubeTicketTracker extends CubeDistanceGraph {
     private final ITicketManager iTicketManager;
 
     public CubeTicketTracker(ITicketManager iTicketManager) {
-        //TODO: change the arguments passed into super to CCCubeManager or CCColumnManager
+        //TODO: change the arguments passed into super to CCCubeManager or CCColumnManager. What's this again?
         super(IChunkManager.MAX_CUBE_DISTANCE + 2, 16, 256);
         this.iTicketManager = iTicketManager;
     }
