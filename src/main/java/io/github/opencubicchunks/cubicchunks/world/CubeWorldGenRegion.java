@@ -399,10 +399,10 @@ public class CubeWorldGenRegion extends WorldGenRegion implements ICubicWorld {
         return this.getLevel().getUncachedNoiseBiome(x, y, z);
     }
 
-    //TODO: Cube Biome Storage
     @Override
     public Biome getNoiseBiome(int x, int y, int z) {
-        return getUncachedNoiseBiome(x, y, z);
+        IBigCube cube = this.getCube(Coords.blockToCube(x), Coords.blockToCube(y), Coords.blockToCube(z), ChunkStatus.BIOMES, false);
+        return cube != null && cube.getBiomes() != null ? cube.getBiomes().getNoiseBiome(x, y, z) : this.getUncachedNoiseBiome(x, y, z);
     }
 
     @Override public boolean isClientSide() {
@@ -447,10 +447,9 @@ public class CubeWorldGenRegion extends WorldGenRegion implements ICubicWorld {
             icube.removeCubeBlockEntity(pos);
         }
 
-        //if (newState.hasPostProcess(this, pos)) {
-        //TODO: reimplement postprocessing
-        //this.markBlockForPostprocessing(pos);
-        //}
+        if (newState.hasPostProcess(this, pos)) {
+            this.markPosForPostprocessing(pos);
+        }
 
         return true;
     }
@@ -496,6 +495,10 @@ public class CubeWorldGenRegion extends WorldGenRegion implements ICubicWorld {
 
     @Override public int getHeight() {
         return getLevel().getHeight();
+    }
+
+    private void markPosForPostprocessing(BlockPos pos) {
+        this.getCube(pos).markPosForPostprocessing(pos);
     }
 
     private static class DummyChunkAccess implements ChunkAccess {
