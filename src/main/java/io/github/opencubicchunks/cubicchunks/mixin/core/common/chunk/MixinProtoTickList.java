@@ -28,10 +28,6 @@ public class MixinProtoTickList<T> {
         return 0;
     }
 
-    /**
-     * @author Barteks2x
-     * @reason TODO tick scheduling, this data needs to be in cubes, but the code for it also in Chunks...
-     */
     @Inject(method = "scheduleTick", at = @At("HEAD"), cancellable = true)
     public void scheduleTick(BlockPos blockPos, T object, int i, TickPriority tickPriority, CallbackInfo ci) {
         //This is gross but due to vanilla chunks and cubes being pushed through together in cubic worlds, we have to specifically check for our implementation
