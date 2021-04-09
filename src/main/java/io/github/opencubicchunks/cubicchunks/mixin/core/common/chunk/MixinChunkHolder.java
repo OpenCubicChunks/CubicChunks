@@ -432,6 +432,7 @@ public abstract class MixinChunkHolder implements ICubeHolder {
 
         ShortArraySet changedPositions = changedLocalBlocks;
         int changedBlocks = changedPositions.size();
+        //FORGE:
 //        if (changedPositions.size() >= net.minecraftforge.common.ForgeConfig.SERVER.clumpingThreshold.get()) {
 //            this.queueLevel = -1;// boundaryMask
 //        }
