@@ -39,6 +39,8 @@ public abstract class MixinServerPlayerEntity extends Player {
 //    @Inject(method = "tick",
 //        at = @At("HEAD"))
 //    private void onTick(CallbackInfo ci) {
-//        PacketDispatcher.sendTo(new PacketUpdateLight(CubePos.from(new BlockPos(this.position())), this.level.getLightEngine(), true), (ServerPlayer) (Object) this);
+//        if (((CubicLevelHeightAccessor) this.getLevel()).isCubic()) {
+//            PacketDispatcher.sendTo(new PacketUpdateLight(CubePos.from(new BlockPos(this.position())), this.level.getLightEngine(), true), (ServerPlayer) (Object) this);
+//        }
 //    }
 }

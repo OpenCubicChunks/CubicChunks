@@ -49,12 +49,7 @@ public abstract class MixinProtoChunk implements LightHeightmapGetter, LevelHeig
         // FIXME remove debug
         if (lightHeightmap == null) {
             System.out.println("late creation of light heightmap in MixinProtoChunk");
-            // TODO figure out how to make sure this only happens on server side - do ProtoChunks exist on client?
-//            if (level.isClientSide) {
-//                lightHeightmap = new ClientLightSurfaceTracker(this);
-//            } else {
-                lightHeightmap = new LightSurfaceTrackerWrapper((ChunkAccess) this);
-//            }
+            lightHeightmap = new LightSurfaceTrackerWrapper((ChunkAccess) this);
         }
         return lightHeightmap;
     }
@@ -138,7 +133,6 @@ public abstract class MixinProtoChunk implements LightHeightmapGetter, LevelHeig
         if (!this.isCubic()) {
             return;
         }
-        // TODO can this run on the client? Will break things if so.
         if (lightHeightmap == null && this.getStatus().isOrAfter(ChunkStatus.FEATURES)) {
             // Lighting only starts happening after FEATURES, so we init here to avoid creating unnecessary heightmaps
             lightHeightmap = new LightSurfaceTrackerWrapper((ChunkAccess) this);
