@@ -24,7 +24,8 @@
         "cubicchunks.mixins.access.json",
         "cubicchunks.mixins.asm.json",
         "cubicchunks.mixins.core.json",
-        "cubicchunks.mixins.optifine.json"
+        "cubicchunks.mixins.optifine.json",
+        "cubicchunks.mixins.debug.json"
     ],
     "depends": {
         "fabricloader": ">=0.7.4",
