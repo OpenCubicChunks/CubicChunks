@@ -1,5 +1,7 @@
 package io.github.opencubicchunks.cubicchunks.mixin.core.common;
 
+import static io.github.opencubicchunks.cubicchunks.chunk.util.Utils.*;
+
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -20,7 +22,6 @@ import io.github.opencubicchunks.cubicchunks.chunk.cube.CubeStatus;
 import io.github.opencubicchunks.cubicchunks.chunk.graph.CCTicketType;
 import io.github.opencubicchunks.cubicchunks.chunk.ticket.ITicketManager;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
-import io.github.opencubicchunks.cubicchunks.chunk.util.Utils;
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.ChunkManagerAccess;
 import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import io.github.opencubicchunks.cubicchunks.server.IServerChunkProvider;
@@ -194,6 +195,7 @@ public abstract class MixinServerChunkProvider implements IServerChunkProvider, 
     }
 
     // func_217213_a, getVisibleChunkIfPresent
+    @Nullable
     private ChunkHolder getVisibleCubeIfPresent(long cubePosIn) {
         return ((IChunkManager) this.chunkMap).getImmutableCubeHolder(cubePosIn);
     }
@@ -325,7 +327,7 @@ public abstract class MixinServerChunkProvider implements IServerChunkProvider, 
     private void getFullCube(long pos, Consumer<ChunkAccess> chunkConsumer) {
         ChunkHolder chunkHolder = this.getVisibleCubeIfPresent(pos);
         if (chunkHolder != null) {
-            CompletableFuture<Either<BigCube, ChunkHolder.ChunkLoadingFailure>> o = Utils.unsafeCast((chunkHolder.getFullChunkFuture()));
+            CompletableFuture<Either<BigCube, ChunkHolder.ChunkLoadingFailure>> o = unsafeCast((chunkHolder.getFullChunkFuture()));
             o.getNow(ICubeHolder.UNLOADED_CUBE).left().ifPresent(chunkConsumer);
         }
 
@@ -340,8 +342,7 @@ public abstract class MixinServerChunkProvider implements IServerChunkProvider, 
         if (chunkHolder == null) {
             return false;
         } else {
-            Either<BigCube, ChunkHolder.ChunkLoadingFailure> either = (Either) ((CompletableFuture) futureFunction.apply(chunkHolder)).getNow(ChunkHolder.UNLOADED_LEVEL_CHUNK);
-            return either.left().isPresent();
+            return futureFunction.apply(chunkHolder).getNow(unsafeCast(ChunkHolder.UNLOADED_LEVEL_CHUNK)).left().isPresent();
         }
     }
 
@@ -355,5 +356,14 @@ public abstract class MixinServerChunkProvider implements IServerChunkProvider, 
             return;
         }
         cir.setReturnValue("ServerChunkCache: " + this.getLoadedChunksCount() + " | " + ((IChunkManager) chunkMap).sizeCubes());
+    }
+
+    @Inject(method = "isTickingChunk", at = @At("HEAD"), cancellable = true)
+    private void isTickingCube(BlockPos pos, CallbackInfoReturnable<Boolean> cir) {
+        if (!((CubicLevelHeightAccessor) this.level).isCubic()) {
+            return;
+        }
+        long asLong = CubePos.from(pos).asLong();
+        cir.setReturnValue(this.checkCubeFuture(asLong, (chunkHolder) -> unsafeCast(chunkHolder.getTickingChunkFuture())));
     }
 }

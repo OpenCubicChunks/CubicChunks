@@ -11,6 +11,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+//TODO: Handle this when heightproviders decorators(ores) are finalized
 @Mixin(value = AbstractRangeDecorator.class)
 public abstract class MixinAbstractRangeDecorator {
 

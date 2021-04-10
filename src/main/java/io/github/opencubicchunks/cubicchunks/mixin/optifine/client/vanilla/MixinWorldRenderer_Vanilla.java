@@ -95,7 +95,7 @@ public abstract class MixinWorldRenderer_Vanilla {
         return Math.max(hFogDistance, verticalFogDistance);
     }
 
-    @Redirect(method = "setupRender", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/Mth;clamp(DDD)D"))
+    @Redirect(method = "updateRenderChunks", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/Mth;clamp(DDD)D"))
     private double considerVerticalRenderDistance(double value, double min, double max) {
         return Mth.clamp(Math.max(value, CubicChunks.config().client.verticalViewDistance), min, max);
     }

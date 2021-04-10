@@ -4,6 +4,7 @@ import java.util.Random;
 
 import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import net.minecraft.core.BlockPos;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.StructureFeatureManager;
 import net.minecraft.world.level.WorldGenLevel;
@@ -15,6 +16,8 @@ import net.minecraft.world.level.levelgen.structure.OceanRuinPieces;
 import net.minecraft.world.level.levelgen.structure.TemplateStructurePiece;
 import net.minecraft.world.level.levelgen.structure.templatesystem.BlockIgnoreProcessor;
 import net.minecraft.world.level.levelgen.structure.templatesystem.BlockRotProcessor;
+import net.minecraft.world.level.levelgen.structure.templatesystem.StructureManager;
+import net.minecraft.world.level.levelgen.structure.templatesystem.StructurePlaceSettings;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -27,9 +30,12 @@ public abstract class MixinOceanRuinPieces extends TemplateStructurePiece {
 
     @Shadow @Final private float integrity;
 
-    public MixinOceanRuinPieces(StructurePieceType structurePieceType, int i) {
-        super(structurePieceType, i);
+    public MixinOceanRuinPieces(StructurePieceType structurePieceType, int i, StructureManager structureManager,
+                                ResourceLocation resourceLocation, String string,
+                                StructurePlaceSettings structurePlaceSettings, BlockPos blockPos) {
+        super(structurePieceType, i, structureManager, resourceLocation, string, structurePlaceSettings, blockPos);
     }
+
 
     @Inject(at = @At("HEAD"), method = "postProcess", cancellable = true)
     private void patchYPosition(WorldGenLevel worldGenLevel, StructureFeatureManager structureFeatureManager, ChunkGenerator chunkGenerator, Random random, BoundingBox boundingBox,

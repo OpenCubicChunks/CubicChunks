@@ -20,6 +20,7 @@ import com.google.common.collect.Sets;
 import io.github.opencubicchunks.cubicchunks.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.LightHeightmapGetter;
+import io.github.opencubicchunks.cubicchunks.chunk.ImposterChunkPos;
 import io.github.opencubicchunks.cubicchunks.chunk.biome.CubeBiomeContainer;
 import io.github.opencubicchunks.cubicchunks.chunk.heightmap.LightSurfaceTrackerWrapper;
 import io.github.opencubicchunks.cubicchunks.chunk.heightmap.SurfaceTrackerSection;
@@ -28,6 +29,7 @@ import io.github.opencubicchunks.cubicchunks.mixin.access.common.BiomeContainerA
 import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import io.github.opencubicchunks.cubicchunks.world.CubeWorldGenRegion;
+import io.github.opencubicchunks.cubicchunks.world.storage.CubeProtoTickList;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap;
@@ -108,10 +110,13 @@ public class CubePrimer extends ProtoChunk implements IBigCube, CubicLevelHeight
     private int height;
 
     public CubePrimer(CubePos cubePos, UpgradeData upgradeData, LevelHeightAccessor levelHeightAccessor) {
-        this(cubePos, upgradeData, null, null, null, levelHeightAccessor);
+        this(cubePos, upgradeData, null, new CubeProtoTickList<>((block) -> {
+            return block == null || block.defaultBlockState().isAir();
+        }, new ImposterChunkPos(cubePos), new CubeProtoTickList.CubeProtoTickListHeightAccess(cubePos, (CubicLevelHeightAccessor) levelHeightAccessor)), new CubeProtoTickList<>((fluid) -> {
+            return fluid == null || fluid == Fluids.EMPTY;
+        }, new ImposterChunkPos(cubePos), new CubeProtoTickList.CubeProtoTickListHeightAccess(cubePos, (CubicLevelHeightAccessor) levelHeightAccessor)), levelHeightAccessor);
     }
 
-    //TODO: add TickList<Block> and TickList<Fluid>
     public CubePrimer(CubePos cubePosIn, UpgradeData upgradeData, @Nullable LevelChunkSection[] sectionsIn, ProtoTickList<Block> blockProtoTickList, ProtoTickList<Fluid> fluidProtoTickList,
                       LevelHeightAccessor levelHeightAccessor) {
         super(cubePosIn.asChunkPos(), upgradeData, sectionsIn, blockProtoTickList, fluidProtoTickList, new FakeSectionCount(levelHeightAccessor, IBigCube.SECTION_COUNT));
@@ -120,8 +125,8 @@ public class CubePrimer extends ProtoChunk implements IBigCube, CubicLevelHeight
         this.carvingMasks = new Object2ObjectArrayMap<>();
 
         this.structureStarts = Maps.newHashMap();
-//        this.structuresRefences = Maps.newHashMap();
-		this.structuresRefences = new ConcurrentHashMap<>();
+      
+        this.structuresRefences = new ConcurrentHashMap<>(); // Maps.newHashMap(); //TODO: This should NOT be a ConcurrentHashMap
 
         this.cubePos = cubePosIn;
         this.levelHeightAccessor = levelHeightAccessor;
@@ -476,11 +481,11 @@ public class CubePrimer extends ProtoChunk implements IBigCube, CubicLevelHeight
         return Collections.unmodifiableMap(this.structuresRefences);
     }
 
-    public static BlockPos unpackToWorld(short packedPos, int yOffset, CubePos cubePosIn) {
-        BlockPos pos = cubePosIn.asBlockPos();
-        int xPos = (packedPos & 15) + pos.getX();
-        int yPos = (packedPos >>> 4 & 15) + pos.getY();
-        int zPos = (packedPos >>> 8 & 15) + pos.getZ();
+    public static BlockPos unpackToWorld(short sectionRel, int sectionIdx, CubePos cubePosIn) {
+        BlockPos pos = Coords.sectionPosToMinBlockPos(Coords.sectionPosByIndex(cubePosIn, sectionIdx));
+        int xPos = (sectionRel & 15) + pos.getX();
+        int yPos = (sectionRel >>> 4 & 15) + pos.getY();
+        int zPos = (sectionRel >>> 8 & 15) + pos.getZ();
         return new BlockPos(xPos, yPos, zPos);
     }
 
@@ -516,7 +521,7 @@ public class CubePrimer extends ProtoChunk implements IBigCube, CubicLevelHeight
     }
 
     @Nullable @Override public ChunkBiomeContainer getBiomes() {
-         return this.cubeBiomeContainer;
+        return this.cubeBiomeContainer;
     }
 
     @Override public void addLight(short chunkSliceRel, int sectionY) {
@@ -549,14 +554,6 @@ public class CubePrimer extends ProtoChunk implements IBigCube, CubicLevelHeight
 
     @Override public void setLightEngine(LevelLightEngine lightingProvider) {
         this.setCubeLightManager(lightingProvider);
-    }
-
-    @Override public ProtoTickList<Block> getBlockTicks() {
-        throw new UnsupportedOperationException("For later implementation");
-    }
-
-    @Override public ProtoTickList<Fluid> getLiquidTicks() {
-        throw new UnsupportedOperationException("For later implementation");
     }
 
     @Nullable
@@ -698,6 +695,26 @@ public class CubePrimer extends ProtoChunk implements IBigCube, CubicLevelHeight
     @Deprecated @Override public LevelChunkSection[] getSections() {
         new UnsupportedOperationException("This should never be called!").printStackTrace();
         return getCubeSections();
+    }
+
+    @Override public BlockPos getHeighestPosition(Heightmap.Types type) {
+        BlockPos.MutableBlockPos mutableBlockPos = null;
+
+        for (int x = this.cubePos.minCubeX(); x <= this.cubePos.maxCubeX(); ++x) {
+            for (int z = this.cubePos.minCubeZ(); z <= this.cubePos.maxCubeZ(); ++z) {
+                int heightAtPos = this.getHeight(type, x & 15, z & 15);
+                if (mutableBlockPos == null) {
+                    mutableBlockPos = new BlockPos.MutableBlockPos().set(x, heightAtPos, z);
+                }
+
+                if (mutableBlockPos.getY() < heightAtPos) {
+                    mutableBlockPos.set(x, heightAtPos, z);
+                }
+            }
+        }
+        return mutableBlockPos != null ? mutableBlockPos.immutable() : new BlockPos.MutableBlockPos().set(this.cubePos.minCubeX(), this.getHeight(type, this.cubePos.minCubeX() & 15,
+            this.cubePos.minCubeZ() & 15), this.cubePos.minCubeZ() & 15);
+
     }
 
     @Deprecated @Override public ChunkPos getPos() {
