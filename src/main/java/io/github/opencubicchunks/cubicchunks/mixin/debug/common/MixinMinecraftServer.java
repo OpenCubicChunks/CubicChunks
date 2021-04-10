@@ -49,15 +49,6 @@ public abstract class MixinMinecraftServer {
 
     @Shadow protected abstract void updateMobSpawningFlags();
 
-//    Set<ChunkPos> loadRegions = new HashSet<>();
-
-    @Inject(method = "<init>", at = @At("RETURN"))
-    private void onInit(Thread thread, RegistryAccess.RegistryHolder registryHolder, LevelStorageSource.LevelStorageAccess levelStorageAccess, WorldData worldData,
-                        PackRepository packRepository, Proxy proxy, DataFixer dataFixer, ServerResources serverResources, MinecraftSessionService minecraftSessionService,
-                        GameProfileRepository gameProfileRepository, GameProfileCache gameProfileCache, ChunkProgressListenerFactory chunkProgressListenerFactory, CallbackInfo ci) {
-//        loadRegions.add(new ChunkPos(0, 0));
-    }
-
     /**
      * @author NotStirred
      * @reason Custom chunk loading order for debugging
