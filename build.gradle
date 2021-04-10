@@ -58,6 +58,13 @@ mixinGen {
         it.configurationPlugin = 'io.github.opencubicchunks.cubicchunks.mixin.OptiFineMixinConfig'
         it.injectorsDefaultRequire = 1
     }
+
+    config("debug") {
+        it.required = true
+        it.conformVisibility = true
+        it.injectorsDefaultRequire = 1
+        it.configurationPlugin = 'io.github.opencubicchunks.cubicchunks.mixin.DebugMixinConfig'
+    }
 }
 
 group = "io.github.opencubicchunks" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
