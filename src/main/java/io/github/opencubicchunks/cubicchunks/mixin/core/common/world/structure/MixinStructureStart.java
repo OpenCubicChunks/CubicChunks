@@ -28,7 +28,7 @@ public abstract class MixinStructureStart implements ICubicStructureStart {
     @Shadow @Final protected List<StructurePiece> pieces;
 
 
-    @Shadow protected BoundingBox boundingBox;
+    @Shadow protected abstract BoundingBox createBoundingBox();
 
     @Override public void init3dPlacement(int sectionY) {
         this.sectionY = sectionY;
@@ -65,6 +65,6 @@ public abstract class MixinStructureStart implements ICubicStructureStart {
 
     @ModifyArg(method = "getLocatePos", at = @At(value = "INVOKE", target = "Lnet/minecraft/core/BlockPos;<init>(III)V"), index = 1)
     private int getStructureY(int arg0) {
-        return (this.boundingBox.y0 + this.boundingBox.y1) >> 1;
+        return (this.createBoundingBox().minY() + this.createBoundingBox().maxY()) >> 1;
     }
 }

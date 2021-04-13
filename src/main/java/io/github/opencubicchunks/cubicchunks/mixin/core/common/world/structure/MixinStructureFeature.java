@@ -45,8 +45,6 @@ public abstract class MixinStructureFeature<C extends FeatureConfiguration> impl
 
     @Shadow protected abstract boolean linearSeparation();
 
-    @Shadow protected abstract StructureStart<C> createStart(ChunkPos pos, BoundingBox boundingBox, int referenceCount, long worldSeed);
-
     @Shadow protected abstract boolean isFeatureChunk(ChunkGenerator chunkGenerator, BiomeSource biomeSource, long worldSeed, WorldgenRandom random, ChunkPos pos,
                                                       Biome biome, ChunkPos chunkPos, C config, LevelHeightAccessor levelHeightAccessor);
 
@@ -56,6 +54,8 @@ public abstract class MixinStructureFeature<C extends FeatureConfiguration> impl
                                                        StructureManager structureManager, long worldSeed, ChunkPos chunkPos, Biome biome, int referenceCount,
                                                        WorldgenRandom worldgenRandom, StructureFeatureConfiguration structureFeatureConfiguration, C featureConfiguration,
                                                        LevelHeightAccessor levelHeightAccessor);
+
+    @Shadow protected abstract StructureStart<C> createStart(ChunkPos pos, int i, long l);
 
     @Inject(at = @At("HEAD"), method = "getNearestGeneratedFeature", cancellable = true)
     private void getNearestStructure3D(LevelReader level, StructureFeatureManager manager, BlockPos blockPos, int searchRadius, boolean skipExistingChunks, long seed,
@@ -226,7 +226,7 @@ public abstract class MixinStructureFeature<C extends FeatureConfiguration> impl
             this.isFeatureSection(chunkGenerator, biomeSource, worldSeed, worldgenRandom, sectionPos, biome,
                 outSection, featureConfiguration, levelHeightAccessor)) {
 
-            StructureStart<C> structureStart = this.createStart(sectionPos.chunk(), BoundingBox.getUnknownBox(), referenceCount, worldSeed);
+            StructureStart<C> structureStart = this.createStart(sectionPos.chunk(), referenceCount, worldSeed);
             ((ICubicStructureStart) structureStart).init3dPlacement(sectionPos.y());
 
             structureStart.generatePieces(registryAccess, chunkGenerator, structureManager, sectionPos.chunk(), biome, featureConfiguration, levelHeightAccessor);
@@ -241,7 +241,7 @@ public abstract class MixinStructureFeature<C extends FeatureConfiguration> impl
 
     private void movePieces(StructureStart<?> start, int sectionY) {
         BoundingBox boundingBox = start.getBoundingBox();
-        int currentY = (boundingBox.y0 + boundingBox.y1) >> 1;
+        int currentY = (boundingBox.minY() + boundingBox.maxY()) >> 1;
         int targetY = Coords.sectionToMinBlock(sectionY);
         int dy = targetY - currentY;
 
