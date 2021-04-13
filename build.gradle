@@ -209,17 +209,6 @@ dependencies {
 
     include implementation('io.github.opencubicchunks:regionlib:0.63.0-SNAPSHOT')
     include implementation('org.spongepowered:noise:2.0.0-SNAPSHOT')
-
-    modImplementation ("me.sargunvohra.mcmods:autoconfig1u:${project.auto_config_version}"){
-        exclude module: 'fabric-api'
-    }
-    include ("me.sargunvohra.mcmods:autoconfig1u:${project.auto_config_version}"){
-        exclude module: 'fabric-api'
-    }
-
-    modImplementation ("io.github.prospector:modmenu:${project.mod_menu_version}"){
-        exclude module: 'fabric-api'
-    }
 }
 
 processResources {
