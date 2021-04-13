@@ -69,15 +69,11 @@ public class MixinBiome implements BiomeGetter {
 
                     random.setDecorationSeed(seed, k, genStepIDX);
                     int minSectionX = Coords.sectionToMinBlock(Coords.blockToSection(blockPos.getX()));
-                    int minSectionY = Coords.sectionToMinBlock(Coords.blockToSection(blockPos.getY()));
                     int minSectionZ = Coords.sectionToMinBlock(Coords.blockToSection(blockPos.getZ()));
 
                     try {
+                        region.usesRegionHeightMap();
                         structureManager.startsForFeature(SectionPos.of(blockPos), structure).forEach((structureStart) -> {
-//                            ((ICubicStructureStart) structureStart).placeInCube(region, structureManager, chunkGenerator, random,
-//                                new BoundingBox(minSectionX, Coords.cubeToMinBlock(region.getMinCubeY()), minSectionZ, minSectionX + 15, minSectionY + IBigCube.DIAMETER_IN_BLOCKS - 1,
-//                                    minSectionZ + 15),
-//                                blockPos);
                             structureStart.placeInChunk(region, structureManager, chunkGenerator, random,
                                 new BoundingBox(minSectionX, Coords.cubeToMinBlock(region.getMinCubeY()) + 1, minSectionZ, minSectionX + 15, Coords.cubeToMaxBlock(region.getMaxCubeY()) - 1,
                                     minSectionZ + 15),
@@ -115,6 +111,7 @@ public class MixinBiome implements BiomeGetter {
 
                     if (!featureBlacklist.contains(key)) {
                         try {
+                            region.usesCubeHeightMap();
                             configuredFeature.place(region, chunkGenerator, random, blockPos);
                         } catch (Exception e) {
                             CrashReport crashReport2 = CrashReport.forThrowable(e, "Feature placement");

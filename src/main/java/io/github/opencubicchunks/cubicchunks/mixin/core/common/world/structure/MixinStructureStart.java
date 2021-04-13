@@ -25,9 +25,6 @@ public abstract class MixinStructureStart implements ICubicStructureStart {
     private int sectionY;
     private boolean has3dPlacement;
 
-    @Shadow @Final protected List<StructurePiece> pieces;
-
-
     @Shadow protected abstract BoundingBox createBoundingBox();
 
     @Override public void init3dPlacement(int sectionY) {
@@ -37,30 +34,6 @@ public abstract class MixinStructureStart implements ICubicStructureStart {
 
     @Override public boolean has3DPlacement() {
         return this.has3dPlacement;
-    }
-
-    @Override
-    public void placeInCube(WorldGenLevel worldGenLevel, StructureFeatureManager structureFeatureManager, ChunkGenerator chunkGenerator, Random random, BoundingBox boundingBox,
-                            BlockPos cubePos) {
-
-        synchronized(this.pieces) {
-            if (!this.pieces.isEmpty()) {
-                BoundingBox firstPieceBoundingBox = this.pieces.get(0).getBoundingBox();
-                Vec3i centerPos = firstPieceBoundingBox.getCenter();
-                BlockPos blockPos = new BlockPos(centerPos.getX(), firstPieceBoundingBox.minY(), centerPos.getZ());
-                Iterator<StructurePiece> iterator = this.pieces.iterator();
-
-
-                while (iterator.hasNext()) {
-                    StructurePiece structurePiece = iterator.next();
-                    if (structurePiece.getBoundingBox().intersects(boundingBox) && !structurePiece
-                        .postProcess(worldGenLevel, structureFeatureManager, chunkGenerator, random, boundingBox, null, blockPos)) {
-                        iterator.remove();
-                    }
-                }
-//                this.calculateBoundingBox();
-            }
-        }
     }
 
     @ModifyArg(method = "getLocatePos", at = @At(value = "INVOKE", target = "Lnet/minecraft/core/BlockPos;<init>(III)V"), index = 1)
