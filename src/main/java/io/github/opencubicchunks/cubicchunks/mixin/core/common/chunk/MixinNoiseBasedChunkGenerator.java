@@ -110,7 +110,7 @@ public abstract class MixinNoiseBasedChunkGenerator {
                                 double density) {
         // optimization: we don't need to compute aquifer if we know that this block is already solid
         if (density > 0.0) {
-            ci.setReturnValue(stoneSource.getBaseStone(x, y, z, this.settings.get()));
+            ci.setReturnValue(stoneSource.getBaseStone(x, y, z));
         }
     }
 
