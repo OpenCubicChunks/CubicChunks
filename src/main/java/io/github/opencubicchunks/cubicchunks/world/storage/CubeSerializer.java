@@ -80,8 +80,6 @@ public class CubeSerializer {
         boolean isLightOn = level.getBoolean("isLightOn");
         ListTag sectionsNBTList = level.getList("Sections", 10);
         LevelChunkSection[] sections = new LevelChunkSection[IBigCube.SECTION_COUNT];
-        //TODO: 1.16 dimensions stuff
-//            boolean worldHasSkylight = world.getDimension().hasSkyLight();
         ChunkSource abstractchunkprovider = world.getChunkSource();
         LevelLightEngine worldlightmanager = abstractchunkprovider.getLightEngine();
 //            if (isLightOn) {
@@ -111,7 +109,7 @@ public class CubeSerializer {
                 }
 
                 //TODO: reimplement
-                if (/*worldHasSkylight &&*/ sectionNBT.contains("SkyLight", 7)) {
+                if (world.dimensionType().hasSkyLight() && sectionNBT.contains("SkyLight", 7)) {
                     worldlightmanager.queueSectionData(LightLayer.SKY, sectionPos, new DataLayer(sectionNBT.getByteArray("SkyLight")), true);
                 }
             }
