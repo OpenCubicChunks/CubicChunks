@@ -27,8 +27,8 @@ public abstract class MixinStructureFeatureConfiguration implements ICubicStruct
 
     private Optional<CubicStructureConfiguration> cubicStructureConfiguration = Optional.empty();
 
-    @Override public void setVerticalSettings(Optional<CubicStructureConfiguration> cubicStructureConfiguration) {
-        this.cubicStructureConfiguration = cubicStructureConfiguration;
+    @Override public void setVerticalSettings(Optional<CubicStructureConfiguration> cubicStructureConfigurationVal) {
+        this.cubicStructureConfiguration = cubicStructureConfigurationVal;
     }
 
     @Nullable @Override public Optional<CubicStructureConfiguration> getVerticalSettings() {

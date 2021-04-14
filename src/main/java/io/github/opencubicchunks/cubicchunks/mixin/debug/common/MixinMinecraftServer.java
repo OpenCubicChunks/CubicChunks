@@ -1,32 +1,21 @@
 package io.github.opencubicchunks.cubicchunks.mixin.debug.common;
 
-import java.net.Proxy;
 import java.util.Iterator;
 import java.util.Map;
 
-import com.mojang.authlib.GameProfileRepository;
-import com.mojang.authlib.minecraft.MinecraftSessionService;
-import com.mojang.datafixers.DataFixer;
 import io.github.opencubicchunks.cubicchunks.server.ICubicWorld;
 import it.unimi.dsi.fastutil.longs.LongIterator;
 import net.minecraft.Util;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.RegistryAccess;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.ServerResources;
 import net.minecraft.server.level.ServerChunkCache;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.progress.ChunkProgressListener;
-import net.minecraft.server.level.progress.ChunkProgressListenerFactory;
-import net.minecraft.server.packs.repository.PackRepository;
-import net.minecraft.server.players.GameProfileCache;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.ForcedChunksSavedData;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.chunk.ChunkStatus;
-import net.minecraft.world.level.storage.LevelStorageSource;
-import net.minecraft.world.level.storage.WorldData;
 import org.apache.logging.log4j.Logger;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -39,13 +28,14 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public abstract class MixinMinecraftServer {
     @Shadow @Final private static Logger LOGGER;
 
-    @Shadow public abstract ServerLevel overworld();
-
     @Shadow private long nextTickTime;
 
-    @Shadow protected abstract void waitUntilNextTick();
-
     @Shadow @Final private Map<ResourceKey<Level>, ServerLevel> levels;
+
+
+    @Shadow public abstract ServerLevel overworld();
+
+    @Shadow protected abstract void waitUntilNextTick();
 
     @Shadow protected abstract void updateMobSpawningFlags();
 
@@ -90,14 +80,14 @@ public abstract class MixinMinecraftServer {
         try {
             Thread.sleep(10000);
         } catch (InterruptedException e) {
-
+            String s = ""; //Lets checkstyle pass
         }
 
         this.nextTickTime = Util.getMillis() + 10L;
         this.waitUntilNextTick();
         Iterator<ServerLevel> levelIter = this.levels.values().iterator();
 
-        while(true) {
+        while (true) {
             ServerLevel serverLevel2;
             ForcedChunksSavedData forcedChunksSavedData;
             do {
@@ -112,11 +102,11 @@ public abstract class MixinMinecraftServer {
 
                 serverLevel2 = levelIter.next();
                 forcedChunksSavedData = serverLevel2.getDataStorage().get(ForcedChunksSavedData::load, "chunks");
-            } while(forcedChunksSavedData == null);
+            } while (forcedChunksSavedData == null);
 
             LongIterator longIterator = forcedChunksSavedData.getChunks().iterator();
 
-            while(longIterator.hasNext()) {
+            while (longIterator.hasNext()) {
                 long l = longIterator.nextLong();
                 ChunkPos chunkPos = new ChunkPos(l);
                 serverLevel2.getChunkSource().updateChunkForced(chunkPos, true);

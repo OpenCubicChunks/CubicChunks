@@ -227,7 +227,7 @@ public abstract class MixinStructureFeature<C extends FeatureConfiguration> impl
                 outSection, featureConfiguration, levelHeightAccessor)) {
 
             StructureStart<C> structureStart = this.createStart(sectionPos.chunk(), referenceCount, worldSeed);
-            ((ICubicStructureStart) structureStart).init3dPlacement(sectionPos.y());
+            ((ICubicStructureStart) structureStart).init3dPlacement();
 
             structureStart.generatePieces(registryAccess, chunkGenerator, structureManager, sectionPos.chunk(), biome, featureConfiguration, levelHeightAccessor);
             movePieces(structureStart, sectionPos.y());

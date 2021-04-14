@@ -26,14 +26,12 @@ public class CubicStructureConfiguration {
         return config.verticalSpacing <= config.verticalSeparation ? DataResult.error("Vertical spacing has to be smaller than vertical separation") : DataResult.success(config);
     }, Function.identity());
 
+    public static final IdentityHashMap<StructureFeature<?>, CubicStructureConfiguration> DATA_FEATURE_VERTICAL_SETTINGS = new IdentityHashMap<>();
 
     private final int verticalSpacing;
     private final int verticalSeparation;
     private final int maxYCutoff;
     private final int minYCutoff;
-
-    public static IdentityHashMap<StructureFeature<?>, CubicStructureConfiguration> DATA_FEATURE_VERTICAL_SETTINGS = new IdentityHashMap<>();
-
 
     @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
     private CubicStructureConfiguration(int verticalSpacing, int verticalSeparation, Optional<Integer> maxYCutoff, Optional<Integer> minYCutoff) {
@@ -67,13 +65,13 @@ public class CubicStructureConfiguration {
         Optional<Integer> minY = Optional.empty();
 
 
-        public Builder setYSpacing(int ySpacing) {
-            this.ySpacing = ySpacing;
+        public Builder setYSpacing(int newYSpacing) {
+            this.ySpacing = newYSpacing;
             return this;
         }
 
-        public Builder setYSeparation(int ySeparation) {
-            this.ySeparation = ySeparation;
+        public Builder setYSeparation(int newYSeparation) {
+            this.ySeparation = newYSeparation;
             return this;
         }
 

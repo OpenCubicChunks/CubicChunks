@@ -10,7 +10,6 @@ import java.util.Set;
 import java.util.function.Supplier;
 
 import io.github.opencubicchunks.cubicchunks.CubicChunks;
-import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.NoiseAndSurfaceBuilderHelper;
 import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;

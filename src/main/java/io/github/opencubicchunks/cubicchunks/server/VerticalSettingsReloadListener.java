@@ -24,7 +24,8 @@ import net.minecraft.world.level.levelgen.feature.StructureFeature;
 
 public class VerticalSettingsReloadListener implements SimpleSynchronousResourceReloadListener {
 
-    @Override public void onResourceManagerReload(ResourceManager manager) {
+    @Override
+    public void onResourceManagerReload(ResourceManager manager) {
         IdentityHashMap<StructureFeature<?>, CubicStructureConfiguration> newMap = new IdentityHashMap<>();
 
         ResourceLocation location = new ResourceLocation(CubicChunks.MODID, "vertical_settings.json");
@@ -72,7 +73,8 @@ public class VerticalSettingsReloadListener implements SimpleSynchronousResource
         } catch (IOException e) {
             CubicChunks.LOGGER.error("Could not get resources for: " + location.toString());
         }
-        CubicStructureConfiguration.DATA_FEATURE_VERTICAL_SETTINGS = newMap;
+        CubicStructureConfiguration.DATA_FEATURE_VERTICAL_SETTINGS.clear();
+        CubicStructureConfiguration.DATA_FEATURE_VERTICAL_SETTINGS.putAll(newMap);
     }
 
     @Override public ResourceLocation getFabricId() {
