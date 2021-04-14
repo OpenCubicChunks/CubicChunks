@@ -310,7 +310,6 @@ public abstract class MixinServerChunkProvider implements IServerChunkProvider, 
                 this.level.getProfiler().pop();
 
                 if (!((IChunkManager) this.chunkMap).noPlayersCloseForSpawning(cube.getCubePos())) {
-                    // TODO probably want to make sure column-based inhabited time works too
                     cube.setCubeInhabitedTime(cube.getCubeInhabitedTime() + timePassed);
 
                     if (this.level.random.nextInt(((CubicNaturalSpawner.SPAWN_RADIUS / IBigCube.DIAMETER_IN_BLOCKS) * 2) + 1) == 0) {
