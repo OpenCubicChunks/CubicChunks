@@ -34,7 +34,7 @@ public abstract class MixinVerticalDecorator<DC extends DecoratorConfiguration> 
 
         CubeWorldGenRegion cubeWorldGenRegion = (CubeWorldGenRegion) ((DecorationContextAccess) context).getLevel();
         int lowestAllowedY = Coords.cubeToMinBlock(cubeWorldGenRegion.getMinCubeY());
-        int highestAllowedY = Coords.cubeToMaxBlock(cubeWorldGenRegion.getMinCubeY());
+        int highestAllowedY = Coords.cubeToMaxBlock(cubeWorldGenRegion.getMaxCubeY());
         if (pos.getY() < lowestAllowedY + 1 || pos.getY() > highestAllowedY - 1) {
             cir.setReturnValue(Stream.empty());
         } else {
