@@ -26,6 +26,7 @@ public abstract class MixinTrapezoidHeightProvider implements CubicHeightProvide
     @Override public OptionalInt sampleCubic(Random rand, WorldGenerationContext context, int cubeMinY, int cubeMaxY) {
         int minHeight = this.minInclusive.resolveY(context) - 1;
         int maxHeight = this.maxInclusive.resolveY(context) + 1;
+
         int plateauStart = (minHeight + maxHeight - plateau) / 2;
         int plateauEnd = (minHeight + maxHeight + plateau) / 2;
 
@@ -40,6 +41,11 @@ public abstract class MixinTrapezoidHeightProvider implements CubicHeightProvide
         for (int cubeY = cubeMinY; cubeY <= cubeMaxY; cubeY++) {
             counter += userFunction.getValue(cubeY);
             if (counter >= randomFloat) {
+                //TODO: Is there a better way of not capturing higher y level ores and repeating them?
+                if ((minHeight + maxHeight) / 2 > 128 && cubeY < minHeight) {
+                    return OptionalInt.empty();
+                }
+
                 return OptionalInt.of(cubeY);
             }
         }
