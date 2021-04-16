@@ -70,7 +70,6 @@ public abstract class MixinNoiseBasedChunkGenerator {
         if (((CubicLevelHeightAccessor) chunkAccess).generates2DChunks()) {
             return;
         }
-        this.height = chunkAccess.getHeight();
         this.cellCountY = chunkAccess.getHeight() / this.cellHeight;
     }
 
@@ -79,7 +78,6 @@ public abstract class MixinNoiseBasedChunkGenerator {
         if (((CubicLevelHeightAccessor) chunkAccess).generates2DChunks()) {
             return;
         }
-        this.height = chunkAccess.getHeight();
         this.cellCountY = chunkAccess.getHeight() / this.cellHeight;
     }
 

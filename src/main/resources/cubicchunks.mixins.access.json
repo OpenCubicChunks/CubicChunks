@@ -29,7 +29,8 @@
         "common.StructureFeatureManagerAccess",
         "common.TicketAccess",
         "common.TicketManagerAccess",
-        "common.TicketTypeAccess"
+        "common.TicketTypeAccess",
+        "common.VerticalAnchorAccess"
     ],
     "client": [
         "client.ChunkRenderDispatcherAccess",
