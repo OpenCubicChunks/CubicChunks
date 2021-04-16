@@ -1,35 +1,33 @@
 package io.github.opencubicchunks.cubicchunks.world.gen.placement;
 
-import java.util.Arrays;
-import java.util.Comparator;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-import com.mojang.serialization.Codec;
-import com.mojang.serialization.codecs.RecordCodecBuilder;
 import io.github.opencubicchunks.cubicchunks.utils.MathUtil;
+import net.minecraft.util.Mth;
 
-public class UserFunction {
+//TODO: Datapack Codec for user customization.
+public class PeriodicUserFunction {
 
-    public static final Codec<UserFunction> CODEC = RecordCodecBuilder.create((instance) ->
-        instance.group(
-            Codec.list(Entry.CODEC).fieldOf("values").forGetter((UserFunction config) -> Arrays.asList(config.values))
-        ).apply(instance, UserFunction::new));
+    // TODO: flatten to float array for performance?
+    public Entry[] values;
+    private final Entry valPre;
+    private final Entry valPost;
+    public float minY;
+    public float maxY;
 
-    private final Entry[] values;
-
-    public UserFunction(List<Entry> entry) {
-        values = entry.toArray(new Entry[0]);
-    }
-
-
-    public UserFunction(Map<Float, Float> funcMap) {
+    public PeriodicUserFunction(Map<Float, Float> funcMap, float minY, float maxY) {
         values = funcMap.entrySet().stream()
             .sorted(Map.Entry.comparingByKey())
             .map(e -> new Entry(e.getKey(), e.getValue()))
             .toArray(Entry[]::new);
+        this.minY = minY;
+        this.maxY = maxY;
+        Entry last = values[values.length - 1];
+        valPre = new Entry(last.y - (maxY - minY), last.v);
+        Entry first = values[0];
+        valPost = new Entry(first.y + (maxY - minY), first.v);
     }
 
     public float getValue(float y) {
@@ -39,46 +37,61 @@ public class UserFunction {
         if (values.length == 1) {
             return values[0].v;
         }
-        Entry e1 = values[0];
-        Entry e2 = values[1];
-
+        y = repeatY(y);
+        Entry e1 = getValue(-1);
+        Entry e2 = getValue(0);
         // TODO: binary search? do we want to support functions complex enough for it to be needed? Will it improve performance?
-        for (int i = 2; i < values.length; i++) {
-            if (values[i - 1].y < y) {
+        for (int i = 1; i <= values.length; i++) {
+            if (getValue(i - 1).y < y) {
                 e1 = e2;
-                e2 = values[i];
+                e2 = getValue(i);
             }
         }
         float yFract = MathUtil.unlerp(y, e1.y, e2.y);
         return MathUtil.lerp(yFract, e1.v, e2.v);
     }
 
-    public static Builder builder() {
-        return new Builder();
+    private float repeatY(float y) {
+        y -= minY;
+        y = Mth.positiveModulo(y, maxY - minY);
+        y += minY;
+        return y;
+    }
+
+    private Entry getValue(int idx) {
+        if (idx == -1) {
+            return valPre;
+        }
+        if (idx == values.length) {
+            return valPost;
+        }
+        return values[idx];
     }
 
     public static class Builder {
 
         private Map<Float, Float> map = new HashMap<>();
+        private float min;
+        private float max;
 
         public Builder point(float y, float v) {
             this.map.put(y, v);
             return this;
         }
 
-        public UserFunction build() {
-            return new UserFunction(this.map);
+        public Builder repeatRange(float min, float max) {
+            this.min = min;
+            this.max = max;
+            return this;
+        }
+
+        public PeriodicUserFunction build() {
+            return new PeriodicUserFunction(this.map, min, max);
         }
     }
 
-
     public static class Entry {
 
-        public static final Codec<Entry> CODEC = RecordCodecBuilder.create((instance) ->
-            instance.group(
-                Codec.FLOAT.fieldOf("y").forGetter((Entry config) -> config.y),
-                Codec.FLOAT.fieldOf("v").forGetter((Entry config) -> config.v)
-            ).apply(instance, Entry::new));
         public float y;
         public float v;
 

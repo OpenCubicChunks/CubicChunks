@@ -9,16 +9,14 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-@Mixin(VerticalAnchor.Absolute.class)
-public class MixinVerticalAnchor$Absolute {
+@Mixin(VerticalAnchor.BelowTop.class)
+public class MixinVerticalAnchorBelowTop {
 
     @Inject(method = "resolveY", at = @At("HEAD"), cancellable = true)
     private void transformCorrectly(WorldGenerationContext context, CallbackInfoReturnable<Integer> cir) {
         if (context instanceof CubicCarvingContext) {
             int defaultValue = ((CubicCarvingContext) context).getOriginalGenDepth() - 1 + ((CubicCarvingContext) context).getOriginalMinGenY() - ((VerticalAnchorAccess) this).invokeValue();
-
-
-
+            cir.setReturnValue(defaultValue);
         }
     }
 }

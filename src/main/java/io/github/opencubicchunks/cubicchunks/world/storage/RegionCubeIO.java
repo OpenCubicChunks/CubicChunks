@@ -192,7 +192,7 @@ public class RegionCubeIO {
             save.save3d(new EntryLocation3D(cubePos.getX(), cubePos.getY(), cubePos.getZ()), buf);
 
             entry.result.complete(null);
-        } catch (IOException e) {
+        } catch (IOException | IllegalStateException e) {
             LOGGER.error("Failed to store cube {}", cubePos, e);
             entry.result.completeExceptionally(e);
         }
