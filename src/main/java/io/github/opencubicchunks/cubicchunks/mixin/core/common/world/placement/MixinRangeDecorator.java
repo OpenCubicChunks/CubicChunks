@@ -34,9 +34,11 @@ public class MixinRangeDecorator {
                 Coords.cubeToMinBlock(level.getMainCubeY()), Coords.cubeToMaxBlock(level.getMainCubeY()));
             if (optionalInt.isPresent()) {
                 cir.setReturnValue(optionalInt.getAsInt());
+            } else {
+                cir.setReturnValue(Integer.MIN_VALUE);
             }
         } else {
-            if (level.outsideCubeHeight(cir.getReturnValue())) {
+            if (!level.insideCubeHeight(cir.getReturnValue())) {
                 cir.setReturnValue(Coords.cubeToMinBlock(level.getMainCubeY()));
             }
         }

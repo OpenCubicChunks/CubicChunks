@@ -259,7 +259,7 @@ public abstract class MixinChunkGenerator implements ICubeGenerator {
     }
 
     @Redirect(method = "applyCarvers", at = @At(value = "NEW", target = "net/minecraft/world/level/levelgen/carver/CarvingContext"))
-    private CarvingContext CubicContext(ChunkGenerator chunkGenerator, long seed, BiomeManager access, ChunkAccess chunk, GenerationStep.Carving carver) {
-        return new CubicCarvingContext(chunk);
+    private CarvingContext cubicContext(ChunkGenerator chunkGenerator, long seed, BiomeManager access, ChunkAccess chunk, GenerationStep.Carving carver) {
+        return new CubicCarvingContext(chunkGenerator, chunk);
     }
 }
