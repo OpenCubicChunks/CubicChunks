@@ -499,7 +499,7 @@ public class CubeWorldGenRegion extends WorldGenRegion implements ICubicWorld {
     }
 
     public boolean insideCubeHeight(int blockY) {
-        return Coords.cubeToMinBlock(this.getMainCubeY()) >= blockY && blockY <= Coords.cubeToMaxBlock(this.getMainCubeY());
+        return Coords.cubeToMinBlock(this.getMainCubeY()) <= blockY && blockY <= Coords.cubeToMaxBlock(this.getMainCubeY());
     }
 
 

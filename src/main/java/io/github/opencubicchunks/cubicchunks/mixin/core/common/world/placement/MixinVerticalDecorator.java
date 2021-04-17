@@ -5,7 +5,6 @@ import java.util.stream.Stream;
 
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.DecorationContextAccess;
 import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
-import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import io.github.opencubicchunks.cubicchunks.world.CubeWorldGenRegion;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.levelgen.feature.configurations.DecoratorConfiguration;
@@ -37,9 +36,8 @@ public abstract class MixinVerticalDecorator<DC extends DecoratorConfiguration> 
         }
 
         CubeWorldGenRegion cubeWorldGenRegion = (CubeWorldGenRegion) ((DecorationContextAccess) context).getLevel();
-        int lowestAllowedY = Coords.cubeToMinBlock(cubeWorldGenRegion.getMinCubeY());
-        int highestAllowedY = Coords.cubeToMaxBlock(cubeWorldGenRegion.getMaxCubeY());
-        if (pos.getY() < lowestAllowedY + 1 || pos.getY() > highestAllowedY - 1) {
+
+        if (!cubeWorldGenRegion.insideCubeHeight(y)) {
             cir.setReturnValue(Stream.empty());
         } else {
             cir.setReturnValue(Stream.of(new BlockPos(pos.getX(), y, pos.getZ())));

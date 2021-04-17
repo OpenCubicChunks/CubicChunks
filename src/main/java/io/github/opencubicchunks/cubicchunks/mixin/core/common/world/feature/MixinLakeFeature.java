@@ -1,6 +1,8 @@
 package io.github.opencubicchunks.cubicchunks.mixin.core.common.world.feature;
 
 import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
+import io.github.opencubicchunks.cubicchunks.utils.Coords;
+import io.github.opencubicchunks.cubicchunks.world.CubeWorldGenRegion;
 import net.minecraft.world.level.WorldGenLevel;
 import net.minecraft.world.level.levelgen.feature.FeaturePlaceContext;
 import net.minecraft.world.level.levelgen.feature.LakeFeature;
@@ -19,6 +21,6 @@ public class MixinLakeFeature {
             return featurePlaceContext.level().getMinBuildHeight();
         }
 
-        return featurePlaceContext.origin().getY();
+        return Coords.cubeToMinBlock(((CubeWorldGenRegion) worldGenLevel).getMainCubeY());
     }
 }
