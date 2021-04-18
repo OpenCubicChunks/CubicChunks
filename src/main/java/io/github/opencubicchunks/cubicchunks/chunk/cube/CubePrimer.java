@@ -201,6 +201,9 @@ public class CubePrimer extends ProtoChunk implements IBigCube, CubicLevelHeight
                                 + " while adding cube to light heightmap; lighting will not be initialized correctly");
                         return;
                     }
+
+                    ((CubeMapGetter) chunk).getCubeMap().markLoaded(this.cubePos.getY());
+
 					LightSurfaceTrackerWrapper lightHeightmap = ((LightHeightmapGetter) chunk).getServerLightHeightmap();
 
                     int[] beforeValues = new int[SECTION_DIAMETER*SECTION_DIAMETER];

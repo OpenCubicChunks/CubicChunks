@@ -12,6 +12,7 @@ import io.github.opencubicchunks.cubicchunks.world.lighting.ISkyLightColumnCheck
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.SectionPos;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.levelgen.Heightmap;
@@ -138,6 +139,12 @@ public abstract class MixinSkyLightEngine extends MixinLightEngine<SkyLightSecti
                 if (chunk == null) {
                     System.out.println("null chunk in MixinSkyLightEngine.doSkyLightForCube");
                     return;
+                }
+                CubeMap cubeMap = ((CubeMapGetter) chunk).getCubeMap();
+                if (!cubeMap.isLoaded(cubePos.getY())) {
+                    // This is probably only happening because we don't have load order fixed yet
+                    System.out.println("Cube not in cubemap during sky lighting");
+                    cubeMap.markLoaded(cubePos.getY());
                 }
                 Heightmap heightmap = ((LightHeightmapGetter) chunk).getLightHeightmap();
                 if (heightmap == null) {
