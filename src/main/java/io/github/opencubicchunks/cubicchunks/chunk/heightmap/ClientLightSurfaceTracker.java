@@ -1,5 +1,6 @@
 package io.github.opencubicchunks.cubicchunks.chunk.heightmap;
 
+import io.github.opencubicchunks.cubicchunks.chunk.CubeMapGetter;
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.HeightmapAccess;
 import io.github.opencubicchunks.cubicchunks.world.lighting.ISkyLightColumnChecker;
@@ -87,7 +88,7 @@ public class ClientLightSurfaceTracker extends ClientSurfaceTracker {
                 int oldHeight = oldStorage.get(index) + minHeight;
                 int newHeight = storage.get(index) + minHeight;
                 if (oldHeight != newHeight) {
-                    ((ISkyLightColumnChecker) Minecraft.getInstance().level.getLightEngine()).checkSkyLightColumn(chunk, baseX + x, baseZ + z, oldHeight, newHeight);
+                    ((ISkyLightColumnChecker) Minecraft.getInstance().level.getLightEngine()).checkSkyLightColumn((CubeMapGetter) chunk, baseX + x, baseZ + z, oldHeight, newHeight);
                 }
             }
         }

@@ -1,7 +1,8 @@
 package io.github.opencubicchunks.cubicchunks.mixin.core.common.chunk;
 
+import io.github.opencubicchunks.cubicchunks.chunk.CubeMap;
+import io.github.opencubicchunks.cubicchunks.chunk.CubeMapGetter;
 import io.github.opencubicchunks.cubicchunks.chunk.LightHeightmapGetter;
-import io.github.opencubicchunks.cubicchunks.chunk.heightmap.ClientLightSurfaceTracker;
 import io.github.opencubicchunks.cubicchunks.chunk.heightmap.LightSurfaceTrackerWrapper;
 import net.minecraft.world.level.LevelHeightAccessor;
 import net.minecraft.world.level.chunk.ChunkAccess;
@@ -11,7 +12,6 @@ import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import net.minecraft.core.SectionPos;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.LevelHeightAccessor;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.chunk.ChunkStatus;
 import net.minecraft.world.level.chunk.LevelChunkSection;
@@ -30,7 +30,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(ProtoChunk.class)
-public abstract class MixinProtoChunk implements LightHeightmapGetter, LevelHeightAccessor, CubicLevelHeightAccessor {
+public abstract class MixinProtoChunk implements LightHeightmapGetter, LevelHeightAccessor, CubeMapGetter, CubicLevelHeightAccessor {
     @Shadow @Final private LevelHeightAccessor levelHeightAccessor;
 
     private boolean isCubic;
@@ -40,6 +40,7 @@ public abstract class MixinProtoChunk implements LightHeightmapGetter, LevelHeig
     @Shadow public abstract ChunkStatus getStatus();
 
     private LightSurfaceTrackerWrapper lightHeightmap;
+    private CubeMap cubeMap;
 
     @Override
     public Heightmap getLightHeightmap() {
@@ -52,6 +53,15 @@ public abstract class MixinProtoChunk implements LightHeightmapGetter, LevelHeig
             lightHeightmap = new LightSurfaceTrackerWrapper((ChunkAccess) this);
         }
         return lightHeightmap;
+    }
+
+    @Override
+    public CubeMap getCubeMap() {
+        // TODO actually init this properly instead of doing lazy init here
+        if (cubeMap == null) {
+            cubeMap = new CubeMap();
+        }
+        return cubeMap;
     }
 
     @Inject(method = "<init>(Lnet/minecraft/world/level/ChunkPos;Lnet/minecraft/world/level/chunk/UpgradeData;[Lnet/minecraft/world/level/chunk/LevelChunkSection;"

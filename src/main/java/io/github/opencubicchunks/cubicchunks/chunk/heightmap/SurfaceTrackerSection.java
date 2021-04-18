@@ -27,10 +27,10 @@ public class SurfaceTrackerSection {
     private static final int BASE_SIZE_BITS = IBigCube.SIZE_BITS;
 
     // Use width of 16 to match columns.
-    private static final int WIDTH_BLOCKS = 16;
+    public static final int WIDTH_BLOCKS = 16;
 
     protected final BitStorage heights;
-    private final long[] dirtyPositions; // bitset has 100% memory usage overhead due to pointers and object headers
+    protected final long[] dirtyPositions; // bitset has 100% memory usage overhead due to pointers and object headers
     protected SurfaceTrackerSection parent;
     protected Object cubeOrNodes;
     /**

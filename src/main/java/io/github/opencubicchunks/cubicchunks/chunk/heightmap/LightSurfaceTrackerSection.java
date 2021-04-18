@@ -11,6 +11,7 @@ import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
 import javax.annotation.Nullable;
+import java.util.Arrays;
 
 public class LightSurfaceTrackerSection extends SurfaceTrackerSection {
     public LightSurfaceTrackerSection() {
@@ -115,6 +116,31 @@ public class LightSurfaceTrackerSection extends SurfaceTrackerSection {
             clearDirty(idx);
             return maxY;
         }
+    }
+
+    @Override
+    public void loadCube(int sectionX, int sectionZ, IBigCube newCube, boolean markDirty) {
+        if (this.cubeOrNodes == null) {
+            throw new IllegalStateException("Attempting to load cube " + newCube.getCubePos() + " into an unloaded surface tracker section");
+        }
+        if (markDirty) {
+            Arrays.fill(dirtyPositions, -1);
+        }
+        if (this.scale == 0) {
+            return;
+        }
+        int idx = indexOfRawHeightNode(newCube.getCubePos().getY(), scale, scaledY);
+        SurfaceTrackerSection[] nodes = (SurfaceTrackerSection[]) cubeOrNodes;
+        for (int i = 0; i < nodes.length; i++) {
+            if (nodes[i] != null) {
+                continue;
+            }
+            int newScaledY = indexToScaledY(i, scale, scaledY);
+            SurfaceTrackerSection newMap = loadNode(newScaledY, scale - 1, newCube, i == idx);
+            nodes[i] = newMap;
+        }
+        assert nodes[idx] != null;
+        nodes[idx].loadCube(sectionX, sectionZ, newCube, markDirty);
     }
 
     protected VoxelShape getShape(BlockState blockState, BlockPos pos, Direction facing) {

@@ -18,6 +18,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import io.github.opencubicchunks.cubicchunks.CubicChunks;
+import io.github.opencubicchunks.cubicchunks.chunk.CubeMapGetter;
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.LightHeightmapGetter;
 import io.github.opencubicchunks.cubicchunks.chunk.ImposterChunkPos;
@@ -30,6 +31,7 @@ import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import io.github.opencubicchunks.cubicchunks.world.CubeWorldGenRegion;
 import io.github.opencubicchunks.cubicchunks.world.storage.CubeProtoTickList;
+import io.github.opencubicchunks.cubicchunks.world.lighting.ISkyLightColumnChecker;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap;
@@ -187,21 +189,40 @@ public class CubePrimer extends ProtoChunk implements IBigCube, CubicLevelHeight
         if (this.status == ChunkStatus.LIGHT) {
         	ChunkSource chunkSource = getChunkSource();
 
-			ChunkPos chunkPos = this.cubePos.asChunkPos();
 			for (int dx = 0; dx < IBigCube.DIAMETER_IN_SECTIONS; dx++) {
 				for (int dz = 0; dz < IBigCube.DIAMETER_IN_SECTIONS; dz++) {
+				    ChunkPos chunkPos = this.cubePos.asChunkPos(dx, dz);
 					// TODO chunk can be null, at least until we get the column->cube invariant
-					BlockGetter chunk = chunkSource.getChunkForLighting(chunkPos.x + dx, chunkPos.z + dz);
+					BlockGetter chunk = chunkSource.getChunkForLighting(chunkPos.x, chunkPos.z);
 					// force-loading like this causes lighting to init incorrectly for some reason
-//					BlockGetter chunk = chunkSource.getChunk(chunkPos.x + dx, chunkPos.z + dz, ChunkStatus.EMPTY, true);
+//					BlockGetter chunk = chunkSource.getChunk(chunkPos.x, chunkPos.z, ChunkStatus.EMPTY, true);
                     if (chunk == null) {
-                        CubicChunks.LOGGER.warn("Got a null column at " + (chunkPos.x + dx) + ", " + (chunkPos.z + dz)
+                        CubicChunks.LOGGER.warn("Got a null column at " + (chunkPos.x) + ", " + (chunkPos.z)
                                 + " while adding cube to light heightmap; lighting will not be initialized correctly");
                         return;
                     }
 					LightSurfaceTrackerWrapper lightHeightmap = ((LightHeightmapGetter) chunk).getServerLightHeightmap();
+
+                    int[] beforeValues = new int[SECTION_DIAMETER*SECTION_DIAMETER];
+                    for (int z = 0; z < SECTION_DIAMETER; z++) {
+                        for (int x = 0; x < SECTION_DIAMETER; x++) {
+                            beforeValues[z*SECTION_DIAMETER + x] = lightHeightmap.getFirstAvailable(x, z);
+                        }
+                    }
+
 					// TODO want to optimize this - probably want to do the thing we do for other scale0 sections and store a reference to it
 					lightHeightmap.loadCube(this);
+
+                    for (int z = 0; z < SECTION_DIAMETER; z++) {
+                        for (int x = 0; x < SECTION_DIAMETER; x++) {
+                            int beforeValue = beforeValues[z*SECTION_DIAMETER + x];
+                            int afterValue = lightHeightmap.getFirstAvailable(x, z);
+                            if (beforeValue != afterValue) {
+                                ((ISkyLightColumnChecker) chunkSource.getLightEngine()).checkSkyLightColumn((CubeMapGetter) chunk,
+                                        chunkPos.getBlockX(x), chunkPos.getBlockZ(z), beforeValue, afterValue);
+                            }
+                        }
+                    }
 				}
 			}
 		}
@@ -242,16 +263,21 @@ public class CubePrimer extends ProtoChunk implements IBigCube, CubicLevelHeight
                 || state.getLightEmission() != lastState.getLightEmission() || state.useShapeForLightOcclusion() || lastState.useShapeForLightOcclusion())) {
             ChunkSource chunkSource = getChunkSource();
 
-            ChunkPos chunkPos = this.cubePos.asChunkPos();
-            for (int dx = 0; dx < IBigCube.DIAMETER_IN_SECTIONS; dx++) {
-                for (int dz = 0; dz < IBigCube.DIAMETER_IN_SECTIONS; dz++) {
-                    // TODO do we want to force-load chunks here? if not the chunk can be null, at least until we get the column->cube invariant
-                    BlockGetter chunk = chunkSource.getChunkForLighting(chunkPos.x + dx, chunkPos.z + dz);
-                    LightSurfaceTrackerWrapper lightHeightmap = ((LightHeightmapGetter) chunk).getServerLightHeightmap();
+            ChunkPos chunkPos = Coords.chunkPosByIndex(this.cubePos, index);
 
-                    // Not sure if this is the right blockstate to pass in, but it doesn't actually matter since we don't use it
-                    lightHeightmap.update(x, pos.getY(), z, state);
-                }
+            // TODO do we want to force-load chunks here? if not the chunk can be null, at least until we get the column->cube invariant
+            BlockGetter chunk = chunkSource.getChunkForLighting(chunkPos.x, chunkPos.z);
+            LightSurfaceTrackerWrapper lightHeightmap = ((LightHeightmapGetter) chunk).getServerLightHeightmap();
+
+            int relX = pos.getX() & 15;
+            int relZ = pos.getZ() & 15;
+            int oldHeight = lightHeightmap.getFirstAvailable(relX, relZ);
+            // Light heightmap update needs to occur before the light engine update.
+            // Not sure if this is the right blockstate to pass in, but it doesn't actually matter since we don't use it
+            lightHeightmap.update(relX, pos.getY(), relZ, state);
+            int newHeight = lightHeightmap.getFirstAvailable(relX, relZ);
+            if (newHeight != oldHeight) {
+                ((ISkyLightColumnChecker) chunkSource.getLightEngine()).checkSkyLightColumn((CubeMapGetter) chunk, pos.getX(), pos.getZ(), oldHeight, newHeight);
             }
 
             lightManager.checkBlock(pos);

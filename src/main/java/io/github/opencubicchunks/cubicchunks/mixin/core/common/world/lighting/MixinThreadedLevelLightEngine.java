@@ -6,6 +6,7 @@ import java.util.function.IntSupplier;
 import javax.annotation.Nullable;
 
 import com.mojang.datafixers.util.Pair;
+import io.github.opencubicchunks.cubicchunks.chunk.CubeMapGetter;
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.IChunkManager;
 import io.github.opencubicchunks.cubicchunks.chunk.ticket.CubeTaskPriorityQueueSorter;
@@ -22,7 +23,6 @@ import net.minecraft.server.level.ThreadedLevelLightEngine;
 import net.minecraft.util.thread.ProcessorHandle;
 import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.level.chunk.DataLayer;
-import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.chunk.LevelChunkSection;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -146,7 +146,7 @@ public abstract class MixinThreadedLevelLightEngine extends MixinLevelLightEngin
     }
 
     @Override
-    public void checkSkyLightColumn(LevelChunk chunk, int x, int z, int oldHeight, int newHeight) {
+    public void checkSkyLightColumn(CubeMapGetter chunk, int x, int z, int oldHeight, int newHeight) {
         // FIXME figure out when this should actually be scheduled instead of just hoping for the best
         this.addTask(SectionPos.blockToSectionCoord(x), SectionPos.blockToSectionCoord(z), ThreadedLevelLightEngine.TaskType.POST_UPDATE, Util.name(() -> {
             super.checkSkyLightColumn(chunk, x, z, oldHeight, newHeight);

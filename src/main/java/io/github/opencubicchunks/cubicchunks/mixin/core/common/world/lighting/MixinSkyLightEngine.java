@@ -14,7 +14,6 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.SectionPos;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.ChunkPos;
-import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.lighting.SkyLightEngine;
 import net.minecraft.world.level.lighting.SkyLightSectionStorage;
@@ -41,10 +40,9 @@ public abstract class MixinSkyLightEngine extends MixinLightEngine<SkyLightSecti
     }
 
     /** all parameters are global coordinates */
-    @Override public void checkSkyLightColumn(LevelChunk chunk, int x, int z, int oldHeight, int newHeight) {
+    @Override public void checkSkyLightColumn(CubeMapGetter chunk, int x, int z, int oldHeight, int newHeight) {
         ((SectionLightStorageAccess) this.storage).invokeRunAllUpdates();
-        // TODO pass CubeMap into method instead?
-        CubeMap cubeMap = ((CubeMapGetter) chunk).getCubeMap();
+        CubeMap cubeMap = chunk.getCubeMap();
         int oldHeightCube = Coords.blockToCube(oldHeight-1);
         int newHeightCube = Coords.blockToCube(newHeight);
         if (oldHeight > newHeight) {

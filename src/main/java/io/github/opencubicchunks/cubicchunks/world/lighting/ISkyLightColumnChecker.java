@@ -1,8 +1,8 @@
 package io.github.opencubicchunks.cubicchunks.world.lighting;
 
-import net.minecraft.world.level.chunk.LevelChunk;
+import io.github.opencubicchunks.cubicchunks.chunk.CubeMapGetter;
 
 public interface ISkyLightColumnChecker {
     /** all parameters are global coordinates */
-    void checkSkyLightColumn(LevelChunk chunk, int x, int z, int oldHeight, int newHeight);
+    void checkSkyLightColumn(CubeMapGetter chunk, int x, int z, int oldHeight, int newHeight);
 }
