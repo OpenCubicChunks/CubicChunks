@@ -1,7 +1,6 @@
 package io.github.opencubicchunks.cubicchunks.chunk.heightmap;
 
 import io.github.opencubicchunks.cubicchunks.chunk.CubeMapGetter;
-import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.HeightmapAccess;
 import io.github.opencubicchunks.cubicchunks.world.lighting.ISkyLightColumnChecker;
 import net.minecraft.client.Minecraft;
@@ -26,7 +25,7 @@ public class ClientLightSurfaceTracker extends ClientSurfaceTracker {
     }
 
     @Override public boolean update(int x, int y, int z, BlockState blockState) {
-        return false;/*
+        return false; /*
         // TODO is it safe to do this or are we risking causing cube loading, etc?
         int previous = getFirstAvailable(x, z);
         if (y <= previous - 2) {
@@ -72,8 +71,8 @@ public class ClientLightSurfaceTracker extends ClientSurfaceTracker {
 
     @Override
     public void setRawData(long[] heightmap) {
-    	throw new UnsupportedOperationException("this shouldn't be called");
-	}
+        throw new UnsupportedOperationException("this shouldn't be called");
+    }
     public void setRawData(long[] heightmap, LevelChunk chunk) {
         // We need to compare the old and new data here, hence the inefficiencies with making a new bitstorage
         BitStorage storage = ((HeightmapAccess) this).getData();

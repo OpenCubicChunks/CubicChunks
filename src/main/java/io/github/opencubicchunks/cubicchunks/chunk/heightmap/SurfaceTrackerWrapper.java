@@ -46,12 +46,12 @@ public class SurfaceTrackerWrapper extends Heightmap {
 //        surfaceTracker.getCubeNode(blockToCube(y)).markDirty(x + dx, z + dz);
 //        // TODO not sure if this is safe to do or if things depend on the result
 //        return false;
-		// FIXME soft fail for debugging
-		SurfaceTrackerSection node = surfaceTracker.getCubeNode(blockToCube(y));
-		if (node == null) {
-			System.out.println("warning: null node in surface tracker " + this);
-			return false;
-		}
+        // FIXME soft fail for debugging
+        SurfaceTrackerSection node = surfaceTracker.getCubeNode(blockToCube(y));
+        if (node == null) {
+            System.out.println("warning: null node in surface tracker " + this);
+            return false;
+        }
         node.markDirty(x + dx, z + dz);
         return false;
     }

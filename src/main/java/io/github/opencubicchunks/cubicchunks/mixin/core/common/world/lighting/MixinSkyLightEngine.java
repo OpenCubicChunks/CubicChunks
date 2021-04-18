@@ -12,7 +12,6 @@ import io.github.opencubicchunks.cubicchunks.world.lighting.ISkyLightColumnCheck
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.SectionPos;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.levelgen.Heightmap;
@@ -44,7 +43,7 @@ public abstract class MixinSkyLightEngine extends MixinLightEngine<SkyLightSecti
     @Override public void checkSkyLightColumn(CubeMapGetter chunk, int x, int z, int oldHeight, int newHeight) {
         ((SectionLightStorageAccess) this.storage).invokeRunAllUpdates();
         CubeMap cubeMap = chunk.getCubeMap();
-        int oldHeightCube = Coords.blockToCube(oldHeight-1);
+        int oldHeightCube = Coords.blockToCube(oldHeight - 1);
         int newHeightCube = Coords.blockToCube(newHeight);
         if (oldHeight > newHeight) {
             // not sure if this is necessary - also maybe it should be done inside the loop? not sure if threaded stuff can result in storage becoming out of date inside the loop
@@ -54,7 +53,7 @@ public abstract class MixinSkyLightEngine extends MixinLightEngine<SkyLightSecti
             //      (int y = oldHeight-1; y >= newHeight; y--)
             for (int cubeY : cubeMap.getLoaded()) {
                 if (oldHeightCube <= cubeY && cubeY <= newHeightCube) {
-                    for (int dy = IBigCube.DIAMETER_IN_BLOCKS-1; dy >= 0; dy--) {
+                    for (int dy = IBigCube.DIAMETER_IN_BLOCKS - 1; dy >= 0; dy--) {
                         int y = cubeY * IBigCube.DIAMETER_IN_BLOCKS + dy;
 
                         if (y >= oldHeight) {
@@ -157,7 +156,7 @@ public abstract class MixinSkyLightEngine extends MixinLightEngine<SkyLightSecti
                         if (height <= maxY) {
                             height = Math.max(height, minY);
                             for (int y = maxY; y >= height; y--) {
-                                long pos = new BlockPos((chunkPos.x + sectionX)*16 + x, y, (chunkPos.z + sectionZ)*16 + z).asLong();
+                                long pos = new BlockPos((chunkPos.x + sectionX) * 16 + x, y, (chunkPos.z + sectionZ) * 16 + z).asLong();
                                 // Not sure if this is necessary
                                 ((SectionLightStorageAccess) this.storage).invokeRunAllUpdates();
 

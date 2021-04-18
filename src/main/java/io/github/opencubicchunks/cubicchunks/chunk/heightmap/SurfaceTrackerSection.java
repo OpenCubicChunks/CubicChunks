@@ -21,13 +21,13 @@ public class SurfaceTrackerSection {
     /** Number of children nodes */
     public static final int NODE_COUNT = 1 << NODE_COUNT_BITS;
 
+    // Use width of 16 to match columns.
+    public static final int WIDTH_BLOCKS = 16;
+
     private static final Heightmap.Types[] HEIGHTMAP_TYPES = Heightmap.Types.values();
 
     /** Number of bits needed to represent height (excluding null) at scale zero (i.e. log2(scale0 height)) */
     private static final int BASE_SIZE_BITS = IBigCube.SIZE_BITS;
-
-    // Use width of 16 to match columns.
-    public static final int WIDTH_BLOCKS = 16;
 
     protected final BitStorage heights;
     protected final long[] dirtyPositions; // bitset has 100% memory usage overhead due to pointers and object headers

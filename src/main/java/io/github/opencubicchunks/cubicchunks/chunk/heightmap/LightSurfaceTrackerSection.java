@@ -1,5 +1,9 @@
 package io.github.opencubicchunks.cubicchunks.chunk.heightmap;
 
+import java.util.Arrays;
+
+import javax.annotation.Nullable;
+
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import net.minecraft.core.BlockPos;
@@ -9,9 +13,6 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
-
-import javax.annotation.Nullable;
-import java.util.Arrays;
 
 public class LightSurfaceTrackerSection extends SurfaceTrackerSection {
     public LightSurfaceTrackerSection() {
@@ -80,7 +81,9 @@ public class LightSurfaceTrackerSection extends SurfaceTrackerSection {
                 BlockState state = cube.getBlockState(x, dy, z);
 
                 // note that this BlockPos relies on `cubePos.blockY` returning correct results when the local coord is not inside the cube
-                VoxelShape voxelShapeAbove = sectionAbove == null ? Shapes.empty() : this.getShape(above, new BlockPos(cubePos.blockX(x), cubePos.blockY(dy + 1), cubePos.blockZ(z)), Direction.DOWN);
+                VoxelShape voxelShapeAbove = sectionAbove == null
+                        ? Shapes.empty()
+                        : this.getShape(above, new BlockPos(cubePos.blockX(x), cubePos.blockY(dy + 1), cubePos.blockZ(z)), Direction.DOWN);
                 VoxelShape voxelShape = this.getShape(state, new BlockPos(cubePos.blockX(x), cubePos.blockY(dy), cubePos.blockZ(z)), Direction.UP);
 
                 while (dy >= 0) {

@@ -20,8 +20,8 @@ import com.google.common.collect.Sets;
 import io.github.opencubicchunks.cubicchunks.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.chunk.CubeMapGetter;
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
-import io.github.opencubicchunks.cubicchunks.chunk.LightHeightmapGetter;
 import io.github.opencubicchunks.cubicchunks.chunk.ImposterChunkPos;
+import io.github.opencubicchunks.cubicchunks.chunk.LightHeightmapGetter;
 import io.github.opencubicchunks.cubicchunks.chunk.biome.CubeBiomeContainer;
 import io.github.opencubicchunks.cubicchunks.chunk.heightmap.LightSurfaceTrackerWrapper;
 import io.github.opencubicchunks.cubicchunks.chunk.heightmap.SurfaceTrackerSection;
@@ -30,8 +30,8 @@ import io.github.opencubicchunks.cubicchunks.mixin.access.common.BiomeContainerA
 import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import io.github.opencubicchunks.cubicchunks.world.CubeWorldGenRegion;
-import io.github.opencubicchunks.cubicchunks.world.storage.CubeProtoTickList;
 import io.github.opencubicchunks.cubicchunks.world.lighting.ISkyLightColumnChecker;
+import io.github.opencubicchunks.cubicchunks.world.storage.CubeProtoTickList;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap;
@@ -175,27 +175,27 @@ public class CubePrimer extends ProtoChunk implements IBigCube, CubicLevelHeight
     }
 
     private ChunkSource getChunkSource() {
-		if (this.levelHeightAccessor instanceof CubeWorldGenRegion) {
-			return ((CubeWorldGenRegion) this.levelHeightAccessor).getChunkSource();
-		} else {
-			return ((ServerLevel) this.levelHeightAccessor).getChunkSource();
-		}
-	}
+        if (this.levelHeightAccessor instanceof CubeWorldGenRegion) {
+            return ((CubeWorldGenRegion) this.levelHeightAccessor).getChunkSource();
+        } else {
+            return ((ServerLevel) this.levelHeightAccessor).getChunkSource();
+        }
+    }
 
     //STATUS
     @Override public void setCubeStatus(ChunkStatus newStatus) {
         this.status = newStatus;
 
         if (this.status == ChunkStatus.LIGHT) {
-        	ChunkSource chunkSource = getChunkSource();
+            ChunkSource chunkSource = getChunkSource();
 
-			for (int dx = 0; dx < IBigCube.DIAMETER_IN_SECTIONS; dx++) {
-				for (int dz = 0; dz < IBigCube.DIAMETER_IN_SECTIONS; dz++) {
-				    ChunkPos chunkPos = this.cubePos.asChunkPos(dx, dz);
-					// TODO chunk can be null, at least until we get the column->cube invariant
-					BlockGetter chunk = chunkSource.getChunkForLighting(chunkPos.x, chunkPos.z);
-					// force-loading like this causes lighting to init incorrectly for some reason
-//					BlockGetter chunk = chunkSource.getChunk(chunkPos.x, chunkPos.z, ChunkStatus.EMPTY, true);
+            for (int dx = 0; dx < IBigCube.DIAMETER_IN_SECTIONS; dx++) {
+                for (int dz = 0; dz < IBigCube.DIAMETER_IN_SECTIONS; dz++) {
+                    ChunkPos chunkPos = this.cubePos.asChunkPos(dx, dz);
+                    // TODO chunk can be null, at least until we get the column->cube invariant
+                    BlockGetter chunk = chunkSource.getChunkForLighting(chunkPos.x, chunkPos.z);
+                    // force-loading like this causes lighting to init incorrectly for some reason
+//                    BlockGetter chunk = chunkSource.getChunk(chunkPos.x, chunkPos.z, ChunkStatus.EMPTY, true);
                     if (chunk == null) {
                         CubicChunks.LOGGER.warn("Got a null column at " + (chunkPos.x) + ", " + (chunkPos.z)
                                 + " while adding cube to light heightmap; lighting will not be initialized correctly");
@@ -204,21 +204,21 @@ public class CubePrimer extends ProtoChunk implements IBigCube, CubicLevelHeight
 
                     ((CubeMapGetter) chunk).getCubeMap().markLoaded(this.cubePos.getY());
 
-					LightSurfaceTrackerWrapper lightHeightmap = ((LightHeightmapGetter) chunk).getServerLightHeightmap();
+                    LightSurfaceTrackerWrapper lightHeightmap = ((LightHeightmapGetter) chunk).getServerLightHeightmap();
 
-                    int[] beforeValues = new int[SECTION_DIAMETER*SECTION_DIAMETER];
+                    int[] beforeValues = new int[SECTION_DIAMETER * SECTION_DIAMETER];
                     for (int z = 0; z < SECTION_DIAMETER; z++) {
                         for (int x = 0; x < SECTION_DIAMETER; x++) {
-                            beforeValues[z*SECTION_DIAMETER + x] = lightHeightmap.getFirstAvailable(x, z);
+                            beforeValues[z * SECTION_DIAMETER + x] = lightHeightmap.getFirstAvailable(x, z);
                         }
                     }
 
-					// TODO want to optimize this - probably want to do the thing we do for other scale0 sections and store a reference to it
-					lightHeightmap.loadCube(this);
+                    // TODO want to optimize this - probably want to do the thing we do for other scale0 sections and store a reference to it
+                    lightHeightmap.loadCube(this);
 
                     for (int z = 0; z < SECTION_DIAMETER; z++) {
                         for (int x = 0; x < SECTION_DIAMETER; x++) {
-                            int beforeValue = beforeValues[z*SECTION_DIAMETER + x];
+                            int beforeValue = beforeValues[z * SECTION_DIAMETER + x];
                             int afterValue = lightHeightmap.getFirstAvailable(x, z);
                             if (beforeValue != afterValue) {
                                 ((ISkyLightColumnChecker) chunkSource.getLightEngine()).checkSkyLightColumn((CubeMapGetter) chunk,
@@ -226,9 +226,9 @@ public class CubePrimer extends ProtoChunk implements IBigCube, CubicLevelHeight
                             }
                         }
                     }
-				}
-			}
-		}
+                }
+            }
+        }
     }
 
     @Override public ChunkStatus getCubeStatus() {

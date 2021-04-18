@@ -18,11 +18,9 @@ import io.github.opencubicchunks.cubicchunks.chunk.heightmap.ClientLightSurfaceT
 import io.github.opencubicchunks.cubicchunks.chunk.heightmap.ClientSurfaceTracker;
 import io.github.opencubicchunks.cubicchunks.chunk.heightmap.LightSurfaceTrackerWrapper;
 import io.github.opencubicchunks.cubicchunks.chunk.heightmap.SurfaceTrackerWrapper;
-import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
-import io.github.opencubicchunks.cubicchunks.utils.Coords;
-import io.github.opencubicchunks.cubicchunks.world.lighting.ISkyLightColumnChecker;
 import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
+import io.github.opencubicchunks.cubicchunks.world.lighting.ISkyLightColumnChecker;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientBlockEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerBlockEntityEvents;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -72,6 +70,9 @@ public abstract class MixinChunk implements ChunkAccess, LightHeightmapGetter, C
     private boolean generates2DChunks;
     private WorldStyle worldStyle;
 
+    private Heightmap lightHeightmap;
+    private CubeMap cubeMap;
+
     @Shadow public abstract ChunkStatus getStatus();
 
     @Shadow protected abstract boolean isInLevel();
@@ -81,9 +82,6 @@ public abstract class MixinChunk implements ChunkAccess, LightHeightmapGetter, C
     @Override public boolean isYSpaceEmpty(int startY, int endY) {
         return false;
     }
-
-    private Heightmap lightHeightmap;
-    private CubeMap cubeMap;
 
     @Override
     public Heightmap getLightHeightmap() {
@@ -159,16 +157,16 @@ public abstract class MixinChunk implements ChunkAccess, LightHeightmapGetter, C
         }
         // TODO client side light heightmap stuff
         if (this.level.isClientSide) {
-            ClientLightSurfaceTracker lightHeightmap = ((LightHeightmapGetter) this).getClientLightHeightmap();
+            ClientLightSurfaceTracker clientLightHeightmap = ((LightHeightmapGetter) this).getClientLightHeightmap();
         } else {
             int relX = pos.getX() & 15;
             int relZ = pos.getZ() & 15;
-            LightSurfaceTrackerWrapper lightHeightmap = ((LightHeightmapGetter) this).getServerLightHeightmap();
-            int oldHeight = lightHeightmap.getFirstAvailable(relX, relZ);
+            LightSurfaceTrackerWrapper serverLightHeightmap = ((LightHeightmapGetter) this).getServerLightHeightmap();
+            int oldHeight = serverLightHeightmap.getFirstAvailable(relX, relZ);
             // Light heightmap update needs to occur before the light engine update.
             // LevelChunk.setBlockState is called before the light engine is updated, so this works fine currently, but if this update call is ever moved, that must still be the case.
-            lightHeightmap.update(relX, pos.getY(), relZ, state);
-            int newHeight = lightHeightmap.getFirstAvailable(relX, relZ);
+            serverLightHeightmap.update(relX, pos.getY(), relZ, state);
+            int newHeight = serverLightHeightmap.getFirstAvailable(relX, relZ);
             if (newHeight != oldHeight) {
                 ((ISkyLightColumnChecker) this.level.getChunkSource().getLightEngine()).checkSkyLightColumn(this, pos.getX(), pos.getZ(), oldHeight, newHeight);
             }

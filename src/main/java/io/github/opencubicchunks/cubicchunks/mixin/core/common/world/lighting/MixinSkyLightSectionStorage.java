@@ -55,7 +55,7 @@ public abstract class MixinSkyLightSectionStorage extends LayerLightSectionStora
     }
 
     @Inject(method = "enableLightSources", cancellable = true,
-        at = @At(value = "INVOKE", shift= At.Shift.AFTER, target="Lnet/minecraft/world/level/lighting/SkyLightSectionStorage;runAllUpdates()V"))
+        at = @At(value = "INVOKE", shift = At.Shift.AFTER, target = "Lnet/minecraft/world/level/lighting/SkyLightSectionStorage;runAllUpdates()V"))
     private void onEnableLightSources(long columnPos, boolean enabled, CallbackInfo ci) {
         if (!isCubic) return;
         if (enabled) {
@@ -71,7 +71,8 @@ public abstract class MixinSkyLightSectionStorage extends LayerLightSectionStora
     }
 
     @Inject(method = "markNewInconsistencies", cancellable = true, at = @At("HEAD"))
-    private void onMarkNewInconsistencies(LayerLightEngine<SkyLightSectionStorage.SkyDataLayerStorageMap, ?> lightProvider, boolean doSkylight, boolean skipEdgeLightPropagation, CallbackInfo ci) {
+    private void onMarkNewInconsistencies(LayerLightEngine<SkyLightSectionStorage.SkyDataLayerStorageMap, ?> lightProvider, boolean doSkylight, boolean skipEdgeLightPropagation,
+                                          CallbackInfo ci) {
         if (!isCubic) return;
         ci.cancel();
         super.markNewInconsistencies(lightProvider, doSkylight, skipEdgeLightPropagation);

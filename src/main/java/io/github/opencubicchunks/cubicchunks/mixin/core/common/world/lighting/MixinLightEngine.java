@@ -38,15 +38,15 @@ public abstract class MixinLightEngine<M extends DataLayerStorageMap<M>, S exten
 
     @Shadow @Final protected LightChunkGetter chunkSource;
 
+    protected boolean isCubic;
+
     @Shadow @Final private long[] lastChunkPos;
 
     @Shadow @Final private BlockGetter[] lastChunk;
 
-    protected boolean isCubic;
-    private boolean generates2DChunks;
-    private CubicLevelHeightAccessor.WorldStyle worldStyle;
+    @Shadow protected void checkNode(long id) {
+    }
 
-	@Shadow protected void checkNode(long id) {}
     @Shadow @Nullable protected abstract BlockGetter getChunk(int chunkX, int chunkZ);
 
     @Override
@@ -69,8 +69,8 @@ public abstract class MixinLightEngine<M extends DataLayerStorageMap<M>, S exten
     @Inject(method = "<init>", at = @At("RETURN"))
     private void setCubic(LightChunkGetter lightChunkGetter, LightLayer lightLayer, S layerLightSectionStorage, CallbackInfo ci) {
         this.isCubic = ((CubicLevelHeightAccessor) this.chunkSource.getLevel()).isCubic();
-        this.generates2DChunks = ((CubicLevelHeightAccessor) this.chunkSource.getLevel()).generates2DChunks();
-        this.worldStyle = ((CubicLevelHeightAccessor) this.chunkSource.getLevel()).worldStyle();
+//        this.generates2DChunks = ((CubicLevelHeightAccessor) this.chunkSource.getLevel()).generates2DChunks();
+//        this.worldStyle = ((CubicLevelHeightAccessor) this.chunkSource.getLevel()).worldStyle();
     }
 
     /**
