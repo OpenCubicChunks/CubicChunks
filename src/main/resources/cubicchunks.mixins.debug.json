@@ -12,6 +12,7 @@
         "conformVisibility": true
     },
     "mixins": [
+        "common.MixinDistanceManager",
         "common.MixinMinecraftServer",
         "common.MixinPlayerRespawnLogic"
     ],
