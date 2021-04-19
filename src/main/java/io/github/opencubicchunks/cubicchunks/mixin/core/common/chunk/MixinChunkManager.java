@@ -202,14 +202,6 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
         throw new Error("Mixin didn't apply");
     }
 
-    @Shadow public abstract CompletableFuture<Either<ChunkAccess, ChunkHolder.ChunkLoadingFailure>> schedule(ChunkHolder holder, ChunkStatus requiredStatus);
-
-    @Shadow @org.jetbrains.annotations.Nullable protected abstract ChunkHolder getUpdatingChunkIfPresent(long pos);
-
-    @Shadow @org.jetbrains.annotations.Nullable protected abstract ChunkHolder updateChunkScheduling(long pos, int level, @org.jetbrains.annotations.Nullable ChunkHolder holder, int i);
-
-    @Shadow @org.jetbrains.annotations.Nullable protected abstract ChunkHolder getVisibleChunkIfPresent(long pos);
-
     @SuppressWarnings("UnresolvedMixinReference") @Redirect(method = "<init>", at = @At(value = "NEW", target = "net/minecraft/server/level/ChunkMap$DistanceManager"))
     private ChunkMap.DistanceManager setIsCubic(ChunkMap chunkMap, Executor executor, Executor executor2, ServerLevel worldIn) {
         ChunkMap.DistanceManager distanceManager1 = chunkMap.new DistanceManager(executor, executor2);
@@ -548,9 +540,9 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
     private CompletableFuture<Either<IBigCube, ChunkHolder.ChunkLoadingFailure>> chainFutures(
         Supplier<CompletableFuture<Either<IBigCube, ChunkHolder.ChunkLoadingFailure>>> cubeFutureSupplier, ChunkHolder[] chunkHolders, ChunkStatus chunkStatusIn) {
         Iterator<ChunkHolder> iterator = Arrays.stream(chunkHolders).iterator();
-        ChunkHolder chunkHolder = iterator.next();
+        ChunkHolder chunkHolder = iterator.next(); //set first future
         CompletableFuture<Either<ChunkAccess, ChunkHolder.ChunkLoadingFailure>> chunkFutureChain = chunkHolder.getOrScheduleFuture(chunkStatusIn, (ChunkMap) (Object) this);
-        while (iterator.hasNext()) {
+        while (iterator.hasNext()) { //chain all subsequent futures
             ChunkHolder next = iterator.next();
             chunkFutureChain = chunkFutureChain.thenComposeAsync((either) -> next.getOrScheduleFuture(chunkStatusIn, (ChunkMap) (Object) this));
         }
@@ -586,9 +578,7 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
                                 completablefuture1 = this.scheduleCubeGeneration(cubeHolder, chunkStatusIn);
                             } else {
                                 completablefuture1 = Utils.unsafeCast(
-                                    chunkStatusIn.load(this.level, this.structureManager, this.lightEngine, (chunk) -> {
-                                        return Utils.unsafeCast(this.protoCubeToFullCube(cubeHolder));
-                                    }, (ChunkAccess) cube));
+                                    chunkStatusIn.load(this.level, this.structureManager, this.lightEngine, (chunk) -> Utils.unsafeCast(this.protoCubeToFullCube(cubeHolder)), cube));
                             }
 
                             ((ICubeStatusListener) this.progressListener).onCubeStatusChange(cubePos, chunkStatusIn);

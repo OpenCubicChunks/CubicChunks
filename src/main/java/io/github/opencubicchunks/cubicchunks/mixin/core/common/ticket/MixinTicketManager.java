@@ -52,9 +52,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(DistanceManager.class)
 public abstract class MixinTicketManager implements ITicketManager, IVerticalView {
 
-    @Final @Shadow private Executor mainThreadExecutor;
-    @Shadow private long ticketTickCounter;
-
     private final Long2ObjectOpenHashMap<SortedArraySet<Ticket<?>>> cubeTickets = new Long2ObjectOpenHashMap<>();
     private final Long2ObjectMap<ObjectSet<ServerPlayer>> playersPerCube = new Long2ObjectOpenHashMap<>();
 
@@ -70,10 +67,6 @@ public abstract class MixinTicketManager implements ITicketManager, IVerticalVie
 
     private boolean isCubic;
 
-    @Shadow private static int getTicketLevelAt(SortedArraySet<Ticket<?>> p_229844_0_) {
-        throw new Error("Mixin did not apply correctly");
-    }
-
     @Shadow @Final private DistanceManager.FixedPlayerDistanceChunkTracker naturalSpawnChunkCounter;
 
     @Shadow @Final private DistanceManager.PlayerTicketTracker playerTicketManager;
@@ -84,9 +77,17 @@ public abstract class MixinTicketManager implements ITicketManager, IVerticalVie
 
     @Shadow @Final private LongSet ticketsToRelease;
 
-    @Shadow protected abstract SortedArraySet<Ticket<?>> getTickets(long position);
-
     @Shadow @Final private ProcessorHandle<ChunkTaskPriorityQueueSorter.Release> ticketThrottlerReleaser;
+
+    @Final @Shadow private Executor mainThreadExecutor;
+
+    @Shadow private long ticketTickCounter;
+
+    @Shadow private static int getTicketLevelAt(SortedArraySet<Ticket<?>> p_229844_0_) {
+        throw new Error("Mixin did not apply correctly");
+    }
+
+    @Shadow protected abstract SortedArraySet<Ticket<?>> getTickets(long position);
 
     @Inject(method = "<init>", at = @At("RETURN"))
     public void init(Executor executor, Executor executor2, CallbackInfo ci) {
@@ -141,11 +142,9 @@ public abstract class MixinTicketManager implements ITicketManager, IVerticalVie
             if (!this.ticketsToRelease.isEmpty()) {
                 LongIterator longIterator = this.ticketsToRelease.iterator();
 
-                while(longIterator.hasNext()) {
+                while (longIterator.hasNext()) {
                     long l = longIterator.nextLong();
-                    if (this.getTickets(l).stream().anyMatch((ticket) -> {
-                        return ticket.getType() == TicketType.PLAYER;
-                    })) {
+                    if (this.getTickets(l).stream().anyMatch((ticket) -> ticket.getType() == TicketType.PLAYER)) {
                         ChunkHolder chunkHolder = ((ChunkManagerAccess) chunkMap).invokeGetUpdatingChunkIfPresent(l);
                         if (chunkHolder == null) {
                             throw new IllegalStateException();

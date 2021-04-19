@@ -85,8 +85,6 @@ public abstract class MixinServerChunkProvider implements IServerChunkProvider, 
 
     @Shadow @org.jetbrains.annotations.Nullable protected abstract ChunkHolder getVisibleChunkIfPresent(long pos);
 
-    @Shadow protected abstract boolean runDistanceManagerUpdates();
-
     @Inject(method = "<init>", at = @At("RETURN"))
     private void onInit(ServerLevel serverLevel, LevelStorageSource.LevelStorageAccess levelStorageAccess, DataFixer dataFixer, StructureManager structureManager, Executor executor,
                         ChunkGenerator chunkGenerator, int i, boolean bl, ChunkProgressListener chunkProgressListener, ChunkStatusUpdateListener chunkStatusUpdateListener,

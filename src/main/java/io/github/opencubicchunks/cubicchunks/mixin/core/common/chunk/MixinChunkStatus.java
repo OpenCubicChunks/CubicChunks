@@ -98,6 +98,7 @@ public class MixinChunkStatus {
         Function<ChunkAccess, CompletableFuture<Either<ChunkAccess, ChunkHolder.ChunkLoadingFailure>>> func,
         List<ChunkAccess> chunks, ChunkAccess chunk,
         CallbackInfoReturnable<CompletableFuture<Either<ChunkAccess, ChunkHolder.ChunkLoadingFailure>>> cir) {
+
         if (((CubicLevelHeightAccessor) world).generates2DChunks()) {
             if (!(chunk instanceof IBigCube)) {
                 return;
