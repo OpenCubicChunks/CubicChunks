@@ -46,8 +46,9 @@ public abstract class MixinMinecraftServer {
      */
     @Inject(method = "prepareLevels", at = @At("HEAD"), cancellable = true)
     private void prepareLevels(ChunkProgressListener worldGenerationProgressListener, CallbackInfo ci) {
-        if(!DEBUG_LOAD_ORDER_ENABLED)
+        if (!DEBUG_LOAD_ORDER_ENABLED) {
             return;
+        }
 
         ci.cancel();
         ServerLevel serverLevel = this.overworld();

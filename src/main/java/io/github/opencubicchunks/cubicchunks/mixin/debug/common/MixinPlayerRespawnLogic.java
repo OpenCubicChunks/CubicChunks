@@ -14,8 +14,9 @@ public class MixinPlayerRespawnLogic {
 
     @Inject(method = "getOverworldRespawnPos", at = @At("HEAD"), cancellable = true)
     private static void fakeRespawnLocation(ServerLevel world, int x, int z, boolean validSpawnNeeded, CallbackInfoReturnable<BlockPos> cir) {
-        if(!DEBUG_LOAD_ORDER_ENABLED)
+        if (!DEBUG_LOAD_ORDER_ENABLED) {
             return;
+        }
         cir.setReturnValue(new BlockPos(0, 0, 0));
     }
 }

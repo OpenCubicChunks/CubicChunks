@@ -24,7 +24,6 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.SectionPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.ChunkStatus;
 import org.spongepowered.asm.mixin.Mixin;
@@ -34,14 +33,15 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(LevelRenderer.class)
 public class MixinLevelRenderer {
-    private static final boolean doDebugRender = System.getProperty("cubicchunks.debug.statusrenderer", "false").equalsIgnoreCase("true");
+    private static final boolean DEBUG_STATUS_RENDERER = System.getProperty("cubicchunks.debug.statusrenderer", "false").equalsIgnoreCase("true");
 
     @Inject(method = "renderLevel", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/debug/DebugRenderer;"
         + "render(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource$BufferSource;DDD)V"))
     public void render(PoseStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture,
                        Matrix4f matrix4f, CallbackInfo ci) {
-        if(!doDebugRender)
+        if (!DEBUG_STATUS_RENDERER) {
             return;
+        }
 
         ServerLevel levelAccessor = Minecraft.getInstance().getSingleplayerServer().getLevel(Level.OVERWORLD);
         RenderSystem.disableBlend();
