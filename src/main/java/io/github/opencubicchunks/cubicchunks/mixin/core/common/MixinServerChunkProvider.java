@@ -6,11 +6,14 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 import javax.annotation.Nullable;
 
+import com.mojang.datafixers.DataFixer;
 import com.mojang.datafixers.util.Either;
 import io.github.opencubicchunks.cubicchunks.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
@@ -37,12 +40,19 @@ import net.minecraft.server.level.DistanceManager;
 import net.minecraft.server.level.ServerChunkCache;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.TicketType;
+import net.minecraft.server.level.progress.ChunkProgressListener;
 import net.minecraft.util.profiling.ProfilerFiller;
 import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.NaturalSpawner;
 import net.minecraft.world.level.chunk.ChunkAccess;
+import net.minecraft.world.level.chunk.ChunkGenerator;
 import net.minecraft.world.level.chunk.ChunkStatus;
+import net.minecraft.world.level.entity.ChunkStatusUpdateListener;
+import net.minecraft.world.level.levelgen.structure.templatesystem.StructureManager;
+import net.minecraft.world.level.storage.DimensionDataStorage;
 import net.minecraft.world.level.storage.LevelData;
+import net.minecraft.world.level.storage.LevelStorageSource;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -72,6 +82,33 @@ public abstract class MixinServerChunkProvider implements IServerChunkProvider, 
     @Shadow protected abstract boolean chunkAbsent(@Nullable ChunkHolder chunkHolderIn, int p_217224_2_);
 
     @Shadow public abstract int getLoadedChunksCount();
+
+    @Shadow @org.jetbrains.annotations.Nullable protected abstract ChunkHolder getVisibleChunkIfPresent(long pos);
+
+    @Inject(method = "<init>", at = @At("RETURN"))
+    private void onInit(ServerLevel serverLevel, LevelStorageSource.LevelStorageAccess levelStorageAccess, DataFixer dataFixer, StructureManager structureManager, Executor executor,
+                        ChunkGenerator chunkGenerator, int i, boolean bl, ChunkProgressListener chunkProgressListener, ChunkStatusUpdateListener chunkStatusUpdateListener,
+                        Supplier<DimensionDataStorage> supplier, CallbackInfo ci) {
+        ((IChunkManager) chunkMap).setServerChunkCache((ServerChunkCache) (Object) this);
+    }
+
+    @Override public ChunkHolder getChunkHolderForce(ChunkPos chunkPos, ChunkStatus requiredStatus) {
+        long pos = chunkPos.toLong();
+        ChunkHolder chunkHolder = this.getVisibleChunkIfPresent(pos);
+        int chunkLevel = 33 + ChunkStatus.getDistance(requiredStatus);
+        this.distanceManager.addTicket(TicketType.UNKNOWN, chunkPos, chunkLevel, chunkPos);
+        if (this.chunkAbsent(chunkHolder, chunkLevel)) {
+            ProfilerFiller profilerFiller = this.level.getProfiler();
+            profilerFiller.push("chunkLoad");
+            this.runChunkDistanceManagerUpdates();
+            chunkHolder = this.getVisibleChunkIfPresent(pos);
+            profilerFiller.pop();
+            if (this.chunkAbsent(chunkHolder, chunkLevel)) {
+                throw Util.pauseInIde(new IllegalStateException("No chunk holder after ticket has been added"));
+            }
+        }
+        return chunkHolder;
+    }
 
     @Override
     public <T> void addCubeRegionTicket(TicketType<T> type, CubePos pos, int distance, T value) {
@@ -112,11 +149,9 @@ public abstract class MixinServerChunkProvider implements IServerChunkProvider, 
                 requiredStatus,
                 load);
             this.mainThreadProcessor.managedBlock(completablefuture::isDone);
-            IBigCube icube = completablefuture.join().map((cube) -> {
-                return cube;
-            }, (p_222870_1_) -> {
+            IBigCube icube = completablefuture.join().map((cube) -> cube, (chunkLoadingFailure) -> {
                 if (load) {
-                    throw Util.pauseInIde(new IllegalStateException("Cube not there when requested: " + p_222870_1_));
+                    throw Util.pauseInIde(new IllegalStateException("Cube not there when requested: " + chunkLoadingFailure));
                 } else {
                     return null;
                 }
@@ -185,7 +220,7 @@ public abstract class MixinServerChunkProvider implements IServerChunkProvider, 
                 chunkholder = this.getVisibleCubeIfPresent(i);
                 iprofiler.pop();
                 if (this.chunkAbsent(chunkholder, j)) {
-                    throw Util.pauseInIde(new IllegalStateException("No chunk holder after ticket has been added"));
+                    throw Util.pauseInIde(new IllegalStateException("No cube holder after ticket has been added"));
                 }
             }
         }
@@ -224,6 +259,17 @@ public abstract class MixinServerChunkProvider implements IServerChunkProvider, 
             return;
         }
         this.clearCubeCache();
+    }
+
+    private boolean runChunkDistanceManagerUpdates() {
+        boolean flag = ((ITicketManager) this.distanceManager).runAllUpdatesForChunks(chunkMap);
+        boolean flag1 = ((ChunkManagerAccess) this.chunkMap).invokePromoteChunkMap();
+        if (!flag && !flag1) {
+            return false;
+        } else {
+            this.clearCubeCache();
+            return true;
+        }
     }
 
     // func_217235_l, runDistanceManagerUpdates

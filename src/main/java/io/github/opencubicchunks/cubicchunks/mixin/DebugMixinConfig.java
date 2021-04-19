@@ -7,7 +7,7 @@ import org.objectweb.asm.tree.ClassNode;
 import org.spongepowered.asm.mixin.extensibility.IMixinConfigPlugin;
 import org.spongepowered.asm.mixin.extensibility.IMixinInfo;
 
-public class DebugMixinConfig implements IMixinConfigPlugin  {
+public class DebugMixinConfig implements IMixinConfigPlugin {
 
     private static final boolean DEBUG_MIXINS_ENABLED = System.getProperty("cubicchunks.debug.mixins", "false").equals("true");
 

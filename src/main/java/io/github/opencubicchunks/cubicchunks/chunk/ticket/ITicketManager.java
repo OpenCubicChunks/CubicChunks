@@ -25,6 +25,8 @@ public interface ITicketManager {
 
     boolean processUpdates(ChunkMap chunkManager);
 
+    boolean runAllUpdatesForChunks(ChunkMap chunkMap);
+
     <T> void addCubeTicket(TicketType<T> type, CubePos pos, int level, T value);
 
     void addCubeTicket(long chunkPosIn, Ticket<?> ticketIn);
