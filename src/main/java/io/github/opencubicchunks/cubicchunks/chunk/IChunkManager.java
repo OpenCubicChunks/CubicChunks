@@ -15,6 +15,7 @@ import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import net.minecraft.core.SectionPos;
 import net.minecraft.server.level.ChunkHolder;
+import net.minecraft.server.level.ServerChunkCache;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.chunk.ChunkStatus;
 
@@ -120,4 +121,6 @@ public interface IChunkManager {
     void releaseLightTicket(CubePos cubePos);
 
     boolean noPlayersCloseForSpawning(CubePos cubePos);
+
+    void setServerChunkCache(ServerChunkCache cache);
 }

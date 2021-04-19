@@ -26,6 +26,7 @@
         "common.PlayerTicketTrackerFactoryAccess",
         "common.ProtoTickListAccess",
         "common.SectionLightStorageAccess",
+        "common.ServerChunkCacheAccess",
         "common.SpawnStateAccess",
         "common.StructureFeatureManagerAccess",
         "common.TicketAccess",
