@@ -23,10 +23,12 @@ import net.minecraft.core.Registry;
 import net.minecraft.server.level.ChunkHolder;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ThreadedLevelLightEngine;
+import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.StructureFeatureManager;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.ChunkGenerator;
 import net.minecraft.world.level.chunk.ChunkStatus;
+import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.chunk.ProtoChunk;
 import net.minecraft.world.level.chunk.UpgradeData;
 import net.minecraft.world.level.levelgen.GenerationStep;
@@ -98,7 +100,11 @@ public class MixinChunkStatus {
         Function<ChunkAccess, CompletableFuture<Either<ChunkAccess, ChunkHolder.ChunkLoadingFailure>>> func,
         List<ChunkAccess> chunks, ChunkAccess chunk,
         CallbackInfoReturnable<CompletableFuture<Either<ChunkAccess, ChunkHolder.ChunkLoadingFailure>>> cir) {
-
+        if(!(chunk instanceof CubePrimer) && chunk instanceof ProtoChunk) {
+            if(chunk.getPos().equals(new ChunkPos(0, 0))) {
+                int asd = 0;
+            }
+        }
         if (((CubicLevelHeightAccessor) world).generates2DChunks()) {
             if (!(chunk instanceof IBigCube)) {
                 return;
@@ -155,6 +161,11 @@ public class MixinChunkStatus {
         at = @At("HEAD"), cancellable = true
     )
     private static void cubicChunksBiome(ServerLevel world, ChunkGenerator chunkGenerator, List<ChunkAccess> neighbors, ChunkAccess chunkAccess, CallbackInfo ci) {
+        if(!(chunkAccess instanceof CubePrimer) && chunkAccess instanceof ProtoChunk) {
+            if(chunkAccess.getPos().equals(new ChunkPos(0, 0))) {
+                int asd = 0;
+            }
+        }
         if (((CubicLevelHeightAccessor) world).generates2DChunks()) {
             if (chunkAccess instanceof IBigCube) {
                 return;

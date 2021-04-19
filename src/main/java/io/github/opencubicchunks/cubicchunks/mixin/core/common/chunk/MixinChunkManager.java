@@ -59,6 +59,7 @@ import io.github.opencubicchunks.cubicchunks.network.PacketUnloadCube;
 import io.github.opencubicchunks.cubicchunks.network.PacketUpdateCubePosition;
 import io.github.opencubicchunks.cubicchunks.network.PacketUpdateLight;
 import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
+import io.github.opencubicchunks.cubicchunks.server.IServerChunkProvider;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import io.github.opencubicchunks.cubicchunks.world.server.IServerWorld;
 import io.github.opencubicchunks.cubicchunks.world.server.IServerWorldLightManager;
@@ -529,24 +530,14 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
             return;
         }
         CubePos cubePos = CubePos.from(pos);
+        if(cubePos.equals(CubePos.of(0,0,0))) {
+            int asd = 0;
+        }
         ChunkHolder[] chunkHolders = new ChunkHolder[IBigCube.DIAMETER_IN_SECTIONS * IBigCube.DIAMETER_IN_SECTIONS];
         for (int localX = 0; localX < IBigCube.DIAMETER_IN_SECTIONS; localX++) {
             for (int localZ = 0; localZ < IBigCube.DIAMETER_IN_SECTIONS; localZ++) {
                 ChunkPos chunkPos = cubePos.asChunkPos(localX, localZ);
-                long chunkPosLong = chunkPos.toLong();
-                ChunkHolder chunkHolder = this.getVisibleChunkIfPresent(chunkPosLong);
-                if (chunkHolder == null) {
-                    if (((ServerChunkCacheAccess) serverChunkCache).invokeChunkAbsent(chunkHolder, i)) {
-                        ProfilerFiller profilerFiller = this.level.getProfiler();
-                        profilerFiller.push("chunkLoad");
-                        ((ServerChunkCacheAccess) serverChunkCache).invokeRunDistanceManagerUpdates();
-                        chunkHolder = getVisibleChunkIfPresent(chunkPosLong);
-                        profilerFiller.pop();
-                        if (((ServerChunkCacheAccess) serverChunkCache).invokeChunkAbsent(chunkHolder, i)) {
-                            throw Util.pauseInIde(new IllegalStateException("No chunk holder after ticket has been added"));
-                        }
-                    }
-                }
+                ChunkHolder chunkHolder = ((IServerChunkProvider) serverChunkCache).getChunkHolderForce(chunkPos, ChunkStatus.EMPTY);
                 chunkHolders[localX * IBigCube.DIAMETER_IN_SECTIONS + localZ] = chunkHolder;
             }
         }
