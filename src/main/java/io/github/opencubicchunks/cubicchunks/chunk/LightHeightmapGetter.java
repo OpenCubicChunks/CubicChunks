@@ -7,6 +7,7 @@ import net.minecraft.world.level.levelgen.Heightmap;
 public interface LightHeightmapGetter {
     Heightmap getLightHeightmap();
 
+    // Do not override this
     default ClientLightSurfaceTracker getClientLightHeightmap() {
         Heightmap lightHeightmap = this.getLightHeightmap();
         if (!(lightHeightmap instanceof ClientLightSurfaceTracker)) {
@@ -15,6 +16,7 @@ public interface LightHeightmapGetter {
         return (ClientLightSurfaceTracker) lightHeightmap;
     }
 
+    // Do not override this
     default LightSurfaceTrackerWrapper getServerLightHeightmap() {
         Heightmap lightHeightmap = this.getLightHeightmap();
         if (!(lightHeightmap instanceof LightSurfaceTrackerWrapper)) {

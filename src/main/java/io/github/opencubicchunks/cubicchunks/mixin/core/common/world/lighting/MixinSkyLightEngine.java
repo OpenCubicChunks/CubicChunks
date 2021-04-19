@@ -151,8 +151,7 @@ public abstract class MixinSkyLightEngine extends MixinLightEngine<SkyLightSecti
                 CubeMap cubeMap = ((CubeMapGetter) chunk).getCubeMap();
                 if (!cubeMap.isLoaded(cubePos.getY())) {
                     // This is probably only happening because we don't have load order fixed yet
-                    System.out.println("Cube not in cubemap during sky lighting");
-                    cubeMap.markLoaded(cubePos.getY());
+                    System.out.println(cube.getCubePos() + " : Cube not in cubemap during sky lighting");
                 }
                 Heightmap heightmap = ((LightHeightmapGetter) chunk).getLightHeightmap();
                 if (heightmap == null) {
