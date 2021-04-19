@@ -14,18 +14,16 @@ import net.minecraft.core.SectionPos;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.LightLayer;
-import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.LightChunkGetter;
 import net.minecraft.world.level.lighting.DataLayerStorageMap;
 import net.minecraft.world.level.lighting.LayerLightEngine;
 import net.minecraft.world.level.lighting.LayerLightSectionStorage;
-import org.apache.commons.lang3.mutable.MutableInt;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
@@ -73,46 +71,16 @@ public abstract class MixinLightEngine<M extends DataLayerStorageMap<M>, S exten
 //        this.worldStyle = ((CubicLevelHeightAccessor) this.chunkSource.getLevel()).worldStyle();
     }
 
-    /**
-     * @author NotStirred
-     * @reason Vanilla lighting is gone
-     */
-    //TODO: make this into a redirect that calls getCubeReader taking arguments blockPosLong
-    @Inject(method = "getStateAndOpacity", at = @At("HEAD"), cancellable = true)
-    private void getStateAndOpacity(long blockPosLong, @Nullable MutableInt opacity, CallbackInfoReturnable<BlockState> cir) {
+    @Redirect(method = "getStateAndOpacity",
+            at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/lighting/LayerLightEngine;getChunk(II)Lnet/minecraft/world/level/BlockGetter;"))
+    private BlockGetter useCubicBlockGetter(LayerLightEngine layerLightEngine, int chunkX, int chunkZ, long blockPos) {
         if (!this.isCubic) {
-            return;
+            return this.getChunk(chunkX, chunkZ);
         }
-        cir.cancel();
-
-        if (blockPosLong == Long.MAX_VALUE) {
-            if (opacity != null) {
-                opacity.setValue(0);
-            }
-
-            cir.setReturnValue(Blocks.AIR.defaultBlockState());
-        } else {
-            int sectionX = SectionPos.blockToSectionCoord(BlockPos.getX(blockPosLong));
-            int sectionY = SectionPos.blockToSectionCoord(BlockPos.getY(blockPosLong));
-            int sectionZ = SectionPos.blockToSectionCoord(BlockPos.getZ(blockPosLong));
-            BlockGetter iblockreader = this.getCubeReader(sectionX, sectionY, sectionZ);
-            if (iblockreader == null) {
-                if (opacity != null) {
-                    opacity.setValue(16);
-                }
-
-                cir.setReturnValue(Blocks.BEDROCK.defaultBlockState());
-            } else {
-                this.pos.set(blockPosLong);
-                BlockState blockstate = iblockreader.getBlockState(this.pos);
-                boolean flag = blockstate.canOcclude() && blockstate.useShapeForLightOcclusion();
-                if (opacity != null) {
-                    opacity.setValue(blockstate.getLightBlock(this.chunkSource.getLevel(), this.pos));
-                }
-
-                cir.setReturnValue(flag ? blockstate : Blocks.AIR.defaultBlockState());
-            }
-        }
+        int sectionX = SectionPos.blockToSectionCoord(BlockPos.getX(blockPos));
+        int sectionY = SectionPos.blockToSectionCoord(BlockPos.getY(blockPos));
+        int sectionZ = SectionPos.blockToSectionCoord(BlockPos.getZ(blockPos));
+        return this.getCubeReader(sectionX, sectionY, sectionZ);
     }
 
     @Nullable
