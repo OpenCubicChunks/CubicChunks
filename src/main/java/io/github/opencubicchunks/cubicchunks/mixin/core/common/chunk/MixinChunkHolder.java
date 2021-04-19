@@ -68,13 +68,15 @@ public abstract class MixinChunkHolder implements ICubeHolder {
     @Shadow private CompletableFuture<IBigCube> chunkToSave;
 
 
-    @Shadow private BitSet skyChangedLightSectionFilter;
-    @Shadow private BitSet blockChangedLightSectionFilter;
+    @Shadow @Final private BitSet skyChangedLightSectionFilter;
+    @Shadow @Final private BitSet blockChangedLightSectionFilter;
     @Shadow private int queueLevel;
 
     @Shadow @Final private ChunkHolder.PlayerProvider playerProvider;
     @Shadow private CompletableFuture<Void> pendingFullStateConfirmation;
     @Shadow @Final private LevelHeightAccessor levelHeightAccessor;
+
+    @Shadow private boolean hasChangedSections;
 
     private CubePos cubePos; // set from ASM
 

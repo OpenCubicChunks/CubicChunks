@@ -14,9 +14,9 @@ import net.minecraft.world.level.block.state.BlockState;
 
 public class PacketCubeBlockChanges {
 
-    CubePos cubePos;
-    short[] localAddresses;
-    BlockState[] blockStates;
+    private final short[] localAddresses;
+    private final BlockState[] blockStates;
+    private final SectionPos sectionPos;
 
 
     public PacketCubeBlockChanges(FriendlyByteBuf in) {
