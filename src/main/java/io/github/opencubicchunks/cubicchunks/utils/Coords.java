@@ -233,6 +233,9 @@ public class Coords {
         }
         throw new UnsupportedOperationException("Unsupported cube size " + IBigCube.DIAMETER_IN_SECTIONS);
     }
+    public static int blockToIndex(BlockPos pos) {
+        return blockToIndex(pos.getX(), pos.getY(), pos.getZ());
+    }
 
     /** See {@link Coords#blockToIndex(int, int, int)} */
     private static int blockToIndex16(int blockXVal, int blockYVal, int blockZVal) {

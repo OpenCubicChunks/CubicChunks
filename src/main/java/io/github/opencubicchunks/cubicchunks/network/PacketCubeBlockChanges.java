@@ -2,12 +2,11 @@ package io.github.opencubicchunks.cubicchunks.network;
 
 
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
-import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
-import io.github.opencubicchunks.cubicchunks.utils.AddressTools;
 import io.github.opencubicchunks.cubicchunks.utils.BufferUtils;
 import it.unimi.dsi.fastutil.shorts.ShortList;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.SectionPos;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
@@ -15,13 +14,13 @@ import net.minecraft.world.level.block.state.BlockState;
 
 public class PacketCubeBlockChanges {
 
-    CubePos cubePos;
-    short[] localAddresses;
-    BlockState[] blockStates;
+    private final short[] localAddresses;
+    private final BlockState[] blockStates;
+    private final SectionPos sectionPos;
 
-    @SuppressWarnings("deprecation")
+
     public PacketCubeBlockChanges(FriendlyByteBuf in) {
-        this.cubePos = CubePos.of(
+        this.sectionPos = SectionPos.of(
             BufferUtils.readSignedVarInt(in),
             BufferUtils.readSignedVarInt(in),
             BufferUtils.readSignedVarInt(in));
@@ -36,24 +35,21 @@ public class PacketCubeBlockChanges {
         }
     }
 
-    public PacketCubeBlockChanges(IBigCube cube, ShortList localAddresses) {
-        this.cubePos = cube.getCubePos();
+    public PacketCubeBlockChanges(IBigCube cube, SectionPos sectionPos, ShortList localAddresses) {
+        this.sectionPos = sectionPos;
         this.localAddresses = localAddresses.toShortArray();
         this.blockStates = new BlockState[localAddresses.size()];
         for (int i = 0; i < localAddresses.size(); i++) {
-            int localAddress = this.localAddresses[i];
-            int x = AddressTools.getLocalX(localAddress);
-            int y = AddressTools.getLocalY(localAddress);
-            int z = AddressTools.getLocalZ(localAddress);
-            this.blockStates[i] = cube.getBlockState(x, y, z);
+            short localAddress = this.localAddresses[i];
+            BlockPos changedPos = sectionPos.relativeToBlockPos(localAddress);
+            this.blockStates[i] = cube.getBlockState(changedPos);
         }
     }
 
-    @SuppressWarnings("deprecation")
     public void encode(FriendlyByteBuf out) {
-        BufferUtils.writeSignedVarInt(out, cubePos.getX());
-        BufferUtils.writeSignedVarInt(out, cubePos.getY());
-        BufferUtils.writeSignedVarInt(out, cubePos.getZ());
+        BufferUtils.writeSignedVarInt(out, this.sectionPos.getX());
+        BufferUtils.writeSignedVarInt(out, this.sectionPos.getY());
+        BufferUtils.writeSignedVarInt(out, this.sectionPos.getZ());
         out.writeShort(localAddresses.length);
         for (int i = 0; i < localAddresses.length; i++) {
             out.writeShort(localAddresses[i]);
@@ -63,7 +59,7 @@ public class PacketCubeBlockChanges {
 
     BlockPos getPos(int i) {
         final short addr = this.localAddresses[i];
-        return cubePos.asBlockPos(AddressTools.getLocalX(addr), AddressTools.getLocalY(addr), AddressTools.getLocalZ(addr));
+        return sectionPos.relativeToBlockPos(addr);
     }
 
     public static class Handler {

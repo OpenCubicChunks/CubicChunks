@@ -33,6 +33,7 @@ import com.mojang.datafixers.DataFixer;
 import com.mojang.datafixers.util.Either;
 import io.github.opencubicchunks.cubicchunks.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.chunk.CubeCollectorFuture;
+import io.github.opencubicchunks.cubicchunks.chunk.CubePlayerProvider;
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.IChunkManager;
 import io.github.opencubicchunks.cubicchunks.chunk.IChunkMapInternal;
@@ -126,7 +127,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 @Mixin(ChunkMap.class)
-public abstract class MixinChunkManager implements IChunkManager, IChunkMapInternal, IVerticalView {
+public abstract class MixinChunkManager implements IChunkManager, IChunkMapInternal, IVerticalView, CubePlayerProvider {
 
     private static final double TICK_UPDATE_DISTANCE = 128.0;
 
@@ -890,7 +891,7 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
     }
 
 
-    // getPlayers
+    @Override
     public Stream<ServerPlayer> getPlayers(CubePos pos, boolean boundaryOnly) {
         int hViewDistanceCubes = Coords.sectionToCubeRenderDistance(this.viewDistance);
         int vViewDistanceCubes = Coords.sectionToCubeRenderDistance(this.verticalViewDistance);
