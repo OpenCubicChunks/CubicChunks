@@ -2,21 +2,6 @@ package io.github.opencubicchunks.cubicchunks.world.gen.placement;
 
 import static org.junit.Assert.assertEquals;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
-import java.util.List;
-import java.util.Objects;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
-
-import net.fabricmc.loader.FabricLoader;
-import net.minecraft.server.Bootstrap;
-import net.minecraft.world.level.levelgen.VerticalAnchor;
-import net.minecraft.world.level.levelgen.WorldGenerationContext;
-import net.minecraft.world.level.levelgen.WorldgenRandom;
-import net.minecraft.world.level.levelgen.heightproviders.TrapezoidHeight;
 import org.junit.Test;
 
 public class PeriodicUserFunctionTest {
