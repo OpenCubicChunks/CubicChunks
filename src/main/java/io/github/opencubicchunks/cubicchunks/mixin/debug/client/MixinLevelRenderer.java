@@ -11,8 +11,10 @@ import com.mojang.blaze3d.vertex.VertexFormat;
 import com.mojang.math.Matrix4f;
 import com.mojang.math.Vector3f;
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
-import io.github.opencubicchunks.cubicchunks.server.ICubicWorld;
+import io.github.opencubicchunks.cubicchunks.chunk.ICubeHolder;
+import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
+import it.unimi.dsi.fastutil.longs.Long2ObjectLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
@@ -22,9 +24,11 @@ import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.SectionPos;
+import net.minecraft.server.level.ChunkHolder;
+import net.minecraft.server.level.ChunkMap;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.ChunkStatus;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -61,52 +65,74 @@ public class MixinLevelRenderer {
         );
 
         int renderRadius = 5;
-
         int chunkRenderRadius = renderRadius * IBigCube.DIAMETER_IN_SECTIONS;
-        for (int x = -chunkRenderRadius; x <= chunkRenderRadius; ++x) {
-            for (int z = -chunkRenderRadius; z <= chunkRenderRadius; ++z) {
-                BlockPos offset = blockPos.offset(x * 16, 0, z * 16);
-                int color = 0;
-                int chunkX = offset.getX() >> 4;
-                int chunkZ = offset.getZ() >> 4;
-                ChunkAccess chunkAccess = levelAccessor.getChunk(chunkX, chunkZ, ChunkStatus.EMPTY, false);
-                if (chunkAccess != null) {
-                    ChunkStatus status = chunkAccess.getStatus();
-                    color = colors.getOrDefault(status, 0);
-                }
+        Long2ObjectLinkedOpenHashMap<ChunkHolder> loadedColumns = getField(ChunkMap.class, levelAccessor.getChunkSource().chunkMap, "updatingChunkMap");
 
-                Vector3f vector3f = new Vector3f(((color >> 16) & 0xff) / 256f, ((color >> 8) & 0xff) / 256f, (color & 0xff) / 256f); //this.getColor(types);
+        Object[] data = getField(Long2ObjectLinkedOpenHashMap.class, loadedColumns, "value");
+        long[] keys = getField(Long2ObjectLinkedOpenHashMap.class, loadedColumns, "key");
+        for (int i = 0, keysLength = keys.length; i < keysLength; i++) {
+            long pos = keys[i];
+            ChunkPos chunkPos = new ChunkPos(pos);
 
-                int xPos = SectionPos.sectionToBlockCoord(chunkX, 0);
-                int zPos = SectionPos.sectionToBlockCoord(chunkZ, 0);
-                LevelRenderer.addChainedFilledBoxVertices(bufferBuilder, xPos + 4.25F - cameraX, 108 - cameraY, zPos + 4.25F - cameraZ, xPos + 11.75F - cameraX, 108 - cameraY + 0.09375F,
-                    zPos + 11.75F - cameraZ, vector3f.x(), vector3f.y(), vector3f.z(), 1.0F);
+            if (Math.abs((blockPos.getX() >> 4) - chunkPos.x) > chunkRenderRadius || Math.abs((blockPos.getZ() >> 4) - chunkPos.z) > chunkRenderRadius) {
+                continue;
             }
+
+            if (pos == 0) {
+                continue;
+            }
+            ChunkHolder holder = (ChunkHolder) data[i];
+            if (holder == null) {
+                continue;
+            }
+            ChunkStatus status = ICubeHolder.getCubeStatusFromLevel(holder.getTicketLevel());
+
+            int color = colors.getOrDefault(status, 0);
+
+            Vector3f vector3f = new Vector3f(((color >> 16) & 0xff) / 256f, ((color >> 8) & 0xff) / 256f, (color & 0xff) / 256f); //this.getColor(types);
+
+            int xPos = SectionPos.sectionToBlockCoord(chunkPos.x, 0);
+            int zPos = SectionPos.sectionToBlockCoord(chunkPos.z, 0);
+            LevelRenderer.addChainedFilledBoxVertices(bufferBuilder, xPos + 4.25F - cameraX, 108 - cameraY, zPos + 4.25F - cameraZ, xPos + 11.75F - cameraX, 108 - cameraY + 0.09375F,
+                zPos + 11.75F - cameraZ, vector3f.x(), vector3f.y(), vector3f.z(), 1.0F);
         }
 
-        for (int x = -renderRadius; x <= renderRadius; ++x) {
-            for (int z = -renderRadius; z <= renderRadius; ++z) {
-                for (int y = -renderRadius; y < renderRadius; y++) {
-                    BlockPos offset = blockPos.offset(x * IBigCube.DIAMETER_IN_BLOCKS, y * IBigCube.DIAMETER_IN_BLOCKS, z * IBigCube.DIAMETER_IN_BLOCKS);
-                    int color = 0;
-                    int cubeX = Coords.blockToCube(offset.getX());
-                    int cubeY = Coords.blockToCube(offset.getY());
-                    int cubeZ = Coords.blockToCube(offset.getZ());
-                    IBigCube cube = ((ICubicWorld) levelAccessor).getCube(cubeX, cubeY, cubeZ, ChunkStatus.EMPTY, false);
-                    if (cube != null) {
-                        ChunkStatus status = cube.getStatus();
-                        color = colors.getOrDefault(status, 0);
-                    }
+        Long2ObjectLinkedOpenHashMap<ChunkHolder> loadedCubes = getField(ChunkMap.class, levelAccessor.getChunkSource().chunkMap, "updatingCubeMap");
 
-                    Vector3f vector3f = new Vector3f(((color >> 16) & 0xff) / 256f, ((color >> 8) & 0xff) / 256f, (color & 0xff) / 256f); //this.getColor(types);
+        data = getField(Long2ObjectLinkedOpenHashMap.class, loadedCubes, "value");
+        keys = getField(Long2ObjectLinkedOpenHashMap.class, loadedCubes, "key");
+        for (int i = 0, keysLength = keys.length; i < keysLength; i++) {
+            long pos = keys[i];
+            CubePos cubePos = CubePos.from(pos);
 
-                    int xPos = Coords.cubeToMinBlock(cubeX);
-                    int yPos = Coords.cubeToMinBlock(cubeY);
-                    int zPos = Coords.cubeToMinBlock(cubeZ);
-                    LevelRenderer.addChainedFilledBoxVertices(bufferBuilder, xPos + 4.25F - cameraX, yPos - 4.25F - cameraY, zPos + 4.25F - cameraZ,
-                        xPos + 11.75F - cameraX, yPos + 4.25F - cameraY, zPos + 11.75F - cameraZ, vector3f.x(), vector3f.y(), vector3f.z(), 1.0F);
-                }
+            int cubeX = cubePos.getX();
+            int cubeY = cubePos.getY();
+            int cubeZ = cubePos.getZ();
+
+            if (Math.abs(Coords.blockToCube(blockPos.getX()) - cubeX) > renderRadius
+                || Math.abs(Coords.blockToCube(blockPos.getY()) - cubeY) > renderRadius
+                || Math.abs(Coords.blockToCube(blockPos.getZ()) - cubeZ) > renderRadius) {
+                continue;
             }
+
+            if (pos == 0) {
+                continue;
+            }
+            ChunkHolder holder = (ChunkHolder) data[i];
+            if (holder == null) {
+                continue;
+            }
+            ChunkStatus status = ICubeHolder.getCubeStatusFromLevel(holder.getTicketLevel());
+
+            int color = colors.getOrDefault(status, 0);
+
+            Vector3f vector3f = new Vector3f(((color >> 16) & 0xff) / 256f, ((color >> 8) & 0xff) / 256f, (color & 0xff) / 256f); //this.getColor(types);
+
+            int xPos = Coords.cubeToMinBlock(cubeX);
+            int yPos = Coords.cubeToMinBlock(cubeY);
+            int zPos = Coords.cubeToMinBlock(cubeZ);
+            LevelRenderer.addChainedFilledBoxVertices(bufferBuilder, xPos + 4.25F - cameraX, yPos - 4.25F - cameraY, zPos + 4.25F - cameraZ,
+                xPos + 11.75F - cameraX, yPos + 4.25F - cameraY, zPos + 11.75F - cameraZ, vector3f.x(), vector3f.y(), vector3f.z(), 1.0F);
         }
 
         tesselator.end();
