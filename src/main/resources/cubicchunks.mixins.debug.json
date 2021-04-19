@@ -12,9 +12,12 @@
         "conformVisibility": true
     },
     "mixins": [
+        "common.MixinDistanceManager",
         "common.MixinMinecraftServer",
         "common.MixinPlayerRespawnLogic"
     ],
-    "client": [],
+    "client": [
+        "client.MixinLevelRenderer"
+    ],
     "server": []
 }
