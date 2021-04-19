@@ -7,6 +7,7 @@ import io.github.opencubicchunks.cubicchunks.chunk.LightHeightmapGetter;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.SectionLightStorageAccess;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
+import io.github.opencubicchunks.cubicchunks.world.lighting.ICubeLightProvider;
 import io.github.opencubicchunks.cubicchunks.world.lighting.ICubicSkyLightEngine;
 import io.github.opencubicchunks.cubicchunks.world.lighting.ISkyLightColumnChecker;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -14,6 +15,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.SectionPos;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.chunk.ChunkStatus;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.lighting.SkyLightEngine;
 import net.minecraft.world.level.lighting.SkyLightSectionStorage;
@@ -108,6 +110,13 @@ public abstract class MixinSkyLightEngine extends MixinLightEngine<SkyLightSecti
         // TODO do we want this mixin on client side too?
         if (!this.isCubic || this.chunkSource.getLevel() instanceof ClientLevel) return;
         BlockPos pos = BlockPos.of(id);
+
+        BlockGetter cube = ((ICubeLightProvider) this.chunkSource).getCubeForLighting(
+            Coords.blockToSection(pos.getX()), Coords.blockToSection(pos.getY()), Coords.blockToSection(pos.getZ()));
+        if (cube == null || !((IBigCube) cube).getStatus().isOrAfter(ChunkStatus.LIGHT)) {
+            return;
+        }
+
         // TODO chunk is sometimes null
         BlockGetter chunk = this.chunkSource.getChunkForLighting(SectionPos.blockToSectionCoord(pos.getX()), SectionPos.blockToSectionCoord(pos.getZ()));
         if (chunk == null) {
