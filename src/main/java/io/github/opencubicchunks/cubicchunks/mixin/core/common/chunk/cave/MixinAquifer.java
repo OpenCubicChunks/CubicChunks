@@ -47,7 +47,7 @@ public abstract class MixinAquifer {
         int gridY = this.gridY(y + 1);
 
         // if the bottom of the furthest grid cell we can sample is above y=30, our water level is consistently at sea level
-        if ((gridY - 1) * 12 > 30) {
+        if ((gridY - 1) * 12 > Aquifer.ALWAYS_USE_SEA_LEVEL_WHEN_ABOVE) {
             this.lastBarrierDensity = 0.0;
             this.lastWaterLevel = this.noiseGeneratorSettings.seaLevel();
             return;
@@ -95,15 +95,12 @@ public abstract class MixinAquifer {
         }
 
         int closestWaterLevel = this.getWaterLevel(closestSource);
-        int secondWaterLevel = this.getWaterLevel(secondSource);
-        int thirdWaterLevel = this.getWaterLevel(thirdSource);
-
         double closestToSecond = this.similarity(closestDistance2, secondDistance2);
 
         this.lastWaterLevel = closestWaterLevel;
         this.shouldScheduleWaterUpdate = closestToSecond > 0.0;
 
-        if (closestToSecond <= -1.0 || (closestWaterLevel >= y && Aquifer.isLavaLevel(y - this.noiseGeneratorSettings.noiseSettings().minY() - 1))) {
+        if (closestToSecond <= -1.0) {
             this.lastBarrierDensity = 0.0;
             return;
         }
@@ -119,6 +116,9 @@ public abstract class MixinAquifer {
         }
 
         this.barrierNoiseCache = Double.NaN;
+
+        int secondWaterLevel = this.getWaterLevel(secondSource);
+        int thirdWaterLevel = this.getWaterLevel(thirdSource);
 
         double closestToSecondPressure = this.getPressureLazyNoise(x, y, z, closestWaterLevel, secondWaterLevel);
         double closestToThirdPressure = this.getPressureLazyNoise(x, y, z, closestWaterLevel, thirdWaterLevel);

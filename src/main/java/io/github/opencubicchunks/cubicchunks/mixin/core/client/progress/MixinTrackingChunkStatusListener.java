@@ -58,10 +58,15 @@ public abstract class MixinTrackingChunkStatusListener implements ICubeStatusLis
 
     @Nullable @Override
     public ChunkStatus getCubeStatus(int x, int y, int z) {
-        if (spawnCube == null) {
-            return null; // vanilla race condition, made worse by forge moving IChunkStatusListener ichunkstatuslistener = this.chunkStatusListenerFactory.create(11); earlier
-        }
         int radiusCubes = Coords.sectionToCubeCeil(this.radius);
+
+        if (spawnCube == null) {
+            return this.cubeStatuses.get(CubePos.asLong(
+                x - radiusCubes,
+                y - radiusCubes,
+                z - radiusCubes));
+            // vanilla race condition, made worse by forge moving IChunkStatusListener ichunkstatuslistener = this.chunkStatusListenerFactory.create(11); earlier
+        }
         return this.cubeStatuses.get(CubePos.asLong(
             x + this.spawnCube.getX() - radiusCubes,
             y + this.spawnCube.getY() - radiusCubes,

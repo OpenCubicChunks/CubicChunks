@@ -70,8 +70,6 @@
         "common.world.MixinSpawnLocationHelper",
         "common.world.MixinWorld",
         "common.world.MixinWorldGenRegion",
-        "common.world.placement.MixinAbstractBiasedRangedDecorator",
-        "common.world.placement.MixinAbstractRangeDecorator",
         "common.world.placement.MixinBiasedToBottomHeight",
         "common.world.placement.MixinDarkOakTreePlacementDecorator",
         "common.world.placement.MixinDecorationContext",

@@ -9,7 +9,7 @@ buildscript {
         }
     }
     dependencies {
-        classpath 'net.fabricmc:fabric-loom:0.5-SNAPSHOT'
+        classpath 'net.fabricmc:fabric-loom:0.6-SNAPSHOT'
     }
 }
 plugins {
@@ -21,13 +21,16 @@ apply plugin: "fabric-loom"
 apply plugin: "io.github.opencubicchunks.gradle.mcGitVersion"
 apply plugin: "io.github.opencubicchunks.gradle.mixingen"
 
-sourceCompatibility = JavaVersion.VERSION_1_8
-targetCompatibility = JavaVersion.VERSION_1_8
-
 mcGitVersion {
     snapshot = true
     mcVersion = "${project.minecraft_version}"
     setCommitVersion '570c0cbf0cdc15b8348a862a519d3399a943af9', '0.0'
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(8)
+    }
 }
 
 mixinGen {
@@ -58,6 +61,13 @@ mixinGen {
         it.configurationPlugin = 'io.github.opencubicchunks.cubicchunks.mixin.OptiFineMixinConfig'
         it.injectorsDefaultRequire = 1
     }
+
+    config("debug") {
+        it.required = true
+        it.conformVisibility = true
+        it.injectorsDefaultRequire = 1
+        it.configurationPlugin = 'io.github.opencubicchunks.cubicchunks.mixin.DebugMixinConfig'
+    }
 }
 
 group = "io.github.opencubicchunks" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
@@ -81,30 +91,6 @@ sourceSets {
     }
 }
 
-minecraft {
-    accessWidener "src/main/resources/cubicchunks.accesswidener"
-    // intermediaryUrl = { "http://localhost:9000/intermediary-20w49a-v2.jar" }
-}
-
-/*
-minecraft {
-
-    def args = [
-            "-XX:+UseG1GC",
-            "-Xmx2G",
-            "-XX:+UnlockExperimentalVMOptions",
-            "-XX:G1NewSizePercent=20",
-            "-XX:G1ReservePercent=20",
-            "-XX:MaxGCPauseMillis=50",
-            "-XX:G1HeapRegionSize=32M",
-            "-Dmixin.debug.verbose=true",
-            "-Dmixin.debug.export=true",
-            "-Dcubicchunks.debug=true",
-            "-XX:-OmitStackTraceInFastThrow",
-            "-Dmixin.checks.interfaces=true"
-    ]
-}*/
-
 repositories{
     jcenter()
     mavenCentral()
@@ -118,6 +104,60 @@ repositories{
     maven {
         name = "JitPack"
         url = "https://jitpack.io"
+    }
+}
+
+minecraft {
+    accessWidener "src/main/resources/cubicchunks.accesswidener"
+    // intermediaryUrl = { "http://localhost:9000/intermediary-20w49a-v2.jar" }
+
+    def dependency = project.configurations.detachedConfiguration(project.dependencies.create("net.fabricmc:sponge-mixin:0.9.2+mixin.0.8.2"))
+    dependency.transitive(false)
+    def mixinFile = dependency.resolve().iterator().next().toString()
+
+    def args = [
+            "-XX:+UnlockExperimentalVMOptions",
+            "-XX:-OmitStackTraceInFastThrow",
+            "-XX:+UseG1GC",
+            "-XX:G1NewSizePercent=20",
+            "-XX:G1ReservePercent=20",
+            "-XX:MaxGCPauseMillis=50",
+            "-XX:G1HeapRegionSize=32M",
+            "-javaagent:"+mixinFile,
+            "-Dmixin.debug.verbose=true",
+            "-Dmixin.debug.export=true",
+            "-Dmixin.checks.interfaces=true",
+            "-Dcubicchunks.debug=false",
+            "-Dcubicchunks.debug.mixins=false",
+            "-Dcubicchunks.debug.biomes=false",
+    ]
+
+    runConfigs {
+        client {
+            client()
+            ideConfigGenerated = true
+            vmArgs(args)
+            vmArgs("-Xmx2G")
+        }
+        server {
+            server()
+            ideConfigGenerated = true
+            vmArgs(args)
+            vmArgs("-Xmx2G")
+        }
+
+        client4g {
+            client()
+            ideConfigGenerated = true
+            vmArgs(args)
+            vmArgs("-Xmx4G")
+        }
+        server4g {
+            server()
+            ideConfigGenerated = true
+            vmArgs(args)
+            vmArgs("-Xmx4G")
+        }
     }
 }
 
