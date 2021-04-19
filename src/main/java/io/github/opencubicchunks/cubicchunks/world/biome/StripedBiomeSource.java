@@ -38,6 +38,6 @@ public class StripedBiomeSource extends BiomeSource {
 
     @Override
     public Biome getNoiseBiome(int x, int y, int z) {
-        return biomeArray[Math.floorMod(Math.floorDiv(x, 16), biomeArray.length)];
+        return biomeArray[Math.floorMod(Math.floorDiv(x, 160), biomeArray.length)];
     }
 }

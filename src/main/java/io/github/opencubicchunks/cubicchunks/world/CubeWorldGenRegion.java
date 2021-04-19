@@ -498,6 +498,11 @@ public class CubeWorldGenRegion extends WorldGenRegion implements ICubicWorld {
         return getLevel().getHeight();
     }
 
+    public boolean insideCubeHeight(int blockY) {
+        return Coords.cubeToMinBlock(this.getMainCubeY()) <= blockY && blockY <= Coords.cubeToMaxBlock(this.getMainCubeY());
+    }
+
+
     private static class DummyChunkAccess implements ChunkAccess {
 
 

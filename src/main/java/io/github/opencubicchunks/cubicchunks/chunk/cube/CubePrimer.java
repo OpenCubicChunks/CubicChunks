@@ -643,7 +643,6 @@ public class CubePrimer extends ProtoChunk implements IBigCube, CubicLevelHeight
     }
 
     @Deprecated @Override public LevelChunkSection[] getSections() {
-        new UnsupportedOperationException("This should never be called!").printStackTrace();
         return getCubeSections();
     }
 
