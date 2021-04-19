@@ -51,7 +51,6 @@ import io.github.opencubicchunks.cubicchunks.chunk.ticket.ITicketManager;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.chunk.util.Utils;
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.EntityTrackerAccess;
-import io.github.opencubicchunks.cubicchunks.mixin.access.common.ServerChunkCacheAccess;
 import io.github.opencubicchunks.cubicchunks.network.PacketCubes;
 import io.github.opencubicchunks.cubicchunks.network.PacketDispatcher;
 import io.github.opencubicchunks.cubicchunks.network.PacketHeightmap;
@@ -94,7 +93,6 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.level.ThreadedLevelLightEngine;
 import net.minecraft.server.level.progress.ChunkProgressListener;
 import net.minecraft.util.Mth;
-import net.minecraft.util.profiling.ProfilerFiller;
 import net.minecraft.util.thread.BlockableEventLoop;
 import net.minecraft.util.thread.ProcessorHandle;
 import net.minecraft.util.thread.ProcessorMailbox;
@@ -530,9 +528,6 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
             return;
         }
         CubePos cubePos = CubePos.from(pos);
-        if(cubePos.equals(CubePos.of(0,0,0))) {
-            int asd = 0;
-        }
         ChunkHolder[] chunkHolders = new ChunkHolder[IBigCube.DIAMETER_IN_SECTIONS * IBigCube.DIAMETER_IN_SECTIONS];
         for (int localX = 0; localX < IBigCube.DIAMETER_IN_SECTIONS; localX++) {
             for (int localZ = 0; localZ < IBigCube.DIAMETER_IN_SECTIONS; localZ++) {
@@ -553,10 +548,11 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
     private CompletableFuture<Either<IBigCube, ChunkHolder.ChunkLoadingFailure>> chainFutures(
         Supplier<CompletableFuture<Either<IBigCube, ChunkHolder.ChunkLoadingFailure>>> cubeFutureSupplier, ChunkHolder[] chunkHolders, ChunkStatus chunkStatusIn) {
         Iterator<ChunkHolder> iterator = Arrays.stream(chunkHolders).iterator();
-        CompletableFuture<Either<ChunkAccess, ChunkHolder.ChunkLoadingFailure>> chunkFutureChain = schedule(iterator.next(), chunkStatusIn);
+        ChunkHolder chunkHolder = iterator.next();
+        CompletableFuture<Either<ChunkAccess, ChunkHolder.ChunkLoadingFailure>> chunkFutureChain = chunkHolder.getOrScheduleFuture(chunkStatusIn, (ChunkMap) (Object) this);
         while (iterator.hasNext()) {
             ChunkHolder next = iterator.next();
-            chunkFutureChain = chunkFutureChain.thenComposeAsync((either) -> schedule(next, chunkStatusIn));
+            chunkFutureChain = chunkFutureChain.thenComposeAsync((either) -> next.getOrScheduleFuture(chunkStatusIn, (ChunkMap) (Object) this));
         }
 
         CompletableFuture<Either<IBigCube, ChunkHolder.ChunkLoadingFailure>> cubeFuture = cubeFutureSupplier.get();
