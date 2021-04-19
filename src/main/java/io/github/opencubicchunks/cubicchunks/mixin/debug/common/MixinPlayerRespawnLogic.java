@@ -10,8 +10,12 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(value = PlayerRespawnLogic.class, priority = 999)
 public class MixinPlayerRespawnLogic {
+    private static final boolean DEBUG_LOAD_ORDER_ENABLED = System.getProperty("cubicchunks.debug.loadorder", "false").equals("true");
+
     @Inject(method = "getOverworldRespawnPos", at = @At("HEAD"), cancellable = true)
     private static void fakeRespawnLocation(ServerLevel world, int x, int z, boolean validSpawnNeeded, CallbackInfoReturnable<BlockPos> cir) {
+        if(!DEBUG_LOAD_ORDER_ENABLED)
+            return;
         cir.setReturnValue(new BlockPos(0, 0, 0));
     }
 }

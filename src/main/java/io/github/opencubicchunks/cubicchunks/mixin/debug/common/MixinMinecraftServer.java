@@ -26,6 +26,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(value = MinecraftServer.class, priority = 999)
 public abstract class MixinMinecraftServer {
+    private static final boolean DEBUG_LOAD_ORDER_ENABLED = System.getProperty("cubicchunks.debug.loadorder", "false").equals("true");
+
     @Shadow @Final private static Logger LOGGER;
 
     @Shadow private long nextTickTime;
@@ -44,6 +46,9 @@ public abstract class MixinMinecraftServer {
      */
     @Inject(method = "prepareLevels", at = @At("HEAD"), cancellable = true)
     private void prepareLevels(ChunkProgressListener worldGenerationProgressListener, CallbackInfo ci) {
+        if(!DEBUG_LOAD_ORDER_ENABLED)
+            return;
+
         ci.cancel();
         ServerLevel serverLevel = this.overworld();
         LOGGER.info("Preparing start region for dimension {}", serverLevel.dimension().location());
