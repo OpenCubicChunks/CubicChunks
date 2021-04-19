@@ -192,7 +192,7 @@ public class CubePrimer extends ProtoChunk implements IBigCube, CubicLevelHeight
             for (int dx = 0; dx < IBigCube.DIAMETER_IN_SECTIONS; dx++) {
                 for (int dz = 0; dz < IBigCube.DIAMETER_IN_SECTIONS; dz++) {
                     ChunkPos chunkPos = this.cubePos.asChunkPos(dx, dz);
-                    // TODO chunk can be null, at least until we get the column->cube invariant
+                    // TODO chunk can be null until load order is fixed
                     BlockGetter chunk = chunkSource.getChunkForLighting(chunkPos.x, chunkPos.z);
                     // force-loading like this causes lighting to init incorrectly for some reason
 //                    BlockGetter chunk = chunkSource.getChunk(chunkPos.x, chunkPos.z, ChunkStatus.EMPTY, true);
@@ -261,14 +261,13 @@ public class CubePrimer extends ProtoChunk implements IBigCube, CubicLevelHeight
         }
 
         BlockState lastState = section.setBlockState(x, y, z, state, false);
-        // TODO should this be isOrAfter LIGHT, or isOrAfter FEATURES?
         if (this.status.isOrAfter(ChunkStatus.LIGHT) && state != lastState && (state.getLightBlock(this, pos) != lastState.getLightBlock(this, pos)
                 || state.getLightEmission() != lastState.getLightEmission() || state.useShapeForLightOcclusion() || lastState.useShapeForLightOcclusion())) {
             ChunkSource chunkSource = getChunkSource();
 
             ChunkPos chunkPos = Coords.chunkPosByIndex(this.cubePos, index);
 
-            // TODO do we want to force-load chunks here? if not the chunk can be null, at least until we get the column->cube invariant
+            // TODO chunk can be null until load order is fixed
             BlockGetter chunk = chunkSource.getChunkForLighting(chunkPos.x, chunkPos.z);
             LightSurfaceTrackerWrapper lightHeightmap = ((LightHeightmapGetter) chunk).getServerLightHeightmap();
 

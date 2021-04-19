@@ -117,7 +117,7 @@ public abstract class MixinSkyLightEngine extends MixinLightEngine<SkyLightSecti
             return;
         }
 
-        // TODO chunk is sometimes null
+        // TODO chunk can be null until load order is fixed
         BlockGetter chunk = this.chunkSource.getChunkForLighting(SectionPos.blockToSectionCoord(pos.getX()), SectionPos.blockToSectionCoord(pos.getZ()));
         if (chunk == null) {
             System.out.println("onGetComputedLevel chunk was null " + (this.chunkSource.getLevel() instanceof ClientLevel ? "client" : "server"));
@@ -142,7 +142,7 @@ public abstract class MixinSkyLightEngine extends MixinLightEngine<SkyLightSecti
         int maxY = cubePos.maxCubeY();
         for (int sectionX = 0; sectionX < IBigCube.DIAMETER_IN_SECTIONS; sectionX++) {
             for (int sectionZ = 0; sectionZ < IBigCube.DIAMETER_IN_SECTIONS; sectionZ++) {
-                // TODO this chunk is sometimes null
+                // TODO chunk can be null until load order is fixed
                 BlockGetter chunk = this.chunkSource.getChunkForLighting(chunkPos.x + sectionX, chunkPos.z + sectionZ);
                 if (chunk == null) {
                     System.out.println("null chunk in MixinSkyLightEngine.doSkyLightForCube");

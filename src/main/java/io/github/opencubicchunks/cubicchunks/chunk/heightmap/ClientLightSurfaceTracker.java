@@ -25,40 +25,7 @@ public class ClientLightSurfaceTracker extends ClientSurfaceTracker {
     }
 
     @Override public boolean update(int x, int y, int z, BlockState blockState) {
-        return false; /*
-        // TODO is it safe to do this or are we risking causing cube loading, etc?
-        int previous = getFirstAvailable(x, z);
-        if (y <= previous - 2) {
-            return false;
-        }
-        ChunkAccess chunk = ((HeightmapAccess) this).getChunk();
-        BlockPos blockPos = new BlockPos(x, y, z);
-        BlockPos abovePos = new BlockPos(x, y+1, z);
-        BlockState above = chunk.getBlockState(abovePos);
-        int lightBlock = blockState.getLightBlock(chunk, blockPos);
-        if (lightBlock > 0 || (above != null && Shapes.faceShapeOccludes(getShape(above, abovePos, Direction.DOWN), getShape(blockState, blockPos, Direction.UP)))) {
-            if (y >= previous) {
-                ((HeightmapAccess) this).invokeSetHeight(x, z, y + 1);
-                return true;
-            }
-            return true;
-        }
-        if (previous - 1 == y) {
-            BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
-
-            int currentY;
-            for (currentY = y - 1; currentY >= y - 64; --currentY) {
-                pos.set(x, currentY, z);
-                // TODO copy the face shape occlusion logic here too - I'm too lazy for now.
-                if (blockState.getLightBlock(chunk, pos) > 0) {
-                    ((HeightmapAccess) this).invokeSetHeight(x, z, currentY + 1);
-                    return true;
-                }
-            }
-            ((HeightmapAccess) this).invokeSetHeight(x, z, currentY);
-            return true;
-        }
-        return false;*/
+        throw new UnsupportedOperationException("ClientLightSurfaceTracker.update should never be called");
     }
 
     protected VoxelShape getShape(BlockState blockState, BlockPos pos, Direction facing) {
@@ -71,10 +38,11 @@ public class ClientLightSurfaceTracker extends ClientSurfaceTracker {
 
     @Override
     public void setRawData(long[] heightmap) {
-        throw new UnsupportedOperationException("this shouldn't be called");
+        throw new UnsupportedOperationException("ClientLightSurfaceTracker.setRawData(heightmap) shouldn't be called");
     }
     public void setRawData(long[] heightmap, LevelChunk chunk) {
         // We need to compare the old and new data here, hence the inefficiencies with making a new bitstorage
+        // TODO can this be optimized to operate on long[]s directly instead of making an extra BitStorage?
         BitStorage storage = ((HeightmapAccess) this).getData();
         BitStorage oldStorage = new BitStorage(bitsPerColumn, 256, storage.getRaw().clone());
         System.arraycopy(heightmap, 0, storage.getRaw(), 0, heightmap.length);

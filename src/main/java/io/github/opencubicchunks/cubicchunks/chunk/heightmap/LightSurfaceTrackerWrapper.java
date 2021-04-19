@@ -29,6 +29,7 @@ public class LightSurfaceTrackerWrapper extends SurfaceTrackerWrapper {
             }
         }
 
+        // Return value is unused
         return false;
     }
 }

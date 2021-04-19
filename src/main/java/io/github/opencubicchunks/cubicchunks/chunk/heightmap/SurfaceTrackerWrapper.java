@@ -42,17 +42,8 @@ public class SurfaceTrackerWrapper extends Heightmap {
      */
     @Override
     public boolean update(int x, int y, int z, BlockState blockState) {
-//        // TODO do we need to do anything else here?
-//        surfaceTracker.getCubeNode(blockToCube(y)).markDirty(x + dx, z + dz);
-//        // TODO not sure if this is safe to do or if things depend on the result
-//        return false;
-        // FIXME soft fail for debugging
-        SurfaceTrackerSection node = surfaceTracker.getCubeNode(blockToCube(y));
-        if (node == null) {
-            System.out.println("warning: null node in surface tracker " + this);
-            return false;
-        }
-        node.markDirty(x + dx, z + dz);
+        surfaceTracker.getCubeNode(blockToCube(y)).markDirty(x + dx, z + dz);
+        // We always return false, because the result is never used anywhere anyway (by either vanilla or us)
         return false;
     }
 

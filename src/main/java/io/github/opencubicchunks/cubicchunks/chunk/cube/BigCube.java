@@ -991,8 +991,7 @@ public class BigCube implements ChunkAccess, IBigCube, CubicLevelHeightAccessor 
         ChunkPos pos = this.cubePos.asChunkPos();
         for (int x = 0; x < IBigCube.DIAMETER_IN_SECTIONS; x++) {
             for (int z = 0; z < IBigCube.DIAMETER_IN_SECTIONS; z++) {
-                // TODO we really, *really* shouldn't be force-loading columns here.
-                //      probably the easiest approach until we get a "columns before cubes" invariant though.
+                // TODO force-loading columns is questionable, until we get load order
                 LevelChunk chunk = this.level.getChunk(pos.x + x, pos.z + z);
                 ((CubeMapGetter) chunk).getCubeMap().markLoaded(this.cubePos.getY());
                 for (Map.Entry<Heightmap.Types, Heightmap> entry : chunk.getHeightmaps()) {
@@ -1000,9 +999,8 @@ public class BigCube implements ChunkAccess, IBigCube, CubicLevelHeightAccessor 
                     SurfaceTrackerWrapper tracker = (SurfaceTrackerWrapper) heightmap;
                     tracker.loadCube(this);
                 }
-                // TODO probably don't want to do this if the cube was already loaded as a CubePrimer
-                // TODO what should we do on the client here?
                 if (!this.level.isClientSide) {
+                    // TODO probably don't want to do this if the cube was already loaded as a CubePrimer
                     ((LightHeightmapGetter) chunk).getServerLightHeightmap().loadCube(this);
                 }
             }

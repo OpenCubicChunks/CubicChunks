@@ -52,7 +52,7 @@ public class LightSurfaceTrackerSection extends SurfaceTrackerSection {
     @Nullable
     private LightSurfaceTrackerSection getSectionAbove() {
         if (scale != 0) {
-            throw new IllegalArgumentException("TODO put an actual error message here - also this probably shouldn't be an IllegalArgumentException");
+            throw new IllegalStateException("Attempted to get section above for a non-zero scale section");
         }
         // TODO this can be optimized - don't need to go to the root every time, just the lowest node that is a parent of both this node and the node above.
         return (LightSurfaceTrackerSection) this.getRoot().getCubeNode(scaledY + 1);
