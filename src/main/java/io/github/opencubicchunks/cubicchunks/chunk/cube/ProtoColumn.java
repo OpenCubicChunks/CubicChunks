@@ -7,13 +7,15 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Stream;
 
+import io.github.opencubicchunks.cubicchunks.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
-import io.github.opencubicchunks.cubicchunks.chunk.cube.CubePrimer;
+import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import io.github.opencubicchunks.cubicchunks.world.CubeWorldGenRegion;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import it.unimi.dsi.fastutil.shorts.ShortList;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.block.Block;
@@ -37,21 +39,40 @@ import org.jetbrains.annotations.Nullable;
 //TODO: Implement this properly for mods. Vanilla is fine.
 public class ProtoColumn extends ProtoChunk {
 
-    private final IBigCube[] cubes;
-    private final CubeWorldGenRegion cubeWorldGenRegion;
+    private final int xCubeSectionOffset;
+    private final int zCubeSectionOffset;
+    private final IBigCube[] delegates;
 
-    public ProtoColumn(ChunkPos chunkPos, UpgradeData upgradeData, IBigCube[] cubes, CubeWorldGenRegion cubeWorldGenRegion) {
+    private final int columnMinY;
+    private final int columnMaxY;
+
+    private ProtoColumnContainer biomeContainer = null;
+
+    public ProtoColumn(ChunkPos chunkPos, int xCubeSectionOffset, int zCubeSectionOffset, UpgradeData upgradeData, IBigCube[] delegates, CubeWorldGenRegion cubeWorldGenRegion) {
         super(chunkPos, upgradeData, cubeWorldGenRegion);
-        this.cubes = cubes;
-        this.cubeWorldGenRegion = cubeWorldGenRegion;
+        this.delegates = delegates;
+        this.columnMinY = delegates[0].getCubePos().minCubeY();
+        this.xCubeSectionOffset = xCubeSectionOffset;
+        this.zCubeSectionOffset = zCubeSectionOffset;
+        this.columnMaxY = delegates[delegates.length - 1].getCubePos().maxCubeY();
+    }
+
+    private IBigCube getCube(BlockPos pos) {
+        return getCube(Coords.blockToCube(pos.getY()));
+    }
+
+    public IBigCube getCube(int cubeY) {
+        int minCubeY = delegates[0].getCubePos().getY();
+        int index = Math.abs(cubeY - minCubeY);
+        return delegates[index];
     }
 
     @Override public BlockState getBlockState(BlockPos pos) {
-        return this.cubeWorldGenRegion.getCube(pos).getBlockState(pos);
+        return getCube(pos).getBlockState(pos);
     }
 
     @Override public FluidState getFluidState(BlockPos pos) {
-        return this.cubeWorldGenRegion.getCube(pos).getFluidState(pos);
+        return getCube(pos).getFluidState(pos);
     }
 
     @Override public Stream<BlockPos> getLights() {
@@ -67,15 +88,15 @@ public class ProtoColumn extends ProtoChunk {
     }
 
     @Override public void addLight(BlockPos pos) {
-        ((CubePrimer) this.cubeWorldGenRegion.getCube(pos)).addLight(pos);
+        ((CubePrimer) getCube(pos)).addLight(pos);
     }
 
     @Nullable @Override public BlockState setBlockState(BlockPos pos, BlockState state, boolean moved) {
-        return this.cubeWorldGenRegion.getCube(pos).setBlockState(pos, state, moved);
+        return getCube(pos).setBlockState(pos, state, moved);
     }
 
     @Override public void setBlockEntity(BlockEntity blockEntity) {
-        this.cubeWorldGenRegion.getCube(blockEntity.getBlockPos()).setBlockEntity(blockEntity);
+        getCube(blockEntity.getBlockPos()).setBlockEntity(blockEntity);
     }
 
     @Override public Set<BlockPos> getBlockEntitiesPos() {
@@ -83,7 +104,7 @@ public class ProtoColumn extends ProtoChunk {
     }
 
     @Nullable @Override public BlockEntity getBlockEntity(BlockPos pos) {
-        return this.cubeWorldGenRegion.getCube(pos).getBlockEntity(pos);
+        return getCube(pos).getBlockEntity(pos);
     }
 
     @Override public Map<BlockPos, BlockEntity> getBlockEntities() {
@@ -91,11 +112,18 @@ public class ProtoColumn extends ProtoChunk {
     }
 
     @Override public void addEntity(CompoundTag entityTag) {
-        throw new UnsupportedOperationException("This is not yet implemented.");
+        ListTag entityPos = entityTag.getList("Pos", 6);
+        int y = (int) entityPos.getDouble(1);
+        IBigCube cube = this.getCube(Coords.blockToCube(y));
+        if (cube instanceof CubePrimer) {
+            ((CubePrimer) cube).addEntity(entityTag);
+        } else {
+            CubicChunks.LOGGER.error("Attempted to add an entity tag when cube was NOT an instance of CubePrimer!");
+        }
     }
 
     @Override public void addEntity(Entity entity) {
-        this.cubeWorldGenRegion.getCube(entity.blockPosition()).addEntity(entity);
+        getCube(entity.blockPosition()).addEntity(entity);
     }
 
     @Override public List<CompoundTag> getEntities() {
@@ -143,11 +171,36 @@ public class ProtoColumn extends ProtoChunk {
     }
 
     @Override public int getHeight(Heightmap.Types type, int x, int z) {
-        throw new UnsupportedOperationException("This is not yet implemented.");
+        for (int cubeY = delegates[delegates.length - 1].getCubePos().getY(); cubeY > delegates[0].getCubePos().getY(); cubeY--) {
+            int currentCubeMinY = Coords.cubeToMinBlock(cubeY);
+            IBigCube cube1 = getCube(new BlockPos(x, currentCubeMinY, z));
+
+            int cubeLocalHeight = cube1.getCubeLocalHeight(type, x, z);
+            if (cubeLocalHeight >= currentCubeMinY) {
+                return cubeLocalHeight + 1;
+            }
+        }
+        throw new UnsupportedOperationException("No cube MinY was found.");
     }
 
     @Override public BlockPos getHeighestPosition(Heightmap.Types types) {
-        throw new UnsupportedOperationException("This is not yet implemented.");
+        BlockPos.MutableBlockPos mutableBlockPos = null;
+
+        ChunkPos chunkPos = this.delegates[0].getCubePos().asChunkPos(this.xCubeSectionOffset, this.zCubeSectionOffset);
+        for (int x = chunkPos.getMinBlockX(); x < chunkPos.getMaxBlockX(); ++x) {
+            for (int z = chunkPos.getMinBlockZ(); z < chunkPos.getMaxBlockZ(); ++z) {
+                int heightAtPos = this.getHeight(types, x & 15, z & 15);
+                if (mutableBlockPos == null) {
+                    mutableBlockPos = new BlockPos.MutableBlockPos().set(x, heightAtPos, z);
+                }
+
+                if (mutableBlockPos.getY() < heightAtPos) {
+                    mutableBlockPos.set(x, heightAtPos, z);
+                }
+            }
+        }
+        return mutableBlockPos != null ? mutableBlockPos.immutable() : new BlockPos(chunkPos.getMinBlockX(), this.getHeight(types, chunkPos.getMinBlockX() & 15,
+            chunkPos.getMinBlockZ() & 15), chunkPos.getMinBlockZ() & 15);
     }
 
     @Nullable @Override public StructureStart<?> getStartForFeature(StructureFeature<?> structure) {
@@ -155,7 +208,7 @@ public class ProtoColumn extends ProtoChunk {
     }
 
     @Override public void setStartForFeature(StructureFeature<?> structure, StructureStart<?> start) {
-        throw new UnsupportedOperationException("This is not yet implemented.");
+        this.getCube(Coords.blockToCube(start.getBoundingBox().minY()));
     }
 
     @Override public Map<StructureFeature<?>, StructureStart<?>> getAllStarts() {
@@ -183,7 +236,7 @@ public class ProtoColumn extends ProtoChunk {
     }
 
     @Override public void markPosForPostprocessing(BlockPos pos) {
-        this.cubeWorldGenRegion.getCube(pos).markPosForPostprocessing(pos);
+        getCube(pos).markPosForPostprocessing(pos);
     }
 
     @Override public ShortList[] getPostProcessing() {
@@ -223,15 +276,15 @@ public class ProtoColumn extends ProtoChunk {
     }
 
     @Override public CompoundTag getBlockEntityNbt(BlockPos pos) {
-        return this.cubeWorldGenRegion.getCube(pos).getBlockEntityNbt(pos);
+        return getCube(pos).getBlockEntityNbt(pos);
     }
 
     @Nullable @Override public CompoundTag getBlockEntityNbtForSaving(BlockPos pos) {
-        return this.cubeWorldGenRegion.getCube(pos).getBlockEntityNbt(pos);
+        return getCube(pos).getBlockEntityNbt(pos);
     }
 
     @Override public void removeBlockEntity(BlockPos pos) {
-        this.cubeWorldGenRegion.getCube(pos).getBlockEntityNbt(pos);
+        getCube(pos).getBlockEntityNbt(pos);
     }
 
     @Nullable @Override public BitSet getCarvingMask(GenerationStep.Carving carver) {
@@ -259,10 +312,10 @@ public class ProtoColumn extends ProtoChunk {
     }
 
     @Override public int getMinBuildHeight() {
-        return this.cubeWorldGenRegion.getMinBuildHeight();
+        return super.getMinBuildHeight();
     }
 
     @Override public int getHeight() {
-        return this.cubeWorldGenRegion.getHeight();
+        return super.getHeight();
     }
 }

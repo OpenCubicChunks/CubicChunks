@@ -159,7 +159,7 @@ public class CubeWorldGenRegion extends WorldGenRegion implements ICubicWorld {
                     for (int xSectionRange = 0; xSectionRange < IBigCube.DIAMETER_IN_SECTIONS; xSectionRange++) {
                         for (int zSectionRange = 0; zSectionRange < IBigCube.DIAMETER_IN_SECTIONS; zSectionRange++) {
                             ChunkPos chunkPos = CubePos.of(this.minCubeX + xCubeRange, this.minCubeY, this.minCubeZ + zCubeRange).asChunkPos(xSectionRange, zSectionRange);
-                            ProtoColumn protoColumn = new ProtoColumn(chunkPos, UpgradeData.EMPTY, cubes, this);
+                            ProtoColumn protoColumn = new ProtoColumn(chunkPos, xSectionRange, zSectionRange, UpgradeData.EMPTY, cubes, this);
                             protoColumns.put(chunkPos, protoColumn);
                         }
                     }
