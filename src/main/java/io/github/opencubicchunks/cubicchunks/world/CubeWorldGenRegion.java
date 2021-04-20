@@ -6,6 +6,7 @@ import static io.github.opencubicchunks.cubicchunks.utils.Coords.*;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -16,6 +17,7 @@ import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
+import io.github.opencubicchunks.cubicchunks.chunk.cube.ProtoColumn;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.server.ICubicWorld;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
@@ -72,6 +74,7 @@ public class CubeWorldGenRegion extends WorldGenRegion implements ICubicWorld {
 
     private static final Logger LOGGER = LogManager.getLogger();
     private final IBigCube[] cubePrimers;
+    private final HashMap<ChunkPos, ProtoColumn> protoColumns;
 
     private final CubePos centerCubePos;
     private final int mainCubeX;
@@ -138,6 +141,31 @@ public class CubeWorldGenRegion extends WorldGenRegion implements ICubicWorld {
             this.maxCubeZ = maxCube.getCubePos().getZ();
 
             this.access = access;
+
+            int xSize = Math.abs(this.maxCubeX - this.minCubeX);
+            int ySize = Math.abs(this.maxCubeY - this.minCubeY);
+            int zSize = Math.abs(this.maxCubeZ - this.minCubeZ);
+
+
+            HashMap<ChunkPos, ProtoColumn> protoColumns = new HashMap<>();
+            for (int xCubeRange = 0; xCubeRange < xSize; xCubeRange++) {
+                for (int zCubeRange = 0; zCubeRange < zSize; zCubeRange++) {
+                    IBigCube[] cubes = new IBigCube[ySize];
+
+                    for (int yCubeRange = 0; yCubeRange < ySize; yCubeRange++) {
+                        cubes[yCubeRange] = this.getCube(this.minCubeX + xCubeRange, this.minCubeY + ySize, this.minCubeZ + zCubeRange);
+                    }
+
+                    for (int xSectionRange = 0; xSectionRange < IBigCube.DIAMETER_IN_SECTIONS; xSectionRange++) {
+                        for (int zSectionRange = 0; zSectionRange < IBigCube.DIAMETER_IN_SECTIONS; zSectionRange++) {
+                            ChunkPos chunkPos = CubePos.of(this.minCubeX + xCubeRange, this.minCubeY, this.minCubeZ + zCubeRange).asChunkPos(xSectionRange, zSectionRange);
+                            ProtoColumn protoColumn = new ProtoColumn(chunkPos, UpgradeData.EMPTY, cubes, this);
+                            protoColumns.put(chunkPos, protoColumn);
+                        }
+                    }
+                }
+            }
+            this.protoColumns = protoColumns;
         }
     }
 
@@ -350,7 +378,14 @@ public class CubeWorldGenRegion extends WorldGenRegion implements ICubicWorld {
 
     @Deprecated
     @Nullable @Override public ChunkAccess getChunk(int x, int z, ChunkStatus requiredStatus, boolean nonnull) {
-        return this.access; //TODO: Do not do this.
+        ProtoColumn protoColumn = this.protoColumns.get(new ChunkPos(x, z));
+
+        if (protoColumn == null) {
+            throw new IllegalStateException(String.format("We are asking for a ProtoColumn out of bounds. Requested: %s, %s when the current bound was: %s, %s", x, z, getCenter().x,
+                getCenter().z));
+        }
+
+        return protoColumn;
     }
 
     @Override public int getHeight(Heightmap.Types heightmapType, int x, int z) {

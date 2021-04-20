@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Stream;
 
+import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.CubePrimer;
 import io.github.opencubicchunks.cubicchunks.world.CubeWorldGenRegion;
 import it.unimi.dsi.fastutil.longs.LongSet;
@@ -36,10 +37,12 @@ import org.jetbrains.annotations.Nullable;
 //TODO: Implement this properly for mods. Vanilla is fine.
 public class ProtoColumn extends ProtoChunk {
 
+    private final IBigCube[] cubes;
     private final CubeWorldGenRegion cubeWorldGenRegion;
 
-    public ProtoColumn(ChunkPos chunkPos, UpgradeData upgradeData, CubeWorldGenRegion cubeWorldGenRegion) {
+    public ProtoColumn(ChunkPos chunkPos, UpgradeData upgradeData, IBigCube[] cubes, CubeWorldGenRegion cubeWorldGenRegion) {
         super(chunkPos, upgradeData, cubeWorldGenRegion);
+        this.cubes = cubes;
         this.cubeWorldGenRegion = cubeWorldGenRegion;
     }
 
