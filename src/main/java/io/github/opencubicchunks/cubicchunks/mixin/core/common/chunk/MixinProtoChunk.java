@@ -31,7 +31,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(ProtoChunk.class)
 public abstract class MixinProtoChunk implements LightHeightmapGetter, LevelHeightAccessor, CubeMapGetter, CubicLevelHeightAccessor {
-    @Shadow @Final private LevelHeightAccessor levelHeightAccessor;
 
     private boolean isCubic;
     private boolean generates2DChunks;
@@ -39,6 +38,8 @@ public abstract class MixinProtoChunk implements LightHeightmapGetter, LevelHeig
 
     private LightSurfaceTrackerWrapper lightHeightmap;
     private CubeMap cubeMap;
+
+    @Shadow @Final private LevelHeightAccessor levelHeightAccessor;
 
     @Shadow public abstract ChunkStatus getStatus();
 

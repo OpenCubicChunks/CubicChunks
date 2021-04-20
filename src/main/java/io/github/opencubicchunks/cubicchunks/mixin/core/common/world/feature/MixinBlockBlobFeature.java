@@ -1,35 +1,24 @@
 package io.github.opencubicchunks.cubicchunks.mixin.core.common.world.feature;
 
 import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
+import io.github.opencubicchunks.cubicchunks.utils.Coords;
+import io.github.opencubicchunks.cubicchunks.world.CubeWorldGenRegion;
+import net.minecraft.world.level.WorldGenLevel;
 import net.minecraft.world.level.levelgen.feature.BlockBlobFeature;
-import net.minecraft.world.level.levelgen.feature.FeaturePlaceContext;
-import net.minecraft.world.level.levelgen.feature.configurations.BlockStateConfiguration;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+import org.spongepowered.asm.mixin.injection.Redirect;
 
 //TODO: Configure this properly
 @Mixin(BlockBlobFeature.class)
 public class MixinBlockBlobFeature {
 
-    private int storedY;
-
-    @Inject(at = @At(value = "HEAD"), method = "place", cancellable = true)
-    private void storeMinCubeY(FeaturePlaceContext<BlockStateConfiguration> featurePlaceContext, CallbackInfoReturnable<Boolean> cir) {
-        cir.setReturnValue(false); // TODO: Actually handle this heh
-        storedY = featurePlaceContext.origin().getY();
-    }
-
-    @Inject(at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/WorldGenLevel;isEmptyBlock(Lnet/minecraft/core/BlockPos;)Z", ordinal = 0), method = "place", cancellable = true)
-    private void checkIfInCubeBounds(FeaturePlaceContext<BlockStateConfiguration> featurePlaceContext, CallbackInfoReturnable<Boolean> cir) {
-        if (!((CubicLevelHeightAccessor) featurePlaceContext.level()).isCubic()) {
-            return;
+    @Redirect(method = "place", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/WorldGenLevel;getMinBuildHeight()I"))
+    private int useCubeMinY(WorldGenLevel worldGenLevel) {
+        if (!((CubicLevelHeightAccessor) worldGenLevel).isCubic()) {
+            return worldGenLevel.getMinBuildHeight();
         }
+        return Coords.cubeToMinBlock(((CubeWorldGenRegion) worldGenLevel).getMainCubeY());
 
-
-        if (featurePlaceContext.origin().getY() < storedY) {
-            cir.setReturnValue(true);
-        }
     }
 }

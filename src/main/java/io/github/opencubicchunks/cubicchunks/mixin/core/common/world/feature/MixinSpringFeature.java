@@ -9,7 +9,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-//Enable this
+//TODO: Wait for mojang's take on this
 @Mixin(SpringFeature.class)
 public class MixinSpringFeature {
 

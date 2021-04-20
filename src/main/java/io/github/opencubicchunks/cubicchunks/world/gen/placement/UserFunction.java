@@ -1,7 +1,6 @@
 package io.github.opencubicchunks.cubicchunks.world.gen.placement;
 
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -27,7 +26,7 @@ public class UserFunction {
 
     public UserFunction(Map<Float, Float> funcMap) {
         values = funcMap.entrySet().stream()
-            .sorted(Comparator.comparing(Map.Entry::getKey))
+            .sorted(Map.Entry.comparingByKey())
             .map(e -> new Entry(e.getKey(), e.getValue()))
             .toArray(Entry[]::new);
     }

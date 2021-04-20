@@ -1,8 +1,17 @@
 package io.github.opencubicchunks.cubicchunks;
 
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.OptionalInt;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import io.github.opencubicchunks.cubicchunks.chunk.IChunkManager;
 import io.github.opencubicchunks.cubicchunks.meta.EarlyConfig;
@@ -11,12 +20,17 @@ import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import io.github.opencubicchunks.cubicchunks.world.biome.StripedBiomeSource;
 import io.github.opencubicchunks.cubicchunks.world.gen.feature.CCFeatures;
 import io.github.opencubicchunks.cubicchunks.world.gen.placement.CCPlacement;
+import io.github.opencubicchunks.cubicchunks.world.gen.placement.CubicHeightProvider;
 import net.fabricmc.api.ModInitializer;
 import net.minecraft.SharedConstants;
 import net.minecraft.Util;
 import net.minecraft.core.Registry;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ChunkMap;
+import net.minecraft.world.level.levelgen.VerticalAnchor;
+import net.minecraft.world.level.levelgen.WorldGenerationContext;
+import net.minecraft.world.level.levelgen.WorldgenRandom;
+import net.minecraft.world.level.levelgen.heightproviders.TrapezoidHeight;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -66,6 +80,50 @@ public class CubicChunks implements ModInitializer {
         //Custom CC Features
         CCPlacement.init();
         CCFeatures.init();
+
+        if (SharedConstants.IS_RUNNING_IN_IDE) {
+            cubicChunksTrapezoidHeightProviderTest();
+        }
+    }
+
+    private void cubicChunksTrapezoidHeightProviderTest() {
+        TrapezoidHeight trapezoidHeight = TrapezoidHeight.of(VerticalAnchor.absolute(0), VerticalAnchor.absolute(40), 10);
+
+        class Context implements WorldGenerationContext {
+
+            @Override public int getMinGenY() {
+                throw new Error();
+            }
+
+            @Override public int getGenDepth() {
+                return 384;
+            }
+        }
+
+        WorldgenRandom random = new WorldgenRandom(1000);
+
+        int[] counts = new int[41];
+        int[] counts2 = new int[41];
+        for (int i = 0; i < 100000; i++) {
+            int sample = trapezoidHeight.sample(random, new Context());
+            OptionalInt cubeTrapezoidHeight = ((CubicHeightProvider) trapezoidHeight).sampleCubic(random, new Context(), 0, 64);
+
+            if (cubeTrapezoidHeight.isPresent()) {
+                counts2[cubeTrapezoidHeight.getAsInt()]++;
+            }
+
+            counts[sample]++;
+        }
+
+        List<String> collect = IntStream.of(counts).mapToObj(Objects::toString).collect(Collectors.toList());
+        List<String> collect2 = IntStream.of(counts2).mapToObj(Objects::toString).collect(Collectors.toList());
+
+        try {
+            Files.write(Paths.get("trapezoidHeight.txt"), collect, StandardOpenOption.CREATE);
+            Files.write(Paths.get("cubeTrapezoidHeight.txt"), collect2, StandardOpenOption.CREATE);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     public static Config config() {
@@ -88,7 +146,6 @@ public class CubicChunks implements ModInitializer {
         public void markDirty() {
 
         }
-
 
 
         public static class Client {

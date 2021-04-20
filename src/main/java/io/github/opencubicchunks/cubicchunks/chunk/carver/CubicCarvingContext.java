@@ -1,14 +1,15 @@
 package io.github.opencubicchunks.cubicchunks.chunk.carver;
 
 import net.minecraft.world.level.chunk.ChunkAccess;
+import net.minecraft.world.level.chunk.ChunkGenerator;
 import net.minecraft.world.level.levelgen.carver.CarvingContext;
 
 public class CubicCarvingContext extends CarvingContext {
 
     private final ChunkAccess chunk;
 
-    public CubicCarvingContext(ChunkAccess chunk) {
-        super(null);
+    public CubicCarvingContext(ChunkGenerator generator, ChunkAccess chunk) {
+        super(generator);
         this.chunk = chunk;
     }
 
@@ -19,5 +20,13 @@ public class CubicCarvingContext extends CarvingContext {
 
     @Override public int getGenDepth() {
         return chunk.getHeight();
+    }
+
+    public int getOriginalMinGenY() {
+        return super.getMinGenY();
+    }
+
+    public int getOriginalGenDepth() {
+        return super.getGenDepth();
     }
 }

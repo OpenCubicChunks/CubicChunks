@@ -4,9 +4,10 @@ import java.util.Random;
 import java.util.stream.Stream;
 
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
+import io.github.opencubicchunks.cubicchunks.misc.BlockPosHeightMapDoubleMarker;
 import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
+import io.github.opencubicchunks.cubicchunks.world.CubeWorldGenRegion;
 import net.minecraft.core.BlockPos;
-import net.minecraft.world.level.levelgen.feature.configurations.DecoratorConfiguration;
 import net.minecraft.world.level.levelgen.feature.configurations.HeightmapConfiguration;
 import net.minecraft.world.level.levelgen.placement.DecorationContext;
 import net.minecraft.world.level.levelgen.placement.HeightmapDoubleDecorator;
@@ -16,7 +17,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(HeightmapDoubleDecorator.class)
-public abstract class MixinHeightMapDoubleDecorator<DC extends DecoratorConfiguration> {
+public abstract class MixinHeightMapDoubleDecorator {
 
     @Inject(method = "getPositions", at = @At(value = "HEAD"), cancellable = true)
     private void allowNegativeCoords(DecorationContext decorationContext, Random random, HeightmapConfiguration heightmapConfiguration, BlockPos blockPos,
@@ -27,19 +28,19 @@ public abstract class MixinHeightMapDoubleDecorator<DC extends DecoratorConfigur
             return;
         }
 
-        if (random.nextFloat() >= (0.1F * IBigCube.DIAMETER_IN_SECTIONS)) {
-            cir.setReturnValue(Stream.of());
-            return;
-        }
         int x = blockPos.getX();
         int z = blockPos.getZ();
 
         int yHeightMap = decorationContext.getHeight(heightmapConfiguration.heightmap, x, z);
-        if (yHeightMap <= decorationContext.getMinBuildHeight()) {
+        if (!((CubeWorldGenRegion) decorationContext.getLevel()).insideCubeHeight(yHeightMap)) {
             cir.setReturnValue(Stream.of());
         } else {
             int y = blockPos.getY() + random.nextInt(IBigCube.DIAMETER_IN_BLOCKS);
-            cir.setReturnValue(Stream.of(new BlockPos(x, y, z)));
+            if (random.nextFloat() >= (0.1F * IBigCube.DIAMETER_IN_SECTIONS)) {
+                cir.setReturnValue(Stream.of(new BlockPosHeightMapDoubleMarker(x, y, z, true)));
+                return;
+            }
+            cir.setReturnValue(Stream.of(new BlockPosHeightMapDoubleMarker(x, y, z, false)));
         }
     }
 }
