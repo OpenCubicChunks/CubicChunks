@@ -380,8 +380,8 @@ public class CubeWorldGenRegion extends WorldGenRegion implements ICubicWorld {
 
     @Deprecated
     @Nullable @Override public ChunkAccess getChunk(int x, int z, ChunkStatus requiredStatus, boolean nonnull) {
-        int xIndex = x - cubeToSection(this.minCubeX, 0);
-        int zIndex = z - cubeToSection(this.minCubeZ, 0);
+        int xIndex = Math.abs(x - cubeToSection(this.minCubeX, 0));
+        int zIndex = Math.abs(z - cubeToSection(this.minCubeZ, 0));
         ProtoColumn protoColumn = this.protoColumns[xIndex * cubeToSection(diameter, 0) + zIndex];
 
         if (protoColumn == null) {
