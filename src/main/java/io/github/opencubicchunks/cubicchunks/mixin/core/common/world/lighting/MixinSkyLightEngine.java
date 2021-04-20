@@ -1,5 +1,7 @@
 package io.github.opencubicchunks.cubicchunks.mixin.core.common.world.lighting;
 
+import static net.minecraft.client.renderer.LevelRenderer.DIRECTIONS;
+
 import io.github.opencubicchunks.cubicchunks.chunk.CubeMap;
 import io.github.opencubicchunks.cubicchunks.chunk.CubeMapGetter;
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
@@ -12,6 +14,7 @@ import io.github.opencubicchunks.cubicchunks.world.lighting.ICubicSkyLightEngine
 import io.github.opencubicchunks.cubicchunks.world.lighting.ISkyLightColumnChecker;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.core.SectionPos;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.ChunkPos;
@@ -176,6 +179,40 @@ public abstract class MixinSkyLightEngine extends MixinLightEngine<SkyLightSecti
                     }
                 }
             }
+        }
+    }
+
+    /**
+     * @author CursedFlames
+     * @reason disable vanilla sky light logic
+     */
+    @Inject(method = "checkNeighborsAfterUpdate", at = @At("HEAD"), cancellable = true)
+    private void onCheckNeighborsAfterUpdate(long blockPos, int level, boolean decrease, CallbackInfo ci) {
+        if (!isCubic) {
+            return;
+        }
+        ci.cancel();
+
+        long sectionPos = SectionPos.blockToSection(blockPos);
+
+        for (Direction direction : DIRECTIONS) {
+            long offsetBlockPos = BlockPos.offset(blockPos, direction);
+            long offsetSectionPos = SectionPos.blockToSection(offsetBlockPos);
+            // Check all neighbors that are storing light
+            if (sectionPos == offsetSectionPos || (((SectionLightStorageAccess) this.storage)).invokeStoringLightForSection(offsetSectionPos)) {
+                this.checkNeighbor(blockPos, offsetBlockPos, level, decrease);
+            }
+        }
+    }
+
+    /**
+     * @author CursedFlames
+     * @reason prevent infinite downwards skylight propagation
+     */
+    @Inject(method = "computeLevelFromNeighbor", at = @At("RETURN"), cancellable = true)
+    private void onComputeLevelFromNeighbor(long sourceId, long targetId, int level, CallbackInfoReturnable<Integer> cir) {
+        if (isCubic && cir.getReturnValue() == 0) {
+            cir.setReturnValue(1);
         }
     }
 }
