@@ -11,15 +11,14 @@ import org.spongepowered.asm.gradle.plugins.MixinGradlePlugin
 buildscript {
     repositories {
         mavenCentral()
-        jcenter()
-        maven {
-            setUrl("https://files.minecraftforge.net/maven")
-        }
         maven {
             setUrl("https://repo.spongepowered.org/maven")
         }
         maven {
             setUrl("https://plugins.gradle.org/m2/")
+        }
+        maven {
+            setUrl("https://files.minecraftforge.net/maven")
         }
     }
     dependencies {
