@@ -59,6 +59,10 @@ public class Int3HashSet implements AutoCloseable {
         this.setTableSize(DEFAULT_TABLE_SIZE);
     }
 
+    public Int3HashSet(int initialCapacity) {
+        this.setTableSize((int) Math.ceil(initialCapacity * (1.0d / 0.75d)));
+    }
+
     /**
      * Adds the given position to this set.
      *
@@ -277,7 +281,7 @@ public class Int3HashSet implements AutoCloseable {
             if ((value & ~flag) == 0L) { //this position is the only position in the bucket, so we need to delete the bucket
                 this.usedBuckets--;
 
-                //shifting the buckets IS expensive, yes, but it'll only happen when all
+                //shifting the buckets IS expensive, yes, but it'll only happen when the entire bucket is deleted, which won't happen on every removal
                 this.shiftBuckets(tableAddr, (hash + i) & mask, mask);
             } else { //update bucket value with this position removed
                 PlatformDependent.putLong(bucketAddr + BUCKET_VALUE_OFFSET, value & ~flag);
