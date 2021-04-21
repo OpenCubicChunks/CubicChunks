@@ -7,7 +7,7 @@ import io.github.opencubicchunks.cubicchunks.chunk.CubeMapGetter;
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.LightHeightmapGetter;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
-import io.github.opencubicchunks.cubicchunks.mixin.access.common.SectionLightStorageAccess;
+import io.github.opencubicchunks.cubicchunks.mixin.access.common.LayerLightSectionStorageAccess;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import io.github.opencubicchunks.cubicchunks.world.lighting.ICubeLightProvider;
 import io.github.opencubicchunks.cubicchunks.world.lighting.ICubicSkyLightEngine;
@@ -29,7 +29,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(SkyLightEngine.class)
-public abstract class MixinSkyLightEngine extends MixinLightEngine<SkyLightSectionStorage.SkyDataLayerStorageMap, SkyLightSectionStorage> implements ISkyLightColumnChecker,
+public abstract class MixinSkyLightEngine extends MixinLayerLightEngine<SkyLightSectionStorage.SkyDataLayerStorageMap, SkyLightSectionStorage> implements ISkyLightColumnChecker,
     ICubicSkyLightEngine {
     /**
      * @author CursedFlames
@@ -46,13 +46,13 @@ public abstract class MixinSkyLightEngine extends MixinLightEngine<SkyLightSecti
 
     /** all parameters are global coordinates */
     @Override public void checkSkyLightColumn(CubeMapGetter chunk, int x, int z, int oldHeight, int newHeight) {
-        ((SectionLightStorageAccess) this.storage).invokeRunAllUpdates();
+        ((LayerLightSectionStorageAccess) this.storage).invokeRunAllUpdates();
         CubeMap cubeMap = chunk.getCubeMap();
         int oldHeightCube = Coords.blockToCube(oldHeight - 1);
         int newHeightCube = Coords.blockToCube(newHeight);
         if (oldHeight > newHeight) {
             // not sure if this is necessary - also maybe it should be done inside the loop? not sure if threaded stuff can result in storage becoming out of date inside the loop
-            ((SectionLightStorageAccess) this.storage).invokeRunAllUpdates();
+            ((LayerLightSectionStorageAccess) this.storage).invokeRunAllUpdates();
 
             // TODO cube iteration order might still be important here
             //      (int y = oldHeight-1; y >= newHeight; y--)
@@ -69,7 +69,7 @@ public abstract class MixinSkyLightEngine extends MixinLightEngine<SkyLightSecti
                         }
 
                         long pos = new BlockPos(x, y, z).asLong();
-                        if (((SectionLightStorageAccess) this.storage).invokeStoringLightForSection(SectionPos.blockToSection(pos))) {
+                        if (((LayerLightSectionStorageAccess) this.storage).invokeStoringLightForSection(SectionPos.blockToSection(pos))) {
                             addEmissionAtPos(pos);
                         }
                     }
@@ -171,9 +171,9 @@ public abstract class MixinSkyLightEngine extends MixinLightEngine<SkyLightSecti
                             for (int y = maxY; y >= height; y--) {
                                 long pos = new BlockPos((chunkPos.x + sectionX) * 16 + x, y, (chunkPos.z + sectionZ) * 16 + z).asLong();
                                 // Not sure if this is necessary
-                                ((SectionLightStorageAccess) this.storage).invokeRunAllUpdates();
+                                ((LayerLightSectionStorageAccess) this.storage).invokeRunAllUpdates();
 
-                                if (((SectionLightStorageAccess) this.storage).invokeStoringLightForSection(SectionPos.blockToSection(pos))) {
+                                if (((LayerLightSectionStorageAccess) this.storage).invokeStoringLightForSection(SectionPos.blockToSection(pos))) {
                                     addEmissionAtPos(pos);
                                 }
                             }
@@ -201,7 +201,7 @@ public abstract class MixinSkyLightEngine extends MixinLightEngine<SkyLightSecti
             long offsetBlockPos = BlockPos.offset(blockPos, direction);
             long offsetSectionPos = SectionPos.blockToSection(offsetBlockPos);
             // Check all neighbors that are storing light
-            if (sectionPos == offsetSectionPos || (((SectionLightStorageAccess) this.storage)).invokeStoringLightForSection(offsetSectionPos)) {
+            if (sectionPos == offsetSectionPos || (((LayerLightSectionStorageAccess) this.storage)).invokeStoringLightForSection(offsetSectionPos)) {
                 this.checkNeighbor(blockPos, offsetBlockPos, level, decrease);
             }
         }

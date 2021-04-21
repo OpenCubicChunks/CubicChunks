@@ -24,7 +24,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(LayerLightSectionStorage.class)
-public abstract class MixinSectionLightStorage<M extends DataLayerStorageMap<M>> extends SectionTracker implements ISectionLightStorage {
+public abstract class MixinLayerLightSectionStorage<M extends DataLayerStorageMap<M>> extends SectionTracker implements ISectionLightStorage {
 
     @Shadow @Final private static Direction[] DIRECTIONS;
 
@@ -37,7 +37,7 @@ public abstract class MixinSectionLightStorage<M extends DataLayerStorageMap<M>>
 
     private final LongSet cubesToRetain = new LongOpenHashSet();
 
-    protected MixinSectionLightStorage(int p_i50706_1_, int p_i50706_2_, int p_i50706_3_) {
+    protected MixinLayerLightSectionStorage(int p_i50706_1_, int p_i50706_2_, int p_i50706_3_) {
         super(p_i50706_1_, p_i50706_2_, p_i50706_3_);
     }
 

@@ -2,7 +2,7 @@ package io.github.opencubicchunks.cubicchunks.mixin.core.common.world.lighting;
 
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.LightHeightmapGetter;
-import io.github.opencubicchunks.cubicchunks.mixin.access.common.SectionLightStorageAccess;
+import io.github.opencubicchunks.cubicchunks.mixin.access.common.LayerLightSectionStorageAccess;
 import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import io.github.opencubicchunks.cubicchunks.world.lighting.ICubeLightProvider;
@@ -51,7 +51,7 @@ public abstract class MixinSkyLightSectionStorage extends LayerLightSectionStora
         int y = BlockPos.getY(blockPos);
         int z = BlockPos.getZ(blockPos);
         if (dataLayer == null) {
-            BlockGetter chunk = ((SectionLightStorageAccess) this).getChunkSource().getChunkForLighting(Coords.blockToSection(x), Coords.blockToSection(z));
+            BlockGetter chunk = ((LayerLightSectionStorageAccess) this).getChunkSource().getChunkForLighting(Coords.blockToSection(x), Coords.blockToSection(z));
             if (chunk == null) {
                 // TODO This currently gets called a lot; not sure if it's due to broken load order or this method being called before the lighting stage or in unloaded chunks/cubes
 //                System.out.println("Null chunk (" + Coords.blockToSection(x) + ", " + Coords.blockToSection(z) + ") in MixinSkyLightSectionStorage.onGetLightValue "
@@ -61,7 +61,7 @@ public abstract class MixinSkyLightSectionStorage extends LayerLightSectionStora
             }
 
             //TODO: Optimize
-            BlockGetter cube = ((ICubeLightProvider) ((SectionLightStorageAccess) this).getChunkSource()).getCubeForLighting(
+            BlockGetter cube = ((ICubeLightProvider) ((LayerLightSectionStorageAccess) this).getChunkSource()).getCubeForLighting(
                 Coords.blockToSection(x), Coords.blockToSection(y), Coords.blockToSection(z));
             if (cube == null || !((IBigCube) cube).getStatus().isOrAfter(ChunkStatus.LIGHT)) {
                 cir.setReturnValue(0);
