@@ -1,11 +1,16 @@
 package io.github.opencubicchunks.cubicchunks.mixin.core.common.world.lighting;
 
+import io.github.opencubicchunks.cubicchunks.chunk.LightHeightmapGetter;
+import io.github.opencubicchunks.cubicchunks.mixin.access.common.SectionLightStorageAccess;
 import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
+import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.SectionPos;
+import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.level.chunk.DataLayer;
 import net.minecraft.world.level.chunk.LightChunkGetter;
+import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.lighting.LayerLightEngine;
 import net.minecraft.world.level.lighting.LayerLightSectionStorage;
 import net.minecraft.world.level.lighting.SkyLightSectionStorage;
@@ -36,10 +41,27 @@ public abstract class MixinSkyLightSectionStorage extends LayerLightSectionStora
         // since we don't need sky light logic
         long l = SectionPos.blockToSection(blockPos);
         DataLayer dataLayer = this.getDataLayer(l, cached);
-        cir.setReturnValue(dataLayer == null ? 0 : dataLayer.get(
-                SectionPos.sectionRelative(BlockPos.getX(blockPos)),
-                SectionPos.sectionRelative(BlockPos.getY(blockPos)),
-                SectionPos.sectionRelative(BlockPos.getZ(blockPos))));
+        int x = BlockPos.getX(blockPos);
+        int y = BlockPos.getY(blockPos);
+        int z = BlockPos.getZ(blockPos);
+        if (dataLayer == null) {
+            BlockGetter chunk = ((SectionLightStorageAccess) this).getChunkSource().getChunkForLighting(Coords.blockToSection(x), Coords.blockToSection(z));
+            if (chunk == null) {
+                // TODO This currently gets called a lot; not sure if it's due to broken load order or this method being called before the lighting stage or in unloaded chunks/cubes
+//                System.out.println("Null chunk (" + Coords.blockToSection(x) + ", " + Coords.blockToSection(z) + ") in MixinSkyLightSectionStorage.onGetLightValue "
+//                        + ((SectionLightStorageAccess) this).getChunkSource().getLevel());
+                cir.setReturnValue(0);
+                return;
+            }
+            Heightmap lightHeightmap = ((LightHeightmapGetter) chunk).getLightHeightmap();
+            int height = lightHeightmap.getFirstAvailable(SectionPos.sectionRelative(x), SectionPos.sectionRelative(z));
+            cir.setReturnValue(height <= y ? 15 : 0);
+        } else {
+            cir.setReturnValue(dataLayer.get(
+                    SectionPos.sectionRelative(x),
+                    SectionPos.sectionRelative(y),
+                    SectionPos.sectionRelative(z)));
+        }
     }
 
     @Inject(method = "onNodeAdded", cancellable = true, at = @At("HEAD"))
