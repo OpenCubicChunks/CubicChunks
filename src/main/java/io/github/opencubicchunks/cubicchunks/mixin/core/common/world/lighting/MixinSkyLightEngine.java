@@ -111,7 +111,9 @@ public abstract class MixinSkyLightEngine extends MixinLightEngine<SkyLightSecti
         at = @At("HEAD"), cancellable = true)
     private void onGetComputedLevel(long id, long excludedId, int maxLevel, CallbackInfoReturnable<Integer> cir) {
         // TODO do we want this mixin on client side too?
-        if (!this.isCubic || this.chunkSource.getLevel() instanceof ClientLevel) return;
+        if (!this.isCubic /*|| this.chunkSource.getLevel() instanceof ClientLevel*/) {
+            return;
+        }
         BlockPos pos = BlockPos.of(id);
 
         BlockGetter cube = ((ICubeLightProvider) this.chunkSource).getCubeForLighting(
@@ -205,14 +207,14 @@ public abstract class MixinSkyLightEngine extends MixinLightEngine<SkyLightSecti
         }
     }
 
-    /**
-     * @author CursedFlames
-     * @reason prevent infinite downwards skylight propagation
-     */
-    @Inject(method = "computeLevelFromNeighbor", at = @At("RETURN"), cancellable = true)
-    private void onComputeLevelFromNeighbor(long sourceId, long targetId, int level, CallbackInfoReturnable<Integer> cir) {
-        if (isCubic && cir.getReturnValue() == 0) {
-            cir.setReturnValue(1);
-        }
-    }
+//    /**
+//     * @author CursedFlames
+//     * @reason prevent infinite downwards skylight propagation
+//     */
+//    @Inject(method = "computeLevelFromNeighbor", at = @At("RETURN"), cancellable = true)
+//    private void onComputeLevelFromNeighbor(long sourceId, long targetId, int level, CallbackInfoReturnable<Integer> cir) {
+//        if (isCubic && cir.getReturnValue() == 0) {
+//            cir.setReturnValue(1);
+//        }
+//    }
 }

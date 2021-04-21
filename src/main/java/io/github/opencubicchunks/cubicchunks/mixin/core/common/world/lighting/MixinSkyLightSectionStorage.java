@@ -1,13 +1,16 @@
 package io.github.opencubicchunks.cubicchunks.mixin.core.common.world.lighting;
 
+import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.LightHeightmapGetter;
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.SectionLightStorageAccess;
 import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
+import io.github.opencubicchunks.cubicchunks.world.lighting.ICubeLightProvider;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.SectionPos;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.LightLayer;
+import net.minecraft.world.level.chunk.ChunkStatus;
 import net.minecraft.world.level.chunk.DataLayer;
 import net.minecraft.world.level.chunk.LightChunkGetter;
 import net.minecraft.world.level.levelgen.Heightmap;
@@ -25,7 +28,7 @@ public abstract class MixinSkyLightSectionStorage extends LayerLightSectionStora
     private boolean isCubic;
 
     private MixinSkyLightSectionStorage(LightLayer lightLayer, LightChunkGetter lightChunkGetter,
-                                          SkyLightSectionStorage.SkyDataLayerStorageMap dataLayerStorageMap) {
+                                        SkyLightSectionStorage.SkyDataLayerStorageMap dataLayerStorageMap) {
         super(lightLayer, lightChunkGetter, dataLayerStorageMap);
     }
 
@@ -36,7 +39,10 @@ public abstract class MixinSkyLightSectionStorage extends LayerLightSectionStora
 
     @Inject(method = "getLightValue(JZ)I", cancellable = true, at = @At("HEAD"))
     private void onGetLightValue(long blockPos, boolean cached, CallbackInfoReturnable<Integer> cir) {
-        if (!isCubic) return;
+        if (!isCubic) {
+            return;
+        }
+
         // Replace this method with an equivalent of BlockLightSectionStorage.getLightValue,
         // since we don't need sky light logic
         long l = SectionPos.blockToSection(blockPos);
@@ -53,6 +59,15 @@ public abstract class MixinSkyLightSectionStorage extends LayerLightSectionStora
                 cir.setReturnValue(0);
                 return;
             }
+
+            //TODO: Optimize
+            BlockGetter cube = ((ICubeLightProvider) ((SectionLightStorageAccess) this).getChunkSource()).getCubeForLighting(
+                Coords.blockToSection(x), Coords.blockToSection(y), Coords.blockToSection(z));
+            if (cube == null || !((IBigCube) cube).getStatus().isOrAfter(ChunkStatus.LIGHT)) {
+                cir.setReturnValue(0);
+                return;
+            }
+
             Heightmap lightHeightmap = ((LightHeightmapGetter) chunk).getLightHeightmap();
             int height = lightHeightmap.getFirstAvailable(SectionPos.sectionRelative(x), SectionPos.sectionRelative(z));
             cir.setReturnValue(height <= y ? 15 : 0);
