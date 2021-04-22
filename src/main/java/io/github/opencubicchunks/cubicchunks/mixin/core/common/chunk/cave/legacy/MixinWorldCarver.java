@@ -19,7 +19,7 @@ public class MixinWorldCarver {
         return new NonAtomicWorldgenRandom(seed);
     }
 
-    @Redirect(method = "carveBlock",
+    @Redirect(method = "getCarveState",
         at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/levelgen/VerticalAnchor;resolveY(Lnet/minecraft/world/level/levelgen/WorldGenerationContext;)I"))
     private int returnMinIntValue(VerticalAnchor verticalAnchor, WorldGenerationContext context) {
         return CubicChunks.MIN_SUPPORTED_HEIGHT;

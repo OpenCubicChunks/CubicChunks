@@ -1,7 +1,5 @@
 package io.github.opencubicchunks.cubicchunks.mixin.core.common.chunk;
 
-import java.util.function.Supplier;
-
 import io.github.opencubicchunks.cubicchunks.chunk.NonAtomicWorldgenRandom;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.block.state.BlockState;
@@ -28,7 +26,7 @@ public class MixinDepthBasedReplacingBaseStoneSource {
     private long seedX, seedY, seedZ;
 
     @Inject(method = "<init>", at = @At("RETURN"))
-    private void init(long newSeed, BlockState newNormalBlock, BlockState newReplacementBlock, Supplier<NoiseGeneratorSettings> supplier, CallbackInfo ci) {
+    private void init(long newSeed, BlockState blockState, BlockState blockState2, NoiseGeneratorSettings noiseGeneratorSettings, CallbackInfo ci) {
         // precompute axis seeds
         this.seedX = random.nextLong();
         this.seedY = random.nextLong();
@@ -36,7 +34,7 @@ public class MixinDepthBasedReplacingBaseStoneSource {
         random.setSeed(newSeed);
     }
 
-    @Inject(method = "getBaseStone", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/levelgen/WorldgenRandom;setBaseStoneSeed(JIII)J", shift = At.Shift.BEFORE),
+    @Inject(method = "getBaseBlock", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/levelgen/WorldgenRandom;setBaseStoneSeed(JIII)J", shift = At.Shift.BEFORE),
         cancellable = true)
     private void dontCalculateBaseStone(int x, int y, int z, CallbackInfoReturnable<BlockState> cir) {
         double probability = Mth.clampedMap(y, -8.0D, 0.0D, 1.0D, 0.0D);

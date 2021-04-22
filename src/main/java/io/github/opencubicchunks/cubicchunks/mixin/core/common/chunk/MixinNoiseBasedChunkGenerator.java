@@ -5,17 +5,12 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.function.Supplier;
 
-import io.github.opencubicchunks.cubicchunks.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.chunk.NonAtomicWorldgenRandom;
 import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.StructureFeatureManager;
 import net.minecraft.world.level.biome.BiomeSource;
-import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.ChunkAccess;
-import net.minecraft.world.level.levelgen.Aquifer;
-import net.minecraft.world.level.levelgen.BaseStoneSource;
-import net.minecraft.world.level.levelgen.Beardifier;
 import net.minecraft.world.level.levelgen.NoiseBasedChunkGenerator;
 import net.minecraft.world.level.levelgen.NoiseGeneratorSettings;
 import net.minecraft.world.level.levelgen.NoiseSettings;
@@ -29,7 +24,6 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 @Mixin(NoiseBasedChunkGenerator.class)
 public abstract class MixinNoiseBasedChunkGenerator {
@@ -96,25 +90,6 @@ public abstract class MixinNoiseBasedChunkGenerator {
             return;
         }
         ci.cancel();
-    }
-
-    @Inject(
-        method = "updateNoiseAndGenerateBaseState",
-        at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/levelgen/Aquifer;computeAt(III)V", shift = At.Shift.BEFORE),
-        locals = LocalCapture.CAPTURE_FAILHARD,
-        cancellable = true
-    )
-    private void computeAquifer(Beardifier beardifier, Aquifer aquifer, BaseStoneSource stoneSource, int x, int y, int z, double noise, CallbackInfoReturnable<BlockState> ci,
-                                double density) {
-        // optimization: we don't need to compute aquifer if we know that this block is already solid
-        if (density > 0.0) {
-            ci.setReturnValue(stoneSource.getBaseStone(x, y, z));
-        }
-    }
-
-    @Redirect(method = "updateNoiseAndGenerateBaseState", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/levelgen/NoiseBasedChunkGenerator;getMinY()I"))
-    private int useCCMinY(NoiseBasedChunkGenerator noiseBasedChunkGenerator) {
-        return CubicChunks.MIN_SUPPORTED_HEIGHT;
     }
 
     // replace with non-atomic random for optimized random number generation
