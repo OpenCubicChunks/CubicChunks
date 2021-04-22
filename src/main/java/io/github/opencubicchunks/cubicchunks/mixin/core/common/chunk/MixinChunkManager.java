@@ -1335,7 +1335,7 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
         };
     }
 
-    @Inject(method = "close", at = @At("HEAD"))
+    @Inject(method = "close", at = @At("HEAD"), remap = false)
     public void on$close(CallbackInfo ci) {
         if (!((CubicLevelHeightAccessor) this.level).isCubic()) {
             return;
