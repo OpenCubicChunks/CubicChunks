@@ -1,16 +1,21 @@
 package io.github.opencubicchunks.cubicchunks.chunk.cube;
 
+import static io.github.opencubicchunks.cubicchunks.utils.Coords.*;
+
 import java.util.BitSet;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Stream;
 
+import com.google.common.collect.Maps;
 import io.github.opencubicchunks.cubicchunks.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import io.github.opencubicchunks.cubicchunks.world.CubeWorldGenRegion;
+import io.github.opencubicchunks.cubicchunks.world.DummyHeightmap;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import it.unimi.dsi.fastutil.shorts.ShortList;
 import net.minecraft.core.BlockPos;
@@ -41,20 +46,33 @@ public class ProtoColumn extends ProtoChunk {
 
     private final int xSectionOffset;
     private final int zSectionOffset;
+    private final IBigCube mainCube;
     private final IBigCube[] delegates;
-
-    private final int columnMinY;
-    private final int columnMaxY;
-
-    private ProtoColumnContainer biomeContainer = null;
+    private final CubeWorldGenRegion cubeWorldGenRegion;
+    private final LevelChunkSection[] sections;
+    private final Map<Heightmap.Types, Heightmap> heightmaps;
 
     public ProtoColumn(ChunkPos chunkPos, int xSectionOffset, int zSectionOffset, UpgradeData upgradeData, IBigCube[] delegates, CubeWorldGenRegion cubeWorldGenRegion) {
         super(chunkPos, upgradeData, cubeWorldGenRegion);
-        this.delegates = delegates;
-        this.columnMinY = delegates[0].getCubePos().minCubeY();
         this.xSectionOffset = xSectionOffset;
         this.zSectionOffset = zSectionOffset;
-        this.columnMaxY = delegates[delegates.length - 1].getCubePos().maxCubeY();
+
+        this.mainCube = delegates[delegates.length / 2];
+        this.delegates = delegates;
+
+        this.cubeWorldGenRegion = cubeWorldGenRegion;
+
+        this.heightmaps = Maps.newEnumMap(Heightmap.Types.class);
+
+        LevelChunkSection[] sections = new LevelChunkSection[(delegates.length - 1) * IBigCube.SECTION_COUNT];
+        for (int i = 0; i < delegates.length; i++) {
+            IBigCube cube = delegates[i];
+            for (int ySectionOffset = 0; ySectionOffset < IBigCube.DIAMETER_IN_SECTIONS; ySectionOffset++) {
+                LevelChunkSection cubeSection = cube.getCubeSections()[Coords.sectionToIndex(xSectionOffset, ySectionOffset, zSectionOffset)];
+                sections[i + ySectionOffset] = cubeSection;
+            }
+        }
+        this.sections = sections;
     }
 
     private IBigCube getCube(BlockPos pos) {
@@ -131,7 +149,7 @@ public class ProtoColumn extends ProtoChunk {
     }
 
     @Override public void setBiomes(ChunkBiomeContainer biomes) {
-        throw new UnsupportedOperationException("This is not yet implemented.");
+        throw new UnsupportedOperationException("This is not supported.");
     }
 
     @Nullable @Override public ChunkBiomeContainer getBiomes() {
@@ -139,48 +157,51 @@ public class ProtoColumn extends ProtoChunk {
     }
 
     @Override public void setUnsaved(boolean shouldSave) {
-        throw new UnsupportedOperationException("This is not yet implemented.");
+
     }
 
     @Override public boolean isUnsaved() {
-        throw new UnsupportedOperationException("This is not yet implemented.");
+        return false;
     }
 
     @Override public ChunkStatus getStatus() {
-        throw new UnsupportedOperationException("This is not yet implemented.");
+        return this.mainCube.getStatus();
     }
 
     @Override public void setStatus(ChunkStatus status) {
-        throw new UnsupportedOperationException("This is not yet implemented.");
-    }
-
-    @Override public LevelChunkSection[] getSections() {
-        throw new UnsupportedOperationException("This is not yet implemented.");
+        throw new UnsupportedOperationException("This operation is not supported.");
     }
 
     @Override public Collection<Map.Entry<Heightmap.Types, Heightmap>> getHeightmaps() {
-        throw new UnsupportedOperationException("This is not yet implemented.");
+        return Collections.unmodifiableSet(this.heightmaps.entrySet());
     }
 
     @Override public void setHeightmap(Heightmap.Types type, long[] heightmap) {
-        throw new UnsupportedOperationException("This is not yet implemented.");
+        this.getOrCreateHeightmapUnprimed(type).setRawData(heightmap);
     }
 
     @Override public Heightmap getOrCreateHeightmapUnprimed(Heightmap.Types type) {
-        throw new UnsupportedOperationException("This is not yet implemented.");
+        return this.heightmaps.computeIfAbsent(type, (typex) -> {
+            return new DummyHeightmap(this, typex); //Essentially do nothing here.
+        });
     }
 
-    @Override public int getHeight(Heightmap.Types type, int x, int z) {
-        for (int cubeY = delegates[delegates.length - 1].getCubePos().getY(); cubeY > delegates[0].getCubePos().getY(); cubeY--) {
-            int currentCubeMinY = Coords.cubeToMinBlock(cubeY);
-            IBigCube cube1 = getCube(new BlockPos(x, currentCubeMinY, z));
+    @Override public int getHeight(Heightmap.Types heightmapType, int x, int z) {
+        int yStart = cubeToMinBlock(mainCube.getCubePos().getY() + 1);
+        int yEnd = cubeToMinBlock(mainCube.getCubePos().getY());
 
-            int cubeLocalHeight = cube1.getCubeLocalHeight(type, x, z);
-            if (cubeLocalHeight >= currentCubeMinY) {
-                return cubeLocalHeight + 1;
-            }
+        IBigCube cube1 = getCube(new BlockPos(x, yStart, z));
+        if (cube1.getCubeLocalHeight(heightmapType, x, z) >= yStart) {
+            return this.cubeWorldGenRegion.getMinBuildHeight() - 1;
         }
-        throw new UnsupportedOperationException("No cube MinY was found.");
+        IBigCube cube2 = getCube(new BlockPos(x, yEnd, z));
+        int height = cube2.getCubeLocalHeight(heightmapType, x, z);
+
+        //Check whether or not height was found for this cube. If height wasn't found, move to the next cube under the current cube
+        if (height <= this.cubeWorldGenRegion.getMinBuildHeight()) {
+            return this.cubeWorldGenRegion.getMinBuildHeight() - 1;
+        }
+        return height + 1;
     }
 
     @Override public BlockPos getHeighestPosition(Heightmap.Types types) {
@@ -311,11 +332,15 @@ public class ProtoColumn extends ProtoChunk {
         throw new UnsupportedOperationException("This is not yet implemented.");
     }
 
+    @Override public LevelChunkSection[] getSections() {
+        return this.sections;
+    }
+
     @Override public int getMinBuildHeight() {
-        return super.getMinBuildHeight();
+        return this.delegates[0].getMinBuildHeight();
     }
 
     @Override public int getHeight() {
-        return super.getHeight();
+        return Math.abs(this.delegates[delegates.length - 1].getMaxBuildHeight() - this.delegates[0].getMinBuildHeight());
     }
 }
