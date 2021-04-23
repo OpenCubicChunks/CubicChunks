@@ -5,16 +5,21 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.function.Supplier;
 
+import io.github.opencubicchunks.cubicchunks.chunk.CubicAquifer;
 import io.github.opencubicchunks.cubicchunks.chunk.NonAtomicWorldgenRandom;
 import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import net.minecraft.util.Mth;
+import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.StructureFeatureManager;
 import net.minecraft.world.level.biome.BiomeSource;
 import net.minecraft.world.level.chunk.ChunkAccess;
+import net.minecraft.world.level.levelgen.Aquifer;
 import net.minecraft.world.level.levelgen.NoiseBasedChunkGenerator;
 import net.minecraft.world.level.levelgen.NoiseGeneratorSettings;
+import net.minecraft.world.level.levelgen.NoiseSampler;
 import net.minecraft.world.level.levelgen.NoiseSettings;
 import net.minecraft.world.level.levelgen.WorldgenRandom;
+import net.minecraft.world.level.levelgen.synth.NormalNoise;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Mutable;
@@ -32,8 +37,6 @@ public abstract class MixinNoiseBasedChunkGenerator {
     @Shadow @Final private int cellHeight;
 
     @Mutable @Shadow @Final private int cellCountY;
-
-    @Mutable @Shadow @Final private int height;
 
     @Inject(method = "<init>(Lnet/minecraft/world/level/biome/BiomeSource;Lnet/minecraft/world/level/biome/BiomeSource;JLjava/util/function/Supplier;)V", at = @At("RETURN"))
     private void init(BiomeSource biomeSource, BiomeSource biomeSource2, long l, Supplier<NoiseGeneratorSettings> supplier, CallbackInfo ci) {
@@ -96,5 +99,20 @@ public abstract class MixinNoiseBasedChunkGenerator {
     @Redirect(method = "buildSurfaceAndBedrock", at = @At(value = "NEW", target = "net/minecraft/world/level/levelgen/WorldgenRandom"))
     private WorldgenRandom createCarverRandom() {
         return new NonAtomicWorldgenRandom();
+    }
+
+    @Redirect(
+        method = "getAquifer",
+        at = @At(
+            value = "INVOKE",
+            target = "Lnet/minecraft/world/level/levelgen/Aquifer;create(Lnet/minecraft/world/level/ChunkPos;Lnet/minecraft/world/level/levelgen/synth/NormalNoise;"
+                + "Lnet/minecraft/world/level/levelgen/synth/NormalNoise;Lnet/minecraft/world/level/levelgen/synth/NormalNoise;Lnet/minecraft/world/level/levelgen/NoiseGeneratorSettings;"
+                + "Lnet/minecraft/world/level/levelgen/NoiseSampler;II)Lnet/minecraft/world/level/levelgen/Aquifer;"
+        )
+    )
+    private Aquifer createNoiseAquifer(
+        ChunkPos chunkPos, NormalNoise barrierNoise, NormalNoise levelNoise, NormalNoise lavaNoise,
+        NoiseGeneratorSettings noiseGeneratorSettings, NoiseSampler noiseSampler, int minY, int sizeY) {
+        return new CubicAquifer(chunkPos, barrierNoise, levelNoise, lavaNoise, noiseGeneratorSettings, minY, sizeY);
     }
 }
