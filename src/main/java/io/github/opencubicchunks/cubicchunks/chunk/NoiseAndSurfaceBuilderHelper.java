@@ -72,8 +72,16 @@ public class NoiseAndSurfaceBuilderHelper extends ProtoChunk implements CubicLev
             int idx = getSectionIndex(Coords.sectionToMinBlock(sectionY));
             IBigCube delegateCube = (IBigCube) getDelegateFromSectionY(sectionY);
             assert delegateCube != null;
-            delegateCube.getCubeSections()[Coords.sectionToIndex(columnX, sectionY, columnZ)] = getSections()[idx];
-            getSections()[idx] = new LevelChunkSection(sectionY);
+            int cubeSectionIndex = Coords.sectionToIndex(columnX, sectionY, columnZ);
+            LevelChunkSection cubeSection = delegateCube.getCubeSections()[cubeSectionIndex];
+
+            if (cubeSection == null) {
+                delegateCube.getCubeSections()[cubeSectionIndex] = getSections()[idx];
+            }
+            LevelChunkSection section = getSections()[idx];
+            if (section == null) {
+                getSections()[idx] = new LevelChunkSection(sectionY);
+            }
         }
     }
 
