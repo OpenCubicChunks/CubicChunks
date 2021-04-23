@@ -39,8 +39,8 @@ import org.jetbrains.annotations.Nullable;
 //TODO: Implement this properly for mods. Vanilla is fine.
 public class ProtoColumn extends ProtoChunk {
 
-    private final int xCubeSectionOffset;
-    private final int zCubeSectionOffset;
+    private final int xSectionOffset;
+    private final int zSectionOffset;
     private final IBigCube[] delegates;
 
     private final int columnMinY;
@@ -48,12 +48,12 @@ public class ProtoColumn extends ProtoChunk {
 
     private ProtoColumnContainer biomeContainer = null;
 
-    public ProtoColumn(ChunkPos chunkPos, int xCubeSectionOffset, int zCubeSectionOffset, UpgradeData upgradeData, IBigCube[] delegates, CubeWorldGenRegion cubeWorldGenRegion) {
+    public ProtoColumn(ChunkPos chunkPos, int xSectionOffset, int zSectionOffset, UpgradeData upgradeData, IBigCube[] delegates, CubeWorldGenRegion cubeWorldGenRegion) {
         super(chunkPos, upgradeData, cubeWorldGenRegion);
         this.delegates = delegates;
         this.columnMinY = delegates[0].getCubePos().minCubeY();
-        this.xCubeSectionOffset = xCubeSectionOffset;
-        this.zCubeSectionOffset = zCubeSectionOffset;
+        this.xSectionOffset = xSectionOffset;
+        this.zSectionOffset = zSectionOffset;
         this.columnMaxY = delegates[delegates.length - 1].getCubePos().maxCubeY();
     }
 
@@ -186,7 +186,7 @@ public class ProtoColumn extends ProtoChunk {
     @Override public BlockPos getHeighestPosition(Heightmap.Types types) {
         BlockPos.MutableBlockPos mutableBlockPos = null;
 
-        ChunkPos chunkPos = this.delegates[0].getCubePos().asChunkPos(this.xCubeSectionOffset, this.zCubeSectionOffset);
+        ChunkPos chunkPos = this.delegates[0].getCubePos().asChunkPos(this.xSectionOffset, this.zSectionOffset);
         for (int x = chunkPos.getMinBlockX(); x < chunkPos.getMaxBlockX(); ++x) {
             for (int z = chunkPos.getMinBlockZ(); z < chunkPos.getMaxBlockZ(); ++z) {
                 int heightAtPos = this.getHeight(types, x & 15, z & 15);
