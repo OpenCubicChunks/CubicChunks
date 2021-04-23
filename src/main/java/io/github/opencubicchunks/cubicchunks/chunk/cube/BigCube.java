@@ -236,6 +236,12 @@ public class BigCube implements ChunkAccess, IBigCube, CubicLevelHeightAccessor 
         this.dirty = true;
     }
 
+    @Override public void loadLightHeightmapSection(LightSurfaceTrackerSection section, int localSectionX, int localSectionZ) {
+        int idx = localSectionX + localSectionZ * DIAMETER_IN_SECTIONS;
+
+        this.lightHeightmaps[idx] = section;
+    }
+
     @Deprecated @Override public ChunkPos getPos() {
         throw new UnsupportedOperationException("Not implemented");
     }
