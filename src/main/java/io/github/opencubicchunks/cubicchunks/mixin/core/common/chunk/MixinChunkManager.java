@@ -872,6 +872,7 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
             } catch (ReportedException reportedexception) {
                 Throwable throwable = reportedexception.getCause();
                 if (!(throwable instanceof IOException)) {
+                    this.markCubePositionReplaceable(cubePos);
                     throw reportedexception;
                 }
 
@@ -880,6 +881,7 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
                 LOGGER.error("Couldn't load cube {}", cubePos, exception);
             }
 
+            this.markCubePositionReplaceable(cubePos);
             return Either.left(new CubePrimer(cubePos, UpgradeData.EMPTY, level));
         }, this.mainThreadExecutor);
     }
