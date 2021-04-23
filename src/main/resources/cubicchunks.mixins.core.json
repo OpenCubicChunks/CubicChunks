@@ -12,7 +12,6 @@
     },
     "mixins": [
         "common.chunk.cave.legacy.MixinWorldCarver",
-        "common.chunk.cave.MixinAquifer",
         "common.chunk.MixinBeardifier",
         "common.chunk.MixinBlendedNoise",
         "common.chunk.MixinBulkSectionAccess",
