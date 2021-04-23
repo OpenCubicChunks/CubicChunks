@@ -6,6 +6,7 @@ import java.util.stream.Stream;
 
 import javax.annotation.Nullable;
 
+import io.github.opencubicchunks.cubicchunks.chunk.heightmap.LightSurfaceTrackerSection;
 import io.github.opencubicchunks.cubicchunks.chunk.heightmap.SurfaceTrackerSection;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.meta.EarlyConfig;
@@ -87,5 +88,8 @@ public interface IBigCube extends BlockGetter, ChunkAccess, FeatureAccess {
     int getCubeLocalHeight(Heightmap.Types heightmapType, int x, int z);
 
     default void loadHeightmapSection(SurfaceTrackerSection section, int localSectionX, int localSectionZZ) {
+    }
+
+    default void loadLightHeightmapSection(LightSurfaceTrackerSection section, int localSectionX, int localSectionZZ) {
     }
 }

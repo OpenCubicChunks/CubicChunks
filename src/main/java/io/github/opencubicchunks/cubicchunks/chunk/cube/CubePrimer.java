@@ -23,6 +23,7 @@ import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.ImposterChunkPos;
 import io.github.opencubicchunks.cubicchunks.chunk.LightHeightmapGetter;
 import io.github.opencubicchunks.cubicchunks.chunk.biome.CubeBiomeContainer;
+import io.github.opencubicchunks.cubicchunks.chunk.heightmap.LightSurfaceTrackerSection;
 import io.github.opencubicchunks.cubicchunks.chunk.heightmap.LightSurfaceTrackerWrapper;
 import io.github.opencubicchunks.cubicchunks.chunk.heightmap.SurfaceTrackerSection;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
@@ -80,6 +81,8 @@ public class CubePrimer extends ProtoChunk implements IBigCube, CubicLevelHeight
     private CubeBiomeContainer cubeBiomeContainer;
 
     private final Map<Heightmap.Types, SurfaceTrackerSection[]> heightmaps;
+
+    private final LightSurfaceTrackerSection[] lightHeightmaps = new LightSurfaceTrackerSection[4];
 
 
     private final List<CompoundTag> entities = Lists.newArrayList();
@@ -213,7 +216,6 @@ public class CubePrimer extends ProtoChunk implements IBigCube, CubicLevelHeight
                         }
                     }
 
-                    // TODO want to optimize this - probably want to do the thing we do for other scale0 sections and store a reference to it
                     lightHeightmap.loadCube(this);
 
                     for (int z = 0; z < SECTION_DIAMETER; z++) {
@@ -229,6 +231,16 @@ public class CubePrimer extends ProtoChunk implements IBigCube, CubicLevelHeight
                 }
             }
         }
+    }
+
+    @Override public void loadLightHeightmapSection(LightSurfaceTrackerSection section, int localSectionX, int localSectionZ) {
+        int idx = localSectionX + localSectionZ * DIAMETER_IN_SECTIONS;
+
+        this.lightHeightmaps[idx] = section;
+    }
+
+    public LightSurfaceTrackerSection[] getLightHeightmaps() {
+        return lightHeightmaps;
     }
 
     @Override public ChunkStatus getCubeStatus() {

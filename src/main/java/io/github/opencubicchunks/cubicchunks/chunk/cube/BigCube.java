@@ -24,6 +24,7 @@ import io.github.opencubicchunks.cubicchunks.chunk.CubeMapGetter;
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.ImposterChunkPos;
 import io.github.opencubicchunks.cubicchunks.chunk.LightHeightmapGetter;
+import io.github.opencubicchunks.cubicchunks.chunk.heightmap.LightSurfaceTrackerSection;
 import io.github.opencubicchunks.cubicchunks.chunk.heightmap.SurfaceTrackerSection;
 import io.github.opencubicchunks.cubicchunks.chunk.heightmap.SurfaceTrackerWrapper;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
@@ -112,6 +113,7 @@ public class BigCube implements ChunkAccess, IBigCube, CubicLevelHeightAccessor 
     private final Map<StructureFeature<?>, LongSet> structuresRefences;
 
     private final Map<Heightmap.Types, SurfaceTrackerSection[]> heightmaps;
+    private final LightSurfaceTrackerSection[] lightHeightmaps = new LightSurfaceTrackerSection[4];
 
     private ChunkBiomeContainer cubeBiomeContainer;
 
@@ -219,6 +221,16 @@ public class BigCube implements ChunkAccess, IBigCube, CubicLevelHeightAccessor 
         this.setAllStarts(cubePrimer.getAllCubeStructureStarts());
         this.setAllReferences(cubePrimer.getAllReferences());
 //        var4 = protoChunk.getHeightmaps().iterator();
+
+        LightSurfaceTrackerSection[] primerLightHeightmaps = cubePrimer.getLightHeightmaps();
+        for (int i = 0; i < IBigCube.DIAMETER_IN_SECTIONS * IBigCube.DIAMETER_IN_SECTIONS; i++) {
+            this.lightHeightmaps[i] = primerLightHeightmaps[i];
+            if (this.lightHeightmaps[i] == null) {
+                System.out.println("Got a null light heightmap while upgrading from CubePrimer at " + this.cubePos);
+            } else {
+                this.lightHeightmaps[i].upgradeCube(this);
+            }
+        }
 
         this.setCubeLight(cubePrimer.hasCubeLight());
         this.dirty = true;

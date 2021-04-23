@@ -121,6 +121,20 @@ public class LightSurfaceTrackerSection extends SurfaceTrackerSection {
         }
     }
 
+    /**
+     * Used when upgrading CubePrimers to BigCubes; should never be used elsewhere.
+     */
+    public void upgradeCube(IBigCube cube) {
+        if (this.scale != 0) {
+            throw new IllegalStateException("Attempted to upgrade the cube on a non-zero scale section");
+        }
+        if (this.cubeOrNodes == null) {
+            throw new IllegalStateException("Attempting to upgrade cube " + cube.getCubePos() + " for an unloaded surface tracker section");
+        }
+        this.cubeOrNodes = cube;
+
+    }
+
     @Override
     public void loadCube(int sectionX, int sectionZ, IBigCube newCube, boolean markDirty) {
         if (this.cubeOrNodes == null) {
@@ -130,6 +144,8 @@ public class LightSurfaceTrackerSection extends SurfaceTrackerSection {
             Arrays.fill(dirtyPositions, -1);
         }
         if (this.scale == 0) {
+            // TODO merge loadHeightmapSection and loadLightHeightmapSection, and just use instanceof checks in the implementation to figure out if it's a light heightmap?
+            newCube.loadLightHeightmapSection(this, sectionX, sectionZ);
             return;
         }
         int idx = indexOfRawHeightNode(newCube.getCubePos().getY(), scale, scaledY);
