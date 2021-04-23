@@ -153,6 +153,11 @@ public final class CubicAquifer implements Aquifer {
         }
     }
 
+    @Override
+    public boolean shouldScheduleFluidUpdate() {
+        return this.shouldScheduleFluidUpdate;
+    }
+
     private double computeBarrierDensity(
         int x, int y, int z,
         int firstDistance2, int secondDistance2, int thirdDistance2,
@@ -214,23 +219,18 @@ public final class CubicAquifer implements Aquifer {
         long sourcePos = cache[index];
 
         if (sourcePos == Long.MAX_VALUE) {
-            AquiferRandom random = this.random;
-            random.setSeed(Mth.getSeed(x, y * 3, z) + 1L);
+            AquiferRandom aquiferRandom = this.random;
+            aquiferRandom.setSeed(Mth.getSeed(x, y * 3, z) + 1L);
 
             sourcePos = BlockPos.asLong(
-                x * X_SPACING + random.nextInt(X_RANGE),
-                y * Y_SPACING + random.nextInt(Y_RANGE),
-                z * Z_SPACING + random.nextInt(Z_RANGE)
+                x * X_SPACING + aquiferRandom.nextInt(X_RANGE),
+                y * Y_SPACING + aquiferRandom.nextInt(Y_RANGE),
+                z * Z_SPACING + aquiferRandom.nextInt(Z_RANGE)
             );
             cache[index] = sourcePos;
         }
 
         return sourcePos;
-    }
-
-    @Override
-    public boolean shouldScheduleFluidUpdate() {
-        return this.shouldScheduleFluidUpdate;
     }
 
     private static boolean isLavaLevel(int y) {

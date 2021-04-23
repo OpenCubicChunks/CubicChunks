@@ -107,7 +107,9 @@ public abstract class MixinNoiseBasedChunkGenerator {
         method = "getAquifer",
         at = @At(
             value = "INVOKE",
-            target = "Lnet/minecraft/world/level/levelgen/Aquifer;create(Lnet/minecraft/world/level/ChunkPos;Lnet/minecraft/world/level/levelgen/synth/NormalNoise;Lnet/minecraft/world/level/levelgen/synth/NormalNoise;Lnet/minecraft/world/level/levelgen/synth/NormalNoise;Lnet/minecraft/world/level/levelgen/NoiseGeneratorSettings;Lnet/minecraft/world/level/levelgen/NoiseSampler;II)Lnet/minecraft/world/level/levelgen/Aquifer;"
+            target = "Lnet/minecraft/world/level/levelgen/Aquifer;create(Lnet/minecraft/world/level/ChunkPos;Lnet/minecraft/world/level/levelgen/synth/NormalNoise;"
+                + "Lnet/minecraft/world/level/levelgen/synth/NormalNoise;Lnet/minecraft/world/level/levelgen/synth/NormalNoise;Lnet/minecraft/world/level/levelgen/NoiseGeneratorSettings;"
+                + "Lnet/minecraft/world/level/levelgen/NoiseSampler;II)Lnet/minecraft/world/level/levelgen/Aquifer;"
         )
     )
     private Aquifer createNoiseAquifer(
