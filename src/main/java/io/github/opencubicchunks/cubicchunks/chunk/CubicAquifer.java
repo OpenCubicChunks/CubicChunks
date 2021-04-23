@@ -145,6 +145,10 @@ public final class CubicAquifer implements Aquifer {
 
         double barrierDensity = this.computeBarrierDensity(x, y, z, firstDistance2, secondDistance2, thirdDistance2, secondSource, thirdSource, firstAquifer, firstToSecond);
 
+        return getBlockState(stoneSource, x, y, z, density, firstAquifer, firstToSecond, barrierDensity);
+    }
+
+    private BlockState getBlockState(BaseStoneSource stoneSource, int x, int y, int z, double density, int firstAquifer, double firstToSecond, double barrierDensity) {
         if (density + barrierDensity <= 0.0) {
             this.shouldScheduleFluidUpdate = firstToSecond > 0.0;
             return y >= Sample.levelOf(firstAquifer) ? AIR : Sample.stateOf(firstAquifer);

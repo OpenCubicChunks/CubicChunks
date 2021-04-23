@@ -38,8 +38,6 @@ public abstract class MixinNoiseBasedChunkGenerator {
 
     @Mutable @Shadow @Final private int cellCountY;
 
-    @Mutable @Shadow @Final private int height;
-
     @Inject(method = "<init>(Lnet/minecraft/world/level/biome/BiomeSource;Lnet/minecraft/world/level/biome/BiomeSource;JLjava/util/function/Supplier;)V", at = @At("RETURN"))
     private void init(BiomeSource biomeSource, BiomeSource biomeSource2, long l, Supplier<NoiseGeneratorSettings> supplier, CallbackInfo ci) {
         // access to through the registry is slow: vanilla accesses settings directly from the supplier in the constructor anyway
@@ -113,11 +111,8 @@ public abstract class MixinNoiseBasedChunkGenerator {
         )
     )
     private Aquifer createNoiseAquifer(
-        ChunkPos chunkPos,
-        NormalNoise barrierNoise, NormalNoise levelNoise, NormalNoise lavaNoise,
-        NoiseGeneratorSettings noiseGeneratorSettings,
-        NoiseSampler noiseSampler, int minY, int sizeY
-    ) {
+        ChunkPos chunkPos, NormalNoise barrierNoise, NormalNoise levelNoise, NormalNoise lavaNoise,
+        NoiseGeneratorSettings noiseGeneratorSettings, NoiseSampler noiseSampler, int minY, int sizeY) {
         return new CubicAquifer(chunkPos, barrierNoise, levelNoise, lavaNoise, noiseGeneratorSettings, minY, sizeY);
     }
 }
