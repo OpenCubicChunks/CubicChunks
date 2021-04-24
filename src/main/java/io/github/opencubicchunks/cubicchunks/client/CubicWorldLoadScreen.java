@@ -27,6 +27,7 @@ import io.github.opencubicchunks.cubicchunks.world.gen.placement.UserFunction;
 import it.unimi.dsi.fastutil.objects.Object2IntArrayMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.core.Direction;
@@ -114,9 +115,65 @@ public class CubicWorldLoadScreen {
 
     public static void doRender(PoseStack mStack, StoringChunkProgressListener trackerParam, int xBase, int yBase, int scale, int spacing,
                                 Object2IntMap<ChunkStatus> colors) {
+        renderColorKey(STATUS_COLORS, mStack);
         render3d(trackerParam, xBase, yBase, scale, spacing, STATUS_COLORS);
         // TODO: config option
         // render2d(mStack, trackerParam, xBase, yBase, scale, spacing, colors);
+    }
+
+    private static void renderColorKey(Object2IntMap<ChunkStatus> colors, PoseStack poseStack) {
+        Font font = Minecraft.getInstance().font;
+
+        int x = 1;
+        int y = 1;
+
+        int radius = 11;
+        int margin = 3;
+
+        for (ChunkStatus status : ChunkStatus.getStatusList()) {
+            font.draw(poseStack, status.getName(), x + radius + margin, y + 2, 0xFFFFFFFF);
+            RenderSystem.setShader(GameRenderer::getPositionColorShader);
+            renderColorKeySquare(Transformation.identity().getMatrix(), x, y, x + radius, y + radius, 0xFF000000 | colors.getOrDefault(status, 0xFF00FF),
+                    (int) (255 * STATUS_ALPHAS.getValue(status.getIndex())));
+            y += radius + margin;
+        }
+    }
+
+    private static void renderColorKeySquare(Matrix4f transform, float x1, float y1, float x2, float y2, int color, int alpha) {
+        if (x1 > x2) {
+            float i = x1;
+            x1 = x2;
+            x2 = i;
+        }
+
+        if (y1 > y2) {
+            float j = y1;
+            y1 = y2;
+            y2 = j;
+        }
+
+        int red = color >> 16 & 255;
+        int green = color >> 8 & 255;
+        int blue = color & 255;
+
+        BufferBuilder buffer = Tesselator.getInstance().getBuilder();
+        RenderSystem.enableBlend();
+        RenderSystem.disableTexture();
+        RenderSystem.defaultBlendFunc();
+        buffer.begin(VertexFormat.Mode.TRIANGLES, DefaultVertexFormat.POSITION_COLOR);
+        // Display one triangle with full alpha so it's easier to see
+        buffer.vertex(transform, x2, y1, 0.0F).color(red, green, blue, 255).endVertex();
+        buffer.vertex(transform, x1, y1, 0.0F).color(red, green, blue, 255).endVertex();
+        buffer.vertex(transform, x1, y2, 0.0F).color(red, green, blue, 255).endVertex();
+        // Use actual alpha for other triangle
+        buffer.vertex(transform, x2, y1, 0.0F).color(red, green, blue, alpha).endVertex();
+        buffer.vertex(transform, x1, y2, 0.0F).color(red, green, blue, alpha).endVertex();
+        buffer.vertex(transform, x2, y2, 0.0F).color(red, green, blue, alpha).endVertex();
+        buffer.end();
+
+        BufferUploader.end(buffer);
+        RenderSystem.enableTexture();
+        RenderSystem.disableBlend();
     }
 
     private static void render3d(StoringChunkProgressListener trackerParam, int xBase, int yBase, int scale, int spacing,
