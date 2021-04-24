@@ -13,6 +13,7 @@ import java.util.stream.Stream;
 import com.google.common.collect.Maps;
 import io.github.opencubicchunks.cubicchunks.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
+import io.github.opencubicchunks.cubicchunks.chunk.biome.ProtoColumnBiomeContainer;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import io.github.opencubicchunks.cubicchunks.world.CubeWorldGenRegion;
 import io.github.opencubicchunks.cubicchunks.world.DummyHeightmap;
@@ -51,6 +52,8 @@ public class ProtoColumn extends ProtoChunk {
     private final CubeWorldGenRegion cubeWorldGenRegion;
     private final LevelChunkSection[] sections;
     private final Map<Heightmap.Types, Heightmap> heightmaps;
+    private final ProtoColumnBiomeContainer protoColumnBiomeContainer;
+
 
     public ProtoColumn(ChunkPos chunkPos, int xSectionOffset, int zSectionOffset, UpgradeData upgradeData, IBigCube[] delegates, CubeWorldGenRegion cubeWorldGenRegion) {
         super(chunkPos, upgradeData, cubeWorldGenRegion);
@@ -73,6 +76,8 @@ public class ProtoColumn extends ProtoChunk {
             }
         }
         this.sections = sections;
+
+        this.protoColumnBiomeContainer = new ProtoColumnBiomeContainer(delegates, xSectionOffset, zSectionOffset);
     }
 
     private IBigCube getCube(BlockPos pos) {
@@ -153,7 +158,7 @@ public class ProtoColumn extends ProtoChunk {
     }
 
     @Nullable @Override public ChunkBiomeContainer getBiomes() {
-        throw new UnsupportedOperationException("This is not yet implemented.");
+        return this.protoColumnBiomeContainer;
     }
 
     @Override public void setUnsaved(boolean shouldSave) {
