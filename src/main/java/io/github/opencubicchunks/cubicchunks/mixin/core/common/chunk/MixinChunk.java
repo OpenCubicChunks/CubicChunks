@@ -69,6 +69,10 @@ public abstract class MixinChunk implements ChunkAccess, CubicLevelHeightAccesso
 
     @Shadow public abstract Level getLevel();
 
+    @Shadow public abstract void addAndRegisterBlockEntity(BlockEntity blockEntity);
+
+    @Shadow protected abstract <T extends BlockEntity> void updateBlockEntityTicker(T blockEntity);
+
     @Override public boolean isYSpaceEmpty(int startY, int endY) {
         return false;
     }
@@ -226,12 +230,20 @@ public abstract class MixinChunk implements ChunkAccess, CubicLevelHeightAccesso
     @SuppressWarnings("UnresolvedMixinReference") @Redirect(method = "*",
         at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/chunk/LevelChunk;updateBlockEntityTicker(Lnet/minecraft/world/level/block/entity/BlockEntity;)V"))
     private void updateCubeBlockEntityTicker(LevelChunk levelChunk, BlockEntity blockEntity) {
+        if (!this.isCubic()) {
+            this.updateBlockEntityTicker(blockEntity);
+            return;
+        }
         ((BigCube) getCube(blockEntity.getBlockPos().getY())).updateBlockEntityTicker(blockEntity);
     }
 
     @SuppressWarnings("UnresolvedMixinReference") @Redirect(method = "*",
         at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/chunk/LevelChunk;addAndRegisterBlockEntity(Lnet/minecraft/world/level/block/entity/BlockEntity;)V"))
     private void addAndRegisterCubeBlockEntity(LevelChunk levelChunk, BlockEntity blockEntity) {
+        if (!this.isCubic()) {
+            this.addAndRegisterBlockEntity(blockEntity);
+            return;
+        }
         ((BigCube) getCube(blockEntity.getBlockPos().getY())).addAndRegisterBlockEntity(blockEntity);
     }
 
