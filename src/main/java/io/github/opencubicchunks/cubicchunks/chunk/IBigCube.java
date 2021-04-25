@@ -88,4 +88,6 @@ public interface IBigCube extends BlockGetter, ChunkAccess, FeatureAccess {
 
     default void loadHeightmapSection(SurfaceTrackerSection section, int localSectionX, int localSectionZZ) {
     }
+
+    SurfaceTrackerSection[] getHeightmapSections(Heightmap.Types type);
 }

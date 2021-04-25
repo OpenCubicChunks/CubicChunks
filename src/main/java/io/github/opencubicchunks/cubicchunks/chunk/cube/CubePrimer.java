@@ -396,6 +396,10 @@ public class CubePrimer extends ProtoChunk implements IBigCube, CubicLevelHeight
         return getCubeLocalHeight(types, x, z);
     }
 
+    @Override public SurfaceTrackerSection[] getHeightmapSections(Heightmap.Types type) {
+        return this.heightmaps.get(type);
+    }
+
     @org.jetbrains.annotations.Nullable
     public StructureStart<?> getStartForFeature(StructureFeature<?> structureFeature) {
         return this.structureStarts.get(structureFeature);

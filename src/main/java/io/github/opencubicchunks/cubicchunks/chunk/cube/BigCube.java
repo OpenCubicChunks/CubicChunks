@@ -817,6 +817,10 @@ public class BigCube implements ChunkAccess, IBigCube, CubicLevelHeightAccessor 
         this.heightmaps.computeIfAbsent(section.getType(), t -> new SurfaceTrackerSection[IBigCube.DIAMETER_IN_SECTIONS * IBigCube.DIAMETER_IN_SECTIONS])[idx] = section;
     }
 
+    @Override public SurfaceTrackerSection[] getHeightmapSections(Heightmap.Types type) {
+        return this.heightmaps.get(type);
+    }
+
     @Override public int getCubeLocalHeight(Heightmap.Types type, int x, int z) {
         SurfaceTrackerSection[] surfaceTrackerSections = this.heightmaps.get(type);
         if (surfaceTrackerSections == null) {

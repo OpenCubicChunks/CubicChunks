@@ -16,6 +16,7 @@ import io.github.opencubicchunks.cubicchunks.chunk.biome.CubeBiomeContainer;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.BigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.CubePrimer;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.CubePrimerWrapper;
+import io.github.opencubicchunks.cubicchunks.chunk.heightmap.SurfaceTrackerSection;
 import io.github.opencubicchunks.cubicchunks.chunk.storage.POIDeserializationContext;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.ChunkSerializerAccess;
@@ -28,6 +29,7 @@ import net.minecraft.core.Registry;
 import net.minecraft.core.SectionPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.LongArrayTag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.ai.village.poi.PoiManager;
@@ -47,6 +49,7 @@ import net.minecraft.world.level.chunk.LevelChunkSection;
 import net.minecraft.world.level.chunk.ProtoTickList;
 import net.minecraft.world.level.chunk.storage.ChunkSerializer;
 import net.minecraft.world.level.levelgen.GenerationStep;
+import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.levelgen.feature.StructureFeature;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureManager;
 import net.minecraft.world.level.lighting.LevelLightEngine;
@@ -338,16 +341,25 @@ public class CubeSerializer {
         }
 
         level.put("PostProcessing", ChunkSerializer.packOffsets(icube.getPostProcessing()));
-//        CompoundTag compoundnbt6 = new CompoundTag();
-//
-        //TODO: reimplement heightmaps
-//        for(Map.Entry<Heightmap.Type, Heightmap> entry : icube.getHeightmaps()) {
-//            if (icube.getCubeStatus().getHeightMaps().contains(entry.getKey())) {
-//                compoundnbt6.put(entry.getKey().getId(), new LongArrayNBT(entry.getValue().getDataArray()));
-//            }
-//        }
-//
-//        level.put("Heightmaps", compoundnbt6);
+        CompoundTag heightmapSectionNBT = new CompoundTag();
+
+        for (Heightmap.Types type : icube.getCubeStatus().heightmapsAfter()) {
+            SurfaceTrackerSection[] heightmapSections = icube.getHeightmapSections(type);
+            if (heightmapSections != null) {
+                CompoundTag data = new CompoundTag();
+                ListTag dirtyFlags = new ListTag();
+                ListTag heightData = new ListTag();
+                for (SurfaceTrackerSection heightmapSection : heightmapSections) {
+                    dirtyFlags.add(new LongArrayTag(heightmapSection.getDirtyPositions()));
+                    heightData.add(new LongArrayTag(heightmapSection.getHeights().getRaw()));
+                }
+                data.put("DirtyFlags", dirtyFlags);
+                data.put("HeightData", heightData);
+                heightmapSectionNBT.put(type.getSerializationKey(), data);
+            }
+        }
+
+        level.put("Heightmaps", heightmapSectionNBT);
         level.put("Structures", ChunkSerializerAccess.invokePackStructureData(world, new ImposterChunkPos(icube.getCubePos()), icube.getAllStarts(), icube.getAllReferences()));
 
         return root;

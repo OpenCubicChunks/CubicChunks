@@ -288,4 +288,14 @@ public class SurfaceTrackerSection {
             }
         }
     }
+
+    /** Only used for saving; should not be called elsewhere. */
+    public long[] getDirtyPositions() {
+        return dirtyPositions;
+    }
+
+    /** Only used for saving; should not be called elsewhere. */
+    public BitStorage getHeights() {
+        return heights;
+    }
 }
