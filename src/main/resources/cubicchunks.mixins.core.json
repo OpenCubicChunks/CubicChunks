@@ -85,6 +85,7 @@
         "common.world.structure.pieces.MixinOceanRuinPieces"
     ],
     "client": [
+        "client.chunk.MixinChunk",
         "client.chunk.MixinRenderChunkRegion",
         "client.debug.MixinChunkBorderRenderer",
         "client.debug.MixinClientWorld",
@@ -107,5 +108,7 @@
         "client.world.MixinClientChunkProvider",
         "client.world.MixinClientWorld"
     ],
-    "server": []
+    "server": [
+        "server.chunk.MixinChunk"
+    ]
 }
