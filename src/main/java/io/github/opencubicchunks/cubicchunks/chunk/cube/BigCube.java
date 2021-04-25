@@ -419,7 +419,7 @@ public class BigCube implements ChunkAccess, IBigCube, CubicLevelHeightAccessor 
         this.blockEntities.values().forEach(this::updateBlockEntityTicker);
     }
 
-    private <T extends BlockEntity> void updateBlockEntityTicker(T blockEntity) {
+    public <T extends BlockEntity> void updateBlockEntityTicker(T blockEntity) {
         BlockState blockState = blockEntity.getBlockState();
         @SuppressWarnings("unchecked")
         BlockEntityTicker<T> blockEntityTicker = (BlockEntityTicker<T>) blockState.getTicker(this.level, blockEntity.getType());

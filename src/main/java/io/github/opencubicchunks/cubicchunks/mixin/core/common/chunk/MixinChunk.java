@@ -223,6 +223,18 @@ public abstract class MixinChunk implements ChunkAccess, CubicLevelHeightAccesso
 //        }
     }
 
+    @SuppressWarnings("UnresolvedMixinReference") @Redirect(method = "*",
+        at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/chunk/LevelChunk;updateBlockEntityTicker(Lnet/minecraft/world/level/block/entity/BlockEntity;)V"))
+    private void updateCubeBlockEntityTicker(LevelChunk levelChunk, BlockEntity blockEntity) {
+        ((BigCube) getCube(blockEntity.getBlockPos().getY())).updateBlockEntityTicker(blockEntity);
+    }
+
+    @SuppressWarnings("UnresolvedMixinReference") @Redirect(method = "*",
+        at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/chunk/LevelChunk;addAndRegisterBlockEntity(Lnet/minecraft/world/level/block/entity/BlockEntity;)V"))
+    private void addAndRegisterCubeBlockEntity(LevelChunk levelChunk, BlockEntity blockEntity) {
+        ((BigCube) getCube(blockEntity.getBlockPos().getY())).addAndRegisterBlockEntity(blockEntity);
+    }
+
     //This should return object because Hashmap.get also does
     @SuppressWarnings({ "rawtypes", "UnresolvedMixinReference" })
     @Redirect(method = "*",
