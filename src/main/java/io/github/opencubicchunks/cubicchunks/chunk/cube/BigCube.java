@@ -283,10 +283,10 @@ public class BigCube implements ChunkAccess, IBigCube, CubicLevelHeightAccessor 
 
             int idx = xSection + zSection * DIAMETER_IN_SECTIONS;
 
-            this.heightmaps.get(Heightmap.Types.MOTION_BLOCKING)[idx].markDirty(localX, localZ);
-            this.heightmaps.get(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES)[idx].markDirty(localX, localZ);
-            this.heightmaps.get(Heightmap.Types.OCEAN_FLOOR)[idx].markDirty(localX, localZ);
-            this.heightmaps.get(Heightmap.Types.WORLD_SURFACE)[idx].markDirty(localX, localZ);
+            this.heightmaps.get(Heightmap.Types.MOTION_BLOCKING)[idx].onSetBlock(localX, pos.getY(), localZ, newState);
+            this.heightmaps.get(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES)[idx].onSetBlock(localX, pos.getY(), localZ, newState);
+            this.heightmaps.get(Heightmap.Types.OCEAN_FLOOR)[idx].onSetBlock(localX, pos.getY(), localZ, newState);
+            this.heightmaps.get(Heightmap.Types.WORLD_SURFACE)[idx].onSetBlock(localX, pos.getY(), localZ, newState);
         }
 
         boolean hadBlockEntity = oldState.hasBlockEntity();
