@@ -58,7 +58,7 @@ public class PacketDispatcher {
                                             BiConsumer<T, PacketContext> handler) {
         ENCODERS.put(clazz, encode);
         PACKET_IDS.put(clazz, new ResourceLocation("ocbc", id));
-        ClientSidePacketRegistry.INSTANCE.register(
+        ServerSidePacketRegistry.INSTANCE.register(
             new ResourceLocation("ocbc", id), (ctx, received) -> {
                 T packet = decode.apply(received);
                 handler.accept(packet, ctx);
