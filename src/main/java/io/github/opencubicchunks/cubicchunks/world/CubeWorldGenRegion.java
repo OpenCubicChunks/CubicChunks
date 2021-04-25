@@ -16,7 +16,7 @@ import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
-import io.github.opencubicchunks.cubicchunks.chunk.cube.ProtoColumn;
+import io.github.opencubicchunks.cubicchunks.chunk.cube.CubeWorldRegionColumn;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.server.ICubicWorld;
 import it.unimi.dsi.fastutil.longs.LongSet;
@@ -72,7 +72,7 @@ public class CubeWorldGenRegion extends WorldGenRegion implements ICubicWorld {
 
     private static final Logger LOGGER = LogManager.getLogger();
     private final IBigCube[] cubePrimers;
-    private final ProtoColumn[] protoColumns;
+    private final CubeWorldRegionColumn[] cubeWorldRegionColumns;
 
     private final CubePos centerCubePos;
     private final int mainCubeX;
@@ -145,7 +145,7 @@ public class CubeWorldGenRegion extends WorldGenRegion implements ICubicWorld {
             int zSize = Math.abs(this.maxCubeZ - this.minCubeZ) + 1;
 
 
-            ProtoColumn[] protoColumns = new ProtoColumn[cubeToSection(xSize, 0) * cubeToSection(zSize, 0)];
+            CubeWorldRegionColumn[] cubeWorldRegionColumns = new CubeWorldRegionColumn[cubeToSection(xSize, 0) * cubeToSection(zSize, 0)];
             for (int xCubeRange = 0; xCubeRange < xSize; xCubeRange++) {
                 for (int zCubeRange = 0; zCubeRange < zSize; zCubeRange++) {
                     IBigCube[] cubes = new IBigCube[ySize];
@@ -161,13 +161,13 @@ public class CubeWorldGenRegion extends WorldGenRegion implements ICubicWorld {
                             int index = xIndex * cubeToSection(zSize, 0) + zIndex;
 
                             ChunkPos chunkPos = CubePos.of(this.minCubeX + xCubeRange, this.minCubeY, this.minCubeZ + zCubeRange).asChunkPos(xSectionRange, zSectionRange);
-                            protoColumns[index] = new ProtoColumn(chunkPos, xSectionRange, zSectionRange, UpgradeData.EMPTY, cubes, this);
+                            cubeWorldRegionColumns[index] = new CubeWorldRegionColumn(chunkPos, xSectionRange, zSectionRange, UpgradeData.EMPTY, cubes, this);
 
                         }
                     }
                 }
             }
-            this.protoColumns = protoColumns;
+            this.cubeWorldRegionColumns = cubeWorldRegionColumns;
         }
     }
 
@@ -382,14 +382,14 @@ public class CubeWorldGenRegion extends WorldGenRegion implements ICubicWorld {
     @Nullable @Override public ChunkAccess getChunk(int x, int z, ChunkStatus requiredStatus, boolean nonnull) {
         int xIndex = Math.abs(x - cubeToSection(this.minCubeX, 0));
         int zIndex = Math.abs(z - cubeToSection(this.minCubeZ, 0));
-        ProtoColumn protoColumn = this.protoColumns[xIndex * cubeToSection(diameter, 0) + zIndex];
+        CubeWorldRegionColumn cubeWorldRegionColumn = this.cubeWorldRegionColumns[xIndex * cubeToSection(diameter, 0) + zIndex];
 
-        if (protoColumn == null) {
+        if (cubeWorldRegionColumn == null) {
             throw new IllegalStateException(String.format("We are asking for a ProtoColumn out of bounds. Requested: %s, %s when the current bound was: %s, %s", x, z, getCenter().x,
                 getCenter().z));
         }
 
-        return protoColumn;
+        return cubeWorldRegionColumn;
     }
 
     @Override public int getHeight(Heightmap.Types heightmapType, int x, int z) {

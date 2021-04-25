@@ -43,7 +43,7 @@ import net.minecraft.world.level.material.FluidState;
 import org.jetbrains.annotations.Nullable;
 
 //TODO: Implement this properly for mods. Vanilla is fine.
-public class ProtoColumn extends ProtoChunk {
+public class CubeWorldRegionColumn extends ProtoChunk {
 
     private final int xSectionOffset;
     private final int zSectionOffset;
@@ -55,7 +55,7 @@ public class ProtoColumn extends ProtoChunk {
     private final ProtoColumnBiomeContainer protoColumnBiomeContainer;
 
 
-    public ProtoColumn(ChunkPos chunkPos, int xSectionOffset, int zSectionOffset, UpgradeData upgradeData, IBigCube[] delegates, CubeWorldGenRegion cubeWorldGenRegion) {
+    public CubeWorldRegionColumn(ChunkPos chunkPos, int xSectionOffset, int zSectionOffset, UpgradeData upgradeData, IBigCube[] delegates, CubeWorldGenRegion cubeWorldGenRegion) {
         super(chunkPos, upgradeData, cubeWorldGenRegion);
         this.xSectionOffset = xSectionOffset;
         this.zSectionOffset = zSectionOffset;
@@ -234,7 +234,7 @@ public class ProtoColumn extends ProtoChunk {
     }
 
     @Override public void setStartForFeature(StructureFeature<?> structure, StructureStart<?> start) {
-        this.getCube(Coords.blockToCube(start.getBoundingBox().minY()));
+        this.getCube(Coords.blockToCube(start.getBoundingBox().minY())); //TODO: Wait on load order
     }
 
     @Override public Map<StructureFeature<?>, StructureStart<?>> getAllStarts() {
@@ -294,7 +294,7 @@ public class ProtoColumn extends ProtoChunk {
     }
 
     @Override public void setBlockEntityNbt(CompoundTag nbt) {
-        super.setBlockEntityNbt(nbt);
+        getCube(nbt.getInt("y")).setBlockEntityNbt(nbt);
     }
 
     @Override public Map<BlockPos, CompoundTag> getBlockEntityNbts() {
@@ -326,7 +326,7 @@ public class ProtoColumn extends ProtoChunk {
     }
 
     @Override public void setLightEngine(LevelLightEngine lightingProvider) {
-        throw new UnsupportedOperationException("This is not yet implemented.");
+        throw new UnsupportedOperationException("This operation is not supported.");
     }
 
     @Override public boolean isLightCorrect() {
