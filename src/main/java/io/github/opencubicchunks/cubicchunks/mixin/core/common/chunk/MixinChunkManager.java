@@ -574,14 +574,8 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
 
                         IBigCube cube = optional.get();
                         if (cube.getCubeStatus().isOrAfter(chunkStatusIn)) {
-                            CompletableFuture<Either<IBigCube, ChunkHolder.ChunkLoadingFailure>> completablefuture1;
-                            if (chunkStatusIn == ChunkStatus.LIGHT) {
-                                completablefuture1 = this.scheduleCubeGeneration(cubeHolder, chunkStatusIn);
-                            } else {
-                                completablefuture1 = Utils.unsafeCast(
-                                    chunkStatusIn.load(this.level, this.structureManager, this.lightEngine, (chunk) -> Utils.unsafeCast(this.protoCubeToFullCube(cubeHolder)), cube));
-                            }
-
+                            CompletableFuture<Either<IBigCube, ChunkHolder.ChunkLoadingFailure>> completablefuture1 = Utils
+                                .unsafeCast(chunkStatusIn.load(this.level, this.structureManager, this.lightEngine, (chunk) -> Utils.unsafeCast(this.protoCubeToFullCube(cubeHolder)), cube));
                             ((ICubeStatusListener) this.progressListener).onCubeStatusChange(cubePos, chunkStatusIn);
                             return completablefuture1;
                         } else {
