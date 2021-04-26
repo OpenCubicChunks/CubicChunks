@@ -214,6 +214,24 @@ public abstract class MixinChunk implements ChunkAccess, CubicLevelHeightAccesso
 //        }
     }
 
+    @Inject(method = "addAndRegisterBlockEntity", at = @At("HEAD"), cancellable = true)
+    private void addAndRegisterCubeBlockEntity(BlockEntity blockEntity, CallbackInfo ci) {
+        if (!this.isCubic) {
+            return;
+        }
+        ci.cancel();
+        ((BigCube) getCube(blockEntity.getBlockPos().getY())).addAndRegisterBlockEntity(blockEntity);
+    }
+
+    @Inject(method = "updateBlockEntityTicker", at = @At("HEAD"), cancellable = true)
+    private void updateCubeBlockEntityTicker(BlockEntity blockEntity, CallbackInfo ci) {
+        if (!this.isCubic) {
+            return;
+        }
+        ci.cancel();
+        ((BigCube) getCube(blockEntity.getBlockPos().getY())).updateBlockEntityTicker(blockEntity);
+    }
+
     //This should return object because Hashmap.get also does
 
     @Redirect(method = "addAndRegisterBlockEntity",
