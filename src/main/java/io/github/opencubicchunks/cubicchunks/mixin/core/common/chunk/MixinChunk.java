@@ -69,10 +69,6 @@ public abstract class MixinChunk implements ChunkAccess, CubicLevelHeightAccesso
 
     @Shadow public abstract Level getLevel();
 
-    @Shadow public abstract void addAndRegisterBlockEntity(BlockEntity blockEntity);
-
-    @Shadow protected abstract <T extends BlockEntity> void updateBlockEntityTicker(T blockEntity);
-
     @Override public boolean isYSpaceEmpty(int startY, int endY) {
         return false;
     }
