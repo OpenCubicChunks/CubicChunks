@@ -12,7 +12,6 @@
     },
     "mixins": [
         "common.chunk.cave.legacy.MixinWorldCarver",
-        "common.chunk.cave.MixinAquifer",
         "common.chunk.MixinBeardifier",
         "common.chunk.MixinBlendedNoise",
         "common.chunk.MixinBulkSectionAccess",
@@ -39,7 +38,6 @@
         "common.MixinBlockPos",
         "common.MixinMinecraftServer",
         "common.MixinServerChunkProvider",
-        "common.network.MixinClientboundLevelChunkPacket",
         "common.progress.MixinLoggingChunkStatusListener",
         "common.server.MixinPlayerList",
         "common.ticket.MixinProxyTicketManager",
@@ -90,6 +88,7 @@
         "common.world.structure.pieces.MixinOceanRuinPieces"
     ],
     "client": [
+        "client.chunk.MixinChunk",
         "client.chunk.MixinRenderChunkRegion",
         "client.debug.MixinChunkBorderRenderer",
         "client.debug.MixinClientWorld",
@@ -113,5 +112,7 @@
         "client.world.MixinClientChunkProvider",
         "client.world.MixinClientWorld"
     ],
-    "server": []
+    "server": [
+        "server.chunk.MixinChunk"
+    ]
 }

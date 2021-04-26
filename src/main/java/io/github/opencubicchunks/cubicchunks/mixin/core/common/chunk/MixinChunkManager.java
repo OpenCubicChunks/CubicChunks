@@ -574,14 +574,8 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
 
                         IBigCube cube = optional.get();
                         if (cube.getCubeStatus().isOrAfter(chunkStatusIn)) {
-                            CompletableFuture<Either<IBigCube, ChunkHolder.ChunkLoadingFailure>> completablefuture1;
-                            if (chunkStatusIn == ChunkStatus.LIGHT) {
-                                completablefuture1 = this.scheduleCubeGeneration(cubeHolder, chunkStatusIn);
-                            } else {
-                                completablefuture1 = Utils.unsafeCast(
-                                    chunkStatusIn.load(this.level, this.structureManager, this.lightEngine, (chunk) -> Utils.unsafeCast(this.protoCubeToFullCube(cubeHolder)), cube));
-                            }
-
+                            CompletableFuture<Either<IBigCube, ChunkHolder.ChunkLoadingFailure>> completablefuture1 = Utils
+                                .unsafeCast(chunkStatusIn.load(this.level, this.structureManager, this.lightEngine, (chunk) -> Utils.unsafeCast(this.protoCubeToFullCube(cubeHolder)), cube));
                             ((ICubeStatusListener) this.progressListener).onCubeStatusChange(cubePos, chunkStatusIn);
                             return completablefuture1;
                         } else {
@@ -872,6 +866,7 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
             } catch (ReportedException reportedexception) {
                 Throwable throwable = reportedexception.getCause();
                 if (!(throwable instanceof IOException)) {
+                    this.markCubePositionReplaceable(cubePos);
                     throw reportedexception;
                 }
 
@@ -880,6 +875,7 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
                 LOGGER.error("Couldn't load cube {}", cubePos, exception);
             }
 
+            this.markCubePositionReplaceable(cubePos);
             return Either.left(new CubePrimer(cubePos, UpgradeData.EMPTY, level));
         }, this.mainThreadExecutor);
     }
@@ -1223,6 +1219,14 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
         }
     }
 
+    @Inject(method = "playerLoadedChunk", at = @At("HEAD"), cancellable = true)
+    private void noVanillaNetwork(ServerPlayer player, Packet<?>[] packets, LevelChunk chunk, CallbackInfo ci) {
+        if (!((CubicLevelHeightAccessor) this.level).isCubic()) {
+            return;
+        }
+//        ci.cancel();
+    }
+
     @Nullable
     @Redirect(method = "playerLoadedChunk", at = @At(value = "NEW", target = "net/minecraft/network/protocol/game/ClientboundLightUpdatePacket"))
     private ClientboundLightUpdatePacket onVanillaLightPacketConstruct(ChunkPos pos, LevelLightEngine lightManager, BitSet bits1, BitSet bits2, boolean bool) {
@@ -1335,7 +1339,7 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
         };
     }
 
-    @Inject(method = "close", at = @At("HEAD"))
+    @Inject(method = "close", at = @At("HEAD"), remap = false)
     public void on$close(CallbackInfo ci) {
         if (!((CubicLevelHeightAccessor) this.level).isCubic()) {
             return;

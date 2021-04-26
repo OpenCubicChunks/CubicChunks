@@ -199,7 +199,7 @@ public class CubeWorldGenRegion extends WorldGenRegion implements ICubicWorld {
             int dx = x - this.minCubeX;
             int dy = y - this.minCubeY;
             int dz = z - this.minCubeZ;
-            icube = this.cubePrimers[dx * this.diameter * this.diameter + dy * this.diameter + dz];
+            icube = this.cubePrimers[this.diameter * (dx * this.diameter + dy) + dz];
             if (icube.getCubeStatus().isOrAfter(requiredStatus)) {
                 return icube;
             }
@@ -291,7 +291,7 @@ public class CubeWorldGenRegion extends WorldGenRegion implements ICubicWorld {
         if (tileentity != null) {
             return tileentity;
         } else {
-            CompoundTag compoundnbt = null; // = icube.getDeferredTileEntity(pos);
+            CompoundTag compoundnbt = icube.getBlockEntityNbt(pos);
             BlockState state = this.getBlockState(pos);
             if (compoundnbt != null) {
                 if ("DUMMY".equals(compoundnbt.getString("id"))) {
@@ -304,14 +304,14 @@ public class CubeWorldGenRegion extends WorldGenRegion implements ICubicWorld {
                 }
 
                 if (tileentity != null) {
-                    icube.setCubeBlockEntity(tileentity);
+                    icube.setBlockEntity(tileentity);
                     return tileentity;
                 }
             }
 
-            //if (icube.getBlockState(pos).hasBlockEntity()) {
-            //    LOGGER.warn("Tried to access a block entity before it was created. {}", (Object) pos); //TODO:Re-enable warning
-            //}
+            if (icube.getBlockState(pos).hasBlockEntity()) {
+                LOGGER.warn("Tried to access a block entity before it was created. {}", pos);
+            }
 
             return null;
         }
@@ -402,7 +402,8 @@ public class CubeWorldGenRegion extends WorldGenRegion implements ICubicWorld {
     //TODO: Cube Biome Storage
     @Override
     public Biome getNoiseBiome(int x, int y, int z) {
-        return getUncachedNoiseBiome(x, y, z);
+        IBigCube cube = this.getCube(Coords.blockToCube(x), Coords.blockToCube(y), Coords.blockToCube(z), ChunkStatus.BIOMES, false);
+        return cube != null && cube.getBiomes() != null ? cube.getBiomes().getNoiseBiome(x, y, z) : this.getUncachedNoiseBiome(x, y, z);
     }
 
     @Override public boolean isClientSide() {
@@ -434,14 +435,19 @@ public class CubeWorldGenRegion extends WorldGenRegion implements ICubicWorld {
         }
         if (newState.hasBlockEntity()) {
             if (icube.getCubeStatus().getChunkType() == ChunkStatus.ChunkType.LEVELCHUNK) {
-                icube.setCubeBlockEntity(((EntityBlock) newState.getBlock()).newBlockEntity(pos, newState));
+                BlockEntity tileEntity = ((EntityBlock) newState.getBlock()).newBlockEntity(pos, newState);
+                if (tileEntity != null) {
+                    icube.setBlockEntity(tileEntity);
+                } else {
+                    icube.removeBlockEntity(pos);
+                }
             } else {
                 CompoundTag compoundnbt = new CompoundTag();
                 compoundnbt.putInt("x", pos.getX());
                 compoundnbt.putInt("y", pos.getY());
                 compoundnbt.putInt("z", pos.getZ());
                 compoundnbt.putString("id", "DUMMY");
-                //icube.addTileEntity(compoundnbt);
+                icube.setBlockEntityNbt(compoundnbt);
             }
         } else if (blockstate != null && blockstate.hasBlockEntity()) {
             icube.removeCubeBlockEntity(pos);

@@ -23,6 +23,7 @@ import io.github.opencubicchunks.cubicchunks.mixin.access.common.ChunkHolderAcce
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.ChunkManagerAccess;
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.TicketAccess;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
+import io.github.opencubicchunks.cubicchunks.utils.MathUtil;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.longs.LongIterator;
@@ -60,7 +61,7 @@ public abstract class MixinTicketManager implements ITicketManager, IVerticalVie
 
     private final CubeTicketTracker cubeTicketTracker = new CubeTicketTracker(this);
     private final PlayerCubeTracker naturalSpawnCubeCounter = new PlayerCubeTracker(this, 8 / IBigCube.DIAMETER_IN_SECTIONS);
-    private final PlayerCubeTicketTracker playerCubeTicketTracker = new PlayerCubeTicketTracker(this, 33);
+    private final PlayerCubeTicketTracker playerCubeTicketTracker = new PlayerCubeTicketTracker(this, MathUtil.ceilDiv(33, IBigCube.DIAMETER_IN_SECTIONS));
     private CubeTaskPriorityQueueSorter cubeTicketThrottler;
     private ProcessorHandle<CubeTaskPriorityQueueSorter.FunctionEntry<Runnable>> cubeTicketThrottlerInput;
     private ProcessorHandle<CubeTaskPriorityQueueSorter.RunnableEntry> cubeTicketThrottlerReleaser;

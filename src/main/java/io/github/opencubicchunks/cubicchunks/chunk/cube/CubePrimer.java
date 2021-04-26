@@ -324,7 +324,7 @@ public class CubePrimer extends ProtoChunk implements IBigCube, CubicLevelHeight
             int idx = xSection + zSection * DIAMETER_IN_SECTIONS;
 
             SurfaceTrackerSection surfaceTrackerSection = this.heightmaps.get(types)[idx];
-            surfaceTrackerSection.markDirty(x, z);
+            surfaceTrackerSection.onSetBlock(x, pos.getY(), z, state);
         }
 
         return lastState;
