@@ -3,6 +3,7 @@ package io.github.opencubicchunks.cubicchunks.mixin.core.common.server;
 import java.util.List;
 
 import io.github.opencubicchunks.cubicchunks.chunk.IVerticalView;
+import io.github.opencubicchunks.cubicchunks.network.PacketCCLevelInfo;
 import io.github.opencubicchunks.cubicchunks.network.PacketCubeCacheRadius;
 import io.github.opencubicchunks.cubicchunks.network.PacketDispatcher;
 import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
@@ -47,5 +48,11 @@ public abstract class MixinPlayerList implements IVerticalView {
                 }
             }
         }
+    }
+
+
+    @Inject(method = "sendLevelInfo", at = @At("HEAD"))
+    private void sendCubeInfo(ServerPlayer player, ServerLevel world, CallbackInfo ci) {
+        PacketDispatcher.sendTo(new PacketCCLevelInfo(((CubicLevelHeightAccessor) world).worldStyle()), player);
     }
 }

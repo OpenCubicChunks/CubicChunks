@@ -7,6 +7,8 @@ import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.ICubeProvider;
 import io.github.opencubicchunks.cubicchunks.server.ICubicWorld;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.util.profiling.ProfilerFiller;
@@ -15,6 +17,7 @@ import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.chunk.ChunkStatus;
 import net.minecraft.world.level.dimension.DimensionType;
 import net.minecraft.world.level.storage.WritableLevelData;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -38,6 +41,8 @@ public abstract class MixinWorld implements ICubicWorld, LevelReader {
 
 
     @Shadow public abstract ResourceKey<Level> dimension();
+
+    @Shadow @Final public boolean isClientSide;
 
     @Override public int getHeight() {
         if (!isCubic()) {
@@ -78,6 +83,13 @@ public abstract class MixinWorld implements ICubicWorld, LevelReader {
 
     @Override public boolean generates2DChunks() {
         return generates2DChunks;
+    }
+
+    @Environment(EnvType.CLIENT)
+    @Override public void setWorldStyle(WorldStyle worldStyle) {
+        this.worldStyle = worldStyle;
+        this.isCubic = worldStyle.isCubic();
+        this.generates2DChunks = worldStyle.generates2DChunks();
     }
 
     @Override

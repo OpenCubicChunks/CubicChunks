@@ -10,7 +10,6 @@ import java.util.function.Function;
 import io.github.opencubicchunks.cubicchunks.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import io.netty.buffer.Unpooled;
-import net.fabricmc.fabric.api.network.ClientSidePacketRegistry;
 import net.fabricmc.fabric.api.network.PacketContext;
 import net.fabricmc.fabric.api.network.ServerSidePacketRegistry;
 import net.minecraft.client.Minecraft;
@@ -48,8 +47,10 @@ public class PacketDispatcher {
             PacketHeightmap::new, mainThreadHandler(PacketHeightmap.Handler::handle));
         registerMessage("heights", PacketHeightmapChanges.class, PacketHeightmapChanges::encode,
             PacketHeightmapChanges::new, mainThreadHandler(PacketHeightmapChanges.Handler::handle));
-        //        CHANNEL.registerMessage("init", PacketCubicWorldInit.class, PacketCubicWorldInit::encode,
-        //                PacketCubicWorldInit::new, mainThreadHandler(PacketCubicWorldInit::handle));
+        registerMessage("levelinfo", PacketCCLevelInfo.class, PacketCCLevelInfo::encode,
+            PacketCCLevelInfo::new, mainThreadHandler(PacketCCLevelInfo.Handler::handle));
+//                CHANNEL.registerMessage("init", PacketCubicWorldInit.class, PacketCubicWorldInit::encode,
+//                        PacketCubicWorldInit::new, mainThreadHandler(PacketCubicWorldInit::handle));
     }
 
     private static <T> void registerMessage(String id, Class<T> clazz,
