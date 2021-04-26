@@ -10,15 +10,15 @@ import org.spongepowered.asm.gradle.plugins.MixinGradlePlugin
 // Gradle repositories and dependencies
 buildscript {
     repositories {
-        mavenCentral()
-        maven {
-            setUrl("https://repo.spongepowered.org/maven")
-        }
         maven {
             setUrl("https://plugins.gradle.org/m2/")
         }
         maven {
             setUrl("https://files.minecraftforge.net/maven")
+        }
+        mavenCentral()
+        maven {
+            setUrl("https://repo.spongepowered.org/maven")
         }
     }
     dependencies {
@@ -489,14 +489,17 @@ signing {
 repositories {
     mavenLocal()
     mavenCentral()
-    jcenter()
     maven {
         setUrl("https://oss.sonatype.org/content/repositories/public/")
+    }
+    maven {
+        setUrl("https://maven.minecraftforge.net")
     }
     maven {
         setUrl("https://repo.spongepowered.org/maven")
     }
 }
+repositories.removeIf { it is MavenArtifactRepository && it.url.toString().contains("files.minecraftforge") }
 
 jar.apply {
     from(sourceSets["main"].output)

@@ -1,6 +1,3 @@
-
-
-
 import net.minecraftforge.gradle.tasks.DeobfuscateJar
 import nl.javadude.gradle.plugins.license.LicensePlugin
 import org.gradle.api.internal.HasConvention
@@ -13,15 +10,14 @@ import kotlin.apply
 buildscript {
     repositories {
         mavenCentral()
-        jcenter()
         maven {
-            setUrl("http://files.minecraftforge.net/maven")
-        }
-        maven {
-            setUrl("http://repo.spongepowered.org/maven")
+            setUrl("https://repo.spongepowered.org/maven")
         }
         maven {
             setUrl("https://plugins.gradle.org/m2/")
+        }
+        maven {
+            setUrl("https://maven.minecraftforge.net/")
         }
     }
     dependencies {
@@ -42,6 +38,7 @@ plugins {
     id("io.github.opencubicchunks.gradle.remapper")
     id("io.github.opencubicchunks.gradle.mcGitVersion")
 }
+
 apply {
     plugin<LicensePlugin>()
 }
@@ -246,14 +243,17 @@ signing {
 repositories {
     mavenLocal()
     mavenCentral()
-    jcenter()
     maven {
         setUrl("https://oss.sonatype.org/content/repositories/public/")
     }
     maven {
-        setUrl("http://repo.spongepowered.org/maven")
+        setUrl("https://maven.minecraftforge.net")
+    }
+    maven {
+        setUrl("https://repo.spongepowered.org/maven")
     }
 }
+repositories.removeIf { it is MavenArtifactRepository && it.url.toString().contains("files.minecraftforge") }
 
 jar.apply {
     from(sourceSets["main"].output)
