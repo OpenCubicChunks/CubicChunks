@@ -227,24 +227,22 @@ public abstract class MixinChunk implements ChunkAccess, CubicLevelHeightAccesso
 //        }
     }
 
-    @SuppressWarnings("UnresolvedMixinReference") @Redirect(method = "*",
-        at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/chunk/LevelChunk;updateBlockEntityTicker(Lnet/minecraft/world/level/block/entity/BlockEntity;)V"))
-    private void updateCubeBlockEntityTicker(LevelChunk levelChunk, BlockEntity blockEntity) {
-        if (!this.isCubic()) {
-            this.updateBlockEntityTicker(blockEntity);
+    @Inject(method = "addAndRegisterBlockEntity", at = @At("HEAD"), cancellable = true)
+    private void addAndRegisterCubeBlockEntity(BlockEntity blockEntity, CallbackInfo ci) {
+        if (!this.isCubic) {
             return;
         }
-        ((BigCube) getCube(blockEntity.getBlockPos().getY())).updateBlockEntityTicker(blockEntity);
+        ci.cancel();
+        ((BigCube) getCube(blockEntity.getBlockPos().getY())).addAndRegisterBlockEntity(blockEntity);
     }
 
-    @SuppressWarnings("UnresolvedMixinReference") @Redirect(method = "*",
-        at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/chunk/LevelChunk;addAndRegisterBlockEntity(Lnet/minecraft/world/level/block/entity/BlockEntity;)V"))
-    private void addAndRegisterCubeBlockEntity(LevelChunk levelChunk, BlockEntity blockEntity) {
-        if (!this.isCubic()) {
-            this.addAndRegisterBlockEntity(blockEntity);
+    @Inject(method = "updateBlockEntityTicker", at = @At("HEAD"), cancellable = true)
+    private void updateCubeBlockEntityTicker(BlockEntity blockEntity, CallbackInfo ci) {
+        if (!this.isCubic) {
             return;
         }
-        ((BigCube) getCube(blockEntity.getBlockPos().getY())).addAndRegisterBlockEntity(blockEntity);
+        ci.cancel();
+        ((BigCube) getCube(blockEntity.getBlockPos().getY())).updateBlockEntityTicker(blockEntity);
     }
 
     //This should return object because Hashmap.get also does
