@@ -39,7 +39,8 @@ public class CubicWorldLoadScreen {
 
     private static final UserFunction STATUS_ALPHAS =
         UserFunction.builder().point(0, 1f)
-            .point(ChunkStatus.STRUCTURE_STARTS.getIndex(), 0.2f)
+            .point(ChunkStatus.STRUCTURE_STARTS.getIndex(), 0.15f)
+            .point(ChunkStatus.STRUCTURE_REFERENCES.getIndex(), 0.28f)
             .point(ChunkStatus.CARVERS.getIndex(), 0.7f)
             .point(ChunkStatus.LIQUID_CARVERS.getIndex(), 0.2f)
             .point(ChunkStatus.FULL.getIndex(), 1).build();
@@ -47,7 +48,7 @@ public class CubicWorldLoadScreen {
     @SuppressWarnings("unused") private static void unusedColors() {
         //@formatter:off
         /* MINECRAFT:EMPTY: */                  new java.awt.Color(0xFF00FF);
-        /* MINECRAFT:STRUCTURE_STARTS: */       new java.awt.Color(0x000000);
+        /* MINECRAFT:STRUCTURE_STARTS: */       new java.awt.Color(0x444444);
         /* MINECRAFT:STRUCTURE_REFERENCES: */   new java.awt.Color(0xFF0000);
         /* MINECRAFT:BIOMES: */                 new java.awt.Color(0xFF9900);
         /* MINECRAFT:NOISE: */                  new java.awt.Color(0xCBFF00);
@@ -68,7 +69,7 @@ public class CubicWorldLoadScreen {
 
         map.put(statusList.get(0), 0xFF00FF);
         System.out.println(statusList.get(0) + ": 0x" + Integer.toHexString(0xFF00FF).toUpperCase(Locale.ROOT));
-        map.put(statusList.get(1), 0);
+        map.put(statusList.get(1), 0x444444);
         System.out.println(statusList.get(1) + ": 0x" + Integer.toHexString(0).toUpperCase(Locale.ROOT));
 
         for (int i = 2; i < statusList.size() - 1; i++) {
