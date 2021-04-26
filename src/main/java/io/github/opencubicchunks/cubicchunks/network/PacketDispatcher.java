@@ -21,7 +21,7 @@ import net.minecraft.world.level.Level;
 
 public class PacketDispatcher {
 
-    private static final String PACKET_LOCATION = CubicChunks.MODID;
+    private static final String PACKET_LOCATION = "ocbc";
 
     // TODO: network compatibility check on fabric?
     //private static SimpleChannel CHANNEL = NetworkRegistry.newSimpleChannel(
