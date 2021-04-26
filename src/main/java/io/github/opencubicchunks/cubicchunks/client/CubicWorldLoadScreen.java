@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -22,8 +23,11 @@ import com.mojang.math.Vector4f;
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.ITrackingCubeStatusListener;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
+import io.github.opencubicchunks.cubicchunks.world.gen.placement.UserFunction;
+import it.unimi.dsi.fastutil.objects.Object2IntArrayMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.core.Direction;
@@ -31,12 +35,146 @@ import net.minecraft.server.level.progress.StoringChunkProgressListener;
 import net.minecraft.world.level.chunk.ChunkStatus;
 
 public class CubicWorldLoadScreen {
+    private static final Object2IntArrayMap<ChunkStatus> STATUS_COLORS = getStatusColors();
+
+    private static final UserFunction STATUS_ALPHAS =
+        UserFunction.builder().point(0, 1f)
+            .point(ChunkStatus.STRUCTURE_STARTS.getIndex(), 0.15f)
+            .point(ChunkStatus.STRUCTURE_REFERENCES.getIndex(), 0.28f)
+            .point(ChunkStatus.CARVERS.getIndex(), 0.7f)
+            .point(ChunkStatus.LIQUID_CARVERS.getIndex(), 0.2f)
+            .point(ChunkStatus.FULL.getIndex(), 1).build();
+
+    @SuppressWarnings("unused") private static void unusedColors() {
+        //@formatter:off
+        /* MINECRAFT:EMPTY: */                  new java.awt.Color(0xFF00FF);
+        /* MINECRAFT:STRUCTURE_STARTS: */       new java.awt.Color(0x444444);
+        /* MINECRAFT:STRUCTURE_REFERENCES: */   new java.awt.Color(0xFF0000);
+        /* MINECRAFT:BIOMES: */                 new java.awt.Color(0xFF9900);
+        /* MINECRAFT:NOISE: */                  new java.awt.Color(0xCBFF00);
+        /* MINECRAFT:SURFACE: */                new java.awt.Color(0x32FF00);
+        /* MINECRAFT:CARVERS: */                new java.awt.Color(0x00FF66);
+        /* MINECRAFT:LIQUID_CARVERS: */         new java.awt.Color(0x00FFFF);
+        /* MINECRAFT:FEATURES: */               new java.awt.Color(0x0065FF);
+        /* MINECRAFT:LIGHT: */                  new java.awt.Color(0x3200FF);
+        /* MINECRAFT:SPAWN: */                  new java.awt.Color(0xCC00FF);
+        /* MINECRAFT:HEIGHTMAPS: */             new java.awt.Color(0xFF0099);
+        /* MINECRAFT:FULL: */                   new java.awt.Color(0xFFFFFF);
+        //@formatter:on
+    }
+
+    private static Object2IntArrayMap<ChunkStatus> getStatusColors() {
+        Object2IntArrayMap<ChunkStatus> map = new Object2IntArrayMap<>();
+        List<ChunkStatus> statusList = ChunkStatus.getStatusList();
+
+        map.put(statusList.get(0), 0xFF00FF);
+        System.out.println(statusList.get(0) + ": 0x" + Integer.toHexString(0xFF00FF).toUpperCase(Locale.ROOT));
+        map.put(statusList.get(1), 0x444444);
+        System.out.println(statusList.get(1) + ": 0x" + Integer.toHexString(0).toUpperCase(Locale.ROOT));
+
+        for (int i = 2; i < statusList.size() - 1; i++) {
+            ChunkStatus chunkStatus = statusList.get(i);
+            int v = hsvToRgb((float) (i - 2) / (statusList.size() - 3), 1, 1);
+            map.put(chunkStatus, v);
+            System.out.println(chunkStatus + ": 0x" + Integer.toHexString(v).toUpperCase(Locale.ROOT));
+        }
+
+        map.put(statusList.get(statusList.size() - 1), 0xFFFFFF);
+        System.out.println(statusList.get(statusList.size() - 1) + ": 0x" + Integer.toHexString(0xFFFFFF).toUpperCase(Locale.ROOT));
+
+        return map;
+    }
+
+    public static int hsvToRgb(float hue, float saturation, float value) {
+
+        int h = (int) (hue * 6);
+        float f = hue * 6 - h;
+        float p = value * (1 - saturation);
+        float q = value * (1 - f * saturation);
+        float t = value * (1 - (1 - f) * saturation);
+
+        switch (h) {
+            case 0:
+                return rgbToString(value, t, p);
+            case 1:
+                return rgbToString(q, value, p);
+            case 2:
+                return rgbToString(p, value, t);
+            case 3:
+                return rgbToString(p, q, value);
+            case 4:
+                return rgbToString(t, p, value);
+            case 5:
+                return rgbToString(value, p, q);
+            default:
+                return 0;
+        }
+    }
+    public static int rgbToString(float r, float g, float b) {
+        return (int) (r * 255) << 16 | (int) (g * 255) << 8 | (int) (b * 255);
+    }
 
     public static void doRender(PoseStack mStack, StoringChunkProgressListener trackerParam, int xBase, int yBase, int scale, int spacing,
                                 Object2IntMap<ChunkStatus> colors) {
-        render3d(trackerParam, xBase, yBase, scale, spacing, colors);
+        renderColorKey(STATUS_COLORS, mStack);
+        render3d(trackerParam, xBase, yBase, scale, spacing, STATUS_COLORS);
         // TODO: config option
         // render2d(mStack, trackerParam, xBase, yBase, scale, spacing, colors);
+    }
+
+    private static void renderColorKey(Object2IntMap<ChunkStatus> colors, PoseStack poseStack) {
+        Font font = Minecraft.getInstance().font;
+
+        int x = 1;
+        int y = 1;
+
+        int radius = 11;
+        int margin = 3;
+
+        for (ChunkStatus status : ChunkStatus.getStatusList()) {
+            font.draw(poseStack, status.getName(), x + radius + margin, y + 2, 0xFFFFFFFF);
+            RenderSystem.setShader(GameRenderer::getPositionColorShader);
+            renderColorKeySquare(Transformation.identity().getMatrix(), x, y, x + radius, y + radius, 0xFF000000 | colors.getOrDefault(status, 0xFF00FF),
+                    (int) (255 * STATUS_ALPHAS.getValue(status.getIndex())));
+            y += radius + margin;
+        }
+    }
+
+    private static void renderColorKeySquare(Matrix4f transform, float x1, float y1, float x2, float y2, int color, int alpha) {
+        if (x1 > x2) {
+            float i = x1;
+            x1 = x2;
+            x2 = i;
+        }
+
+        if (y1 > y2) {
+            float j = y1;
+            y1 = y2;
+            y2 = j;
+        }
+
+        int red = color >> 16 & 255;
+        int green = color >> 8 & 255;
+        int blue = color & 255;
+
+        BufferBuilder buffer = Tesselator.getInstance().getBuilder();
+        RenderSystem.enableBlend();
+        RenderSystem.disableTexture();
+        RenderSystem.defaultBlendFunc();
+        buffer.begin(VertexFormat.Mode.TRIANGLES, DefaultVertexFormat.POSITION_COLOR);
+        // Display one triangle with full alpha so it's easier to see
+        buffer.vertex(transform, x2, y1, 0.0F).color(red, green, blue, 255).endVertex();
+        buffer.vertex(transform, x1, y1, 0.0F).color(red, green, blue, 255).endVertex();
+        buffer.vertex(transform, x1, y2, 0.0F).color(red, green, blue, 255).endVertex();
+        // Use actual alpha for other triangle
+        buffer.vertex(transform, x2, y1, 0.0F).color(red, green, blue, alpha).endVertex();
+        buffer.vertex(transform, x1, y2, 0.0F).color(red, green, blue, alpha).endVertex();
+        buffer.vertex(transform, x2, y2, 0.0F).color(red, green, blue, alpha).endVertex();
+        buffer.end();
+
+        BufferUploader.end(buffer);
+        RenderSystem.enableTexture();
+        RenderSystem.disableBlend();
     }
 
     private static void render3d(StoringChunkProgressListener trackerParam, int xBase, int yBase, int scale, int spacing,
@@ -97,7 +235,7 @@ public class CubicWorldLoadScreen {
                         continue;
                     }
                     renderFaces.clear();
-                    float ratio = status.getIndex() / (float) ChunkStatus.FULL.getIndex();
+                    float ratio = STATUS_ALPHAS.getValue(status.getIndex());
                     int alpha = (int) (0x20 + ratio * (0xFF - 0x20));
                     int c = colors.getOrDefault(status, 0xFFFF00FF) | (alpha << 24);
                     for (Direction value : Direction.values()) {
