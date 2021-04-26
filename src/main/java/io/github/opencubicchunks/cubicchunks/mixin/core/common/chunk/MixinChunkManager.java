@@ -1219,6 +1219,14 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
         }
     }
 
+    @Inject(method = "playerLoadedChunk", at = @At("HEAD"), cancellable = true)
+    private void noVanillaNetwork(ServerPlayer player, Packet<?>[] packets, LevelChunk chunk, CallbackInfo ci) {
+        if (!((CubicLevelHeightAccessor) this.level).isCubic()) {
+            return;
+        }
+//        ci.cancel();
+    }
+
     @Nullable
     @Redirect(method = "playerLoadedChunk", at = @At(value = "NEW", target = "net/minecraft/network/protocol/game/ClientboundLightUpdatePacket"))
     private ClientboundLightUpdatePacket onVanillaLightPacketConstruct(ChunkPos pos, LevelLightEngine lightManager, BitSet bits1, BitSet bits2, boolean bool) {
