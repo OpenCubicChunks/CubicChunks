@@ -34,6 +34,7 @@ import io.github.opencubicchunks.cubicchunks.world.lighting.ICubeLightProvider;
 import io.github.opencubicchunks.cubicchunks.world.server.IServerWorld;
 import net.minecraft.Util;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.SectionPos;
 import net.minecraft.server.level.ChunkHolder;
 import net.minecraft.server.level.ChunkMap;
 import net.minecraft.server.level.DistanceManager;
@@ -44,6 +45,7 @@ import net.minecraft.server.level.progress.ChunkProgressListener;
 import net.minecraft.util.profiling.ProfilerFiller;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.level.NaturalSpawner;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.ChunkGenerator;
@@ -411,5 +413,19 @@ public abstract class MixinServerChunkProvider implements IServerChunkProvider, 
         }
         long asLong = CubePos.from(pos).asLong();
         cir.setReturnValue(this.checkCubeFuture(asLong, (chunkHolder) -> unsafeCast(chunkHolder.getTickingChunkFuture())));
+    }
+
+    @Nullable
+    @SuppressWarnings("UnresolvedMixinReference")
+    @Inject(method = "lambda$onLightUpdate$6(Lnet/minecraft/core/SectionPos;Lnet/minecraft/world/level/LightLayer;)V", at = @At(value = "HEAD"), cancellable = true)
+    private void onlyCubes(SectionPos pos, LightLayer type, CallbackInfo ci) {
+        if (!((CubicLevelHeightAccessor) this.level).isCubic()) {
+            return;
+        }
+        ci.cancel();
+        ChunkHolder chunkHolder = this.getVisibleCubeIfPresent(pos.asLong());
+        if (chunkHolder != null) {
+            chunkHolder.sectionLightChanged(type, Coords.sectionToIndex(pos.getX(), pos.getY(), pos.getZ()));
+        }
     }
 }

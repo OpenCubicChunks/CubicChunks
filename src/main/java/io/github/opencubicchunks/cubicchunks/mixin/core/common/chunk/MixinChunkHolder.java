@@ -38,6 +38,7 @@ import net.minecraft.server.level.ChunkMap;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelHeightAccessor;
+import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.ChunkStatus;
@@ -454,6 +455,29 @@ public abstract class MixinChunkHolder implements ICubeHolder {
 
 
             changedLocalBlock.clear();
+        }
+    }
+
+    @Inject(method = "sectionLightChanged", at = @At("HEAD"), cancellable = true)
+    private void cubeSectionlightChanged(LightLayer lightType, int i, CallbackInfo ci) {
+        if (!((CubicLevelHeightAccessor) this.levelHeightAccessor).isCubic()) {
+            return;
+        }
+
+        ci.cancel();
+        if (cubePos == null) {
+            return;
+        }
+
+        BigCube levelChunk = getCubeIfComplete();
+        if (levelChunk != null) {
+            levelChunk.setUnsaved(true);
+            if (lightType == LightLayer.SKY) {
+                this.skyChangedLightSectionFilter.set(i);
+            } else {
+                this.blockChangedLightSectionFilter.set(i);
+            }
+
         }
     }
 
