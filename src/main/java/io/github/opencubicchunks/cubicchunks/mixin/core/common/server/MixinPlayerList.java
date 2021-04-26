@@ -50,7 +50,6 @@ public abstract class MixinPlayerList implements IVerticalView {
         }
     }
 
-
     @Inject(method = "sendLevelInfo", at = @At("HEAD"))
     private void sendCubeInfo(ServerPlayer player, ServerLevel world, CallbackInfo ci) {
         PacketDispatcher.sendTo(new PacketCCLevelInfo(((CubicLevelHeightAccessor) world).worldStyle()), player);

@@ -1,8 +1,5 @@
 package io.github.opencubicchunks.cubicchunks.server;
 
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
-
 public interface CubicLevelHeightAccessor {
 
     default WorldStyle worldStyle() {
@@ -17,7 +14,6 @@ public interface CubicLevelHeightAccessor {
         return worldStyle().generates2DChunks();
     }
 
-    @Environment(EnvType.CLIENT)
     default void setWorldStyle(WorldStyle worldStyle) {
     }
 

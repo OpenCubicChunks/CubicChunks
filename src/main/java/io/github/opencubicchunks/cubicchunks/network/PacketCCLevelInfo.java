@@ -4,6 +4,7 @@ import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.level.Level;
 
+//TODO: Find an earlier point to call this packet, preferably right after client world construction.
 public class PacketCCLevelInfo {
     private final String worldStyle;
 

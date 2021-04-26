@@ -4,15 +4,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
-import java.util.function.Consumer;
 import java.util.function.Function;
 
 import io.github.opencubicchunks.cubicchunks.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import io.netty.buffer.Unpooled;
-import net.fabricmc.fabric.api.network.PacketContext;
-import net.fabricmc.fabric.api.network.ServerSidePacketRegistry;
-import net.minecraft.client.Minecraft;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
@@ -34,39 +34,38 @@ public class PacketDispatcher {
 
     public static void register() {
         registerMessage("cubes", PacketCubes.class, PacketCubes::encode,
-            PacketCubes::new, mainThreadHandler(PacketCubes.Handler::handle));
+            PacketCubes::new, PacketCubes.Handler::handle);
         registerMessage("unload", PacketUnloadCube.class, PacketUnloadCube::encode,
-            PacketUnloadCube::new, mainThreadHandler(PacketUnloadCube.Handler::handle));
+            PacketUnloadCube::new, PacketUnloadCube.Handler::handle);
         registerMessage("blocks", PacketCubeBlockChanges.class, PacketCubeBlockChanges::encode,
-            PacketCubeBlockChanges::new, mainThreadHandler(PacketCubeBlockChanges.Handler::handle));
+            PacketCubeBlockChanges::new, PacketCubeBlockChanges.Handler::handle);
         registerMessage("cubepos", PacketUpdateCubePosition.class, PacketUpdateCubePosition::encode,
-            PacketUpdateCubePosition::new, mainThreadHandler(PacketUpdateCubePosition.Handler::handle));
+            PacketUpdateCubePosition::new, PacketUpdateCubePosition.Handler::handle);
         registerMessage("cube_radius", PacketCubeCacheRadius.class, PacketCubeCacheRadius::encode,
-            PacketCubeCacheRadius::new, mainThreadHandler(PacketCubeCacheRadius.Handler::handle));
+            PacketCubeCacheRadius::new, PacketCubeCacheRadius.Handler::handle);
         registerMessage("light", PacketUpdateLight.class, PacketUpdateLight::encode,
-            PacketUpdateLight::new, mainThreadHandler(PacketUpdateLight.Handler::handle));
+            PacketUpdateLight::new, PacketUpdateLight.Handler::handle);
         registerMessage("heightmap", PacketHeightmap.class, PacketHeightmap::encode,
-            PacketHeightmap::new, mainThreadHandler(PacketHeightmap.Handler::handle));
+            PacketHeightmap::new, PacketHeightmap.Handler::handle);
         registerMessage("heights", PacketHeightmapChanges.class, PacketHeightmapChanges::encode,
-            PacketHeightmapChanges::new, mainThreadHandler(PacketHeightmapChanges.Handler::handle));
+            PacketHeightmapChanges::new, PacketHeightmapChanges.Handler::handle);
         registerMessage("levelinfo", PacketCCLevelInfo.class, PacketCCLevelInfo::encode,
-            PacketCCLevelInfo::new, mainThreadHandler(PacketCCLevelInfo.Handler::handle));
+            PacketCCLevelInfo::new, PacketCCLevelInfo.Handler::handle);
 //                CHANNEL.registerMessage("init", PacketCubicWorldInit.class, PacketCubicWorldInit::encode,
-//                        PacketCubicWorldInit::new, mainThreadHandler(PacketCubicWorldInit::handle));
+//                        PacketCubicWorldInit::new, PacketCubicWorldInit::handle));
     }
 
     private static <T> void registerMessage(String id, Class<T> clazz,
                                             BiConsumer<T, FriendlyByteBuf> encode,
                                             Function<FriendlyByteBuf, T> decode,
-                                            BiConsumer<T, PacketContext> handler) {
+                                            BiConsumer<T, Level> handler) {
         ENCODERS.put(clazz, encode);
         PACKET_IDS.put(clazz, new ResourceLocation(PACKET_LOCATION, id));
-        ServerSidePacketRegistry.INSTANCE.register(
-            new ResourceLocation(PACKET_LOCATION, id), (ctx, received) -> {
-                T packet = decode.apply(received);
-                handler.accept(packet, ctx);
-            }
-        );
+
+
+        if (FabricLoader.getInstance().getEnvironmentType() == EnvType.CLIENT) {
+            ClientProxy.registerClientReceiver(id, decode, handler);
+        }
     }
 
     public static <MSG> void sendTo(MSG packet, ServerPlayer player) {
@@ -75,7 +74,7 @@ public class PacketDispatcher {
         BiConsumer<MSG, FriendlyByteBuf> encoder = (BiConsumer<MSG, FriendlyByteBuf>) ENCODERS.get(packet.getClass());
         FriendlyByteBuf buf = new FriendlyByteBuf(Unpooled.buffer());
         encoder.accept(packet, buf);
-        ServerSidePacketRegistry.INSTANCE.sendToPlayer(player, packetId, buf);
+        ServerPlayNetworking.send(player, packetId, buf);
     }
 
     public static <MSG> void sendTo(MSG packet, List<ServerPlayer> players) {
@@ -87,34 +86,32 @@ public class PacketDispatcher {
 
         players.forEach(player -> {
             if (((CubicLevelHeightAccessor) player.getLevel()).isCubic()) {
-                ServerSidePacketRegistry.INSTANCE.sendToPlayer(player, packetId, buf);
+                ServerPlayNetworking.send(player, packetId, buf);
             }
         });
     }
 
-    private static <T> BiConsumer<T, PacketContext> mainThreadHandler(Consumer<? super T> handler) {
-        return (packet, ctx) -> ctx.getTaskQueue().submit(() -> {
-            try {
-                handler.accept(packet);
-            } catch (Throwable throwable) {
-                CubicChunks.LOGGER.error("Packet failed: ", throwable);
-                throw throwable;
-            }
-        });
-    }
+    public static class ClientProxy {
 
-    private static <T> BiConsumer<T, PacketContext> mainThreadHandler(BiConsumer<? super T, ? super Level> handler) {
-        return (packet, ctx) -> ctx.getTaskQueue().submit(() -> {
-            ClientLevel level = Minecraft.getInstance().level;
-            if (level == null) {
-                return;
-            }
-            try {
-                handler.accept(packet, level);
-            } catch (Throwable throwable) {
-                CubicChunks.LOGGER.error("Packet failed: ", throwable);
-                throw throwable;
-            }
-        });
+        public static <T> void registerClientReceiver(String id, Function<FriendlyByteBuf, T> decode,
+                                                      BiConsumer<T, Level> handler) {
+            ClientPlayNetworking.registerGlobalReceiver(new ResourceLocation(PACKET_LOCATION, id), (client, listener, buf, responseSender) -> {
+                buf.retain();
+                client.execute(() -> {
+                    T packet = decode.apply(buf);
+                    ClientLevel level = client.level;
+                    if (level != null) {
+                        try {
+                            handler.accept(packet, level);
+                        } catch (Throwable throwable) {
+                            CubicChunks.LOGGER.error("Packet failed: ", throwable);
+                            throw throwable;
+                        }
+                    }
+                    buf.release();
+                });
+            });
+        }
+
     }
 }

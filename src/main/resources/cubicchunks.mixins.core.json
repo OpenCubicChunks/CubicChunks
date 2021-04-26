@@ -37,7 +37,6 @@
         "common.MixinBlockPos",
         "common.MixinMinecraftServer",
         "common.MixinServerChunkProvider",
-        "common.network.MixinClientboundLevelChunkPacket",
         "common.progress.MixinLoggingChunkStatusListener",
         "common.server.MixinPlayerList",
         "common.ticket.MixinProxyTicketManager",
