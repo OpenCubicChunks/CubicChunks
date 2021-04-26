@@ -1224,7 +1224,7 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
         if (!((CubicLevelHeightAccessor) this.level).isCubic()) {
             return;
         }
-        ci.cancel();
+//        ci.cancel();
     }
 
     @Nullable

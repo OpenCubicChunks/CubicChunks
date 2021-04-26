@@ -21,9 +21,11 @@ import net.minecraft.world.level.Level;
 
 public class PacketDispatcher {
 
+    private static final String PACKET_LOCATION = CubicChunks.MODID;
+
     // TODO: network compatibility check on fabric?
     //private static SimpleChannel CHANNEL = NetworkRegistry.newSimpleChannel(
-    //        new ResourceLocation("ocbc", "net"),
+    //        new ResourceLocation(PACKET_LOCATION, "net"),
     //        () -> CubicChunks.PROTOCOL_VERSION,
     //        CubicChunks.PROTOCOL_VERSION::equals, CubicChunks.PROTOCOL_VERSION::equals);;
 
@@ -58,9 +60,9 @@ public class PacketDispatcher {
                                             Function<FriendlyByteBuf, T> decode,
                                             BiConsumer<T, PacketContext> handler) {
         ENCODERS.put(clazz, encode);
-        PACKET_IDS.put(clazz, new ResourceLocation("ocbc", id));
+        PACKET_IDS.put(clazz, new ResourceLocation(PACKET_LOCATION, id));
         ServerSidePacketRegistry.INSTANCE.register(
-            new ResourceLocation("ocbc", id), (ctx, received) -> {
+            new ResourceLocation(PACKET_LOCATION, id), (ctx, received) -> {
                 T packet = decode.apply(received);
                 handler.accept(packet, ctx);
             }
