@@ -208,7 +208,7 @@ public class RegionCubeIO {
 
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
             writeCompressed(entry.data, outputStream);
-            ByteBuffer buf = ByteBuffer.wrap(outputStream.toByteArray());
+            ByteBuffer buf = entry.data.isEmpty() ? null : ByteBuffer.wrap(outputStream.toByteArray());
 
             save.save3d(new EntryLocation3D(cubePos.getX(), cubePos.getY(), cubePos.getZ()), buf);
 
@@ -225,7 +225,7 @@ public class RegionCubeIO {
 
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
             writeCompressed(entry.data, outputStream);
-            ByteBuffer buf = ByteBuffer.wrap(outputStream.toByteArray());
+            ByteBuffer buf = entry.data.isEmpty() ? null : ByteBuffer.wrap(outputStream.toByteArray());
 
             save.save2d(new EntryLocation2D(chunkPos.x, chunkPos.z), buf);
 

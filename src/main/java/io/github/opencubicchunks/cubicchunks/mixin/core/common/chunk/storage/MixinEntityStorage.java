@@ -100,7 +100,6 @@ public abstract class MixinEntityStorage implements CubicEntityStorage {
             if (this.emptyChunks.add(cubePos.asLong())) {
                 this.cubeWorker.saveCubeNBT(cubePos, new CompoundTag());
             }
-
         } else {
             ListTag listTag = new ListTag();
             dataList.getEntities().forEach((entity) -> {
@@ -131,6 +130,4 @@ public abstract class MixinEntityStorage implements CubicEntityStorage {
     private static void writeCubePos(CompoundTag chunkTag, CubePos pos) {
         chunkTag.put("Position", new IntArrayTag(new int[] { pos.getX(), pos.getY(), pos.getZ() }));
     }
-
-
 }
