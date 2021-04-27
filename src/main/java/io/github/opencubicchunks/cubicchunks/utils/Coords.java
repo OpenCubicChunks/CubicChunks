@@ -353,6 +353,10 @@ public class Coords {
         return blockVal >> 4;
     }
 
+    public static SectionPos blockToSection(BlockPos pos) {
+        return SectionPos.of(pos);
+    }
+
     /**
      * @param sectionVal A single dimension of a {@link SectionPos}
      *

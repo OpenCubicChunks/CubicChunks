@@ -51,6 +51,7 @@
         "common.world.feature.MixinLakeFeature",
         "common.world.feature.MixinSpringFeature",
         "common.world.feature.range.MixinRandomPatchFeature",
+        "common.world.gameevent.MixinGameEventListenerRegistrar",
         "common.world.lighting.MixinBlockLightEngine",
         "common.world.lighting.MixinLightEngine",
         "common.world.lighting.MixinSectionLightStorage",
