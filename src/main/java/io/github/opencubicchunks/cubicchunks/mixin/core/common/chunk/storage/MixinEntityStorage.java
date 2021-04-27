@@ -41,9 +41,9 @@ public abstract class MixinEntityStorage implements CubicEntityStorage {
 
     private RegionCubeIO cubeWorker;
 
-    @Shadow protected abstract CompoundTag upgradeChunkTag(CompoundTag chunkTag);
-
     @Shadow @Final private Executor mainThreadExecutor;
+
+    @Shadow protected abstract CompoundTag upgradeChunkTag(CompoundTag chunkTag);
 
     @Inject(method = "<init>", at = @At("RETURN"))
     private void setupCubeIO(ServerLevel serverLevel, File file, DataFixer dataFixer, boolean bl, Executor executor, CallbackInfo ci) throws IOException {
