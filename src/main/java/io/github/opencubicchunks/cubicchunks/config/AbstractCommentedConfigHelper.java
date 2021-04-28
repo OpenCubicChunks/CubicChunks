@@ -67,7 +67,7 @@ public class AbstractCommentedConfigHelper {
     }
 
 
-    public <T extends Number> T addNumber(String comment, String key, T defaultValue, T min, T max) {
+    public <T extends Number & Comparable<T>> T addNumber(String comment, String key, T defaultValue, T min, T max) {
         if (config.get(key) == null) {
             config.set(key, defaultValue);
         }
@@ -75,7 +75,8 @@ public class AbstractCommentedConfigHelper {
         if (config.getComment(key) == null) {
             config.setComment(key, comment + String.format("\nRange: %s-%s", min, max));
         }
-        return config.get(key);
+        T value = config.get(key);
+        return value.compareTo(max) > 0 ? max : value.compareTo(min) < 0 ? min : value;
     }
 
     public <T> void updateValue(String key, T newValue) {
