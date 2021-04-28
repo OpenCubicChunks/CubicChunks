@@ -60,7 +60,7 @@ public class CubePrimerWrapper extends CubePrimer {
     }
 
     @Deprecated @Override public LevelChunkSection[] getSections() {
-        throw new UnsupportedOperationException("This should never be called!");
+        return getCubeSections();
     }
 
     @Override public LevelChunkSection[] getCubeSections() {

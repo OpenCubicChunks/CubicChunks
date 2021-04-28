@@ -80,6 +80,12 @@ public abstract class MixinWorld implements ICubicWorld, LevelReader {
         return generates2DChunks;
     }
 
+    @Override public void setWorldStyle(WorldStyle worldStyle) {
+        this.worldStyle = worldStyle;
+        this.isCubic = worldStyle.isCubic();
+        this.generates2DChunks = worldStyle.generates2DChunks();
+    }
+
     @Override
     public IBigCube getCube(int cubeX, int cubeY, int cubeZ) {
         return this.getCube(cubeX, cubeY, cubeZ, ChunkStatus.FULL, true);

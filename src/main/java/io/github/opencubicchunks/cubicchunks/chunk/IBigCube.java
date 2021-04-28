@@ -38,9 +38,6 @@ public interface IBigCube extends BlockGetter, ChunkAccess, FeatureAccess {
     CubePos getCubePos();
     LevelChunkSection[] getCubeSections();
 
-    //STATUS
-    //TODO: remove setCubeStatus from IBigCube to match IChunk
-    void setCubeStatus(ChunkStatus status);
     ChunkStatus getCubeStatus();
 
     //BLOCK

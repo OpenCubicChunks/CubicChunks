@@ -175,35 +175,7 @@ public class MixinBiome implements BiomeGetter {
             new ResourceLocation("seagrass_simple"), //Requires Carving mask
             new ResourceLocation("fossil"),
             new ResourceLocation("desert_well"), //Iterates downwards in its placement
-            new ResourceLocation("ice_patch"), //Iterates downwards in its placement
-
-
-            //Ores //TODO: OPTIMIZE ORE GEN
-            new ResourceLocation("ore_magma"),
-            new ResourceLocation("ore_soul_sand"),
-            new ResourceLocation("ore_gold_deltas"),
-            new ResourceLocation("ore_quartz_deltas"),
-            new ResourceLocation("ore_gold_nether"),
-            new ResourceLocation("ore_quartz_nether"),
-            new ResourceLocation("ore_gravel_nether"),
-            new ResourceLocation("ore_blackstone"),
-            new ResourceLocation("ore_dirt"),
-            new ResourceLocation("ore_gravel"),
-            new ResourceLocation("ore_granite"),
-            new ResourceLocation("ore_diorite"),
-            new ResourceLocation("ore_andesite"),
-            new ResourceLocation("ore_coal"),
-            new ResourceLocation("ore_iron"),
-            new ResourceLocation("ore_gold_extra"),
-            new ResourceLocation("ore_gold"),
-            new ResourceLocation("ore_redstone"),
-            new ResourceLocation("ore_diamond"),
-            new ResourceLocation("ore_lapis"),
-            new ResourceLocation("ore_infested"),
-            new ResourceLocation("ore_emerald"),
-            new ResourceLocation("ore_debris_large"),
-            new ResourceLocation("ore_debris_small"),
-            new ResourceLocation("ore_copper")
+            new ResourceLocation("ice_patch") //Iterates downwards in its placement
         );
 
         featureBlacklist.addAll(resourceLocationList);

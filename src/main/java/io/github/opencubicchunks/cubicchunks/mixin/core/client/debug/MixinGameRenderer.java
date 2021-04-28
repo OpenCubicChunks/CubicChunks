@@ -12,9 +12,11 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(GameRenderer.class)
 public class MixinGameRenderer {
+    private static final boolean DEBUG_WINDOW_ENABLED = System.getProperty("cubicchunks.debug.window", "false").equals("true");
+
     @Inject(method = "renderLevel", at = @At("RETURN"))
     private void onRender(float f, long l, PoseStack poseStack, CallbackInfo ci) {
-        if (!((CubicLevelHeightAccessor) Minecraft.getInstance().level).isCubic()) {
+        if (!((CubicLevelHeightAccessor) Minecraft.getInstance().level).isCubic() || !DEBUG_WINDOW_ENABLED) {
             return;
         }
         DebugVisualization.onRender();

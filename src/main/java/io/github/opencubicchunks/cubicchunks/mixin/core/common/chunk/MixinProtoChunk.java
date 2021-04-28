@@ -25,11 +25,12 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(ProtoChunk.class)
 public abstract class MixinProtoChunk implements LevelHeightAccessor, CubicLevelHeightAccessor {
-    @Shadow @Final private LevelHeightAccessor levelHeightAccessor;
 
     private boolean isCubic;
     private boolean generates2DChunks;
     private WorldStyle worldStyle;
+
+    @Shadow @Final private LevelHeightAccessor levelHeightAccessor;
 
     @Shadow public abstract ChunkStatus getStatus();
 

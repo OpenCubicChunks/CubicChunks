@@ -1,11 +1,9 @@
 package io.github.opencubicchunks.cubicchunks.mixin.core.common.chunk;
 
-import java.util.Map;
 import java.util.concurrent.CompletionException;
 import java.util.function.Consumer;
 
-import javax.annotation.Nullable;
-
+import io.github.opencubicchunks.cubicchunks.chunk.ChunkCubeGetter;
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.ICubeProvider;
 import io.github.opencubicchunks.cubicchunks.chunk.biome.ColumnBiomeContainer;
@@ -15,13 +13,8 @@ import io.github.opencubicchunks.cubicchunks.chunk.heightmap.ClientSurfaceTracke
 import io.github.opencubicchunks.cubicchunks.chunk.heightmap.SurfaceTrackerWrapper;
 import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
-import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientBlockEntityEvents;
-import net.fabricmc.fabric.api.event.lifecycle.v1.ServerBlockEntityEvents;
-import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Registry;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.TickList;
@@ -46,15 +39,12 @@ import org.spongepowered.asm.mixin.injection.ModifyConstant;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(value = LevelChunk.class, priority = 0) //Priority 0 to always ensure our redirects are on top. Should also prevent fabric api crashes that have occur(ed) here. See removeTileEntity
-
-public abstract class MixinChunk implements ChunkAccess, CubicLevelHeightAccessor {
+@Mixin(value = LevelChunk.class, priority = 0) // Priority 0 to always ensure our redirects are on top. Should also prevent fabric api crashes that have occur(ed) here. See removeTileEntity
+public abstract class MixinChunk implements ChunkAccess, CubicLevelHeightAccessor, ChunkCubeGetter {
 
     @Shadow @Final private Level level;
     @Shadow @Final private ChunkPos chunkPos;
 
-    @Shadow @Final private Map<BlockPos, BlockEntity> blockEntities;
-    @Shadow @Final private Map<BlockPos, CompoundTag> pendingBlockEntities;
     @Shadow private ChunkBiomeContainer biomes;
 
     @Shadow private volatile boolean unsaved;
@@ -146,7 +136,8 @@ public abstract class MixinChunk implements ChunkAccess, CubicLevelHeightAccesso
     }
 
     @SuppressWarnings("ConstantConditions")
-    private IBigCube getCube(int y) {
+    @Override
+    public IBigCube getCube(int y) {
         try {
             return ((ICubeProvider) level.getChunkSource()).getCube(
                 Coords.sectionToCube(chunkPos.x),
@@ -223,88 +214,25 @@ public abstract class MixinChunk implements ChunkAccess, CubicLevelHeightAccesso
 //        }
     }
 
+    @Inject(method = "addAndRegisterBlockEntity", at = @At("HEAD"), cancellable = true)
+    private void addAndRegisterCubeBlockEntity(BlockEntity blockEntity, CallbackInfo ci) {
+        if (!this.isCubic) {
+            return;
+        }
+        ci.cancel();
+        ((BigCube) getCube(blockEntity.getBlockPos().getY())).addAndRegisterBlockEntity(blockEntity);
+    }
+
+    @Inject(method = "updateBlockEntityTicker", at = @At("HEAD"), cancellable = true)
+    private void updateCubeBlockEntityTicker(BlockEntity blockEntity, CallbackInfo ci) {
+        if (!this.isCubic) {
+            return;
+        }
+        ci.cancel();
+        ((BigCube) getCube(blockEntity.getBlockPos().getY())).updateBlockEntityTicker(blockEntity);
+    }
+
     //This should return object because Hashmap.get also does
-    @SuppressWarnings({ "rawtypes", "UnresolvedMixinReference" })
-    @Redirect(method = "*",
-        at = @At(value = "INVOKE", target = "Ljava/util/Map;get(Ljava/lang/Object;)Ljava/lang/Object;"))
-    private Object getTileEntity(Map map, Object key) {
-        if (map == this.blockEntities) {
-            if (!this.isCubic()) {
-                return map.get(key);
-            }
-            BigCube cube = (BigCube) this.getCube(Coords.blockToSection(((BlockPos) key).getY()));
-            return cube.getTileEntityMap().get(key);
-        } else if (map == this.pendingBlockEntities) {
-            if (!this.isCubic()) {
-                return map.get(key);
-            }
-            BigCube cube = (BigCube) this.getCube(Coords.blockToSection(((BlockPos) key).getY()));
-            return cube.getDeferredTileEntityMap().get(key);
-        }
-        return map.get(key);
-    }
-
-    @SuppressWarnings({ "rawtypes", "UnresolvedMixinReference" }) @Nullable
-    @Redirect(
-        method = "*",
-        at = @At(value = "INVOKE", target = "Ljava/util/Map;remove(Ljava/lang/Object;)Ljava/lang/Object;"))
-    private Object removeTileEntity(Map map,
-                                    Object key) {
-        // TODO: Maybe Resolve redirect conflict with fabric-lifecycle-events-v1.mixins.json:client .WorldChunkMixin->@Redirect::onRemoveBlockEntity(Fabric API). We implement their events
-        // to respect our priority over theirs.
-
-        if (map == this.blockEntities) {
-            if (!this.isCubic()) {
-                @Nullable
-                Object removed = map.remove(key);
-
-                if (this.getLevel() instanceof ServerLevel) {
-                    ServerBlockEntityEvents.BLOCK_ENTITY_UNLOAD.invoker().onUnload((BlockEntity) removed, (ServerLevel) this.getLevel());
-                } else if ((this.getLevel() instanceof ClientLevel)) {
-                    ClientBlockEntityEvents.BLOCK_ENTITY_UNLOAD.invoker().onUnload((BlockEntity) removed, (ClientLevel) this.getLevel());
-                }
-                return removed;
-            }
-            BigCube cube = (BigCube) this.getCube(Coords.blockToSection(((BlockPos) key).getY()));
-
-            @Nullable
-            BlockEntity removed = cube.getTileEntityMap().remove(key);
-
-            if (this.getLevel() instanceof ServerLevel) {
-                ServerBlockEntityEvents.BLOCK_ENTITY_UNLOAD.invoker().onUnload(removed, (ServerLevel) this.getLevel());
-            } else if ((this.getLevel() instanceof ClientLevel)) {
-                ClientBlockEntityEvents.BLOCK_ENTITY_UNLOAD.invoker().onUnload(removed, (ClientLevel) this.getLevel());
-            }
-            return removed;
-        } else if (map == this.pendingBlockEntities) {
-            if (!this.isCubic()) {
-                return map.remove(key);
-            }
-            BigCube cube = (BigCube) this.getCube(Coords.blockToSection(((BlockPos) key).getY()));
-            return cube.getDeferredTileEntityMap().remove(key);
-        }
-        return map.remove(key);
-    }
-
-    @SuppressWarnings({ "rawtypes", "unchecked", "UnresolvedMixinReference" }) @Nullable
-    @Redirect(method = "*",
-        at = @At(value = "INVOKE", target = "Ljava/util/Map;put(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;"))
-    private Object putTileEntity(Map map, Object key, Object value) {
-        if (map == this.blockEntities) {
-            if (!this.isCubic()) {
-                return map.put(key, value);
-            }
-            BigCube cube = (BigCube) this.getCube(Coords.blockToSection(((BlockPos) key).getY()));
-            return cube.getTileEntityMap().put((BlockPos) key, (BlockEntity) value);
-        } else if (map == this.pendingBlockEntities) {
-            if (!this.isCubic()) {
-                return map.put(key, value);
-            }
-            BigCube cube = (BigCube) this.getCube(Coords.blockToSection(((BlockPos) key).getY()));
-            return cube.getDeferredTileEntityMap().put((BlockPos) key, (CompoundTag) value);
-        }
-        return map.put(key, value);
-    }
 
     @Redirect(method = "addAndRegisterBlockEntity",
         at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/chunk/LevelChunk;isInLevel()Z"))

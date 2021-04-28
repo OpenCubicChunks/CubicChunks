@@ -12,6 +12,7 @@
         "common.ChunkHolderAccess",
         "common.ChunkManagerAccess",
         "common.ChunkSectionAccess",
+        "common.ChunkSerializerAccess",
         "common.ChunkTicketTrackerFactoryAccess",
         "common.DecorationContextAccess",
         "common.EntityTrackerAccess",
@@ -29,7 +30,8 @@
         "common.StructureFeatureManagerAccess",
         "common.TicketAccess",
         "common.TicketManagerAccess",
-        "common.TicketTypeAccess"
+        "common.TicketTypeAccess",
+        "common.VerticalAnchorAccess"
     ],
     "client": [
         "client.ChunkRenderDispatcherAccess",

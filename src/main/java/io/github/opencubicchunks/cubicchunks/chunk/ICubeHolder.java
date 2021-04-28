@@ -26,13 +26,17 @@ public interface ICubeHolder {
     @Deprecated
     Either<BigCube, ChunkHolder.ChunkLoadingFailure> UNLOADED_CUBE = unsafeCast(ChunkHolder.UNLOADED_LEVEL_CHUNK);
     @Deprecated
-    CompletableFuture<Either<BigCube, ChunkHolder.ChunkLoadingFailure>> UNLOADED_CUBE_FUTURE = unsafeCast(ChunkHolderAccess.getUnloadedChunkFuture());
+    CompletableFuture<Either<IBigCube, ChunkHolder.ChunkLoadingFailure>> UNLOADED_CUBE_FUTURE = unsafeCast(ChunkHolderAccess.getUnloadedChunkFuture());
     @Deprecated
     CompletableFuture<Either<IBigCube, ChunkHolder.ChunkLoadingFailure>> MISSING_CUBE_FUTURE = unsafeCast(ChunkHolder.UNLOADED_CHUNK_FUTURE);
 
     static ChunkStatus getCubeStatusFromLevel(int cubeLevel) {
         return cubeLevel < 33 ? ChunkStatus.FULL : CubeStatus.getStatus(cubeLevel - 33);
     }
+
+    void setChunkHolders(ChunkHolder[] chunkHolders);
+
+    ChunkHolder[] getChunkHolders();
 
     @Nullable
     BigCube getCubeIfComplete();

@@ -29,6 +29,9 @@ public class ColumnBiomeContainer extends ChunkBiomeContainer {
         this.level = level;
     }
 
+
+
+
     public Biome getNoiseBiome(int biomeX, int biomeY, int biomeZ) {
         if (this.level == null) {
             return DUMMY_BIOME;

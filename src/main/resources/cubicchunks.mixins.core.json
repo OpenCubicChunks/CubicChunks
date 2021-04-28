@@ -12,9 +12,9 @@
     },
     "mixins": [
         "common.chunk.cave.legacy.MixinWorldCarver",
-        "common.chunk.cave.MixinAquifer",
         "common.chunk.MixinBeardifier",
         "common.chunk.MixinBlendedNoise",
+        "common.chunk.MixinBulkSectionAccess",
         "common.chunk.MixinChunk",
         "common.chunk.MixinChunkGenerator",
         "common.chunk.MixinChunkHolder",
@@ -37,7 +37,7 @@
         "common.MixinBlockPos",
         "common.MixinMinecraftServer",
         "common.MixinServerChunkProvider",
-        "common.network.MixinClientboundLevelChunkPacket",
+        "common.network.MixinFriendlyByteBuf",
         "common.progress.MixinLoggingChunkStatusListener",
         "common.server.MixinPlayerList",
         "common.ticket.MixinProxyTicketManager",
@@ -48,11 +48,11 @@
         "common.world.biome.MixinBiomeDefaultFeatures",
         "common.world.feature.MixinBlockBlobFeature",
         "common.world.feature.MixinCocoaDecorator",
+        "common.world.feature.MixinDecoratedFeature",
         "common.world.feature.MixinIcebergFeature",
         "common.world.feature.MixinLakeFeature",
-        "common.world.feature.MixinOreFeature",
         "common.world.feature.MixinSpringFeature",
-        "common.world.feature.MixinVineFeature",
+        "common.world.feature.range.MixinRandomPatchFeature",
         "common.world.lighting.MixinBlockLightEngine",
         "common.world.lighting.MixinLightEngine",
         "common.world.lighting.MixinSectionLightStorage",
@@ -66,14 +66,18 @@
         "common.world.MixinSpawnLocationHelper",
         "common.world.MixinWorld",
         "common.world.MixinWorldGenRegion",
-        "common.world.placement.MixinAbstractBiasedRangedDecorator",
-        "common.world.placement.MixinAbstractRangeDecorator",
         "common.world.placement.MixinBiasedToBottomHeight",
         "common.world.placement.MixinDarkOakTreePlacementDecorator",
         "common.world.placement.MixinDecorationContext",
+        "common.world.placement.MixinHeightMapDecorator",
         "common.world.placement.MixinHeightMapDoubleDecorator",
-        "common.world.placement.MixinUniformHeight",
+        "common.world.placement.MixinHeightProvider",
+        "common.world.placement.MixinRangeDecorator",
+        "common.world.placement.MixinTrapezoidHeightProvider",
+        "common.world.placement.MixinUniformHeightProvider",
         "common.world.placement.MixinVerticalDecorator",
+        "common.world.placement.verticalanchor.MixinVerticalAnchorAboveBottom",
+        "common.world.placement.verticalanchor.MixinVerticalAnchorBelowTop",
         "common.world.server.MixinServerWorldLightManager",
         "common.world.structure.MixinConfiguredStructureFeature",
         "common.world.structure.MixinLocateCommand",
@@ -84,6 +88,7 @@
         "common.world.structure.MixinStructureStart"
     ],
     "client": [
+        "client.chunk.MixinChunk",
         "client.chunk.MixinRenderChunkRegion",
         "client.debug.MixinChunkBorderRenderer",
         "client.debug.MixinClientWorld",
@@ -106,5 +111,7 @@
         "client.world.MixinClientChunkProvider",
         "client.world.MixinClientWorld"
     ],
-    "server": []
+    "server": [
+        "server.chunk.MixinChunk"
+    ]
 }

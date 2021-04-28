@@ -7,6 +7,7 @@ import javax.annotation.Nullable;
 
 import com.google.common.annotations.VisibleForTesting;
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
+import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import net.minecraft.util.BitStorage;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.Heightmap;
@@ -110,6 +111,35 @@ public class SurfaceTrackerSection {
 
     private boolean isDirty(int idx) {
         return (dirtyPositions[idx >> 6] & (1L << idx)) != 0;
+    }
+
+    public void onSetBlock(int x, int y, int z, BlockState state) {
+        int index = index(x, z);
+        if (isDirty(index)) {
+            return;
+        }
+
+        y = Coords.localToBlock(scaledY, Coords.blockToLocal(y));
+        int height = getHeight(x, z);
+        if (y < height) {
+            return;
+        }
+
+        boolean test = HEIGHTMAP_TYPES[heightmapType].isOpaque().test(state);
+        if (y > height) {
+            if (!test) {
+                return;
+            }
+
+            if (parent != null) {
+                parent.markDirty(x, z);
+            }
+            this.heights.set(index, absToRelY(y, scaledY, scale));
+            return;
+        }
+        if (test) {
+            markDirty(x, z);
+        }
     }
 
     public void markDirty(int x, int z) {

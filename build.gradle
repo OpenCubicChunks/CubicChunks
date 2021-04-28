@@ -128,7 +128,9 @@ minecraft {
             "-Dmixin.debug.export=true",
             "-Dmixin.checks.interfaces=true",
             "-Dcubicchunks.debug=false",
-            "-Dcubicchunks.debug.mixins=false",
+            "-Dcubicchunks.debug.loadorder=false",
+            "-Dcubicchunks.debug.window=false",
+            "-Dcubicchunks.debug.statusrenderer=false",
             "-Dcubicchunks.debug.biomes=false",
     ]
 

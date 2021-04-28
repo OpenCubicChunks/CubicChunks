@@ -210,10 +210,9 @@ public class BigCube implements ChunkAccess, IBigCube, CubicLevelHeightAccessor 
 
         this.deferredTileEntities.putAll(cubePrimer.getDeferredTileEntities());
 
-        //TODO: reimplement missing BigCube methods
-//        for(int i = 0; i < protoChunk.getPostProcessing().length; ++i) {
-//            this.postProcessing[i] = protoChunk.getPostProcessing()[i];
-//        }
+        for (int i = 0; i < cubePrimer.getPostProcessing().length; ++i) {
+            this.postProcessing[i] = cubePrimer.getPostProcessing()[i];
+        }
 
         this.setAllStarts(cubePrimer.getAllCubeStructureStarts());
         this.setAllReferences(cubePrimer.getAllReferences());
@@ -237,11 +236,6 @@ public class BigCube implements ChunkAccess, IBigCube, CubicLevelHeightAccessor 
 
     @Override public LevelChunkSection[] getCubeSections() {
         return this.sections;
-    }
-
-    //STATUS
-    @Override public void setCubeStatus(ChunkStatus status) {
-        throw new UnsupportedOperationException("BigCube does not have a setter for setCubeStatus");
     }
 
     @Deprecated @Override public ChunkStatus getStatus() {
@@ -289,10 +283,10 @@ public class BigCube implements ChunkAccess, IBigCube, CubicLevelHeightAccessor 
 
             int idx = xSection + zSection * DIAMETER_IN_SECTIONS;
 
-            this.heightmaps.get(Heightmap.Types.MOTION_BLOCKING)[idx].markDirty(localX, localZ);
-            this.heightmaps.get(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES)[idx].markDirty(localX, localZ);
-            this.heightmaps.get(Heightmap.Types.OCEAN_FLOOR)[idx].markDirty(localX, localZ);
-            this.heightmaps.get(Heightmap.Types.WORLD_SURFACE)[idx].markDirty(localX, localZ);
+            this.heightmaps.get(Heightmap.Types.MOTION_BLOCKING)[idx].onSetBlock(localX, pos.getY(), localZ, newState);
+            this.heightmaps.get(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES)[idx].onSetBlock(localX, pos.getY(), localZ, newState);
+            this.heightmaps.get(Heightmap.Types.OCEAN_FLOOR)[idx].onSetBlock(localX, pos.getY(), localZ, newState);
+            this.heightmaps.get(Heightmap.Types.WORLD_SURFACE)[idx].onSetBlock(localX, pos.getY(), localZ, newState);
         }
 
         boolean hadBlockEntity = oldState.hasBlockEntity();
@@ -425,7 +419,7 @@ public class BigCube implements ChunkAccess, IBigCube, CubicLevelHeightAccessor 
         this.blockEntities.values().forEach(this::updateBlockEntityTicker);
     }
 
-    private <T extends BlockEntity> void updateBlockEntityTicker(T blockEntity) {
+    public <T extends BlockEntity> void updateBlockEntityTicker(T blockEntity) {
         BlockState blockState = blockEntity.getBlockState();
         @SuppressWarnings("unchecked")
         BlockEntityTicker<T> blockEntityTicker = (BlockEntityTicker<T>) blockState.getTicker(this.level, blockEntity.getType());
@@ -856,7 +850,7 @@ public class BigCube implements ChunkAccess, IBigCube, CubicLevelHeightAccessor 
     }
 
     @Override public ShortList[] getPostProcessing() {
-        throw new UnsupportedOperationException("Not implemented");
+        return this.postProcessing;
     }
 
     @Override public TickList<Block> getBlockTicks() {
@@ -893,7 +887,7 @@ public class BigCube implements ChunkAccess, IBigCube, CubicLevelHeightAccessor 
     }
 
 
-    @org.jetbrains.annotations.Nullable
+    @Nullable
     public StructureStart<?> getStartForFeature(StructureFeature<?> structureFeature) {
         return this.structureStarts.get(structureFeature);
     }
