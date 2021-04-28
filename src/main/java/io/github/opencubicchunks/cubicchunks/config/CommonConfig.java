@@ -17,7 +17,7 @@ public class CommonConfig {
         this.configHelper = new AbstractCommentedConfigHelper(CubicChunks.CONFIG_PATH.resolve(CubicChunks.MODID + "-common.toml"));
         verticalViewDistance = this.configHelper.addNumber("Cubic Chunks vertical render Distance.", "VerticalRenderDistance", 8, MIN_RENDER_DISTANCE, MAX_RENDER_DISTANCE);
         worldExceptionHandler = this.configHelper.addEnum("How will Cubic Chunks handle errors during world gen? It is recommended to leave this as:\""
-                + ExceptionHandler.EXCEPTION_THROWN.toString() + "\"", "WorldFailureHandler", ExceptionHandler.EXCEPTION_THROWN);
+                + ExceptionHandler.EXCEPTION_THROWN.toString() + "\"", "WorldExceptionHandler", ExceptionHandler.EXCEPTION_THROWN);
         this.configHelper.build();
     }
 
