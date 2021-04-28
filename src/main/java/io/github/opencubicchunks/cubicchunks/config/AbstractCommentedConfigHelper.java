@@ -11,6 +11,8 @@ import com.electronwill.nightconfig.core.CommentedConfig;
 import com.electronwill.nightconfig.core.file.CommentedFileConfig;
 import com.electronwill.nightconfig.core.io.WritingMode;
 import com.electronwill.nightconfig.toml.TomlWriter;
+import io.github.opencubicchunks.cubicchunks.utils.ExceptionHandler;
+import net.minecraft.util.StringRepresentable;
 
 public class AbstractCommentedConfigHelper {
 
@@ -78,6 +80,41 @@ public class AbstractCommentedConfigHelper {
         T value = config.get(key);
         return value.compareTo(max) > 0 ? max : value.compareTo(min) < 0 ? min : value;
     }
+
+    public String addString(String comment, String key, String defaultValue) {
+        if (config.get(key) == null) {
+            config.set(key, defaultValue);
+        }
+
+        if (config.getComment(key) == null) {
+            config.setComment(key, comment);
+        }
+        return config.get(key);
+    }
+
+    public <T extends Enum<T>> T addEnum(String comment, String key, T defaultValue) {
+        if (config.get(key) == null) {
+            config.set(key, defaultValue);
+        }
+
+        if (config.getComment(key) == null) {
+            StringBuilder builder = new StringBuilder().append("Values: ").append(defaultValue instanceof StringRepresentable ? "\n" : "");
+            for (T value : defaultValue.getDeclaringClass().getEnumConstants()) {
+                if (defaultValue instanceof StringRepresentable) {
+                    builder.append(((StringRepresentable) value).getSerializedName()).append("\n");
+                } else {
+                    builder.append(value.name()).append(", ");
+                }
+            }
+
+            config.setComment(key, comment + "\n" + builder.toString());
+        }
+
+
+        String value = config.get(key).toString();
+        return T.valueOf(defaultValue.getDeclaringClass(), value);
+    }
+
 
     public <T> void updateValue(String key, T newValue) {
         this.config.set(key, newValue);
