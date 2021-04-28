@@ -37,7 +37,7 @@ public enum ExceptionHandler implements StringRepresentable {
                 e.printStackTrace();
             }
         } else if (logException) {
-            CubicChunks.LOGGER.error(throwable.getStackTrace());
+            throwable.printStackTrace();
         }
     }
 
