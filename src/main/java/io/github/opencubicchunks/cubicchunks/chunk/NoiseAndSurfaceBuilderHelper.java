@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
+import io.github.opencubicchunks.cubicchunks.chunk.cube.CubePrimer;
 import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import io.github.opencubicchunks.cubicchunks.world.DummyHeightmap;
@@ -150,7 +151,10 @@ public class NoiseAndSurfaceBuilderHelper extends ProtoChunk implements CubicLev
     }
 
     @Override public void addLight(BlockPos pos) {
-        //TODO
+        ChunkAccess delegate = getDelegateFromBlockY(pos.getY());
+        if (delegate != null) {
+            ((CubePrimer) delegate).addLight(pos);
+        }
     }
 
     @Nullable @Override public BlockState setBlockState(BlockPos pos, BlockState state, boolean moved) {
