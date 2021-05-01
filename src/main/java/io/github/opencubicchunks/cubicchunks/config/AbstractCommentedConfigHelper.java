@@ -67,6 +67,17 @@ public class AbstractCommentedConfigHelper {
         return subConfig.valueMap();
     }
 
+    public <T> T add(String comment, String key, T defaultValue) {
+        if (config.get(key) == null) {
+            config.set(key, defaultValue);
+        }
+
+        if (config.getComment(key) == null) {
+            config.setComment(key, comment);
+        }
+        return config.get(key);
+    }
+
 
     public <T extends Number & Comparable<T>> T addNumber(String comment, String key, T defaultValue, T min, T max) {
         if (config.get(key) == null) {

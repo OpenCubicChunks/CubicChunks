@@ -12,12 +12,14 @@ public class CommonConfig {
 
     public int verticalViewDistance;
     public ExceptionHandler worldExceptionHandler;
+    public boolean asyncChunkLoad;
 
     public CommonConfig() {
         this.configHelper = new AbstractCommentedConfigHelper(CubicChunks.CONFIG_PATH.resolve(CubicChunks.MODID + "-common.toml"));
-        verticalViewDistance = this.configHelper.addNumber("Cubic Chunks vertical render Distance.", "VerticalRenderDistance", 8, MIN_RENDER_DISTANCE, MAX_RENDER_DISTANCE);
+        verticalViewDistance = this.configHelper.addNumber("Cubic Chunks vertical render Distance.", "verticalRenderDistance", 8, MIN_RENDER_DISTANCE, MAX_RENDER_DISTANCE);
         worldExceptionHandler = this.configHelper.addEnum("How will Cubic Chunks handle errors during world gen? It is recommended to leave this as:\""
-                + ExceptionHandler.EXCEPTION_THROWN.toString() + "\"", "WorldExceptionHandler", ExceptionHandler.EXCEPTION_THROWN);
+                + ExceptionHandler.EXCEPTION_THROWN.toString() + "\"", "worldExceptionHandler", ExceptionHandler.EXCEPTION_THROWN);
+        asyncChunkLoad = this.configHelper.add("Use async cube loading?", "asyncCubeLoad", true);
         this.configHelper.build();
     }
 
