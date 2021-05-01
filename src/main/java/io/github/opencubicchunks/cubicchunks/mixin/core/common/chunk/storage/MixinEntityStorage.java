@@ -80,7 +80,7 @@ public abstract class MixinEntityStorage implements CubicEntityStorage {
     }
 
     private static ChunkEntities<Entity> emptyCube(CubePos pos) {
-        return new ChunkEntities(new ImposterChunkPos(pos), ImmutableList.of());
+        return new ChunkEntities<>(new ImposterChunkPos(pos), ImmutableList.of());
     }
 
     @Inject(method = "storeEntities", at = @At("HEAD"), cancellable = true)
