@@ -17,6 +17,7 @@
         "common.DecorationContextAccess",
         "common.EntityTrackerAccess",
         "common.HeightmapAccess",
+        "common.IOWorkerAccess",
         "common.LevelBasedGraphAccess",
         "common.Matrix4fAccess",
         "common.NaturalSpawnerAccess",
@@ -31,8 +32,7 @@
         "common.TicketAccess",
         "common.TicketManagerAccess",
         "common.TicketTypeAccess",
-        "common.VerticalAnchorAccess",
-        "common.IOWorkerAccess"
+        "common.VerticalAnchorAccess"
     ],
     "client": [
         "client.ChunkRenderDispatcherAccess",
