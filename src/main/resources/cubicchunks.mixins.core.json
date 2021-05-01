@@ -31,6 +31,8 @@
         "common.chunk.storage.MixinEntityStorage",
         "common.chunk.storage.MixinPoiManager",
         "common.chunk.storage.MixinSectionStorage",
+        "common.chunk.storage.MixinStructureManager",
+        "common.chunk.storage.MixinStructureTemplatePalette",
         "common.entity.MixinPersistentEntitySectionManager",
         "common.entity.MixinServerPlayerEntity",
         "common.entity.storage.MixinEntitySectionStorage",

@@ -288,7 +288,7 @@ public class MergedMappingsDependency implements SelfResolvingDependency {
     }
 
     private byte[] readMappings(File mappingsFile) throws IOException {
-        try (FileSystem zipFs = FileSystems.newFileSystem(mappingsFile.toPath(), null)) {
+        try (FileSystem zipFs = FileSystems.newFileSystem(mappingsFile.toPath(), (ClassLoader) null)) { // Fix compile on Java 11
             Path mappingsPath = zipFs.getPath("mappings/mappings.tiny");
             return Files.readAllBytes(mappingsPath);
         }

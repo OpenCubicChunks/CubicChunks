@@ -17,6 +17,7 @@
         "common.DecorationContextAccess",
         "common.EntityTrackerAccess",
         "common.HeightmapAccess",
+        "common.IOWorkerAccess",
         "common.LevelBasedGraphAccess",
         "common.Matrix4fAccess",
         "common.NaturalSpawnerAccess",

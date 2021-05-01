@@ -30,7 +30,9 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.nbt.Tag;
 import net.minecraft.util.datafix.DataFixTypes;
+import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.LevelHeightAccessor;
+import net.minecraft.world.level.chunk.storage.IOWorker;
 import net.minecraft.world.level.chunk.storage.SectionStorage;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
@@ -59,6 +61,8 @@ public abstract class MixinSectionStorage<R> implements ISectionStorage {
 
     @Shadow @Final private DataFixTypes type;
 
+    @Shadow @Final private IOWorker worker;
+
     private RegionCubeIO cubeWorker;
 
     @Shadow protected abstract void onSectionLoad(long pos);
@@ -72,6 +76,8 @@ public abstract class MixinSectionStorage<R> implements ISectionStorage {
     @Shadow protected static int getVersion(Dynamic<?> dynamic) {
         throw new Error("Mixin didn't apply");
     }
+
+    @Shadow protected abstract <T> void readColumn(ChunkPos pos, DynamicOps<T> dynamicOps, @Nullable T data);
 
     @Inject(method = "<init>", at = @At("RETURN"))
     private void getServerLevel(File file, Function<Runnable, Codec<R>> function, Function<Runnable, R> function2, DataFixer dataFixer, DataFixTypes dataFixTypes, boolean bl,
@@ -215,5 +221,15 @@ public abstract class MixinSectionStorage<R> implements ISectionStorage {
             }
         }
 
+    }
+
+    @Override public void updateColumn(ChunkPos pos, CompoundTag tag) {
+        if (this.get(SectionPos.of(pos, 0).asLong()) != null) {
+            this.readColumn(pos, NbtOps.INSTANCE, tag);
+        }
+    }
+
+    @Override public IOWorker getIOWorker() {
+        return this.worker;
     }
 }
