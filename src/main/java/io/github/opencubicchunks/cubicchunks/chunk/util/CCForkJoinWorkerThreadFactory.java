@@ -16,14 +16,14 @@ public class CCForkJoinWorkerThreadFactory implements ForkJoinPool.ForkJoinWorke
 
     @Override
     public ForkJoinWorkerThread newThread(ForkJoinPool pool) {
-        final C2MEForkJoinWorkerThread C2MEForkJoinWorkerThread = new C2MEForkJoinWorkerThread(pool);
-        C2MEForkJoinWorkerThread.setName(String.format(namePattern, serial.incrementAndGet()));
-        C2MEForkJoinWorkerThread.setPriority(priority);
-        C2MEForkJoinWorkerThread.setDaemon(true);
-        return C2MEForkJoinWorkerThread;
+        final CCForkJoinWorkerThread worker = new CCForkJoinWorkerThread(pool);
+        worker.setName(String.format(namePattern, serial.incrementAndGet()));
+        worker.setPriority(priority);
+        worker.setDaemon(true);
+        return worker;
     }
 
-    private static class C2MEForkJoinWorkerThread extends ForkJoinWorkerThread {
+    private static class CCForkJoinWorkerThread extends ForkJoinWorkerThread {
 
         /**
          * Creates a ForkJoinWorkerThread operating in the given pool.
@@ -31,7 +31,7 @@ public class CCForkJoinWorkerThreadFactory implements ForkJoinPool.ForkJoinWorke
          * @param pool the pool this thread works in
          * @throws NullPointerException if pool is null
          */
-        protected C2MEForkJoinWorkerThread(ForkJoinPool pool) {
+        protected CCForkJoinWorkerThread(ForkJoinPool pool) {
             super(pool);
         }
 

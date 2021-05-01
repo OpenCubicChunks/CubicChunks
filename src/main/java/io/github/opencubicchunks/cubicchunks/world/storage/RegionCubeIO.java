@@ -30,7 +30,6 @@ import cubicchunks.regionlib.impl.EntryLocation3D;
 import cubicchunks.regionlib.impl.SaveCubeColumns;
 import io.github.opencubicchunks.cubicchunks.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
-import net.minecraft.Util;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtIo;
 import net.minecraft.util.thread.ProcessorMailbox;
@@ -44,7 +43,7 @@ public class RegionCubeIO {
     private static final long KB = 1024;
     private static final long MB = KB * 1024;
     private static final Logger LOGGER = CubicChunks.LOGGER;
-    public static final ThreadFactory ioWorkerFactory = new ThreadFactoryBuilder().setDaemon(true).setNameFormat("IOWorker-%d").setPriority(Thread.NORM_PRIORITY - 1).build();
+    private static final ThreadFactory IO_WORKER_FACTORY = new ThreadFactoryBuilder().setDaemon(true).setNameFormat("IOWorker-%d").setPriority(Thread.NORM_PRIORITY - 1).build();
 
     private final File storageFolder;
 
@@ -57,7 +56,7 @@ public class RegionCubeIO {
 
     private final AtomicBoolean shutdownRequested = new AtomicBoolean();
 
-    private final Executor executor = Executors.newSingleThreadExecutor(ioWorkerFactory);
+    private final Executor executor = Executors.newSingleThreadExecutor(IO_WORKER_FACTORY);
 
     public RegionCubeIO(File storageFolder, @Nullable String chunkWorkerName, String cubeWorkerName) throws IOException {
         this.storageFolder = storageFolder;

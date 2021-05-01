@@ -21,13 +21,16 @@ apply plugin: "fabric-loom"
 apply plugin: "io.github.opencubicchunks.gradle.mcGitVersion"
 apply plugin: "io.github.opencubicchunks.gradle.mixingen"
 
-sourceCompatibility = JavaVersion.VERSION_1_8
-targetCompatibility = JavaVersion.VERSION_1_8
-
 mcGitVersion {
     snapshot = true
     mcVersion = "${project.minecraft_version}"
     setCommitVersion '570c0cbf0cdc15b8348a862a519d3399a943af9', '0.0'
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(8)
+    }
 }
 
 mixinGen {

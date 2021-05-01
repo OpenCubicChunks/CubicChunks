@@ -31,7 +31,8 @@
         "common.TicketAccess",
         "common.TicketManagerAccess",
         "common.TicketTypeAccess",
-        "common.VerticalAnchorAccess"
+        "common.VerticalAnchorAccess",
+        "common.IOWorkerAccess"
     ],
     "client": [
         "client.ChunkRenderDispatcherAccess",

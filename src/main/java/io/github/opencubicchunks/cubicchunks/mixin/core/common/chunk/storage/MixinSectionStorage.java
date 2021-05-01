@@ -61,6 +61,8 @@ public abstract class MixinSectionStorage<R> implements ISectionStorage {
 
     @Shadow @Final private DataFixTypes type;
 
+    @Shadow @Final private IOWorker worker;
+
     private RegionCubeIO cubeWorker;
 
     @Shadow protected abstract void onSectionLoad(long pos);
@@ -76,8 +78,6 @@ public abstract class MixinSectionStorage<R> implements ISectionStorage {
     }
 
     @Shadow protected abstract <T> void readColumn(ChunkPos pos, DynamicOps<T> dynamicOps, @Nullable T data);
-
-    @Shadow @Final private IOWorker worker;
 
     @Inject(method = "<init>", at = @At("RETURN"))
     private void getServerLevel(File file, Function<Runnable, Codec<R>> function, Function<Runnable, R> function2, DataFixer dataFixer, DataFixTypes dataFixTypes, boolean bl,
@@ -224,8 +224,9 @@ public abstract class MixinSectionStorage<R> implements ISectionStorage {
     }
 
     @Override public void updateColumn(ChunkPos pos, CompoundTag tag) {
-        if (this.get(SectionPos.of(pos, 0).asLong()) != null)
-        this.readColumn(pos, NbtOps.INSTANCE, tag);
+        if (this.get(SectionPos.of(pos, 0).asLong()) != null) {
+            this.readColumn(pos, NbtOps.INSTANCE, tag);
+        }
     }
 
     @Override public IOWorker getIOWorker() {

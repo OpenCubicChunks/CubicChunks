@@ -260,7 +260,8 @@ public class CubeSerializer {
 
             DataLayer blockData = data != null ? data.blockLight.get(Coords.sectionPosByIndex(pos, i)) :
                 worldlightmanager.getLayerListener(LightLayer.BLOCK).getDataLayerData(Coords.sectionPosByIndex(pos, i));
-            DataLayer skyData = data != null ? data.skyLight.get(Coords.sectionPosByIndex(pos, i)) : worldlightmanager.getLayerListener(LightLayer.SKY).getDataLayerData(Coords.sectionPosByIndex(pos, i));
+            DataLayer skyData = data != null ? data.skyLight.get(Coords.sectionPosByIndex(pos, i)) :
+                worldlightmanager.getLayerListener(LightLayer.SKY).getDataLayerData(Coords.sectionPosByIndex(pos, i));
             CompoundTag sectionNBT = new CompoundTag();
             if (section != LevelChunk.EMPTY_SECTION || blockData != null || skyData != null) {
 
