@@ -128,6 +128,7 @@ public class AbstractCommentedConfigHelper {
 
     public <T> void updateValue(String key, T newValue) {
         this.config.set(key, newValue);
+        build();
     }
 
     public void build() {

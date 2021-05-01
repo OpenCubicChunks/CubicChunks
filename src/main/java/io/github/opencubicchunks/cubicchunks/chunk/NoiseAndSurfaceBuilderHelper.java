@@ -241,7 +241,7 @@ public class NoiseAndSurfaceBuilderHelper extends ProtoChunk implements CubicLev
         int maxCubeY = ((IBigCube) delegates[1]).getCubePos().getY();
 
         if (cubeY < minCubeY) {
-            CubicChunks.commonConfig().worldExceptionHandler.wrapException(StopGeneratingThrowable.INSTANCE);
+            CubicChunks.commonConfig().getWorldExceptionHandler().wrapException(StopGeneratingThrowable.INSTANCE);
             return null;
         }
         if (cubeY > maxCubeY) {

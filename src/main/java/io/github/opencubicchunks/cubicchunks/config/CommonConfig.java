@@ -10,9 +10,9 @@ public class CommonConfig {
 
     private final AbstractCommentedConfigHelper configHelper;
 
-    public int verticalViewDistance;
-    public ExceptionHandler worldExceptionHandler;
-    public boolean asyncChunkLoad;
+    private int verticalViewDistance;
+    private ExceptionHandler worldExceptionHandler;
+    private boolean asyncChunkLoad;
 
     public CommonConfig() {
         this.configHelper = new AbstractCommentedConfigHelper(CubicChunks.CONFIG_PATH.resolve(CubicChunks.MODID + "-common.toml"));
@@ -23,8 +23,20 @@ public class CommonConfig {
         this.configHelper.build();
     }
 
-    public void markDirty() {
-        this.configHelper.updateValue("VerticalRenderDistance", verticalViewDistance);
-        this.configHelper.build();
+    public void setVerticalViewDistance(int verticalViewDistance) {
+        this.verticalViewDistance = verticalViewDistance;
+        this.configHelper.updateValue("verticalRenderDistance", verticalViewDistance);
+    }
+
+    public int getVerticalViewDistance() {
+        return verticalViewDistance;
+    }
+
+    public ExceptionHandler getWorldExceptionHandler() {
+        return worldExceptionHandler;
+    }
+
+    public boolean isAsyncChunkLoad() {
+        return asyncChunkLoad;
     }
 }

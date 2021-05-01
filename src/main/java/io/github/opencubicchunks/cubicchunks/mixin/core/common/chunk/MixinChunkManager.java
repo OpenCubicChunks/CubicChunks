@@ -292,7 +292,7 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
 
                     return cubeFuture.join();
                 }).filter((cube) -> cube instanceof CubePrimerWrapper || cube instanceof BigCube)
-                    .map(cube1 -> CubicChunks.commonConfig().asyncChunkLoad ? cubeSaveAsync(cube1) : CompletableFuture.completedFuture(cubeSave(cube1)))
+                    .map(cube1 -> CubicChunks.commonConfig().isAsyncChunkLoad() ? cubeSaveAsync(cube1) : CompletableFuture.completedFuture(cubeSave(cube1)))
                     .distinct().toArray(CompletableFuture[]::new);
                 for (CompletableFuture<Boolean> future : saveFutures) {
                     if (future.join()) {
@@ -458,7 +458,7 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
                         //net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.event.world.ChunkEvent.Unload((Chunk)cube));
                     }
 
-                    if (CubicChunks.commonConfig().asyncChunkLoad) {
+                    if (CubicChunks.commonConfig().isAsyncChunkLoad()) {
                         this.cubeSaveAsync(icube);
                     } else {
                         this.cubeSave(icube);

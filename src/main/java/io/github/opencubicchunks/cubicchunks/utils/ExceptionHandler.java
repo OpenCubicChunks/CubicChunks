@@ -1,6 +1,5 @@
 package io.github.opencubicchunks.cubicchunks.utils;
 
-import io.github.opencubicchunks.cubicchunks.CubicChunks;
 import net.minecraft.util.StringRepresentable;
 
 /**
@@ -29,13 +28,9 @@ public enum ExceptionHandler implements StringRepresentable {
         return crash;
     }
 
-    public void wrapException(Throwable throwable) {
+    public <T extends Throwable> void wrapException(T throwable) throws T {
         if (crash) {
-            try {
-                throw throwable;
-            } catch (Throwable e) {
-                e.printStackTrace();
-            }
+            throw throwable;
         } else if (logException) {
             throwable.printStackTrace();
         }

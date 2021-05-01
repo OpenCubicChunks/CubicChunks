@@ -82,7 +82,7 @@ public class MixinBiome implements BiomeGetter {
                         crashReport.addCategory("Feature").setDetail("Id", Registry.STRUCTURE_FEATURE.getKey(structure)).setDetail("Description", () -> {
                             return structure.toString();
                         });
-                        CubicChunks.commonConfig().worldExceptionHandler.wrapException(new ReportedException(crashReport));
+                        CubicChunks.commonConfig().getWorldExceptionHandler().wrapException(new ReportedException(crashReport));
                     }
                 }
             }
@@ -116,7 +116,7 @@ public class MixinBiome implements BiomeGetter {
                                 return configuredFeature1.feature.toString();
                             });
                             CubicChunks.LOGGER.fatal(crashReport2.getFriendlyReport());
-                            CubicChunks.commonConfig().worldExceptionHandler.wrapException(new ReportedException(crashReport2));
+                            CubicChunks.commonConfig().getWorldExceptionHandler().wrapException(new ReportedException(crashReport2));
                         }
                     }
                 }
@@ -153,7 +153,7 @@ public class MixinBiome implements BiomeGetter {
 
             configuredSurfaceBuilder.apply(random, chunk, (Biome) (Object) this, x, z, worldHeight, noise, defaultBlock, defaultFluid, seaLevel, cubicChunksSurfaceHeight, seed);
         } catch (NoiseAndSurfaceBuilderHelper.StopGeneratingThrowable ignored) {
-            CubicChunks.commonConfig().worldExceptionHandler.wrapException(ignored);
+            CubicChunks.commonConfig().getWorldExceptionHandler().wrapException(ignored);
         }
     }
 
