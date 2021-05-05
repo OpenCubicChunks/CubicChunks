@@ -43,6 +43,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.TicketType;
 import net.minecraft.server.level.progress.ChunkProgressListener;
 import net.minecraft.util.profiling.ProfilerFiller;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.LightLayer;
@@ -60,6 +61,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
@@ -335,18 +337,27 @@ public abstract class MixinServerChunkProvider implements IServerChunkProvider, 
         }
     }
 
-    @Inject(method = "tickChunks", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ChunkMap;getChunks()Ljava/lang/Iterable;"),
-        locals = LocalCapture.CAPTURE_FAILHARD)
-    private void tickSections(CallbackInfo ci, long l, long timePassed, LevelData levelData, boolean bl, boolean doMobSpawning, int randomTicks, boolean bl3, int j,
-                              NaturalSpawner.SpawnState spawnState) {
+    @Redirect(method = "tickChunks", at = @At(value = "INVOKE",
+        target = "Lnet/minecraft/world/level/NaturalSpawner;createState(ILjava/lang/Iterable;Lnet/minecraft/world/level/NaturalSpawner$ChunkGetter;)"
+            + "Lnet/minecraft/world/level/NaturalSpawner$SpawnState;"))
+    private NaturalSpawner.SpawnState cubicChunksSpawnState(int spawningChunkCount, Iterable<Entity> entities, NaturalSpawner.ChunkGetter chunkSource) {
         if (!((CubicLevelHeightAccessor) this.level).isCubic()) {
-            return;
+            return NaturalSpawner.createState(spawningChunkCount, entities, chunkSource);
         }
 
         int naturalSpawnCountForColumns = ((ITicketManager) this.distanceManager).getNaturalSpawnCubeCount()
             * IBigCube.DIAMETER_IN_SECTIONS * IBigCube.DIAMETER_IN_SECTIONS / (CubicNaturalSpawner.SPAWN_RADIUS * 2 / IBigCube.DIAMETER_IN_BLOCKS + 1);
 
-        NaturalSpawner.SpawnState cubeSpawnState = CubicNaturalSpawner.createState(naturalSpawnCountForColumns, this.level.getAllEntities(), this::getFullCube);
+        return CubicNaturalSpawner.createState(naturalSpawnCountForColumns, entities, this::getFullCube);
+    }
+
+    @Inject(method = "tickChunks", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ChunkMap;getChunks()Ljava/lang/Iterable;"),
+        locals = LocalCapture.CAPTURE_FAILHARD)
+    private void tickSections(CallbackInfo ci, long l, long timePassed, LevelData levelData, boolean bl, boolean doMobSpawning, int randomTicks, boolean bl3, int j,
+                              NaturalSpawner.SpawnState cubeSpawnState) {
+        if (!((CubicLevelHeightAccessor) this.level).isCubic()) {
+            return;
+        }
 
         ((IChunkManager) this.chunkMap).getCubes().forEach((cubeHolder) -> {
             Optional<BigCube> optional =
