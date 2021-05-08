@@ -60,7 +60,9 @@ public class Int3HashSet implements AutoCloseable {
     }
 
     public Int3HashSet(int initialCapacity) {
-        this.setTableSize((int) Math.ceil(initialCapacity * (1.0d / 0.75d)));
+        initialCapacity = (int) Math.ceil(initialCapacity * (1.0d / 0.75d)); //scale according to resize threshold
+        initialCapacity = 1 << (Integer.SIZE - Integer.numberOfLeadingZeros(initialCapacity - 1)); //round up to next power of two
+        this.setTableSize(Math.max(initialCapacity, DEFAULT_TABLE_SIZE));
     }
 
     /**
