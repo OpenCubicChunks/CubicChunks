@@ -6,8 +6,7 @@ buildscript {
         maven { url ='https://www.dogforce-games.com/maven/'}
         jcenter()
         mavenCentral()
-        maven {url='https://dist.creeper.host/Sponge/maven'}
-
+        maven {url='https://repo.spongepowered.org/repository/maven-public/'}
     }
     dependencies {
         classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '3.+', changing: true
