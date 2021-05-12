@@ -9,7 +9,7 @@ buildscript {
         }
     }
     dependencies {
-        classpath 'net.fabricmc:fabric-loom:0.6-SNAPSHOT'
+        classpath 'net.fabricmc:fabric-loom:0.7-SNAPSHOT'
     }
 }
 plugins {
@@ -29,7 +29,7 @@ mcGitVersion {
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(8)
+        languageVersion = JavaLanguageVersion.of(16)
     }
 }
 
@@ -203,8 +203,8 @@ dependencies {
 
     compileOnly('com.google.code.findbugs:jsr305:3.0.1')
 
-    testCompile('junit:junit:4.11')
-    testCompile('org.hamcrest:hamcrest-junit:2.0.0.0')
+    testImplementation('junit:junit:4.11')
+    testImplementation('org.hamcrest:hamcrest-junit:2.0.0.0')
 
     debugCompile "org.lwjgl:lwjgl-vulkan:$lwjglVersion"
     debugRuntime "org.lwjgl:lwjgl::$lwjglNatives"
