@@ -12,8 +12,9 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+@SuppressWarnings("rawtypes")
 @Mixin(BlockLightEngine.class)
-public abstract class MixinBlockLightEngine extends MixinLightEngine<BlockLightSectionStorage.BlockDataLayerStorageMap, BlockLightSectionStorage> {
+public abstract class MixinBlockLightEngine extends MixinLightEngine {
 
     /**
      * @author NotStirred

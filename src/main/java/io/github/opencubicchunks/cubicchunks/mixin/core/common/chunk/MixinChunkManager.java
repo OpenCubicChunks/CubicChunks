@@ -169,7 +169,7 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
 
     @Shadow @Final private ChunkMap.DistanceManager distanceManager;
 
-    @Shadow @Final private ServerLevel level;
+    @Shadow @Final ServerLevel level;
 
     @Shadow @Final private StructureManager structureManager;
 
@@ -181,7 +181,7 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
 
     @Shadow @Final private File storageFolder;
 
-    @Shadow private int viewDistance;
+    @Shadow int viewDistance;
     private int verticalViewDistance;
     private int incomingVerticalViewDistance;
 
@@ -208,7 +208,7 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
     @Shadow @Nullable protected abstract CompoundTag readChunk(ChunkPos pos) throws IOException;
 
 
-    @Shadow protected static void postLoadProtoChunk(ServerLevel serverLevel, List<CompoundTag> list) {
+    @Shadow private static void postLoadProtoChunk(ServerLevel serverLevel, List<CompoundTag> list) {
         throw new Error("Mixin didn't apply");
     }
 
@@ -553,7 +553,7 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
     //A lamdba inside a lambda in the method scheduleChunkGeneration.
     @SuppressWarnings({ "UnresolvedMixinReference", "target" })
     @Inject(
-        method = "lambda$null$19(Lnet/minecraft/world/level/ChunkPos;Lnet/minecraft/server/level/ChunkHolder;Lnet/minecraft/world/level/chunk/ChunkStatus;Ljava/util/concurrent/Executor;"
+        method = "lambda$scheduleChunkGeneration$19(Lnet/minecraft/world/level/ChunkPos;Lnet/minecraft/server/level/ChunkHolder;Lnet/minecraft/world/level/chunk/ChunkStatus;Ljava/util/concurrent/Executor;"
             + "Ljava/util/List;)Ljava/util/concurrent/CompletableFuture;",
         at = @At(
             value = "INVOKE",
