@@ -3,7 +3,7 @@
     "package": "io.github.opencubicchunks.cubicchunks.mixin.debug",
     "refmap": "CubicChunks-refmap.json",
     "plugin": "io.github.opencubicchunks.cubicchunks.mixin.DebugMixinConfig",
-    "compatibilityLevel": "JAVA_8",
+    "compatibilityLevel": "JAVA_16",
     "minVersion": "0.8",
     "injectors": {
         "defaultRequire": 1
