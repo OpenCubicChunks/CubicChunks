@@ -2,7 +2,7 @@
     "required": true,
     "package": "io.github.opencubicchunks.cubicchunks.mixin.access",
     "refmap": "CubicChunks-refmap.json",
-    "compatibilityLevel": "JAVA_8",
+    "compatibilityLevel": "JAVA_16",
     "minVersion": "0.8",
     "overwrites": {
         "conformVisibility": true
@@ -17,6 +17,7 @@
         "common.DecorationContextAccess",
         "common.EntityTrackerAccess",
         "common.HeightmapAccess",
+        "common.IOWorkerAccess",
         "common.LayerLightSectionStorageAccess",
         "common.LevelBasedGraphAccess",
         "common.Matrix4fAccess",

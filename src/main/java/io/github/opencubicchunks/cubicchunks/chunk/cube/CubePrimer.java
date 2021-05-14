@@ -416,7 +416,12 @@ public class CubePrimer extends ProtoChunk implements IBigCube, CubicLevelHeight
         this.addCubeLightPosition(unpackToWorld(packedPosition, yOffset, this.cubePos));
     }
 
-    public void addCubeLightPosition(BlockPos lightPos) {
+    /**
+     * Due to splitting the same cube into several threads in MixinChunkStatus,
+     * we have to make this method synchronized to ensure we aren't letting null values slip by.
+     */
+    //TODO: DO NOT Make THE SAME Cube's generation multithreaded in ChunkStatus Noise.
+    public synchronized void addCubeLightPosition(BlockPos lightPos) {
         this.lightPositions.add(lightPos.immutable());
     }
 

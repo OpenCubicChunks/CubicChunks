@@ -2,7 +2,6 @@ package io.github.opencubicchunks.cubicchunks.mixin.core.common.chunk.storage;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
@@ -42,6 +41,8 @@ public abstract class MixinEntityStorage implements CubicEntityStorage {
 
     private RegionCubeIO cubeWorker;
 
+    @Shadow @Final private Executor mainThreadExecutor;
+
     @Shadow protected abstract CompoundTag upgradeChunkTag(CompoundTag chunkTag);
 
     @Inject(method = "<init>", at = @At("RETURN"))
@@ -56,11 +57,10 @@ public abstract class MixinEntityStorage implements CubicEntityStorage {
             return CompletableFuture.completedFuture(emptyCube(pos));
         }
 
-        try {
-            CompoundTag compoundTag = this.cubeWorker.loadCubeNBT(pos);
+        return this.cubeWorker.loadCubeAsync(pos).thenApplyAsync((compoundTag) -> {
             if (compoundTag == null) {
                 this.emptyChunks.add(pos.asLong());
-                return CompletableFuture.completedFuture(emptyCube(pos));
+                return emptyCube(pos);
             } else {
                 try {
                     CubePos cubePos = readCubePos(compoundTag);
@@ -74,16 +74,13 @@ public abstract class MixinEntityStorage implements CubicEntityStorage {
                 CompoundTag compoundTag2 = this.upgradeChunkTag(compoundTag);
                 ListTag listTag = compoundTag2.getList("Entities", 10);
                 List<Entity> list = EntityType.loadEntitiesRecursive(listTag, this.level).collect(ImmutableList.toImmutableList());
-                return CompletableFuture.completedFuture(new ChunkEntities(new ImposterChunkPos(pos), list));
+                return new ChunkEntities<>(new ImposterChunkPos(pos), list);
             }
-            //TODO: Do Async file loading instead.
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
+        }, this.mainThreadExecutor);
     }
 
     private static ChunkEntities<Entity> emptyCube(CubePos pos) {
-        return new ChunkEntities(new ImposterChunkPos(pos), ImmutableList.of());
+        return new ChunkEntities<>(new ImposterChunkPos(pos), ImmutableList.of());
     }
 
     @Inject(method = "storeEntities", at = @At("HEAD"), cancellable = true)
@@ -103,7 +100,6 @@ public abstract class MixinEntityStorage implements CubicEntityStorage {
             if (this.emptyChunks.add(cubePos.asLong())) {
                 this.cubeWorker.saveCubeNBT(cubePos, new CompoundTag());
             }
-
         } else {
             ListTag listTag = new ListTag();
             dataList.getEntities().forEach((entity) -> {
@@ -134,6 +130,4 @@ public abstract class MixinEntityStorage implements CubicEntityStorage {
     private static void writeCubePos(CompoundTag chunkTag, CubePos pos) {
         chunkTag.put("Position", new IntArrayTag(new int[] { pos.getX(), pos.getY(), pos.getZ() }));
     }
-
-
 }
