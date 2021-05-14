@@ -220,7 +220,7 @@ public abstract class MixinChunk implements ChunkAccess, CubicLevelHeightAccesso
             return;
         }
         ci.cancel();
-        ((BigCube) getCube(blockEntity.getBlockPos().getY())).addAndRegisterBlockEntity(blockEntity);
+        ((BigCube) getCube(Coords.blockToSection(blockEntity.getBlockPos().getY()))).addAndRegisterBlockEntity(blockEntity);
     }
 
     @Inject(method = "updateBlockEntityTicker", at = @At("HEAD"), cancellable = true)
@@ -229,7 +229,7 @@ public abstract class MixinChunk implements ChunkAccess, CubicLevelHeightAccesso
             return;
         }
         ci.cancel();
-        ((BigCube) getCube(blockEntity.getBlockPos().getY())).updateBlockEntityTicker(blockEntity);
+        ((BigCube) getCube(Coords.blockToSection(blockEntity.getBlockPos().getY()))).updateBlockEntityTicker(blockEntity);
     }
 
     //This should return object because Hashmap.get also does
