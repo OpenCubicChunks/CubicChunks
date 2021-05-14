@@ -1,6 +1,5 @@
 package io.github.opencubicchunks.cubicchunks.mixin.core.common.world.lighting;
 
-import static net.minecraft.client.renderer.LevelRenderer.DIRECTIONS;
 
 import io.github.opencubicchunks.cubicchunks.chunk.CubeMap;
 import io.github.opencubicchunks.cubicchunks.chunk.CubeMapGetter;
@@ -12,17 +11,19 @@ import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import io.github.opencubicchunks.cubicchunks.world.lighting.ICubeLightProvider;
 import io.github.opencubicchunks.cubicchunks.world.lighting.ICubicSkyLightEngine;
 import io.github.opencubicchunks.cubicchunks.world.lighting.ISkyLightColumnChecker;
-import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.SectionPos;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.chunk.ChunkStatus;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.lighting.SkyLightEngine;
 import net.minecraft.world.level.lighting.SkyLightSectionStorage;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -31,6 +32,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(SkyLightEngine.class)
 public abstract class MixinSkyLightEngine extends MixinLayerLightEngine<SkyLightSectionStorage.SkyDataLayerStorageMap, SkyLightSectionStorage> implements ISkyLightColumnChecker,
     ICubicSkyLightEngine {
+    @Shadow @Final private static Direction[] HORIZONTALS;
+
     /**
      * @author CursedFlames
      * @reason disable vanilla sky light logic
@@ -125,12 +128,12 @@ public abstract class MixinSkyLightEngine extends MixinLayerLightEngine<SkyLight
         // TODO chunk can be null until load order is fixed
         BlockGetter chunk = this.chunkSource.getChunkForLighting(SectionPos.blockToSectionCoord(pos.getX()), SectionPos.blockToSectionCoord(pos.getZ()));
         if (chunk == null) {
-            System.out.println("onGetComputedLevel chunk was null " + (this.chunkSource.getLevel() instanceof ClientLevel ? "client" : "server"));
+            System.out.println("onGetComputedLevel chunk was null " + (((Level) this.chunkSource.getLevel()).isClientSide ? "client" : "server"));
             return;
         }
         Heightmap heightmap = ((LightHeightmapGetter) chunk).getLightHeightmap();
         if (heightmap == null) {
-            System.out.println("onGetComputedLevel heightmap was null " + (this.chunkSource.getLevel() instanceof ClientLevel ? "client" : "server"));
+            System.out.println("onGetComputedLevel heightmap was null " + (((Level) this.chunkSource.getLevel()).isClientSide ? "client" : "server"));
             return;
         }
         int height = heightmap.getFirstAvailable(pos.getX() & 0xF, pos.getZ() & 0xF);
@@ -197,7 +200,7 @@ public abstract class MixinSkyLightEngine extends MixinLayerLightEngine<SkyLight
 
         long sectionPos = SectionPos.blockToSection(blockPos);
 
-        for (Direction direction : DIRECTIONS) {
+        for (Direction direction : HORIZONTALS) {
             long offsetBlockPos = BlockPos.offset(blockPos, direction);
             long offsetSectionPos = SectionPos.blockToSection(offsetBlockPos);
             // Check all neighbors that are storing light
