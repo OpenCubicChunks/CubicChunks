@@ -5,6 +5,7 @@ import java.util.function.Supplier;
 import io.github.opencubicchunks.cubicchunks.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.ICubeProvider;
+import io.github.opencubicchunks.cubicchunks.config.reloadlisteners.WorldStyleReloadListener;
 import io.github.opencubicchunks.cubicchunks.server.ICubicWorld;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import net.minecraft.core.BlockPos;
@@ -32,7 +33,7 @@ public abstract class MixinWorld implements ICubicWorld, LevelReader {
     @Inject(method = "<init>", at = @At("RETURN"))
     private void setCubic(WritableLevelData writableLevelData, ResourceKey<Level> resourceKey, DimensionType dimensionType, Supplier<ProfilerFiller> supplier, boolean bl, boolean bl2,
                           long l, CallbackInfo ci) {
-        worldStyle = CubicChunks.DIMENSION_TO_WORLD_STYLE.get(dimension().location().toString());
+        worldStyle = WorldStyleReloadListener.WORLD_WORLD_STYLE.getOrDefault(resourceKey.location(), WorldStyle.CHUNK);
         isCubic = worldStyle.isCubic();
         generates2DChunks = worldStyle.generates2DChunks();
     }

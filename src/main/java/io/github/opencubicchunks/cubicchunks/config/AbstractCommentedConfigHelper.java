@@ -109,9 +109,11 @@ public class AbstractCommentedConfigHelper {
 
         if (config.getComment(key) == null) {
             StringBuilder builder = new StringBuilder().append("Values: ").append(defaultValue instanceof StringRepresentable ? "\n" : "");
-            for (T value : defaultValue.getDeclaringClass().getEnumConstants()) {
+            T[] enumConstants = defaultValue.getDeclaringClass().getEnumConstants();
+            for (int idx = 0; idx < enumConstants.length; idx++) {
+                T value = enumConstants[idx];
                 if (defaultValue instanceof StringRepresentable) {
-                    builder.append(((StringRepresentable) value).getSerializedName()).append("\n");
+                    builder.append(((StringRepresentable) value).getSerializedName()).append(idx == enumConstants.length - 1 ? "" : "\n");
                 } else {
                     builder.append(value.name()).append(", ");
                 }

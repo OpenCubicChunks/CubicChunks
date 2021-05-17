@@ -18,6 +18,7 @@ import io.github.opencubicchunks.cubicchunks.chunk.IChunkManager;
 import io.github.opencubicchunks.cubicchunks.config.CommonConfig;
 import io.github.opencubicchunks.cubicchunks.config.reloadlisteners.ChunkGeneratorSettingsReloadListener;
 import io.github.opencubicchunks.cubicchunks.config.reloadlisteners.HeightSettingsReloadListener;
+import io.github.opencubicchunks.cubicchunks.config.reloadlisteners.WorldStyleReloadListener;
 import io.github.opencubicchunks.cubicchunks.meta.EarlyConfig;
 import io.github.opencubicchunks.cubicchunks.network.PacketDispatcher;
 import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
@@ -97,6 +98,7 @@ public class CubicChunks implements ModInitializer {
     private static void reloadListeners() {
         HeightSettingsReloadListener.registerHeightSettingsReloadListeners();
         ChunkGeneratorSettingsReloadListener.registerChunkGeneratorSettingsReloadListeners();
+        WorldStyleReloadListener.registerWorldStyleReloadListeners();
     }
 
     private void cubicChunksTrapezoidHeightProviderTest() {
