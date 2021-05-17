@@ -16,6 +16,7 @@ import java.util.stream.IntStream;
 
 import io.github.opencubicchunks.cubicchunks.chunk.IChunkManager;
 import io.github.opencubicchunks.cubicchunks.config.CommonConfig;
+import io.github.opencubicchunks.cubicchunks.config.reloadlisteners.ChunkGeneratorSettingsReloadListener;
 import io.github.opencubicchunks.cubicchunks.config.reloadlisteners.HeightSettingsReloadListener;
 import io.github.opencubicchunks.cubicchunks.meta.EarlyConfig;
 import io.github.opencubicchunks.cubicchunks.network.PacketDispatcher;
@@ -86,11 +87,16 @@ public class CubicChunks implements ModInitializer {
         //Custom CC Features
         CCPlacement.init();
         CCFeatures.init();
-        HeightSettingsReloadListener.registerHeightSettingsReloadListeners();
+        reloadListeners();
 
         if (SharedConstants.IS_RUNNING_IN_IDE) {
             cubicChunksTrapezoidHeightProviderTest();
         }
+    }
+
+    private static void reloadListeners() {
+        HeightSettingsReloadListener.registerHeightSettingsReloadListeners();
+        ChunkGeneratorSettingsReloadListener.registerChunkGeneratorSettingsReloadListeners();
     }
 
     private void cubicChunksTrapezoidHeightProviderTest() {
