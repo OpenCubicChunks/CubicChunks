@@ -264,6 +264,11 @@ public class MainTransformer {
             ), getObjectType("net/minecraft/class_2802")), // ChunkSource
             "isEntityTickingCube");
 
+        methodRedirects.put(new ClassMethod(getObjectType("net/minecraft/class_1923"),
+            getMethod("long method_8324()")), "asLong"); // toLong
+
+        methodRedirects.put(new ClassMethod(getObjectType("net/minecraft/class_1923"),
+            getMethod("long method_8331(int, int)")), "asLong"); // asLong
 
         Map<ClassField, String> fieldRedirects = new HashMap<>();
 
