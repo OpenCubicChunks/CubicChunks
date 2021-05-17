@@ -8,6 +8,7 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.Map;
 
@@ -28,7 +29,7 @@ import net.minecraft.world.level.Level;
 
 public class WorldStyleReloadListener implements SimpleSynchronousResourceReloadListener {
 
-    public static final IdentityHashMap<ResourceLocation, CubicLevelHeightAccessor.WorldStyle> WORLD_WORLD_STYLE = new IdentityHashMap<>();
+    public static final HashMap<ResourceLocation, CubicLevelHeightAccessor.WorldStyle> WORLD_WORLD_STYLE = new HashMap<>();
 
     private static final IdentityHashMap<String, CubicLevelHeightAccessor.WorldStyle> CONFIG_DEFAULT = Util.make(new IdentityHashMap<>(), (map) -> {
         map.put(Level.OVERWORLD.location().toString(), CubicLevelHeightAccessor.WorldStyle.CUBIC);
@@ -37,10 +38,10 @@ public class WorldStyleReloadListener implements SimpleSynchronousResourceReload
     });
 
     private final String jsonFileTarget;
-    private final IdentityHashMap<ResourceLocation, CubicLevelHeightAccessor.WorldStyle> trackedEntriesMap;
+    private final Map<ResourceLocation, CubicLevelHeightAccessor.WorldStyle> trackedEntriesMap;
     private final Path configPath;
 
-    public WorldStyleReloadListener(String jsonFileTarget, IdentityHashMap<ResourceLocation, CubicLevelHeightAccessor.WorldStyle> trackedEntriesMap) {
+    public WorldStyleReloadListener(String jsonFileTarget, Map<ResourceLocation, CubicLevelHeightAccessor.WorldStyle> trackedEntriesMap) {
         this.jsonFileTarget = jsonFileTarget;
         this.trackedEntriesMap = trackedEntriesMap;
         this.configPath = CubicChunks.CONFIG_PATH.resolve(jsonFileTarget);
