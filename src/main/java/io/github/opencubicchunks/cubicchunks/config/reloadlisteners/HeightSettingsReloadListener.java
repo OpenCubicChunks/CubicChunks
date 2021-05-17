@@ -17,7 +17,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import io.github.opencubicchunks.cubicchunks.CubicChunks;
-import io.github.opencubicchunks.cubicchunks.config.HeightSettingsEntry;
+import io.github.opencubicchunks.cubicchunks.config.HeightSettings;
 import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
 import net.fabricmc.fabric.api.resource.SimpleSynchronousResourceReloadListener;
 import net.minecraft.Util;
@@ -31,19 +31,19 @@ import net.minecraft.world.level.levelgen.feature.StructureFeature;
 
 public class HeightSettingsReloadListener<T> implements SimpleSynchronousResourceReloadListener {
 
-    public static final IdentityHashMap<Feature<?>, HeightSettingsEntry> FEATURE_HEIGHT_SETTINGS = new IdentityHashMap<>();
-    public static final IdentityHashMap<StructureFeature<?>, HeightSettingsEntry> STRUCTURE_HEIGHT_SETTINGS = new IdentityHashMap<>();
+    public static final IdentityHashMap<Feature<?>, HeightSettings> FEATURE_HEIGHT_SETTINGS = new IdentityHashMap<>();
+    public static final IdentityHashMap<StructureFeature<?>, HeightSettings> STRUCTURE_HEIGHT_SETTINGS = new IdentityHashMap<>();
 
-    private static final IdentityHashMap<String, HeightSettingsEntry> CONFIG_DEFAULT = Util.make(new IdentityHashMap<>(), (map) -> {
-        map.put("modid:feature_name", HeightSettingsEntry.DEFAULT);
+    private static final IdentityHashMap<String, HeightSettings> CONFIG_DEFAULT = Util.make(new IdentityHashMap<>(), (map) -> {
+        map.put("modid:feature_name", HeightSettings.DEFAULT);
     });
 
     private final Registry<T> registry;
     private final String jsonFileTarget;
-    private final IdentityHashMap<T, HeightSettingsEntry> trackedEntriesMap;
+    private final IdentityHashMap<T, HeightSettings> trackedEntriesMap;
     private final Path configPath;
 
-    public HeightSettingsReloadListener(Registry<T> registry, String jsonFileTarget, IdentityHashMap<T, HeightSettingsEntry> trackedEntriesMap) {
+    public HeightSettingsReloadListener(Registry<T> registry, String jsonFileTarget, IdentityHashMap<T, HeightSettings> trackedEntriesMap) {
         this.registry = registry;
         this.jsonFileTarget = jsonFileTarget;
         this.trackedEntriesMap = trackedEntriesMap;
@@ -52,7 +52,7 @@ public class HeightSettingsReloadListener<T> implements SimpleSynchronousResourc
 
     @Override
     public void onResourceManagerReload(ResourceManager manager) {
-        IdentityHashMap<T, HeightSettingsEntry> newMap = new IdentityHashMap<>();
+        IdentityHashMap<T, HeightSettings> newMap = new IdentityHashMap<>();
         ResourceLocation location = new ResourceLocation(CubicChunks.MODID, this.jsonFileTarget);
         try {
             Collection<Resource> heightSettings = manager.getResources(location);
@@ -69,7 +69,7 @@ public class HeightSettingsReloadListener<T> implements SimpleSynchronousResourc
         this.trackedEntriesMap.putAll(newMap);
     }
 
-    private void handleConfig(IdentityHashMap<T, HeightSettingsEntry> newMap) {
+    private void handleConfig(IdentityHashMap<T, HeightSettings> newMap) {
         if (!configPath.toFile().exists()) {
             createDefault();
         }
@@ -90,7 +90,7 @@ public class HeightSettingsReloadListener<T> implements SimpleSynchronousResourc
         }
     }
 
-    private void readAndProcess(IdentityHashMap<T, HeightSettingsEntry> newMap, String fileName, Reader bufferedReader) {
+    private void readAndProcess(IdentityHashMap<T, HeightSettings> newMap, String fileName, Reader bufferedReader) {
         try (Reader reader = bufferedReader) {
             JsonObject jsonObject = new JsonParser().parse(reader).getAsJsonObject();
 
@@ -101,10 +101,10 @@ public class HeightSettingsReloadListener<T> implements SimpleSynchronousResourc
         }
     }
 
-    private void process(IdentityHashMap<T, HeightSettingsEntry> newMap, JsonObject jsonObject) {
+    private void process(IdentityHashMap<T, HeightSettings> newMap, JsonObject jsonObject) {
         for (Map.Entry<String, JsonElement> entry : jsonObject.entrySet()) {
             ResourceLocation entryID = new ResourceLocation(entry.getKey());
-            HeightSettingsEntry.Builder heightEntry = new HeightSettingsEntry.Builder();
+            HeightSettings.Builder heightEntry = new HeightSettings.Builder();
             if (registry.keySet().contains(entryID)) {
                 processEntry(jsonObject, heightEntry);
                 newMap.put(registry.get(entryID), heightEntry.build());
@@ -114,23 +114,23 @@ public class HeightSettingsReloadListener<T> implements SimpleSynchronousResourc
         }
     }
 
-    private void processEntry(JsonObject jsonObject, HeightSettingsEntry.Builder heightEntry) {
+    private void processEntry(JsonObject jsonObject, HeightSettings.Builder heightEntry) {
         if (jsonObject.has("min_y")) {
             String minY = jsonObject.get("min_y").getAsString().toUpperCase();
-            if (HeightSettingsEntry.HeightType.HEIGHT_TYPES_NAMES.contains(minY)) {
-                heightEntry.setMinHeight(HeightSettingsEntry.HeightType.valueOf(minY));
+            if (HeightSettings.HeightType.HEIGHT_TYPES_NAMES.contains(minY)) {
+                heightEntry.setMinHeight(HeightSettings.HeightType.valueOf(minY));
             }
         }
         if (jsonObject.has("max_y")) {
             String maxY = jsonObject.get("max_y").getAsString().toUpperCase();
-            if (HeightSettingsEntry.HeightType.HEIGHT_TYPES_NAMES.contains(maxY)) {
-                heightEntry.setMaxHeight(HeightSettingsEntry.HeightType.valueOf(maxY));
+            if (HeightSettings.HeightType.HEIGHT_TYPES_NAMES.contains(maxY)) {
+                heightEntry.setMaxHeight(HeightSettings.HeightType.valueOf(maxY));
             }
         }
         if (jsonObject.has("bound_y")) {
             String boundY = jsonObject.get("bound_y").getAsString().toUpperCase();
-            if (HeightSettingsEntry.HeightType.HEIGHT_TYPES_NAMES.contains(boundY)) {
-                heightEntry.setHeightBounds(HeightSettingsEntry.HeightType.valueOf(boundY));
+            if (HeightSettings.HeightType.HEIGHT_TYPES_NAMES.contains(boundY)) {
+                heightEntry.setHeightBounds(HeightSettings.HeightType.valueOf(boundY));
             }
         }
     }

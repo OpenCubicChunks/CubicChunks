@@ -8,15 +8,15 @@ import io.github.opencubicchunks.cubicchunks.CubicChunks;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import net.minecraft.world.level.chunk.ChunkStatus;
 
-public class ChunkGeneratorSettingsEntry {
+public class ChunkGeneratorSettings {
 
-    public static final ChunkGeneratorSettingsEntry DEFAULT = new ChunkGeneratorSettingsEntry(ImmutableList.of(ChunkStatus.SURFACE));
+    public static final ChunkGeneratorSettings DEFAULT = new ChunkGeneratorSettings(ImmutableList.of(ChunkStatus.SURFACE));
 
     private final transient ObjectOpenHashSet<ChunkStatus> controlledStatuses = new ObjectOpenHashSet<>();
     @SerializedName("controlled_statuses") private final String controlledStatusesString;
 
 
-    public ChunkGeneratorSettingsEntry(String controlledStatuses) {
+    public ChunkGeneratorSettings(String controlledStatuses) {
         this.controlledStatusesString = controlledStatuses;
         String[] statuses = controlledStatuses.replace(" ", "").trim().split(",");
 
@@ -30,12 +30,12 @@ public class ChunkGeneratorSettingsEntry {
         }
     }
 
-    public ChunkGeneratorSettingsEntry(Collection<ChunkStatus> chunkStatuses) {
+    public ChunkGeneratorSettings(Collection<ChunkStatus> chunkStatuses) {
         this(remapToCommentedListString(chunkStatuses));
     }
 
-    public ObjectOpenHashSet<ChunkStatus> getControlledStatuses() {
-        return controlledStatuses;
+    public boolean controlsStatus(ChunkStatus status) {
+        return controlledStatuses.contains(status);
     }
 
     public static <T> String remapToCommentedListString(Collection<T> values) {
@@ -80,8 +80,8 @@ public class ChunkGeneratorSettingsEntry {
             return this;
         }
 
-        public ChunkGeneratorSettingsEntry build() {
-            return new ChunkGeneratorSettingsEntry(statuses);
+        public ChunkGeneratorSettings build() {
+            return new ChunkGeneratorSettings(statuses);
         }
     }
 }

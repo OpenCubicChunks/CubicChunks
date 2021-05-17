@@ -18,7 +18,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.mojang.serialization.Codec;
 import io.github.opencubicchunks.cubicchunks.CubicChunks;
-import io.github.opencubicchunks.cubicchunks.config.ChunkGeneratorSettingsEntry;
+import io.github.opencubicchunks.cubicchunks.config.ChunkGeneratorSettings;
 import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
 import net.fabricmc.fabric.api.resource.SimpleSynchronousResourceReloadListener;
 import net.minecraft.Util;
@@ -31,18 +31,18 @@ import net.minecraft.world.level.chunk.ChunkGenerator;
 
 public class ChunkGeneratorSettingsReloadListener<T extends Codec<? extends ChunkGenerator>> implements SimpleSynchronousResourceReloadListener {
 
-    public static final IdentityHashMap<Codec<? extends ChunkGenerator>, ChunkGeneratorSettingsEntry> CHUNK_GENERATOR_SETTINGS = new IdentityHashMap<>();
+    public static final IdentityHashMap<Codec<? extends ChunkGenerator>, ChunkGeneratorSettings> CHUNK_GENERATOR_SETTINGS = new IdentityHashMap<>();
 
-    private static final IdentityHashMap<String, ChunkGeneratorSettingsEntry> CONFIG_DEFAULT = Util.make(new IdentityHashMap<>(), (map) -> {
-        map.put("modid:chunk_generator", ChunkGeneratorSettingsEntry.DEFAULT);
+    private static final IdentityHashMap<String, ChunkGeneratorSettings> CONFIG_DEFAULT = Util.make(new IdentityHashMap<>(), (map) -> {
+        map.put("modid:chunk_generator", ChunkGeneratorSettings.DEFAULT);
     });
 
     private final Registry<T> registry;
     private final String jsonFileTarget;
-    private final IdentityHashMap<T, ChunkGeneratorSettingsEntry> trackedEntriesMap;
+    private final IdentityHashMap<T, ChunkGeneratorSettings> trackedEntriesMap;
     private final Path configPath;
 
-    public ChunkGeneratorSettingsReloadListener(Registry<T> registry, String jsonFileTarget, IdentityHashMap<T, ChunkGeneratorSettingsEntry> trackedEntriesMap) {
+    public ChunkGeneratorSettingsReloadListener(Registry<T> registry, String jsonFileTarget, IdentityHashMap<T, ChunkGeneratorSettings> trackedEntriesMap) {
         this.registry = registry;
         this.jsonFileTarget = jsonFileTarget;
         this.trackedEntriesMap = trackedEntriesMap;
@@ -51,7 +51,7 @@ public class ChunkGeneratorSettingsReloadListener<T extends Codec<? extends Chun
 
     @Override
     public void onResourceManagerReload(ResourceManager manager) {
-        IdentityHashMap<T, ChunkGeneratorSettingsEntry> newMap = new IdentityHashMap<>();
+        IdentityHashMap<T, ChunkGeneratorSettings> newMap = new IdentityHashMap<>();
         ResourceLocation location = new ResourceLocation(CubicChunks.MODID, this.jsonFileTarget);
         try {
             Collection<Resource> heightSettings = manager.getResources(location);
@@ -68,7 +68,7 @@ public class ChunkGeneratorSettingsReloadListener<T extends Codec<? extends Chun
         this.trackedEntriesMap.putAll(newMap);
     }
 
-    private void handleConfig(IdentityHashMap<T, ChunkGeneratorSettingsEntry> newMap) {
+    private void handleConfig(IdentityHashMap<T, ChunkGeneratorSettings> newMap) {
         if (!configPath.toFile().exists()) {
             createDefault();
         }
@@ -89,7 +89,7 @@ public class ChunkGeneratorSettingsReloadListener<T extends Codec<? extends Chun
         }
     }
 
-    private void readAndProcess(IdentityHashMap<T, ChunkGeneratorSettingsEntry> newMap, String fileName, Reader bufferedReader) {
+    private void readAndProcess(IdentityHashMap<T, ChunkGeneratorSettings> newMap, String fileName, Reader bufferedReader) {
         try (Reader reader = bufferedReader) {
             JsonObject jsonObject = new JsonParser().parse(reader).getAsJsonObject();
 
@@ -100,10 +100,10 @@ public class ChunkGeneratorSettingsReloadListener<T extends Codec<? extends Chun
         }
     }
 
-    private void process(IdentityHashMap<T, ChunkGeneratorSettingsEntry> newMap, JsonObject jsonObject) {
+    private void process(IdentityHashMap<T, ChunkGeneratorSettings> newMap, JsonObject jsonObject) {
         for (Map.Entry<String, JsonElement> entry : jsonObject.entrySet()) {
             ResourceLocation entryID = new ResourceLocation(entry.getKey());
-            ChunkGeneratorSettingsEntry.Builder chunkGeneratorSettingsEntry = new ChunkGeneratorSettingsEntry.Builder();
+            ChunkGeneratorSettings.Builder chunkGeneratorSettingsEntry = new ChunkGeneratorSettings.Builder();
             if (registry.keySet().contains(entryID)) {
                 processEntry(jsonObject, chunkGeneratorSettingsEntry);
                 newMap.put(registry.get(entryID), chunkGeneratorSettingsEntry.build());
@@ -113,7 +113,7 @@ public class ChunkGeneratorSettingsReloadListener<T extends Codec<? extends Chun
         }
     }
 
-    private void processEntry(JsonObject jsonObject, ChunkGeneratorSettingsEntry.Builder heightEntry) {
+    private void processEntry(JsonObject jsonObject, ChunkGeneratorSettings.Builder heightEntry) {
         if (jsonObject.has("controlled_statuses")) {
             String controlledStatuses = jsonObject.get("controlled_statuses").getAsString();
             heightEntry.addControlledStatuses(controlledStatuses);

@@ -6,7 +6,6 @@ import java.util.Map;
 
 import com.google.common.collect.Maps;
 import io.github.opencubicchunks.cubicchunks.CubicChunks;
-import io.github.opencubicchunks.cubicchunks.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.CubePrimer;
 import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
@@ -54,6 +53,10 @@ public class NoiseAndSurfaceBuilderHelper extends ProtoChunk implements CubicLev
         isCubic = ((CubicLevelHeightAccessor) delegate).isCubic();
         generates2DChunks = ((CubicLevelHeightAccessor) delegate).generates2DChunks();
         worldStyle = ((CubicLevelHeightAccessor) delegate).worldStyle();
+    }
+
+    public IBigCube delegateAbove() {
+        return (IBigCube) this.delegates[1];
     }
 
     public void moveColumn(int newColumnX, int newColumnZ) {

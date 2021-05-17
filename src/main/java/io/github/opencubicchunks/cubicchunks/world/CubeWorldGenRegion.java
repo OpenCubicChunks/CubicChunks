@@ -17,7 +17,7 @@ import javax.annotation.Nullable;
 
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
-import io.github.opencubicchunks.cubicchunks.config.HeightSettingsEntry;
+import io.github.opencubicchunks.cubicchunks.config.HeightSettings;
 import io.github.opencubicchunks.cubicchunks.server.ICubicWorld;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import it.unimi.dsi.fastutil.longs.LongSet;
@@ -512,7 +512,7 @@ public class CubeWorldGenRegion extends WorldGenRegion implements ICubicWorld {
         return this.getLevel().startsForFeature(sectionPos, structure);
     }
 
-    public void upgradeY(HeightSettingsEntry heightSettings) {
+    public void upgradeY(HeightSettings heightSettings) {
         boundHeight = heightSettings.getHeightBounds().getHeight(this);
         boundMinHeight = heightSettings.getHeightBounds().getMinHeight(this);
 

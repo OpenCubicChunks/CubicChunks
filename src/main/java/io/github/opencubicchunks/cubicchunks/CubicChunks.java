@@ -6,9 +6,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.OptionalInt;
 import java.util.stream.Collectors;
@@ -21,7 +19,6 @@ import io.github.opencubicchunks.cubicchunks.config.reloadlisteners.HeightSettin
 import io.github.opencubicchunks.cubicchunks.config.reloadlisteners.WorldStyleReloadListener;
 import io.github.opencubicchunks.cubicchunks.meta.EarlyConfig;
 import io.github.opencubicchunks.cubicchunks.network.PacketDispatcher;
-import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import io.github.opencubicchunks.cubicchunks.world.biome.StripedBiomeSource;
 import io.github.opencubicchunks.cubicchunks.world.gen.feature.CCFeatures;
 import io.github.opencubicchunks.cubicchunks.world.gen.placement.CCPlacement;
@@ -29,7 +26,6 @@ import io.github.opencubicchunks.cubicchunks.world.gen.placement.CubicHeightProv
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.SharedConstants;
-import net.minecraft.Util;
 import net.minecraft.core.Registry;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ChunkMap;
@@ -62,12 +58,6 @@ public class CubicChunks implements ModInitializer {
 
     public static final Path CONFIG_PATH = FabricLoader.getInstance().getConfigDir().resolve(MODID);
     public static final Path WORLD_CONFIG_PATH = CONFIG_PATH.resolve("world");
-
-    public static final Map<String, CubicLevelHeightAccessor.WorldStyle> DIMENSION_TO_WORLD_STYLE = Util.make(new HashMap<>(), (set) -> {
-        set.put("minecraft:overworld", CubicLevelHeightAccessor.WorldStyle.CUBIC);
-        set.put("minecraft:the_nether", CubicLevelHeightAccessor.WorldStyle.CHUNK);
-        set.put("minecraft:the_end", CubicLevelHeightAccessor.WorldStyle.CHUNK);
-    });
 
     private static CommonConfig commonConfig = new CommonConfig();
 

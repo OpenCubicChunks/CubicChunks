@@ -8,15 +8,15 @@ import com.google.gson.annotations.SerializedName;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import io.github.opencubicchunks.cubicchunks.world.CubeWorldGenRegion;
 
-public class HeightSettingsEntry {
+public class HeightSettings {
 
-    public static final HeightSettingsEntry DEFAULT = new HeightSettingsEntry(HeightType.WORLD, HeightType.WORLD, HeightType.WORLD);
+    public static final HeightSettings DEFAULT = new HeightSettings(HeightType.WORLD, HeightType.WORLD, HeightType.WORLD);
 
     @SerializedName("min_y") private final HeightType minHeight;
     @SerializedName("max_y") private final HeightType maxHeight;
     @SerializedName("bounds_y") private final HeightType heightBounds;
 
-    public HeightSettingsEntry(HeightType minHeight, HeightType maxHeight, HeightType heightBounds) {
+    public HeightSettings(HeightType minHeight, HeightType maxHeight, HeightType heightBounds) {
         this.minHeight = minHeight;
         this.maxHeight = maxHeight;
         this.heightBounds = heightBounds;
@@ -56,8 +56,8 @@ public class HeightSettingsEntry {
             return this;
         }
 
-        public HeightSettingsEntry build() {
-            return new HeightSettingsEntry(minHeight, maxHeight, heightBounds);
+        public HeightSettings build() {
+            return new HeightSettings(minHeight, maxHeight, heightBounds);
         }
     }
 
