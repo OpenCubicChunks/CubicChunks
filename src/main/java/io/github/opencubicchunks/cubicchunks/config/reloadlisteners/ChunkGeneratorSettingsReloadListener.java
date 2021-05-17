@@ -46,7 +46,7 @@ public class ChunkGeneratorSettingsReloadListener<T extends Codec<? extends Chun
         this.registry = registry;
         this.jsonFileTarget = jsonFileTarget;
         this.trackedEntriesMap = trackedEntriesMap;
-        this.configPath = CubicChunks.CONFIG_PATH.resolve(jsonFileTarget);
+        this.configPath = CubicChunks.WORLD_CONFIG_PATH.resolve(jsonFileTarget);
     }
 
     @Override
@@ -82,6 +82,7 @@ public class ChunkGeneratorSettingsReloadListener<T extends Codec<? extends Chun
 
     private void createDefault() {
         try {
+            Files.createDirectories(configPath.getParent());
             Files.write(configPath, new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().create().toJson(CONFIG_DEFAULT).getBytes());
         } catch (IOException e) {
             CubicChunks.LOGGER.error(this.configPath.toString() + " could not be created.");

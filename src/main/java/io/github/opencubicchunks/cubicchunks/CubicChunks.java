@@ -61,6 +61,7 @@ public class CubicChunks implements ModInitializer {
     public static final String PROTOCOL_VERSION = "0";
 
     public static final Path CONFIG_PATH = FabricLoader.getInstance().getConfigDir().resolve(MODID);
+    public static final Path WORLD_CONFIG_PATH = CONFIG_PATH.resolve("world");
 
     public static final Map<String, CubicLevelHeightAccessor.WorldStyle> DIMENSION_TO_WORLD_STYLE = Util.make(new HashMap<>(), (set) -> {
         set.put("minecraft:overworld", CubicLevelHeightAccessor.WorldStyle.CUBIC);

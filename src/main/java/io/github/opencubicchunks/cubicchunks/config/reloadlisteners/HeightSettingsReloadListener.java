@@ -47,7 +47,7 @@ public class HeightSettingsReloadListener<T> implements SimpleSynchronousResourc
         this.registry = registry;
         this.jsonFileTarget = jsonFileTarget;
         this.trackedEntriesMap = trackedEntriesMap;
-        this.configPath = CubicChunks.CONFIG_PATH.resolve(jsonFileTarget);
+        this.configPath = CubicChunks.WORLD_CONFIG_PATH.resolve(jsonFileTarget);
     }
 
     @Override
@@ -83,6 +83,7 @@ public class HeightSettingsReloadListener<T> implements SimpleSynchronousResourc
 
     private void createDefault() {
         try {
+            Files.createDirectories(configPath.getParent());
             Files.write(configPath, new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().create().toJson(CONFIG_DEFAULT).getBytes());
         } catch (IOException e) {
             CubicChunks.LOGGER.error(this.configPath.toString() + " could not be created.");
