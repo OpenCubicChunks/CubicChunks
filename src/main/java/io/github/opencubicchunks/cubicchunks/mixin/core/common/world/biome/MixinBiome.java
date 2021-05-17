@@ -12,6 +12,8 @@ import java.util.function.Supplier;
 import io.github.opencubicchunks.cubicchunks.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.NoiseAndSurfaceBuilderHelper;
+import io.github.opencubicchunks.cubicchunks.config.HeightSettingsEntry;
+import io.github.opencubicchunks.cubicchunks.config.reloadlisteners.HeightSettingsReloadListener;
 import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import io.github.opencubicchunks.cubicchunks.world.CubeWorldGenRandom;
@@ -66,7 +68,7 @@ public class MixinBiome implements BiomeGetter {
             if (structureManager.shouldGenerateFeatures()) {
 
                 for (StructureFeature<?> structure : this.structuresByStep.getOrDefault(genStepIDX, Collections.emptyList())) {
-
+                    region.upgradeY(HeightSettingsReloadListener.STRUCTURE_HEIGHT_SETTINGS.getOrDefault(structure, HeightSettingsEntry.DEFAULT));
                     random.setDecorationSeed(seed, k, genStepIDX);
                     int minSectionX = Coords.sectionToMinBlock(Coords.blockToSection(blockPos.getX()));
                     int minSectionY = Coords.sectionToMinBlock(Coords.blockToSection(blockPos.getY()));
@@ -95,6 +97,8 @@ public class MixinBiome implements BiomeGetter {
             if (list.size() > genStepIDX) {
                 for (Supplier<ConfiguredFeature<?, ?>> configuredFeatureSupplier : list.get(genStepIDX)) {
                     ConfiguredFeature<?, ?> configuredFeature = configuredFeatureSupplier.get();
+                    //noinspection SuspiciousMethodCalls
+                    region.upgradeY(HeightSettingsReloadListener.STRUCTURE_HEIGHT_SETTINGS.getOrDefault(configuredFeature.feature, HeightSettingsEntry.DEFAULT));
 
                     ResourceLocation key = region.getLevel().getServer().registryAccess().registry(Registry.CONFIGURED_FEATURE_REGISTRY).get().getKey(configuredFeature);
                     if (key != null) {
