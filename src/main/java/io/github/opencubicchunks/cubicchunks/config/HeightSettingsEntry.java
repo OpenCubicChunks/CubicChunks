@@ -4,6 +4,7 @@ import java.util.EnumSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.google.gson.annotations.SerializedName;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import io.github.opencubicchunks.cubicchunks.world.CubeWorldGenRegion;
 
@@ -11,9 +12,9 @@ public class HeightSettingsEntry {
 
     public static final HeightSettingsEntry DEFAULT = new HeightSettingsEntry(HeightType.WORLD, HeightType.WORLD, HeightType.WORLD);
 
-    private final HeightType minHeight;
-    private final HeightType maxHeight;
-    private final HeightType heightBounds;
+    @SerializedName("min_y") private final HeightType minHeight;
+    @SerializedName("max_y") private final HeightType maxHeight;
+    @SerializedName("bounds_y") private final HeightType heightBounds;
 
     public HeightSettingsEntry(HeightType minHeight, HeightType maxHeight, HeightType heightBounds) {
         this.minHeight = minHeight;

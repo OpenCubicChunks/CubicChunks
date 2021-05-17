@@ -108,7 +108,7 @@ public class HeightSettingsReloadListener<T> implements SimpleSynchronousResourc
                 processEntry(jsonObject, heightEntry);
                 newMap.put(registry.get(entryID), heightEntry.build());
             } else {
-                CubicChunks.LOGGER.error("\"" + entryID.toString() + "\" was not found in the \"" + registry.key().location() + "\" registry, skipping height settings...");
+                CubicChunks.LOGGER.error("\"" + entryID.toString() + "\" was not found in the \"" + registry.key().location() + "\" registry, skipping entry...");
             }
         }
     }
