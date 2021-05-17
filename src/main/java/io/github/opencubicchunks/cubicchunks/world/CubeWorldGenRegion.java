@@ -158,14 +158,6 @@ public class CubeWorldGenRegion extends WorldGenRegion implements ICubicWorld {
         this.cubeCenterColumnCenterZ = newZ;
     }
 
-    public void upgradeY(HeightSettingsEntry heightSettings) {
-        boundHeight = heightSettings.getHeightBounds().getHeight(this);
-        boundMinHeight = heightSettings.getHeightBounds().getMinHeight(this);
-
-        height = heightSettings.getMaxHeight().getHeight(this);
-        minHeight = heightSettings.getMinHeight().getMinHeight(this);
-    }
-
     public IBigCube getCenterCube() {
         return (IBigCube) centerCube;
     }
@@ -520,6 +512,14 @@ public class CubeWorldGenRegion extends WorldGenRegion implements ICubicWorld {
         return this.getLevel().startsForFeature(sectionPos, structure);
     }
 
+    public void upgradeY(HeightSettingsEntry heightSettings) {
+        boundHeight = heightSettings.getHeightBounds().getHeight(this);
+        boundMinHeight = heightSettings.getHeightBounds().getMinHeight(this);
+
+        height = heightSettings.getMaxHeight().getHeight(this);
+        minHeight = heightSettings.getMinHeight().getMinHeight(this);
+    }
+
     @Override public int getMinBuildHeight() {
         return minHeight;
     }
@@ -529,7 +529,7 @@ public class CubeWorldGenRegion extends WorldGenRegion implements ICubicWorld {
     }
 
     @Override public boolean isOutsideBuildHeight(int y) {
-        return y < minHeight || y >= minHeight + boundHeight;
+        return y < boundMinHeight || y >= boundMinHeight + boundHeight;
     }
 
     public boolean insideCubeHeight(int blockY) {
