@@ -2,8 +2,15 @@ package io.github.opencubicchunks.cubicchunks.chunk.util;
 
 import static io.github.opencubicchunks.cubicchunks.utils.Coords.*;
 
+import java.util.Spliterators;
+import java.util.function.Consumer;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
+
+import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Cursor3D;
 import net.minecraft.core.SectionPos;
 import net.minecraft.core.Vec3i;
 import net.minecraft.util.Mth;
@@ -166,5 +173,20 @@ public class CubePos extends Vec3i {
 
     public static long sectionToCubeSectionLong(long sectionPosIn) {
         return CubePos.from(SectionPos.of(sectionPosIn)).asSectionPos().asLong();
+    }
+
+    public static Stream<SectionPos> aroundCube(CubePos center, int radius) {
+        int cubeX = center.getX();
+        int cubeY = center.getY();
+        int cubeZ = center.getZ();
+
+        //Is this right?!
+        radius = radius * IBigCube.DIAMETER_IN_SECTIONS;
+
+        int sectionX = Coords.cubeToSection(cubeX, 0);
+        int sectionY = Coords.cubeToSection(cubeY, 0);
+        int sectionZ = Coords.cubeToSection(cubeZ, 0);
+
+        return SectionPos.betweenClosedStream(sectionX - radius, sectionY - radius, sectionZ - radius, sectionX + radius, sectionY - radius, sectionZ + radius);
     }
 }
