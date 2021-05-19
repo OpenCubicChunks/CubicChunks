@@ -96,7 +96,7 @@ public abstract class MixinPoiManager extends SectionStorage<PoiSection> impleme
             return;
         }
         ci.cancel();
-        CubePos.aroundCube(new CubePos(pos), Math.floorDiv(radius, 16)).map((sectionPos) -> {
+        CubePos.sectionsAroundCube(new CubePos(pos), Math.floorDiv(radius, 16)).map((sectionPos) -> {
             return Pair.of(sectionPos, this.getOrLoad(sectionPos.asLong()));
         }).filter((pair) -> {
             return !(Boolean) pair.getSecond().map(poi -> ((PoiSectionAccess) poi).invokeIsValid()).orElse(false);
