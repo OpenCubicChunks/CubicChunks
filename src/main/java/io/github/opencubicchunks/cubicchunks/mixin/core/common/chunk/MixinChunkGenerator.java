@@ -242,9 +242,9 @@ public abstract class MixinChunkGenerator implements ICubeGenerator {
                 long seed = worldgenRandom.setDecorationSeed(region.getSeed(), columnMinPos.getX(), columnMinPos.getY(), columnMinPos.getZ());
 
                 Biome biome = ((ChunkGenerator) (Object) this).getBiomeSource().getNoiseBiome(
-                    QuartPos.fromSection(cubeToSection(mainCubeX, columnX)) + BiomeManagerAccess.getCHUNK_CENTER_QUART(),
-                    QuartPos.fromSection(cubeToSection(mainCubeY, 0)) + BiomeManagerAccess.getCHUNK_CENTER_QUART(),
-                    QuartPos.fromSection(cubeToSection(mainCubeZ, columnZ)) + BiomeManagerAccess.getCHUNK_CENTER_QUART());
+                    QuartPos.fromSection(cubeToSection(mainCubeX, columnX)) + BiomeManagerAccess.getChunkCenterQuart(),
+                    QuartPos.fromSection(cubeToSection(mainCubeY, 0)) + BiomeManagerAccess.getChunkCenterQuart(),
+                    QuartPos.fromSection(cubeToSection(mainCubeZ, columnZ)) + BiomeManagerAccess.getChunkCenterQuart());
                 try {
                     ((BiomeGetter) (Object) biome).generate(structureManager, ((ChunkGenerator) (Object) this), region, seed, worldgenRandom, columnMinPos);
                 } catch (Exception e) {

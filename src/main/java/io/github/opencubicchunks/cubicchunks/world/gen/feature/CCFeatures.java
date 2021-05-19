@@ -64,11 +64,11 @@ public class CCFeatures {
             ))
         ));
 
-    public static void init() {
-    }
-
     public static final ConfiguredFeature<?, ?> LAVA_LEAK_FIX = createCCConfiguredFeature("lava_leak_fix",
         CCFeature.LAVA_LEAK_FIX.configured(NoneFeatureConfiguration.INSTANCE).decorated(FeatureDecorator.NOPE.configured(NoneDecoratorConfiguration.INSTANCE)));
+
+    public static void init() {
+    }
 
     public static <FC extends FeatureConfiguration, F extends Feature<FC>, CF extends ConfiguredFeature<FC, F>> CF createCCConfiguredFeature(String id, CF configuredFeature) {
         ResourceLocation ccID = new ResourceLocation(CubicChunks.MODID, id);

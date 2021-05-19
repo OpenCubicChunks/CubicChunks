@@ -39,20 +39,21 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(PoiManager.class)
 public abstract class MixinPoiManager extends SectionStorage<PoiSection> implements POIDeserializationContext {
 
+    @Shadow @Final private LongSet loadedChunks; // Loaded cubes
 
     public MixinPoiManager(File file, Function function, Function function2, DataFixer dataFixer,
                            DataFixTypes dataFixTypes, boolean bl, LevelHeightAccessor levelHeightAccessor) {
         super(file, function, function2, dataFixer, dataFixTypes, bl, levelHeightAccessor);
     }
 
-    @Shadow protected abstract void updateFromSection(LevelChunkSection levelChunkSection, SectionPos sectionPos,
-                                                      BiConsumer<BlockPos, PoiType> biConsumer);
-
     @Shadow private static boolean mayHavePoi(LevelChunkSection levelChunkSection) {
         throw new Error("Mixin did not apply");
     }
 
-    @Shadow @Final private LongSet loadedChunks; // Loaded cubes
+    @Shadow protected abstract void updateFromSection(LevelChunkSection levelChunkSection, SectionPos sectionPos,
+                                                      BiConsumer<BlockPos, PoiType> biConsumer);
+
+
 
     @Inject(method = "getInSquare", at = @At("HEAD"), cancellable = true)
     private void getInSquare(Predicate<PoiType> typePredicate, BlockPos pos, int radius, PoiManager.Occupancy occupancy, CallbackInfoReturnable<Stream<PoiRecord>> cir) {

@@ -7,7 +7,7 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 @Mixin(BiomeManager.class)
 public interface BiomeManagerAccess {
 
-    @Accessor static int getCHUNK_CENTER_QUART() {
+    @Accessor("CHUNK_CENTER_QUART") static int getChunkCenterQuart() {
         throw new Error("Mixin did not apply");
     }
 }

@@ -48,28 +48,34 @@ public class LavaLeakFix extends Feature<NoneFeatureConfiguration> {
                     if (cube.getBlockState(localX, localY, localZ).getBlock() != Blocks.LAVA) {
                         continue;
                     }
-                    for (Direction direction : Direction.values()) {
-                        if (direction == Direction.UP) {
-                            continue;
-                        }
 
-                        if (level.getBlockState(mutable.set(Coords.localToBlock(cubePos.getX(), localX),
-                            Coords.localToBlock(cubePos.getY(), localY), Coords.localToBlock(cubePos.getZ(), localZ)).move(direction)).isAir()) {
-                            if (direction == Direction.DOWN) {
-                                level.setBlock(mutable, generator.getBaseStoneSource().getBaseBlock(mutable), 2);
-                            } else {
-                                if (random.nextInt(5) == 0) {
-                                    continue;
-                                }
-                                SurfaceBuilderConfiguration surfaceBuilderConfiguration = context.level().getBiome(mutable).getGenerationSettings().getSurfaceBuilder().get().config();
-                                level.setBlock(mutable, context.level().getBlockState(mutable.offset(0, 1, 0)).isAir() ? surfaceBuilderConfiguration.getTopMaterial() :
-                                    surfaceBuilderConfiguration.getUnderMaterial(), 2);
-                            }
-                        }
-                    }
+                    checkDirectionsAndPreventLeaking(context, level, cubePos, random, generator, mutable, localX, localY, localZ);
                 }
             }
         }
         return false;
+    }
+
+    private void checkDirectionsAndPreventLeaking(FeaturePlaceContext<NoneFeatureConfiguration> context, CubeWorldGenRegion level, CubePos cubePos, Random random, ChunkGenerator generator,
+                           BlockPos.MutableBlockPos mutable, int localX, int localY, int localZ) {
+        for (Direction direction : Direction.values()) {
+            if (direction == Direction.UP) {
+                continue;
+            }
+
+            if (level.getBlockState(mutable.set(Coords.localToBlock(cubePos.getX(), localX),
+                Coords.localToBlock(cubePos.getY(), localY), Coords.localToBlock(cubePos.getZ(), localZ)).move(direction)).isAir()) {
+                if (direction == Direction.DOWN) {
+                    level.setBlock(mutable, generator.getBaseStoneSource().getBaseBlock(mutable), 2);
+                } else {
+                    if (random.nextInt(5) == 0) {
+                        continue;
+                    }
+                    SurfaceBuilderConfiguration surfaceBuilderConfiguration = context.level().getBiome(mutable).getGenerationSettings().getSurfaceBuilder().get().config();
+                    level.setBlock(mutable, context.level().getBlockState(mutable.offset(0, 1, 0)).isAir() ? surfaceBuilderConfiguration.getTopMaterial() :
+                        surfaceBuilderConfiguration.getUnderMaterial(), 2);
+                }
+            }
+        }
     }
 }

@@ -36,11 +36,11 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public abstract class MixinNoiseBasedChunkGenerator {
     @Mutable @Shadow @Final protected Supplier<NoiseGeneratorSettings> settings;
 
-    @Shadow @Final private int cellHeight;
-
-    @Mutable @Shadow @Final private int cellCountY;
-
     @Shadow @Final protected BlockState defaultFluid;
+
+    @Mutable @Shadow @Final int cellCountY;
+
+    @Shadow @Final private int cellHeight;
 
     @Shadow @Final private NormalNoise barrierNoise;
 
