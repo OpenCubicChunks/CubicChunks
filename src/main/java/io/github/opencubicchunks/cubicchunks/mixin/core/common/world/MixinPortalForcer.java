@@ -1,10 +1,16 @@
 package io.github.opencubicchunks.cubicchunks.mixin.core.common.world;
 
+import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
+import io.github.opencubicchunks.cubicchunks.server.IServerChunkProvider;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.server.level.ServerChunkCache;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.TicketType;
+import net.minecraft.world.entity.ai.village.poi.PoiRecord;
+import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.portal.PortalForcer;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -19,16 +25,16 @@ public class MixinPortalForcer {
 
     @Shadow @Final private ServerLevel level;
 
-    // TODO: Why is this crashing?
-//    @Redirect(method = "findPortalAround", at = @At(value = "INVOKE",
-//        target = "Lnet/minecraft/server/level/ServerChunkCache;addRegionTicket(Lnet/minecraft/server/level/TicketType;Lnet/minecraft/world/level/ChunkPos;ILjava/lang/Object;)V"))
-//    private <T> void addCubeRegionTicket(ServerChunkCache serverChunkCache, TicketType<T> ticketType, ChunkPos chunkPos, int radius, T argument, BlockPos pos,
-//                                         boolean destIsNether) {
-//        if (!((CubicLevelHeightAccessor) serverChunkCache.getLevel()).isCubic()) {
-//            serverChunkCache.addRegionTicket(ticketType, chunkPos, radius, argument);
-//        }
-//        ((IServerChunkProvider) serverChunkCache).addCubeRegionTicket(ticketType, new CubePos(pos), radius, argument);
-//    }
+    @SuppressWarnings("UnresolvedMixinReference") @Redirect(method = "lambda$findPortalAround$5(Lnet/minecraft/world/entity/ai/village/poi/PoiRecord;)Lnet/minecraft/BlockUtil$FoundRectangle", at = @At(value = "INVOKE",
+        target = "Lnet/minecraft/server/level/ServerChunkCache;addRegionTicket(Lnet/minecraft/server/level/TicketType;Lnet/minecraft/world/level/ChunkPos;ILjava/lang/Object;)V"))
+    private <T> void addCubeRegionTicket(ServerChunkCache serverChunkCache, TicketType<T> ticketType, ChunkPos chunkPos, int radius, T argument, PoiRecord poiRecord) {
+        if (!((CubicLevelHeightAccessor) serverChunkCache.getLevel()).isCubic()) {
+            serverChunkCache.addRegionTicket(ticketType, chunkPos, radius, argument);
+            return;
+        }
+        serverChunkCache.addRegionTicket(ticketType, chunkPos, radius, argument); // TODO: Load order?
+        ((IServerChunkProvider) serverChunkCache).addCubeRegionTicket(ticketType, new CubePos((BlockPos) argument), radius, argument);
+    }
 
     @Redirect(method = "createPortal", at = @At(value = "INVOKE", target = "Ljava/lang/Math;min(II)I", ordinal = 0))
     private int limitYUp(int a, int b, BlockPos pos, Direction.Axis axis) {
