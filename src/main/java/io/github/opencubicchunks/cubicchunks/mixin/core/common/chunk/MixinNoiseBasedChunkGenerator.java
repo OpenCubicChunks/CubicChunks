@@ -48,6 +48,8 @@ public abstract class MixinNoiseBasedChunkGenerator {
 
     @Shadow @Final private NormalNoise lavaNoise;
 
+    @Shadow public abstract int getSeaLevel();
+
     @Inject(method = "<init>(Lnet/minecraft/world/level/biome/BiomeSource;Lnet/minecraft/world/level/biome/BiomeSource;JLjava/util/function/Supplier;)V", at = @At("RETURN"))
     private void init(BiomeSource biomeSource, BiomeSource biomeSource2, long l, Supplier<NoiseGeneratorSettings> supplier, CallbackInfo ci) {
         // access to through the registry is slow: vanilla accesses settings directly from the supplier in the constructor anyway
@@ -121,6 +123,18 @@ public abstract class MixinNoiseBasedChunkGenerator {
         }
         return noiseGeneratorSettings.getMinSurfaceLevel();
     }
+
+    @Redirect(method = "buildSurfaceAndBedrock", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/levelgen/NoiseBasedChunkGenerator;getSeaLevel()I"))
+    private int noSeaLevelNether(NoiseBasedChunkGenerator noiseBasedChunkGenerator, WorldGenRegion region, ChunkAccess chunk) {
+        if (!((CubicLevelHeightAccessor) region).isCubic()) {
+            return this.getSeaLevel();
+        }
+        if (region.getLevel().dimension() == Level.NETHER) {
+            return chunk.getMinBuildHeight(); // The nether has no sea level for cubic chunks so, so no sea level :P
+        }
+        return this.getSeaLevel();
+    }
+
 
     @Inject(method = "getAquifer", at = @At("HEAD"), cancellable = true)
     private void createNoiseAquifer(int minY, int sizeY, ChunkPos chunkPos, CallbackInfoReturnable<Aquifer> cir) {

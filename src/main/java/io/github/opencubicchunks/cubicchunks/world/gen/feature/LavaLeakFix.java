@@ -62,7 +62,7 @@ public class LavaLeakFix extends Feature<NoneFeatureConfiguration> {
                                     continue;
                                 }
                                 SurfaceBuilderConfiguration surfaceBuilderConfiguration = context.level().getBiome(mutable).getGenerationSettings().getSurfaceBuilder().get().config();
-                                level.setBlock(mutable, context.level().getBlockState(mutable.move(Direction.UP)).isAir() ? surfaceBuilderConfiguration.getTopMaterial() :
+                                level.setBlock(mutable, context.level().getBlockState(mutable.offset(0, 1, 0)).isAir() ? surfaceBuilderConfiguration.getTopMaterial() :
                                     surfaceBuilderConfiguration.getUnderMaterial(), 2);
                             }
                         }
