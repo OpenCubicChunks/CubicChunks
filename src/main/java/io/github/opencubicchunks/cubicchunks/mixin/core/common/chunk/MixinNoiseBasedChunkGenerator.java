@@ -144,8 +144,8 @@ public abstract class MixinNoiseBasedChunkGenerator {
         }
     }
 
-    @Redirect(method = "createAquifer", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/chunk/ChunkAccess;getMinBuildHeight()I"))
-    private int useChunkMinHeight(ChunkAccess chunkAccess) {
-        return chunkAccess.getMinBuildHeight();
+    @Redirect(method = "createAquifer", at = @At(value = "INVOKE", target = "Ljava/lang/Math;max(II)I"))
+    private int useChunkMinHeight(int a, int b, ChunkAccess chunk) {
+        return !((CubicLevelHeightAccessor) chunk).isCubic() ? Math.max(a, b) : chunk.getMinBuildHeight();
     }
 }
