@@ -12,11 +12,11 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.StructureFeatureManager;
 import net.minecraft.world.level.biome.BiomeSource;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.levelgen.Aquifer;
 import net.minecraft.world.level.levelgen.NoiseBasedChunkGenerator;
 import net.minecraft.world.level.levelgen.NoiseGeneratorSettings;
-import net.minecraft.world.level.levelgen.NoiseSampler;
 import net.minecraft.world.level.levelgen.NoiseSettings;
 import net.minecraft.world.level.levelgen.WorldgenRandom;
 import net.minecraft.world.level.levelgen.synth.NormalNoise;
@@ -37,6 +37,14 @@ public abstract class MixinNoiseBasedChunkGenerator {
     @Shadow @Final private int cellHeight;
 
     @Mutable @Shadow @Final private int cellCountY;
+
+    @Shadow @Final protected BlockState defaultFluid;
+
+    @Shadow @Final private NormalNoise barrierNoise;
+
+    @Shadow @Final private NormalNoise waterLevelNoise;
+
+    @Shadow @Final private NormalNoise lavaNoise;
 
     @Inject(method = "<init>(Lnet/minecraft/world/level/biome/BiomeSource;Lnet/minecraft/world/level/biome/BiomeSource;JLjava/util/function/Supplier;)V", at = @At("RETURN"))
     private void init(BiomeSource biomeSource, BiomeSource biomeSource2, long l, Supplier<NoiseGeneratorSettings> supplier, CallbackInfo ci) {
@@ -101,18 +109,11 @@ public abstract class MixinNoiseBasedChunkGenerator {
         return new NonAtomicWorldgenRandom();
     }
 
-    @Redirect(
-        method = "getAquifer",
-        at = @At(
-            value = "INVOKE",
-            target = "Lnet/minecraft/world/level/levelgen/Aquifer;create(Lnet/minecraft/world/level/ChunkPos;Lnet/minecraft/world/level/levelgen/synth/NormalNoise;"
-                + "Lnet/minecraft/world/level/levelgen/synth/NormalNoise;Lnet/minecraft/world/level/levelgen/synth/NormalNoise;Lnet/minecraft/world/level/levelgen/NoiseGeneratorSettings;"
-                + "Lnet/minecraft/world/level/levelgen/NoiseSampler;II)Lnet/minecraft/world/level/levelgen/Aquifer;"
-        )
-    )
-    private Aquifer createNoiseAquifer(
-        ChunkPos chunkPos, NormalNoise barrierNoise, NormalNoise levelNoise, NormalNoise lavaNoise,
-        NoiseGeneratorSettings noiseGeneratorSettings, NoiseSampler noiseSampler, int minY, int sizeY) {
-        return new CubicAquifer(chunkPos, barrierNoise, levelNoise, lavaNoise, noiseGeneratorSettings, minY, sizeY);
+    @Inject(method = "getAquifer", at = @At("HEAD"), cancellable = true)
+    private void createNoiseAquifer(int minY, int sizeY, ChunkPos chunkPos, CallbackInfoReturnable<Aquifer> cir) {
+        if (!this.settings.get().noiseSettings().islandNoiseOverride()) {
+            cir.setReturnValue(
+                new CubicAquifer(chunkPos, this.barrierNoise, this.waterLevelNoise, this.lavaNoise, this.settings.get(), minY * cellHeight, sizeY * cellHeight, this.defaultFluid));
+        }
     }
 }

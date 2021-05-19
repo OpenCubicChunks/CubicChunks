@@ -41,6 +41,8 @@ public final class CubicAquifer implements Aquifer {
     private final int minGridX;
     private final int minGridY;
     private final int minGridZ;
+    private final BlockState[] typeToBlock;
+
     private final int gridSizeX;
     private final int gridSizeZ;
 
@@ -51,16 +53,20 @@ public final class CubicAquifer implements Aquifer {
     public CubicAquifer(
         ChunkPos chunkPos,
         NormalNoise barrierNoise, NormalNoise waterLevelNoise, NormalNoise lavaNoise,
-        NoiseGeneratorSettings noiseGeneratorSettings, int minY, int sizeY
+        NoiseGeneratorSettings noiseGeneratorSettings, int minY, int sizeY, BlockState waterState
     ) {
         this.barrierNoise = barrierNoise;
         this.waterLevelNoise = waterLevelNoise;
         this.lavaNoise = lavaNoise;
         this.noiseGeneratorSettings = noiseGeneratorSettings;
-
         this.minGridX = gridX(chunkPos.getMinBlockX()) - 1;
         this.minGridY = gridY(minY) - 1;
         this.minGridZ = gridZ(chunkPos.getMinBlockZ()) - 1;
+        typeToBlock = new BlockState[] {
+            waterState,
+            Blocks.LAVA.defaultBlockState()
+        };
+
         int maxGridX = gridX(chunkPos.getMaxBlockX()) + 1;
         int maxGridY = gridY(minY + sizeY) + 1;
         int maxGridZ = gridZ(chunkPos.getMaxBlockZ()) + 1;
@@ -148,10 +154,21 @@ public final class CubicAquifer implements Aquifer {
         return getBlockState(stoneSource, x, y, z, density, firstAquifer, firstToSecond, barrierDensity);
     }
 
+    private int typeOf(int status) {
+        return status & Sample.TYPE_MASK;
+    }
+
+    private BlockState stateOf(int status) {
+        return this.typeToBlock[typeOf(status)];
+    }
+
     private BlockState getBlockState(BaseStoneSource stoneSource, int x, int y, int z, double density, int firstAquifer, double firstToSecond, double barrierDensity) {
         if (density + barrierDensity <= 0.0) {
             this.shouldScheduleFluidUpdate = firstToSecond > 0.0;
-            return y >= Sample.levelOf(firstAquifer) ? AIR : Sample.stateOf(firstAquifer);
+            if (y >= Sample.levelOf(firstAquifer)) {
+                return AIR;
+            }
+            return this.stateOf(firstAquifer);
         } else {
             return this.stone(stoneSource, x, y, z);
         }
