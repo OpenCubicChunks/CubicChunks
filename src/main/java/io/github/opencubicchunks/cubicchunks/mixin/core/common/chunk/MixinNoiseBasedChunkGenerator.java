@@ -8,8 +8,10 @@ import java.util.function.Supplier;
 import io.github.opencubicchunks.cubicchunks.chunk.CubicAquifer;
 import io.github.opencubicchunks.cubicchunks.chunk.NonAtomicWorldgenRandom;
 import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
+import net.minecraft.server.level.WorldGenRegion;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.StructureFeatureManager;
 import net.minecraft.world.level.biome.BiomeSource;
 import net.minecraft.world.level.block.state.BlockState;
@@ -107,6 +109,17 @@ public abstract class MixinNoiseBasedChunkGenerator {
     @Redirect(method = "buildSurfaceAndBedrock", at = @At(value = "NEW", target = "net/minecraft/world/level/levelgen/WorldgenRandom"))
     private WorldgenRandom createCarverRandom() {
         return new NonAtomicWorldgenRandom();
+    }
+
+    @Redirect(method = "buildSurfaceAndBedrock", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/levelgen/NoiseGeneratorSettings;getMinSurfaceLevel()I"))
+    private int useWorldMinY(NoiseGeneratorSettings noiseGeneratorSettings, WorldGenRegion region, ChunkAccess chunk) {
+        if (!((CubicLevelHeightAccessor) region).isCubic()) {
+            return noiseGeneratorSettings.getMinSurfaceLevel();
+        }
+        if (region.getLevel().dimension() == Level.NETHER) {
+            return chunk.getMinBuildHeight(); // Allow surface builders to generate infinitely in the nether.
+        }
+        return noiseGeneratorSettings.getMinSurfaceLevel();
     }
 
     @Inject(method = "getAquifer", at = @At("HEAD"), cancellable = true)
