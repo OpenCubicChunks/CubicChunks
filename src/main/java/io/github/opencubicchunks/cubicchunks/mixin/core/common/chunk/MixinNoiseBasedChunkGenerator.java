@@ -143,4 +143,9 @@ public abstract class MixinNoiseBasedChunkGenerator {
                 new CubicAquifer(chunkPos, this.barrierNoise, this.waterLevelNoise, this.lavaNoise, this.settings.get(), minY * cellHeight, sizeY * cellHeight, this.defaultFluid));
         }
     }
+
+    @Redirect(method = "createAquifer", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/chunk/ChunkAccess;getMinBuildHeight()I"))
+    private int useChunkMinHeight(ChunkAccess chunkAccess) {
+        return chunkAccess.getMinBuildHeight();
+    }
 }
