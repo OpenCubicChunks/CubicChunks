@@ -582,43 +582,9 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
         this.visibleCubeMap = updatingCubeMap.clone();
     }
 
-    @Dynamic
-    @Inject(method = "updateCubeScheduling", at = @At(value = "INVOKE", target = "Lit/unimi/dsi/fastutil/longs/Long2ObjectLinkedOpenHashMap;put(JLjava/lang/Object;)Ljava/lang/Object;"))
-    private void addChunkHolders(long pos, int _level, ChunkHolder holder, int i, CallbackInfoReturnable<ChunkHolder> cir) {
-        ICubeHolder cubeHolder = (ICubeHolder) holder;
-        if (cubeHolder.getChunkHolders() != null) {
-            return;
-        }
-        CubePos cubePos = CubePos.from(pos);
-        ChunkHolder[] chunkHolders = new ChunkHolder[IBigCube.DIAMETER_IN_SECTIONS * IBigCube.DIAMETER_IN_SECTIONS];
-        for (int localX = 0; localX < IBigCube.DIAMETER_IN_SECTIONS; localX++) {
-            for (int localZ = 0; localZ < IBigCube.DIAMETER_IN_SECTIONS; localZ++) {
-                ChunkPos chunkPos = cubePos.asChunkPos(localX, localZ);
-                ChunkHolder chunkHolder = ((IServerChunkProvider) serverChunkCache).getChunkHolderForce(chunkPos, ChunkStatus.EMPTY);
-                chunkHolders[localX * IBigCube.DIAMETER_IN_SECTIONS + localZ] = chunkHolder;
-            }
-        }
-        cubeHolder.setChunkHolders(chunkHolders);
-    }
-
     @Override
     public Iterable<ChunkHolder> getCubes() {
         return Iterables.unmodifiableIterable(this.visibleCubeMap.values());
-    }
-
-    //weird supplier to make sure the cube future is created after the chunk ones, just in case
-    private CompletableFuture<Either<IBigCube, ChunkHolder.ChunkLoadingFailure>> chainFutures(
-        Supplier<CompletableFuture<Either<IBigCube, ChunkHolder.ChunkLoadingFailure>>> cubeFutureSupplier, ChunkHolder[] chunkHolders, ChunkStatus chunkStatusIn) {
-        Iterator<ChunkHolder> iterator = Arrays.stream(chunkHolders).iterator();
-        ChunkHolder chunkHolder = iterator.next(); //set first future
-        CompletableFuture<Either<ChunkAccess, ChunkHolder.ChunkLoadingFailure>> chunkFutureChain = chunkHolder.getOrScheduleFuture(chunkStatusIn, (ChunkMap) (Object) this);
-        while (iterator.hasNext()) { //chain all subsequent futures
-            ChunkHolder next = iterator.next();
-            chunkFutureChain = chunkFutureChain.thenComposeAsync((either) -> next.getOrScheduleFuture(chunkStatusIn, (ChunkMap) (Object) this));
-        }
-
-        CompletableFuture<Either<IBigCube, ChunkHolder.ChunkLoadingFailure>> cubeFuture = cubeFutureSupplier.get();
-        return chunkFutureChain.thenComposeAsync((either) -> cubeFuture);
     }
 
     // func_219244_a, schedule
@@ -626,10 +592,11 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
     public CompletableFuture<Either<IBigCube, ChunkHolder.ChunkLoadingFailure>> scheduleCube(ChunkHolder cubeHolder, ChunkStatus chunkStatusIn) {
         CubePos cubePos = ((ICubeHolder) cubeHolder).getCubePos();
         if (chunkStatusIn == ChunkStatus.EMPTY) {
-            return chainFutures(() -> scheduleCubeLoad(cubePos), ((ICubeHolder) cubeHolder).getChunkHolders(), chunkStatusIn);
+            return this.scheduleCubeLoad(cubePos);
         } else {
-            CompletableFuture<Either<IBigCube, ChunkHolder.ChunkLoadingFailure>> completablefuture = chainFutures(
-                () -> ((ICubeHolder) cubeHolder).getOrScheduleCubeFuture(chunkStatusIn.getParent(), (ChunkMap) (Object) this), ((ICubeHolder) cubeHolder).getChunkHolders(), chunkStatusIn);
+            CompletableFuture<Either<IBigCube, ChunkHolder.ChunkLoadingFailure>> completablefuture = Utils.unsafeCast(
+                ((ICubeHolder) cubeHolder).getOrScheduleCubeFuture(chunkStatusIn.getParent(), (ChunkMap) (Object) this)
+            );
             return completablefuture.thenComposeAsync(
                 (Either<IBigCube, ChunkHolder.ChunkLoadingFailure> inputSection) -> {
                     Optional<IBigCube> optional = inputSection.left();

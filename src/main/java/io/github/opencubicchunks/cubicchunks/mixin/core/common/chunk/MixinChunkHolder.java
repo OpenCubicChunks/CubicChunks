@@ -79,7 +79,6 @@ public abstract class MixinChunkHolder implements ICubeHolder {
     @Shadow private CompletableFuture<Void> pendingFullStateConfirmation;
     @Shadow @Final private LevelHeightAccessor levelHeightAccessor;
 
-    private ChunkHolder[] chunkHolders = null;
     @Shadow private boolean hasChangedSections;
 
     private CubePos cubePos; // set from ASM
@@ -312,39 +311,11 @@ public abstract class MixinChunkHolder implements ICubeHolder {
         }
     }
 
-    @Override
-    public void setChunkHolders(ChunkHolder[] chunkHolders) {
-        this.chunkHolders = chunkHolders;
-    }
-
-    @Override
-    public ChunkHolder[] getChunkHolders() {
-        return chunkHolders;
-    }
-
     // func_219276_a, getOrScheduleFuture
-    @Override public CompletableFuture<Either<IBigCube, ChunkHolder.ChunkLoadingFailure>> getOrScheduleCubeFuture(ChunkStatus targetStatus, ChunkMap chunkStorage) {
-        int i = targetStatus.getIndex();
-        CompletableFuture<Either<IBigCube, ChunkHolder.ChunkLoadingFailure>> completableFuture = futures.get(i);
-        if (completableFuture != null) {
-            Either<IBigCube, ChunkHolder.ChunkLoadingFailure> either = completableFuture.getNow(null);
-            if (either == null || either.left().isPresent()) {
-                return completableFuture;
-            }
-        }
-
-        if (getStatus(this.ticketLevel).isOrAfter(targetStatus)) {
-            CompletableFuture<Either<IBigCube, ChunkHolder.ChunkLoadingFailure>> completableFuture2 = ((IChunkManager) chunkStorage).scheduleCube((ChunkHolder) (Object) this,
-                targetStatus);
-            this.updateChunkToSave(completableFuture2, "schedule " + targetStatus);
-            this.futures.set(i, completableFuture2);
-            return completableFuture2;
-        } else {
-            return completableFuture == null ? UNLOADED_CUBE_FUTURE : completableFuture;
-        }
+    @Override public CompletableFuture<Either<IBigCube, ChunkHolder.ChunkLoadingFailure>> getOrScheduleCubeFuture(ChunkStatus chunkStatus, ChunkMap chunkManager) {
+        return getOrScheduleFuture(chunkStatus, chunkManager);
     }
 
-    @Override
     public void addCubeStageListener(ChunkStatus status, BiConsumer<Either<IBigCube, ChunkHolder.ChunkLoadingFailure>, Throwable> consumer, ChunkMap chunkManager) {
         CompletableFuture<Either<IBigCube, ChunkHolder.ChunkLoadingFailure>> future = getOrScheduleFuture(status, chunkManager);
 
