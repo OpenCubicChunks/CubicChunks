@@ -9,6 +9,8 @@ import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.ICubeGenerator;
 import io.github.opencubicchunks.cubicchunks.chunk.NonAtomicWorldgenRandom;
 import io.github.opencubicchunks.cubicchunks.chunk.carver.CubicCarvingContext;
+import io.github.opencubicchunks.cubicchunks.chunk.cube.CubePrimer;
+import io.github.opencubicchunks.cubicchunks.chunk.util.CCWorldGenUtils;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.OverworldBiomeSourceAccess;
 import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
@@ -219,7 +221,9 @@ public abstract class MixinChunkGenerator implements ICubeGenerator {
     }
 
     @Override
-    public void decorate(CubeWorldGenRegion region, StructureFeatureManager structureManager) {
+    public void decorate(CubeWorldGenRegion region, StructureFeatureManager structureManager, CubePrimer chunk) {
+
+
         int mainCubeX = region.getMainCubeX();
         int mainCubeY = region.getMainCubeY();
         int mainCubeZ = region.getMainCubeZ();
@@ -235,6 +239,12 @@ public abstract class MixinChunkGenerator implements ICubeGenerator {
         //Feed the given columnMinPos into the feature decorators.
         for (int columnX = 0; columnX < IBigCube.DIAMETER_IN_SECTIONS; columnX++) {
             for (int columnZ = 0; columnZ < IBigCube.DIAMETER_IN_SECTIONS; columnZ++) {
+                chunk.moveColumns(columnX, columnZ);
+                if (CCWorldGenUtils.areSectionsEmpty(chunk.getCubePos().getY(), chunk.getPos(), chunk)) {
+                    continue;
+                }
+
+
                 BlockPos columnMinPos = new BlockPos(xStart + (sectionToMinBlock(columnX)), yStart, zStart + (sectionToMinBlock(columnZ)));
 
                 long seed = worldgenRandom.setDecorationSeed(region.getSeed(), columnMinPos.getX(), columnMinPos.getY(), columnMinPos.getZ());
