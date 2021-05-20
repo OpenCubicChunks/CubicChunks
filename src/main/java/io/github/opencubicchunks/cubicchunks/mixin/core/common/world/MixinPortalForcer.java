@@ -3,6 +3,7 @@ package io.github.opencubicchunks.cubicchunks.mixin.core.common.world;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import io.github.opencubicchunks.cubicchunks.server.IServerChunkProvider;
+import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerChunkCache;
@@ -34,7 +35,7 @@ public class MixinPortalForcer {
             return;
         }
         serverChunkCache.addRegionTicket(ticketType, chunkPos, radius, argument); // TODO: Load order?
-        ((IServerChunkProvider) serverChunkCache).addCubeRegionTicket(ticketType, new CubePos((BlockPos) argument), radius, argument);
+        ((IServerChunkProvider) serverChunkCache).addCubeRegionTicket(ticketType, new CubePos((BlockPos) argument), Coords.sectionToCube(radius), argument);
     }
 
     @Redirect(method = "createPortal", at = @At(value = "INVOKE", target = "Ljava/lang/Math;min(II)I", ordinal = 0))
