@@ -109,7 +109,7 @@ public class MixinBiome implements BiomeGetter {
 
                     if (!featureBlacklist.contains(key)) {
                         try {
-                            configuredFeature.place(region, chunkGenerator, random, blockPos);
+//                            configuredFeature.place(region, chunkGenerator, random, blockPos);
                         } catch (Exception e) {
                             CrashReport crashReport2 = CrashReport.forThrowable(e, "Feature placement");
                             crashReport2.addCategory("Feature").setDetail("Id", key).setDetail("Config", configuredFeature.config).setDetail("Description", () -> {

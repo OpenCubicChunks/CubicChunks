@@ -84,7 +84,9 @@
         "common.world.structure.MixinStructureFeatureManager",
         "common.world.structure.MixinStructurePiece",
         "common.world.structure.MixinStructureStart",
-        "common.world.structure.pieces.MixinOceanRuinPieces"
+        "common.world.structure.pieces.MixinOceanRuinPieces",
+        "common.world.dimension.end.MixinEndDragonFight",
+        "common.world.feature.MixinSpikeFeature"
     ],
     "client": [
         "client.chunk.MixinChunk",

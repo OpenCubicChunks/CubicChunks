@@ -43,7 +43,7 @@ public abstract class MixinChunk {
                 return map.get(key);
             }
             BigCube cube = (BigCube) ((ChunkCubeGetter) this).getCube(Coords.blockToSection(((BlockPos) key).getY()));
-            return cube.getTileEntityMap().get(key);
+            return cube.getCubeBlockEntities().get(key);
         } else if (map == this.pendingBlockEntities) {
             if (!((CubicLevelHeightAccessor) this).isCubic()) {
                 return map.get(key);
@@ -75,7 +75,7 @@ public abstract class MixinChunk {
             BigCube cube = (BigCube) ((ChunkCubeGetter) this).getCube(Coords.blockToSection(((BlockPos) key).getY()));
 
             @Nullable
-            BlockEntity removed = cube.getTileEntityMap().remove(key);
+            BlockEntity removed = cube.getCubeBlockEntities().remove(key);
 
             if (this.getLevel() instanceof ServerLevel) {
                 ServerBlockEntityEvents.BLOCK_ENTITY_UNLOAD.invoker().onUnload(removed, (ServerLevel) this.getLevel());
@@ -104,7 +104,7 @@ public abstract class MixinChunk {
                 return map.put(key, value);
             }
             BigCube cube = (BigCube) ((ChunkCubeGetter) this).getCube(Coords.blockToSection(((BlockPos) key).getY()));
-            return cube.getTileEntityMap().put((BlockPos) key, (BlockEntity) value);
+            return cube.getCubeBlockEntities().put((BlockPos) key, (BlockEntity) value);
         } else if (map == this.pendingBlockEntities) {
             if (!((CubicLevelHeightAccessor) this).isCubic()) {
                 return map.put(key, value);

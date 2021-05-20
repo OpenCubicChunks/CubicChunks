@@ -119,6 +119,7 @@ public abstract class MixinServerChunkProvider implements IServerChunkProvider, 
         ((ITicketManager) this.distanceManager).addCubeRegionTicket(type, pos, distance, value);
     }
 
+    @Override
     public <T> void removeCubeRegionTicket(TicketType<T> type, CubePos pos, int distance, T value) {
         ((ITicketManager) this.distanceManager).removeCubeRegionTicket(type, pos, distance, value);
     }

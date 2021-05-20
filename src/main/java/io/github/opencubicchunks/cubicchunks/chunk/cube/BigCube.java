@@ -529,7 +529,7 @@ public class BigCube implements ChunkAccess, IBigCube, CubicLevelHeightAccessor 
         return tileentity;
     }
 
-    public Map<BlockPos, BlockEntity> getTileEntityMap() {
+    public Map<BlockPos, BlockEntity> getCubeBlockEntities() {
         return blockEntities;
     }
 
@@ -591,7 +591,6 @@ public class BigCube implements ChunkAccess, IBigCube, CubicLevelHeightAccessor 
         this.deferredTileEntities.clear();
 //        this.upgradeData.upgrade(this); //TODO: DFU
     }
-
 
     @Deprecated @Nullable @Override public CompoundTag getBlockEntityNbt(BlockPos pos) {
         return this.getCubeDeferredTileEntity(pos);

@@ -8,6 +8,8 @@ import net.minecraft.server.level.TicketType;
 
 public class CCTicketType {
     public static final TicketType<CubePos> CCPLAYER = create("player", Comparator.comparingLong(CubePos::asLong));
+    public static final TicketType<CubePos> CCDRAGON = create("dragon", Comparator.comparingLong(CubePos::asLong));
+
     public static final TicketType<CubePos> CCFORCED = create("forced", Comparator.comparingLong(CubePos::asLong));
     public static final TicketType<CubePos> CCLIGHT = create("light", Comparator.comparingLong(CubePos::asLong));
     public static final TicketType<CubePos> CCUNKNOWN = create("unknown", Comparator.comparingLong(CubePos::asLong), 1);

@@ -47,7 +47,7 @@ public class PacketCubes {
         this.packetData = new byte[calculateDataSize(cubes)];
         fillDataBuffer(wrapBuffer(this.packetData), cubes, cubeExists);
         this.tileEntityTags = cubes.stream()
-            .flatMap(cube -> cube.getTileEntityMap().values().stream())
+            .flatMap(cube -> cube.getCubeBlockEntities().values().stream())
             .map(BlockEntity::getUpdateTag)
             .collect(Collectors.toList());
     }
