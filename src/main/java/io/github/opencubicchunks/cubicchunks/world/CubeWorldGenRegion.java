@@ -103,7 +103,7 @@ public class CubeWorldGenRegion extends WorldGenRegion implements ICubicWorld {
     private final TickList<Fluid> liquidTicks = new WorldGenTickList<>((pos) -> this.getCube(pos).getLiquidTicks());
 
     public CubeWorldGenRegion(ServerLevel worldIn, List<IBigCube> cubesIn, ChunkAccess access) {
-        super(worldIn, Collections.singletonList(new DummyChunkAccess()));
+        super(worldIn, Collections.singletonList(new DummyChunkAccess()), null, 0);
 
         int cubeRoot = Mth.floor(Math.cbrt(cubesIn.size()));
         if (cubeRoot * cubeRoot * cubeRoot != cubesIn.size()) {
