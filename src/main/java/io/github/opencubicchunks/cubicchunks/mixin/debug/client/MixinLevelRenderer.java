@@ -10,15 +10,14 @@ import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import com.mojang.math.Matrix4f;
 import com.mojang.math.Vector3f;
-import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.ICubeHolder;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
+import io.github.opencubicchunks.cubicchunks.client.CubicWorldLoadScreen;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import it.unimi.dsi.fastutil.longs.Long2ObjectLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.screens.LevelLoadingScreen;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.LightTexture;
@@ -61,10 +60,10 @@ public class MixinLevelRenderer {
         bufferBuilder.begin(VertexFormat.Mode.TRIANGLE_STRIP, DefaultVertexFormat.POSITION_COLOR);
 
         Object2IntMap<ChunkStatus> colors = getField(
-            LevelLoadingScreen.class, null, "COLORS" // TODO: intermediary name
+            CubicWorldLoadScreen.class, null, "STATUS_COLORS" // TODO: intermediary name
         );
 
-        int renderRadius = 1;
+        int renderRadius = 25;
         int chunkRenderRadius = 100; //renderRadius * IBigCube.DIAMETER_IN_SECTIONS;
         Long2ObjectLinkedOpenHashMap<ChunkHolder> loadedColumns = getField(ChunkMap.class, levelAccessor.getChunkSource().chunkMap, "updatingChunkMap");
 
@@ -131,12 +130,16 @@ public class MixinLevelRenderer {
             int xPos = Coords.cubeToMinBlock(cubeX);
             int yPos = Coords.cubeToMinBlock(cubeY);
             int zPos = Coords.cubeToMinBlock(cubeZ);
-            LevelRenderer.addChainedFilledBoxVertices(bufferBuilder, xPos + 4.25F - cameraX, yPos - 4.25F - cameraY, zPos + 4.25F - cameraZ,
-                xPos + 11.75F - cameraX, yPos + 4.25F - cameraY, zPos + 11.75F - cameraZ, vector3f.x(), vector3f.y(), vector3f.z(), 1.0F);
+            drawBox(bufferBuilder, cameraX, cameraY, cameraZ, xPos + 16, yPos + 16, zPos + 16, 4, vector3f);
         }
 
         tesselator.end();
         RenderSystem.enableTexture();
+    }
+
+    private void drawBox(BufferBuilder bufferBuilder, double cameraX, double cameraY, double cameraZ, float x, float y, float z, float radius, Vector3f color) {
+        LevelRenderer.addChainedFilledBoxVertices(bufferBuilder, x - radius - cameraX, y - radius - cameraY, z - radius - cameraZ,
+            x + radius - cameraX, y + radius - cameraY, z + radius - cameraZ, color.x(), color.y(), color.z(), 1.0F);
     }
 
     private static <T> T getField(Class<?> cl, Object obj, String name) {

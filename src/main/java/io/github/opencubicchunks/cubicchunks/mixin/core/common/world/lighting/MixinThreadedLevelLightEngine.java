@@ -21,6 +21,7 @@ import net.minecraft.core.SectionPos;
 import net.minecraft.server.level.ChunkMap;
 import net.minecraft.server.level.ThreadedLevelLightEngine;
 import net.minecraft.util.thread.ProcessorHandle;
+import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.level.chunk.DataLayer;
 import net.minecraft.world.level.chunk.LevelChunkSection;
@@ -151,6 +152,13 @@ public abstract class MixinThreadedLevelLightEngine extends MixinLevelLightEngin
         this.addTask(SectionPos.blockToSectionCoord(x), SectionPos.blockToSectionCoord(z), ThreadedLevelLightEngine.TaskType.POST_UPDATE, Util.name(() -> {
             super.checkSkyLightColumn(chunk, x, z, oldHeight, newHeight);
         }, () -> "checkSkyLightColumn " + x + " " + z));
+    }
+
+    @Inject(method = "updateChunkStatus", at = @At("HEAD"), cancellable = true)
+    private void cancelUpdateChunkStatus(ChunkPos pos, CallbackInfo ci) {
+        if (((CubicLevelHeightAccessor) this.levelHeightAccessor).isCubic()) {
+            ci.cancel();
+        }
     }
 
     /**

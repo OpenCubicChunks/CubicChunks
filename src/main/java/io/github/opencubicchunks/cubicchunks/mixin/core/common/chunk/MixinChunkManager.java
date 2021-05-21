@@ -139,6 +139,8 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
     private static final double TICK_UPDATE_DISTANCE = 128.0;
     private static final boolean USE_ASYNC_SERIALIZATION = true;
 
+    private static final Executor COLUMN_LOADING_EXECUTOR = Executors.newSingleThreadExecutor();
+
     @Shadow @Final ServerLevel level;
     @Shadow int viewDistance;
 
@@ -150,8 +152,6 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
     private final LongSet cubesToDrop = new LongOpenHashSet();
     private final LongSet cubeEntitiesInLevel = new LongOpenHashSet();
     private final Long2ObjectLinkedOpenHashMap<ChunkHolder> pendingCubeUnloads = new Long2ObjectLinkedOpenHashMap<>();
-
-    private static final Executor columnLoadingExecutor = Executors.newSingleThreadExecutor();
 
     // field_219264_r, worldgenMailbox
     private ProcessorHandle<CubeTaskPriorityQueueSorter.FunctionEntry<Runnable>> cubeWorldgenMailbox;
@@ -605,16 +605,15 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
     @Override
     public CompletableFuture<Either<IBigCube, ChunkHolder.ChunkLoadingFailure>> scheduleCube(ChunkHolder cubeHolder, ChunkStatus chunkStatusIn) {
         CubePos cubePos = ((ICubeHolder) cubeHolder).getCubePos();
+        CompletableFuture<Either<ChunkAccess, ChunkHolder.ChunkLoadingFailure>> columnFutures = scheduleAndWaitForColumns(chunkStatusIn, cubePos);
         if (chunkStatusIn == ChunkStatus.EMPTY) {
-            return this.scheduleCubeLoad(cubePos);
+            CompletableFuture<Either<IBigCube, ChunkHolder.ChunkLoadingFailure>> cubeFuture = this.scheduleCubeLoad(cubePos);
+            return columnFutures.thenComposeAsync(columns -> cubeFuture);
         } else {
-            CompletableFuture<Either<IBigCube, ChunkHolder.ChunkLoadingFailure>> completablefuture = Utils.unsafeCast(
+            CompletableFuture<Either<IBigCube, ChunkHolder.ChunkLoadingFailure>> parentCubeFuture = Utils.unsafeCast(
                 ((ICubeHolder) cubeHolder).getOrScheduleCubeFuture(chunkStatusIn.getParent(), (ChunkMap) (Object) this)
             );
-            return completablefuture.thenApplyAsync((either) -> {
-                scheduleAndWaitForColumns(chunkStatusIn, cubePos);
-                return either;
-            }, columnLoadingExecutor).thenComposeAsync(
+            return columnFutures.thenComposeAsync(columns -> parentCubeFuture).thenComposeAsync(
                 (Either<IBigCube, ChunkHolder.ChunkLoadingFailure> inputSection) -> {
                     Optional<IBigCube> optional = inputSection.left();
                     if (!optional.isPresent()) {
@@ -683,16 +682,16 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
         }, executor);
     }
 
-    private void scheduleAndWaitForColumns(ChunkStatus chunkStatusIn, CubePos cubePos) {
-        CompletableFuture.supplyAsync(() -> {
-            CompletableFuture<Either<ChunkAccess, ChunkHolder.ChunkLoadingFailure>> chainedFutures = null;
+    private CompletableFuture<Either<ChunkAccess, ChunkHolder.ChunkLoadingFailure>> scheduleAndWaitForColumns(ChunkStatus chunkStatusIn, CubePos cubePos) {
 
+        CompletableFuture<CompletableFuture<Either<ChunkAccess, ChunkHolder.ChunkLoadingFailure>>> nestedChainedFuture = CompletableFuture.supplyAsync(() -> {
+            CompletableFuture<Either<ChunkAccess, ChunkHolder.ChunkLoadingFailure>> chainedFutures = null;
             for (int localX = 0; localX < IBigCube.DIAMETER_IN_SECTIONS; localX++) {
                 for (int localZ = 0; localZ < IBigCube.DIAMETER_IN_SECTIONS; localZ++) {
                     ChunkPos chunkPos = cubePos.asChunkPos(localX, localZ);
                     CompletableFuture<Either<ChunkAccess, ChunkHolder.ChunkLoadingFailure>> columnFutureForCube =
                         ((IServerChunkProvider) serverChunkCache).getColumnFutureForCube(cubePos, chunkPos.x, chunkPos.z, chunkStatusIn, true);
-                    if(chainedFutures == null) {
+                    if (chainedFutures == null) {
                         chainedFutures = columnFutureForCube;
                     } else {
                         chainedFutures = chainedFutures.thenCompose((existingFuture) -> columnFutureForCube);
@@ -700,7 +699,8 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
                 }
             }
             return chainedFutures;
-        }, mainThreadExecutor).join().join();
+        }, mainThreadExecutor);
+        return nestedChainedFuture.thenComposeAsync((future) -> future, COLUMN_LOADING_EXECUTOR);
     }
 
     // func_219236_a, getChunkRangeFuture
