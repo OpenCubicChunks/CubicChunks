@@ -15,6 +15,7 @@ import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import net.minecraft.core.SectionPos;
 import net.minecraft.server.level.ChunkHolder;
+import net.minecraft.server.level.ServerChunkCache;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.chunk.ChunkStatus;
 
@@ -29,6 +30,7 @@ public interface IChunkManager {
     @Nullable
     ChunkHolder updateCubeScheduling(long cubePosIn, int newLevel, @Nullable ChunkHolder holder, int oldLevel);
 
+    void setServerChunkCache(ServerChunkCache cache);
     LongSet getCubesToDrop();
 
     @Nullable

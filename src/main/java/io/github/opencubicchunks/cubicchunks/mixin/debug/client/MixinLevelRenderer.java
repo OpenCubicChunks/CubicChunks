@@ -64,8 +64,8 @@ public class MixinLevelRenderer {
             LevelLoadingScreen.class, null, "COLORS" // TODO: intermediary name
         );
 
-        int renderRadius = 5;
-        int chunkRenderRadius = renderRadius * IBigCube.DIAMETER_IN_SECTIONS;
+        int renderRadius = 1;
+        int chunkRenderRadius = 100; //renderRadius * IBigCube.DIAMETER_IN_SECTIONS;
         Long2ObjectLinkedOpenHashMap<ChunkHolder> loadedColumns = getField(ChunkMap.class, levelAccessor.getChunkSource().chunkMap, "updatingChunkMap");
 
         Object[] data = getField(Long2ObjectLinkedOpenHashMap.class, loadedColumns, "value");

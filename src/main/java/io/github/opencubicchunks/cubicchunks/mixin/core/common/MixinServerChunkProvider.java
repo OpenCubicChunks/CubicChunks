@@ -6,11 +6,14 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 import javax.annotation.Nullable;
 
+import com.mojang.datafixers.DataFixer;
 import com.mojang.datafixers.util.Either;
 import io.github.opencubicchunks.cubicchunks.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
@@ -38,13 +41,20 @@ import net.minecraft.server.level.DistanceManager;
 import net.minecraft.server.level.ServerChunkCache;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.TicketType;
+import net.minecraft.server.level.progress.ChunkProgressListener;
 import net.minecraft.util.profiling.ProfilerFiller;
 import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.level.NaturalSpawner;
 import net.minecraft.world.level.chunk.ChunkAccess;
+import net.minecraft.world.level.chunk.ChunkGenerator;
 import net.minecraft.world.level.chunk.ChunkStatus;
+import net.minecraft.world.level.entity.ChunkStatusUpdateListener;
+import net.minecraft.world.level.levelgen.structure.templatesystem.StructureManager;
+import net.minecraft.world.level.storage.DimensionDataStorage;
 import net.minecraft.world.level.storage.LevelData;
+import net.minecraft.world.level.storage.LevelStorageSource;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -74,6 +84,10 @@ public abstract class MixinServerChunkProvider implements IServerChunkProvider, 
     @Shadow protected abstract boolean chunkAbsent(@Nullable ChunkHolder chunkHolderIn, int p_217224_2_);
 
     @Shadow public abstract int getLoadedChunksCount();
+
+    @Shadow @org.jetbrains.annotations.Nullable protected abstract ChunkHolder getVisibleChunkIfPresent(long pos);
+
+    @Shadow abstract boolean runDistanceManagerUpdates();
 
     @Override
     public <T> void addCubeRegionTicket(TicketType<T> type, CubePos pos, int distance, T value) {
@@ -167,6 +181,29 @@ public abstract class MixinServerChunkProvider implements IServerChunkProvider, 
     @Override
     public void forceCube(CubePos pos, boolean add) {
         ((ITicketManager) this.distanceManager).updateCubeForced(pos, add);
+    }
+
+
+    @Override public CompletableFuture<Either<ChunkAccess, ChunkHolder.ChunkLoadingFailure>> getColumnFutureForCube(CubePos cubepos, int chunkX, int chunkZ, ChunkStatus leastStatus,
+                                                                                                                    boolean create) {
+        ChunkPos chunkPos = new ChunkPos(chunkX, chunkZ);
+        long l = chunkPos.toLong();
+        int i = 33 + ChunkStatus.getDistance(leastStatus);
+        ChunkHolder chunkHolder = this.getVisibleChunkIfPresent(l);
+        if (create) {
+            this.distanceManager.addTicket(CCTicketType.CCCOLUMN, chunkPos, i, cubepos);
+            if (this.chunkAbsent(chunkHolder, i)) {
+                ProfilerFiller profilerFiller = this.level.getProfiler();
+                profilerFiller.push("chunkLoad");
+                this.runDistanceManagerUpdates();
+                chunkHolder = this.getVisibleChunkIfPresent(l);
+                profilerFiller.pop();
+                if (this.chunkAbsent(chunkHolder, i)) {
+                    throw Util.pauseInIde(new IllegalStateException("No chunk holder after ticket has been added"));
+                }
+            }
+        }
+        return this.chunkAbsent(chunkHolder, i) ? ChunkHolder.UNLOADED_CHUNK_FUTURE : chunkHolder.getOrScheduleFuture(leastStatus, this.chunkMap);
     }
 
     // func_217233_c, getChunkFutureMainThread
@@ -270,6 +307,12 @@ public abstract class MixinServerChunkProvider implements IServerChunkProvider, 
         }
     }
 
+    @Inject(method = "<init>", at = @At(value = "RETURN"))
+    private void setChunkManagerServerChunkCache(ServerLevel serverLevel, LevelStorageSource.LevelStorageAccess levelStorageAccess, DataFixer dataFixer, StructureManager structureManager,
+                                                 Executor executor, ChunkGenerator chunkGenerator, int i, boolean bl, ChunkProgressListener chunkProgressListener,
+                                                 ChunkStatusUpdateListener chunkStatusUpdateListener, Supplier<DimensionDataStorage> supplier, CallbackInfo ci) {
+        ((IChunkManager) this.chunkMap).setServerChunkCache((ServerChunkCache) (Object) this);
+    }
     /**
      * @author Barteks2x
      * @reason sections
