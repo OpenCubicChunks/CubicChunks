@@ -125,7 +125,6 @@ public class IONbtReader {
             return null;
         }
         readBiomes(cube, level);
-        readLightingInfo(cube, level, world);
         readBlocks(level, world, cube);
 
         return cube;
@@ -138,6 +137,7 @@ public class IONbtReader {
         readEntities(level, world, cube);
         readTileEntities(level, world, cube);
         readScheduledBlockTicks(level, world);
+        readLightingInfo(cube, level, world);
         cube.markSaved(); // its exactly the same as on disk so its not modified
     }
 
