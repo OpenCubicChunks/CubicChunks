@@ -44,7 +44,7 @@ import java.util.stream.Collectors;
  * <p>
  * Implementations of this class must be thread-safe.
  * <p>
- * If multiple writes are issued for the same cube/column at once, it is undefined which one will be kept.
+ * Unless otherwise specified by the implementation, absolutely <strong>NO</strong> atomicity guarantees are made whatsoever.
  */
 @ParametersAreNonnullByDefault
 public interface ICubicStorage extends Flushable, AutoCloseable {

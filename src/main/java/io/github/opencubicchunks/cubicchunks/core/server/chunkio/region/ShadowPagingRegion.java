@@ -25,15 +25,23 @@
 package io.github.opencubicchunks.cubicchunks.core.server.chunkio.region;
 
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.channels.SeekableByteChannel;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.BitSet;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Function;
 
+import cubicchunks.regionlib.MultiUnsupportedDataException;
+import cubicchunks.regionlib.UnsupportedDataException;
 import cubicchunks.regionlib.api.region.IRegion;
 import cubicchunks.regionlib.api.region.header.IHeaderDataEntryProvider;
 import cubicchunks.regionlib.api.region.key.IKey;
@@ -46,7 +54,6 @@ import cubicchunks.regionlib.lib.header.IntPackedSectorMap;
 import cubicchunks.regionlib.util.CheckedConsumer;
 import cubicchunks.regionlib.util.CorruptedDataException;
 import cubicchunks.regionlib.util.Utils;
-import cubicchunks.regionlib.util.WrappedException;
 
 import static java.nio.file.StandardOpenOption.CREATE;
 import static java.nio.file.StandardOpenOption.READ;
@@ -74,25 +81,79 @@ public class ShadowPagingRegion<K extends IKey<K>> implements IRegion<K> {
 		this.sectorTracker = sectorTracker;
 	}
 
-	@Override public synchronized void writeValue(K key, ByteBuffer value) throws IOException {
+	/**
+	 * Writes an entry without updating the region headers on disk.
+	 * @return whether or not {@link #file} needs to be flushed before the headers are be updated
+	 */
+	protected boolean writeValueFirst(K key, ByteBuffer value) throws IOException {
 		if (value == null) {
 			this.sectorTracker.removeKey(key);
-			updateHeaders(key);
+			return false; //the data isn't actually changed on-disk, so we don't need to flush the channel before updating the headers
+		} else {
+			int size = value.remaining();
+			int sizeWithSizeInfo = size + Integer.BYTES;
+			int numSectors = this.getSectorNumber(sizeWithSizeInfo);
+			// this may throw UnsupportedDataException if data is too big
+			RegionEntryLocation location = this.sectorTracker.reserveForKey(key, numSectors);
+
+			int bytesOffset = location.getOffset() * this.sectorSize;
+
+			Utils.writeFully(this.file.position(bytesOffset), ByteBuffer.allocate(Integer.BYTES).putInt(0, size));
+			Utils.writeFully(this.file, value);
+			return true;
+		}
+	}
+
+	@Override public synchronized void writeValue(K key, ByteBuffer value) throws IOException {
+		if (this.writeValueFirst(key, value)) {
+			this.file.force(true);
+		}
+		this.updateHeaders(key);
+		//no need to flush channel a second time after headers update, as doing so won't affect data integrity
+	}
+
+	@Override
+	public synchronized void writeValues(Map<K, ByteBuffer> entries) throws IOException {
+		if (entries.isEmpty()) { //fast-path if there isn't anything to be written
 			return;
 		}
-		int size = value.remaining();
-		int sizeWithSizeInfo = size + Integer.BYTES;
-		int numSectors = getSectorNumber(sizeWithSizeInfo);
-		// this may throw UnsupportedDataException if data is too big
-		RegionEntryLocation location = this.sectorTracker.reserveForKey(key, numSectors);
 
-		int bytesOffset = location.getOffset()*sectorSize;
+		//TODO: bump regionlib to whatever newest version is to make batch writes work properly when handling failing writes
 
-		Utils.writeFully(file.position(bytesOffset), ByteBuffer.allocate(Integer.BYTES).putInt(0, size));
-		Utils.writeFully(file, value);
-		file.force(false);
-		updateHeaders(key);
-		//no need to flush channel a second time after headers update, as doing so won't affect data integrity
+		//calling file.force() is slow, so we want to minimize the number of times it needs to be called. the solution is simple: we write the data for ALL
+		//  entries at once, and don't update the headers until it's all been written to disk.
+		List<UnsupportedDataException.WithKey> exceptions = new ArrayList<>();
+		Set<K> erroredKeys = new HashSet<>();
+
+		//first pass: write all data
+		boolean shouldFlush = false;
+		for (Iterator<Map.Entry<K, ByteBuffer>> itr = entries.entrySet().iterator(); itr.hasNext(); ) {
+			Map.Entry<K, ByteBuffer> entry = itr.next();
+			try {
+				shouldFlush |= this.writeValueFirst(entry.getKey(), entry.getValue());
+			} catch (UnsupportedDataException e) {
+				//save exception for later, and remember that the key failed to write correctly
+				exceptions.add(new UnsupportedDataException.WithKey(e, entry.getKey()));
+				erroredKeys.add(entry.getKey());
+			}
+		}
+
+		//flush the file's contents if any of the entries modified the region data
+		if (shouldFlush) {
+			this.file.force(true);
+		}
+
+		//second pass: update headers for all successfully written keys
+		for (K key : entries.keySet()) {
+			if (!erroredKeys.contains(key)) {
+				this.updateHeaders(key);
+			}
+		}
+
+		//throw all pending exceptions at once if any occurred
+		if (!exceptions.isEmpty()) {
+			throw new MultiUnsupportedDataException(exceptions);
+		}
 	}
 
 	@Override public void writeSpecial(K key, Object marker) throws IOException {
@@ -115,8 +176,8 @@ public class ShadowPagingRegion<K extends IKey<K>> implements IRegion<K> {
 			return sectorTracker.trySpecialValue(key)
 					.map(reader -> Optional.of(reader.apply(key)))
 					.orElseGet(() -> doReadKey(key));
-		} catch (WrappedException e) {
-			throw (IOException) e.get();
+		} catch (UncheckedIOException e) {
+			throw e.getCause();
 		}
 	}
 
@@ -141,7 +202,7 @@ public class ShadowPagingRegion<K extends IKey<K>> implements IRegion<K> {
 				bytes.flip();
 				return Optional.of(bytes);
 			} catch (IOException e) {
-				throw new WrappedException(e);
+				throw new UncheckedIOException(e);
 			}
 		});
 	}
