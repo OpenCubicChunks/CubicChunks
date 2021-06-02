@@ -18,7 +18,7 @@ public class DummyHeightmap extends Heightmap {
         return 0;
     }
 
-    @Override public void setRawData(long[] heightmap) {
+    @Override public void setRawData(ChunkAccess clv, Types a, long[] heightmap) {
 
     }
 

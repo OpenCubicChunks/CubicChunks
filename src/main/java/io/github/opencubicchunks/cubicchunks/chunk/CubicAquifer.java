@@ -3,6 +3,7 @@ package io.github.opencubicchunks.cubicchunks.chunk;
 import java.util.Arrays;
 
 import io.github.opencubicchunks.cubicchunks.CubicChunks;
+import io.github.opencubicchunks.cubicchunks.chunk.CubicAquifer.Sample;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.ChunkPos;
