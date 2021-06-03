@@ -135,11 +135,11 @@ public abstract class MixinThreadedLevelLightEngine extends MixinLevelLightEngin
                 super.doSkyLightForCube(icube);
             }
 
-            ((IChunkManager) this.chunkMap).releaseLightTicket(cubePos);
         }, () -> "lightCube " + cubePos + " " + flagIn));
         return CompletableFuture.supplyAsync(() -> {
             icube.setCubeLight(true);
             super.retainData(cubePos, false);
+            ((IChunkManager) this.chunkMap).releaseLightTicket(cubePos);
             return icube;
         }, (runnable) -> {
             this.addTask(cubePos.getX(), cubePos.getY(), cubePos.getZ(), ThreadedLevelLightEngine.TaskType.POST_UPDATE, runnable);
