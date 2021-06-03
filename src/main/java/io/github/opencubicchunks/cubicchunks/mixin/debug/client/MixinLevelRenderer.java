@@ -10,7 +10,7 @@ import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import com.mojang.math.Matrix4f;
 import com.mojang.math.Vector3f;
-import io.github.opencubicchunks.cubicchunks.chunk.ICubeHolder;
+import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.client.CubicWorldLoadScreen;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
@@ -63,8 +63,8 @@ public class MixinLevelRenderer {
             CubicWorldLoadScreen.class, null, "STATUS_COLORS" // TODO: intermediary name
         );
 
-        int renderRadius = 25;
-        int chunkRenderRadius = 100; //renderRadius * IBigCube.DIAMETER_IN_SECTIONS;
+        int renderRadius = 5;
+        int chunkRenderRadius = renderRadius * IBigCube.DIAMETER_IN_SECTIONS;
         Long2ObjectLinkedOpenHashMap<ChunkHolder> loadedColumns = getField(ChunkMap.class, levelAccessor.getChunkSource().chunkMap, "updatingChunkMap");
 
         Object[] data = getField(Long2ObjectLinkedOpenHashMap.class, loadedColumns, "value");
@@ -84,7 +84,7 @@ public class MixinLevelRenderer {
             if (holder == null) {
                 continue;
             }
-            ChunkStatus status = ICubeHolder.getCubeStatusFromLevel(holder.getTicketLevel());
+            ChunkStatus status = holder.getLastAvailableStatus();
 
             int color = colors.getOrDefault(status, 0);
 
@@ -121,7 +121,7 @@ public class MixinLevelRenderer {
             if (holder == null) {
                 continue;
             }
-            ChunkStatus status = ICubeHolder.getCubeStatusFromLevel(holder.getTicketLevel());
+            ChunkStatus status = holder.getLastAvailableStatus();
 
             int color = colors.getOrDefault(status, 0);
 
