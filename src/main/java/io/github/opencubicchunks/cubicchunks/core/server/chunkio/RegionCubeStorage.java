@@ -46,13 +46,17 @@ import net.minecraft.util.math.ChunkPos;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * Implementation of {@link ICubicStorage} for the Cubic Chunks' standard Anvil3d storage format.
@@ -156,7 +160,7 @@ public class RegionCubeStorage implements ICubicStorage {
             CompressedStreamTools.writeCompressed(nbt, new ByteBufOutputStream(compressedBuf));
 
             //write compressed data to disk
-            this.save.save2d(new EntryLocation2D(pos.x, pos.z), compressedBuf.internalNioBuffer(compressedBuf.readerIndex(), compressedBuf.readableBytes()));
+            this.save.save2d(new EntryLocation2D(pos.x, pos.z), compressedBuf.nioBuffer());
         } finally {
             compressedBuf.release();
         }
@@ -170,9 +174,60 @@ public class RegionCubeStorage implements ICubicStorage {
             CompressedStreamTools.writeCompressed(nbt, new ByteBufOutputStream(compressedBuf));
 
             //write compressed data to disk
-            this.save.save3d(new EntryLocation3D(pos.getX(), pos.getY(), pos.getZ()), compressedBuf.internalNioBuffer(compressedBuf.readerIndex(), compressedBuf.readableBytes()));
+            this.save.save3d(new EntryLocation3D(pos.getX(), pos.getY(), pos.getZ()), compressedBuf.nioBuffer());
         } finally {
             compressedBuf.release();
+        }
+    }
+
+    @Override
+    public void writeBatch(NBTBatch batch) throws IOException {
+        Map<EntryLocation2D, ByteBuf> compressedColumns = Collections.emptyMap();
+        Map<EntryLocation3D, ByteBuf> compressedCubes = Collections.emptyMap();
+        try {
+            //compress NBT data
+            compressedColumns = this.compressNBTForBatchWrite(batch.columns, pos -> new EntryLocation2D(pos.x, pos.z));
+            compressedCubes = this.compressNBTForBatchWrite(batch.cubes, pos -> new EntryLocation3D(pos.getX(), pos.getY(), pos.getZ()));
+
+            //write compressed data to disk
+            if (!compressedColumns.isEmpty()) {
+                this.save.save2d(compressedColumns.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().nioBuffer())));
+            }
+            if (!compressedCubes.isEmpty()) {
+                this.save.save3d(compressedCubes.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().nioBuffer())));
+            }
+        } finally {
+            compressedColumns.values().forEach(ByteBuf::release);
+            compressedCubes.values().forEach(ByteBuf::release);
+        }
+    }
+
+    private <KI, KO> Map<KO, ByteBuf> compressNBTForBatchWrite(Map<KI, NBTTagCompound> nbt, Function<KI, KO> keyMappingFunction) throws IOException {
+        if (nbt.isEmpty()) { //avoid somewhat expensive stream creation if there are no entries
+            return Collections.emptyMap();
+        }
+
+        try {
+            //if the following code throws an exception, something is VERY wrong, so i won't bother with needlessly complex code to ensure that any
+            //  previously allocated buffers get released in the event of an exception being thrown
+
+            return nbt.entrySet().parallelStream().collect(Collectors.toMap(entry -> keyMappingFunction.apply(entry.getKey()), entry -> {
+                ByteBuf compressedBuf = ByteBufAllocator.DEFAULT.ioBuffer();
+                try {
+                    //encode and compress nbt data
+                    CompressedStreamTools.writeCompressed(entry.getValue(), new ByteBufOutputStream(compressedBuf));
+
+                    return compressedBuf.retain();
+                } catch (IOException e) {
+                    //wrap exception so that we can throw it from inside the lambda
+                    throw new UncheckedIOException(e);
+                } finally {
+                    compressedBuf.release();
+                }
+            }));
+        } catch (UncheckedIOException e) {
+            //rethrow original exception
+            throw e.getCause();
         }
     }
 

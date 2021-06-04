@@ -41,7 +41,7 @@ public class WorldSavedCubicChunksData extends WorldSavedData {
     public WorldSavedCubicChunksData(String name) {
         super(name);
     }
-    
+
     public WorldSavedCubicChunksData(String name, boolean isCC, int minHeight, int maxHeight) {
         this(name);
         if (isCC) {

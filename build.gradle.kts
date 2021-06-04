@@ -143,7 +143,7 @@ dependencies {
         isTransitive = false
     }
 
-    embed("io.github.opencubicchunks:regionlib:0.71.0-SNAPSHOT")
+    embed("io.github.opencubicchunks:regionlib:0.78.0-SNAPSHOT")
     if (System.getProperty("cubicchunks.isStandaloneBuild") == "false")
         compile("io.github.opencubicchunks:cubicchunks-api:1.12.2-0.0-SNAPSHOT")
 }
