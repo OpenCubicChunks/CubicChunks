@@ -11,12 +11,14 @@ import javax.annotation.Nullable;
 import com.google.common.collect.Maps;
 import io.github.opencubicchunks.cubicchunks.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
+import io.github.opencubicchunks.cubicchunks.chunk.IHeightmapGetter;
 import io.github.opencubicchunks.cubicchunks.chunk.ImposterChunkPos;
 import io.github.opencubicchunks.cubicchunks.chunk.biome.CubeBiomeContainer;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.BigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.CubePrimer;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.CubePrimerWrapper;
 import io.github.opencubicchunks.cubicchunks.chunk.heightmap.SurfaceTrackerSection;
+import io.github.opencubicchunks.cubicchunks.chunk.heightmap.SurfaceTrackerWrapper;
 import io.github.opencubicchunks.cubicchunks.chunk.storage.POIDeserializationContext;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.ChunkSerializerAccess;
@@ -30,6 +32,7 @@ import net.minecraft.core.SectionPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.LongArrayTag;
+import net.minecraft.nbt.Tag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.ai.village.poi.PoiManager;
@@ -40,6 +43,7 @@ import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.level.TickList;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.ChunkBiomeContainer;
 import net.minecraft.world.level.chunk.ChunkSource;
 import net.minecraft.world.level.chunk.ChunkStatus;
@@ -83,8 +87,8 @@ public class CubeSerializer {
         boolean isLightOn = level.getBoolean("isLightOn");
         ListTag sectionsNBTList = level.getList("Sections", 10);
         LevelChunkSection[] sections = new LevelChunkSection[IBigCube.SECTION_COUNT];
-        ChunkSource abstractchunkprovider = world.getChunkSource();
-        LevelLightEngine worldlightmanager = abstractchunkprovider.getLightEngine();
+        ChunkSource chunkSource = world.getChunkSource();
+        LevelLightEngine worldlightmanager = chunkSource.getLightEngine();
 //            if (isLightOn) {
 //                worldlightmanager.retainData(cubePos, true);
 //            }
@@ -163,20 +167,62 @@ public class CubeSerializer {
             //}
         }
         icube.setCubeLight(isLightOn);
-        //TODO: reimplement heightmap in save format
-//            CompoundTag compoundnbt3 = level.getCompound("Heightmaps");
-//            EnumSet<Heightmap.Type> enumset = EnumSet.noneOf(Heightmap.Type.class);
-//
-//            for(Heightmap.Type heightmap$type : icube.getCubeStatus().getHeightMaps()) {
-//                String s = heightmap$type.getId();
-//                if (compoundnbt3.contains(s, 12)) {
-//                    icube.setHeightmap(heightmap$type, compoundnbt3.getLongArray(s));
-//                } else {
-//                    enumset.add(heightmap$type);
-//                }
-//            }
-//
-//            Heightmap.updateChunkHeightmaps(icube, enumset);
+
+        CompoundTag heightmapSectionNBT = level.getCompound("Heightmaps");
+        for (Heightmap.Types type : icube.getCubeStatus().heightmapsAfter()) {
+            if (heightmapSectionNBT.contains(type.getSerializationKey(), Tag.TAG_COMPOUND)) {
+                CompoundTag data = heightmapSectionNBT.getCompound(type.getSerializationKey());
+                if (!data.contains("DirtyFlags", Tag.TAG_LIST) || !data.contains("HeightData", Tag.TAG_LIST)) {
+                    // TODO proper warning here
+                    System.out.println("heightmap data is broken");
+                    continue;
+                }
+                ListTag dirtyFlags = data.getList("DirtyFlags", Tag.TAG_LONG_ARRAY);
+                ListTag heightData = data.getList("HeightData", Tag.TAG_LONG_ARRAY);
+                SurfaceTrackerSection[] heightmapSections = new SurfaceTrackerSection[IBigCube.CHUNK_COUNT];
+                for (int z = 0; z < IBigCube.DIAMETER_IN_SECTIONS; z++) {
+                    for (int x = 0; x < IBigCube.DIAMETER_IN_SECTIONS; x++) {
+                        int index = x + z * IBigCube.DIAMETER_IN_SECTIONS;
+                        ChunkPos chunkPos = cubePos.asChunkPos(x, z);
+                        ChunkAccess chunk;
+                        try {
+//                            chunk = chunkSource.getChunk(chunkPos.x, chunkPos.z, icube.getCubeStatus(), true);
+                            chunk = ((ChunkAccess) chunkSource.getChunkForLighting(chunkPos.x, chunkPos.z));
+                        } catch (Exception e) {
+                            String a = "";
+                            throw e;
+                        }
+                        if (chunk == null) {
+                            // TODO proper warning here
+                            System.out.println("Got null chunk in cube deserialization");
+                            continue;
+                        }
+                        long[] dirtyFlagArray = dirtyFlags.getLongArray(index);
+                        long[] heightDataArray = heightData.getLongArray(index);
+                        if (dirtyFlagArray == null || heightDataArray == null) {
+                            // TODO proper warning here
+                            System.out.println("heightmap data is broken");
+                            continue;
+                        }
+                        SurfaceTrackerSection heightmapSection = SurfaceTrackerSection.loadScaleZero(
+                                type, icube, dirtyFlags.getLongArray(index), heightData.getLongArray(index));
+                        heightmapSections[index] = heightmapSection;
+                        if (chunkType == ChunkStatus.ChunkType.LEVELCHUNK) {
+                            SurfaceTrackerWrapper fullHeightmap = ((IHeightmapGetter) chunk).getServerHeightmap(type);
+                            if (fullHeightmap == null) {
+                                // TODO proper warning here
+                                System.out.println("got null global heightmap in cube deserialization");
+                                continue;
+                            }
+                            // FIXME we seem to be making sections with the wrong scaledY?
+                            fullHeightmap.getRootNode().loadCube(x, z, icube, false, heightmapSection);
+                        }
+                    }
+                }
+            }
+        }
+
+
         CompoundTag structures = level.getCompound("Structures");
         icube.setAllStarts(ChunkSerializerAccess.invokeUnpackStructureStart(world, structures, world.getSeed()));
         icube.setAllReferences(unpackCubeStructureReferences(new ImposterChunkPos(cubePos), structures));

@@ -8,6 +8,7 @@ import javax.annotation.Nullable;
 
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.ICubeProvider;
+import io.github.opencubicchunks.cubicchunks.chunk.IHeightmapGetter;
 import io.github.opencubicchunks.cubicchunks.chunk.biome.ColumnBiomeContainer;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.BigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.EmptyCube;
@@ -48,7 +49,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(value = LevelChunk.class, priority = 0) //Priority 0 to always ensure our redirects are on top. Should also prevent fabric api crashes that have occur(ed) here. See removeTileEntity
 
-public abstract class MixinChunk implements ChunkAccess, CubicLevelHeightAccessor {
+public abstract class MixinChunk implements ChunkAccess, CubicLevelHeightAccessor, IHeightmapGetter {
 
     @Shadow @Final private Level level;
     @Shadow @Final private ChunkPos chunkPos;
@@ -68,6 +69,8 @@ public abstract class MixinChunk implements ChunkAccess, CubicLevelHeightAccesso
     @Shadow protected abstract boolean isInLevel();
 
     @Shadow public abstract Level getLevel();
+
+    @Shadow @Final private Map<Heightmap.Types, Heightmap> heightmaps;
 
     @Override public boolean isYSpaceEmpty(int startY, int endY) {
         return false;
@@ -337,4 +340,7 @@ public abstract class MixinChunk implements ChunkAccess, CubicLevelHeightAccesso
         return generates2DChunks;
     }
 
+    @Override public Heightmap getHeightmap(Heightmap.Types type) {
+        return heightmaps.get(type);
+    }
 }

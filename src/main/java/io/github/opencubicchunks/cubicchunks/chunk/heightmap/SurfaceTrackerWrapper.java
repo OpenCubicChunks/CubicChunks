@@ -22,6 +22,10 @@ public class SurfaceTrackerWrapper extends Heightmap {
         this.dz = sectionToMinBlock(chunkAccess.getPos().z);
     }
 
+    public SurfaceTrackerSection getRootNode() {
+        return surfaceTracker;
+    }
+
     @Override
     public boolean update(int x, int y, int z, BlockState blockState) {
         // TODO do we need to do anything else here?

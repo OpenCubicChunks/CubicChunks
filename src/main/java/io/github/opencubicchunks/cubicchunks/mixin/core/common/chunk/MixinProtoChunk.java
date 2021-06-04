@@ -1,6 +1,9 @@
 package io.github.opencubicchunks.cubicchunks.mixin.core.common.chunk;
 
+import java.util.Map;
+
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
+import io.github.opencubicchunks.cubicchunks.chunk.IHeightmapGetter;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.CubePrimer;
 import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import net.minecraft.core.SectionPos;
@@ -13,6 +16,7 @@ import net.minecraft.world.level.chunk.LevelChunkSection;
 import net.minecraft.world.level.chunk.ProtoChunk;
 import net.minecraft.world.level.chunk.ProtoTickList;
 import net.minecraft.world.level.chunk.UpgradeData;
+import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.material.Fluid;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -24,13 +28,15 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(ProtoChunk.class)
-public abstract class MixinProtoChunk implements LevelHeightAccessor, CubicLevelHeightAccessor {
+public abstract class MixinProtoChunk implements LevelHeightAccessor, CubicLevelHeightAccessor, IHeightmapGetter {
 
     private boolean isCubic;
     private boolean generates2DChunks;
     private WorldStyle worldStyle;
 
     @Shadow @Final private LevelHeightAccessor levelHeightAccessor;
+
+    @Shadow @Final private Map<Heightmap.Types, Heightmap> heightmaps;
 
     @Shadow public abstract ChunkStatus getStatus();
 
@@ -103,5 +109,9 @@ public abstract class MixinProtoChunk implements LevelHeightAccessor, CubicLevel
 
     @Override public boolean generates2DChunks() {
         return generates2DChunks;
+    }
+
+    @Override public Heightmap getHeightmap(Heightmap.Types type) {
+        return heightmaps.get(type);
     }
 }

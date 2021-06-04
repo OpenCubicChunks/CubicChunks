@@ -36,6 +36,7 @@
         "common.entity.MixinServerPlayerEntity",
         "common.entity.storage.MixinEntitySectionStorage",
         "common.MixinBlockPos",
+        "common.MixinListTag",
         "common.MixinMinecraftServer",
         "common.MixinServerChunkProvider",
         "common.network.MixinClientboundLevelChunkPacket",

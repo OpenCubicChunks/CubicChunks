@@ -49,10 +49,19 @@ public class SurfaceTrackerSection {
     }
 
     public SurfaceTrackerSection(int scale, int scaledY, SurfaceTrackerSection parent, IBigCube cube, Heightmap.Types types) {
+        this(scale, scaledY, parent, cube, types, null, null);
+    }
+
+    /** This method should only be used when loading a stored scale 0 section. */
+    public static SurfaceTrackerSection loadScaleZero(Heightmap.Types types, IBigCube cube, long[] dirtyPositions, long[] heightData) {
+        return new SurfaceTrackerSection(0, cube.getCubePos().getY(), null, cube, types, dirtyPositions, heightData);
+    }
+
+    protected SurfaceTrackerSection(int scale, int scaledY, SurfaceTrackerSection parent, IBigCube cube, Heightmap.Types types, long[] dirtyPositions, long[] heightData) {
 //      super((ChunkAccess) cube, types);
         // +1 in bit size to make room for null values
-        this.heights = new BitStorage(BASE_SIZE_BITS + 1 + scale * NODE_COUNT_BITS, WIDTH_BLOCKS * WIDTH_BLOCKS);
-        this.dirtyPositions = new long[WIDTH_BLOCKS * WIDTH_BLOCKS / Long.SIZE];
+        this.heights = new BitStorage(BASE_SIZE_BITS + 1 + scale * NODE_COUNT_BITS, WIDTH_BLOCKS * WIDTH_BLOCKS, heightData);
+        this.dirtyPositions = dirtyPositions != null ? dirtyPositions : new long[WIDTH_BLOCKS * WIDTH_BLOCKS / Long.SIZE];
         this.parent = parent;
         this.cubeOrNodes = scale == 0 ? cube : new SurfaceTrackerSection[NODE_COUNT];
         this.scaledY = scaledY;
@@ -152,6 +161,10 @@ public class SurfaceTrackerSection {
     }
 
     public void loadCube(int sectionX, int sectionZ, IBigCube newCube, boolean markDirty) {
+        loadCube(sectionX, sectionZ, newCube, markDirty, null);
+    }
+
+    public void loadCube(int sectionX, int sectionZ, IBigCube newCube, boolean markDirty, @Nullable SurfaceTrackerSection scaleZeroSection) {
         if (this.cubeOrNodes == null) {
             throw new IllegalStateException("Attempting to load cube " + newCube.getCubePos() + " into an unloaded surface tracker section");
         }
@@ -164,6 +177,13 @@ public class SurfaceTrackerSection {
         }
         int idx = indexOfRawHeightNode(newCube.getCubePos().getY(), scale, scaledY);
         SurfaceTrackerSection[] nodes = (SurfaceTrackerSection[]) cubeOrNodes;
+        if (this.scale == 1 && scaleZeroSection != null) {
+            if (nodes[idx] != null) {
+                // TODO change to an assert
+                System.out.println("attempted to load a cube heightmap section when one was already loaded " + newCube.getCubePos());
+            }
+            nodes[idx] = scaleZeroSection;
+        }
         for (int i = 0; i < nodes.length; i++) {
             if (nodes[i] != null) {
                 continue;
@@ -173,7 +193,7 @@ public class SurfaceTrackerSection {
             nodes[i] = newMap;
         }
         assert nodes[idx] != null;
-        nodes[idx].loadCube(sectionX, sectionZ, newCube, markDirty);
+        nodes[idx].loadCube(sectionX, sectionZ, newCube, markDirty, scaleZeroSection);
     }
 
     @Nullable
