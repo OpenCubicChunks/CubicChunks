@@ -24,22 +24,6 @@
  */
 package io.github.opencubicchunks.cubicchunks.core.server.chunkio.region;
 
-import java.io.IOException;
-import java.io.UncheckedIOException;
-import java.nio.ByteBuffer;
-import java.nio.channels.FileChannel;
-import java.nio.channels.SeekableByteChannel;
-import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.BitSet;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.function.Function;
-
 import cubicchunks.regionlib.MultiUnsupportedDataException;
 import cubicchunks.regionlib.UnsupportedDataException;
 import cubicchunks.regionlib.api.region.IRegion;
@@ -54,10 +38,26 @@ import cubicchunks.regionlib.lib.header.IntPackedSectorMap;
 import cubicchunks.regionlib.util.CheckedConsumer;
 import cubicchunks.regionlib.util.CorruptedDataException;
 import cubicchunks.regionlib.util.Utils;
+import io.github.opencubicchunks.cubicchunks.core.CubicChunks;
+import net.minecraft.util.Tuple;
 
-import static java.nio.file.StandardOpenOption.CREATE;
-import static java.nio.file.StandardOpenOption.READ;
-import static java.nio.file.StandardOpenOption.WRITE;
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
+import java.nio.channels.SeekableByteChannel;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.BitSet;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.function.Function;
+
+import static java.nio.file.StandardOpenOption.*;
 
 /**
  * Simplified {@link Region} class implementing shadow paging by using custom sector tracker
@@ -81,35 +81,10 @@ public class ShadowPagingRegion<K extends IKey<K>> implements IRegion<K> {
 		this.sectorTracker = sectorTracker;
 	}
 
-	/**
-	 * Writes an entry without updating the region headers on disk.
-	 * @return whether or not {@link #file} needs to be flushed before the headers are be updated
-	 */
-	protected boolean writeValueFirst(K key, ByteBuffer value) throws IOException {
-		if (value == null) {
-			this.sectorTracker.removeKey(key);
-			return false; //the data isn't actually changed on-disk, so we don't need to flush the channel before updating the headers
-		} else {
-			int size = value.remaining();
-			int sizeWithSizeInfo = size + Integer.BYTES;
-			int numSectors = this.getSectorNumber(sizeWithSizeInfo);
-			// this may throw UnsupportedDataException if data is too big
-			RegionEntryLocation location = this.sectorTracker.reserveForKey(key, numSectors);
-
-			int bytesOffset = location.getOffset() * this.sectorSize;
-
-			Utils.writeFully(this.file.position(bytesOffset), ByteBuffer.allocate(Integer.BYTES).putInt(0, size));
-			Utils.writeFully(this.file, value);
-			return true;
-		}
-	}
-
-	@Override public synchronized void writeValue(K key, ByteBuffer value) throws IOException {
-		if (this.writeValueFirst(key, value)) {
-			this.file.force(true);
-		}
-		this.updateHeaders(key);
-		//no need to flush channel a second time after headers update, as doing so won't affect data integrity
+	@Override
+	public void writeValue(K key, ByteBuffer value) throws IOException {
+		CubicChunks.LOGGER.warn("Using slow non-batch write at {} in {}", key, this.regionKey.getName());
+		this.writeValues(Collections.singletonMap(key, value));
 	}
 
 	@Override
@@ -118,23 +93,47 @@ public class ShadowPagingRegion<K extends IKey<K>> implements IRegion<K> {
 			return;
 		}
 
-		//TODO: bump regionlib to whatever newest version is to make batch writes work properly when handling failing writes
-
 		//calling file.force() is slow, so we want to minimize the number of times it needs to be called. the solution is simple: we write the data for ALL
 		//  entries at once, and don't update the headers until it's all been written to disk.
 		List<UnsupportedDataException.WithKey> exceptions = new ArrayList<>();
-		Set<K> erroredKeys = new HashSet<>();
+		Map<K, Optional<RegionEntryLocation>> pendingHeaderUpdates = new HashMap<>(entries.size());
 
 		//first pass: write all data
 		boolean shouldFlush = false;
 		for (Iterator<Map.Entry<K, ByteBuffer>> itr = entries.entrySet().iterator(); itr.hasNext(); ) {
 			Map.Entry<K, ByteBuffer> entry = itr.next();
+
+			K key = entry.getKey();
+			ByteBuffer value = entry.getValue();
+
 			try {
-				shouldFlush |= this.writeValueFirst(entry.getKey(), entry.getValue());
+				Optional<RegionEntryLocation> prevLocation;
+				if (value == null) {
+					//if deleting an entry, there's no need to change anything on disk! the only thing that needs
+					// to be changed is the headers.
+					prevLocation = null;
+				} else {
+					int size = value.remaining();
+					int sizeWithSizeInfo = size + Integer.BYTES;
+					int numSectors = this.getSectorNumber(sizeWithSizeInfo);
+
+					//this may throw UnsupportedDataException if data is too big.
+					//it won't cause the sector tracker to be updated, meaning that reallocated sectors won't be overwritten by
+					// subsequent writes from the same batch.
+					Tuple<RegionEntryLocation, RegionEntryLocation> headerUpdate = this.sectorTracker.reserveForKey(key, numSectors);
+					prevLocation = Optional.ofNullable(headerUpdate.getFirst());
+
+					int bytesOffset = headerUpdate.getSecond().getOffset() * this.sectorSize;
+					Utils.writeFully(this.file.position(bytesOffset), ByteBuffer.allocate(Integer.BYTES).putInt(0, size));
+					Utils.writeFully(this.file, value);
+
+					//data has changed on disk, so we'll need to flush it before updating the headers
+					shouldFlush = true;
+				}
+				pendingHeaderUpdates.put(key, prevLocation);
 			} catch (UnsupportedDataException e) {
-				//save exception for later, and remember that the key failed to write correctly
-				exceptions.add(new UnsupportedDataException.WithKey(e, entry.getKey()));
-				erroredKeys.add(entry.getKey());
+				//save exception for later
+				exceptions.add(new UnsupportedDataException.WithKey(e, key));
 			}
 		}
 
@@ -143,11 +142,27 @@ public class ShadowPagingRegion<K extends IKey<K>> implements IRegion<K> {
 			this.file.force(true);
 		}
 
-		//second pass: update headers for all successfully written keys
-		for (K key : entries.keySet()) {
-			if (!erroredKeys.contains(key)) {
+		//second pass: execute pending header updates
+		if (!pendingHeaderUpdates.isEmpty()) {
+			for (Iterator<Map.Entry<K, Optional<RegionEntryLocation>>> itr = pendingHeaderUpdates.entrySet().iterator(); itr.hasNext(); ) {
+				Map.Entry<K, Optional<RegionEntryLocation>> entry = itr.next();
+
+				K key = entry.getKey();
+				Optional<RegionEntryLocation> prevLocation = entry.getValue();
+				if (prevLocation == null) {
+					//the entry is being deleted, so we need to remove the key from the headers entirely
+					this.sectorTracker.removeKey(key);
+				} else {
+					//the entry changed, and we need to release the previous sectors
+					this.sectorTracker.updateUsedSectorsFor(prevLocation.orElse(null), null);
+				}
+
+				//write new header value for this key to disk
 				this.updateHeaders(key);
 			}
+
+			//ensure all header modifications are present on disk before another batch runs
+			this.file.force(true);
 		}
 
 		//throw all pending exceptions at once if any occurred
@@ -333,14 +348,16 @@ public class ShadowPagingRegion<K extends IKey<K>> implements IRegion<K> {
 		}
 
 		/**
-		 * Returns offset for the given key and requestedSize, and reserves these sectors
+		 * Returns the old offset for the given key and the new offset for the given key and requestedSize, and reserves the new sectors.
+		 *
+		 * The old sectors will not be released.
 		 */
-		public RegionEntryLocation reserveForKey(K key, int requestedSize) throws IOException {
+		public Tuple<RegionEntryLocation, RegionEntryLocation> reserveForKey(K key, int requestedSize) throws IOException {
 			Optional<RegionEntryLocation> existing = sectorMap.getEntryLocation(key);
 			RegionEntryLocation found = findFree(requestedSize);
 			this.sectorMap.setOffsetAndSize(key, found);
-			this.updateUsedSectorsFor(existing.orElse(null), found);
-			return found;
+			this.updateUsedSectorsFor(null, found); //mark new sectors as allocated
+			return new Tuple<>(existing.orElse(null), found);
 		}
 
 		private RegionEntryLocation findFree(int requestedSize) {
