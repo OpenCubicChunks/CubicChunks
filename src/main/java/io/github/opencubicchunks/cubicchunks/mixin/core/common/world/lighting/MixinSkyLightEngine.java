@@ -125,12 +125,16 @@ public abstract class MixinSkyLightEngine extends MixinLayerLightEngine<SkyLight
             return;
         }
 
-        // TODO chunk can be null until load order is fixed
         BlockGetter chunk = this.chunkSource.getChunkForLighting(SectionPos.blockToSectionCoord(pos.getX()), SectionPos.blockToSectionCoord(pos.getZ()));
+
+        // the load order guarantees the chunk being present
+        assert(chunk != null);
+
         if (chunk == null) {
             System.out.println("onGetComputedLevel chunk was null " + (((Level) this.chunkSource.getLevel()).isClientSide ? "client" : "server"));
             return;
         }
+
         Heightmap heightmap = ((LightHeightmapGetter) chunk).getLightHeightmap();
         if (heightmap == null) {
             System.out.println("onGetComputedLevel heightmap was null " + (((Level) this.chunkSource.getLevel()).isClientSide ? "client" : "server"));
@@ -150,17 +154,18 @@ public abstract class MixinSkyLightEngine extends MixinLayerLightEngine<SkyLight
         int maxY = cubePos.maxCubeY();
         for (int sectionX = 0; sectionX < IBigCube.DIAMETER_IN_SECTIONS; sectionX++) {
             for (int sectionZ = 0; sectionZ < IBigCube.DIAMETER_IN_SECTIONS; sectionZ++) {
-                // TODO chunk can be null until load order is fixed
+
                 BlockGetter chunk = this.chunkSource.getChunkForLighting(chunkPos.x + sectionX, chunkPos.z + sectionZ);
-                if (chunk == null) {
-                    System.out.println("null chunk in MixinSkyLightEngine.doSkyLightForCube");
-                    return;
-                }
+
+                // the load order guarantees the chunk being present
+                assert(chunk != null);
+
                 CubeMap cubeMap = ((CubeMapGetter) chunk).getCubeMap();
                 if (!cubeMap.isLoaded(cubePos.getY())) {
                     // This is probably only happening because we don't have load order fixed yet
                     System.out.println(cube.getCubePos() + " : Cube not in cubemap during sky lighting");
                 }
+
                 Heightmap heightmap = ((LightHeightmapGetter) chunk).getLightHeightmap();
                 if (heightmap == null) {
                     System.out.println("heightmap null");

@@ -51,14 +51,11 @@ public abstract class MixinSkyLightSectionStorage extends LayerLightSectionStora
         int y = BlockPos.getY(blockPos);
         int z = BlockPos.getZ(blockPos);
         if (dataLayer == null) {
+
             BlockGetter chunk = ((LayerLightSectionStorageAccess) this).getChunkSource().getChunkForLighting(Coords.blockToSection(x), Coords.blockToSection(z));
-            if (chunk == null) {
-                // TODO This currently gets called a lot; not sure if it's due to broken load order or this method being called before the lighting stage or in unloaded chunks/cubes
-//                System.out.println("Null chunk (" + Coords.blockToSection(x) + ", " + Coords.blockToSection(z) + ") in MixinSkyLightSectionStorage.onGetLightValue "
-//                        + ((SectionLightStorageAccess) this).getChunkSource().getLevel());
-                cir.setReturnValue(0);
-                return;
-            }
+
+            // load order guarantees the chunk being present
+            assert(chunk != null);
 
             //TODO: Optimize
             BlockGetter cube = ((ICubeLightProvider) ((LayerLightSectionStorageAccess) this).getChunkSource()).getCubeForLighting(

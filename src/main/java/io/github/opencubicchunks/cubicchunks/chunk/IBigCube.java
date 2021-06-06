@@ -90,6 +90,6 @@ public interface IBigCube extends BlockGetter, ChunkAccess, FeatureAccess {
     default void loadHeightmapSection(SurfaceTrackerSection section, int localSectionX, int localSectionZZ) {
     }
 
-    default void loadLightHeightmapSection(LightSurfaceTrackerSection section, int localSectionX, int localSectionZZ) {
+    default void setLightHeightmapSection(LightSurfaceTrackerSection section, int localSectionX, int localSectionZZ) {
     }
 }

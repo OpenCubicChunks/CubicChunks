@@ -145,7 +145,7 @@ public class LightSurfaceTrackerSection extends SurfaceTrackerSection {
         }
         if (this.scale == 0) {
             // TODO merge loadHeightmapSection and loadLightHeightmapSection, and just use instanceof checks in the implementation to figure out if it's a light heightmap?
-            newCube.loadLightHeightmapSection(this, sectionX, sectionZ);
+            newCube.setLightHeightmapSection(this, sectionX, sectionZ);
             return;
         }
         int idx = indexOfRawHeightNode(newCube.getCubePos().getY(), scale, scaledY);

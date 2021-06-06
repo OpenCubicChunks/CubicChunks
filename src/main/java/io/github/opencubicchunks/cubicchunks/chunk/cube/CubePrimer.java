@@ -194,16 +194,13 @@ public class CubePrimer extends ProtoChunk implements IBigCube, CubicLevelHeight
 
             for (int dx = 0; dx < IBigCube.DIAMETER_IN_SECTIONS; dx++) {
                 for (int dz = 0; dz < IBigCube.DIAMETER_IN_SECTIONS; dz++) {
+
+                    // get the chunk for this section
                     ChunkPos chunkPos = this.cubePos.asChunkPos(dx, dz);
-                    // TODO chunk can be null until load order is fixed
                     BlockGetter chunk = chunkSource.getChunkForLighting(chunkPos.x, chunkPos.z);
-                    // force-loading like this causes lighting to init incorrectly for some reason
-//                    BlockGetter chunk = chunkSource.getChunk(chunkPos.x, chunkPos.z, ChunkStatus.EMPTY, true);
-                    if (chunk == null) {
-                        CubicChunks.LOGGER.warn("Got a null column at " + (chunkPos.x) + ", " + (chunkPos.z)
-                                + " while adding cube to light heightmap; lighting will not be initialized correctly");
-                        return;
-                    }
+
+                    // the load order guarantees the chunk being present
+                    assert(chunk != null);
 
                     ((CubeMapGetter) chunk).getCubeMap().markLoaded(this.cubePos.getY());
 
@@ -233,9 +230,9 @@ public class CubePrimer extends ProtoChunk implements IBigCube, CubicLevelHeight
         }
     }
 
-    @Override public void loadLightHeightmapSection(LightSurfaceTrackerSection section, int localSectionX, int localSectionZ) {
+    @Override
+    public void setLightHeightmapSection(LightSurfaceTrackerSection section, int localSectionX, int localSectionZ) {
         int idx = localSectionX + localSectionZ * DIAMETER_IN_SECTIONS;
-
         this.lightHeightmaps[idx] = section;
     }
 
@@ -248,39 +245,42 @@ public class CubePrimer extends ProtoChunk implements IBigCube, CubicLevelHeight
     }
 
     @Override @Nullable public BlockState setBlock(BlockPos pos, BlockState state, boolean isMoving) {
-        int x = pos.getX() & 0xF;
-        int y = pos.getY() & 0xF;
-        int z = pos.getZ() & 0xF;
-        int index = Coords.blockToIndex(pos.getX(), pos.getY(), pos.getZ());
+        int xSection = pos.getX() & 0xF;
+        int ySection = pos.getY() & 0xF;
+        int zSection = pos.getZ() & 0xF;
+        int sectionIdx = Coords.blockToIndex(pos.getX(), pos.getY(), pos.getZ());
 
-        LevelChunkSection section = this.sections[index];
+        LevelChunkSection section = this.sections[sectionIdx];
         if (section == EMPTY_SECTION && state == EMPTY_BLOCK) {
             return state;
         }
 
         if (section == EMPTY_SECTION) {
-            section = new LevelChunkSection(Coords.cubeToMinBlock(this.cubePos.getY() + Coords.sectionToMinBlock(Coords.indexToY(index))));
-            this.sections[index] = section;
+            section = new LevelChunkSection(Coords.cubeToMinBlock(this.cubePos.getY() + Coords.sectionToMinBlock(Coords.indexToY(sectionIdx))));
+            this.sections[sectionIdx] = section;
         }
 
         if (state.getLightEmission() > 0) {
-            SectionPos sectionPosAtIndex = Coords.sectionPosByIndex(this.cubePos, index);
+            SectionPos sectionPosAtIndex = Coords.sectionPosByIndex(this.cubePos, sectionIdx);
             this.lightPositions.add(new BlockPos(
-                    x + Coords.sectionToMinBlock(sectionPosAtIndex.getX()),
-                    y + Coords.sectionToMinBlock(sectionPosAtIndex.getY()),
-                    z + Coords.sectionToMinBlock(sectionPosAtIndex.getZ()))
+                    xSection + Coords.sectionToMinBlock(sectionPosAtIndex.getX()),
+                    ySection + Coords.sectionToMinBlock(sectionPosAtIndex.getY()),
+                    zSection + Coords.sectionToMinBlock(sectionPosAtIndex.getZ()))
             );
         }
 
-        BlockState lastState = section.setBlockState(x, y, z, state, false);
+        BlockState lastState = section.setBlockState(xSection, ySection, zSection, state, false);
         if (this.status.isOrAfter(ChunkStatus.LIGHT) && state != lastState && (state.getLightBlock(this, pos) != lastState.getLightBlock(this, pos)
                 || state.getLightEmission() != lastState.getLightEmission() || state.useShapeForLightOcclusion() || lastState.useShapeForLightOcclusion())) {
+
+            // get the chunk containing the updated block
             ChunkSource chunkSource = getChunkSource();
-
-            ChunkPos chunkPos = Coords.chunkPosByIndex(this.cubePos, index);
-
-            // TODO chunk can be null until load order is fixed
+            ChunkPos chunkPos = Coords.chunkPosByIndex(this.cubePos, sectionIdx);
             BlockGetter chunk = chunkSource.getChunkForLighting(chunkPos.x, chunkPos.z);
+
+            // the load order guarantees the chunk being present
+            assert(chunk != null);
+
             LightSurfaceTrackerWrapper lightHeightmap = ((LightHeightmapGetter) chunk).getServerLightHeightmap();
 
             int relX = pos.getX() & 15;
@@ -316,15 +316,13 @@ public class CubePrimer extends ProtoChunk implements IBigCube, CubicLevelHeight
             primeHeightMaps(toInitialize);
         }
 
+        int xChunk = Coords.blockToCubeLocalSection(pos.getX());
+        int zChunk = Coords.blockToCubeLocalSection(pos.getZ());
+        int chunkIdx = xChunk + zChunk * DIAMETER_IN_SECTIONS;
+
         for (Heightmap.Types types : heightMapsAfter) {
-
-            int xSection = Coords.blockToCubeLocalSection(pos.getX());
-            int zSection = Coords.blockToCubeLocalSection(pos.getZ());
-
-            int idx = xSection + zSection * DIAMETER_IN_SECTIONS;
-
-            SurfaceTrackerSection surfaceTrackerSection = this.heightmaps.get(types)[idx];
-            surfaceTrackerSection.onSetBlock(x, pos.getY(), z, state);
+            SurfaceTrackerSection surfaceTrackerSection = this.heightmaps.get(types)[chunkIdx];
+            surfaceTrackerSection.onSetBlock(xSection, pos.getY(), zSection, state);
         }
 
         return lastState;

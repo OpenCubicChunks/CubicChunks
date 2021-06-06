@@ -236,7 +236,7 @@ public class BigCube implements ChunkAccess, IBigCube, CubicLevelHeightAccessor 
         this.dirty = true;
     }
 
-    @Override public void loadLightHeightmapSection(LightSurfaceTrackerSection section, int localSectionX, int localSectionZ) {
+    @Override public void setLightHeightmapSection(LightSurfaceTrackerSection section, int localSectionX, int localSectionZ) {
         int idx = localSectionX + localSectionZ * DIAMETER_IN_SECTIONS;
 
         this.lightHeightmaps[idx] = section;
@@ -1003,6 +1003,7 @@ public class BigCube implements ChunkAccess, IBigCube, CubicLevelHeightAccessor 
         ChunkPos pos = this.cubePos.asChunkPos();
         for (int x = 0; x < IBigCube.DIAMETER_IN_SECTIONS; x++) {
             for (int z = 0; z < IBigCube.DIAMETER_IN_SECTIONS; z++) {
+
                 // TODO force-loading columns is questionable, until we get load order
                 LevelChunk chunk = this.level.getChunk(pos.x + x, pos.z + z);
                 ((CubeMapGetter) chunk).getCubeMap().markLoaded(this.cubePos.getY());
@@ -1011,6 +1012,7 @@ public class BigCube implements ChunkAccess, IBigCube, CubicLevelHeightAccessor 
                     SurfaceTrackerWrapper tracker = (SurfaceTrackerWrapper) heightmap;
                     tracker.loadCube(this);
                 }
+
                 if (!this.level.isClientSide) {
                     // TODO probably don't want to do this if the cube was already loaded as a CubePrimer
                     ((LightHeightmapGetter) chunk).getServerLightHeightmap().loadCube(this);
