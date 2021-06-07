@@ -12,6 +12,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import com.google.common.collect.Lists;
@@ -298,34 +299,59 @@ public class CubePrimer extends ProtoChunk implements IBigCube, CubicLevelHeight
         }
 
         EnumSet<Heightmap.Types> heightMapsAfter = this.getStatus().heightmapsAfter();
-        EnumSet<Heightmap.Types> toInitialize = null;
-
-        for (Heightmap.Types type : heightMapsAfter) {
-            SurfaceTrackerSection[] heightmapArray = this.heightmaps.get(type);
-
-            if (heightmapArray == null) {
-                if (toInitialize == null) {
-                    toInitialize = EnumSet.noneOf(Heightmap.Types.class);
-                }
-
-                toInitialize.add(type);
-            }
-        }
-
-        if (toInitialize != null) {
-            primeHeightMaps(toInitialize);
-        }
+//        EnumSet<Heightmap.Types> toInitialize = null;
+//
+//        for (Heightmap.Types type : heightMapsAfter) {
+//            SurfaceTrackerSection[] heightmapArray = this.heightmaps.get(type);
+//
+//            if (heightmapArray == null) {
+//                if (toInitialize == null) {
+//                    toInitialize = EnumSet.noneOf(Heightmap.Types.class);
+//                }
+//
+//                toInitialize.add(type);
+//            }
+//        }
+//
+//        if (toInitialize != null) {
+//            primeHeightMaps(toInitialize);
+//        }
 
         int xChunk = Coords.blockToCubeLocalSection(pos.getX());
         int zChunk = Coords.blockToCubeLocalSection(pos.getZ());
         int chunkIdx = xChunk + zChunk * DIAMETER_IN_SECTIONS;
 
         for (Heightmap.Types types : heightMapsAfter) {
-            SurfaceTrackerSection surfaceTrackerSection = this.heightmaps.get(types)[chunkIdx];
+            SurfaceTrackerSection surfaceTrackerSection = getHeightmapSections(types)[chunkIdx];
             surfaceTrackerSection.onSetBlock(xSection, pos.getY(), zSection, state);
         }
 
         return lastState;
+    }
+
+    /**
+     * Gets the SurfaceTrackerSections for the given Heightmap.Types for all chunks of this cube.
+     * Lazily initializes new SurfaceTrackerSections.
+     */
+    private SurfaceTrackerSection[] getHeightmapSections(Heightmap.Types type) {
+
+        SurfaceTrackerSection[] sections = heightmaps.get(type);
+
+        if (sections == null) {
+            sections = new SurfaceTrackerSection[IBigCube.DIAMETER_IN_SECTIONS * IBigCube.DIAMETER_IN_SECTIONS];
+
+            for (int dx = 0; dx < IBigCube.DIAMETER_IN_SECTIONS; dx++) {
+                for (int dz = 0; dz < IBigCube.DIAMETER_IN_SECTIONS; dz++) {
+                    int idx = dx + dz * IBigCube.DIAMETER_IN_SECTIONS;
+                    sections[idx] = new SurfaceTrackerSection(0, cubePos.getY(), null, this, type);
+                    sections[idx].loadCube(dx, dz, this, true);
+                }
+            }
+
+            heightmaps.put(type, sections);
+        }
+
+        return sections;
     }
 
     private void primeHeightMaps(EnumSet<Heightmap.Types> toInitialize) {
@@ -471,7 +497,7 @@ public class CubePrimer extends ProtoChunk implements IBigCube, CubicLevelHeight
     }
 
     @Override public int getCubeLocalHeight(Heightmap.Types type, int x, int z) {
-        SurfaceTrackerSection[] surfaceTrackerSections = this.heightmaps.get(type);
+        SurfaceTrackerSection[] surfaceTrackerSections = getHeightmapSections(type);
         if (surfaceTrackerSections == null) {
             primeHeightMaps(EnumSet.of(type));
             surfaceTrackerSections = this.heightmaps.get(type);
