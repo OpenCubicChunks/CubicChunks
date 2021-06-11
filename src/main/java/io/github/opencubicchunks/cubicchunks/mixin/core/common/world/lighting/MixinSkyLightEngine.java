@@ -127,19 +127,15 @@ public abstract class MixinSkyLightEngine extends MixinLayerLightEngine<SkyLight
 
         BlockGetter chunk = this.chunkSource.getChunkForLighting(SectionPos.blockToSectionCoord(pos.getX()), SectionPos.blockToSectionCoord(pos.getZ()));
 
-        // the load order guarantees the chunk being present
-        assert(chunk != null);
-
         if (chunk == null) {
-            System.out.println("onGetComputedLevel chunk was null " + (((Level) this.chunkSource.getLevel()).isClientSide ? "client" : "server"));
+            // ToDo Known bug: Cubes may be sent to the client ahead of their chunks. This is not fatal.
+            // see MixinSkyLightSectionStorage.onGetLightValue(...)
+            System.out.println("getComputedLevel: Missing chunk for lighting.");
             return;
         }
 
         Heightmap heightmap = ((LightHeightmapGetter) chunk).getLightHeightmap();
-        if (heightmap == null) {
-            System.out.println("onGetComputedLevel heightmap was null " + (((Level) this.chunkSource.getLevel()).isClientSide ? "client" : "server"));
-            return;
-        }
+
         int height = heightmap.getFirstAvailable(pos.getX() & 0xF, pos.getZ() & 0xF);
         if (height <= pos.getY()) {
             cir.setReturnValue(0);

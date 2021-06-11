@@ -48,11 +48,6 @@ public abstract class MixinProtoChunk implements LightHeightmapGetter, LevelHeig
         if (!isCubic) {
             throw new UnsupportedOperationException("Attempted to get light heightmap on a non-cubic chunk");
         }
-        // FIXME remove debug
-        if (lightHeightmap == null) {
-            System.out.println("late creation of light heightmap in MixinProtoChunk");
-            lightHeightmap = new LightSurfaceTrackerWrapper((ChunkAccess) this);
-        }
         return lightHeightmap;
     }
 

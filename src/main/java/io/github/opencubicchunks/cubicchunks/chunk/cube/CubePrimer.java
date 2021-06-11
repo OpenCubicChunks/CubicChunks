@@ -190,7 +190,7 @@ public class CubePrimer extends ProtoChunk implements IBigCube, CubicLevelHeight
     public void setCubeStatus(ChunkStatus newStatus) {
         this.status = newStatus;
 
-        if (this.status == ChunkStatus.LIGHT) {
+        if (this.status == ChunkStatus.FEATURES) {
             ChunkSource chunkSource = getChunkSource();
 
             for (int dx = 0; dx < IBigCube.DIAMETER_IN_SECTIONS; dx++) {

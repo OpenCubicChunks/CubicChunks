@@ -10,6 +10,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.SectionPos;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.LightLayer;
+import net.minecraft.world.level.chunk.ChunkSource;
 import net.minecraft.world.level.chunk.ChunkStatus;
 import net.minecraft.world.level.chunk.DataLayer;
 import net.minecraft.world.level.chunk.LightChunkGetter;
@@ -54,8 +55,12 @@ public abstract class MixinSkyLightSectionStorage extends LayerLightSectionStora
 
             BlockGetter chunk = ((LayerLightSectionStorageAccess) this).getChunkSource().getChunkForLighting(Coords.blockToSection(x), Coords.blockToSection(z));
 
-            // load order guarantees the chunk being present
-            assert(chunk != null);
+            if (chunk == null) {
+                // ToDo Known bug: Cubes may be sent to the client ahead of their chunks. This is not fatal.
+                // see MixinSkyLightEngine.onGetComputedLevel(...)
+                System.out.println("getLightValue: Missing chunk for lighting.");
+                return;
+            }
 
             //TODO: Optimize
             BlockGetter cube = ((ICubeLightProvider) ((LayerLightSectionStorageAccess) this).getChunkSource()).getCubeForLighting(

@@ -81,15 +81,6 @@ public abstract class MixinChunk implements ChunkAccess, LightHeightmapGetter, C
         if (!isCubic) {
             throw new UnsupportedOperationException("Attempted to get light heightmap on a non-cubic chunk");
         }
-        // FIXME remove debug
-        if (lightHeightmap == null) {
-            System.out.println("late creation of light heightmap in MixinChunk");
-            if (level.isClientSide) {
-                lightHeightmap = new ClientLightSurfaceTracker(this);
-            } else {
-                lightHeightmap = new LightSurfaceTrackerWrapper(this);
-            }
-        }
         return lightHeightmap;
     }
 
