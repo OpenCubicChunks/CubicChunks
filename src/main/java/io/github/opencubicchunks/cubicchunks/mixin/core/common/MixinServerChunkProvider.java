@@ -418,8 +418,7 @@ public abstract class MixinServerChunkProvider implements IServerChunkProvider, 
         if (!((CubicLevelHeightAccessor) this.level).isCubic()) {
             return;
         }
-        long asLong = CubePos.from(BlockPos.of(pos)).asLong();
-        cir.setReturnValue(this.checkCubeFuture(asLong, (chunkHolder) -> unsafeCast(chunkHolder.getTickingChunkFuture())));
+        cir.setReturnValue(this.checkCubeFuture(pos, (chunkHolder) -> unsafeCast(chunkHolder.getTickingChunkFuture())));
     }
 
     @Nullable

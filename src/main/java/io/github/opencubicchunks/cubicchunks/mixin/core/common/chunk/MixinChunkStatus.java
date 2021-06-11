@@ -150,7 +150,7 @@ public class MixinChunkStatus {
 
         ci.cancel();
         if (chunk instanceof IBigCube) {
-            generator.createReferences(new CubeWorldGenRegion(world, unsafeCast(neighbors), status, chunk), world.structureFeatureManager(), chunk);
+            generator.createReferences(new CubeWorldGenRegion(world, unsafeCast(neighbors), status, chunk, -1), world.structureFeatureManager(), chunk);
         }
     }
 
@@ -209,7 +209,7 @@ public class MixinChunkStatus {
 
         ci.cancel();
         if (chunk instanceof IBigCube) {
-            CubeWorldGenRegion cubeWorldGenRegion = new CubeWorldGenRegion(world, unsafeCast(neighbors), status, chunk);
+            CubeWorldGenRegion cubeWorldGenRegion = new CubeWorldGenRegion(world, unsafeCast(neighbors), status, chunk, 0);
 
             CubePos cubePos = ((IBigCube) chunk).getCubePos();
             int cubeY = cubePos.getY();
@@ -415,7 +415,7 @@ public class MixinChunkStatus {
             //        .of(Heightmap.Type.MOTION_BLOCKING, Heightmap.Type.MOTION_BLOCKING_NO_LEAVES, Heightmap.Type.OCEAN_FLOOR,
             //        Heightmap.Type.WORLD_SURFACE));
 
-            CubeWorldGenRegion cubeWorldGenRegion = new CubeWorldGenRegion(world, unsafeCast(chunks), status, chunk);
+            CubeWorldGenRegion cubeWorldGenRegion = new CubeWorldGenRegion(world, unsafeCast(chunks), status, chunk, 1);
             StructureFeatureManager structureFeatureManager =
                 new StructureFeatureManager(cubeWorldGenRegion, ((StructureFeatureManagerAccess) world.structureFeatureManager()).getWorldGenSettings());
 
@@ -469,7 +469,7 @@ public class MixinChunkStatus {
         if (chunk instanceof IBigCube) {
             int cubeY = ((IBigCube) chunk).getCubePos().getY();
 
-            CubeWorldGenRegion cubeWorldGenRegion = new CubeWorldGenRegion(world, unsafeCast(neighbors), status, chunk);
+            CubeWorldGenRegion cubeWorldGenRegion = new CubeWorldGenRegion(world, unsafeCast(neighbors), status, chunk, -1);
             for (int columnX = 0; columnX < IBigCube.DIAMETER_IN_SECTIONS; columnX++) {
                 for (int columnZ = 0; columnZ < IBigCube.DIAMETER_IN_SECTIONS; columnZ++) {
                     cubeWorldGenRegion.moveCenterCubeChunkPos(columnX, columnZ);
