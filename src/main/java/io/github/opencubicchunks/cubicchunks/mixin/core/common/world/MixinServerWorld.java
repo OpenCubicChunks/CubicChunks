@@ -83,6 +83,12 @@ public abstract class MixinServerWorld extends Level implements IServerWorld {
         return this.random.nextInt(16);
     }
 
+
+    @Redirect(method = "isPositionTickingWithEntitiesLoaded", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/ChunkPos;asLong(Lnet/minecraft/core/BlockPos;)J"))
+    private long useCubePosInCubicWorld(BlockPos blockPos) {
+        return ((CubicLevelHeightAccessor) this).isCubic() ? CubePos.asLong(blockPos) : ChunkPos.asLong(blockPos);
+    }
+
     private BlockPos getNextBlockRandomPos(int i, int j, int k, int l) {
         int randValue = this.randValue * 3 + 1013904223;
         int m = randValue >> 2;
