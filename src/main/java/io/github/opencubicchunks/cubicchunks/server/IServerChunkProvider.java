@@ -21,7 +21,5 @@ public interface IServerChunkProvider extends ICubeProvider {
 
     void forceCube(CubePos pos, boolean add);
 
-    boolean isEntityTickingCube(CubePos pos);
-
     boolean checkCubeFuture(long cubePosLong, Function<ChunkHolder, CompletableFuture<Either<BigCube, ChunkHolder.ChunkLoadingFailure>>> futureFunction);
 }

@@ -138,7 +138,7 @@ public class MixinChunkStatus {
     @SuppressWarnings({ "UnresolvedMixinReference", "target" })
     @Inject(
         method = "lambda$static$3(Lnet/minecraft/world/level/chunk/ChunkStatus;Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/level/chunk/ChunkGenerator;Ljava/util/List;"
-+ "Lnet/minecraft/world/level/chunk/ChunkAccess;)V",
+            + "Lnet/minecraft/world/level/chunk/ChunkAccess;)V",
         at = @At("HEAD"), cancellable = true
     )
     private static void cubicChunksStructureReferences(ChunkStatus status, ServerLevel world, ChunkGenerator generator, List<ChunkAccess> neighbors, ChunkAccess chunk,
@@ -150,14 +150,14 @@ public class MixinChunkStatus {
 
         ci.cancel();
         if (chunk instanceof IBigCube) {
-            generator.createReferences(new CubeWorldGenRegion(world, unsafeCast(neighbors), chunk), world.structureFeatureManager(), chunk);
+            generator.createReferences(new CubeWorldGenRegion(world, unsafeCast(neighbors), status, chunk), world.structureFeatureManager(), chunk);
         }
     }
 
     @SuppressWarnings({ "UnresolvedMixinReference", "target" })
     @Inject(
         method = "lambda$static$4(Lnet/minecraft/world/level/chunk/ChunkStatus;Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/level/chunk/ChunkGenerator;Ljava/util/List;"
-+ "Lnet/minecraft/world/level/chunk/ChunkAccess;)V",
+            + "Lnet/minecraft/world/level/chunk/ChunkAccess;)V",
         at = @At("HEAD"), cancellable = true
     )
     private static void cubicChunksBiome(ChunkStatus status, ServerLevel world, ChunkGenerator chunkGenerator, List<ChunkAccess> neighbors, ChunkAccess chunkAccess, CallbackInfo ci) {
@@ -209,7 +209,7 @@ public class MixinChunkStatus {
 
         ci.cancel();
         if (chunk instanceof IBigCube) {
-            CubeWorldGenRegion cubeWorldGenRegion = new CubeWorldGenRegion(world, unsafeCast(neighbors), chunk);
+            CubeWorldGenRegion cubeWorldGenRegion = new CubeWorldGenRegion(world, unsafeCast(neighbors), status, chunk);
 
             CubePos cubePos = ((IBigCube) chunk).getCubePos();
             int cubeY = cubePos.getY();
@@ -287,7 +287,7 @@ public class MixinChunkStatus {
     @SuppressWarnings({ "UnresolvedMixinReference", "target" })
     @Inject(
         method = "lambda$static$7(Lnet/minecraft/world/level/chunk/ChunkStatus;Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/level/chunk/ChunkGenerator;"
-+ "Ljava/util/List;Lnet/minecraft/world/level/chunk/ChunkAccess;)V",
+            + "Ljava/util/List;Lnet/minecraft/world/level/chunk/ChunkAccess;)V",
         at = @At("HEAD"), cancellable = true
     )
     private static void cubicChunksSurface(ChunkStatus status, ServerLevel world, ChunkGenerator generator, List<ChunkAccess> neighbors, ChunkAccess chunk,
@@ -305,7 +305,7 @@ public class MixinChunkStatus {
     @SuppressWarnings({ "UnresolvedMixinReference", "target" })
     @Inject(
         method = "lambda$static$8(Lnet/minecraft/world/level/chunk/ChunkStatus;Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/level/chunk/ChunkGenerator;Ljava/util/List;"
-+ "Lnet/minecraft/world/level/chunk/ChunkAccess;)V",
+            + "Lnet/minecraft/world/level/chunk/ChunkAccess;)V",
         at = @At("HEAD"), cancellable = true
     )
     private static void cubicChunksCarvers(ChunkStatus status, ServerLevel world, ChunkGenerator generator, List<ChunkAccess> neighbors, ChunkAccess chunk,
@@ -340,7 +340,7 @@ public class MixinChunkStatus {
     @SuppressWarnings({ "UnresolvedMixinReference", "target" })
     @Inject(
         method = "lambda$static$9(Lnet/minecraft/world/level/chunk/ChunkStatus;Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/level/chunk/ChunkGenerator;Ljava/util/List;"
-+ "Lnet/minecraft/world/level/chunk/ChunkAccess;)V",
+            + "Lnet/minecraft/world/level/chunk/ChunkAccess;)V",
         at = @At("HEAD"), cancellable = true
     )
     private static void cubicChunksLiquidCarvers(ChunkStatus status, ServerLevel world, ChunkGenerator generator, List<ChunkAccess> neighbors, ChunkAccess chunk,
@@ -415,7 +415,7 @@ public class MixinChunkStatus {
             //        .of(Heightmap.Type.MOTION_BLOCKING, Heightmap.Type.MOTION_BLOCKING_NO_LEAVES, Heightmap.Type.OCEAN_FLOOR,
             //        Heightmap.Type.WORLD_SURFACE));
 
-            CubeWorldGenRegion cubeWorldGenRegion = new CubeWorldGenRegion(world, unsafeCast(chunks), chunk);
+            CubeWorldGenRegion cubeWorldGenRegion = new CubeWorldGenRegion(world, unsafeCast(chunks), status, chunk);
             StructureFeatureManager structureFeatureManager =
                 new StructureFeatureManager(cubeWorldGenRegion, ((StructureFeatureManagerAccess) world.structureFeatureManager()).getWorldGenSettings());
 
@@ -453,7 +453,7 @@ public class MixinChunkStatus {
     @SuppressWarnings({ "UnresolvedMixinReference", "target" })
     @Inject(
         method = "lambda$static$13(Lnet/minecraft/world/level/chunk/ChunkStatus;Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/level/chunk/ChunkGenerator;Ljava/util/List;"
-+ "Lnet/minecraft/world/level/chunk/ChunkAccess;)V",
+            + "Lnet/minecraft/world/level/chunk/ChunkAccess;)V",
         at = @At("HEAD"), cancellable = true
     )
     //TODO: Expose the above and bottom cubes via neighbors or thing else. Check if chunk generator overrides "spawnOriginalMobs" and redirect to our spawner instead.
@@ -469,7 +469,7 @@ public class MixinChunkStatus {
         if (chunk instanceof IBigCube) {
             int cubeY = ((IBigCube) chunk).getCubePos().getY();
 
-            CubeWorldGenRegion cubeWorldGenRegion = new CubeWorldGenRegion(world, unsafeCast(neighbors), chunk);
+            CubeWorldGenRegion cubeWorldGenRegion = new CubeWorldGenRegion(world, unsafeCast(neighbors), status, chunk);
             for (int columnX = 0; columnX < IBigCube.DIAMETER_IN_SECTIONS; columnX++) {
                 for (int columnZ = 0; columnZ < IBigCube.DIAMETER_IN_SECTIONS; columnZ++) {
                     cubeWorldGenRegion.moveCenterCubeChunkPos(columnX, columnZ);

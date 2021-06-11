@@ -258,12 +258,6 @@ public class MainTransformer {
                 + "net.minecraft.class_2818)" // LevelChunk
             )), "getRandomPosWithinCube");
 
-        methodRedirects.put(new ClassMethod(getObjectType("net/minecraft/class_3215"), // ServerChunkCache
-            getMethod("boolean method_20591(" // isEntityTickingChunk
-                + "net.minecraft.class_1923)" // ChunkPos
-            ), getObjectType("net/minecraft/class_2802")), // ChunkSource
-            "isEntityTickingCube");
-
         methodRedirects.put(new ClassMethod(getObjectType("net/minecraft/class_1923"),
             getMethod("long method_8324()")), "asLong"); // toLong
 
