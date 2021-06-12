@@ -42,7 +42,7 @@ import org.apache.logging.log4j.Logger;
  * Requires Mixin BootStrap in order to use in forge.
  */
 // The value here should match an entry in the META-INF/mods.toml file
-public class CubicChunks implements ModInitializer {
+public class  CubicChunks implements ModInitializer {
 
     // TODO: debug and fix optimized cubeload
     public static final boolean OPTIMIZED_CUBELOAD = false;

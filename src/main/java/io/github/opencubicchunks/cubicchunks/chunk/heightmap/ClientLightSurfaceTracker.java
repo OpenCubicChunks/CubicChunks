@@ -36,10 +36,6 @@ public class ClientLightSurfaceTracker extends ClientSurfaceTracker {
         return x + z * 16;
     }
 
-    @Override
-    public void setRawData(long[] heightmap) {
-        throw new UnsupportedOperationException("ClientLightSurfaceTracker.setRawData(heightmap) shouldn't be called");
-    }
     public void setRawData(long[] heightmap, LevelChunk chunk) {
         // We need to compare the old and new data here, hence the inefficiencies with making a new bitstorage
         // TODO can this be optimized to operate on long[]s directly instead of making an extra BitStorage?

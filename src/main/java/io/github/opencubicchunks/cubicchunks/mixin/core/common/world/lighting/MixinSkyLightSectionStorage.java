@@ -58,7 +58,7 @@ public abstract class MixinSkyLightSectionStorage extends LayerLightSectionStora
             if (chunk == null) {
                 // ToDo Known bug: Cubes may be sent to the client ahead of their chunks. This is not fatal.
                 // see MixinSkyLightEngine.onGetComputedLevel(...)
-                System.out.println("getLightValue: Missing chunk for lighting.");
+//                System.out.println("getLightValue: Missing chunk for lighting.");
                 return;
             }
 

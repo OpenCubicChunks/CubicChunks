@@ -11,6 +11,7 @@
         "common.BiomeContainerAccess",
         "common.BiomeGenerationSettingsAccess",
         "common.BiomeManagerAccess",
+        "common.ChunkGeneratorAccess",
         "common.ChunkHolderAccess",
         "common.ChunkManagerAccess",
         "common.ChunkSectionAccess",
@@ -20,6 +21,7 @@
         "common.EntityTrackerAccess",
         "common.HeightmapAccess",
         "common.IOWorkerAccess",
+        "common.LayerLightSectionStorageAccess",
         "common.LevelBasedGraphAccess",
         "common.Matrix4fAccess",
         "common.NaturalSpawnerAccess",
@@ -29,14 +31,14 @@
         "common.PlayerTicketTrackerFactoryAccess",
         "common.PoiSectionAccess",
         "common.ProtoTickListAccess",
-        "common.SectionLightStorageAccess",
         "common.SpawnStateAccess",
         "common.StructureFeatureManagerAccess",
+        "common.ThreadedLevelLightEngineAccess",
         "common.TicketAccess",
         "common.TicketManagerAccess",
         "common.TicketTypeAccess",
         "common.VerticalAnchorAccess",
-        "common.ChunkGeneratorAccess"
+        "common.WorldGenRegionAccess"
     ],
     "client": [
         "client.ChunkRenderDispatcherAccess",
