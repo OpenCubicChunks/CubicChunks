@@ -153,7 +153,7 @@ public abstract class MixinSkyLightEngine extends MixinLayerLightEngine<SkyLight
                 BlockGetter chunk = this.chunkSource.getChunkForLighting(chunkPos.x + sectionX, chunkPos.z + sectionZ);
 
                 // the load order guarantees the chunk being present
-                assert(chunk != null);
+                assert (chunk != null);
 
                 CubeMap cubeMap = ((CubeMapGetter) chunk).getCubeMap();
                 if (!cubeMap.isLoaded(cubePos.getY())) {
