@@ -16,7 +16,6 @@ import net.minecraft.core.Direction;
 import net.minecraft.core.SectionPos;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.ChunkPos;
-import net.minecraft.world.level.Level;
 import net.minecraft.world.level.chunk.ChunkStatus;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.lighting.SkyLightEngine;
@@ -32,7 +31,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(SkyLightEngine.class)
 public abstract class MixinSkyLightEngine extends MixinLayerLightEngine<SkyLightSectionStorage.SkyDataLayerStorageMap, SkyLightSectionStorage> implements ISkyLightColumnChecker,
     ICubicSkyLightEngine {
-    @Shadow @Final private static Direction[] HORIZONTALS;
+    @Shadow @Final private static Direction[] DIRECTIONS;
 
     /**
      * @author CursedFlames
@@ -201,7 +200,7 @@ public abstract class MixinSkyLightEngine extends MixinLayerLightEngine<SkyLight
 
         long sectionPos = SectionPos.blockToSection(blockPos);
 
-        for (Direction direction : HORIZONTALS) {
+        for (Direction direction : DIRECTIONS) {
             long offsetBlockPos = BlockPos.offset(blockPos, direction);
             long offsetSectionPos = SectionPos.blockToSection(offsetBlockPos);
             // Check all neighbors that are storing light
