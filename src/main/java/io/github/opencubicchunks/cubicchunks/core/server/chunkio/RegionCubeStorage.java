@@ -38,8 +38,8 @@ import io.github.opencubicchunks.cubicchunks.api.world.storage.ICubicStorage;
 import io.github.opencubicchunks.cubicchunks.core.CubicChunksConfig;
 import io.github.opencubicchunks.cubicchunks.core.server.chunkio.region.ShadowPagingRegion;
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.ByteBufAllocator;
 import io.netty.buffer.ByteBufOutputStream;
+import io.netty.buffer.UnpooledByteBufAllocator;
 import net.minecraft.nbt.CompressedStreamTools;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.math.ChunkPos;
@@ -154,7 +154,7 @@ public class RegionCubeStorage implements ICubicStorage {
 
     @Override
     public void writeColumn(ChunkPos pos, NBTTagCompound nbt) throws IOException {
-        ByteBuf compressedBuf = ByteBufAllocator.DEFAULT.ioBuffer();
+        ByteBuf compressedBuf = UnpooledByteBufAllocator.DEFAULT.ioBuffer();
         try {
             //compress NBT data
             CompressedStreamTools.writeCompressed(nbt, new ByteBufOutputStream(compressedBuf));
@@ -168,7 +168,7 @@ public class RegionCubeStorage implements ICubicStorage {
 
     @Override
     public void writeCube(CubePos pos, NBTTagCompound nbt) throws IOException {
-        ByteBuf compressedBuf = ByteBufAllocator.DEFAULT.ioBuffer();
+        ByteBuf compressedBuf = UnpooledByteBufAllocator.DEFAULT.ioBuffer();
         try {
             //compress NBT data
             CompressedStreamTools.writeCompressed(nbt, new ByteBufOutputStream(compressedBuf));
@@ -212,7 +212,7 @@ public class RegionCubeStorage implements ICubicStorage {
             //  previously allocated buffers get released in the event of an exception being thrown
 
             return nbt.entrySet().parallelStream().collect(Collectors.toMap(entry -> keyMappingFunction.apply(entry.getKey()), entry -> {
-                ByteBuf compressedBuf = ByteBufAllocator.DEFAULT.ioBuffer();
+                ByteBuf compressedBuf = UnpooledByteBufAllocator.DEFAULT.ioBuffer();
                 try {
                     //encode and compress nbt data
                     CompressedStreamTools.writeCompressed(entry.getValue(), new ByteBufOutputStream(compressedBuf));
