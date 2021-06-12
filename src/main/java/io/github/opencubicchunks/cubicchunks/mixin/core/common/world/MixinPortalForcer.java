@@ -27,7 +27,7 @@ public class MixinPortalForcer {
     @Shadow @Final private ServerLevel level;
 
     @SuppressWarnings("UnresolvedMixinReference")
-    @Redirect(method = "lambda$findPortalAround$5(Lnet/minecraft/world/entity/ai/village/poi/PoiRecord;)Lnet/minecraft/BlockUtil$FoundRectangle", at = @At(value = "INVOKE",
+    @Redirect(method = "lambda$findPortalAround$5(Lnet/minecraft/world/entity/ai/village/poi/PoiRecord;)Lnet/minecraft/BlockUtil$FoundRectangle;", at = @At(value = "INVOKE",
         target = "Lnet/minecraft/server/level/ServerChunkCache;addRegionTicket(Lnet/minecraft/server/level/TicketType;Lnet/minecraft/world/level/ChunkPos;ILjava/lang/Object;)V"))
     private <T> void addCubeRegionTicket(ServerChunkCache serverChunkCache, TicketType<T> ticketType, ChunkPos chunkPos, int radius, T argument, PoiRecord poiRecord) {
         if (!((CubicLevelHeightAccessor) serverChunkCache.getLevel()).isCubic()) {
