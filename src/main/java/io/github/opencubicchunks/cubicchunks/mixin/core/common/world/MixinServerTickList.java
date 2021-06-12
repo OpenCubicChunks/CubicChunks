@@ -21,15 +21,28 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(ServerTickList.class)
 public abstract class MixinServerTickList<T> {
 
-
     @Shadow @Final private ServerLevel level;
 
+    private long gameTime = 0L;
+
     @Shadow public abstract List<TickNextTickData<T>> fetchTicksInArea(BoundingBox bounds, boolean updateState, boolean getStaleTicks);
+
+    @Inject(method = "tick", at = @At("HEAD"))
+    private void cacheGameTime(CallbackInfo ci) {
+        gameTime = this.level.getGameTime();
+    }
+
+    @Redirect(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerLevel;getGameTime()J"))
+    private long useFastGameTime(ServerLevel serverLevel) {
+        return gameTime;
+    }
 
     @Inject(method = "fetchTicksInChunk", at = @At("HEAD"), cancellable = true)
     private void fetchTicksInCube(ChunkPos pos, boolean updateState, boolean getStaleTicks, CallbackInfoReturnable<List<TickNextTickData<T>>> cir) {
@@ -49,7 +62,6 @@ public abstract class MixinServerTickList<T> {
             cir.setReturnValue(fetchedTicks);
         }
     }
-
 
     @Inject(method = "fetchTicksInArea(Ljava/util/List;Ljava/util/Collection;Lnet/minecraft/world/level/levelgen/structure/BoundingBox;Z)Ljava/util/List;", at = @At("HEAD"),
         cancellable = true)
