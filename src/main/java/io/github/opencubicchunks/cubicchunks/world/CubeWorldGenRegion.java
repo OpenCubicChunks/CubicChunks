@@ -18,6 +18,7 @@ import javax.annotation.Nullable;
 
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
+import io.github.opencubicchunks.cubicchunks.config.HeightSettings;
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.WorldGenRegionAccess;
 import io.github.opencubicchunks.cubicchunks.server.ICubicWorld;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
@@ -94,12 +95,18 @@ public class CubeWorldGenRegion extends WorldGenRegion implements ICubicWorld {
     private final LevelData worldInfo;
     private final Random random;
     private final DimensionType dimension;
-    private final ChunkAccess access;
+    private final ChunkAccess centerCube;
 
     private final BiomeManager biomeManager;
 
     private int cubeCenterColumnCenterX = 0;
     private int cubeCenterColumnCenterZ = 0;
+
+    private int height;
+    private int minHeight;
+
+    private int boundHeight;
+    private int boundMinHeight;
 
     private final TickList<Block> blockTicks = new WorldGenTickList<>((pos) -> this.getCube(pos).getBlockTicks());
     private final TickList<Fluid> liquidTicks = new WorldGenTickList<>((pos) -> this.getCube(pos).getLiquidTicks());
@@ -139,13 +146,22 @@ public class CubeWorldGenRegion extends WorldGenRegion implements ICubicWorld {
             this.maxCubeY = maxCube.getCubePos().getY();
             this.maxCubeZ = maxCube.getCubePos().getZ();
 
-            this.access = access;
+            this.centerCube = access;
+            minHeight = getLevel().getMinBuildHeight();
+            height = getLevel().getHeight();
+
+            boundMinHeight = getLevel().getMinBuildHeight();
+            boundHeight = getLevel().getHeight();
         }
     }
 
     public void moveCenterCubeChunkPos(int newX, int newZ) {
         this.cubeCenterColumnCenterX = newX;
         this.cubeCenterColumnCenterZ = newZ;
+    }
+
+    public IBigCube getCenterCube() {
+        return (IBigCube) centerCube;
     }
 
     @Override public ChunkPos getCenter() {
@@ -352,7 +368,7 @@ public class CubeWorldGenRegion extends WorldGenRegion implements ICubicWorld {
 
     @Deprecated
     @Nullable @Override public ChunkAccess getChunk(int x, int z, ChunkStatus requiredStatus, boolean nonnull) {
-        return this.access; //TODO: Do not do this.
+        return this.centerCube; //TODO: Do not do this.
     }
 
     @Override public int getHeight(Heightmap.Types heightmapType, int x, int z) {
@@ -362,16 +378,16 @@ public class CubeWorldGenRegion extends WorldGenRegion implements ICubicWorld {
 
         if (maxCubeY == mainCubeY) {
             IBigCube cube1 = getCube(new BlockPos(x, yEnd, z));
-            int height = cube1.getCubeLocalHeight(heightmapType, x, z);
+            int cubeLocalHeight = cube1.getCubeLocalHeight(heightmapType, x, z);
 
             if (cube1.getCubeLocalHeight(heightmapType, x, z) >= yStart) {
                 return yStart + 2;
             }
 
-            if (height <= getLevel().getMinBuildHeight()) {
+            if (cubeLocalHeight <= getLevel().getMinBuildHeight()) {
                 return yEnd - 1;
             }
-            return height + 1;
+            return cubeLocalHeight + 1;
         }
 
 
@@ -380,13 +396,13 @@ public class CubeWorldGenRegion extends WorldGenRegion implements ICubicWorld {
             return yStart + 2;
         }
         IBigCube cube2 = getCube(new BlockPos(x, yEnd, z));
-        int height = cube2.getCubeLocalHeight(heightmapType, x, z);
+        int cubeLocalHeight = cube2.getCubeLocalHeight(heightmapType, x, z);
 
         //Check whether or not height was found for this cube. If height wasn't found, move to the next cube under the current cube
-        if (height <= getLevel().getMinBuildHeight()) {
+        if (cubeLocalHeight <= getLevel().getMinBuildHeight()) {
             return yEnd - 1;
         }
-        return height + 1;
+        return cubeLocalHeight + 1;
     }
 
     @Override public int getSkyDarken() {
@@ -523,12 +539,24 @@ public class CubeWorldGenRegion extends WorldGenRegion implements ICubicWorld {
         return this.getLevel().startsForFeature(sectionPos, structure);
     }
 
+    public void upgradeY(HeightSettings heightSettings) {
+        boundHeight = heightSettings.getHeightBounds().getHeight(this);
+        boundMinHeight = heightSettings.getHeightBounds().getMinHeight(this);
+
+        height = heightSettings.getMaxHeight().getHeight(this);
+        minHeight = heightSettings.getMinHeight().getMinHeight(this);
+    }
+
     @Override public int getMinBuildHeight() {
-        return getLevel().getMinBuildHeight();
+        return minHeight;
     }
 
     @Override public int getHeight() {
-        return getLevel().getHeight();
+        return height;
+    }
+
+    @Override public boolean isOutsideBuildHeight(int y) {
+        return y < boundMinHeight || y >= boundMinHeight + boundHeight;
     }
 
     public boolean insideCubeHeight(int blockY) {

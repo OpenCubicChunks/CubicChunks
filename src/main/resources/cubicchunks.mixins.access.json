@@ -33,7 +33,7 @@
         "common.TicketManagerAccess",
         "common.TicketTypeAccess",
         "common.VerticalAnchorAccess",
-        "common.WorldGenRegionAccess"
+        "common.ChunkGeneratorAccess"
     ],
     "client": [
         "client.ChunkRenderDispatcherAccess",

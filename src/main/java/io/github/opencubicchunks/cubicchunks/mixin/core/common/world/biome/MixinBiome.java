@@ -12,6 +12,8 @@ import java.util.function.Supplier;
 import io.github.opencubicchunks.cubicchunks.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.NoiseAndSurfaceBuilderHelper;
+import io.github.opencubicchunks.cubicchunks.config.HeightSettings;
+import io.github.opencubicchunks.cubicchunks.config.reloadlisteners.HeightSettingsReloadListener;
 import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import io.github.opencubicchunks.cubicchunks.world.CubeWorldGenRandom;
@@ -66,7 +68,7 @@ public class MixinBiome implements BiomeGetter {
             if (structureManager.shouldGenerateFeatures()) {
 
                 for (StructureFeature<?> structure : this.structuresByStep.getOrDefault(genStepIDX, Collections.emptyList())) {
-
+                    region.upgradeY(HeightSettingsReloadListener.STRUCTURE_HEIGHT_SETTINGS.getOrDefault(structure, HeightSettings.DEFAULT));
                     random.setDecorationSeed(seed, k, genStepIDX);
                     int minSectionX = Coords.sectionToMinBlock(Coords.blockToSection(blockPos.getX()));
                     int minSectionY = Coords.sectionToMinBlock(Coords.blockToSection(blockPos.getY()));
@@ -82,7 +84,7 @@ public class MixinBiome implements BiomeGetter {
                         crashReport.addCategory("Feature").setDetail("Id", Registry.STRUCTURE_FEATURE.getKey(structure)).setDetail("Description", () -> {
                             return structure.toString();
                         });
-                        throw new ReportedException(crashReport);
+                        CubicChunks.commonConfig().getWorldExceptionHandler().wrapException(new ReportedException(crashReport));
                     }
                 }
             }
@@ -95,6 +97,8 @@ public class MixinBiome implements BiomeGetter {
             if (list.size() > genStepIDX) {
                 for (Supplier<ConfiguredFeature<?, ?>> configuredFeatureSupplier : list.get(genStepIDX)) {
                     ConfiguredFeature<?, ?> configuredFeature = configuredFeatureSupplier.get();
+                    //noinspection SuspiciousMethodCalls
+                    region.upgradeY(HeightSettingsReloadListener.STRUCTURE_HEIGHT_SETTINGS.getOrDefault(configuredFeature.feature, HeightSettings.DEFAULT));
 
                     ResourceLocation key = region.getLevel().getServer().registryAccess().registry(Registry.CONFIGURED_FEATURE_REGISTRY).get().getKey(configuredFeature);
                     if (key != null) {
@@ -116,7 +120,7 @@ public class MixinBiome implements BiomeGetter {
                                 return configuredFeature1.feature.toString();
                             });
                             CubicChunks.LOGGER.fatal(crashReport2.getFriendlyReport());
-                            throw new ReportedException(crashReport2);
+                            CubicChunks.commonConfig().getWorldExceptionHandler().wrapException(new ReportedException(crashReport2));
                         }
                     }
                 }
@@ -153,7 +157,7 @@ public class MixinBiome implements BiomeGetter {
 
             configuredSurfaceBuilder.apply(random, chunk, (Biome) (Object) this, x, z, worldHeight, noise, defaultBlock, defaultFluid, seaLevel, cubicChunksSurfaceHeight, seed);
         } catch (NoiseAndSurfaceBuilderHelper.StopGeneratingThrowable ignored) {
-            // used as a way to stop the surface builder when it goes below the current cube
+            CubicChunks.commonConfig().getWorldExceptionHandler().wrapException(ignored);
         }
     }
 

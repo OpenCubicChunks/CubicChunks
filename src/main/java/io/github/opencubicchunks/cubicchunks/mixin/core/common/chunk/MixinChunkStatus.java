@@ -16,6 +16,9 @@ import io.github.opencubicchunks.cubicchunks.chunk.biome.ColumnBiomeContainer;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.CubePrimer;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CCWorldGenUtils;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
+import io.github.opencubicchunks.cubicchunks.config.ChunkGeneratorSettings;
+import io.github.opencubicchunks.cubicchunks.config.reloadlisteners.ChunkGeneratorSettingsReloadListener;
+import io.github.opencubicchunks.cubicchunks.mixin.access.common.ChunkGeneratorAccess;
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.ChunkManagerAccess;
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.StructureFeatureManagerAccess;
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.ThreadedLevelLightEngineAccess;
@@ -234,6 +237,17 @@ public class MixinChunkStatus {
                     CompletableFuture<ChunkAccess> chunkAccessCompletableFuture =
                         generator.fillFromNoise(executor, world.structureFeatureManager().forWorldGenRegion(cubeWorldGenRegion), cubeAccessWrapper).thenApply(chunkAccess -> {
                             cubeAccessWrapper.applySections();
+                            ChunkGeneratorSettings chunkGeneratorSettings = ChunkGeneratorSettingsReloadListener.CHUNK_GENERATOR_SETTINGS
+                                .getOrDefault(((ChunkGeneratorAccess) generator).invokeCodec(), ChunkGeneratorSettings.DEFAULT);
+
+                            if (chunkGeneratorSettings.controlsStatus(ChunkStatus.SURFACE)) {
+                                generator.buildSurfaceAndBedrock(cubeWorldGenRegion, chunkAccess);
+                            } else {
+                                ((ICubeGenerator) generator).buildSurfaceAndBedrockCC(cubeWorldGenRegion, chunkAccess);
+                            }
+
+                            ((ICubeGenerator) generator).applyCubicCarvers(world.getSeed(), world.getBiomeManager(), cubeAccessWrapper, GenerationStep.Carving.AIR);
+                            ((ICubeGenerator) generator).applyCubicCarvers(world.getSeed(), world.getBiomeManager(), cubeAccessWrapper, GenerationStep.Carving.LIQUID);
 
 
                             // Exit early and don't waste time on empty sections.
