@@ -16,6 +16,7 @@ import io.github.opencubicchunks.cubicchunks.chunk.heightmap.ClientLightSurfaceT
 import io.github.opencubicchunks.cubicchunks.chunk.heightmap.ClientSurfaceTracker;
 import io.github.opencubicchunks.cubicchunks.chunk.heightmap.LightSurfaceTrackerWrapper;
 import io.github.opencubicchunks.cubicchunks.chunk.heightmap.SurfaceTrackerWrapper;
+import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import io.github.opencubicchunks.cubicchunks.world.lighting.ISkyLightColumnChecker;
@@ -292,7 +293,7 @@ public abstract class MixinChunk implements ChunkAccess, LightHeightmapGetter, C
             return;
         }
         ci.cancel();
-        ((BigCube) getCube(blockEntity.getBlockPos().getY())).addAndRegisterBlockEntity(blockEntity);
+        ((BigCube) getCube(Coords.blockToSection(blockEntity.getBlockPos().getY()))).addAndRegisterBlockEntity(blockEntity);
     }
 
     @Inject(method = "updateBlockEntityTicker", at = @At("HEAD"), cancellable = true)
@@ -301,7 +302,7 @@ public abstract class MixinChunk implements ChunkAccess, LightHeightmapGetter, C
             return;
         }
         ci.cancel();
-        ((BigCube) getCube(blockEntity.getBlockPos().getY())).updateBlockEntityTicker(blockEntity);
+        ((BigCube) getCube(Coords.blockToSection(blockEntity.getBlockPos().getY()))).updateBlockEntityTicker(blockEntity);
     }
 
     //This should return object because Hashmap.get also does
@@ -323,6 +324,11 @@ public abstract class MixinChunk implements ChunkAccess, LightHeightmapGetter, C
         }
 
         return ((BigCube) this.getCube(Coords.blockToSection(pos.getY()))).isInLevel();
+    }
+
+    @Redirect(method = "isTicking", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/ChunkPos;asLong(Lnet/minecraft/core/BlockPos;)J"))
+    private long cubePos(BlockPos blockPos) {
+        return isCubic ? CubePos.asLong(blockPos) : ChunkPos.asLong(blockPos);
     }
 
     @Override public WorldStyle worldStyle() {

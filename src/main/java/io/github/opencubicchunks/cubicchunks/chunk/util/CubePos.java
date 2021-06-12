@@ -37,6 +37,10 @@ public class CubePos extends Vec3i {
         return i;
     }
 
+    public static long asLong(BlockPos pos) {
+        return asLong(Coords.blockToCube(pos.getX()), Coords.blockToCube(pos.getY()), Coords.blockToCube(pos.getZ()));
+    }
+
     public long asLong() {
         long i = 0L;
         i |= ((long) this.getX() & (1 << 21) - 1) << 43;

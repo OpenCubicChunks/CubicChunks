@@ -27,6 +27,8 @@ public abstract class MixinFriendlyByteBuf {
         BlockPos data = BlockPos.of(this.readLong());
         if (data.getY() == DimensionType.MIN_Y) {
             cir.setReturnValue(new BlockPos(data.getX(), this.readVarInt(), data.getZ()));
+        } else {
+            cir.setReturnValue(data);
         }
     }
 
@@ -37,7 +39,7 @@ public abstract class MixinFriendlyByteBuf {
         if (y >= DimensionType.MAX_Y - 1 || y <= DimensionType.MIN_Y + 1) {
             this.writeLong(new BlockPos(pos.getX(), DimensionType.MIN_Y, pos.getZ()).asLong());
             this.writeVarInt(y);
+            cir.setReturnValue((FriendlyByteBuf) (Object) this);
         }
-        cir.setReturnValue((FriendlyByteBuf) (Object) this);
     }
 }

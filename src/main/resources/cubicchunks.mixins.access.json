@@ -29,11 +29,12 @@
         "common.ProtoTickListAccess",
         "common.SpawnStateAccess",
         "common.StructureFeatureManagerAccess",
+        "common.ThreadedLevelLightEngineAccess",
         "common.TicketAccess",
         "common.TicketManagerAccess",
         "common.TicketTypeAccess",
         "common.VerticalAnchorAccess",
-        "common.ThreadedLevelLightEngineAccess"
+        "common.WorldGenRegionAccess"
     ],
     "client": [
         "client.ChunkRenderDispatcherAccess",

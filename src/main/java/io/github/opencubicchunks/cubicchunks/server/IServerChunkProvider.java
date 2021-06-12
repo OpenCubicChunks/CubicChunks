@@ -13,6 +13,9 @@ import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.ChunkStatus;
 
 public interface IServerChunkProvider extends ICubeProvider {
+    // TODO check whether this is still needed
+    // ChunkHolder getChunkHolderForce(ChunkPos chunkPos, ChunkStatus requiredStatus);
+
     <T> void addCubeRegionTicket(TicketType<T> type, CubePos pos, int distance, T value);
 
     int getTickingGeneratedCubes();
@@ -20,7 +23,8 @@ public interface IServerChunkProvider extends ICubeProvider {
     void forceCube(CubePos pos, boolean add);
 
     CompletableFuture<Either<ChunkAccess, ChunkHolder.ChunkLoadingFailure>> getColumnFutureForCube(CubePos cubePos, int chunkX, int chunkZ, ChunkStatus leastStatus, boolean create);
-    boolean isEntityTickingCube(CubePos pos);
+    // TODO check whether this is still needed
+    // boolean isEntityTickingCube(CubePos pos);
 
     boolean checkCubeFuture(long cubePosLong, Function<ChunkHolder, CompletableFuture<Either<BigCube, ChunkHolder.ChunkLoadingFailure>>> futureFunction);
 }

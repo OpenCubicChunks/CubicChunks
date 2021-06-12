@@ -50,6 +50,7 @@
         "common.world.biome.MixinBiome",
         "common.world.biome.MixinBiomeDefaultFeatures",
         "common.world.feature.MixinBlockBlobFeature",
+        "common.world.feature.MixinCocoaDecorator",
         "common.world.feature.MixinDecoratedFeature",
         "common.world.feature.MixinIcebergFeature",
         "common.world.feature.MixinLakeFeature",

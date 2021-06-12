@@ -55,7 +55,7 @@ public class SurfaceTrackerWrapper extends Heightmap {
 
     // TODO not sure what to do about these methods
     @Override
-    public void setRawData(long[] ls) {
+    public void setRawData(ChunkAccess clv, Types a, long[] ls) {
         throw new UnsupportedOperationException();
     }
 

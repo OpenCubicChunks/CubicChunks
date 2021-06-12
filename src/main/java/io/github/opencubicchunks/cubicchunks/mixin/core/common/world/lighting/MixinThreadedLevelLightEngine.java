@@ -7,6 +7,7 @@ import javax.annotation.Nullable;
 
 import com.mojang.datafixers.util.Pair;
 import io.github.opencubicchunks.cubicchunks.chunk.CubeMapGetter;
+import io.github.opencubicchunks.cubicchunks.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.IChunkManager;
 import io.github.opencubicchunks.cubicchunks.chunk.ticket.CubeTaskPriorityQueueSorter;
@@ -129,7 +130,12 @@ public abstract class MixinThreadedLevelLightEngine extends MixinLevelLightEngin
             super.enableLightSources(cubePos, true);
             if (!flagIn) {
                 icube.getCubeLightSources().forEach((blockPos) -> {
-                    super.onBlockEmissionIncrease(blockPos, icube.getLightEmission(blockPos));
+                    //TODO: Figure out why some positions are null. Might have to do with the multithreading of the noise stage of world generation.
+                    if (blockPos == null) {
+                        CubicChunks.LOGGER.error("Block pos was null when attempting to calculate block light emission, skipping...");
+                    } else {
+                        super.onBlockEmissionIncrease(blockPos, icube.getLightEmission(blockPos));
+                    }
                 });
                 // FIXME we probably want another flag for controlling skylight
                 super.doSkyLightForCube(icube);

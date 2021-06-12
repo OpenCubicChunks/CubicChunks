@@ -23,7 +23,7 @@ import org.spongepowered.asm.mixin.Shadow;
 @Mixin(targets = "net.minecraft.world.level.chunk.ChunkStatus$SimpleGenerationTask")
 public interface MixinISelectiveWorker {
 
-    @Shadow void doWork(ServerLevel world, ChunkGenerator generator, List<ChunkAccess> neighbors, ChunkAccess chunk);
+    @Shadow void doWork(ChunkStatus status, ServerLevel world, ChunkGenerator generator, List<ChunkAccess> neighbors, ChunkAccess chunk);
 
     /**
      * @author Batrteks2x
@@ -38,7 +38,7 @@ public interface MixinISelectiveWorker {
 
         if (!((CubicLevelHeightAccessor) chunk).isCubic()) {
             if (!chunk.getStatus().isOrAfter(status)) {
-                this.doWork(world, generator, neighbors, chunk);
+                this.doWork(status, world, generator, neighbors, chunk);
                 if (chunk instanceof ProtoChunk) {
                     ((ProtoChunk) chunk).setStatus(status);
                 }
@@ -47,7 +47,7 @@ public interface MixinISelectiveWorker {
         }
 
         if (!chunk.getStatus().isOrAfter(status)) {
-            this.doWork(world, generator, neighbors, chunk);
+            this.doWork(status, world, generator, neighbors, chunk);
             if (chunk instanceof ProtoChunk) {
                 ((ProtoChunk) chunk).setStatus(status);
             } else if (chunk instanceof CubePrimer) {
