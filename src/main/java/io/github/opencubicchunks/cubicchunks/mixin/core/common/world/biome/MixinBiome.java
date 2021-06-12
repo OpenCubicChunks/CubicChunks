@@ -10,7 +10,6 @@ import java.util.Set;
 import java.util.function.Supplier;
 
 import io.github.opencubicchunks.cubicchunks.CubicChunks;
-import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.NoiseAndSurfaceBuilderHelper;
 import io.github.opencubicchunks.cubicchunks.config.HeightSettings;
 import io.github.opencubicchunks.cubicchunks.config.reloadlisteners.HeightSettingsReloadListener;
@@ -18,7 +17,6 @@ import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import io.github.opencubicchunks.cubicchunks.world.CubeWorldGenRandom;
 import io.github.opencubicchunks.cubicchunks.world.CubeWorldGenRegion;
-import io.github.opencubicchunks.cubicchunks.world.SetupCubeStructureStart;
 import io.github.opencubicchunks.cubicchunks.world.biome.BiomeGetter;
 import io.github.opencubicchunks.cubicchunks.world.gen.feature.CCFeatures;
 import net.minecraft.CrashReport;
@@ -27,6 +25,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Registry;
 import net.minecraft.core.SectionPos;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.StructureFeatureManager;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.biome.BiomeGenerationSettings;
@@ -71,13 +70,15 @@ public class MixinBiome implements BiomeGetter {
                     region.upgradeY(HeightSettingsReloadListener.STRUCTURE_HEIGHT_SETTINGS.getOrDefault(structure, HeightSettings.DEFAULT));
                     random.setDecorationSeed(seed, k, genStepIDX);
                     int minSectionX = Coords.sectionToMinBlock(Coords.blockToSection(blockPos.getX()));
-                    int minSectionY = Coords.sectionToMinBlock(Coords.blockToSection(blockPos.getY()));
                     int minSectionZ = Coords.sectionToMinBlock(Coords.blockToSection(blockPos.getZ()));
 
                     try {
+                        region.usesRegionHeightMap();
                         structureManager.startsForFeature(SectionPos.of(blockPos), structure).forEach((structureStart) -> {
-                            ((SetupCubeStructureStart) structureStart).placeInCube(region, structureManager, chunkGenerator, random,
-                                new BoundingBox(minSectionX, minSectionY, minSectionZ, minSectionX + 15, minSectionY + IBigCube.DIAMETER_IN_BLOCKS - 1, minSectionZ + 15), blockPos);
+                            structureStart.placeInChunk(region, structureManager, chunkGenerator, random,
+                                new BoundingBox(minSectionX, Coords.cubeToMinBlock(region.getMinCubeY()) + 1, minSectionZ, minSectionX + 15, Coords.cubeToMaxBlock(region.getMaxCubeY()) - 1,
+                                    minSectionZ + 15),
+                                new ChunkPos(blockPos));
                         });
                     } catch (Exception e) {
                         CrashReport crashReport = CrashReport.forThrowable(e, "Structure Feature placement");
@@ -113,6 +114,7 @@ public class MixinBiome implements BiomeGetter {
 
                     if (!featureBlacklist.contains(key)) {
                         try {
+                            region.usesCubeHeightMap();
                             configuredFeature.place(region, chunkGenerator, random, blockPos);
                         } catch (Exception e) {
                             CrashReport crashReport2 = CrashReport.forThrowable(e, "Feature placement");
