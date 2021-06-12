@@ -10,13 +10,18 @@ import net.minecraft.world.level.levelgen.Heightmap;
 
 public class ClientSurfaceTracker extends Heightmap {
 
-    private final Predicate<BlockState> isOpaque;
+    protected final Predicate<BlockState> isOpaque;
 
     public ClientSurfaceTracker(ChunkAccess chunkAccess, Types types) {
         super(chunkAccess, types);
         this.isOpaque = ((HeightmapAccess) this).getIsOpaque();
     }
 
+    /**
+     * @param x column-local x
+     * @param y global y
+     * @param z column-local z
+     */
     @Override public boolean update(int x, int y, int z, BlockState blockState) {
         int previous = getFirstAvailable(x, z);
         if (y <= previous - 2) {
