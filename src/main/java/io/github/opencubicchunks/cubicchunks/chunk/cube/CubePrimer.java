@@ -115,7 +115,7 @@ public class CubePrimer extends ProtoChunk implements IBigCube, CubicLevelHeight
 
     public CubePrimer(CubePos cubePosIn, UpgradeData upgradeData, @Nullable LevelChunkSection[] sectionsIn, ProtoTickList<Block> blockProtoTickList, ProtoTickList<Fluid> fluidProtoTickList,
                       LevelHeightAccessor levelHeightAccessor) {
-        super(cubePosIn.asChunkPos(), upgradeData, sectionsIn, blockProtoTickList, fluidProtoTickList, new FakeSectionCount(levelHeightAccessor, IBigCube.SECTION_COUNT));
+        super(cubePosIn.asChunkPos(), upgradeData, sectionsIn, blockProtoTickList, fluidProtoTickList, levelHeightAccessor);
 
         this.heightmaps = Maps.newEnumMap(Heightmap.Types.class);
         this.carvingMasks = new Object2ObjectArrayMap<>();
@@ -327,8 +327,7 @@ public class CubePrimer extends ProtoChunk implements IBigCube, CubicLevelHeight
     }
 
     /**
-     * Due to splitting the same cube into several threads in MixinChunkStatus,
-     * we have to make this method synchronized to ensure we aren't letting null values slip by.
+     * Due to splitting the same cube into several threads in MixinChunkStatus, we have to make this method synchronized to ensure we aren't letting null values slip by.
      */
     //TODO: DO NOT Make THE SAME Cube's generation multithreaded in ChunkStatus Noise.
     public synchronized void addCubeLightPosition(BlockPos lightPos) {
@@ -683,52 +682,5 @@ public class CubePrimer extends ProtoChunk implements IBigCube, CubicLevelHeight
 
     @Override public boolean generates2DChunks() {
         return generates2DChunks;
-    }
-
-    public static class FakeSectionCount implements LevelHeightAccessor, CubicLevelHeightAccessor {
-        private final int height;
-        private final int minHeight;
-        private final int fakeSectionCount;
-        private final boolean isCubic;
-        private final boolean generates2DChunks;
-        private final WorldStyle worldStyle;
-
-        public FakeSectionCount(LevelHeightAccessor levelHeightAccessor, int sectionCount) {
-            this(levelHeightAccessor.getHeight(), levelHeightAccessor.getMinBuildHeight(), sectionCount, ((CubicLevelHeightAccessor) levelHeightAccessor).isCubic(),
-                ((CubicLevelHeightAccessor) levelHeightAccessor).generates2DChunks(), ((CubicLevelHeightAccessor) levelHeightAccessor).worldStyle());
-        }
-
-        private FakeSectionCount(int height, int minHeight, int sectionCount, boolean isCubic, boolean generates2DChunks, WorldStyle worldStyle) {
-            this.height = height;
-            this.minHeight = minHeight;
-            this.fakeSectionCount = sectionCount;
-            this.isCubic = isCubic;
-            this.generates2DChunks = generates2DChunks;
-            this.worldStyle = worldStyle;
-        }
-
-        @Override public int getHeight() {
-            return this.height;
-        }
-
-        @Override public int getMinBuildHeight() {
-            return this.minHeight;
-        }
-
-        @Override public int getSectionsCount() {
-            return this.fakeSectionCount;
-        }
-
-        @Override public WorldStyle worldStyle() {
-            return worldStyle;
-        }
-
-        @Override public boolean isCubic() {
-            return isCubic;
-        }
-
-        @Override public boolean generates2DChunks() {
-            return generates2DChunks;
-        }
     }
 }

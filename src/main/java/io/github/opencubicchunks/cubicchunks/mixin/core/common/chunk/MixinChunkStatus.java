@@ -227,7 +227,7 @@ public class MixinChunkStatus {
 
                     ChunkPos pos = chunk.getPos();
 
-                    NoiseAndSurfaceBuilderHelper cubeAccessWrapper = new NoiseAndSurfaceBuilderHelper((IBigCube) chunk, cubeAbove);
+                    NoiseAndSurfaceBuilderHelper cubeAccessWrapper = new NoiseAndSurfaceBuilderHelper((IBigCube) chunk, cubeAbove, world);
                     cubeAccessWrapper.moveColumn(columnX, columnZ);
                     CompletableFuture<ChunkAccess> chunkAccessCompletableFuture =
                         generator.fillFromNoise(executor, world.structureFeatureManager().forWorldGenRegion(cubeWorldGenRegion), cubeAccessWrapper).thenApply(chunkAccess -> {
