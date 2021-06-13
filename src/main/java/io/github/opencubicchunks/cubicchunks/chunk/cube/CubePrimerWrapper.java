@@ -69,11 +69,7 @@ public class CubePrimerWrapper extends CubePrimer {
 
     //STATUS
     @Deprecated @Override public ChunkStatus getStatus() {
-        return this.cube.getCubeStatus();
-    }
-
-    @Override public ChunkStatus getCubeStatus() {
-        return cube.getCubeStatus();
+        return this.cube.getStatus();
     }
 
     //BLOCK

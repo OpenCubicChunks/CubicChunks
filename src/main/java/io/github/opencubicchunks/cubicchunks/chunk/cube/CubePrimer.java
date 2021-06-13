@@ -25,6 +25,7 @@ import io.github.opencubicchunks.cubicchunks.chunk.biome.CubeBiomeContainer;
 import io.github.opencubicchunks.cubicchunks.chunk.heightmap.SurfaceTrackerSection;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.BiomeContainerAccess;
+import io.github.opencubicchunks.cubicchunks.mixin.access.common.ProtoChunkAccess;
 import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import io.github.opencubicchunks.cubicchunks.world.storage.CubeProtoTickList;
@@ -65,15 +66,11 @@ public class CubePrimer extends ProtoChunk implements IBigCube, CubicLevelHeight
     private static final FluidState EMPTY_FLUID = Fluids.EMPTY.defaultFluidState();
 
     private final CubePos cubePos;
-    private final LevelHeightAccessor levelHeightAccessor;
-    private ChunkStatus status = ChunkStatus.EMPTY;
 
     @Nullable
     private CubeBiomeContainer cubeBiomeContainer;
 
-
     private final Map<Heightmap.Types, SurfaceTrackerSection[]> heightmaps;
-
 
     private final List<CompoundTag> entities = Lists.newArrayList();
     private final Map<BlockPos, BlockEntity> tileEntities = Maps.newHashMap();
@@ -123,7 +120,6 @@ public class CubePrimer extends ProtoChunk implements IBigCube, CubicLevelHeight
         this.structuresRefences = new ConcurrentHashMap<>(); // Maps.newHashMap(); //TODO: This should NOT be a ConcurrentHashMap
 
         this.cubePos = cubePosIn;
-        this.levelHeightAccessor = levelHeightAccessor;
 
         isCubic = ((CubicLevelHeightAccessor) levelHeightAccessor).isCubic();
         generates2DChunks = ((CubicLevelHeightAccessor) levelHeightAccessor).generates2DChunks();
@@ -143,8 +139,8 @@ public class CubePrimer extends ProtoChunk implements IBigCube, CubicLevelHeight
             this.minBuildHeight = this.cubePos.minCubeY();
             this.height = IBigCube.DIAMETER_IN_BLOCKS;
         } else {
-            this.minBuildHeight = this.levelHeightAccessor.getMinBuildHeight();
-            this.height = this.levelHeightAccessor.getHeight();
+            this.minBuildHeight = ((ProtoChunkAccess) this).getLevelHeightAccessor().getMinBuildHeight();
+            this.height = ((ProtoChunkAccess) this).getLevelHeightAccessor().getHeight();
         }
     }
 
@@ -154,15 +150,6 @@ public class CubePrimer extends ProtoChunk implements IBigCube, CubicLevelHeight
 
     @Override public LevelChunkSection[] getCubeSections() {
         return this.getSections();
-    }
-
-    //STATUS
-    public void setCubeStatus(ChunkStatus newStatus) {
-        this.status = newStatus;
-    }
-
-    @Override public ChunkStatus getCubeStatus() {
-        return this.status;
     }
 
     @Override @Nullable public BlockState setBlock(BlockPos pos, BlockState state, boolean isMoving) {
@@ -191,7 +178,7 @@ public class CubePrimer extends ProtoChunk implements IBigCube, CubicLevelHeight
         }
 
         BlockState lastState = section.setBlockState(x, y, z, state, false);
-        if (this.status.isOrAfter(ChunkStatus.FEATURES) && state != lastState && (state.getLightBlock(this, pos) != lastState.getLightBlock(this, pos)
+        if (this.getStatus().isOrAfter(ChunkStatus.FEATURES) && state != lastState && (state.getLightBlock(this, pos) != lastState.getLightBlock(this, pos)
             || state.getLightEmission() != lastState.getLightEmission() || state.useShapeForLightOcclusion() || lastState.useShapeForLightOcclusion())) {
 
             lightManager.checkBlock(pos);
@@ -458,7 +445,7 @@ public class CubePrimer extends ProtoChunk implements IBigCube, CubicLevelHeight
 
     @Override public void setBiomes(ChunkBiomeContainer biomes) {
         if (cubeBiomeContainer == null) {
-            cubeBiomeContainer = new CubeBiomeContainer(((BiomeContainerAccess) biomes).getBiomeRegistry(), this.levelHeightAccessor);
+            cubeBiomeContainer = new CubeBiomeContainer(((BiomeContainerAccess) biomes).getBiomeRegistry(), ((ProtoChunkAccess) this).getLevelHeightAccessor());
         }
 
         cubeBiomeContainer.setContainerForColumn(columnX, columnZ, biomes);
@@ -482,10 +469,6 @@ public class CubePrimer extends ProtoChunk implements IBigCube, CubicLevelHeight
 
     @Override public List<CompoundTag> getEntities() {
         return this.getCubeEntities();
-    }
-
-    @Override public void setStatus(ChunkStatus status) {
-        this.setCubeStatus(status);
     }
 
     @Override public Map<BlockPos, CompoundTag> getBlockEntityNbts() {
@@ -620,10 +603,6 @@ public class CubePrimer extends ProtoChunk implements IBigCube, CubicLevelHeight
     //BLOCK
     @Deprecated @Nullable @Override public BlockState setBlockState(BlockPos pos, BlockState state, boolean isMoving) {
         return setBlock(pos, state, isMoving);
-    }
-
-    @Deprecated @Override public ChunkStatus getStatus() {
-        return getCubeStatus();
     }
 
     @Override public BlockPos getHeighestPosition(Heightmap.Types type) {

@@ -239,10 +239,6 @@ public class BigCube implements ChunkAccess, IBigCube, CubicLevelHeightAccessor 
     }
 
     @Deprecated @Override public ChunkStatus getStatus() {
-        return this.getCubeStatus();
-    }
-
-    @Override public ChunkStatus getCubeStatus() {
         return ChunkStatus.FULL;
     }
 

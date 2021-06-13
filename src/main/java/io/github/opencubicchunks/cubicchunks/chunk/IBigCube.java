@@ -16,7 +16,6 @@ import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.ChunkAccess;
-import net.minecraft.world.level.chunk.ChunkStatus;
 import net.minecraft.world.level.chunk.FeatureAccess;
 import net.minecraft.world.level.chunk.LevelChunkSection;
 import net.minecraft.world.level.levelgen.Heightmap;
@@ -37,8 +36,6 @@ public interface IBigCube extends BlockGetter, ChunkAccess, FeatureAccess {
 
     CubePos getCubePos();
     LevelChunkSection[] getCubeSections();
-
-    ChunkStatus getCubeStatus();
 
     //BLOCK
     // this can't be setBlockState because the implementations also implement IChunk which already has setBlockState and this breaks obfuscation
