@@ -65,7 +65,6 @@ public class CubePrimer extends ProtoChunk implements IBigCube, CubicLevelHeight
     private static final FluidState EMPTY_FLUID = Fluids.EMPTY.defaultFluidState();
 
     private final CubePos cubePos;
-    private final LevelChunkSection[] sections;
     private final LevelHeightAccessor levelHeightAccessor;
     private ChunkStatus status = ChunkStatus.EMPTY;
 
@@ -126,15 +125,6 @@ public class CubePrimer extends ProtoChunk implements IBigCube, CubicLevelHeight
         this.cubePos = cubePosIn;
         this.levelHeightAccessor = levelHeightAccessor;
 
-        if (sectionsIn == null) {
-            this.sections = new LevelChunkSection[IBigCube.SECTION_COUNT];
-        } else {
-            if (sectionsIn.length == IBigCube.SECTION_COUNT) {
-                this.sections = sectionsIn;
-            } else {
-                throw new IllegalStateException("Number of Sections must equal IBigCube.CUBESIZE | " + IBigCube.SECTION_COUNT);
-            }
-        }
         isCubic = ((CubicLevelHeightAccessor) levelHeightAccessor).isCubic();
         generates2DChunks = ((CubicLevelHeightAccessor) levelHeightAccessor).generates2DChunks();
         worldStyle = ((CubicLevelHeightAccessor) levelHeightAccessor).worldStyle();
@@ -163,7 +153,7 @@ public class CubePrimer extends ProtoChunk implements IBigCube, CubicLevelHeight
     }
 
     @Override public LevelChunkSection[] getCubeSections() {
-        return this.sections;
+        return this.getSections();
     }
 
     //STATUS
@@ -181,14 +171,14 @@ public class CubePrimer extends ProtoChunk implements IBigCube, CubicLevelHeight
         int z = pos.getZ() & 0xF;
         int index = Coords.blockToIndex(pos.getX(), pos.getY(), pos.getZ());
 
-        LevelChunkSection section = this.sections[index];
+        LevelChunkSection section = this.getSections()[index];
         if (section == EMPTY_SECTION && state == EMPTY_BLOCK) {
             return state;
         }
 
         if (section == EMPTY_SECTION) {
             section = new LevelChunkSection(Coords.cubeToMinBlock(this.cubePos.getY() + Coords.sectionToMinBlock(Coords.indexToY(index))));
-            this.sections[index] = section;
+            this.getSections()[index] = section;
         }
 
         if (state.getLightEmission() > 0) {
@@ -351,7 +341,7 @@ public class CubePrimer extends ProtoChunk implements IBigCube, CubicLevelHeight
     }
 
     @Override public boolean isEmptyCube() {
-        for (LevelChunkSection section : this.sections) {
+        for (LevelChunkSection section : this.getSections()) {
             if (!LevelChunkSection.isEmpty(section)) {
                 return false;
             }
@@ -373,7 +363,7 @@ public class CubePrimer extends ProtoChunk implements IBigCube, CubicLevelHeight
         int y = pos.getY();
         int z = pos.getZ();
         int index = Coords.blockToIndex(x, y, z);
-        LevelChunkSection section = this.sections[index];
+        LevelChunkSection section = this.getSections()[index];
         if (!LevelChunkSection.isEmpty(section)) {
             return section.getFluidState(x & 15, y & 15, z & 15);
         } else {
@@ -618,7 +608,7 @@ public class CubePrimer extends ProtoChunk implements IBigCube, CubicLevelHeight
 
     @Override public BlockState getBlockState(int x, int y, int z) {
         int index = Coords.blockToIndex(x, y, z);
-        LevelChunkSection section = this.sections[index];
+        LevelChunkSection section = this.getSections()[index];
         return LevelChunkSection.isEmpty(section) ? EMPTY_BLOCK : section.getBlockState(x & 15, y & 15, z & 15);
     }
 
@@ -634,10 +624,6 @@ public class CubePrimer extends ProtoChunk implements IBigCube, CubicLevelHeight
 
     @Deprecated @Override public ChunkStatus getStatus() {
         return getCubeStatus();
-    }
-
-    @Deprecated @Override public LevelChunkSection[] getSections() {
-        return getCubeSections();
     }
 
     @Override public BlockPos getHeighestPosition(Heightmap.Types type) {
