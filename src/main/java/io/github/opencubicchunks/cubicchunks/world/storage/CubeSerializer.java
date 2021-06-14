@@ -196,7 +196,7 @@ public class CubeSerializer {
         if (chunkType == ChunkStatus.ChunkType.LEVELCHUNK) {
             //TODO: reimplement forge chunk load event
 //                net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.event.world.ChunkDataEvent.Load(icube, level, chunkstatus$type));
-            return new CubePrimerWrapper((BigCube) icube, world);
+            return new CubePrimerWrapper((BigCube) icube);
         } else {
             CubePrimer cubePrimer = (CubePrimer) icube;
             ListTag entitiesNBT = level.getList("Entities", 10);

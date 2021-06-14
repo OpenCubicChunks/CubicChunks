@@ -816,7 +816,7 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
                         //TODO: Verify this is ok
                         postLoadProtoChunk(this.level, ((CubePrimer) prevCube).getCubeEntities());
                     });
-                    ((ICubeHolder) holder).replaceProtoCube(new CubePrimerWrapper(cube, level));
+                    ((ICubeHolder) holder).replaceProtoCube(new CubePrimerWrapper(cube));
                 }
 
                 cube.setFullStatus(() -> ChunkHolder.getFullChunkStatus(holder.getTicketLevel()));
