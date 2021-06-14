@@ -1,16 +1,21 @@
 package io.github.opencubicchunks.cubicchunks.chunk;
 
+import java.util.BitSet;
 import java.util.Collection;
-import java.util.Collections;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Stream;
 
-import com.google.common.collect.Maps;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.CubePrimer;
 import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import io.github.opencubicchunks.cubicchunks.world.DummyHeightmap;
 import io.github.opencubicchunks.cubicchunks.world.storage.CubeProtoTickList;
+import it.unimi.dsi.fastutil.longs.LongSet;
+import it.unimi.dsi.fastutil.shorts.ShortList;
 import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.LevelHeightAccessor;
@@ -19,11 +24,18 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.ChunkAccess;
+import net.minecraft.world.level.chunk.ChunkBiomeContainer;
+import net.minecraft.world.level.chunk.ChunkStatus;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.chunk.LevelChunkSection;
 import net.minecraft.world.level.chunk.ProtoChunk;
+import net.minecraft.world.level.chunk.ProtoTickList;
 import net.minecraft.world.level.chunk.UpgradeData;
+import net.minecraft.world.level.levelgen.GenerationStep;
 import net.minecraft.world.level.levelgen.Heightmap;
+import net.minecraft.world.level.levelgen.feature.StructureFeature;
+import net.minecraft.world.level.levelgen.structure.StructureStart;
+import net.minecraft.world.level.lighting.LevelLightEngine;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.material.Fluids;
@@ -35,10 +47,11 @@ public class NoiseAndSurfaceBuilderHelper extends ProtoChunk implements CubicLev
     public static final int SECTION_COUNT = IBigCube.SECTION_COUNT + (IBigCube.DIAMETER_IN_SECTIONS * IBigCube.DIAMETER_IN_SECTIONS);
     public static final int Y_DIAMETER_IN_SECTIONS = IBigCube.DIAMETER_IN_SECTIONS + 1;
 
+    public static final DummyHeightmap DUMMY_HEIGHTMAP = new DummyHeightmap(Heightmap.Types.OCEAN_FLOOR_WG);
+
     private final ChunkAccess[] delegates;
     private int columnX;
     private int columnZ;
-    private final Map<Heightmap.Types, Heightmap> heightmaps;
     private final boolean isCubic;
     private final boolean generates2DChunks;
     private final WorldStyle worldStyle;
@@ -51,10 +64,10 @@ public class NoiseAndSurfaceBuilderHelper extends ProtoChunk implements CubicLev
         this.delegates = new ChunkAccess[2];
         this.delegates[0] = delegate;
         this.delegates[1] = delegateAbove;
-        this.heightmaps = Maps.newEnumMap(Heightmap.Types.class);
         isCubic = ((CubicLevelHeightAccessor) delegate).isCubic();
         generates2DChunks = ((CubicLevelHeightAccessor) delegate).generates2DChunks();
         worldStyle = ((CubicLevelHeightAccessor) delegate).worldStyle();
+
     }
 
     public void moveColumn(int newColumnX, int newColumnZ) {
@@ -90,9 +103,11 @@ public class NoiseAndSurfaceBuilderHelper extends ProtoChunk implements CubicLev
     }
 
     @Override public Heightmap getOrCreateHeightmapUnprimed(Heightmap.Types type) {
-        return this.heightmaps.computeIfAbsent(type, (typex) -> {
-            return new DummyHeightmap(this, typex); //Essentially do nothing here.
-        });
+        return DUMMY_HEIGHTMAP;
+    }
+
+    @Override public Collection<Map.Entry<Heightmap.Types, Heightmap>> getHeightmaps() {
+        return this.delegates[0].getHeightmaps();
     }
 
     @Override public ChunkPos getPos() {
@@ -117,10 +132,6 @@ public class NoiseAndSurfaceBuilderHelper extends ProtoChunk implements CubicLev
         return cubeSections[sectionIndex];
     }
 
-
-    @Override public Collection<Map.Entry<Heightmap.Types, Heightmap>> getHeightmaps() {
-        return Collections.unmodifiableSet(this.heightmaps.entrySet());
-    }
 
     @Override public int getSectionIndex(int y) {
         return Coords.blockToCubeLocalSection(y) + IBigCube.DIAMETER_IN_SECTIONS * getDelegateIndex(Coords.blockToCube(y));

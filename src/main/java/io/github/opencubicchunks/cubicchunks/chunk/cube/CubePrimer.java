@@ -12,7 +12,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Stream;
 
 import javax.annotation.Nullable;
 
@@ -85,7 +84,6 @@ public class CubePrimer extends ProtoChunk implements IBigCube, CubicLevelHeight
 
     private volatile boolean modified = true;
 
-    private final List<BlockPos> lightPositions = Lists.newArrayList();
     private volatile boolean hasLight;
     private LevelLightEngine lightManager;
 
@@ -170,7 +168,7 @@ public class CubePrimer extends ProtoChunk implements IBigCube, CubicLevelHeight
 
         if (state.getLightEmission() > 0) {
             SectionPos sectionPosAtIndex = Coords.sectionPosByIndex(this.cubePos, index);
-            this.lightPositions.add(new BlockPos(
+            ((ProtoChunkAccess) this).getLights().add(new BlockPos(
                 x + Coords.sectionToMinBlock(sectionPosAtIndex.getX()),
                 y + Coords.sectionToMinBlock(sectionPosAtIndex.getY()),
                 z + Coords.sectionToMinBlock(sectionPosAtIndex.getZ()))
@@ -295,9 +293,6 @@ public class CubePrimer extends ProtoChunk implements IBigCube, CubicLevelHeight
         this.setDirty(true);
     }
 
-    @Override public Stream<BlockPos> getCubeLightSources() {
-        return this.lightPositions.stream();
-    }
 
     public void addCubeLightValue(short packedPosition, int yOffset) {
         this.addCubeLightPosition(unpackToWorld(packedPosition, yOffset, this.cubePos));
@@ -308,7 +303,7 @@ public class CubePrimer extends ProtoChunk implements IBigCube, CubicLevelHeight
      */
     //TODO: DO NOT Make THE SAME Cube's generation multithreaded in ChunkStatus Noise.
     public synchronized void addCubeLightPosition(BlockPos lightPos) {
-        this.lightPositions.add(lightPos.immutable());
+        ((ProtoChunkAccess) this).getLights().add(lightPos.immutable());
     }
 
     public void setCubeLightManager(LevelLightEngine newLightEngine) {
@@ -334,6 +329,10 @@ public class CubePrimer extends ProtoChunk implements IBigCube, CubicLevelHeight
             }
         }
         return true;
+    }
+
+    @Override public List<BlockPos> getLightsRaw() {
+        return ((ProtoChunkAccess) this).getLights();
     }
 
     @Override public void setCubeInhabitedTime(long newInhabitedTime) {
@@ -546,10 +545,6 @@ public class CubePrimer extends ProtoChunk implements IBigCube, CubicLevelHeight
     //MISC
     @Deprecated @Override public void setUnsaved(boolean newUnsaved) {
         setDirty(newUnsaved);
-    }
-
-    @Deprecated @Override public Stream<BlockPos> getLights() {
-        return getCubeLightSources();
     }
 
     @Deprecated @Override public void setLightCorrect(boolean lightCorrectIn) {

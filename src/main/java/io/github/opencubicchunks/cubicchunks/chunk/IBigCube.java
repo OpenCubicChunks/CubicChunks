@@ -1,8 +1,8 @@
 package io.github.opencubicchunks.cubicchunks.chunk;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Stream;
 
 import javax.annotation.Nullable;
 
@@ -37,6 +37,8 @@ public interface IBigCube extends BlockGetter, ChunkAccess, FeatureAccess {
     CubePos getCubePos();
     LevelChunkSection[] getCubeSections();
 
+    List<BlockPos> getLightsRaw();
+
     //BLOCK
     // this can't be setBlockState because the implementations also implement IChunk which already has setBlockState and this breaks obfuscation
     @Nullable BlockState setBlock(BlockPos pos, BlockState state, boolean isMoving);
@@ -67,8 +69,6 @@ public interface IBigCube extends BlockGetter, ChunkAccess, FeatureAccess {
     //can't be set/hasLight due to obfuscation issues with IChunk
     boolean hasCubeLight();
     void setCubeLight(boolean lightCorrectIn);
-
-    Stream<BlockPos> getCubeLightSources();
 
     //MISC
     // can't be isModified due to obfuscation issues with IChunk

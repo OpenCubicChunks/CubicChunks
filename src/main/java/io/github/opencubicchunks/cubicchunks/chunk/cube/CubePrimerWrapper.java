@@ -1,6 +1,7 @@
 package io.github.opencubicchunks.cubicchunks.chunk.cube;
 
 import java.util.BitSet;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
@@ -8,6 +9,7 @@ import javax.annotation.Nullable;
 
 import io.github.opencubicchunks.cubicchunks.chunk.ImposterChunkPos;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
+import io.github.opencubicchunks.cubicchunks.mixin.access.common.ProtoChunkAccess;
 import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import io.github.opencubicchunks.cubicchunks.world.storage.CubeProtoTickList;
 import it.unimi.dsi.fastutil.longs.LongSet;
@@ -148,16 +150,16 @@ public class CubePrimerWrapper extends CubePrimer {
         return this.cube.hasCubeLight();
     }
 
-    @Deprecated @Override public Stream<BlockPos> getLights() {
-        return this.getCubeLightSources();
-    }
-
-    @Override public Stream<BlockPos> getCubeLightSources() {
-        return this.cube.getCubeLightSources();
-    }
-
     @Override public int getMaxLightLevel() {
         return this.cube.getMaxLightLevel();
+    }
+
+    @Override public Stream<BlockPos> getLights() {
+        return this.cube.getLights();
+    }
+
+    @Override public List<BlockPos> getLightsRaw() {
+        return ((ProtoChunkAccess) this.cube).getLights();
     }
 
     //MISC
