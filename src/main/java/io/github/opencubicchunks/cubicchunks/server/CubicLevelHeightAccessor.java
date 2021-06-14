@@ -18,9 +18,6 @@ public interface CubicLevelHeightAccessor {
         return worldStyle().generates2DChunks();
     }
 
-    default void setWorldStyle(WorldStyle worldStyle) {
-    }
-
     enum WorldStyle {
         CUBIC(true, false), // Primary Implementation (Generate Chunks 3D, infinite world height)
         HYBRID(true, true), // Soft implementation (Vanilla Chunk Generation, infinite world height)

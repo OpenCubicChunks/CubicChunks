@@ -19,6 +19,7 @@ import io.github.opencubicchunks.cubicchunks.config.reloadlisteners.HeightSettin
 import io.github.opencubicchunks.cubicchunks.config.reloadlisteners.WorldStyleReloadListener;
 import io.github.opencubicchunks.cubicchunks.meta.EarlyConfig;
 import io.github.opencubicchunks.cubicchunks.network.PacketDispatcher;
+import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import io.github.opencubicchunks.cubicchunks.world.biome.StripedBiomeSource;
 import io.github.opencubicchunks.cubicchunks.world.gen.feature.CCFeatures;
 import io.github.opencubicchunks.cubicchunks.world.gen.placement.CCPlacement;
@@ -50,6 +51,8 @@ public class CubicChunks implements ModInitializer {
     public static final int MAX_SUPPORTED_HEIGHT = Integer.MAX_VALUE / 2;
     public static final int MIN_SUPPORTED_HEIGHT = -MAX_SUPPORTED_HEIGHT;
     public static final int SEA_LEVEL = 64;
+
+    public static CubicLevelHeightAccessor.WorldStyle currentClientStyle = CubicLevelHeightAccessor.WorldStyle.CHUNK;
 
     public static final String MODID = "cubicchunks";
     public static final Logger LOGGER = LogManager.getLogger();
