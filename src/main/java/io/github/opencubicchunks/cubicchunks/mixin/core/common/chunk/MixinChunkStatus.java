@@ -227,11 +227,11 @@ public class MixinChunkStatus {
 
                     ChunkPos pos = chunk.getPos();
 
-                    NoiseAndSurfaceBuilderHelper cubeAccessWrapper = new NoiseAndSurfaceBuilderHelper((IBigCube) chunk, cubeAbove);
-                    cubeAccessWrapper.moveColumn(columnX, columnZ);
+                    NoiseAndSurfaceBuilderHelper noiseAndSurfaceBuilderHelper = new NoiseAndSurfaceBuilderHelper((IBigCube) chunk, cubeAbove);
+                    noiseAndSurfaceBuilderHelper.moveColumn(columnX, columnZ);
                     CompletableFuture<ChunkAccess> chunkAccessCompletableFuture =
-                        generator.fillFromNoise(executor, world.structureFeatureManager().forWorldGenRegion(cubeWorldGenRegion), cubeAccessWrapper).thenApply(chunkAccess -> {
-                            cubeAccessWrapper.applySections();
+                        generator.fillFromNoise(executor, world.structureFeatureManager().forWorldGenRegion(cubeWorldGenRegion), noiseAndSurfaceBuilderHelper).thenApply(chunkAccess -> {
+                            noiseAndSurfaceBuilderHelper.applySections();
 
 
                             // Exit early and don't waste time on empty sections.
@@ -242,8 +242,10 @@ public class MixinChunkStatus {
                             generator.buildSurfaceAndBedrock(cubeWorldGenRegion, chunkAccess);
 
                             // Carvers
-                            generator.applyCarvers(world.getSeed(), world.getBiomeManager(), cubeAccessWrapper, GenerationStep.Carving.AIR);
-                            generator.applyCarvers(world.getSeed(), world.getBiomeManager(), cubeAccessWrapper, GenerationStep.Carving.LIQUID);
+
+                            noiseAndSurfaceBuilderHelper.setNeedsExtraHeight(false);
+                            generator.applyCarvers(world.getSeed(), world.getBiomeManager(), noiseAndSurfaceBuilderHelper, GenerationStep.Carving.AIR);
+                            generator.applyCarvers(world.getSeed(), world.getBiomeManager(), noiseAndSurfaceBuilderHelper, GenerationStep.Carving.LIQUID);
                             return chunkAccess;
                         });
                     if (completableFuture == null) {
