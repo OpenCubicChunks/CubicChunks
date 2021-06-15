@@ -212,6 +212,10 @@ public class CubeWorldGenRegion extends WorldGenRegion implements ICubicWorld {
     }
 
     public IBigCube getCube(int x, int y, int z, ChunkStatus requiredStatus, boolean nonnull) {
+        if (x == this.mainCubeX && y == this.mainCubeY && z == this.mainCubeZ) {
+            return (IBigCube) this.access;
+        }
+
         IBigCube icube;
         if (this.cubeExists(x, y, z)) {
             int dx = x - this.minCubeX;
@@ -422,6 +426,10 @@ public class CubeWorldGenRegion extends WorldGenRegion implements ICubicWorld {
     public Biome getNoiseBiome(int x, int y, int z) {
         IBigCube cube = this.getCube(Coords.blockToCube(x), Coords.blockToCube(y), Coords.blockToCube(z), ChunkStatus.BIOMES, false);
         return cube != null && cube.getBiomes() != null ? cube.getBiomes().getNoiseBiome(x, y, z) : this.getUncachedNoiseBiome(x, y, z);
+    }
+
+    @Override public Biome getBiome(BlockPos pos) {
+        return super.getBiome(pos);
     }
 
     @Override public boolean isClientSide() {

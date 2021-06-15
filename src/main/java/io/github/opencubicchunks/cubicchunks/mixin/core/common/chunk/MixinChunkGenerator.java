@@ -20,11 +20,12 @@ import io.github.opencubicchunks.cubicchunks.chunk.util.CCWorldGenUtils;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.OverworldBiomeSourceAccess;
 import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
+import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import io.github.opencubicchunks.cubicchunks.world.CubeWorldGenRandom;
 import io.github.opencubicchunks.cubicchunks.world.CubeWorldGenRegion;
 import io.github.opencubicchunks.cubicchunks.world.biome.BiomeGetter;
 import io.github.opencubicchunks.cubicchunks.world.biome.StripedBiomeSource;
-import io.github.opencubicchunks.cubicchunks.world.surfacebuilder.ChunkGeneratorFluidStateObtainer;
+import io.github.opencubicchunks.cubicchunks.world.surfacebuilder.ChunkGeneratorSurfaceBuilderContextObtainer;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.MappingResolver;
 import net.minecraft.CrashReport;
@@ -92,8 +93,6 @@ public abstract class MixinChunkGenerator implements ICubeGenerator {
     @Shadow protected abstract Codec<? extends ChunkGenerator> codec();
 
     @Shadow public abstract void buildSurfaceAndBedrock(WorldGenRegion region, ChunkAccess chunk);
-
-    @Shadow public abstract void applyCarvers(long seed, BiomeManager access, ChunkAccess chunkAccess, GenerationStep.Carving carver);
 
     private SurfaceNoise surfaceNoise;
 
@@ -262,6 +261,7 @@ public abstract class MixinChunkGenerator implements ICubeGenerator {
 
         //Y value stays 32
         CubeWorldGenRandom worldgenRandom = new CubeWorldGenRandom();
+        boolean generateFeatures = structureManager.shouldGenerateFeatures();
 
         //Get each individual column from a given cube no matter the size. Where y height is the same per column.
         //Feed the given columnMinPos into the feature decorators.
@@ -278,8 +278,17 @@ public abstract class MixinChunkGenerator implements ICubeGenerator {
                 long seed = worldgenRandom.setDecorationSeed(region.getSeed(), columnMinPos.getX(), columnMinPos.getY(), columnMinPos.getZ());
 
                 Biome biome = ((ChunkGenerator) (Object) this).getBiomeSource().getPrimaryBiome(new ChunkPos(cubeToSection(mainCubeX, columnX), cubeToSection(mainCubeZ, columnZ)));
+
+                int minSectionX = Coords.sectionToMinBlock(Coords.blockToSection(columnMinPos.getX()));
+                int minSectionY = Coords.sectionToMinBlock(Coords.blockToSection(columnMinPos.getY()));
+                int minSectionZ = Coords.sectionToMinBlock(Coords.blockToSection(columnMinPos.getZ()));
+
+
+                BoundingBox boundingBox =
+                    new BoundingBox(minSectionX, minSectionY, minSectionZ, minSectionX + 15, minSectionY + IBigCube.DIAMETER_IN_BLOCKS - 1, minSectionZ + 15);
+
                 try {
-                    ((BiomeGetter) (Object) biome).generate(structureManager, ((ChunkGenerator) (Object) this), region, seed, worldgenRandom, columnMinPos);
+                    ((BiomeGetter) (Object) biome).generate(structureManager, ((ChunkGenerator) (Object) this), region, seed, worldgenRandom, columnMinPos, generateFeatures, boundingBox);
                 } catch (Exception e) {
                     CrashReport crashReport = CrashReport.forThrowable(e, "Biome decoration");
                     crashReport.addCategory("Generation").setDetail("CubeX", mainCubeX).setDetail("CubeY", mainCubeY).setDetail("CubeZ", mainCubeZ).setDetail("Seed", seed)
@@ -290,7 +299,9 @@ public abstract class MixinChunkGenerator implements ICubeGenerator {
         }
     }
 
-    BlockState fluidState = null;
+    private BlockState fluidState = null;
+    private int minSurfaceLevel;
+    private final BaseStoneSource stoneSource = this.getBaseStoneSource();
 
     @Override public void buildSurfaceAndBedrockCC(WorldGenRegion region, ChunkAccess chunk) {
         ChunkPos chunkPos = chunk.getPos();
@@ -301,12 +312,25 @@ public abstract class MixinChunkGenerator implements ICubeGenerator {
         int minBlockX = chunkPos.getMinBlockX();
         int minBlockZ = chunkPos.getMinBlockZ();
         BlockPos.MutableBlockPos mutable = new BlockPos.MutableBlockPos();
+        int seaLevel = this.getSeaLevel();
 
         if (fluidState == null) {
             mutable.set(minBlockX, chunk.getHeight(Heightmap.Types.WORLD_SURFACE_WG, minBlockX, minBlockZ) + 1, minBlockZ);
             buildSurfaceAndBedrock(region, ((NoiseAndSurfaceBuilderHelper) chunk).delegateAbove()); // Use the thrown away cube.
-            fluidState = ((ChunkGeneratorFluidStateObtainer) region.getBiome(mutable).getGenerationSettings().getSurfaceBuilder().get()).getDefaultFluidBlockState();
+            fluidState = ((ChunkGeneratorSurfaceBuilderContextObtainer) region.getBiome(mutable).getGenerationSettings().getSurfaceBuilder().get()).getDefaultFluidBlockState();
+            minSurfaceLevel = ((ChunkGeneratorSurfaceBuilderContextObtainer) region.getBiome(mutable).getGenerationSettings().getSurfaceBuilder().get()).getMinSurfaceHeight();
         }
+
+        int fastMinSurfaceHeight = minSurfaceLevel;
+
+        if (chunk.getMinBuildHeight() > fastMinSurfaceHeight) {
+            fastMinSurfaceHeight = chunk.getMinBuildHeight();
+        } else if (chunk.getMaxBuildHeight() < fastMinSurfaceHeight) {
+            fastMinSurfaceHeight = Integer.MAX_VALUE;
+        }
+
+
+        long seed = region.getSeed();
 
         for (int moveX = 0; moveX < 16; ++moveX) {
             for (int moveZ = 0; moveZ < 16; ++moveZ) {
@@ -314,11 +338,10 @@ public abstract class MixinChunkGenerator implements ICubeGenerator {
                 int worldZ = minBlockZ + moveZ;
                 int worldSurfaceHeight = chunk.getHeight(Heightmap.Types.WORLD_SURFACE_WG, moveX, moveZ) + 1;
                 double surfaceNoise = this.surfaceNoise.getSurfaceNoiseValue((double) worldX * 0.0625D, (double) worldZ * 0.0625D, 0.0625D, (double) moveX * 0.0625D) * 15.0D;
-                int minSurfaceLevel = 0;
 
                 region.getBiome(mutable.set(minBlockX + moveX, worldSurfaceHeight, minBlockZ + moveZ))
-                    .buildSurfaceAt(worldgenRandom, chunk, worldX, worldZ, worldSurfaceHeight, surfaceNoise, this.getBaseStoneSource().getBaseBlock(mutable), fluidState, this.getSeaLevel(),
-                        minSurfaceLevel, region.getSeed());
+                    .buildSurfaceAt(worldgenRandom, chunk, worldX, worldZ, worldSurfaceHeight, surfaceNoise, stoneSource.getBaseBlock(mutable), fluidState, seaLevel,
+                        fastMinSurfaceHeight, seed);
             }
         }
     }
