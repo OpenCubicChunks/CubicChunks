@@ -19,7 +19,9 @@ import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.config.ChunkGeneratorSettings;
 import io.github.opencubicchunks.cubicchunks.config.reloadlisteners.ChunkGeneratorSettingsReloadListener;
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.ChunkGeneratorAccess;
+import io.github.opencubicchunks.cubicchunks.mixin.access.common.ChunkManagerAccess;
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.StructureFeatureManagerAccess;
+import io.github.opencubicchunks.cubicchunks.mixin.access.common.ThreadedLevelLightEngineAccess;
 import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import io.github.opencubicchunks.cubicchunks.world.CubeWorldGenRegion;
@@ -462,6 +464,10 @@ public class MixinChunkStatus {
         }
 
         if (!(chunk instanceof CubePrimer)) {
+            ChunkPos pos = chunk.getPos();
+            ((ThreadedLevelLightEngineAccess) lightManager).invokeAddTask(pos.x, pos.z, ThreadedLevelLightEngine.TaskType.PRE_UPDATE, () -> {
+                ((ChunkManagerAccess) ((ThreadedLevelLightEngineAccess) lightManager).getChunkMap()).invokeReleaseLightTicket(pos);
+            });
             if (!chunk.getStatus().isOrAfter(status)) {
                 ((ProtoChunk) chunk).setStatus(status);
             }

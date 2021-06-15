@@ -10,9 +10,11 @@ import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.levelgen.Heightmap;
 
 public class SurfaceTrackerWrapper extends Heightmap {
-    private final SurfaceTrackerSection surfaceTracker;
-    private final int dx;
-    private final int dz;
+    protected final SurfaceTrackerSection surfaceTracker;
+    /** global x of min block in column */
+    protected final int dx;
+    /** global z of min block in column */
+    protected final int dz;
 
     public SurfaceTrackerWrapper(ChunkAccess chunkAccess, Types types) {
         super(chunkAccess, types);
@@ -22,14 +24,30 @@ public class SurfaceTrackerWrapper extends Heightmap {
         this.dz = sectionToMinBlock(chunkAccess.getPos().z);
     }
 
+    protected SurfaceTrackerWrapper(ChunkAccess chunkAccess, Types types, SurfaceTrackerSection root) {
+        super(chunkAccess, types);
+        ((HeightmapAccess) this).setIsOpaque(null);
+        this.surfaceTracker = root;
+        this.dx = sectionToMinBlock(chunkAccess.getPos().x);
+        this.dz = sectionToMinBlock(chunkAccess.getPos().z);
+    }
+
+    /**
+     *
+     * @param x column-local x
+     * @param y global y
+     * @param z column-local z
+     * @param blockState unused.
+     * @return currently unused; always false
+     */
     @Override
     public boolean update(int x, int y, int z, BlockState blockState) {
-        // TODO do we need to do anything else here?
         surfaceTracker.getCubeNode(blockToCube(y)).markDirty(x + dx, z + dz);
-        // TODO not sure if this is safe to do or if things depend on the result
+        // We always return false, because the result is never used anywhere anyway (by either vanilla or us)
         return false;
     }
 
+    /** x/z are column-local. */
     @Override
     public int getFirstAvailable(int x, int z) {
         return surfaceTracker.getHeight(x + dx, z + dz) + 1;
