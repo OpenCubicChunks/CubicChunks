@@ -10,8 +10,11 @@ import io.github.opencubicchunks.cubicchunks.chunk.NonAtomicWorldgenRandom;
 import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.WorldGenRegion;
+import net.minecraft.server.level.WorldGenRegion;
+import net.minecraft.core.BlockPos;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.StructureFeatureManager;
 import net.minecraft.world.level.biome.BiomeSource;
 import net.minecraft.world.level.block.state.BlockState;
@@ -21,7 +24,6 @@ import net.minecraft.world.level.levelgen.BaseStoneSource;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.levelgen.NoiseBasedChunkGenerator;
 import net.minecraft.world.level.levelgen.NoiseGeneratorSettings;
-import net.minecraft.world.level.levelgen.NoiseSampler;
 import net.minecraft.world.level.levelgen.NoiseSettings;
 import net.minecraft.world.level.levelgen.WorldgenRandom;
 import net.minecraft.world.level.levelgen.synth.NormalNoise;
@@ -40,9 +42,19 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public abstract class MixinNoiseBasedChunkGenerator {
     @Mutable @Shadow @Final protected Supplier<NoiseGeneratorSettings> settings;
 
+    @Shadow @Final protected BlockState defaultFluid;
+
+    @Mutable @Shadow @Final int cellCountY;
+
     @Shadow @Final private int cellHeight;
 
-    @Mutable @Shadow @Final private int cellCountY;
+    @Shadow @Final private NormalNoise barrierNoise;
+
+    @Shadow @Final private NormalNoise waterLevelNoise;
+
+    @Shadow @Final private NormalNoise lavaNoise;
+
+    @Shadow public abstract int getSeaLevel();
 
     @Shadow @Final private BaseStoneSource baseStoneSource;
     @Shadow @Final protected BlockState defaultFluid;
@@ -132,7 +144,7 @@ public abstract class MixinNoiseBasedChunkGenerator {
 
         long seed = region.getSeed();
 
-        int fastMinSurfaceHeight = settings.get().getMinSurfaceLevel();
+        int fastMinSurfaceHeight = region.getLevel().dimension() == Level.NETHER ? chunk.getMinBuildHeight() : settings.get().getMinSurfaceLevel();
 
         if (chunk.getMinBuildHeight() > fastMinSurfaceHeight) {
             fastMinSurfaceHeight = chunk.getMinBuildHeight();
@@ -155,18 +167,28 @@ public abstract class MixinNoiseBasedChunkGenerator {
         }
     }
 
-    @Redirect(
-        method = "getAquifer",
-        at = @At(
-            value = "INVOKE",
-            target = "Lnet/minecraft/world/level/levelgen/Aquifer;create(Lnet/minecraft/world/level/ChunkPos;Lnet/minecraft/world/level/levelgen/synth/NormalNoise;"
-                + "Lnet/minecraft/world/level/levelgen/synth/NormalNoise;Lnet/minecraft/world/level/levelgen/synth/NormalNoise;Lnet/minecraft/world/level/levelgen/NoiseGeneratorSettings;"
-                + "Lnet/minecraft/world/level/levelgen/NoiseSampler;II)Lnet/minecraft/world/level/levelgen/Aquifer;"
-        )
-    )
-    private Aquifer createNoiseAquifer(
-        ChunkPos chunkPos, NormalNoise barrierNoise, NormalNoise levelNoise, NormalNoise lavaNoise,
-        NoiseGeneratorSettings noiseGeneratorSettings, NoiseSampler noiseSampler, int minY, int sizeY) {
-        return new CubicAquifer(chunkPos, barrierNoise, levelNoise, lavaNoise, noiseGeneratorSettings, minY, sizeY);
+    @Redirect(method = "buildSurfaceAndBedrock", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/levelgen/NoiseBasedChunkGenerator;getSeaLevel()I"))
+    private int noSeaLevelNether(NoiseBasedChunkGenerator noiseBasedChunkGenerator, WorldGenRegion region, ChunkAccess chunk) {
+        if (!((CubicLevelHeightAccessor) region).isCubic()) {
+            return this.getSeaLevel();
+        }
+        if (region.getLevel().dimension() == Level.NETHER) {
+            return chunk.getMinBuildHeight(); // The nether has no sea level for cubic chunks so, so no sea level :P
+        }
+        return this.getSeaLevel();
+    }
+
+
+    @Inject(method = "getAquifer", at = @At("HEAD"), cancellable = true)
+    private void createNoiseAquifer(int minY, int sizeY, ChunkPos chunkPos, CallbackInfoReturnable<Aquifer> cir) {
+        if (!this.settings.get().noiseSettings().islandNoiseOverride()) {
+            cir.setReturnValue(
+                new CubicAquifer(chunkPos, this.barrierNoise, this.waterLevelNoise, this.lavaNoise, this.settings.get(), minY * cellHeight, sizeY * cellHeight, this.defaultFluid));
+        }
+    }
+
+    @Redirect(method = "createAquifer", at = @At(value = "INVOKE", target = "Ljava/lang/Math;max(II)I"))
+    private int useChunkMinHeight(int a, int b, ChunkAccess chunk) {
+        return !((CubicLevelHeightAccessor) chunk).isCubic() ? Math.max(a, b) : chunk.getMinBuildHeight();
     }
 }
