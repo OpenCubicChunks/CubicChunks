@@ -10,8 +10,6 @@ import io.github.opencubicchunks.cubicchunks.chunk.NonAtomicWorldgenRandom;
 import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.WorldGenRegion;
-import net.minecraft.server.level.WorldGenRegion;
-import net.minecraft.core.BlockPos;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
@@ -57,9 +55,6 @@ public abstract class MixinNoiseBasedChunkGenerator {
     @Shadow public abstract int getSeaLevel();
 
     @Shadow @Final private BaseStoneSource baseStoneSource;
-    @Shadow @Final protected BlockState defaultFluid;
-
-    @Shadow public abstract int getSeaLevel();
 
     @Shadow @Final private SurfaceNoise surfaceNoise;
 

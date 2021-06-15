@@ -16,7 +16,6 @@ import io.github.opencubicchunks.cubicchunks.config.reloadlisteners.HeightSettin
 import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import io.github.opencubicchunks.cubicchunks.world.CubeWorldGenRandom;
 import io.github.opencubicchunks.cubicchunks.world.CubeWorldGenRegion;
-import io.github.opencubicchunks.cubicchunks.world.SetupCubeStructureStart;
 import io.github.opencubicchunks.cubicchunks.world.biome.BiomeGetter;
 import io.github.opencubicchunks.cubicchunks.world.gen.feature.CCFeatures;
 import net.minecraft.CrashReport;
@@ -25,6 +24,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Registry;
 import net.minecraft.core.SectionPos;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.StructureFeatureManager;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.biome.BiomeGenerationSettings;
@@ -84,9 +84,10 @@ public class MixinBiome implements BiomeGetter {
                     random.setDecorationSeed(seed, k, genStepIDX);
 
                     try {
+                        region.usesRegionHeightMap();
                         structureManager.startsForFeature(SectionPos.of(blockPos), structure).forEach((structureStart) -> {
-                            ((SetupCubeStructureStart) structureStart).placeInCube(region, structureManager, chunkGenerator, random,
-                                structureBoundingBox, blockPos);
+                            structureStart.placeInChunk(region, structureManager, chunkGenerator, random,
+                                structureBoundingBox, new ChunkPos(blockPos));
                         });
                     } catch (Exception e) {
                         CrashReport crashReport = CrashReport.forThrowable(e, "Structure Feature placement");
@@ -117,6 +118,7 @@ public class MixinBiome implements BiomeGetter {
 
                     if (!featureBlacklist.contains(key)) {
                         try {
+                            region.usesCubeHeightMap();
                             configuredFeature.place(region, chunkGenerator, random, blockPos);
                         } catch (Exception e) {
                             CrashReport crashReport2 = CrashReport.forThrowable(e, "Feature placement");
