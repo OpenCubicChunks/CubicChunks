@@ -9,6 +9,7 @@
     },
     "mixins": [
         "common.BiomeContainerAccess",
+        "common.ChunkGeneratorAccess",
         "common.ChunkHolderAccess",
         "common.ChunkManagerAccess",
         "common.ChunkSectionAccess",
@@ -33,7 +34,7 @@
         "common.TicketManagerAccess",
         "common.TicketTypeAccess",
         "common.VerticalAnchorAccess",
-        "common.ChunkGeneratorAccess"
+        "common.WorldGenRegionAccess"
     ],
     "client": [
         "client.ChunkRenderDispatcherAccess",

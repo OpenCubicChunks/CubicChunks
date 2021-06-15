@@ -52,14 +52,14 @@ public abstract class MixinPlayerList implements IVerticalView {
         }
     }
 
-    @Inject(method = "placeNewPlayer", at = @At(value = "NEW", target = "net/minecraft/network/protocol/game/ClientboundLoginPacket", ordinal = 1))
-    private void sendCubeInfo(Connection connection, ServerPlayer player, CallbackInfo ci) {
+    @Inject(method = "placeNewPlayer", at = @At(value = "NEW", target = "net/minecraft/network/protocol/game/ClientboundLoginPacket"))
+    private void sendCubeInfoLogin(Connection connection, ServerPlayer player, CallbackInfo ci) {
         PacketDispatcher.sendTo(new PacketCCLevelInfo(((CubicLevelHeightAccessor) player.getLevel()).worldStyle()), player);
     }
 
     @SuppressWarnings("UnresolvedMixinReference")
     @Inject(method = "*", at = @At(value = "NEW", target = "net/minecraft/network/protocol/game/ClientboundRespawnPacket"))
-    private void sendCubeInfo(ServerPlayer player, boolean alive, CallbackInfoReturnable<ServerPlayer> cir) {
+    private void sendCubeInfoRespawn(ServerPlayer player, boolean alive, CallbackInfoReturnable<ServerPlayer> cir) {
         PacketDispatcher.sendTo(new PacketCCLevelInfo(((CubicLevelHeightAccessor) player.getLevel()).worldStyle()), player);
     }
 }

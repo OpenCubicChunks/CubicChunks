@@ -49,6 +49,7 @@
         "common.world.biome.MixinBiome",
         "common.world.biome.MixinBiomeDefaultFeatures",
         "common.world.feature.MixinBlockBlobFeature",
+        "common.world.feature.MixinCocoaDecorator",
         "common.world.feature.MixinDecoratedFeature",
         "common.world.feature.MixinIcebergFeature",
         "common.world.feature.MixinLakeFeature",
@@ -59,6 +60,7 @@
         "common.world.lighting.MixinSectionLightStorage",
         "common.world.lighting.MixinWorldLightManager",
         "common.world.MixinAbstractChunkProvider",
+        "common.world.MixinConfiguredSurfaceBuilder",
         "common.world.MixinFuzzyOffsetConstantColumnBiomeZoomer",
         "common.world.MixinLevelHeightAccessor",
         "common.world.MixinNaturalSpawner",
@@ -84,8 +86,7 @@
         "common.world.structure.MixinStructureFeatureManager",
         "common.world.structure.MixinStructurePiece",
         "common.world.structure.MixinStructureStart",
-        "common.world.structure.pieces.MixinOceanRuinPieces",
-        "common.world.MixinConfiguredSurfaceBuilder"
+        "common.world.structure.pieces.MixinOceanRuinPieces"
     ],
     "client": [
         "client.chunk.MixinChunk",
