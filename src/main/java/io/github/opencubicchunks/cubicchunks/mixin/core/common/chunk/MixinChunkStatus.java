@@ -216,7 +216,6 @@ public class MixinChunkStatus {
 
             CubePrimer cubeAbove = new CubePrimer(CubePos.of(cubePos.getX(), cubeY + 1,
                 cubePos.getZ()), UpgradeData.EMPTY, cubeWorldGenRegion);
-            NoiseAndSurfaceBuilderHelper cubeAccessWrapper = new NoiseAndSurfaceBuilderHelper((IBigCube) chunk, cubeAbove);
 
             CompletableFuture<ChunkAccess> chainedNoiseFutures = null;
 
@@ -229,6 +228,7 @@ public class MixinChunkStatus {
 
                     ChunkPos pos = chunk.getPos();
 
+                    NoiseAndSurfaceBuilderHelper cubeAccessWrapper = new NoiseAndSurfaceBuilderHelper((IBigCube) chunk, cubeAbove);
                     cubeAccessWrapper.moveColumn(columnX, columnZ);
 
                     if (chainedNoiseFutures == null) {
