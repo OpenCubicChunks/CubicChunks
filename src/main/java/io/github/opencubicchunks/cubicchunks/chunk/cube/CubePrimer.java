@@ -11,7 +11,6 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 
 import javax.annotation.Nullable;
@@ -121,7 +120,7 @@ public class CubePrimer extends ProtoChunk implements IBigCube, CubicLevelHeight
         this.carvingMasks = new Object2ObjectArrayMap<>();
 
         this.structureStarts = Maps.newHashMap();
-        this.structuresRefences = new ConcurrentHashMap<>(); // Maps.newHashMap(); //TODO: This should NOT be a ConcurrentHashMap
+        this.structuresRefences = Maps.newHashMap();
 
         this.cubePos = cubePosIn;
         this.levelHeightAccessor = levelHeightAccessor;
@@ -326,12 +325,7 @@ public class CubePrimer extends ProtoChunk implements IBigCube, CubicLevelHeight
         this.addCubeLightPosition(unpackToWorld(packedPosition, yOffset, this.cubePos));
     }
 
-    /**
-     * Due to splitting the same cube into several threads in MixinChunkStatus,
-     * we have to make this method synchronized to ensure we aren't letting null values slip by.
-     */
-    //TODO: DO NOT Make THE SAME Cube's generation multithreaded in ChunkStatus Noise.
-    public synchronized void addCubeLightPosition(BlockPos lightPos) {
+    public void addCubeLightPosition(BlockPos lightPos) {
         this.lightPositions.add(lightPos.immutable());
     }
 
