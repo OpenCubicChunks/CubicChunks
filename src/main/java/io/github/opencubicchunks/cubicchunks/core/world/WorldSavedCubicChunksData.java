@@ -65,7 +65,9 @@ public class WorldSavedCubicChunksData extends WorldSavedData {
         if(nbt.hasKey("storageFormat"))
             storageFormat = new ResourceLocation(nbt.getString("storageFormat"));
         else
-            storageFormat = StorageFormatProviderBase.defaultStorageFormatProviderName(CubicChunksConfig.storageFormat);
+            //if no storage format is set, we should assume that this world was created before the custom storage API. therefore, it
+            // must be using anvil3d.
+            storageFormat = StorageFormatProviderBase.DEFAULT;
     }
 
     @Override
