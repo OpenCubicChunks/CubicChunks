@@ -3,6 +3,7 @@ package io.github.opencubicchunks.cubicchunks;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.HashMap;
@@ -22,6 +23,7 @@ import io.github.opencubicchunks.cubicchunks.world.gen.feature.CCFeatures;
 import io.github.opencubicchunks.cubicchunks.world.gen.placement.CCPlacement;
 import io.github.opencubicchunks.cubicchunks.world.gen.placement.CubicHeightProvider;
 import net.fabricmc.api.ModInitializer;
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.SharedConstants;
 import net.minecraft.Util;
 import net.minecraft.core.Registry;
@@ -51,6 +53,8 @@ public class CubicChunks implements ModInitializer {
 
     public static final String MODID = "cubicchunks";
     public static final Logger LOGGER = LogManager.getLogger();
+
+    public static final Path CONFIG_PATH = FabricLoader.getInstance().getConfigDir().resolve(MODID);
 
     public static final String PROTOCOL_VERSION = "0";
 

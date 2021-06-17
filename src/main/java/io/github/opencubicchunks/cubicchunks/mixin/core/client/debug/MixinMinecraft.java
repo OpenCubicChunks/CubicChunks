@@ -1,13 +1,14 @@
 package io.github.opencubicchunks.cubicchunks.mixin.core.client.debug;
 
-import java.io.IOException;
 import java.util.function.Function;
 
 import javax.annotation.Nullable;
 
 import com.mojang.datafixers.util.Function4;
+import io.github.opencubicchunks.cubicchunks.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.client.BlockPosLoadFailureScreen;
 import io.github.opencubicchunks.cubicchunks.debug.DebugVisualization;
+import io.github.opencubicchunks.cubicchunks.mixin.access.common.BlockPosAccess;
 import io.github.opencubicchunks.cubicchunks.server.CCServerSavedData;
 import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import net.minecraft.client.Minecraft;
@@ -21,7 +22,6 @@ import net.minecraft.world.level.storage.WorldData;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Coerce;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
@@ -65,6 +65,8 @@ public abstract class MixinMinecraft {
         CCServerSavedData ccServerSavedData = (CCServerSavedData) worldData;
         if (ccServerSavedData.blockPosLongNoMatch()) {
             this.setScreen(new BlockPosLoadFailureScreen(ccServerSavedData.getServerPackedXZ()));
+            CubicChunks.LOGGER.error(String.format("Could not start the server because this server's XZ size does not match the XZ size set in the config.\n Server's XZ size: %s"
+                + "\nConfig XZ size: %s", ccServerSavedData.getServerPackedXZ(), BlockPosAccess.getPackedXLength()));
             ci.cancel();
         }
     }
