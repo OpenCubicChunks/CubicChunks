@@ -16,7 +16,8 @@ import org.spongepowered.asm.mixin.injection.ModifyConstant;
 @Mixin(BlockPos.class)
 public class MixinBlockPos {
 
-    //TODO: This is a temporary fix to achieve taller worlds(by stopping the light engine from NPEing. Will be removed in the future.
+    //This is a workaround to allow usages of Blockpos.tolong to work in taller worlds at the cost of XZ size.
+    @SuppressWarnings("UnresolvedMixinReference")
     @ModifyConstant(method = "<clinit>", constant = @Constant(intValue = 30000000))
     private static int getMaxWorldSizeXZ(int size) {
         int defaultValue = 1000000;
