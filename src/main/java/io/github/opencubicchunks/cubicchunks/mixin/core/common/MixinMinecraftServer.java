@@ -34,6 +34,7 @@ import net.minecraft.util.Unit;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.ForcedChunksSavedData;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.dimension.DimensionType;
 import net.minecraft.world.level.storage.LevelStorageSource;
 import net.minecraft.world.level.storage.WorldData;
 import org.apache.logging.log4j.Logger;
@@ -63,8 +64,10 @@ public abstract class MixinMinecraftServer {
         CCServerSavedData ccServerSavedData = (CCServerSavedData) worldData;
         if (ccServerSavedData.blockPosLongNoMatch()) {
             throw
-                new IllegalStateException(String.format("Could not start the server because this server's XZ size does not match the XZ size set in the config.\nServer's XZ size: %s"
-                    + "\nConfig's XZ size: %s", MathUtil.unpackXZSize(ccServerSavedData.getServerPackedXZ()), MathUtil.unpackXZSize(BlockPosAccess.getPackedXLength())));
+                new IllegalStateException(String.format("Could not start the server because this server's ±XZ size does not match the XZ size set in the config." +
+                        "\nServer's XZ size: %s, Y size: %s\nConfig's XZ size: %s, Y size: %s",
+                    (MathUtil.unpackXZSize(ccServerSavedData.getServerPackedXZ()) * 2), MathUtil.unpackYSize(ccServerSavedData.getServerPackedXZ()),
+                    MathUtil.unpackXZSize(BlockPosAccess.getPackedXLength()), DimensionType.Y_SIZE));
         }
     }
 

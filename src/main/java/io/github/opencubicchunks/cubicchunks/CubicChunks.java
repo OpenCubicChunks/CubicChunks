@@ -155,9 +155,12 @@ public class CubicChunks implements ModInitializer {
             }
 
         }
-        if (overwriteExisting || blockPosFile.exists()) {
+        if (overwriteExisting || !blockPosFile.exists()) {
             try (FileWriter writer = new FileWriter(blockPosFile)) {
-                writer.write(fileText);
+                writer.write("#This value represents the total size of the X & Z axis from one end of the world to the other." +
+                    "\n#If this value is: \"67,108,864\", there's effectively \"33,554,432\" in the positive x/z & negative x/z directions." +
+                    "\n#Y size in this case would be calculated with the following formula: \"((1 << (64 - 67,108,864)) - 32)\" and result in: 4064."
+                    + fileText);
             } catch (IOException e) {
             }
         }

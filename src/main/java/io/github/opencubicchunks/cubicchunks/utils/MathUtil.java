@@ -37,6 +37,10 @@ public class MathUtil {
         return (1 << (xzPacked - 1));
     }
 
+    public static int unpackYSize(int xzPacked) {
+        return ((1 << (64 - xzPacked - xzPacked)) - 32);
+    }
+
     public static float unlerp(final float v, final float min, final float max) {
         return (v - min) / (max - min);
     }

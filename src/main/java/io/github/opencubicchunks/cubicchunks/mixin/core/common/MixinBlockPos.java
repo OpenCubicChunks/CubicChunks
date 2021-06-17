@@ -27,17 +27,17 @@ public class MixinBlockPos {
 
             try {
                 String xzsize = p.getProperty("xzsize");
-                CubicChunks.LOGGER.info("BlockPos XZ size: " + xzsize);
                 int parsed = Integer.parseInt(xzsize);
-                int xzPacked = 1 + Mth.log2(Mth.smallestEncompassingPowerOfTwo(parsed));
+                int sizeAbsolute = parsed / 2;
+                int xzPacked = 1 + Mth.log2(Mth.smallestEncompassingPowerOfTwo(sizeAbsolute));
                 int xzUnpackedSize = MathUtil.unpackXZSize(xzPacked);
-                if (parsed != xzUnpackedSize) {
+                if (sizeAbsolute != xzUnpackedSize) {
                     CubicChunks.createBlockPosPropertiesFile(blockPosPath,
-                        "#File generated from the xzsize of: \"" + parsed + "\" where this new value is the nearest encompassing power of 2.\nxzsize=" + xzUnpackedSize, true);
-
+                        "#File generated from the xzsize of: \"" + parsed + "\" where this new value is the nearest encompassing power of 2.\nxzsize=" + (xzUnpackedSize * 2), true);
                 }
+                CubicChunks.LOGGER.info("BlockPos XZ size: " + xzUnpackedSize);
 
-                return parsed;
+                return xzUnpackedSize;
             } catch (NumberFormatException e) {
             }
         } catch (IOException e) {

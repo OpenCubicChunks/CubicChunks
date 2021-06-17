@@ -12,6 +12,7 @@ import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.MultiLineLabel;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.world.level.dimension.DimensionType;
 
 public class BlockPosLoadFailureScreen extends Screen {
     private final String currentWorldName;
@@ -19,7 +20,8 @@ public class BlockPosLoadFailureScreen extends Screen {
     private MultiLineLabel message;
 
     public BlockPosLoadFailureScreen(String currentWorldName, int currentServerXZPacked) {
-        super(new TranslatableComponent("blockposlongfailure.title", MathUtil.unpackXZSize(currentServerXZPacked), MathUtil.unpackXZSize(BlockPosAccess.getPackedXLength())));
+        super(new TranslatableComponent("blockposlongfailure.title", (MathUtil.unpackXZSize(currentServerXZPacked) * 2), MathUtil.unpackYSize(currentServerXZPacked),
+            (MathUtil.unpackXZSize(BlockPosAccess.getPackedXLength()) * 2), DimensionType.Y_SIZE));
         this.currentWorldName = currentWorldName;
         this.currentServerXZPacked = currentServerXZPacked;
         this.message = MultiLineLabel.EMPTY;
@@ -33,7 +35,7 @@ public class BlockPosLoadFailureScreen extends Screen {
             new TranslatableComponent("gui.blockposlongfailure.title.menu.openfile"), (button) -> {
             Path blockPosPath = CubicChunks.CONFIG_PATH.resolve("blockpos.properties");
             CubicChunks.createBlockPosPropertiesFile(blockPosPath,
-                "#File generated with the xzsize from world: \"" + this.currentWorldName + "\".\nxzsize=" + MathUtil.unpackXZSize(this.currentServerXZPacked), false);
+                "#File generated with the ±xzsize from world: \"" + this.currentWorldName + "\".\nxzsize=" + (MathUtil.unpackXZSize(this.currentServerXZPacked) * 2), false);
 
             Util.getPlatform().openUri(blockPosPath.toUri());
         }));
