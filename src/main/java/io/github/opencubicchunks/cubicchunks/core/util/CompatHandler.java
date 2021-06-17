@@ -24,6 +24,17 @@
  */
 package io.github.opencubicchunks.cubicchunks.core.util;
 
+import java.lang.reflect.Field;
+import java.util.AbstractMap;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.function.Consumer;
+import java.util.stream.Collectors;
+
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableSet;
 import io.github.opencubicchunks.cubicchunks.api.world.ICubicWorld;
@@ -31,8 +42,6 @@ import io.github.opencubicchunks.cubicchunks.core.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.core.asm.mixin.ICubicWorldInternal;
 import io.github.opencubicchunks.cubicchunks.core.asm.mixin.fixes.common.fakeheight.IASMEventHandler;
 import io.github.opencubicchunks.cubicchunks.core.asm.mixin.fixes.common.fakeheight.IEventBus;
-import net.minecraft.world.World;
-import net.minecraft.world.chunk.Chunk;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.terraingen.DecorateBiomeEvent;
 import net.minecraftforge.event.terraingen.PopulateChunkEvent;
@@ -43,16 +52,10 @@ import net.minecraftforge.fml.common.eventhandler.Event;
 import net.minecraftforge.fml.common.eventhandler.EventBus;
 import net.minecraftforge.fml.common.eventhandler.IEventListener;
 import net.minecraftforge.fml.common.eventhandler.ListenerList;
+import sun.misc.Unsafe;
 
-import java.util.AbstractMap;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.function.Consumer;
-import java.util.stream.Collectors;
+import net.minecraft.world.World;
+import net.minecraft.world.chunk.Chunk;
 
 public class CompatHandler {
 
@@ -85,8 +88,17 @@ public class CompatHandler {
     private static IEventListener[] fakeChunkLoadListeners;
 
     public static void init() {
+        Chunk uninitializedChunk;
+        try {
+            Field theUnsafe = Unsafe.class.getDeclaredField("theUnsafe");
+            theUnsafe.setAccessible(true);
+            Unsafe unsafe = (Unsafe) theUnsafe.get(null);
+            uninitializedChunk = (Chunk) unsafe.allocateInstance(Chunk.class);
+        } catch (ReflectiveOperationException e) {
+            throw new RuntimeException(e);
+        }
         fakeChunkLoadListeners = getFakeEventListeners(
-                new ChunkEvent.Load(new Chunk(null, 0, 0)).getListenerList(),
+                new ChunkEvent.Load(uninitializedChunk).getListenerList(),
                 MinecraftForge.EVENT_BUS, FAKE_CHUNK_LOAD
         );
     }
