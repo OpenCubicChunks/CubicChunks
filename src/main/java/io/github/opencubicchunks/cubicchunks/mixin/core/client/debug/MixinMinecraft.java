@@ -11,6 +11,7 @@ import io.github.opencubicchunks.cubicchunks.debug.DebugVisualization;
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.BlockPosAccess;
 import io.github.opencubicchunks.cubicchunks.server.CCServerSavedData;
 import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
+import io.github.opencubicchunks.cubicchunks.utils.MathUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -64,9 +65,9 @@ public abstract class MixinMinecraft {
 
         CCServerSavedData ccServerSavedData = (CCServerSavedData) worldData;
         if (ccServerSavedData.blockPosLongNoMatch()) {
-            this.setScreen(new BlockPosLoadFailureScreen(ccServerSavedData.getServerPackedXZ()));
+            this.setScreen(new BlockPosLoadFailureScreen(worldName, ccServerSavedData.getServerPackedXZ()));
             CubicChunks.LOGGER.error(String.format("Could not start the server because this server's XZ size does not match the XZ size set in the config.\n Server's XZ size: %s"
-                + "\nConfig XZ size: %s", ccServerSavedData.getServerPackedXZ(), BlockPosAccess.getPackedXLength()));
+                + "\nConfig XZ size: %s", MathUtil.unpackXZSize(ccServerSavedData.getServerPackedXZ()), MathUtil.unpackXZSize(BlockPosAccess.getPackedXLength())));
             ci.cancel();
         }
     }

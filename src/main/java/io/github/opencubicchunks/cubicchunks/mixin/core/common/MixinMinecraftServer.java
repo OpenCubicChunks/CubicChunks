@@ -14,6 +14,7 @@ import io.github.opencubicchunks.cubicchunks.server.CCServerSavedData;
 import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import io.github.opencubicchunks.cubicchunks.server.IServerChunkProvider;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
+import io.github.opencubicchunks.cubicchunks.utils.MathUtil;
 import io.github.opencubicchunks.cubicchunks.world.ForcedCubesSaveData;
 import it.unimi.dsi.fastutil.longs.LongIterator;
 import net.minecraft.Util;
@@ -63,7 +64,7 @@ public abstract class MixinMinecraftServer {
         if (ccServerSavedData.blockPosLongNoMatch()) {
             throw
                 new IllegalStateException(String.format("Could not start the server because this server's XZ size does not match the XZ size set in the config.\nServer's XZ size: %s"
-                    + "\nConfig's XZ size: %s", (1 << ccServerSavedData.getServerPackedXZ()), (1 << BlockPosAccess.getPackedXLength())));
+                    + "\nConfig's XZ size: %s", MathUtil.unpackXZSize(ccServerSavedData.getServerPackedXZ()), MathUtil.unpackXZSize(BlockPosAccess.getPackedXLength())));
         }
     }
 

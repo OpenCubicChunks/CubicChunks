@@ -28,7 +28,6 @@
         "common.chunk.MixinNoiseSampler",
         "common.chunk.MixinProtoChunk",
         "common.chunk.MixinProtoTickList",
-        "common.chunk.MixinWorldGenRandom",
         "common.chunk.storage.MixinEntityStorage",
         "common.chunk.storage.MixinPoiManager",
         "common.chunk.storage.MixinSectionStorage",

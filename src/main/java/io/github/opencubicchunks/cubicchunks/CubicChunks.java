@@ -1,5 +1,7 @@
 package io.github.opencubicchunks.cubicchunks;
 
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Files;
@@ -140,6 +142,25 @@ public class CubicChunks implements ModInitializer {
 
         Registry.register(Registry.BIOME_SOURCE, new ResourceLocation(MODID, "stripes"), StripedBiomeSource.CODEC);
 //        Registry.register(Registry.CHUNK_GENERATOR, new ResourceLocation(MODID, "generator"), CCNoiseBasedChunkGenerator.CODEC);
+    }
+
+    public static void createBlockPosPropertiesFile(Path blockPosPath, String fileText, boolean overwriteExisting) {
+        File blockPosFile = blockPosPath.toFile();
+
+        if (!blockPosPath.getParent().toFile().exists()) {
+            try {
+                Files.createDirectories(blockPosPath.getParent());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+        }
+        if (overwriteExisting || blockPosFile.exists()) {
+            try (FileWriter writer = new FileWriter(blockPosFile)) {
+                writer.write(fileText);
+            } catch (IOException e) {
+            }
+        }
     }
 
     //TODO: Implement a file for this.
