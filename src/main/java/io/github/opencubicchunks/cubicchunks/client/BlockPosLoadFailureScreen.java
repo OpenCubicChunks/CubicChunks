@@ -2,6 +2,8 @@ package io.github.opencubicchunks.cubicchunks.client;
 
 import java.nio.file.Path;
 
+import javax.annotation.Nullable;
+
 import com.mojang.blaze3d.vertex.PoseStack;
 import io.github.opencubicchunks.cubicchunks.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.BlockPosAccess;
@@ -15,11 +17,12 @@ import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.world.level.dimension.DimensionType;
 
 public class BlockPosLoadFailureScreen extends Screen {
+    @Nullable
     private final String currentWorldName;
     private final int currentServerXZPacked;
     private MultiLineLabel message;
 
-    public BlockPosLoadFailureScreen(String currentWorldName, int currentServerXZPacked) {
+    public BlockPosLoadFailureScreen(@Nullable String currentWorldName, int currentServerXZPacked) {
         super(new TranslatableComponent("blockposlongfailure.title", (MathUtil.unpackXZSize(currentServerXZPacked) * 2), MathUtil.unpackYSize(currentServerXZPacked),
             (MathUtil.unpackXZSize(BlockPosAccess.getPackedXLength()) * 2), DimensionType.Y_SIZE));
         this.currentWorldName = currentWorldName;
@@ -35,7 +38,9 @@ public class BlockPosLoadFailureScreen extends Screen {
             new TranslatableComponent("gui.blockposlongfailure.title.menu.openfile"), (button) -> {
             Path blockPosPath = CubicChunks.CONFIG_PATH.resolve("blockpos.properties");
             CubicChunks.createBlockPosPropertiesFile(blockPosPath,
-                "#File generated with the ±xzsize from world: \"" + this.currentWorldName + "\".\nxzsize=" + (MathUtil.unpackXZSize(this.currentServerXZPacked) * 2), false);
+                "#File generated with the ±xzsize from world: \"" + (this.currentWorldName == null ? "" : this.currentWorldName) + "\".\nxzsize=" + (
+                    MathUtil.unpackXZSize(this.currentServerXZPacked) * 2),
+                false);
 
             Util.getPlatform().openUri(blockPosPath.toUri());
         }));
