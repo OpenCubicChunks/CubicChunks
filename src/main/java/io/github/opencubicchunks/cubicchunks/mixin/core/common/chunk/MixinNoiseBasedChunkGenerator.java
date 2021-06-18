@@ -5,8 +5,9 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.function.Supplier;
 
-import io.github.opencubicchunks.cubicchunks.chunk.CubicAquifer;
 import io.github.opencubicchunks.cubicchunks.chunk.NonAtomicWorldgenRandom;
+import io.github.opencubicchunks.cubicchunks.chunk.aquifer.AquiferSourceSampler;
+import io.github.opencubicchunks.cubicchunks.chunk.aquifer.CubicAquifer;
 import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import net.minecraft.server.level.WorldGenRegion;
 import net.minecraft.util.Mth;
@@ -14,6 +15,7 @@ import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.StructureFeatureManager;
 import net.minecraft.world.level.biome.BiomeSource;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.levelgen.Aquifer;
@@ -53,11 +55,22 @@ public abstract class MixinNoiseBasedChunkGenerator {
 
     @Shadow public abstract int getSeaLevel();
 
+    private AquiferSourceSampler aquiferSourceSampler;
+
     @Inject(method = "<init>(Lnet/minecraft/world/level/biome/BiomeSource;Lnet/minecraft/world/level/biome/BiomeSource;JLjava/util/function/Supplier;)V", at = @At("RETURN"))
     private void init(BiomeSource biomeSource, BiomeSource biomeSource2, long l, Supplier<NoiseGeneratorSettings> supplier, CallbackInfo ci) {
         // access to through the registry is slow: vanilla accesses settings directly from the supplier in the constructor anyway
         NoiseGeneratorSettings suppliedSettings = this.settings.get();
         this.settings = () -> suppliedSettings;
+
+        AquiferSourceSampler aquiferSampler;
+        if (suppliedSettings.getDefaultFluid().getBlock() != Blocks.LAVA) {
+            aquiferSampler = new AquiferSourceSampler.Overworld(this.waterLevelNoise, this.lavaNoise, suppliedSettings);
+        } else {
+            aquiferSampler = new AquiferSourceSampler.Nether(this.waterLevelNoise);
+        }
+
+        this.aquiferSourceSampler = aquiferSampler;
     }
 
     @Redirect(method = "fillFromNoise", at = @At(value = "INVOKE", target = "Ljava/lang/Math;max(II)I"))
@@ -139,9 +152,9 @@ public abstract class MixinNoiseBasedChunkGenerator {
     }
 
     @Redirect(method = "updateNoiseAndGenerateBaseState", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/levelgen/NoiseModifier;modifyNoise(DIII)D"))
-    private double dontModifyNoiseIfAboveCurrentCube(NoiseModifier noiseModifier, double weight, int x, int y, int z, Beardifier structures, Aquifer aquiferSampler,
+    private double dontModifyNoiseIfAboveCurrentCube(NoiseModifier noiseModifier, double weight, int x, int y, int z, Beardifier structures, Aquifer aquifer,
                                                      BaseStoneSource blockInterpolator, NoiseModifier noiseModifier2, int i, int j, int k, double d) {
-        if (aquiferSampler instanceof CubicAquifer cubicAquifer && y >= (cubicAquifer.getMinY() + cubicAquifer.getSizeY())) {
+        if (aquifer instanceof CubicAquifer cubicAquifer && y >= (cubicAquifer.getMinY() + cubicAquifer.getSizeY())) {
             return weight;
         }
         return noiseModifier.modifyNoise(weight, x, y, z);
@@ -150,8 +163,7 @@ public abstract class MixinNoiseBasedChunkGenerator {
     @Inject(method = "getAquifer", at = @At("HEAD"), cancellable = true)
     private void createNoiseAquifer(int minY, int sizeY, ChunkPos chunkPos, CallbackInfoReturnable<Aquifer> cir) {
         if (!this.settings.get().noiseSettings().islandNoiseOverride()) {
-            cir.setReturnValue(
-                new CubicAquifer(chunkPos, this.barrierNoise, this.waterLevelNoise, this.lavaNoise, this.settings.get(), minY * cellHeight, this.defaultFluid));
+            cir.setReturnValue(new CubicAquifer(chunkPos, this.barrierNoise, this.aquiferSourceSampler, minY * cellHeight, this.defaultFluid));
         }
     }
 }
