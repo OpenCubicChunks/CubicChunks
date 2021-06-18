@@ -6,7 +6,6 @@ import java.util.function.IntSupplier;
 import javax.annotation.Nullable;
 
 import com.mojang.datafixers.util.Pair;
-import io.github.opencubicchunks.cubicchunks.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.IChunkManager;
 import io.github.opencubicchunks.cubicchunks.chunk.ticket.CubeTaskPriorityQueueSorter;
@@ -127,12 +126,8 @@ public abstract class MixinServerWorldLightManager extends MixinWorldLightManage
             super.enableLightSources(cubePos, true);
             if (!flagIn) {
                 icube.getCubeLightSources().forEach((blockPos) -> {
-                    //TODO: Figure out why some positions are null. Might have to do with the multithreading of the noise stage of world generation.
-                    if (blockPos == null) {
-                        CubicChunks.LOGGER.error("Block pos was null when attempting to calculate block light emission, skipping...");
-                    } else {
-                        super.onBlockEmissionIncrease(blockPos, icube.getLightEmission(blockPos));
-                    }
+                    assert blockPos != null;
+                    super.onBlockEmissionIncrease(blockPos, icube.getLightEmission(blockPos));
                 });
             }
 
