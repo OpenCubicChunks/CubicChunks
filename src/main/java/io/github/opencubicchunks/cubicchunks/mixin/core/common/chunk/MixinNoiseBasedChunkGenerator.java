@@ -17,8 +17,11 @@ import net.minecraft.world.level.biome.BiomeSource;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.levelgen.Aquifer;
+import net.minecraft.world.level.levelgen.BaseStoneSource;
+import net.minecraft.world.level.levelgen.Beardifier;
 import net.minecraft.world.level.levelgen.NoiseBasedChunkGenerator;
 import net.minecraft.world.level.levelgen.NoiseGeneratorSettings;
+import net.minecraft.world.level.levelgen.NoiseModifier;
 import net.minecraft.world.level.levelgen.NoiseSettings;
 import net.minecraft.world.level.levelgen.WorldgenRandom;
 import net.minecraft.world.level.levelgen.synth.NormalNoise;
@@ -135,17 +138,20 @@ public abstract class MixinNoiseBasedChunkGenerator {
         return this.getSeaLevel();
     }
 
+    @Redirect(method = "updateNoiseAndGenerateBaseState", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/levelgen/NoiseModifier;modifyNoise(DIII)D"))
+    private double dontModifyNoiseIfAboveCurrentCube(NoiseModifier noiseModifier, double weight, int x, int y, int z, Beardifier structures, Aquifer aquiferSampler,
+                                                     BaseStoneSource blockInterpolator, NoiseModifier noiseModifier2, int i, int j, int k, double d) {
+        if (aquiferSampler instanceof CubicAquifer cubicAquifer && y >= (cubicAquifer.getMinY() + cubicAquifer.getSizeY())) {
+            return weight;
+        }
+        return noiseModifier.modifyNoise(weight, x, y, z);
+    }
 
     @Inject(method = "getAquifer", at = @At("HEAD"), cancellable = true)
     private void createNoiseAquifer(int minY, int sizeY, ChunkPos chunkPos, CallbackInfoReturnable<Aquifer> cir) {
         if (!this.settings.get().noiseSettings().islandNoiseOverride()) {
             cir.setReturnValue(
-                new CubicAquifer(chunkPos, this.barrierNoise, this.waterLevelNoise, this.lavaNoise, this.settings.get(), minY * cellHeight, sizeY * cellHeight, this.defaultFluid));
+                new CubicAquifer(chunkPos, this.barrierNoise, this.waterLevelNoise, this.lavaNoise, this.settings.get(), minY * cellHeight, this.defaultFluid));
         }
-    }
-
-    @Redirect(method = "createAquifer", at = @At(value = "INVOKE", target = "Ljava/lang/Math;max(II)I"))
-    private int useChunkMinHeight(int a, int b, ChunkAccess chunk) {
-        return !((CubicLevelHeightAccessor) chunk).isCubic() ? Math.max(a, b) : chunk.getMinBuildHeight();
     }
 }

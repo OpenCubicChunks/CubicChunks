@@ -8,6 +8,7 @@ import io.github.opencubicchunks.cubicchunks.chunk.storage.CubicEntityStorage;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.world.entity.IsCubicEntityContext;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
+import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ChunkHolder;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.entity.ChunkEntities;
@@ -23,6 +24,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(PersistentEntitySectionManager.class)
 public abstract class MixinPersistentEntitySectionManager<T extends EntityAccess> implements IsCubicEntityContext {
@@ -32,6 +34,7 @@ public abstract class MixinPersistentEntitySectionManager<T extends EntityAccess
     @Shadow @Final private EntityPersistentStorage<T> permanentStorage;
     @Shadow @Final private Queue<ChunkEntities<T>> loadingInbox;
     @Shadow @Final private EntitySectionStorage<T> sectionStorage;
+    @Shadow @Final private Long2ObjectMap<Visibility> chunkVisibility;
 
     private boolean isCubic;
 
@@ -84,5 +87,25 @@ public abstract class MixinPersistentEntitySectionManager<T extends EntityAccess
         } else {
             return new ChunkPos(pos);
         }
+    }
+
+    @Inject(method = "isPositionTicking(Lnet/minecraft/world/level/ChunkPos;)Z", at = @At("HEAD"), cancellable = true)
+    private void returnFalseIfCubic(ChunkPos chunkPos, CallbackInfoReturnable<Boolean> cir) {
+        if (chunkPos instanceof ImposterChunkPos) {
+            return;
+        }
+
+        if (isCubic) {
+            cir.setReturnValue(false);
+        }
+    }
+
+    @Inject(method = "isPositionTicking(Lnet/minecraft/core/BlockPos;)Z", at = @At("HEAD"), cancellable = true)
+    private void useCubePos(BlockPos blockPos, CallbackInfoReturnable<Boolean> cir) {
+        if (!isCubic) {
+            return;
+        }
+
+        cir.setReturnValue(this.chunkVisibility.get(CubePos.asLong(blockPos)).isTicking());
     }
 }

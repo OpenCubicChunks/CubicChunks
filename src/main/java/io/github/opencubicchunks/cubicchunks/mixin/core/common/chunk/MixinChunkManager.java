@@ -14,7 +14,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Queue;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -510,13 +509,13 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
     // TODO: remove when cubic chunks versions are done
     @SuppressWarnings("UnresolvedMixinReference")
     // lambda$func_219244_a$13 or lambda$schedule$13 or lambda$null$13
-    @Inject(method = "*", at = @At(
+    @Inject(method = "schedule", at = @At(
         value = "INVOKE",
         target = "Lnet/minecraft/server/level/progress/ChunkProgressListener;onStatusChange(Lnet/minecraft/world/level/ChunkPos;Lnet/minecraft/world/level/chunk/ChunkStatus;)V")
     )
     @Group(name = "MixinChunkManager.on_func_219244_a_StatusChange", min = 1, max = 1)
-    private void on_func_219244_a_StatusChange(ChunkStatus chunkStatusIn, ChunkPos chunkpos,
-                                               ChunkHolder chunkHolderIn, Either<?, ?> p_223180_4_, CallbackInfoReturnable<CompletionStage<?>> cir) {
+    private void on_func_219244_a_StatusChange(ChunkHolder chunkHolderIn, ChunkStatus chunkStatusIn,
+                                               CallbackInfoReturnable<CompletableFuture<Either<ChunkAccess, ChunkHolder.ChunkLoadingFailure>>> cir) {
         if (!((CubicLevelHeightAccessor) this.level).isCubic()) {
             return;
         }
@@ -551,7 +550,7 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
     //A lamdba inside a lambda in the method scheduleChunkGeneration.
     @SuppressWarnings({ "UnresolvedMixinReference", "target" })
     @Inject(
-        method = "lambda$scheduleChunkGeneration$19(Lnet/minecraft/world/level/ChunkPos;Lnet/minecraft/server/level/ChunkHolder;Lnet/minecraft/world/level/chunk/ChunkStatus;"
+        method = "lambda$scheduleChunkGeneration$18(Lnet/minecraft/world/level/ChunkPos;Lnet/minecraft/server/level/ChunkHolder;Lnet/minecraft/world/level/chunk/ChunkStatus;"
             + "Ljava/util/concurrent/Executor;Ljava/util/List;)Ljava/util/concurrent/CompletableFuture;",
         at = @At(
             value = "INVOKE",
@@ -899,7 +898,7 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
     }
 
     @SuppressWarnings({ "UnresolvedMixinReference", "ConstantConditions" })
-    @Redirect(method = "lambda$scheduleChunkLoad$14(Lnet/minecraft/world/level/ChunkPos;)Lcom/mojang/datafixers/util/Either;",
+    @Redirect(method = "lambda$scheduleChunkLoad$13(Lnet/minecraft/world/level/ChunkPos;)Lcom/mojang/datafixers/util/Either;",
         at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ChunkMap;readChunk(Lnet/minecraft/world/level/ChunkPos;)Lnet/minecraft/nbt/CompoundTag;"))
     private CompoundTag on$readChunk(ChunkMap chunkManager, ChunkPos chunkPos) throws IOException {
         if (!((CubicLevelHeightAccessor) this.level).isCubic()) {

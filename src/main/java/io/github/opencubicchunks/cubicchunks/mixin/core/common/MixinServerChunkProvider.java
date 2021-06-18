@@ -392,10 +392,6 @@ public abstract class MixinServerChunkProvider implements IServerChunkProvider, 
 
     }
 
-    @Override public boolean isEntityTickingCube(CubePos pos) {
-        return this.checkCubeFuture(pos.asLong(), chunkHolder -> ((ICubeHolder) chunkHolder).getCubeEntityTickingFuture());
-    }
-
     @Override public boolean checkCubeFuture(long cubePosLong, Function<ChunkHolder, CompletableFuture<Either<BigCube, ChunkHolder.ChunkLoadingFailure>>> futureFunction) {
         ChunkHolder chunkHolder = this.getVisibleCubeIfPresent(cubePosLong);
         if (chunkHolder == null) {
@@ -417,13 +413,12 @@ public abstract class MixinServerChunkProvider implements IServerChunkProvider, 
         cir.setReturnValue("ServerChunkCache: " + this.getLoadedChunksCount() + " | " + ((IChunkManager) chunkMap).sizeCubes());
     }
 
-    @Inject(method = "isTickingChunk", at = @At("HEAD"), cancellable = true)
-    private void isTickingCube(BlockPos pos, CallbackInfoReturnable<Boolean> cir) {
+    @Inject(method = "isPositionTicking", at = @At("HEAD"), cancellable = true)
+    private void isTickingCube(long pos, CallbackInfoReturnable<Boolean> cir) {
         if (!((CubicLevelHeightAccessor) this.level).isCubic()) {
             return;
         }
-        long asLong = CubePos.from(pos).asLong();
-        cir.setReturnValue(this.checkCubeFuture(asLong, (chunkHolder) -> unsafeCast(chunkHolder.getTickingChunkFuture())));
+        cir.setReturnValue(this.checkCubeFuture(pos, (chunkHolder) -> unsafeCast(chunkHolder.getTickingChunkFuture())));
     }
 
     @Nullable

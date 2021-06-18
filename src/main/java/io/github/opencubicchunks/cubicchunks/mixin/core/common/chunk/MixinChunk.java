@@ -11,6 +11,7 @@ import io.github.opencubicchunks.cubicchunks.chunk.cube.BigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.EmptyCube;
 import io.github.opencubicchunks.cubicchunks.chunk.heightmap.ClientSurfaceTracker;
 import io.github.opencubicchunks.cubicchunks.chunk.heightmap.SurfaceTrackerWrapper;
+import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import net.minecraft.core.BlockPos;
@@ -251,6 +252,11 @@ public abstract class MixinChunk implements ChunkAccess, CubicLevelHeightAccesso
         }
 
         return ((BigCube) this.getCube(Coords.blockToSection(pos.getY()))).isInLevel();
+    }
+
+    @Redirect(method = "isTicking", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/ChunkPos;asLong(Lnet/minecraft/core/BlockPos;)J"))
+    private long cubePos(BlockPos blockPos) {
+        return isCubic ? CubePos.asLong(blockPos) : ChunkPos.asLong(blockPos);
     }
 
     @Override public WorldStyle worldStyle() {
