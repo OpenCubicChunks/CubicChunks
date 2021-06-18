@@ -47,6 +47,7 @@ public final class CubicAquifer implements Aquifer {
     private final int gridSizeX;
     private final int gridSizeZ;
 
+    private final boolean isNether;
     private final AquiferRandom random = new AquiferRandom();
 
     private double barrierNoiseCache;
@@ -70,6 +71,7 @@ public final class CubicAquifer implements Aquifer {
             waterState,
             Blocks.LAVA.defaultBlockState()
         };
+        isNether = waterState.getBlock() == Blocks.LAVA;
 
         int maxGridX = gridX(chunkPos.getMaxBlockX()) + 1;
         int maxGridY = gridY(minYInput + sizeY) + 1;
@@ -311,6 +313,24 @@ public final class CubicAquifer implements Aquifer {
     }
 
     private int computeAquifer(int x, int y, int z) {
+        if (isNether) {
+            int gridY = Math.floorDiv(y, 40);
+
+            double noiseX = x >> 6;
+            double noiseY = gridY / 1.4;
+            double noiseZ = z >> 6;
+
+            double levelNoise = this.waterLevelNoise.getValue(noiseX, noiseY, noiseZ) * 30.0 - 10.0;
+            if (Math.abs(levelNoise) > 8.0) {
+                levelNoise *= 4.0;
+            }
+
+            int gridMidY = gridY * 40 + 20;
+            int level = gridMidY + Mth.floor(levelNoise);
+
+            return Sample.lava(level);
+        }
+
         if (y > 30) {
             int seaLevel = this.noiseGeneratorSettings.seaLevel();
             return Sample.water(seaLevel);
