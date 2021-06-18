@@ -266,7 +266,7 @@ public class MixinChunkStatus {
             generator.buildSurfaceAndBedrock(cubeWorldGenRegion, chunkAccess);
 
           
-            noiseAndSurfaceBuilderHelper.setNeedsExtraHeight(false);
+            cubeAccessWrapper.setNeedsExtraHeight(false);
 
             // Carvers
             generator.applyCarvers(world.getSeed(), world.getBiomeManager(), cubeAccessWrapper, GenerationStep.Carving.AIR);
