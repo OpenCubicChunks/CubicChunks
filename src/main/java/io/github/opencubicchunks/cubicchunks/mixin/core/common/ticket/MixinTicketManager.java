@@ -39,7 +39,6 @@ import net.minecraft.server.level.Ticket;
 import net.minecraft.server.level.TicketType;
 import net.minecraft.util.SortedArraySet;
 import net.minecraft.util.thread.ProcessorHandle;
-import net.minecraft.world.level.ChunkPos;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -73,7 +72,7 @@ public abstract class MixinTicketManager implements ITicketManager, IVerticalVie
         throw new Error("Mixin did not apply correctly");
     }
 
-    @Shadow public abstract <T> void addTicket(TicketType<T> type, ChunkPos pos, int level, T argument);
+    @Shadow abstract void addTicket(long position, Ticket<?> ticket);
 
     @Inject(method = "<init>", at = @At("RETURN"))
     public void init(Executor executor, Executor executor2, CallbackInfo ci) {
@@ -86,16 +85,20 @@ public abstract class MixinTicketManager implements ITicketManager, IVerticalVie
 
     @Override
     public void addCubeTicket(long cubePosIn, Ticket<?> ticketIn) {
-        SortedArraySet<Ticket<?>> sortedarrayset = this.getCubeTickets(cubePosIn);
-        int i = getTicketLevelAt(sortedarrayset);
+        SortedArraySet<Ticket<?>> ticketsForCube = this.getCubeTickets(cubePosIn);
+        int existingTicketLevel = getTicketLevelAt(ticketsForCube);
 
-        // force a ticket on the cube's column
+        // force a ticket on the cube's columns
         CubePos cubePos = CubePos.from(cubePosIn);
-        addTicket(CCTicketType.CCCOLUMN, cubePos.asChunkPos(), i, cubePos);
+        for (int localX = 0; localX < IBigCube.DIAMETER_IN_SECTIONS; localX++) {
+            for (int localZ = 0; localZ < IBigCube.DIAMETER_IN_SECTIONS; localZ++) {
+                addTicket(CubePos.asChunkPosLong(cubePosIn, localX, localZ), TicketAccess.createNew(CCTicketType.CCCOLUMN, ticketIn.getTicketLevel(), cubePos));
+            }
+        }
 
-        Ticket<?> ticket = sortedarrayset.addOrGet(ticketIn);
+        Ticket<?> ticket = ticketsForCube.addOrGet(ticketIn);
         ((TicketAccess) ticket).invokeSetCreatedTick(this.ticketTickCounter);
-        if (ticketIn.getTicketLevel() < i) {
+        if (ticketIn.getTicketLevel() < existingTicketLevel) {
             this.cubeTicketTracker.updateSourceLevel(cubePosIn, ticketIn.getTicketLevel(), true);
         }
     }
@@ -110,7 +113,6 @@ public abstract class MixinTicketManager implements ITicketManager, IVerticalVie
         }
 
         this.cubeTicketTracker.updateSourceLevel(cubePosIn, getTicketLevelAt(sortedarrayset), false);
-        // TODO: release chunk tickets when releasing cube tickets
     }
 
     private SortedArraySet<Ticket<?>> getCubeTickets(long cubePos) {

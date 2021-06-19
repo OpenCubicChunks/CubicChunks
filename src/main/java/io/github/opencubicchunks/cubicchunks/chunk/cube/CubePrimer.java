@@ -196,10 +196,10 @@ public class CubePrimer extends ProtoChunk implements IBigCube, CubicLevelHeight
 
                     // get the chunk for this section
                     ChunkPos chunkPos = this.cubePos.asChunkPos(dx, dz);
-                    BlockGetter chunk = chunkSource.getChunkForLighting(chunkPos.x, chunkPos.z);
+                    ChunkAccess chunk = chunkSource.getChunk(chunkPos.x, chunkPos.z, ChunkStatus.EMPTY, false);
 
                     // the load order guarantees the chunk being present
-                    assert (chunk != null);
+                    assert (chunk != null && chunk.getStatus().isOrAfter(ChunkStatus.FEATURES));
 
                     ((CubeMapGetter) chunk).getCubeMap().markLoaded(this.cubePos.getY());
 
