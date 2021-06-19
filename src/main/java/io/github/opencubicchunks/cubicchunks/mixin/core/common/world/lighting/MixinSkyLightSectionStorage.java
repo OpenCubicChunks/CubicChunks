@@ -2,13 +2,17 @@ package io.github.opencubicchunks.cubicchunks.mixin.core.common.world.lighting;
 
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.LightHeightmapGetter;
+import io.github.opencubicchunks.cubicchunks.chunk.cube.EmptyCube;
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.LayerLightSectionStorageAccess;
 import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
+import io.github.opencubicchunks.cubicchunks.server.ICubicWorld;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import io.github.opencubicchunks.cubicchunks.world.lighting.ICubeLightProvider;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.SectionPos;
 import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.level.chunk.ChunkStatus;
 import net.minecraft.world.level.chunk.DataLayer;
@@ -52,20 +56,28 @@ public abstract class MixinSkyLightSectionStorage extends LayerLightSectionStora
         int z = BlockPos.getZ(blockPos);
         if (dataLayer == null) {
 
-            BlockGetter chunk = ((LayerLightSectionStorageAccess) this).getChunkSource().getChunkForLighting(Coords.blockToSection(x), Coords.blockToSection(z));
+            int chunkX = Coords.blockToSection(x);
+            int chunkZ = Coords.blockToSection(z);
+            ChunkPos chunkPos = new ChunkPos(chunkX, chunkZ);
+            BlockGetter chunk = ((LayerLightSectionStorageAccess) this).getChunkSource().getChunkForLighting(chunkX, chunkZ);
+
+            Level level = (Level) ((LayerLightSectionStorageAccess) this).getChunkSource().getLevel();
 
             if (chunk == null) {
                 // ToDo Known bug: Cubes may be sent to the client ahead of their chunks. This is not fatal.
                 // see MixinSkyLightEngine.onGetComputedLevel(...)
-                System.out.println("getLightValue: Missing chunk for lighting.");
+                if (level.isClientSide) {
+                    BlockPos pos = new BlockPos(x, y, z);
+                    assert !(((ICubicWorld) level).getCube(pos) instanceof EmptyCube);
+                }
                 // Set return value to prevent vanilla behaviour from happening and causing weird effects
-                cir.setReturnValue(0);
+                cir.setReturnValue(15);
                 return;
             }
 
             //TODO: Optimize
             BlockGetter cube = ((ICubeLightProvider) ((LayerLightSectionStorageAccess) this).getChunkSource()).getCubeForLighting(
-                Coords.blockToSection(x), Coords.blockToSection(y), Coords.blockToSection(z));
+                chunkX, Coords.blockToSection(y), chunkZ);
             if (cube == null || !((IBigCube) cube).getStatus().isOrAfter(ChunkStatus.LIGHT)) {
                 cir.setReturnValue(0);
                 return;
@@ -76,9 +88,9 @@ public abstract class MixinSkyLightSectionStorage extends LayerLightSectionStora
             cir.setReturnValue(height <= y ? 15 : 0);
         } else {
             cir.setReturnValue(dataLayer.get(
-                    SectionPos.sectionRelative(x),
-                    SectionPos.sectionRelative(y),
-                    SectionPos.sectionRelative(z)));
+                SectionPos.sectionRelative(x),
+                SectionPos.sectionRelative(y),
+                SectionPos.sectionRelative(z)));
         }
     }
 
