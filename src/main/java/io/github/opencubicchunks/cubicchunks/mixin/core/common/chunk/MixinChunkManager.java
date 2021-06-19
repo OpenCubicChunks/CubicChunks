@@ -32,6 +32,7 @@ import com.google.common.collect.Queues;
 import com.mojang.datafixers.DataFixer;
 import com.mojang.datafixers.util.Either;
 import io.github.opencubicchunks.cubicchunks.CubicChunks;
+import io.github.opencubicchunks.cubicchunks.chunk.ChunkActiveSections;
 import io.github.opencubicchunks.cubicchunks.chunk.CubeCollectorFuture;
 import io.github.opencubicchunks.cubicchunks.chunk.CubePlayerProvider;
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
@@ -111,7 +112,9 @@ import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.ChunkGenerator;
 import net.minecraft.world.level.chunk.ChunkStatus;
+import net.minecraft.world.level.chunk.EmptyLevelChunk;
 import net.minecraft.world.level.chunk.LevelChunk;
+import net.minecraft.world.level.chunk.LevelChunkSection;
 import net.minecraft.world.level.chunk.LightChunkGetter;
 import net.minecraft.world.level.chunk.UpgradeData;
 import net.minecraft.world.level.entity.ChunkStatusUpdateListener;
@@ -475,7 +478,16 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
 
                     for (int localX = 0; localX < IBigCube.DIAMETER_IN_SECTIONS; localX++) {
                         for (int localZ = 0; localZ < IBigCube.DIAMETER_IN_SECTIONS; localZ++) {
-                            long chunkPos = pos.asChunkPos(localX, localZ).toLong();
+                            ChunkPos chunkPos1 = pos.asChunkPos(localX, localZ);
+                            LevelChunk chunk = this.level.getChunk(chunkPos1.x, chunkPos1.z);
+
+                            for (LevelChunkSection section : icube.getSections()) {
+                                if (section != null) {
+                                    ((ChunkActiveSections) chunk).activeSections().remove(section);
+                                }
+                            }
+
+                            long chunkPos = chunkPos1.toLong();
                             Ticket<?>[] tickets = ((TicketManagerAccess) distanceManager).invokeGetTickets(chunkPos).stream().filter((ticket ->
                                 ticket.getType() == CCTicketType.CCCOLUMN && ((TicketAccess) ticket).getKey().equals(pos))).toArray(Ticket[]::new);
                             for (Ticket<?> ticket : tickets) {

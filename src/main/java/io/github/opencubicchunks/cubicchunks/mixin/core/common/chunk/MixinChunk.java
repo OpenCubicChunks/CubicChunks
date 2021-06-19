@@ -1,8 +1,11 @@
 package io.github.opencubicchunks.cubicchunks.mixin.core.common.chunk;
 
+import java.util.Comparator;
+import java.util.Set;
 import java.util.concurrent.CompletionException;
 import java.util.function.Consumer;
 
+import io.github.opencubicchunks.cubicchunks.chunk.ChunkActiveSections;
 import io.github.opencubicchunks.cubicchunks.chunk.ChunkCubeGetter;
 import io.github.opencubicchunks.cubicchunks.chunk.CubeMap;
 import io.github.opencubicchunks.cubicchunks.chunk.CubeMapGetter;
@@ -20,6 +23,7 @@ import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import io.github.opencubicchunks.cubicchunks.world.lighting.ISkyLightColumnChecker;
+import it.unimi.dsi.fastutil.objects.ObjectAVLTreeSet;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Registry;
 import net.minecraft.server.level.ServerLevel;
@@ -51,7 +55,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(value = LevelChunk.class, priority = 0) //Priority 0 to always ensure our redirects are on top. Should also prevent fabric api crashes that have occur(ed) here. See removeTileEntity
 
-public abstract class MixinChunk implements ChunkAccess, LightHeightmapGetter, CubeMapGetter, CubicLevelHeightAccessor, ChunkCubeGetter {
+public abstract class MixinChunk implements ChunkAccess, LightHeightmapGetter, CubeMapGetter, CubicLevelHeightAccessor, ChunkCubeGetter, ChunkActiveSections {
 
     @Shadow @Final private Level level;
     @Shadow @Final private ChunkPos chunkPos;
@@ -66,6 +70,8 @@ public abstract class MixinChunk implements ChunkAccess, LightHeightmapGetter, C
 
     private Heightmap lightHeightmap;
     private CubeMap cubeMap;
+
+    private final ObjectAVLTreeSet<LevelChunkSection> activeSections = new ObjectAVLTreeSet<>(Comparator.comparingInt(LevelChunkSection::bottomBlockY));
 
     @Shadow public abstract ChunkStatus getStatus();
 
@@ -170,6 +176,13 @@ public abstract class MixinChunk implements ChunkAccess, LightHeightmapGetter, C
         }
 
         return 16; // TODO: properly handle Chunk
+    }
+
+    @Inject(method = "getSections", at = @At("HEAD"), cancellable = true)
+    private void getActiveSections(CallbackInfoReturnable<LevelChunkSection[]> cir) {
+        if (this.isCubic) {
+            cir.setReturnValue(this.activeSections.toArray(new LevelChunkSection[0]));
+        }
     }
 
     @Redirect(
@@ -330,6 +343,10 @@ public abstract class MixinChunk implements ChunkAccess, LightHeightmapGetter, C
     @Redirect(method = "isTicking", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/ChunkPos;asLong(Lnet/minecraft/core/BlockPos;)J"))
     private long cubePos(BlockPos blockPos) {
         return isCubic ? CubePos.asLong(blockPos) : ChunkPos.asLong(blockPos);
+    }
+
+    @Override public Set<LevelChunkSection> activeSections() {
+        return this.activeSections;
     }
 
     @Override public WorldStyle worldStyle() {
