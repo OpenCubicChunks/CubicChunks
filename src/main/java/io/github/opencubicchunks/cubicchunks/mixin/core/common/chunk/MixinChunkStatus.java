@@ -214,21 +214,25 @@ public class MixinChunkStatus {
             CubePos cubePos = ((IBigCube) chunk).getCubePos();
             int cubeY = cubePos.getY();
 
-            CubePrimer cubeAbove = new CubePrimer(CubePos.of(cubePos.getX(), cubeY + 1,
-                cubePos.getZ()), UpgradeData.EMPTY, cubeWorldGenRegion);
+            CubePos cubePosAbove = CubePos.of(cubePos.getX(), cubeY + 1,
+                cubePos.getZ());
 
+            CubePrimer realCubeAbove = (CubePrimer) cubeWorldGenRegion.getCube(cubePosAbove);
+            CubePrimer simulatedCubeAbove = new CubePrimer(cubePosAbove, UpgradeData.EMPTY, cubeWorldGenRegion);
+            boolean notempty = !realCubeAbove.getFeaturesStateMap().isEmpty();
             CompletableFuture<ChunkAccess> chainedNoiseFutures = null;
 
+            simulatedCubeAbove.applyFeatureStates();
             for (int columnX = 0; columnX < IBigCube.DIAMETER_IN_SECTIONS; columnX++) {
                 for (int columnZ = 0; columnZ < IBigCube.DIAMETER_IN_SECTIONS; columnZ++) {
-                    cubeAbove.moveColumns(columnX, columnZ);
+                    simulatedCubeAbove.moveColumns(columnX, columnZ);
                     if (chunk instanceof CubePrimer) {
                         ((CubePrimer) chunk).moveColumns(columnX, columnZ);
                     }
 
                     ChunkPos pos = chunk.getPos();
 
-                    NoiseAndSurfaceBuilderHelper cubeAccessWrapper = new NoiseAndSurfaceBuilderHelper((IBigCube) chunk, cubeAbove);
+                    NoiseAndSurfaceBuilderHelper cubeAccessWrapper = new NoiseAndSurfaceBuilderHelper((IBigCube) chunk, simulatedCubeAbove, realCubeAbove, notempty);
                     cubeAccessWrapper.moveColumn(columnX, columnZ);
 
                     if (chainedNoiseFutures == null) {

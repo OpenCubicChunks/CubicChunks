@@ -11,6 +11,7 @@ import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import io.github.opencubicchunks.cubicchunks.world.DummyHeightmap;
 import io.github.opencubicchunks.cubicchunks.world.storage.CubeProtoTickList;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.SectionPos;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.LevelHeightAccessor;
@@ -19,6 +20,7 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.ChunkAccess;
+import net.minecraft.world.level.chunk.ChunkStatus;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.chunk.LevelChunkSection;
 import net.minecraft.world.level.chunk.ProtoChunk;
@@ -33,22 +35,26 @@ public class NoiseAndSurfaceBuilderHelper extends ProtoChunk implements CubicLev
 
 
     private final ChunkAccess[] delegates;
+    private final CubePrimer realCubeAbove;
     private int columnX;
     private int columnZ;
     private final Map<Heightmap.Types, Heightmap> heightmaps;
     private final boolean isCubic;
     private final boolean generates2DChunks;
     private final WorldStyle worldStyle;
+    boolean offsetFloor;
 
     private final BlockPos.MutableBlockPos mutablePos = new BlockPos.MutableBlockPos();
 
     private boolean needsExtraHeight;
 
-    public NoiseAndSurfaceBuilderHelper(IBigCube delegate, IBigCube delegateAbove) {
+    public NoiseAndSurfaceBuilderHelper(IBigCube delegate, IBigCube delegateAbove, CubePrimer realCubeAbove, boolean offsetFloor) {
         super(delegate.getCubePos().asChunkPos(), UpgradeData.EMPTY, null, ((CubeProtoTickList<Block>) delegate.getBlockTicks()), ((CubeProtoTickList<Fluid>) delegate.getLiquidTicks()),
             new HeightAccessor(delegate));
+        this.realCubeAbove = realCubeAbove;
         this.delegates = new ChunkAccess[2];
         this.delegates[0] = delegate;
+        this.offsetFloor = offsetFloor;
         this.delegates[1] = delegateAbove;
         this.heightmaps = Maps.newEnumMap(Heightmap.Types.class);
         isCubic = ((CubicLevelHeightAccessor) delegate).isCubic();
@@ -75,7 +81,7 @@ public class NoiseAndSurfaceBuilderHelper extends ProtoChunk implements CubicLev
 
 
     public void applySections() {
-        for (int relativeSectionY = 0; relativeSectionY < IBigCube.DIAMETER_IN_SECTIONS * 2; relativeSectionY++) {
+        for (int relativeSectionY = 0; relativeSectionY < IBigCube.DIAMETER_IN_SECTIONS + 1; relativeSectionY++) {
             int sectionY = relativeSectionY + ((IBigCube) delegates[0]).getCubePos().asSectionPos().getY();
             int idx = getSectionIndex(Coords.sectionToMinBlock(sectionY));
             IBigCube delegateCube = (IBigCube) getDelegateFromSectionY(sectionY);
@@ -85,6 +91,25 @@ public class NoiseAndSurfaceBuilderHelper extends ProtoChunk implements CubicLev
 
             if (cubeSection == null) {
                 delegateCube.getCubeSections()[cubeSectionIndex] = getSections()[idx];
+            } else {
+                ChunkPos pos = getPos();
+                if (delegateCube == this.delegates[1]) {
+                    if (!cubeSection.isEmpty()) {
+                        for (int x = 0; x < 16; x++) {
+                            for (int z = 0; z < 16; z++) {
+                                for (int y = 0; y < 8; y++) {
+                                    BlockState blockState = cubeSection.getBlockState(x, y, z);
+                                    if (!blockState.isAir()) {
+                                        if (!realCubeAbove.getStatus().isOrAfter(ChunkStatus.BIOMES)) {
+                                            realCubeAbove.setFeatureBlocks(new BlockPos(SectionPos.sectionToBlockCoord(pos.x, x), SectionPos.sectionToBlockCoord(sectionY, y),
+                                                SectionPos.sectionToBlockCoord(pos.z, z)), blockState);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             }
             LevelChunkSection section = getSections()[idx];
             if (section == null) {
@@ -131,7 +156,8 @@ public class NoiseAndSurfaceBuilderHelper extends ProtoChunk implements CubicLev
     }
 
     @Override public int getMinBuildHeight() {
-        return ((IBigCube) delegates[0]).getCubePos().minCubeY();
+        int minCubeY = ((IBigCube) delegates[0]).getCubePos().minCubeY();
+        return offsetFloor ? minCubeY + 8 : minCubeY;
     }
 
     @Override public int getSectionYFromSectionIndex(int sectionIndex) {
@@ -166,6 +192,14 @@ public class NoiseAndSurfaceBuilderHelper extends ProtoChunk implements CubicLev
 
     @Nullable @Override public BlockState setBlockState(BlockPos pos, BlockState state, boolean moved) {
         ChunkAccess delegate = getDelegateFromBlockY(pos.getY());
+        if (delegate == delegates[1]) {
+
+            if (!realCubeAbove.getStatus().isOrAfter(ChunkStatus.BIOMES)) {
+                realCubeAbove.setFeatureBlocks(pos, state);
+                return state;
+            }
+        }
+
         if (delegate != null) {
             return delegate.setBlockState(correctPos(pos), state, moved);
         }

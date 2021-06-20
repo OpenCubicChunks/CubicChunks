@@ -84,7 +84,7 @@ public class CubePrimer extends ProtoChunk implements IBigCube, CubicLevelHeight
     private final Map<StructureFeature<?>, StructureStart<?>> structureStarts;
     private final Map<StructureFeature<?>, LongSet> structuresRefences;
     private final Map<GenerationStep.Carving, BitSet> carvingMasks;
-    private final Map<BlockPos, BlockState> featuresStateMap = new HashMap<>();
+    private Map<BlockPos, BlockState> featuresStateMap = new HashMap<>();
 
     private volatile boolean isDirty;
 
@@ -250,6 +250,8 @@ public class CubePrimer extends ProtoChunk implements IBigCube, CubicLevelHeight
         featuresStateMap.forEach((pos, state) -> {
             setBlock(pos, state, false);
         });
+
+        featuresStateMap = new HashMap<>();
     }
 
     public Map<BlockPos, BlockState> getFeaturesStateMap() {
