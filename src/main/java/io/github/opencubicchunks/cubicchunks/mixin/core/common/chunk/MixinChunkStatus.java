@@ -265,7 +265,7 @@ public class MixinChunkStatus {
 
             generator.buildSurfaceAndBedrock(cubeWorldGenRegion, chunkAccess);
 
-          
+
             cubeAccessWrapper.setNeedsExtraHeight(false);
 
             // Carvers
@@ -427,7 +427,7 @@ public class MixinChunkStatus {
                 new StructureFeatureManager(cubeWorldGenRegion, ((StructureFeatureManagerAccess) world.structureFeatureManager()).getWorldGenSettings());
 
 //            if (cubePrimer.getCubePos().getY() >= 0)
-
+            cubePrimer.applyFeatureStates();
             ((ICubeGenerator) generator).decorate(cubeWorldGenRegion, structureFeatureManager, (CubePrimer) chunk);
             cubePrimer.setCubeStatus(status);
         }

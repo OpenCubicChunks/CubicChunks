@@ -228,6 +228,13 @@ public class CubeSerializer {
                 cubePrimer.setCarvingMask(carvingStage, BitSet.valueOf(compoundnbt5.getByteArray(key)));
             }
 
+            ListTag featurestates = level.getList("featurestates", CompoundTag.TAG_COMPOUND);
+            featurestates.forEach((tag) -> {
+                CompoundTag compoundTag = (CompoundTag) tag;
+                cubePrimer.setFeatureBlocks(new BlockPos(compoundTag.getInt("x"), compoundTag.getInt("y"), compoundTag.getInt("z")),
+                    Block.BLOCK_STATE_REGISTRY.byId(compoundTag.getInt("s")));
+            });
+
             //TODO: reimplement forge ChunkDataEvent
 //                net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.event.world.ChunkDataEvent.Load(icube, level, chunkstatus$type));
 
@@ -333,6 +340,17 @@ public class CubeSerializer {
             }
 
             level.put("CarvingMasks", carvingMasksNBT);
+
+            ListTag featuresStates = new ListTag();
+            cubePrimer.getFeaturesStateMap().forEach(((pos1, state) -> {
+                CompoundTag tag = new CompoundTag();
+                tag.putInt("x", pos.getX());
+                tag.putInt("y", pos.getY());
+                tag.putInt("z", pos.getZ());
+                tag.putInt("s", Block.BLOCK_STATE_REGISTRY.getId(state));
+                featuresStates.add(tag);
+            }));
+            level.put("featurestates", featuresStates);
         }
 
         TickList<Block> tickList = icube.getBlockTicks();

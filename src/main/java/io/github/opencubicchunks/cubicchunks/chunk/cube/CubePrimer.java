@@ -8,6 +8,7 @@ import java.util.BitSet;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -83,6 +84,7 @@ public class CubePrimer extends ProtoChunk implements IBigCube, CubicLevelHeight
     private final Map<StructureFeature<?>, StructureStart<?>> structureStarts;
     private final Map<StructureFeature<?>, LongSet> structuresRefences;
     private final Map<GenerationStep.Carving, BitSet> carvingMasks;
+    private final Map<BlockPos, BlockState> featuresStateMap = new HashMap<>();
 
     private volatile boolean isDirty;
 
@@ -103,6 +105,7 @@ public class CubePrimer extends ProtoChunk implements IBigCube, CubicLevelHeight
 
     private int minBuildHeight;
     private int height;
+
 
     public CubePrimer(CubePos cubePos, UpgradeData upgradeData, LevelHeightAccessor levelHeightAccessor) {
         this(cubePos, upgradeData, null, new CubeProtoTickList<>((block) -> {
@@ -237,6 +240,20 @@ public class CubePrimer extends ProtoChunk implements IBigCube, CubicLevelHeight
         }
 
         return lastState;
+    }
+
+    @Override public void setFeatureBlocks(BlockPos pos, BlockState state) {
+       featuresStateMap.put(pos.immutable(), state);
+    }
+
+    public void applyFeatureStates() {
+        featuresStateMap.forEach((pos, state) -> {
+            setBlock(pos, state, false);
+        });
+    }
+
+    public Map<BlockPos, BlockState> getFeaturesStateMap() {
+        return featuresStateMap;
     }
 
     private void primeHeightMaps(EnumSet<Heightmap.Types> toInitialize) {
