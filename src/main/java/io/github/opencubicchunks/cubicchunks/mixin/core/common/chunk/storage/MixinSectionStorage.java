@@ -30,7 +30,6 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.nbt.Tag;
 import net.minecraft.util.datafix.DataFixTypes;
-import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.LevelHeightAccessor;
 import net.minecraft.world.level.chunk.storage.IOWorker;
 import net.minecraft.world.level.chunk.storage.SectionStorage;
@@ -76,8 +75,6 @@ public abstract class MixinSectionStorage<R> implements ISectionStorage {
     @Shadow protected static int getVersion(Dynamic<?> dynamic) {
         throw new Error("Mixin didn't apply");
     }
-
-    @Shadow protected abstract <T> void readColumn(ChunkPos pos, DynamicOps<T> dynamicOps, @Nullable T data);
 
     @Inject(method = "<init>", at = @At("RETURN"))
     private void getServerLevel(File file, Function<Runnable, Codec<R>> function, Function<Runnable, R> function2, DataFixer dataFixer, DataFixTypes dataFixTypes, boolean bl,
@@ -223,9 +220,13 @@ public abstract class MixinSectionStorage<R> implements ISectionStorage {
 
     }
 
-    @Override public void updateColumn(ChunkPos pos, CompoundTag tag) {
-        if (this.get(SectionPos.of(pos, 0).asLong()) != null) {
-            this.readColumn(pos, NbtOps.INSTANCE, tag);
+    @Override public void updateCube(CubePos pos, CompoundTag tag) {
+        for (int i = 0; i < IBigCube.SECTION_COUNT; ++i) {
+            SectionPos sectionPos = Coords.sectionPosByIndex(pos, i);
+            if (this.get(sectionPos.asLong()) != null) {
+                readCube(pos, NbtOps.INSTANCE, tag);
+                return; // Exit if cube was read, don't need to reread it again!
+            }
         }
     }
 

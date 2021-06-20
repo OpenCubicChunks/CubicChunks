@@ -928,7 +928,9 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
                     boolean flag = cubeNBT.contains("Level", 10) && cubeNBT.getCompound("Level").contains("Status", 8);
                     if (flag) {
                         ChunkIoMainThreadTaskUtils.executeMain(() -> {
-                            if (poiNBT != null) ((ISectionStorage) this.poiManager).updateColumn(cubePos.asChunkPos(), poiNBT);
+                            if (poiNBT != null) {
+                                ((ISectionStorage) this.poiManager).updateCube(cubePos, poiNBT);
+                            }
                         });
                         return CubeSerializer.read(this.level, this.structureManager, poiManager, cubePos, cubeNBT);
                     }
