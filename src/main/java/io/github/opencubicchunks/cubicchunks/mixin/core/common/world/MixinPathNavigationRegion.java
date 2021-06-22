@@ -5,12 +5,15 @@ import io.github.opencubicchunks.cubicchunks.chunk.cube.EmptyCube;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
+import io.github.opencubicchunks.cubicchunks.world.CubeCollisionGetter;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.SectionPos;
 import net.minecraft.util.Mth;
+import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.PathNavigationRegion;
 import net.minecraft.world.level.chunk.ChunkAccess;
+import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Mutable;
@@ -22,7 +25,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(PathNavigationRegion.class)
-public class MixinPathNavigationRegion {
+public abstract class MixinPathNavigationRegion implements CubeCollisionGetter {
 
     @Mutable @Shadow @Final protected int centerX;
     @Mutable @Shadow @Final protected int centerZ;
@@ -115,20 +118,7 @@ public class MixinPathNavigationRegion {
             return;
         }
 
-        int cubeX = Coords.blockToCube(pos.getX());
-        int cubeY = Coords.blockToCube(pos.getY());
-        int cubeZ = Coords.blockToCube(pos.getZ());
-
-        int dx = cubeX - this.centerX;
-        int dy = cubeY - this.centerY;
-        int dz = cubeZ - this.centerZ;
-        int index = this.diameter * (dx * this.diameter + dy) + dz;
-        if (dx >= 0 && dy >= 0 && dz >= 0 && index < cubes.length) {
-            ChunkAccess chunkAccess = this.cubes[index];
-            cir.setReturnValue((chunkAccess != null ? chunkAccess : new EmptyCube(this.level, CubePos.of(cubeX, cubeY, cubeZ))));
-        } else {
-            cir.setReturnValue(new EmptyCube(this.level, CubePos.of(cubeX, cubeY, cubeZ)));
-        }
+        cir.setReturnValue(getCube(Coords.blockToCube(pos.getX()), Coords.blockToCube(pos.getY()), Coords.blockToCube(pos.getZ())));
     }
 
 
@@ -141,5 +131,22 @@ public class MixinPathNavigationRegion {
     @Inject(method = "getMinBuildHeight", at = @At("HEAD"), cancellable = true)
     private void useMinYVariableInstead(CallbackInfoReturnable<Integer> cir) {
         cir.setReturnValue(this.minY);
+    }
+
+    @Nullable @Override public BlockGetter getCubeForCollisions(int cubeX, int cubeY, int cubeZ) {
+        return getCube(cubeX, cubeY, cubeZ);
+    }
+
+    private ChunkAccess getCube(int cubeX, int cubeY, int cubeZ) {
+        int dx = cubeX - this.centerX;
+        int dy = cubeY - this.centerY;
+        int dz = cubeZ - this.centerZ;
+        int index = this.diameter * (dx * this.diameter + dy) + dz;
+        if (dx >= 0 && dy >= 0 && dz >= 0 && index < cubes.length) {
+            ChunkAccess chunkAccess = this.cubes[index];
+            return (chunkAccess != null ? chunkAccess : new EmptyCube(this.level, CubePos.of(cubeX, cubeY, cubeZ)));
+        } else {
+            return new EmptyCube(this.level, CubePos.of(cubeX, cubeY, cubeZ));
+        }
     }
 }

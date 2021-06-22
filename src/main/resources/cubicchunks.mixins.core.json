@@ -64,9 +64,11 @@
         "common.world.lighting.MixinSectionLightStorage",
         "common.world.lighting.MixinWorldLightManager",
         "common.world.MixinAbstractChunkProvider",
+        "common.world.MixinCollisionSpliterator",
         "common.world.MixinFuzzyOffsetConstantColumnBiomeZoomer",
         "common.world.MixinLevelHeightAccessor",
         "common.world.MixinNaturalSpawner",
+        "common.world.MixinPathNavigationRegion",
         "common.world.MixinServerTickList",
         "common.world.MixinServerWorld",
         "common.world.MixinSpawnLocationHelper",
@@ -89,8 +91,7 @@
         "common.world.structure.MixinStructureFeatureManager",
         "common.world.structure.MixinStructurePiece",
         "common.world.structure.MixinStructureStart",
-        "common.world.structure.pieces.MixinOceanRuinPieces",
-        "common.world.MixinPathNavigationRegion"
+        "common.world.structure.pieces.MixinOceanRuinPieces"
     ],
     "client": [
         "client.chunk.MixinChunk",
