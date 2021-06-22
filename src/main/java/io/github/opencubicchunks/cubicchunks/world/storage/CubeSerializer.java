@@ -16,7 +16,9 @@ import io.github.opencubicchunks.cubicchunks.chunk.biome.CubeBiomeContainer;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.BigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.CubePrimer;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.CubePrimerWrapper;
+import io.github.opencubicchunks.cubicchunks.chunk.storage.AsyncSaveData;
 import io.github.opencubicchunks.cubicchunks.chunk.storage.POIDeserializationContext;
+import io.github.opencubicchunks.cubicchunks.chunk.util.ChunkIoMainThreadTaskUtils;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.ChunkSerializerAccess;
 import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
@@ -100,7 +102,7 @@ public class CubeSerializer {
                     sections[cubeIndex] = chunksection;
                 }
 
-                ((POIDeserializationContext) poiManager).checkConsistencyWithBlocksForCube(sectionPos, chunksection);
+                ChunkIoMainThreadTaskUtils.executeMain(() -> ((POIDeserializationContext) poiManager).checkConsistencyWithBlocksForCube(sectionPos, chunksection));
             }
 
             if (isLightOn) {
@@ -226,6 +228,13 @@ public class CubeSerializer {
                 cubePrimer.setCarvingMask(carvingStage, BitSet.valueOf(compoundnbt5.getByteArray(key)));
             }
 
+            ListTag featurestates = level.getList("featurestates", CompoundTag.TAG_COMPOUND);
+            featurestates.forEach((tag) -> {
+                CompoundTag compoundTag = (CompoundTag) tag;
+                cubePrimer.setFeatureBlocks(new BlockPos(compoundTag.getInt("x"), compoundTag.getInt("y"), compoundTag.getInt("z")),
+                    Block.BLOCK_STATE_REGISTRY.byId(compoundTag.getInt("s")));
+            });
+
             //TODO: reimplement forge ChunkDataEvent
 //                net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.event.world.ChunkDataEvent.Load(icube, level, chunkstatus$type));
 
@@ -233,7 +242,7 @@ public class CubeSerializer {
         }
     }
 
-    public static CompoundTag write(ServerLevel world, IBigCube icube) {
+    public static CompoundTag write(ServerLevel world, IBigCube icube, AsyncSaveData data) {
         CubePos pos = icube.getCubePos();
 
         CompoundTag root = new CompoundTag();
@@ -256,8 +265,10 @@ public class CubeSerializer {
         for (int i = 0; i < IBigCube.SECTION_COUNT; ++i) {
             LevelChunkSection section = sections[i];
 
-            DataLayer blockData = worldlightmanager.getLayerListener(LightLayer.BLOCK).getDataLayerData(Coords.sectionPosByIndex(pos, i));
-            DataLayer skyData = worldlightmanager.getLayerListener(LightLayer.SKY).getDataLayerData(Coords.sectionPosByIndex(pos, i));
+            DataLayer blockData = data != null ? data.blockLight.get(Coords.sectionPosByIndex(pos, i)) :
+                worldlightmanager.getLayerListener(LightLayer.BLOCK).getDataLayerData(Coords.sectionPosByIndex(pos, i));
+            DataLayer skyData = data != null ? data.skyLight.get(Coords.sectionPosByIndex(pos, i)) :
+                worldlightmanager.getLayerListener(LightLayer.SKY).getDataLayerData(Coords.sectionPosByIndex(pos, i));
             CompoundTag sectionNBT = new CompoundTag();
             if (section != LevelChunk.EMPTY_SECTION || blockData != null || skyData != null) {
 
@@ -290,11 +301,23 @@ public class CubeSerializer {
 
         ListTag tileEntitiesNBTList = new ListTag();
 
-        for (BlockPos blockpos : icube.getCubeTileEntitiesPos()) {
-            CompoundTag tileEntityNBT = icube.getCubeBlockEntityNbtForSaving(blockpos);
-            if (tileEntityNBT != null) {
-                CubicChunks.LOGGER.debug("Saving tile entity at " + blockpos.toString());
+        if (data != null) {
+            data.blockEntities.forEach((blockPos, blockEntity) -> {
+                CompoundTag tileEntityNBT = blockEntity.save(new CompoundTag());
+                if (icube instanceof BigCube) tileEntityNBT.putBoolean("keepPacked", false);
                 tileEntitiesNBTList.add(tileEntityNBT);
+            });
+            data.blockEntitiesDeferred.forEach((blockPos, tag) -> {
+                if (icube instanceof BigCube) tag.putBoolean("keepPacked", true);
+                tileEntitiesNBTList.add(tag);
+            });
+        } else {
+            for (BlockPos blockpos : icube.getCubeTileEntitiesPos()) {
+                CompoundTag tileEntityNBT = icube.getCubeBlockEntityNbtForSaving(blockpos);
+                if (tileEntityNBT != null) {
+                    CubicChunks.LOGGER.debug("Saving tile entity at " + blockpos.toString());
+                    tileEntitiesNBTList.add(tileEntityNBT);
+                }
             }
         }
 
@@ -317,6 +340,17 @@ public class CubeSerializer {
             }
 
             level.put("CarvingMasks", carvingMasksNBT);
+
+            ListTag featuresStates = new ListTag();
+            cubePrimer.getFeaturesStateMap().forEach(((pos1, state) -> {
+                CompoundTag tag = new CompoundTag();
+                tag.putInt("x", pos.getX());
+                tag.putInt("y", pos.getY());
+                tag.putInt("z", pos.getZ());
+                tag.putInt("s", Block.BLOCK_STATE_REGISTRY.getId(state));
+                featuresStates.add(tag);
+            }));
+            level.put("featurestates", featuresStates);
         }
 
         TickList<Block> tickList = icube.getBlockTicks();
@@ -324,6 +358,8 @@ public class CubeSerializer {
             level.put("ToBeTicked", ((ProtoTickList) tickList).save());
         } else if (tickList instanceof ChunkTickList) {
             level.put("TileTicks", ((ChunkTickList) tickList).save());
+        } else if (data != null) {
+            level.put("TileTicks", data.serverBlockTicks.get());
         } else {
             level.put("TileTicks", world.getBlockTicks().save(new ImposterChunkPos(icube.getCubePos())));
         }
@@ -333,6 +369,8 @@ public class CubeSerializer {
             level.put("LiquidsToBeTicked", ((ProtoTickList) tickList2).save());
         } else if (tickList2 instanceof ChunkTickList) {
             level.put("LiquidTicks", ((ChunkTickList) tickList2).save());
+        } else if (data != null) {
+            level.put("LiquidTicks", data.serverLiquidTicks.get());
         } else {
             level.put("LiquidTicks", world.getLiquidTicks().save(new ImposterChunkPos(icube.getCubePos())));
         }

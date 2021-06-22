@@ -31,6 +31,7 @@ import net.minecraft.nbt.NbtOps;
 import net.minecraft.nbt.Tag;
 import net.minecraft.util.datafix.DataFixTypes;
 import net.minecraft.world.level.LevelHeightAccessor;
+import net.minecraft.world.level.chunk.storage.IOWorker;
 import net.minecraft.world.level.chunk.storage.SectionStorage;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
@@ -58,6 +59,8 @@ public abstract class MixinSectionStorage<R> implements ISectionStorage {
     @Shadow @Final private DataFixer fixerUpper;
 
     @Shadow @Final private DataFixTypes type;
+
+    @Shadow @Final private IOWorker worker;
 
     private RegionCubeIO cubeWorker;
 
@@ -215,5 +218,19 @@ public abstract class MixinSectionStorage<R> implements ISectionStorage {
             }
         }
 
+    }
+
+    @Override public void updateCube(CubePos pos, CompoundTag tag) {
+        for (int i = 0; i < IBigCube.SECTION_COUNT; ++i) {
+            SectionPos sectionPos = Coords.sectionPosByIndex(pos, i);
+            if (this.get(sectionPos.asLong()) != null) {
+                readCube(pos, NbtOps.INSTANCE, tag);
+                return; // Exit if cube was read, don't need to reread it again!
+            }
+        }
+    }
+
+    @Override public IOWorker getIOWorker() {
+        return this.worker;
     }
 }

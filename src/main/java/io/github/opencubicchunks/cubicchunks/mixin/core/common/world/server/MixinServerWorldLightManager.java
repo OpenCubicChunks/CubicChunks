@@ -126,6 +126,7 @@ public abstract class MixinServerWorldLightManager extends MixinWorldLightManage
             super.enableLightSources(cubePos, true);
             if (!flagIn) {
                 icube.getCubeLightSources().forEach((blockPos) -> {
+                    assert blockPos != null;
                     super.onBlockEmissionIncrease(blockPos, icube.getLightEmission(blockPos));
                 });
             }

@@ -10,10 +10,11 @@ import java.util.BitSet;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Queue;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionStage;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BooleanSupplier;
@@ -45,13 +46,17 @@ import io.github.opencubicchunks.cubicchunks.chunk.cube.CubePrimer;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.CubePrimerWrapper;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.CubeStatus;
 import io.github.opencubicchunks.cubicchunks.chunk.graph.CCTicketType;
+import io.github.opencubicchunks.cubicchunks.chunk.storage.AsyncSaveData;
 import io.github.opencubicchunks.cubicchunks.chunk.storage.ISectionStorage;
 import io.github.opencubicchunks.cubicchunks.chunk.ticket.CubeTaskPriorityQueue;
 import io.github.opencubicchunks.cubicchunks.chunk.ticket.CubeTaskPriorityQueueSorter;
 import io.github.opencubicchunks.cubicchunks.chunk.ticket.ITicketManager;
+import io.github.opencubicchunks.cubicchunks.chunk.util.ChunkIoMainThreadTaskUtils;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
+import io.github.opencubicchunks.cubicchunks.chunk.util.ExecutorUtils;
 import io.github.opencubicchunks.cubicchunks.chunk.util.Utils;
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.EntityTrackerAccess;
+import io.github.opencubicchunks.cubicchunks.mixin.access.common.IOWorkerAccess;
 import io.github.opencubicchunks.cubicchunks.network.PacketCubes;
 import io.github.opencubicchunks.cubicchunks.network.PacketDispatcher;
 import io.github.opencubicchunks.cubicchunks.network.PacketHeightmap;
@@ -130,6 +135,10 @@ import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 public abstract class MixinChunkManager implements IChunkManager, IChunkMapInternal, IVerticalView, CubePlayerProvider {
 
     private static final double TICK_UPDATE_DISTANCE = 128.0;
+    private static final boolean USE_ASYNC_SERIALIZATION = true;
+
+    @Shadow @Final ServerLevel level;
+    @Shadow int viewDistance;
 
     private CubeTaskPriorityQueueSorter cubeQueueSorter;
 
@@ -154,13 +163,13 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
 
     private RegionCubeIO regionCubeIO;
 
+    private final Map<CubePos, CompletableFuture<Boolean>> cubeSavingFutures = new ConcurrentHashMap<>();
+
     @Shadow @Final private ThreadedLevelLightEngine lightEngine;
 
     @Shadow private boolean modified;
 
     @Shadow @Final private ChunkMap.DistanceManager distanceManager;
-
-    @Shadow @Final private ServerLevel level;
 
     @Shadow @Final private StructureManager structureManager;
 
@@ -172,10 +181,8 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
 
     @Shadow @Final private File storageFolder;
 
-    @Shadow private int viewDistance;
     private int verticalViewDistance;
     private int incomingVerticalViewDistance;
-
 
     @Shadow @Final private Int2ObjectMap<ChunkMap.TrackedEntity> entityMap;
 
@@ -198,8 +205,7 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
 
     @Shadow @Nullable protected abstract CompoundTag readChunk(ChunkPos pos) throws IOException;
 
-
-    @Shadow protected static void postLoadProtoChunk(ServerLevel serverLevel, List<CompoundTag> list) {
+    @Shadow private static void postLoadProtoChunk(ServerLevel serverLevel, List<CompoundTag> list) {
         throw new Error("Mixin didn't apply");
     }
 
@@ -277,7 +283,7 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
 
             do {
                 savedAny.setFalse();
-                list.stream().map((cubeHolder) -> {
+                @SuppressWarnings("unchecked") final CompletableFuture<Boolean>[] saveFutures = list.stream().map((cubeHolder) -> {
                     CompletableFuture<IBigCube> cubeFuture;
                     do {
                         cubeFuture = ((ICubeHolder) cubeHolder).getCubeToSave();
@@ -286,7 +292,14 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
 
                     return cubeFuture.join();
                 }).filter((cube) -> cube instanceof CubePrimerWrapper || cube instanceof BigCube)
-                    .filter(this::cubeSave).forEach((unsavedCube) -> savedAny.setTrue());
+                    .map(cube1 -> USE_ASYNC_SERIALIZATION ? cubeSaveAsync(cube1) : CompletableFuture.completedFuture(cubeSave(cube1)))
+                    .distinct().toArray(CompletableFuture[]::new);
+                for (CompletableFuture<Boolean> future : saveFutures) {
+                    if (future.join()) {
+                        savedAny.setTrue();
+                    }
+                }
+
             } while (savedAny.isTrue());
 
             this.processCubeUnloads(() -> true);
@@ -339,7 +352,7 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
                     }
                 }
 
-                CompoundTag compoundnbt = CubeSerializer.write(this.level, cube);
+                CompoundTag compoundnbt = CubeSerializer.write(this.level, cube, null);
                 //TODO: FORGE EVENT : reimplement ChunkDataEvent#Save
 //                net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.event.world.ChunkDataEvent.Save(p_219229_1_, p_219229_1_.getWorldForge() != null ?
 //                p_219229_1_.getWorldForge() : this.level, compoundnbt));
@@ -352,6 +365,57 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
                 return false;
             }
         }
+    }
+
+    private CompletableFuture<Boolean> cubeSaveAsync(IBigCube cube) {
+        ((ISectionStorage) this.poiManager).flush(cube.getCubePos());
+        if (!cube.isDirty()) {
+            return CompletableFuture.completedFuture(false);
+        } else {
+            cube.setDirty(false);
+            CubePos cubePos = cube.getCubePos();
+
+            try {
+                ChunkStatus status = cube.getCubeStatus();
+                if (status.getChunkType() != ChunkStatus.ChunkType.LEVELCHUNK) {
+                    if (isExistingCubeFull(cubePos)) {
+                        return CompletableFuture.completedFuture(false);
+                    }
+                    if (status == ChunkStatus.EMPTY && cube.getAllStarts().values().stream().noneMatch(StructureStart::isValid)) {
+                        return CompletableFuture.completedFuture(false);
+                    }
+                }
+
+                if (status.getChunkType() != ChunkStatus.ChunkType.LEVELCHUNK) {
+                    CompoundTag compoundnbt = regionCubeIO.loadCubeNBT(cubePos);
+                    if (compoundnbt != null && CubeSerializer.getChunkStatus(compoundnbt) == ChunkStatus.ChunkType.LEVELCHUNK) {
+                        return CompletableFuture.completedFuture(false);
+                    }
+
+                    if (status == ChunkStatus.EMPTY && cube.getAllStarts().values().stream().noneMatch(StructureStart::isValid)) {
+                        return CompletableFuture.completedFuture(false);
+                    }
+                }
+
+                final AsyncSaveData asyncSaveData = new AsyncSaveData(this.level, cube);
+                this.markCubePosition(cubePos, status.getChunkType());
+                final CompletableFuture<Boolean> future = CompletableFuture.supplyAsync(() -> CubeSerializer.write(this.level, cube, asyncSaveData), ExecutorUtils.SERIALIZER)
+                    .thenAccept(tag -> regionCubeIO.saveCubeNBT(cubePos, tag)).thenApply(unused -> true).exceptionally(throwable -> {
+                        LOGGER.error("Failed to save chunk {},{},{}", cubePos.getX(), cubePos.getY(), cubePos.getZ(), throwable);
+                        return false;
+                    });
+                this.cubeSavingFutures.put(cubePos, future);
+                return future;
+            } catch (Exception exception) {
+                LOGGER.error("Failed to save chunk {},{},{}", cubePos.getX(), cubePos.getY(), cubePos.getZ(), exception);
+                return CompletableFuture.completedFuture(false);
+            }
+        }
+    }
+
+    @Inject(method = "tick(Ljava/util/function/BooleanSupplier;)V", at = @At("HEAD"))
+    private void onTick(CallbackInfo info) {
+        cubeSavingFutures.entrySet().removeIf(entry -> entry.getValue().isDone());
     }
 
     private CompoundTag readCubeNBT(CubePos cubePos) throws IOException {
@@ -394,7 +458,11 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
                         //net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.event.world.ChunkEvent.Unload((Chunk)cube));
                     }
 
-                    this.cubeSave(icube);
+                    if (USE_ASYNC_SERIALIZATION) {
+                        this.cubeSaveAsync(icube);
+                    } else {
+                        this.cubeSave(icube);
+                    }
                     if (this.cubeEntitiesInLevel.remove(cubePos) && icube instanceof BigCube) {
                         ((IServerWorld) this.level).onCubeUnloading((BigCube) icube);
                     }
@@ -441,13 +509,13 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
     // TODO: remove when cubic chunks versions are done
     @SuppressWarnings("UnresolvedMixinReference")
     // lambda$func_219244_a$13 or lambda$schedule$13 or lambda$null$13
-    @Inject(method = "*", at = @At(
+    @Inject(method = "schedule", at = @At(
         value = "INVOKE",
         target = "Lnet/minecraft/server/level/progress/ChunkProgressListener;onStatusChange(Lnet/minecraft/world/level/ChunkPos;Lnet/minecraft/world/level/chunk/ChunkStatus;)V")
     )
     @Group(name = "MixinChunkManager.on_func_219244_a_StatusChange", min = 1, max = 1)
-    private void on_func_219244_a_StatusChange(ChunkStatus chunkStatusIn, ChunkPos chunkpos,
-                                               ChunkHolder chunkHolderIn, Either<?, ?> p_223180_4_, CallbackInfoReturnable<CompletionStage<?>> cir) {
+    private void on_func_219244_a_StatusChange(ChunkHolder chunkHolderIn, ChunkStatus chunkStatusIn,
+                                               CallbackInfoReturnable<CompletableFuture<Either<ChunkAccess, ChunkHolder.ChunkLoadingFailure>>> cir) {
         if (!((CubicLevelHeightAccessor) this.level).isCubic()) {
             return;
         }
@@ -482,8 +550,8 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
     //A lamdba inside a lambda in the method scheduleChunkGeneration.
     @SuppressWarnings({ "UnresolvedMixinReference", "target" })
     @Inject(
-        method = "lambda$null$19(Lnet/minecraft/world/level/ChunkPos;Lnet/minecraft/server/level/ChunkHolder;Lnet/minecraft/world/level/chunk/ChunkStatus;Ljava/util/concurrent/Executor;"
-            + "Ljava/util/List;)Ljava/util/concurrent/CompletableFuture;",
+        method = "lambda$scheduleChunkGeneration$18(Lnet/minecraft/world/level/ChunkPos;Lnet/minecraft/server/level/ChunkHolder;Lnet/minecraft/world/level/chunk/ChunkStatus;"
+            + "Ljava/util/concurrent/Executor;Ljava/util/List;)Ljava/util/concurrent/CompletableFuture;",
         at = @At(
             value = "INVOKE",
             target = "Lnet/minecraft/server/level/progress/ChunkProgressListener;onStatusChange(Lnet/minecraft/world/level/ChunkPos;Lnet/minecraft/world/level/chunk/ChunkStatus;)V"
@@ -830,7 +898,7 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
     }
 
     @SuppressWarnings({ "UnresolvedMixinReference", "ConstantConditions" })
-    @Redirect(method = "lambda$scheduleChunkLoad$14(Lnet/minecraft/world/level/ChunkPos;)Lcom/mojang/datafixers/util/Either;",
+    @Redirect(method = "lambda$scheduleChunkLoad$13(Lnet/minecraft/world/level/ChunkPos;)Lcom/mojang/datafixers/util/Either;",
         at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ChunkMap;readChunk(Lnet/minecraft/world/level/ChunkPos;)Lnet/minecraft/nbt/CompoundTag;"))
     private CompoundTag on$readChunk(ChunkMap chunkManager, ChunkPos chunkPos) throws IOException {
         if (!((CubicLevelHeightAccessor) this.level).isCubic()) {
@@ -849,34 +917,38 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
 
     //scheduleChunkLoad
     private CompletableFuture<Either<IBigCube, ChunkHolder.ChunkLoadingFailure>> scheduleCubeLoad(CubePos cubePos) {
-        return CompletableFuture.supplyAsync(() -> {
-            try {
-                this.level.getProfiler().incrementCounter("cubeLoad");
+        this.level.getProfiler().incrementCounter("cubeLoad");
 
-                CompoundTag compoundnbt = regionCubeIO.loadCubeNBT(cubePos);
-                if (compoundnbt != null) {
-                    boolean flag = compoundnbt.contains("Level", 10) && compoundnbt.getCompound("Level").contains("Status", 8);
+        final CompletableFuture<Boolean> savingFuture = cubeSavingFutures.containsKey(cubePos) ? cubeSavingFutures.get(cubePos) : CompletableFuture.completedFuture(true);
+        return savingFuture.thenComposeAsync(unused -> {
+            final CompletableFuture<CompoundTag> cubeNBTFuture = regionCubeIO.getCubeNBTFuture(cubePos);
+            final CompletableFuture<CompoundTag> poiFuture = ((IOWorkerAccess) ((ISectionStorage) this.poiManager).getIOWorker()).invokeLoadAsync(cubePos.asChunkPos());
+            return cubeNBTFuture.thenCombineAsync(poiFuture, (cubeNBT, poiNBT) -> {
+                if (cubeNBT != null) {
+                    boolean flag = cubeNBT.contains("Level", 10) && cubeNBT.getCompound("Level").contains("Status", 8);
                     if (flag) {
-                        IBigCube iBigCube = CubeSerializer.read(this.level, this.structureManager, poiManager, cubePos, compoundnbt);
-                        this.markCubePosition(cubePos, iBigCube.getCubeStatus().getChunkType());
-                        return Either.left(iBigCube);
+                        ChunkIoMainThreadTaskUtils.executeMain(() -> {
+                            if (poiNBT != null) {
+                                ((ISectionStorage) this.poiManager).updateCube(cubePos, poiNBT);
+                            }
+                        });
+                        return CubeSerializer.read(this.level, this.structureManager, poiManager, cubePos, cubeNBT);
                     }
                     LOGGER.error("Cube file at {} is missing level data, skipping", cubePos);
                 }
-            } catch (ReportedException reportedexception) {
-                Throwable throwable = reportedexception.getCause();
-                if (!(throwable instanceof IOException)) {
-                    this.markCubePositionReplaceable(cubePos);
-                    throw reportedexception;
+                return null;
+            }, ExecutorUtils.SERIALIZER).handleAsync((iBigCube, throwable) -> {
+                if (throwable != null) {
+                    LOGGER.error("Couldn't load cube {}", cubePos, throwable);
                 }
-
-                LOGGER.error("Couldn't load cube {}", cubePos, throwable);
-            } catch (Exception exception) {
-                LOGGER.error("Couldn't load cube {}", cubePos, exception);
-            }
-
-            this.markCubePositionReplaceable(cubePos);
-            return Either.left(new CubePrimer(cubePos, UpgradeData.EMPTY, level));
+                ChunkIoMainThreadTaskUtils.drainQueue();
+                if (iBigCube != null) {
+                    this.markCubePosition(cubePos, iBigCube.getCubeStatus().getChunkType());
+                    return Either.left(iBigCube);
+                }
+                this.markCubePositionReplaceable(cubePos);
+                return Either.left(new CubePrimer(cubePos, UpgradeData.EMPTY, level));
+            }, this.mainThreadExecutor);
         }, this.mainThreadExecutor);
     }
 

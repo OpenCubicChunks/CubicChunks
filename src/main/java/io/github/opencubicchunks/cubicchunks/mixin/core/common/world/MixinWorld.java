@@ -16,6 +16,7 @@ import net.minecraft.world.level.chunk.ChunkStatus;
 import net.minecraft.world.level.dimension.DimensionType;
 import net.minecraft.world.level.storage.WritableLevelData;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -45,6 +46,14 @@ public abstract class MixinWorld implements ICubicWorld, LevelReader {
         }
 
         return 40000000;
+    }
+
+    /**
+     * @author Setadokalo
+     * @reason Allows teleporting outside +/-20000000 blocks on the Y axis
+     */
+    @Overwrite private static boolean isOutsideSpawnableHeight(int y) {
+        return CubicChunks.MIN_SUPPORTED_HEIGHT > y || y > CubicChunks.MAX_SUPPORTED_HEIGHT;
     }
 
     @Override public int getMinBuildHeight() {

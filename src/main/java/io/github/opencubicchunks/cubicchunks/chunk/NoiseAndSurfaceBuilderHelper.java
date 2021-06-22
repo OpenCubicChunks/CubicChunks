@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
+import io.github.opencubicchunks.cubicchunks.chunk.cube.CubePrimer;
 import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import io.github.opencubicchunks.cubicchunks.world.DummyHeightmap;
@@ -41,6 +42,8 @@ public class NoiseAndSurfaceBuilderHelper extends ProtoChunk implements CubicLev
 
     private final BlockPos.MutableBlockPos mutablePos = new BlockPos.MutableBlockPos();
 
+    private boolean needsExtraHeight;
+
     public NoiseAndSurfaceBuilderHelper(IBigCube delegate, IBigCube delegateAbove) {
         super(delegate.getCubePos().asChunkPos(), UpgradeData.EMPTY, null, ((CubeProtoTickList<Block>) delegate.getBlockTicks()), ((CubeProtoTickList<Fluid>) delegate.getLiquidTicks()),
             new HeightAccessor(delegate));
@@ -51,6 +54,11 @@ public class NoiseAndSurfaceBuilderHelper extends ProtoChunk implements CubicLev
         isCubic = ((CubicLevelHeightAccessor) delegate).isCubic();
         generates2DChunks = ((CubicLevelHeightAccessor) delegate).generates2DChunks();
         worldStyle = ((CubicLevelHeightAccessor) delegate).worldStyle();
+        this.needsExtraHeight = true;
+    }
+
+    public void setNeedsExtraHeight(boolean needsExtraHeight) {
+        this.needsExtraHeight = needsExtraHeight;
     }
 
     public void moveColumn(int newColumnX, int newColumnZ) {
@@ -134,7 +142,7 @@ public class NoiseAndSurfaceBuilderHelper extends ProtoChunk implements CubicLev
 
 
     @Override public int getHeight() {
-        return IBigCube.DIAMETER_IN_BLOCKS + 8;
+        return this.needsExtraHeight ? IBigCube.DIAMETER_IN_BLOCKS + 8 : IBigCube.DIAMETER_IN_BLOCKS;
     }
 
     @Override public WorldStyle worldStyle() {
@@ -150,7 +158,10 @@ public class NoiseAndSurfaceBuilderHelper extends ProtoChunk implements CubicLev
     }
 
     @Override public void addLight(BlockPos pos) {
-        //TODO
+        ChunkAccess delegate = getDelegateFromBlockY(pos.getY());
+        if (delegate != null) {
+            ((CubePrimer) delegate).addLight(pos);
+        }
     }
 
     @Nullable @Override public BlockState setBlockState(BlockPos pos, BlockState state, boolean moved) {

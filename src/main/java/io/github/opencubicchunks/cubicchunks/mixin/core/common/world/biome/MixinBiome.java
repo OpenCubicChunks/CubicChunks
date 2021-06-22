@@ -163,19 +163,12 @@ public class MixinBiome implements BiomeGetter {
     private void getBlacklist() {
 
         List<ResourceLocation> resourceLocationList = Arrays.asList(
-
-            //Broken Features
-            new ResourceLocation("ice_spike"), /**{@link net.minecraft.world.level.levelgen.feature.IceSpikeFeature}**/ //Handles its placement in its own class w/ a while loop.
+            //Requires similar 1.12 implementation, see: https://github.com/OpenCubicChunks/CubicWorldGen/blob/27de56d2f792513873584b2f8fd9f3082fb259ec/src/main/java/io/github
+            // /opencubicchunks/cubicchunks/cubicgen/customcubic/populator/DefaultDecorator.java#L331-L361
             new ResourceLocation("spring_water"),
             //Requires similar 1.12 implementation, see: https://github.com/OpenCubicChunks/CubicWorldGen/blob/27de56d2f792513873584b2f8fd9f3082fb259ec/src/main/java/io/github
             // /opencubicchunks/cubicchunks/cubicgen/customcubic/populator/DefaultDecorator.java#L331-L361
-            new ResourceLocation("spring_lava"),
-            //Requires similar 1.12 implementation, see: https://github.com/OpenCubicChunks/CubicWorldGen/blob/27de56d2f792513873584b2f8fd9f3082fb259ec/src/main/java/io/github
-            // /opencubicchunks/cubicchunks/cubicgen/customcubic/populator/DefaultDecorator.java#L331-L361
-            new ResourceLocation("seagrass_simple"), //Requires Carving mask
-            new ResourceLocation("fossil"),
-            new ResourceLocation("desert_well"), //Iterates downwards in its placement
-            new ResourceLocation("ice_patch") //Iterates downwards in its placement
+            new ResourceLocation("spring_lava")
         );
 
         featureBlacklist.addAll(resourceLocationList);

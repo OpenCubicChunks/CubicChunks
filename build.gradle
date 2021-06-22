@@ -9,7 +9,7 @@ buildscript {
         }
     }
     dependencies {
-        classpath 'net.fabricmc:fabric-loom:0.6-SNAPSHOT'
+        classpath 'net.fabricmc:fabric-loom:0.8.3'
     }
 }
 plugins {
@@ -29,7 +29,7 @@ mcGitVersion {
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(8)
+        languageVersion = JavaLanguageVersion.of(16)
     }
 }
 
@@ -37,7 +37,7 @@ mixinGen {
     filePattern = "cubicchunks.mixins.%s.json"
     defaultRefmap = "CubicChunks-refmap.json"
     defaultPackagePrefix = "io.github.opencubicchunks.cubicchunks.mixin"
-    defaultCompatibilityLevel = "JAVA_8"
+    defaultCompatibilityLevel = "JAVA_16"
     defaultMinVersion = "0.8"
 
     config("core") {
@@ -196,15 +196,15 @@ dependencies {
     }
 
     // modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
-
-    modRuntime ("com.github.SuperCoder7979:databreaker:0.2.6") {
-        exclude module: "fabric-loader"
-    }
+//
+//    modRuntime ("com.github.SuperCoder7979:databreaker:0.2.6") {
+//        exclude module: "fabric-loader"
+//    }
 
     compileOnly('com.google.code.findbugs:jsr305:3.0.1')
 
-    testCompile('junit:junit:4.11')
-    testCompile('org.hamcrest:hamcrest-junit:2.0.0.0')
+    testImplementation('junit:junit:4.11')
+    testImplementation('org.hamcrest:hamcrest-junit:2.0.0.0')
 
     debugCompile "org.lwjgl:lwjgl-vulkan:$lwjglVersion"
     debugRuntime "org.lwjgl:lwjgl::$lwjglNatives"

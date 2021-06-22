@@ -89,6 +89,7 @@ import com.mojang.math.Vector3f;
 import com.mojang.math.Vector4f;
 import io.github.opencubicchunks.cubicchunks.chunk.ICubeHolder;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
+import io.github.opencubicchunks.cubicchunks.debug.DebugVisualization.Vertex;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import io.github.opencubicchunks.cubicchunks.utils.MathUtil;
 import it.unimi.dsi.fastutil.longs.Long2ByteLinkedOpenHashMap;

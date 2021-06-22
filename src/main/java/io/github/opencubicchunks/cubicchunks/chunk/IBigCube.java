@@ -40,6 +40,11 @@ public interface IBigCube extends BlockGetter, ChunkAccess, FeatureAccess {
 
     ChunkStatus getCubeStatus();
 
+
+    default void setFeatureBlocks(BlockPos pos, BlockState state) {
+        setBlock(pos, state, false);
+    }
+
     //BLOCK
     // this can't be setBlockState because the implementations also implement IChunk which already has setBlockState and this breaks obfuscation
     @Nullable BlockState setBlock(BlockPos pos, BlockState state, boolean isMoving);

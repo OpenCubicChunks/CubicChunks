@@ -1,5 +1,6 @@
 package io.github.opencubicchunks.cubicchunks.mixin.core.common.world.feature;
 
+
 import java.util.List;
 import java.util.Random;
 import java.util.function.BiConsumer;
@@ -16,10 +17,11 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(CocoaDecorator.class)
 public class MixinCocoaDecorator {
 
-
     @Inject(method = "place", at = @At("HEAD"), cancellable = true)
-    private void stopCocoaDecorator(LevelSimulatedReader levelSimulatedReader, BiConsumer<BlockPos, BlockState> biConsumer, Random random, List<BlockPos> leavesPositions,
-                                    List<BlockPos> list, CallbackInfo ci) {
-        ci.cancel();
+    private void exitIfListIsEmpty(LevelSimulatedReader world, BiConsumer<BlockPos, BlockState> replacer, Random random, List<BlockPos> logPositions, List<BlockPos> leavesPositions,
+                                   CallbackInfo ci) {
+        if (leavesPositions.isEmpty() || logPositions.isEmpty()) {
+            ci.cancel();
+        }
     }
 }

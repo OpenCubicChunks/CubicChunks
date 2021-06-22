@@ -8,10 +8,10 @@ import java.util.BitSet;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 
 import javax.annotation.Nullable;
@@ -84,6 +84,7 @@ public class CubePrimer extends ProtoChunk implements IBigCube, CubicLevelHeight
     private final Map<StructureFeature<?>, StructureStart<?>> structureStarts;
     private final Map<StructureFeature<?>, LongSet> structuresRefences;
     private final Map<GenerationStep.Carving, BitSet> carvingMasks;
+    private final Map<BlockPos, BlockState> featuresStateMap = new HashMap<>();
 
     private volatile boolean isDirty;
 
@@ -105,6 +106,7 @@ public class CubePrimer extends ProtoChunk implements IBigCube, CubicLevelHeight
     private int minBuildHeight;
     private int height;
 
+
     public CubePrimer(CubePos cubePos, UpgradeData upgradeData, LevelHeightAccessor levelHeightAccessor) {
         this(cubePos, upgradeData, null, new CubeProtoTickList<>((block) -> {
             return block == null || block.defaultBlockState().isAir();
@@ -121,7 +123,7 @@ public class CubePrimer extends ProtoChunk implements IBigCube, CubicLevelHeight
         this.carvingMasks = new Object2ObjectArrayMap<>();
 
         this.structureStarts = Maps.newHashMap();
-        this.structuresRefences = new ConcurrentHashMap<>(); // Maps.newHashMap(); //TODO: This should NOT be a ConcurrentHashMap
+        this.structuresRefences = Maps.newHashMap();
 
         this.cubePos = cubePosIn;
         this.levelHeightAccessor = levelHeightAccessor;
@@ -238,6 +240,20 @@ public class CubePrimer extends ProtoChunk implements IBigCube, CubicLevelHeight
         }
 
         return lastState;
+    }
+
+    @Override public void setFeatureBlocks(BlockPos pos, BlockState state) {
+       featuresStateMap.put(pos.immutable(), state);
+    }
+
+    public void applyFeatureStates() {
+        featuresStateMap.forEach((pos, state) -> {
+            setBlock(pos, state, false);
+        });
+    }
+
+    public Map<BlockPos, BlockState> getFeaturesStateMap() {
+        return featuresStateMap;
     }
 
     private void primeHeightMaps(EnumSet<Heightmap.Types> toInitialize) {

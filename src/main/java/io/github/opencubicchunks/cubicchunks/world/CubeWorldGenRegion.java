@@ -11,12 +11,14 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import javax.annotation.Nullable;
 
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
+import io.github.opencubicchunks.cubicchunks.mixin.access.common.WorldGenRegionAccess;
 import io.github.opencubicchunks.cubicchunks.server.ICubicWorld;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import it.unimi.dsi.fastutil.longs.LongSet;
@@ -104,8 +106,8 @@ public class CubeWorldGenRegion extends WorldGenRegion implements ICubicWorld {
     private final TickList<Block> blockTicks = new WorldGenTickList<>((pos) -> this.getCube(pos).getBlockTicks());
     private final TickList<Fluid> liquidTicks = new WorldGenTickList<>((pos) -> this.getCube(pos).getLiquidTicks());
 
-    public CubeWorldGenRegion(ServerLevel worldIn, List<IBigCube> cubesIn, ChunkAccess access) {
-        super(worldIn, Collections.singletonList(new DummyChunkAccess()));
+    public CubeWorldGenRegion(ServerLevel worldIn, List<IBigCube> cubesIn, ChunkStatus status, ChunkAccess access, int writeRadiusCutoff) {
+        super(worldIn, Collections.singletonList(new DummyChunkAccess()), status, writeRadiusCutoff);
 
         int cubeRoot = Mth.floor(Math.cbrt(cubesIn.size()));
         if (cubeRoot * cubeRoot * cubeRoot != cubesIn.size()) {
@@ -449,8 +451,19 @@ public class CubeWorldGenRegion extends WorldGenRegion implements ICubicWorld {
 
     // setBlockState
     @Override public boolean setBlock(BlockPos pos, BlockState newState, int flags, int recursionLimit) {
+        if (!this.ensureCanWrite(pos)) {
+            return false;
+        }
+
         IBigCube icube = this.getCube(pos);
+
+        if (!icube.getStatus().isOrAfter(ChunkStatus.LIQUID_CARVERS)) {
+            icube.setFeatureBlocks(pos, newState);
+            return true;
+        }
+
         BlockState blockstate = icube.setBlock(pos, newState, false);
+
         if (blockstate != null) {
             this.getLevel().onBlockStateChange(pos, blockstate, newState);
         }
@@ -480,6 +493,26 @@ public class CubeWorldGenRegion extends WorldGenRegion implements ICubicWorld {
         //}
 
         return true;
+    }
+
+    @Override public boolean ensureCanWrite(BlockPos blockPos) {
+        int cubeX = Coords.blockToCube(blockPos.getX());
+        int cubeY = Coords.blockToCube(blockPos.getY());
+        int cubeZ = Coords.blockToCube(blockPos.getZ());
+
+        int xDiff = Math.abs(this.centerCubePos.getX() - cubeX);
+        int zDiff = Math.abs(this.centerCubePos.getZ() - cubeZ);
+        int writeRadiusCutoff = ((WorldGenRegionAccess) this).getWriteRadiusCutoff();
+        if (xDiff <= writeRadiusCutoff && zDiff <= writeRadiusCutoff) {
+            return true;
+        } else {
+            Supplier<String> currentlyGenerating = ((WorldGenRegionAccess) this).getCurrentlyGenerating();
+            Util.logAndPauseIfInIde(
+                "Detected setBlock in a far cube [" + cubeX + ", " + cubeY + ", " + cubeZ + "], pos: " + blockPos + ", status: " + ((WorldGenRegionAccess) this).getGeneratingStatus() + (
+                    currentlyGenerating == null ? "" : ", currently generating: " + currentlyGenerating.get()));
+            return false;
+        }
+
     }
 
     @Override public boolean removeBlock(BlockPos pos, boolean isMoving) {
