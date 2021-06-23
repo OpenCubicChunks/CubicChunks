@@ -16,10 +16,10 @@ public class MixinLocateCommand {
         return String.valueOf(structurePos.getY());
     }
 
-    @SuppressWarnings("UnresolvedMixinReference")
-    @ModifyConstant(method = "lambda$showLocateResult$2(Lnet/minecraft/core/BlockPos;Lnet/minecraft/network/chat/Style;)Lnet/minecraft/network/chat/Style;",
-        constant = @Constant(stringValue = " ~ "))
-    private static String show3DLocateResultForTPSuggestion(String arg0, BlockPos structurePos, Style style) {
-        return " " + structurePos.getY() + " ";
-    }
+//    @SuppressWarnings("UnresolvedMixinReference")
+//    @ModifyConstant(method = "lambda$showLocateResult$2(Lnet/minecraft/core/BlockPos;Lnet/minecraft/network/chat/Style;)Lnet/minecraft/network/chat/Style;",
+//        constant = @Constant(stringValue = " ~ "))
+//    private static String show3DLocateResultForTPSuggestion(String arg0, BlockPos structurePos, Style style) {
+//        return " " + structurePos.getY() + " ";
+//    }
 }
