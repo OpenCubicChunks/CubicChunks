@@ -215,10 +215,11 @@ public class MixinChunkStatus {
 
             CubePos cubePos = ((IBigCube) chunk).getCubePos();
             int cubeY = cubePos.getY();
+
             CubePrimer cubeAbove = new CubePrimer(CubePos.of(cubePos.getX(), cubeY + 1,
                 cubePos.getZ()), UpgradeData.EMPTY, cubeWorldGenRegion);
 
-            CompletableFuture<ChunkAccess> completableFuture = null;
+            CompletableFuture<ChunkAccess> chainedNoiseFutures = null;
 
             for (int columnX = 0; columnX < IBigCube.DIAMETER_IN_SECTIONS; columnX++) {
                 for (int columnZ = 0; columnZ < IBigCube.DIAMETER_IN_SECTIONS; columnZ++) {
@@ -231,43 +232,49 @@ public class MixinChunkStatus {
 
                     NoiseAndSurfaceBuilderHelper cubeAccessWrapper = new NoiseAndSurfaceBuilderHelper((IBigCube) chunk, cubeAbove);
                     cubeAccessWrapper.moveColumn(columnX, columnZ);
-                    CompletableFuture<ChunkAccess> chunkAccessCompletableFuture =
-                        generator.fillFromNoise(executor, world.structureFeatureManager().forWorldGenRegion(cubeWorldGenRegion), cubeAccessWrapper).thenApply(chunkAccess -> {
-                            cubeAccessWrapper.applySections();
 
-
-                            // Exit early and don't waste time on empty sections.
-                            if (areSectionsEmpty(cubeY, pos, ((NoiseAndSurfaceBuilderHelper) chunkAccess).getDelegateByIndex(0))) {
-                                return chunkAccess;
-                            }
-
-                            generator.buildSurfaceAndBedrock(cubeWorldGenRegion, chunkAccess);
-
-                            // Carvers
-                            generator.applyCarvers(world.getSeed(), world.getBiomeManager(), cubeAccessWrapper, GenerationStep.Carving.AIR);
-                            generator.applyCarvers(world.getSeed(), world.getBiomeManager(), cubeAccessWrapper, GenerationStep.Carving.LIQUID);
-                            return chunkAccess;
-                        });
-                    if (completableFuture == null) {
-                        completableFuture = chunkAccessCompletableFuture;
+                    if (chainedNoiseFutures == null) {
+                        chainedNoiseFutures = getNoiseSurfaceCarverFuture(executor, world, generator, cubeWorldGenRegion, cubeY, pos, cubeAccessWrapper);
                     } else {
-                        completableFuture = completableFuture.thenCombine(chunkAccessCompletableFuture, (chunk1, chunk2) -> chunk1);
+                        // Wait for first completion stage to complete before getting the next future, as it calls supplyAsync internally
+                        chainedNoiseFutures =
+                            chainedNoiseFutures.thenCompose(futureIn -> getNoiseSurfaceCarverFuture(executor, world, generator, cubeWorldGenRegion, cubeY, pos, cubeAccessWrapper));
                     }
                 }
             }
-            assert completableFuture != null;
-            ci.setReturnValue(completableFuture.thenApply(chunkAccess2 -> {
+            assert chainedNoiseFutures != null;
+            ci.setReturnValue(chainedNoiseFutures.thenApply(ignored -> {
                 if (chunk instanceof CubePrimer) {
                     ((CubePrimer) chunk).setCubeStatus(status);
                 }
-
-//                System.out.println("Total time taken for cycle: " + totalTimeForCycle  + "ms. Skipped Carvers: " + skipped);
 
                 return Either.left(chunk);
             }));
         } else {
             ci.setReturnValue(CompletableFuture.completedFuture(Either.left(chunk)));
         }
+    }
+
+    private static CompletableFuture<ChunkAccess> getNoiseSurfaceCarverFuture(Executor executor, ServerLevel world, ChunkGenerator generator, CubeWorldGenRegion cubeWorldGenRegion,
+                                                                              int cubeY, ChunkPos pos, NoiseAndSurfaceBuilderHelper cubeAccessWrapper) {
+        return generator.fillFromNoise(executor, world.structureFeatureManager().forWorldGenRegion(cubeWorldGenRegion), cubeAccessWrapper).thenApply(chunkAccess -> {
+            cubeAccessWrapper.applySections();
+
+            // Exit early and don't waste time on empty sections.
+            if (areSectionsEmpty(cubeY, pos, ((NoiseAndSurfaceBuilderHelper) chunkAccess).getDelegateByIndex(0))) {
+                return chunkAccess;
+            }
+
+            generator.buildSurfaceAndBedrock(cubeWorldGenRegion, chunkAccess);
+
+
+            cubeAccessWrapper.setNeedsExtraHeight(false);
+
+            // Carvers
+            generator.applyCarvers(world.getSeed(), world.getBiomeManager(), cubeAccessWrapper, GenerationStep.Carving.AIR);
+            generator.applyCarvers(world.getSeed(), world.getBiomeManager(), cubeAccessWrapper, GenerationStep.Carving.LIQUID);
+            return chunkAccess;
+        });
     }
 
     private static boolean areSectionsEmpty(int cubeY, ChunkPos pos, IBigCube cube) {
@@ -422,7 +429,7 @@ public class MixinChunkStatus {
                 new StructureFeatureManager(cubeWorldGenRegion, ((StructureFeatureManagerAccess) world.structureFeatureManager()).getWorldGenSettings());
 
 //            if (cubePrimer.getCubePos().getY() >= 0)
-
+            cubePrimer.applyFeatureStates();
             ((ICubeGenerator) generator).decorate(cubeWorldGenRegion, structureFeatureManager, (CubePrimer) chunk);
             cubePrimer.setCubeStatus(status);
         }

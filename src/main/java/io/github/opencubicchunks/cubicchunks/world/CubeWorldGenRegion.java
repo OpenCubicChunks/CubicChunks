@@ -435,7 +435,14 @@ public class CubeWorldGenRegion extends WorldGenRegion implements ICubicWorld {
         }
 
         IBigCube icube = this.getCube(pos);
+
+        if (!icube.getStatus().isOrAfter(ChunkStatus.LIQUID_CARVERS)) {
+            icube.setFeatureBlocks(pos, newState);
+            return true;
+        }
+
         BlockState blockstate = icube.setBlock(pos, newState, false);
+
         if (blockstate != null) {
             this.getLevel().onBlockStateChange(pos, blockstate, newState);
         }
@@ -473,10 +480,9 @@ public class CubeWorldGenRegion extends WorldGenRegion implements ICubicWorld {
         int cubeZ = Coords.blockToCube(blockPos.getZ());
 
         int xDiff = Math.abs(this.centerCubePos.getX() - cubeX);
-        int yDiff = Math.abs(this.centerCubePos.getY() - cubeY);
         int zDiff = Math.abs(this.centerCubePos.getZ() - cubeZ);
         int writeRadiusCutoff = ((WorldGenRegionAccess) this).getWriteRadiusCutoff();
-        if (xDiff <= writeRadiusCutoff && yDiff <= writeRadiusCutoff && zDiff <= writeRadiusCutoff) {
+        if (xDiff <= writeRadiusCutoff && zDiff <= writeRadiusCutoff) {
             return true;
         } else {
             Supplier<String> currentlyGenerating = ((WorldGenRegionAccess) this).getCurrentlyGenerating();
