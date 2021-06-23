@@ -3,7 +3,6 @@ package io.github.opencubicchunks.cubicchunks.chunk;
 import java.util.Arrays;
 
 import io.github.opencubicchunks.cubicchunks.CubicChunks;
-import io.github.opencubicchunks.cubicchunks.chunk.CubicAquifer.Sample;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.ChunkPos;
@@ -42,6 +41,8 @@ public final class CubicAquifer implements Aquifer {
     private final int minGridX;
     private final int minGridY;
     private final int minGridZ;
+    private final int minY;
+    private final int sizeY;
     private final int gridSizeX;
     private final int gridSizeZ;
 
@@ -52,7 +53,7 @@ public final class CubicAquifer implements Aquifer {
     public CubicAquifer(
         ChunkPos chunkPos,
         NormalNoise barrierNoise, NormalNoise waterLevelNoise, NormalNoise lavaNoise,
-        NoiseGeneratorSettings noiseGeneratorSettings, int minY, int sizeY
+        NoiseGeneratorSettings noiseGeneratorSettings, int minYInput
     ) {
         this.barrierNoise = barrierNoise;
         this.waterLevelNoise = waterLevelNoise;
@@ -60,10 +61,13 @@ public final class CubicAquifer implements Aquifer {
         this.noiseGeneratorSettings = noiseGeneratorSettings;
 
         this.minGridX = gridX(chunkPos.getMinBlockX()) - 1;
-        this.minGridY = gridY(minY) - 1;
+        this.minGridY = gridY(minYInput) - 1;
         this.minGridZ = gridZ(chunkPos.getMinBlockZ()) - 1;
+        this.minY = minYInput;
+        this.sizeY = IBigCube.DIAMETER_IN_BLOCKS;
+
         int maxGridX = gridX(chunkPos.getMaxBlockX()) + 1;
-        int maxGridY = gridY(minY + sizeY) + 1;
+        int maxGridY = gridY(minYInput + sizeY) + 1;
         int maxGridZ = gridZ(chunkPos.getMaxBlockZ()) + 1;
 
         this.gridSizeX = maxGridX - this.minGridX + 1;
@@ -90,6 +94,10 @@ public final class CubicAquifer implements Aquifer {
 
     @Override
     public BlockState computeState(BaseStoneSource stoneSource, int x, int y, int z, double density) {
+        if (y >= (this.minY + this.sizeY + 1)) {
+            return stoneSource.getBaseBlock(x, y, z);
+        }
+
         // we never subtract anything from the world so we can't do anything if it is already solid here
         if (density > 0.0) {
             return this.stone(stoneSource, x, y, z);
@@ -321,6 +329,14 @@ public final class CubicAquifer implements Aquifer {
 
     private static int gridZ(int z) {
         return z >> 4;
+    }
+
+    public int getMinY() {
+        return minY;
+    }
+
+    public int getSizeY() {
+        return sizeY;
     }
 
     static final class Sample {

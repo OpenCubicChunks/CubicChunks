@@ -43,6 +43,8 @@ public class NoiseAndSurfaceBuilderHelper extends ProtoChunk implements CubicLev
 
     private final BlockPos.MutableBlockPos mutablePos = new BlockPos.MutableBlockPos();
 
+    private boolean needsExtraHeight;
+
     public NoiseAndSurfaceBuilderHelper(IBigCube delegate, IBigCube delegateAbove) {
         super(delegate.getCubePos().asChunkPos(), UpgradeData.EMPTY, null, ((CubeProtoTickList<Block>) delegate.getBlockTicks()), ((CubeProtoTickList<Fluid>) delegate.getLiquidTicks()),
             new HeightAccessor(delegate));
@@ -53,6 +55,11 @@ public class NoiseAndSurfaceBuilderHelper extends ProtoChunk implements CubicLev
         isCubic = ((CubicLevelHeightAccessor) delegate).isCubic();
         generates2DChunks = ((CubicLevelHeightAccessor) delegate).generates2DChunks();
         worldStyle = ((CubicLevelHeightAccessor) delegate).worldStyle();
+        this.needsExtraHeight = true;
+    }
+
+    public void setNeedsExtraHeight(boolean needsExtraHeight) {
+        this.needsExtraHeight = needsExtraHeight;
     }
 
     public IBigCube delegateAbove() {
@@ -140,7 +147,7 @@ public class NoiseAndSurfaceBuilderHelper extends ProtoChunk implements CubicLev
 
 
     @Override public int getHeight() {
-        return IBigCube.DIAMETER_IN_BLOCKS + 8;
+        return this.needsExtraHeight ? IBigCube.DIAMETER_IN_BLOCKS + 8 : IBigCube.DIAMETER_IN_BLOCKS;
     }
 
     @Override public WorldStyle worldStyle() {

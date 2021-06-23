@@ -18,9 +18,11 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.levelgen.Aquifer;
 import net.minecraft.world.level.levelgen.BaseStoneSource;
+import net.minecraft.world.level.levelgen.Beardifier;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.levelgen.NoiseBasedChunkGenerator;
 import net.minecraft.world.level.levelgen.NoiseGeneratorSettings;
+import net.minecraft.world.level.levelgen.NoiseModifier;
 import net.minecraft.world.level.levelgen.NoiseSampler;
 import net.minecraft.world.level.levelgen.NoiseSettings;
 import net.minecraft.world.level.levelgen.WorldgenRandom;
@@ -167,6 +169,15 @@ public abstract class MixinNoiseBasedChunkGenerator {
     private Aquifer createNoiseAquifer(
         ChunkPos chunkPos, NormalNoise barrierNoise, NormalNoise levelNoise, NormalNoise lavaNoise,
         NoiseGeneratorSettings noiseGeneratorSettings, NoiseSampler noiseSampler, int minY, int sizeY) {
-        return new CubicAquifer(chunkPos, barrierNoise, levelNoise, lavaNoise, noiseGeneratorSettings, minY, sizeY);
+        return new CubicAquifer(chunkPos, barrierNoise, levelNoise, lavaNoise, noiseGeneratorSettings, minY);
+    }
+
+    @Redirect(method = "updateNoiseAndGenerateBaseState", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/levelgen/NoiseModifier;modifyNoise(DIII)D"))
+    private double dontModifyNoiseIfAboveCurrentCube(NoiseModifier noiseModifier, double weight, int x, int y, int z, Beardifier structures, Aquifer aquiferSampler,
+                                                     BaseStoneSource blockInterpolator, NoiseModifier noiseModifier2, int i, int j, int k, double d) {
+        if (aquiferSampler instanceof CubicAquifer cubicAquifer && y >= (cubicAquifer.getMinY() + cubicAquifer.getSizeY())) {
+            return weight;
+        }
+        return noiseModifier.modifyNoise(weight, x, y, z);
     }
 }
