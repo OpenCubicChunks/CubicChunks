@@ -16,6 +16,7 @@ import io.github.opencubicchunks.cubicchunks.world.gen.structure.CubicStructureC
 import io.github.opencubicchunks.cubicchunks.world.gen.structure.ICubicStructureFeature;
 import io.github.opencubicchunks.cubicchunks.world.gen.structure.ICubicStructureFeatureConfiguration;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.QuartPos;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.SectionPos;
 import net.minecraft.nbt.CompoundTag;
@@ -61,7 +62,7 @@ public abstract class MixinStructureFeature<C extends FeatureConfiguration> impl
 
     @Shadow protected abstract StructureStart<C> createStart(ChunkPos pos, int i, long l);
 
-    @Inject(at = @At("HEAD"), method = "getNearestGeneratedFeature", cancellable = true)
+    @SuppressWarnings("ConstantConditions") @Inject(at = @At("HEAD"), method = "getNearestGeneratedFeature", cancellable = true)
     private void getNearestStructure3D(LevelReader level, StructureFeatureManager manager, BlockPos blockPos, int searchRadius, boolean skipExistingChunks, long seed,
                                        StructureFeatureConfiguration structureFeatureConfiguration, CallbackInfoReturnable<BlockPos> cir) {
 
@@ -105,6 +106,8 @@ public abstract class MixinStructureFeature<C extends FeatureConfiguration> impl
                         CubePos pos = CubePos.from(potentialFeature);
 
                         IBigCube cube = null;
+                        BlockPos.MutableBlockPos mutableBlockPos = new BlockPos.MutableBlockPos();
+
                         for (int sectionX = 0; sectionX < IBigCube.DIAMETER_IN_SECTIONS; sectionX++) {
                             for (int sectionZ = 0; sectionZ < IBigCube.DIAMETER_IN_SECTIONS; sectionZ++) {
                                 SectionPos sp = SectionPos.of(
@@ -112,8 +115,13 @@ public abstract class MixinStructureFeature<C extends FeatureConfiguration> impl
                                     Coords.cubeToSection(pos.getY(), 0),
                                     Coords.cubeToSection(pos.getZ(), sectionZ)
                                 );
+                                int centerQuart = QuartPos.fromBlock(8); //TODO: Use Biome Manager's center quart directly
+
                                 boolean validBiome =
-                                    level.getBiomeManager().getPrimaryBiomeAtChunk(new ChunkPos(sp.x(), sp.z())).getGenerationSettings().isValidStart((StructureFeature<?>) (Object) this);
+                                    level.getBiomeManager().getBiome(mutableBlockPos.set(
+                                        Coords.sectionToMinBlock(sp.x()) + centerQuart, Coords.sectionToMinBlock(sp.y()) + centerQuart, Coords.sectionToMinBlock(sp.z()) + centerQuart)
+                                    ).getGenerationSettings().isValidStart((StructureFeature<?>) (Object) this);
+
                                 if (!validBiome) {
                                     continue;
                                 }
