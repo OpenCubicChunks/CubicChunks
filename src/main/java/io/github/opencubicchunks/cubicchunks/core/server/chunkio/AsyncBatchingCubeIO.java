@@ -74,6 +74,10 @@ public class AsyncBatchingCubeIO implements ICubeIO {
         checkState(this.open, "already closed?!?");
     }
 
+    public ICubicStorage getStorage() {
+        return this.storage;
+    }
+
     @Override
     public boolean columnExists(int columnX, int columnZ) {
         ChunkPos pos = new ChunkPos(columnX, columnZ);
@@ -269,8 +273,13 @@ public class AsyncBatchingCubeIO implements ICubeIO {
     public boolean writeNextIO() {
         try {
             //take a snapshot of both queues
-            Map<ChunkPos, NBTTagCompound> columnsSnapshot = new Object2ObjectOpenHashMap<>(this.pendingColumns);
-            Map<CubePos, NBTTagCompound> cubesSnapshot = new Object2ObjectOpenHashMap<>(this.pendingCubes);
+
+            //unfortunately we can't use putAll() (or the copy constructor which delegates to putAll()), because the implementation doesn't actually bother to check
+            // for Iterator#hasNext(), which is kind of important in our case where the pendingCubes/Columns map could be modified at any time...
+            Map<ChunkPos, NBTTagCompound> columnsSnapshot = new Object2ObjectOpenHashMap<>(this.pendingColumns.size());
+            this.pendingColumns.forEach(columnsSnapshot::put);
+            Map<CubePos, NBTTagCompound> cubesSnapshot = new Object2ObjectOpenHashMap<>(this.pendingCubes.size());
+            this.pendingCubes.forEach(cubesSnapshot::put);
 
             //forward all tasks to the storage at once
             this.storage.writeBatch(new ICubicStorage.NBTBatch(Collections.unmodifiableMap(columnsSnapshot), Collections.unmodifiableMap(cubesSnapshot)));
