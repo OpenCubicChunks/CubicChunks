@@ -24,7 +24,7 @@ public class ClientLightSurfaceTracker extends ClientSurfaceTracker {
         minHeight = ((HeightmapAccess) this).getChunk().getMinBuildHeight();
     }
 
-    @Override public boolean update(int x, int y, int z, BlockState blockState) {
+    @Override public boolean update(int columnLocalX, int globalY, int columnLocalZ, BlockState blockState) {
         throw new UnsupportedOperationException("ClientLightSurfaceTracker.update should never be called");
     }
 

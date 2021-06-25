@@ -29,13 +29,4 @@ public abstract class MixinServerPlayerEntity extends Player {
             serverPlayNetHandler.send(packetIn);
         }
     }
-
-    // This debug code probably causes considerable lag and other issues; it should only be used while debugging lighting
-//    @Inject(method = "tick",
-//        at = @At("HEAD"))
-//    private void onTick(CallbackInfo ci) {
-//        if (((CubicLevelHeightAccessor) this.getLevel()).isCubic()) {
-//            PacketDispatcher.sendTo(new PacketUpdateLight(CubePos.from(new BlockPos(this.position())), this.level.getLightEngine(), true), (ServerPlayer) (Object) this);
-//        }
-//    }
 }

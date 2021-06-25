@@ -296,23 +296,6 @@ public class CubePrimer extends ProtoChunk implements IBigCube, CubicLevelHeight
         }
 
         EnumSet<Heightmap.Types> heightMapsAfter = this.getStatus().heightmapsAfter();
-//        EnumSet<Heightmap.Types> toInitialize = null;
-//
-//        for (Heightmap.Types type : heightMapsAfter) {
-//            SurfaceTrackerSection[] heightmapArray = this.heightmaps.get(type);
-//
-//            if (heightmapArray == null) {
-//                if (toInitialize == null) {
-//                    toInitialize = EnumSet.noneOf(Heightmap.Types.class);
-//                }
-//
-//                toInitialize.add(type);
-//            }
-//        }
-//
-//        if (toInitialize != null) {
-//            primeHeightMaps(toInitialize);
-//        }
 
         int xChunk = Coords.blockToCubeLocalSection(pos.getX());
         int zChunk = Coords.blockToCubeLocalSection(pos.getZ());

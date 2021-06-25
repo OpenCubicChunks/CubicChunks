@@ -140,7 +140,8 @@ public abstract class MixinChunk implements ChunkAccess, LightHeightmapGetter, C
         if (!this.isCubic()) {
             return;
         }
-        // TODO client side light heightmap stuff
+        // TODO how do we want to handle client side light heightmap updates on block updates?
+        //      note that either way there'll still need to be synchronization, since updates can happen outside of the client's vertically loaded range
         if (this.level.isClientSide) {
             ClientLightSurfaceTracker clientLightHeightmap = ((LightHeightmapGetter) this).getClientLightHeightmap();
         } else {

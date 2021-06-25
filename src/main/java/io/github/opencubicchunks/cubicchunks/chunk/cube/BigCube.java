@@ -220,10 +220,9 @@ public class BigCube implements ChunkAccess, IBigCube, CubicLevelHeightAccessor 
 
         this.setAllStarts(cubePrimer.getAllCubeStructureStarts());
         this.setAllReferences(cubePrimer.getAllReferences());
-//        var4 = protoChunk.getHeightmaps().iterator();
 
         LightSurfaceTrackerSection[] primerLightHeightmaps = cubePrimer.getLightHeightmaps();
-        for (int i = 0; i < IBigCube.DIAMETER_IN_SECTIONS * IBigCube.DIAMETER_IN_SECTIONS; i++) {
+        for (int i = 0; i < IBigCube.CHUNK_COUNT; i++) {
             this.lightHeightmaps[i] = primerLightHeightmaps[i];
             if (this.lightHeightmaps[i] == null) {
                 System.out.println("Got a null light heightmap while upgrading from CubePrimer at " + this.cubePos);
@@ -1004,7 +1003,7 @@ public class BigCube implements ChunkAccess, IBigCube, CubicLevelHeightAccessor 
         for (int x = 0; x < IBigCube.DIAMETER_IN_SECTIONS; x++) {
             for (int z = 0; z < IBigCube.DIAMETER_IN_SECTIONS; z++) {
 
-                // TODO force-loading columns is questionable, until we get load order
+                // This force-loads the column, but it shouldn't matter if column-cube load order is working properly.
                 LevelChunk chunk = this.level.getChunk(pos.x + x, pos.z + z);
                 ((CubeMapGetter) chunk).getCubeMap().markLoaded(this.cubePos.getY());
                 for (Map.Entry<Heightmap.Types, Heightmap> entry : chunk.getHeightmaps()) {

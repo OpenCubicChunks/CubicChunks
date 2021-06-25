@@ -13,19 +13,19 @@ public class LightSurfaceTrackerWrapper extends SurfaceTrackerWrapper {
     }
 
     @Override
-    public boolean update(int x, int y, int z, BlockState blockState) {
-        super.update(x, y, z, blockState);
-        int relY = blockToLocal(y);
+    public boolean update(int columnLocalX, int globalY, int columnLocalZ, BlockState blockState) {
+        super.update(columnLocalX, globalY, columnLocalZ, blockState);
+        int relY = blockToLocal(globalY);
         // TODO how are we going to handle making sure that unloaded sections stay updated?
         if (relY == 0) {
-            SurfaceTrackerSection section = surfaceTracker.getCubeNode(blockToCube(y - 1));
+            SurfaceTrackerSection section = surfaceTracker.getCubeNode(blockToCube(globalY - 1));
             if (section != null) {
-                section.markDirty(x, z);
+                section.markDirty(columnLocalX, columnLocalZ);
             }
         } else if (relY == IBigCube.DIAMETER_IN_BLOCKS - 1) {
-            SurfaceTrackerSection section = surfaceTracker.getCubeNode(blockToCube(y + 1));
+            SurfaceTrackerSection section = surfaceTracker.getCubeNode(blockToCube(globalY + 1));
             if (section != null) {
-                section.markDirty(x, z);
+                section.markDirty(columnLocalX, columnLocalZ);
             }
         }
 

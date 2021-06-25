@@ -34,23 +34,22 @@ public class SurfaceTrackerWrapper extends Heightmap {
 
     /**
      *
-     * @param x column-local x
-     * @param y global y
-     * @param z column-local z
+     * @param columnLocalX column-local x
+     * @param globalY global y
+     * @param columnLocalZ column-local z
      * @param blockState unused.
      * @return currently unused; always false
      */
     @Override
-    public boolean update(int x, int y, int z, BlockState blockState) {
-        surfaceTracker.getCubeNode(blockToCube(y)).markDirty(x + dx, z + dz);
+    public boolean update(int columnLocalX, int globalY, int columnLocalZ, BlockState blockState) {
+        surfaceTracker.getCubeNode(blockToCube(globalY)).markDirty(columnLocalX + dx, columnLocalZ + dz);
         // We always return false, because the result is never used anywhere anyway (by either vanilla or us)
         return false;
     }
 
-    /** x/z are column-local. */
     @Override
-    public int getFirstAvailable(int x, int z) {
-        return surfaceTracker.getHeight(x + dx, z + dz) + 1;
+    public int getFirstAvailable(int columnLocalX, int columnLocalZ) {
+        return surfaceTracker.getHeight(columnLocalX + dx, columnLocalZ + dz) + 1;
     }
 
     // TODO not sure what to do about these methods
