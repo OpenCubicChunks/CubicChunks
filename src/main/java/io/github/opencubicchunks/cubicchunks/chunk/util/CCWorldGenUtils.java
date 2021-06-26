@@ -9,7 +9,7 @@ import net.minecraft.world.level.chunk.LevelChunkSection;
 public class CCWorldGenUtils {
 
     public static boolean areSectionsEmpty(int cubeY, ChunkPos pos, IBigCube cube) {
-        if (CubicChunks.commonConfig().isSkipEmptySections()) {
+        if (!CubicChunks.commonConfig().isSkipEmptySections()) {
             return false;
         }
 

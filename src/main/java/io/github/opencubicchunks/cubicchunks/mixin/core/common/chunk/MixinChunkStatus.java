@@ -302,7 +302,7 @@ public class MixinChunkStatus {
     }
 
     private static boolean areSectionsEmpty(int cubeY, ChunkPos pos, IBigCube cube) {
-        if (CubicChunks.commonConfig().isSkipEmptySections()) {
+        if (!CubicChunks.commonConfig().isSkipEmptySections()) {
             return false;
         }
 
