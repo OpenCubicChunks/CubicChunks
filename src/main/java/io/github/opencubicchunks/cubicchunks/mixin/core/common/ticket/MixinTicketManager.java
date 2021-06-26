@@ -20,7 +20,6 @@ import io.github.opencubicchunks.cubicchunks.chunk.ticket.PlayerCubeTicketTracke
 import io.github.opencubicchunks.cubicchunks.chunk.ticket.PlayerCubeTracker;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.ChunkHolderAccess;
-import io.github.opencubicchunks.cubicchunks.mixin.access.common.ChunkManagerAccess;
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.TicketAccess;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import io.github.opencubicchunks.cubicchunks.utils.MathUtil;
@@ -34,14 +33,12 @@ import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import it.unimi.dsi.fastutil.objects.ObjectSet;
 import net.minecraft.server.level.ChunkHolder;
 import net.minecraft.server.level.ChunkMap;
-import net.minecraft.server.level.ChunkTaskPriorityQueueSorter;
 import net.minecraft.server.level.DistanceManager;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.level.Ticket;
 import net.minecraft.server.level.TicketType;
 import net.minecraft.util.SortedArraySet;
 import net.minecraft.util.thread.ProcessorHandle;
-import net.minecraft.world.level.chunk.LevelChunk;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -52,6 +49,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(DistanceManager.class)
 public abstract class MixinTicketManager implements ITicketManager, IVerticalView {
+
+    @Final @Shadow private Executor mainThreadExecutor;
+    @Shadow private long ticketTickCounter;
 
     private final Long2ObjectOpenHashMap<SortedArraySet<Ticket<?>>> cubeTickets = new Long2ObjectOpenHashMap<>();
     private final Long2ObjectMap<ObjectSet<ServerPlayer>> playersPerCube = new Long2ObjectOpenHashMap<>();
@@ -68,27 +68,11 @@ public abstract class MixinTicketManager implements ITicketManager, IVerticalVie
 
     private boolean isCubic;
 
-    @Shadow @Final private DistanceManager.FixedPlayerDistanceChunkTracker naturalSpawnChunkCounter;
-
-    @Shadow @Final private DistanceManager.PlayerTicketTracker playerTicketManager;
-
-    @Shadow @Final private DistanceManager.ChunkTicketTracker ticketTracker;
-
-    @Shadow @Final private Set<ChunkHolder> chunksToUpdateFutures;
-
-    @Shadow @Final private LongSet ticketsToRelease;
-
-    @Shadow @Final private ProcessorHandle<ChunkTaskPriorityQueueSorter.Release> ticketThrottlerReleaser;
-
-    @Final @Shadow private Executor mainThreadExecutor;
-
-    @Shadow private long ticketTickCounter;
-
     @Shadow private static int getTicketLevelAt(SortedArraySet<Ticket<?>> p_229844_0_) {
         throw new Error("Mixin did not apply correctly");
     }
 
-    @Shadow protected abstract SortedArraySet<Ticket<?>> getTickets(long position);
+    @Shadow abstract void addTicket(long position, Ticket<?> ticket);
 
     @Inject(method = "<init>", at = @At("RETURN"))
     public void init(Executor executor, Executor executor2, CallbackInfo ci) {
@@ -101,11 +85,23 @@ public abstract class MixinTicketManager implements ITicketManager, IVerticalVie
 
     @Override
     public void addCubeTicket(long cubePosIn, Ticket<?> ticketIn) {
-        SortedArraySet<Ticket<?>> sortedarrayset = this.getCubeTickets(cubePosIn);
-        int i = getTicketLevelAt(sortedarrayset);
-        Ticket<?> ticket = sortedarrayset.addOrGet(ticketIn);
+        SortedArraySet<Ticket<?>> ticketsForCube = this.getCubeTickets(cubePosIn);
+        int existingTicketLevel = getTicketLevelAt(ticketsForCube);
+
+        // force a ticket on the cube's columns
+        CubePos cubePos = CubePos.from(cubePosIn);
+        for (int localX = 0; localX < IBigCube.DIAMETER_IN_SECTIONS; localX++) {
+            for (int localZ = 0; localZ < IBigCube.DIAMETER_IN_SECTIONS; localZ++) {
+                //Convert the ticket level from cube to chunk
+                int originalRadius = 33 - ticketIn.getTicketLevel();
+                int chunkTicketLevel = 33 - Coords.cubeToSection(originalRadius, 0);
+                addTicket(CubePos.asChunkPosLong(cubePosIn, localX, localZ), TicketAccess.createNew(CCTicketType.CCCOLUMN, chunkTicketLevel, cubePos));
+            }
+        }
+
+        Ticket<?> ticket = ticketsForCube.addOrGet(ticketIn);
         ((TicketAccess) ticket).invokeSetCreatedTick(this.ticketTickCounter);
-        if (ticketIn.getTicketLevel() < i) {
+        if (ticketIn.getTicketLevel() < existingTicketLevel) {
             this.cubeTicketTracker.updateSourceLevel(cubePosIn, ticketIn.getTicketLevel(), true);
         }
     }
@@ -120,7 +116,6 @@ public abstract class MixinTicketManager implements ITicketManager, IVerticalVie
         }
 
         this.cubeTicketTracker.updateSourceLevel(cubePosIn, getTicketLevelAt(sortedarrayset), false);
-        // TODO: release chunk tickets when releasing cube tickets
     }
 
     private SortedArraySet<Ticket<?>> getCubeTickets(long cubePos) {
@@ -128,45 +123,6 @@ public abstract class MixinTicketManager implements ITicketManager, IVerticalVie
     }
 
     //BEGIN INJECT
-
-    @Override public boolean runAllUpdatesForChunks(ChunkMap chunkMap) {
-        this.naturalSpawnChunkCounter.runAllUpdates();
-        this.playerTicketManager.runAllUpdates();
-        int i = Integer.MAX_VALUE - this.ticketTracker.runDistanceUpdates(Integer.MAX_VALUE);
-        boolean bl = i != 0;
-
-        if (!this.chunksToUpdateFutures.isEmpty()) {
-            this.chunksToUpdateFutures.forEach((chunkHolder) -> ((ChunkHolderAccess) chunkHolder).invokeUpdateFutures(chunkMap, this.mainThreadExecutor));
-            this.chunksToUpdateFutures.clear();
-            return true;
-        } else {
-            if (!this.ticketsToRelease.isEmpty()) {
-                LongIterator longIterator = this.ticketsToRelease.iterator();
-
-                while (longIterator.hasNext()) {
-                    long l = longIterator.nextLong();
-                    if (this.getTickets(l).stream().anyMatch((ticket) -> ticket.getType() == TicketType.PLAYER)) {
-                        ChunkHolder chunkHolder = ((ChunkManagerAccess) chunkMap).invokeGetUpdatingChunkIfPresent(l);
-                        if (chunkHolder == null) {
-                            throw new IllegalStateException();
-                        }
-
-                        CompletableFuture<Either<LevelChunk, ChunkHolder.ChunkLoadingFailure>> completableFuture = chunkHolder.getEntityTickingChunkFuture();
-                        completableFuture.thenAccept((either) -> {
-                            this.mainThreadExecutor.execute(() -> {
-                                this.ticketThrottlerReleaser.tell(ChunkTaskPriorityQueueSorter.release(() -> {
-                                }, l, false));
-                            });
-                        });
-                    }
-                }
-
-                this.ticketsToRelease.clear();
-            }
-
-            return bl;
-        }
-    }
 
     @Inject(method = "runAllUpdates", at = @At("RETURN"), cancellable = true)
     public void processUpdates(ChunkMap chunkManager, CallbackInfoReturnable<Boolean> callbackInfoReturnable) {
