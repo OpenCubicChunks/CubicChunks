@@ -163,10 +163,10 @@ public class CubePrimer extends ProtoChunk implements IBigCube, CubicLevelHeight
     }
 
     private ChunkSource getChunkSource() {
-        if (this.levelHeightAccessor instanceof CubeWorldGenRegion) {
-            return ((CubeWorldGenRegion) this.levelHeightAccessor).getChunkSource();
+        if (((ProtoChunkAccess) this).getLevelHeightAccessor() instanceof CubeWorldGenRegion) {
+            return ((CubeWorldGenRegion) ((ProtoChunkAccess) this).getLevelHeightAccessor()).getChunkSource();
         } else {
-            return ((ServerLevel) this.levelHeightAccessor).getChunkSource();
+            return ((ServerLevel) ((ProtoChunkAccess) this).getLevelHeightAccessor()).getChunkSource();
         }
     }
 
@@ -224,10 +224,6 @@ public class CubePrimer extends ProtoChunk implements IBigCube, CubicLevelHeight
 
     public LightSurfaceTrackerSection[] getLightHeightmaps() {
         return lightHeightmaps;
-    }
-
-    @Override public ChunkStatus getCubeStatus() {
-        return this.status;
     }
 
     @Override @Nullable public BlockState setBlock(BlockPos pos, BlockState state, boolean isMoving) {

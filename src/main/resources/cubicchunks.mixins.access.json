@@ -30,6 +30,7 @@
         "common.PlayerChunkTrackerFactoryAccess",
         "common.PlayerTicketTrackerFactoryAccess",
         "common.PoiSectionAccess",
+        "common.ProtoChunkAccess",
         "common.ProtoTickListAccess",
         "common.SpawnStateAccess",
         "common.StructureFeatureManagerAccess",

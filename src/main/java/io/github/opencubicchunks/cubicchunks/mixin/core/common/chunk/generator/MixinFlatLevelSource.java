@@ -17,7 +17,7 @@ import org.spongepowered.asm.mixin.injection.ModifyConstant;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
 @Mixin(FlatLevelSource.class)
-public class MixinFlatLevelSource implements ICubeGenerator {
+public abstract class MixinFlatLevelSource implements ICubeGenerator {
 
     @ModifyConstant(method = "fillFromNoise", constant = @Constant(intValue = 0, ordinal = 0))
     private int useChunkMinY(int arg0, Executor executor, StructureFeatureManager accessor, ChunkAccess chunk) {

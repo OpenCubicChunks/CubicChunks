@@ -9,6 +9,7 @@ import java.util.concurrent.Executor;
 import java.util.function.Function;
 
 import com.mojang.datafixers.util.Either;
+import io.github.opencubicchunks.cubicchunks.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.ICubeGenerator;
 import io.github.opencubicchunks.cubicchunks.chunk.NoiseAndSurfaceBuilderHelper;
@@ -301,6 +302,10 @@ public class MixinChunkStatus {
     }
 
     private static boolean areSectionsEmpty(int cubeY, ChunkPos pos, IBigCube cube) {
+        if (CubicChunks.commonConfig().isSkipEmptySections()) {
+            return false;
+        }
+
         int emptySections = 0;
         for (int yScan = 0; yScan < IBigCube.DIAMETER_IN_SECTIONS; yScan++) {
             int sectionY = Coords.cubeToSection(cubeY, yScan);

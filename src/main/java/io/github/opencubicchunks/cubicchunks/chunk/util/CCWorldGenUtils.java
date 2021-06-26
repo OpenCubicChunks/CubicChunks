@@ -1,5 +1,6 @@
 package io.github.opencubicchunks.cubicchunks.chunk.util;
 
+import io.github.opencubicchunks.cubicchunks.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import net.minecraft.world.level.ChunkPos;
@@ -8,6 +9,10 @@ import net.minecraft.world.level.chunk.LevelChunkSection;
 public class CCWorldGenUtils {
 
     public static boolean areSectionsEmpty(int cubeY, ChunkPos pos, IBigCube cube) {
+        if (CubicChunks.commonConfig().isSkipEmptySections()) {
+            return false;
+        }
+
         int emptySections = 0;
         for (int yScan = 0; yScan < IBigCube.DIAMETER_IN_SECTIONS; yScan++) {
             int sectionY = Coords.cubeToSection(cubeY, yScan);

@@ -13,6 +13,8 @@ public class CommonConfig {
     private int verticalViewDistance;
     private ExceptionHandler worldExceptionHandler;
     private boolean asyncChunkLoad;
+    private boolean skipEmptySections;
+
 
     public CommonConfig() {
         this.configHelper = new AbstractCommentedConfigHelper(CubicChunks.CONFIG_PATH.resolve(CubicChunks.MODID + "-common.toml"));
@@ -20,6 +22,7 @@ public class CommonConfig {
         worldExceptionHandler = this.configHelper.addEnum("How will Cubic Chunks handle errors during world gen? It is recommended to leave this as:\""
                 + ExceptionHandler.EXCEPTION_THROWN.toString() + "\"", "worldExceptionHandler", ExceptionHandler.EXCEPTION_THROWN);
         asyncChunkLoad = this.configHelper.add("Use async cube loading?", "asyncCubeLoad", true);
+        skipEmptySections = this.configHelper.add("Skip empty sections in world generation?", "skipEmptySections", true);
         this.configHelper.build();
     }
 
@@ -38,5 +41,9 @@ public class CommonConfig {
 
     public boolean isAsyncChunkLoad() {
         return asyncChunkLoad;
+    }
+
+    public boolean isSkipEmptySections() {
+        return skipEmptySections;
     }
 }
