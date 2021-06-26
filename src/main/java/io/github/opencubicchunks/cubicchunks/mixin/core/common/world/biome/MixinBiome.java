@@ -1,18 +1,19 @@
 package io.github.opencubicchunks.cubicchunks.mixin.core.common.world.biome;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
-import java.util.Set;
 import java.util.function.Supplier;
 
 import io.github.opencubicchunks.cubicchunks.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.chunk.NoiseAndSurfaceBuilderHelper;
+import io.github.opencubicchunks.cubicchunks.chunk.NonAtomicWorldgenRandom;
+import io.github.opencubicchunks.cubicchunks.config.HeightSettings;
+import io.github.opencubicchunks.cubicchunks.config.reloadlisteners.HeightSettingsReloadListener;
 import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
-import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import io.github.opencubicchunks.cubicchunks.world.CubeWorldGenRandom;
 import io.github.opencubicchunks.cubicchunks.world.CubeWorldGenRegion;
 import io.github.opencubicchunks.cubicchunks.world.biome.BiomeGetter;
@@ -23,6 +24,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Registry;
 import net.minecraft.core.SectionPos;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.StructureFeatureManager;
 import net.minecraft.world.level.biome.Biome;
@@ -53,29 +55,39 @@ public class MixinBiome implements BiomeGetter {
     private Map<Integer, List<StructureFeature<?>>> structuresByStep;
 
 
-    private final Set<ResourceLocation> featureBlacklist = new HashSet<>();
+    private static final List<ResourceLocation> featureBlacklist = new ArrayList<>(Arrays.asList(
+
+        //Broken Features
+        new ResourceLocation("ice_spike"), /**{@link net.minecraft.world.level.levelgen.feature.IceSpikeFeature}**/ //Handles its placement in its own class w/ a while loop.
+        new ResourceLocation("spring_water"),
+        //Requires similar 1.12 implementation, see: https://github.com/OpenCubicChunks/CubicWorldGen/blob/27de56d2f792513873584b2f8fd9f3082fb259ec/src/main/java/io/github
+        // /opencubicchunks/cubicchunks/cubicgen/customcubic/populator/DefaultDecorator.java#L331-L361
+        new ResourceLocation("spring_lava"),
+        //Requires similar 1.12 implementation, see: https://github.com/OpenCubicChunks/CubicWorldGen/blob/27de56d2f792513873584b2f8fd9f3082fb259ec/src/main/java/io/github
+        // /opencubicchunks/cubicchunks/cubicgen/customcubic/populator/DefaultDecorator.java#L331-L361
+        new ResourceLocation("seagrass_simple"), //Requires Carving mask
+        new ResourceLocation("fossil"),
+        new ResourceLocation("desert_well"), //Iterates downwards in its placement
+        new ResourceLocation("ice_patch") //Iterates downwards in its placement
+    ));
 
     @Override
     public void generate(StructureFeatureManager structureManager, ChunkGenerator chunkGenerator, CubeWorldGenRegion region, long seed, CubeWorldGenRandom random,
-                         BlockPos blockPos) {
+                         BlockPos blockPos, boolean generatesStructures, BoundingBox structureBoundingBox) {
         List<List<Supplier<ConfiguredFeature<?, ?>>>> list = this.generationSettings.features();
 
         for (int genStepIDX = 0; genStepIDX < GenerationStep.Decoration.values().length; ++genStepIDX) {
             int k = 0;
-            if (structureManager.shouldGenerateFeatures()) {
+            if (generatesStructures) {
 
                 for (StructureFeature<?> structure : this.structuresByStep.getOrDefault(genStepIDX, Collections.emptyList())) {
-
+                    region.upgradeY(HeightSettingsReloadListener.STRUCTURE_HEIGHT_SETTINGS.getOrDefault(structure, HeightSettings.DEFAULT));
                     random.setDecorationSeed(seed, k, genStepIDX);
-                    int minSectionX = Coords.sectionToMinBlock(Coords.blockToSection(blockPos.getX()));
-                    int minSectionZ = Coords.sectionToMinBlock(Coords.blockToSection(blockPos.getZ()));
 
                     try {
                         region.usesRegionHeightMap();
                         structureManager.startsForFeature(SectionPos.of(blockPos), structure).forEach((structureStart) -> {
-                            structureStart.placeInChunk(region, structureManager, chunkGenerator, random,
-                                new BoundingBox(minSectionX, Coords.cubeToMinBlock(region.getMinCubeY()) + 1, minSectionZ, minSectionX + 15, Coords.cubeToMaxBlock(region.getMaxCubeY()) - 1,
-                                    minSectionZ + 15),
+                            structureStart.placeInChunk(region, structureManager, chunkGenerator, random, structureBoundingBox,
                                 new ChunkPos(blockPos));
                         });
                     } catch (Exception e) {
@@ -83,19 +95,16 @@ public class MixinBiome implements BiomeGetter {
                         crashReport.addCategory("Feature").setDetail("Id", Registry.STRUCTURE_FEATURE.getKey(structure)).setDetail("Description", () -> {
                             return structure.toString();
                         });
-                        throw new ReportedException(crashReport);
+                        CubicChunks.commonConfig().getWorldExceptionHandler().wrapException(new ReportedException(crashReport));
                     }
                 }
             }
 
-            if (featureBlacklist.isEmpty()) {
-                getBlacklist();
-            }
-
-
             if (list.size() > genStepIDX) {
                 for (Supplier<ConfiguredFeature<?, ?>> configuredFeatureSupplier : list.get(genStepIDX)) {
                     ConfiguredFeature<?, ?> configuredFeature = configuredFeatureSupplier.get();
+                    //noinspection SuspiciousMethodCalls
+                    region.upgradeY(HeightSettingsReloadListener.STRUCTURE_HEIGHT_SETTINGS.getOrDefault(configuredFeature.feature, HeightSettings.DEFAULT));
 
                     ResourceLocation key = region.getLevel().getServer().registryAccess().registry(Registry.CONFIGURED_FEATURE_REGISTRY).get().getKey(configuredFeature);
                     if (key != null) {
@@ -118,7 +127,7 @@ public class MixinBiome implements BiomeGetter {
                                 return configuredFeature1.feature.toString();
                             });
                             CubicChunks.LOGGER.fatal(crashReport2.getFriendlyReport());
-                            throw new ReportedException(crashReport2);
+                            CubicChunks.commonConfig().getWorldExceptionHandler().wrapException(new ReportedException(crashReport2));
                         }
                     }
                 }
@@ -143,34 +152,19 @@ public class MixinBiome implements BiomeGetter {
 
         ConfiguredSurfaceBuilder<?> configuredSurfaceBuilder = this.generationSettings.getSurfaceBuilder().get();
         configuredSurfaceBuilder.initNoise(seed);
-        try {
-            int cubicChunksSurfaceHeight;
+
+        if (!(random instanceof NonAtomicWorldgenRandom)) {
             if (chunk.getMinBuildHeight() > surfaceMinHeight) {
-                cubicChunksSurfaceHeight = chunk.getMinBuildHeight();
+                surfaceMinHeight = chunk.getMinBuildHeight();
             } else if (chunk.getMaxBuildHeight() < surfaceMinHeight) {
-                cubicChunksSurfaceHeight = Integer.MAX_VALUE;
-            } else {
-                cubicChunksSurfaceHeight = surfaceMinHeight;
+                surfaceMinHeight = Integer.MAX_VALUE;
             }
-
-            configuredSurfaceBuilder.apply(random, chunk, (Biome) (Object) this, x, z, worldHeight, noise, defaultBlock, defaultFluid, seaLevel, cubicChunksSurfaceHeight, seed);
-        } catch (NoiseAndSurfaceBuilderHelper.StopGeneratingThrowable ignored) {
-            // used as a way to stop the surface builder when it goes below the current cube
         }
-    }
 
-    //TODO: Remove this blacklist.
-    private void getBlacklist() {
-
-        List<ResourceLocation> resourceLocationList = Arrays.asList(
-            //Requires similar 1.12 implementation, see: https://github.com/OpenCubicChunks/CubicWorldGen/blob/27de56d2f792513873584b2f8fd9f3082fb259ec/src/main/java/io/github
-            // /opencubicchunks/cubicchunks/cubicgen/customcubic/populator/DefaultDecorator.java#L331-L361
-            new ResourceLocation("spring_water"),
-            //Requires similar 1.12 implementation, see: https://github.com/OpenCubicChunks/CubicWorldGen/blob/27de56d2f792513873584b2f8fd9f3082fb259ec/src/main/java/io/github
-            // /opencubicchunks/cubicchunks/cubicgen/customcubic/populator/DefaultDecorator.java#L331-L361
-            new ResourceLocation("spring_lava")
-        );
-
-        featureBlacklist.addAll(resourceLocationList);
+        try {
+            configuredSurfaceBuilder.apply(random, chunk, (Biome) (Object) this, x, z, worldHeight, noise, defaultBlock, defaultFluid, seaLevel, surfaceMinHeight, seed);
+        } catch (NoiseAndSurfaceBuilderHelper.StopGeneratingThrowable ignored) {
+            CubicChunks.commonConfig().getWorldExceptionHandler().wrapException(ignored);
+        }
     }
 }

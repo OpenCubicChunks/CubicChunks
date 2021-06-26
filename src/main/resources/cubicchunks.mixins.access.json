@@ -11,6 +11,7 @@
         "common.BiomeContainerAccess",
         "common.BiomeGenerationSettingsAccess",
         "common.BiomeManagerAccess",
+        "common.ChunkGeneratorAccess",
         "common.ChunkHolderAccess",
         "common.ChunkManagerAccess",
         "common.ChunkSectionAccess",
