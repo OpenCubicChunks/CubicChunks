@@ -1,4 +1,4 @@
-package io.github.opencubicchunks.cubicchunks.mixin.core.common.chunk;
+package io.github.opencubicchunks.cubicchunks.mixin.core.common.chunk.generator;
 
 import java.util.Random;
 import java.util.concurrent.CompletableFuture;
