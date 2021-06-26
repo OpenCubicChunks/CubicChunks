@@ -81,7 +81,7 @@ public class CubePrimer extends ProtoChunk implements IBigCube, CubicLevelHeight
 
     private final Map<Heightmap.Types, SurfaceTrackerSection[]> heightmaps;
 
-    private final LightSurfaceTrackerSection[] lightHeightmaps = new LightSurfaceTrackerSection[4];
+    private final LightSurfaceTrackerSection[] lightHeightmaps = new LightSurfaceTrackerSection[IBigCube.DIAMETER_IN_SECTIONS * IBigCube.DIAMETER_IN_SECTIONS];
 
 
     private final List<CompoundTag> entities = Lists.newArrayList();
