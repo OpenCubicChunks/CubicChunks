@@ -1,11 +1,13 @@
 package io.github.opencubicchunks.cubicchunks.chunk;
 
+import java.util.BitSet;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.CubePrimer;
+import io.github.opencubicchunks.cubicchunks.mixin.access.common.ProtoChunkAccess;
 import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import io.github.opencubicchunks.cubicchunks.world.DummyHeightmap;
@@ -23,6 +25,7 @@ import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.chunk.LevelChunkSection;
 import net.minecraft.world.level.chunk.ProtoChunk;
 import net.minecraft.world.level.chunk.UpgradeData;
+import net.minecraft.world.level.levelgen.GenerationStep;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.FluidState;
@@ -30,7 +33,6 @@ import net.minecraft.world.level.material.Fluids;
 import org.jetbrains.annotations.Nullable;
 
 public class NoiseAndSurfaceBuilderHelper extends ProtoChunk implements CubicLevelHeightAccessor {
-
 
     private final ChunkAccess[] delegates;
     private int columnX;
@@ -96,6 +98,12 @@ public class NoiseAndSurfaceBuilderHelper extends ProtoChunk implements CubicLev
     @Override public Heightmap getOrCreateHeightmapUnprimed(Heightmap.Types type) {
         return this.heightmaps.computeIfAbsent(type, (typex) -> {
             return new DummyHeightmap(this, typex); //Essentially do nothing here.
+        });
+    }
+
+    @Override public BitSet getOrCreateCarvingMask(GenerationStep.Carving carver) {
+        return (BitSet) ((ProtoChunkAccess) this).getCarvingMasks().computeIfAbsent(carver, (carverx) -> {
+            return new BitSet(IBigCube.BLOCK_COUNT);
         });
     }
 

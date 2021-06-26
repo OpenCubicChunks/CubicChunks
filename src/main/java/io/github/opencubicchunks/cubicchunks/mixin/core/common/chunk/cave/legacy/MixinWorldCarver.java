@@ -4,6 +4,7 @@ import java.util.Random;
 
 import io.github.opencubicchunks.cubicchunks.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.chunk.NonAtomicWorldgenRandom;
+import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.levelgen.VerticalAnchor;
 import net.minecraft.world.level.levelgen.WorldGenerationContext;
 import net.minecraft.world.level.levelgen.carver.WorldCarver;
@@ -23,5 +24,10 @@ public class MixinWorldCarver {
         at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/levelgen/VerticalAnchor;resolveY(Lnet/minecraft/world/level/levelgen/WorldGenerationContext;)I"))
     private int returnMinIntValue(VerticalAnchor verticalAnchor, WorldGenerationContext context) {
         return CubicChunks.MIN_SUPPORTED_HEIGHT;
+    }
+
+    @Redirect(method = "carveEllipsoid", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/levelgen/carver/WorldCarver;hasDisallowedLiquid(Lnet/minecraft/world/level/chunk/ChunkAccess;IIIIII)Z"))
+    private boolean constantFalse(WorldCarver worldCarver, ChunkAccess chunk, int minX, int maxX, int minY, int maxY, int minZ, int maxZ) {
+        return false;
     }
 }

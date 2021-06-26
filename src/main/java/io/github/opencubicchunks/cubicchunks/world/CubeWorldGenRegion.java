@@ -202,9 +202,9 @@ public class CubeWorldGenRegion extends WorldGenRegion implements ICubicWorld {
             int dy = y - this.minCubeY;
             int dz = z - this.minCubeZ;
             icube = this.cubePrimers[this.diameter * (dx * this.diameter + dy) + dz];
-            if (icube.getCubeStatus().isOrAfter(requiredStatus)) {
+//            if (icube.getCubeStatus().isOrAfter(requiredStatus)) {
                 return icube;
-            }
+//            }
         } else {
             icube = null;
         }
