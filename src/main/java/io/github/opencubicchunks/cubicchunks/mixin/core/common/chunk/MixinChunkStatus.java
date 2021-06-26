@@ -87,7 +87,7 @@ public class MixinChunkStatus {
 
 
         if (chunk instanceof CubePrimer && !chunk.getStatus().isOrAfter(status)) {
-            ((CubePrimer) chunk).setCubeStatus(status);
+            ((CubePrimer) chunk).setStatus(status);
         }
     }
 
@@ -114,9 +114,9 @@ public class MixinChunkStatus {
                 return;
             }
 
-            if (!((IBigCube) chunk).getCubeStatus().isOrAfter(status)) {
+            if (!chunk.getStatus().isOrAfter(status)) {
                 if (chunk instanceof CubePrimer) {
-                    ((CubePrimer) chunk).setCubeStatus(status);
+                    ((CubePrimer) chunk).setStatus(status);
                 }
             }
             cir.setReturnValue(CompletableFuture.completedFuture(Either.left(chunk)));
@@ -129,7 +129,7 @@ public class MixinChunkStatus {
             return;
         }
         //cc
-        if (!((IBigCube) chunk).getCubeStatus().isOrAfter(status)) {
+        if (!chunk.getStatus().isOrAfter(status)) {
             if (world.getServer().getWorldData().worldGenSettings().generateFeatures()) { // check if structures are enabled
                 for (int dx = 0; dx < IBigCube.DIAMETER_IN_SECTIONS; dx++) {
                     for (int dy = 0; dy < IBigCube.DIAMETER_IN_SECTIONS; dy++) {
@@ -143,7 +143,7 @@ public class MixinChunkStatus {
                 }
             }
             if (chunk instanceof CubePrimer) {
-                ((CubePrimer) chunk).setCubeStatus(status);
+                ((CubePrimer) chunk).setStatus(status);
             }
         }
     }
@@ -240,7 +240,7 @@ public class MixinChunkStatus {
 
                     ChunkPos pos = chunk.getPos();
 
-                    NoiseAndSurfaceBuilderHelper cubeAccessWrapper = new NoiseAndSurfaceBuilderHelper((IBigCube) chunk, cubeAbove);
+                    NoiseAndSurfaceBuilderHelper cubeAccessWrapper = new NoiseAndSurfaceBuilderHelper((IBigCube) chunk, cubeAbove, world);
                     cubeAccessWrapper.moveColumn(columnX, columnZ);
 
                     if (chainedNoiseFutures == null) {
@@ -255,7 +255,7 @@ public class MixinChunkStatus {
             assert chainedNoiseFutures != null;
             ci.setReturnValue(chainedNoiseFutures.thenApply(ignored -> {
                 if (chunk instanceof CubePrimer) {
-                    ((CubePrimer) chunk).setCubeStatus(status);
+                    ((CubePrimer) chunk).setStatus(status);
                 }
 
                 return Either.left(chunk);
@@ -424,8 +424,8 @@ public class MixinChunkStatus {
             }
 
             CubePrimer cubePrimer = (CubePrimer) chunk;
-            if (!cubePrimer.getCubeStatus().isOrAfter(status)) {
-                cubePrimer.setCubeStatus(status);
+            if (!cubePrimer.getStatus().isOrAfter(status)) {
+                cubePrimer.setStatus(status);
             }
             cir.setReturnValue(CompletableFuture.completedFuture(Either.left(chunk)));
             return;
@@ -439,7 +439,7 @@ public class MixinChunkStatus {
         }
         CubePrimer cubePrimer = (CubePrimer) chunk;
         cubePrimer.setCubeLightManager(lightManager);
-        if (!cubePrimer.getCubeStatus().isOrAfter(status)) {
+        if (!cubePrimer.getStatus().isOrAfter(status)) {
             // TODO: reimplement heightmaps
             //Heightmap.updateChunkHeightmaps(chunk, EnumSet
             //        .of(Heightmap.Type.MOTION_BLOCKING, Heightmap.Type.MOTION_BLOCKING_NO_LEAVES, Heightmap.Type.OCEAN_FLOOR,
@@ -452,7 +452,7 @@ public class MixinChunkStatus {
 //            if (cubePrimer.getCubePos().getY() >= 0)
             cubePrimer.applyFeatureStates();
             ((ICubeGenerator) generator).decorate(cubeWorldGenRegion, structureFeatureManager, (CubePrimer) chunk);
-            cubePrimer.setCubeStatus(status);
+            cubePrimer.setStatus(status);
         }
         cir.setReturnValue(CompletableFuture.completedFuture(Either.left(chunk)));
     }
@@ -472,9 +472,9 @@ public class MixinChunkStatus {
             cir.setReturnValue(CompletableFuture.completedFuture(Either.left(chunk)));
             return;
         }
-        boolean flag = ((CubePrimer) chunk).getCubeStatus().isOrAfter(status) && ((CubePrimer) chunk).hasCubeLight();
+        boolean flag = ((CubePrimer) chunk).getStatus().isOrAfter(status) && ((CubePrimer) chunk).hasCubeLight();
         if (!chunk.getStatus().isOrAfter(status)) {
-            ((CubePrimer) chunk).setCubeStatus(status);
+            ((CubePrimer) chunk).setStatus(status);
         }
         cir.setReturnValue(unsafeCast(((IServerWorldLightManager) lightManager).lightCube((IBigCube) chunk, flag).thenApply(Either::left)));
     }

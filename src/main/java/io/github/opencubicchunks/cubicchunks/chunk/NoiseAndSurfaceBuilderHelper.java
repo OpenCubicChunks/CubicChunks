@@ -1,7 +1,6 @@
 package io.github.opencubicchunks.cubicchunks.chunk;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
@@ -32,11 +31,15 @@ import org.jetbrains.annotations.Nullable;
 
 public class NoiseAndSurfaceBuilderHelper extends ProtoChunk implements CubicLevelHeightAccessor {
 
+    // Number of sections sufficient enough to house the required data required for the Noise & Surface stage of world generation.
+    public static final int SECTION_COUNT = IBigCube.SECTION_COUNT + (IBigCube.DIAMETER_IN_SECTIONS * IBigCube.DIAMETER_IN_SECTIONS);
+    public static final int Y_DIAMETER_IN_SECTIONS = IBigCube.DIAMETER_IN_SECTIONS + 1;
+
+    public static final DummyHeightmap DUMMY_HEIGHTMAP = new DummyHeightmap(Heightmap.Types.OCEAN_FLOOR_WG);
 
     private final ChunkAccess[] delegates;
     private int columnX;
     private int columnZ;
-    private final Map<Heightmap.Types, Heightmap> heightmaps;
     private final boolean isCubic;
     private final boolean generates2DChunks;
     private final WorldStyle worldStyle;
@@ -45,13 +48,12 @@ public class NoiseAndSurfaceBuilderHelper extends ProtoChunk implements CubicLev
 
     private boolean needsExtraHeight;
 
-    public NoiseAndSurfaceBuilderHelper(IBigCube delegate, IBigCube delegateAbove) {
+    public NoiseAndSurfaceBuilderHelper(IBigCube delegate, IBigCube delegateAbove, LevelHeightAccessor accessor) {
         super(delegate.getCubePos().asChunkPos(), UpgradeData.EMPTY, null, ((CubeProtoTickList<Block>) delegate.getBlockTicks()), ((CubeProtoTickList<Fluid>) delegate.getLiquidTicks()),
-            new HeightAccessor(delegate));
+            accessor);
         this.delegates = new ChunkAccess[2];
         this.delegates[0] = delegate;
         this.delegates[1] = delegateAbove;
-        this.heightmaps = Maps.newEnumMap(Heightmap.Types.class);
         isCubic = ((CubicLevelHeightAccessor) delegate).isCubic();
         generates2DChunks = ((CubicLevelHeightAccessor) delegate).generates2DChunks();
         worldStyle = ((CubicLevelHeightAccessor) delegate).worldStyle();
@@ -70,7 +72,7 @@ public class NoiseAndSurfaceBuilderHelper extends ProtoChunk implements CubicLev
         this.columnX = newColumnX;
         this.columnZ = newColumnZ;
 
-        for (int relativeSectionY = 0; relativeSectionY < IBigCube.DIAMETER_IN_SECTIONS * 2; relativeSectionY++) {
+        for (int relativeSectionY = 0; relativeSectionY < Y_DIAMETER_IN_SECTIONS; relativeSectionY++) {
             int sectionY = relativeSectionY + ((IBigCube) delegates[0]).getCubePos().asSectionPos().getY();
             IBigCube delegateCube = (IBigCube) getDelegateFromSectionY(sectionY);
             assert delegateCube != null;
@@ -99,9 +101,11 @@ public class NoiseAndSurfaceBuilderHelper extends ProtoChunk implements CubicLev
     }
 
     @Override public Heightmap getOrCreateHeightmapUnprimed(Heightmap.Types type) {
-        return this.heightmaps.computeIfAbsent(type, (typex) -> {
-            return new DummyHeightmap(this, typex); //Essentially do nothing here.
-        });
+        return DUMMY_HEIGHTMAP;
+    }
+
+    @Override public Collection<Map.Entry<Heightmap.Types, Heightmap>> getHeightmaps() {
+        return this.delegates[0].getHeightmaps();
     }
 
     @Override public ChunkPos getPos() {
@@ -126,10 +130,6 @@ public class NoiseAndSurfaceBuilderHelper extends ProtoChunk implements CubicLev
         return cubeSections[sectionIndex];
     }
 
-
-    @Override public Collection<Map.Entry<Heightmap.Types, Heightmap>> getHeightmaps() {
-        return Collections.unmodifiableSet(this.heightmaps.entrySet());
-    }
 
     @Override public int getSectionIndex(int y) {
         return Coords.blockToCubeLocalSection(y) + IBigCube.DIAMETER_IN_SECTIONS * getDelegateIndex(Coords.blockToCube(y));
@@ -288,46 +288,6 @@ public class NoiseAndSurfaceBuilderHelper extends ProtoChunk implements CubicLev
 
         public StopGeneratingThrowable() {
             super("Stop the surface builder");
-        }
-    }
-
-    private static class HeightAccessor implements LevelHeightAccessor, CubicLevelHeightAccessor {
-
-
-        private final int minBuildHeight;
-        private final int height;
-        private final boolean isCubic;
-        private final boolean generates2DChunks;
-        private final WorldStyle worldStyle;
-
-
-        private HeightAccessor(ChunkAccess cube) {
-
-            this.minBuildHeight = ((IBigCube) cube).getCubePos().minCubeY();
-            this.height = IBigCube.DIAMETER_IN_BLOCKS * 2;
-            isCubic = ((CubicLevelHeightAccessor) cube).isCubic();
-            generates2DChunks = ((CubicLevelHeightAccessor) cube).generates2DChunks();
-            worldStyle = ((CubicLevelHeightAccessor) cube).worldStyle();
-        }
-
-        @Override public int getHeight() {
-            return height;
-        }
-
-        @Override public int getMinBuildHeight() {
-            return minBuildHeight;
-        }
-
-        @Override public WorldStyle worldStyle() {
-            return worldStyle;
-        }
-
-        @Override public boolean isCubic() {
-            return isCubic;
-        }
-
-        @Override public boolean generates2DChunks() {
-            return generates2DChunks;
         }
     }
 }
