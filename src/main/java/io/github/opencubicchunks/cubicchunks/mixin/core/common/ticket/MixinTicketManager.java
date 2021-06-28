@@ -92,10 +92,8 @@ public abstract class MixinTicketManager implements ITicketManager, IVerticalVie
         CubePos cubePos = CubePos.from(cubePosIn);
         for (int localX = 0; localX < IBigCube.DIAMETER_IN_SECTIONS; localX++) {
             for (int localZ = 0; localZ < IBigCube.DIAMETER_IN_SECTIONS; localZ++) {
-                //Convert the ticket level from cube to chunk
-                int originalRadius = 33 - ticketIn.getTicketLevel();
-                int chunkTicketLevel = 33 - Coords.cubeToSection(originalRadius, 0);
-                addTicket(CubePos.asChunkPosLong(cubePosIn, localX, localZ), TicketAccess.createNew(CCTicketType.CCCOLUMN, chunkTicketLevel, cubePos));
+                //do not need to handle region tickets due to the additional CCColumn tickets added in cube generation stages
+                addTicket(CubePos.asChunkPosLong(cubePosIn, localX, localZ), TicketAccess.createNew(CCTicketType.CCCOLUMN, ticketIn.getTicketLevel(), cubePos));
             }
         }
 
