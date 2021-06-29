@@ -9,10 +9,12 @@ import java.util.concurrent.Executor;
 import java.util.function.Function;
 
 import com.mojang.datafixers.util.Either;
+import io.github.opencubicchunks.cubicchunks.chunk.CuboidPrimer;
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.ICubeGenerator;
 import io.github.opencubicchunks.cubicchunks.chunk.NoiseAndSurfaceBuilderHelper;
 import io.github.opencubicchunks.cubicchunks.chunk.biome.ColumnBiomeContainer;
+import io.github.opencubicchunks.cubicchunks.chunk.biome.CuboidBiomeContainer;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.CubePrimer;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CCWorldGenUtils;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
@@ -103,6 +105,11 @@ public class MixinChunkStatus {
         List<ChunkAccess> chunks, ChunkAccess chunk,
         CallbackInfoReturnable<CompletableFuture<Either<ChunkAccess, ChunkHolder.ChunkLoadingFailure>>> cir) {
 
+        if (chunk instanceof CuboidPrimer) {
+            cir.setReturnValue(CompletableFuture.completedFuture(Either.left(chunk)));
+            return;
+        }
+
         if (((CubicLevelHeightAccessor) world).generates2DChunks()) {
             if (!(chunk instanceof IBigCube)) {
                 return;
@@ -148,6 +155,10 @@ public class MixinChunkStatus {
             return;
         }
 
+        if (chunk instanceof CuboidPrimer) {
+            ci.cancel();
+            return;
+        }
         ci.cancel();
         if (chunk instanceof IBigCube) {
             generator.createReferences(new CubeWorldGenRegion(world, unsafeCast(neighbors), status, chunk, -1), world.structureFeatureManager(), chunk);
@@ -164,6 +175,25 @@ public class MixinChunkStatus {
         if (((CubicLevelHeightAccessor) world).generates2DChunks()) {
             if (chunkAccess instanceof IBigCube) {
                 return;
+            }
+            return;
+        }
+
+        if (chunkAccess instanceof CuboidPrimer) {
+            ci.cancel();
+            CubePrimer[] delegates = ((CuboidPrimer) chunkAccess).getDelegates();
+            for (int columnX = 0; columnX < IBigCube.DIAMETER_IN_SECTIONS; columnX++) {
+                for (int columnZ = 0; columnZ < IBigCube.DIAMETER_IN_SECTIONS; columnZ++) {
+                    ((CuboidPrimer) chunkAccess).moveColumns(columnX, columnZ);
+
+                    for (CubePrimer delegate : delegates) {
+                        delegate.setHeightToCubeBounds(true);
+                        delegate.moveColumns(columnX, columnZ);
+                        chunkGenerator.createBiomes(world.registryAccess().registryOrThrow(Registry.BIOME_REGISTRY), delegate);
+                        delegate.setHeightToCubeBounds(false);
+                    }
+                    ((CuboidPrimer) chunkAccess).setBiomes(new CuboidBiomeContainer(delegates, columnX, columnZ));
+                }
             }
             return;
         }
@@ -204,6 +234,11 @@ public class MixinChunkStatus {
             if (chunk instanceof IBigCube) {
                 ci.setReturnValue(CompletableFuture.completedFuture(Either.left(chunk)));
             }
+            return;
+        }
+
+        if (chunk instanceof CuboidPrimer) {
+            ci.setReturnValue(CompletableFuture.completedFuture(Either.left(chunk)));
             return;
         }
 
@@ -395,6 +430,11 @@ public class MixinChunkStatus {
         List<ChunkAccess> chunks, ChunkAccess chunk,
         CallbackInfoReturnable<CompletableFuture<Either<ChunkAccess, ChunkHolder.ChunkLoadingFailure>>> cir) {
 
+        if (chunk instanceof CuboidPrimer) {
+            cir.setReturnValue(CompletableFuture.completedFuture(Either.left(chunk)));
+            return;
+        }
+
         if (((CubicLevelHeightAccessor) world).generates2DChunks()) {
             if (!(chunk instanceof CubePrimer)) {
                 return;
@@ -438,6 +478,11 @@ public class MixinChunkStatus {
     private static void lightChunkCC(ChunkStatus status, ThreadedLevelLightEngine lightManager, ChunkAccess chunk,
                                      CallbackInfoReturnable<CompletableFuture<Either<ChunkAccess, ChunkHolder.ChunkLoadingFailure>>> cir) {
 
+        if (chunk instanceof CuboidPrimer) {
+            cir.setReturnValue(CompletableFuture.completedFuture(Either.left(chunk)));
+            return;
+        }
+
         if (!((CubicLevelHeightAccessor) chunk).isCubic()) {
             return;
         }
@@ -471,6 +516,10 @@ public class MixinChunkStatus {
             return;
         }
 
+        if (chunk instanceof CuboidPrimer) {
+            ci.cancel();
+            return;
+        }
 
         ci.cancel();
         if (chunk instanceof IBigCube) {

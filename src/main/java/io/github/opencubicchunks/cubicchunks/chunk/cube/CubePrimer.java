@@ -45,6 +45,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.ChunkBiomeContainer;
 import net.minecraft.world.level.chunk.ChunkStatus;
+import net.minecraft.world.level.chunk.EmptyLevelChunk;
 import net.minecraft.world.level.chunk.LevelChunkSection;
 import net.minecraft.world.level.chunk.ProtoChunk;
 import net.minecraft.world.level.chunk.ProtoTickList;
@@ -70,7 +71,7 @@ public class CubePrimer extends ProtoChunk implements IBigCube, CubicLevelHeight
     private ChunkStatus status = ChunkStatus.EMPTY;
 
     @Nullable
-    private CubeBiomeContainer cubeBiomeContainer;
+    protected ChunkBiomeContainer cubeBiomeContainer;
 
 
     private final Map<Heightmap.Types, SurfaceTrackerSection[]> heightmaps;
@@ -483,7 +484,7 @@ public class CubePrimer extends ProtoChunk implements IBigCube, CubicLevelHeight
             cubeBiomeContainer = new CubeBiomeContainer(((BiomeContainerAccess) biomes).getBiomeRegistry(), this.levelHeightAccessor);
         }
 
-        cubeBiomeContainer.setContainerForColumn(columnX, columnZ, biomes);
+        ((CubeBiomeContainer) cubeBiomeContainer).setContainerForColumn(columnX, columnZ, biomes);
     }
 
     @Nullable @Override public ChunkBiomeContainer getBiomes() {

@@ -48,6 +48,7 @@ public class CubicChunks implements ModInitializer {
     public static final int MAX_SUPPORTED_HEIGHT = Integer.MAX_VALUE / 2;
     public static final int MIN_SUPPORTED_HEIGHT = -MAX_SUPPORTED_HEIGHT;
     public static final int SEA_LEVEL = 64;
+    public static final boolean USE_CUBOIDS = true;
 
     public static final String MODID = "cubicchunks";
     public static final Logger LOGGER = LogManager.getLogger();

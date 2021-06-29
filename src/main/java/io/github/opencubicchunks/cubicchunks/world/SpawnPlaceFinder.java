@@ -63,6 +63,10 @@ public final class SpawnPlaceFinder {
     */
     @Nullable
     public static BlockPos getTopBlockBisect(Level world, BlockPos pos, boolean checkValid) {
+        if (CubicChunks.USE_CUBOIDS) {
+            return new BlockPos(0, 0, 0);
+        }
+
         BlockPos minPos, maxPos;
         if (findNonEmpty(world, pos) == null) {
             CubicChunks.LOGGER.debug("Starting bisect with empty space at init {}", pos);

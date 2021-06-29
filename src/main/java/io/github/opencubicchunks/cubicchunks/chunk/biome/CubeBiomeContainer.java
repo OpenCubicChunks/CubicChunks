@@ -134,4 +134,8 @@ public class CubeBiomeContainer extends ChunkBiomeContainer {
         ChunkBiomeContainer container = containers[chunkZ * IBigCube.DIAMETER_IN_SECTIONS + chunkX];
         return container.getNoiseBiome(biomeX, biomeY, biomeZ);
     }
+
+    public ChunkBiomeContainer getContainerForColumn(int columnX, int columnZ) {
+        return containers[columnZ * IBigCube.DIAMETER_IN_SECTIONS + columnX];
+    }
 }

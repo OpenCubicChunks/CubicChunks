@@ -35,6 +35,7 @@ import com.mojang.datafixers.util.Either;
 import io.github.opencubicchunks.cubicchunks.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.chunk.CubeCollectorFuture;
 import io.github.opencubicchunks.cubicchunks.chunk.CubePlayerProvider;
+import io.github.opencubicchunks.cubicchunks.chunk.CuboidPrimer;
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.IChunkManager;
 import io.github.opencubicchunks.cubicchunks.chunk.IChunkMapInternal;
@@ -66,6 +67,7 @@ import io.github.opencubicchunks.cubicchunks.network.PacketUpdateLight;
 import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import io.github.opencubicchunks.cubicchunks.server.IServerChunkProvider;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
+import io.github.opencubicchunks.cubicchunks.utils.CuboidUtils;
 import io.github.opencubicchunks.cubicchunks.world.server.IServerWorld;
 import io.github.opencubicchunks.cubicchunks.world.server.IServerWorldLightManager;
 import io.github.opencubicchunks.cubicchunks.world.storage.CubeSerializer;
@@ -112,6 +114,7 @@ import net.minecraft.world.level.chunk.ChunkStatus;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.chunk.LightChunkGetter;
 import net.minecraft.world.level.chunk.UpgradeData;
+import net.minecraft.world.level.dimension.DimensionType;
 import net.minecraft.world.level.entity.ChunkStatusUpdateListener;
 import net.minecraft.world.level.levelgen.structure.StructureStart;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureManager;
@@ -323,6 +326,14 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
 
     // chunkSave
     private boolean cubeSave(IBigCube cube) {
+        if (cube instanceof CuboidPrimer) {
+            for (CubePrimer delegate : ((CuboidPrimer) cube).getDelegates()) {
+                cubeSave(delegate);
+            }
+            return true;
+        }
+
+
         ((ISectionStorage) this.poiManager).flush(cube.getCubePos());
         if (!cube.isDirty()) {
             return false;
@@ -368,6 +379,13 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
     }
 
     private CompletableFuture<Boolean> cubeSaveAsync(IBigCube cube) {
+        if (cube instanceof CuboidPrimer) {
+            for (CubePrimer delegate : ((CuboidPrimer) cube).getDelegates()) {
+                cubeSaveAsync(delegate);
+            }
+            return CompletableFuture.completedFuture(true);
+        }
+
         ((ISectionStorage) this.poiManager).flush(cube.getCubePos());
         if (!cube.isDirty()) {
             return CompletableFuture.completedFuture(false);
@@ -482,6 +500,15 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
 
     private void markCubePositionReplaceable(CubePos cubePos) {
         this.cubeTypeCache.put(cubePos.asLong(), (byte) -1);
+    }
+
+    private void markCuboidCubePositionsReplaceable(CubePos cubePos) {
+        DimensionType type = this.level.dimensionType();
+        int bottomY = CuboidUtils.getCuboidBottomStartY(cubePos, type);
+
+        for (int y = 0; y < CuboidUtils.getCuboidHeight(type); y++) {
+            this.cubeTypeCache.put(CubePos.asLong(cubePos.getX(), bottomY + y, cubePos.getZ()), (byte) -1);
+        }
     }
 
     private byte markCubePosition(CubePos cubePos, ChunkStatus.ChunkType status) {
@@ -812,11 +839,23 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
                 if (prevCube instanceof CubePrimerWrapper) {
                     cube = ((CubePrimerWrapper) prevCube).getCube();
                 } else {
-                    cube = new BigCube(this.level, (CubePrimer) prevCube, (bigCube) -> {
-                        //TODO: Verify this is ok
-                        postLoadProtoChunk(this.level, ((CubePrimer) prevCube).getCubeEntities());
-                    });
-                    ((ICubeHolder) holder).replaceProtoCube(new CubePrimerWrapper(cube, level));
+                    if (prevCube instanceof CuboidPrimer) {
+                        CubePrimer[] delegates = ((CuboidPrimer) prevCube).getDelegates();
+                        for (CubePrimer delegate : delegates) {
+                            postLoadProtoChunk(this.level, delegate.getCubeEntities());
+                        }
+
+                        cube = new BigCube(this.level, ((CuboidPrimer) prevCube).getRequested(), (bigCube) -> {
+                        });
+
+                        ((ICubeHolder) holder).replaceProtoCube(new CubePrimerWrapper(cube, level));
+                    } else {
+                        cube = new BigCube(this.level, (CubePrimer) prevCube, (bigCube) -> {
+                            //TODO: Verify this is ok
+                            postLoadProtoChunk(this.level, ((CubePrimer) prevCube).getCubeEntities());
+                        });
+                        ((ICubeHolder) holder).replaceProtoCube(new CubePrimerWrapper(cube, level));
+                    }
                 }
 
                 cube.setFullStatus(() -> ChunkHolder.getFullChunkStatus(holder.getTicketLevel()));
@@ -942,14 +981,33 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
                     LOGGER.error("Couldn't load cube {}", cubePos, throwable);
                 }
                 ChunkIoMainThreadTaskUtils.drainQueue();
+
                 if (iBigCube != null) {
                     this.markCubePosition(cubePos, iBigCube.getCubeStatus().getChunkType());
                     return Either.left(iBigCube);
                 }
-                this.markCubePositionReplaceable(cubePos);
-                return Either.left(new CubePrimer(cubePos, UpgradeData.EMPTY, level));
+                CubePrimer requested = new CubePrimer(cubePos, UpgradeData.EMPTY, level);
+                if (CubicChunks.USE_CUBOIDS) {
+                    this.markCuboidCubePositionsReplaceable(cubePos);
+                    return Either.left(new CuboidPrimer(createCubeArray(cubePos, requested), requested, level));
+                } else {
+                    this.markCubePositionReplaceable(cubePos);
+                    return Either.left(requested);
+                }
             }, this.mainThreadExecutor);
         }, this.mainThreadExecutor);
+    }
+
+    private CubePrimer[] createCubeArray(CubePos requestedPos, CubePrimer requested) {
+        DimensionType dimensionType = this.level.dimensionType();
+        CubePrimer[] cubes = new CubePrimer[Coords.blockToCube(dimensionType.height())];
+
+        for (int i = 0; i < cubes.length; i++) {
+            int cubeY = CuboidUtils.getCuboidBottomStartY(requestedPos, dimensionType) + i;
+            cubes[i] = cubeY == requestedPos.getY() ? requested : new CubePrimer(CubePos.of(requestedPos.getX(), cubeY, requestedPos.getZ()), UpgradeData.EMPTY, this.level);
+        }
+
+        return cubes;
     }
 
     // func_219220_a, getUpdatingChunkIfPresent
