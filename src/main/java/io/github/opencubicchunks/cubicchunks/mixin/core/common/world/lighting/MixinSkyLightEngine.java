@@ -16,6 +16,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.core.SectionPos;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.chunk.ChunkStatus;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.lighting.SkyLightEngine;
@@ -127,9 +128,8 @@ public abstract class MixinSkyLightEngine extends MixinLayerLightEngine<SkyLight
         BlockGetter chunk = this.chunkSource.getChunkForLighting(SectionPos.blockToSectionCoord(pos.getX()), SectionPos.blockToSectionCoord(pos.getZ()));
 
         if (chunk == null) {
-            // ToDo Known bug: Cubes may be sent to the client ahead of their chunks. This is not fatal.
-            // see MixinSkyLightSectionStorage.onGetLightValue(...)
-            System.out.println("getComputedLevel: Missing chunk for lighting.");
+            //Client can have null chunks when trying to render an entity in a chunk that hasn't arrived yet (neither has the cube at that point)
+            assert ((Level)this.chunkSource.getLevel()).isClientSide;
             return;
         }
 

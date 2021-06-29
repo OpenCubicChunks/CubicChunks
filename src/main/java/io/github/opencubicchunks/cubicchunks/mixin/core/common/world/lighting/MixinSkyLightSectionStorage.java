@@ -63,13 +63,18 @@ public abstract class MixinSkyLightSectionStorage extends LayerLightSectionStora
             Level level = (Level) ((LayerLightSectionStorageAccess) this).getChunkSource().getLevel();
 
             if (chunk == null) {
-                // ToDo Known bug: Cubes may be sent to the client ahead of their chunks. This is not fatal.
-                // see MixinSkyLightEngine.onGetComputedLevel(...)
-                if (level.isClientSide) {
-                    BlockPos pos = new BlockPos(x, y, z);
-                    assert (((ICubicWorld) level).getCube(pos) instanceof EmptyCube);
+                //TODO: re-enable asserts and remove temporary check once mojang fix mushroom generation https://bugs.mojang.com/browse/MC-229557
+                //mushroom generation checking light values before light stage has been reached causes these assets to trigger false positives
+                System.out.println("getLightValue: Missing chunk for lighting.");
+                if(level.isClientSide) {
+                    assert (((ICubicWorld) level).getCube(new BlockPos(x, y, z)) instanceof EmptyCube);
                 }
-                // Set return value to prevent vanilla behaviour from happening and causing weird effects
+
+                //Client can have null chunks when trying to render an entity in a chunk that hasn't arrived yet (neither has the cube at that point)
+//                assert level.isClientSide;
+//                assert (((ICubicWorld) level).getCube(new BlockPos(x, y, z)) instanceof EmptyCube);
+
+                //Used as a default light value, eg for rendering entities that are not within a chunk/cube
                 cir.setReturnValue(15);
                 return;
             }
