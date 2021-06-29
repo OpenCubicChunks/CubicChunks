@@ -58,7 +58,6 @@ public abstract class MixinSkyLightSectionStorage extends LayerLightSectionStora
 
             int chunkX = Coords.blockToSection(x);
             int chunkZ = Coords.blockToSection(z);
-            ChunkPos chunkPos = new ChunkPos(chunkX, chunkZ);
             BlockGetter chunk = ((LayerLightSectionStorageAccess) this).getChunkSource().getChunkForLighting(chunkX, chunkZ);
 
             Level level = (Level) ((LayerLightSectionStorageAccess) this).getChunkSource().getLevel();
@@ -68,7 +67,7 @@ public abstract class MixinSkyLightSectionStorage extends LayerLightSectionStora
                 // see MixinSkyLightEngine.onGetComputedLevel(...)
                 if (level.isClientSide) {
                     BlockPos pos = new BlockPos(x, y, z);
-                    assert !(((ICubicWorld) level).getCube(pos) instanceof EmptyCube);
+                    assert (((ICubicWorld) level).getCube(pos) instanceof EmptyCube);
                 }
                 // Set return value to prevent vanilla behaviour from happening and causing weird effects
                 cir.setReturnValue(15);
