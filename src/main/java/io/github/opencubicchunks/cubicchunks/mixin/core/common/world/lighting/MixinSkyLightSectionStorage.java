@@ -11,7 +11,6 @@ import io.github.opencubicchunks.cubicchunks.world.lighting.ICubeLightProvider;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.SectionPos;
 import net.minecraft.world.level.BlockGetter;
-import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.level.chunk.ChunkStatus;
@@ -66,7 +65,7 @@ public abstract class MixinSkyLightSectionStorage extends LayerLightSectionStora
                 //TODO: re-enable asserts and remove temporary check once mojang fix mushroom generation https://bugs.mojang.com/browse/MC-229557
                 //mushroom generation checking light values before light stage has been reached causes these assets to trigger false positives
                 System.out.println("getLightValue: Missing chunk for lighting.");
-                if(level.isClientSide) {
+                if (level.isClientSide) {
                     assert (((ICubicWorld) level).getCube(new BlockPos(x, y, z)) instanceof EmptyCube);
                 }
 

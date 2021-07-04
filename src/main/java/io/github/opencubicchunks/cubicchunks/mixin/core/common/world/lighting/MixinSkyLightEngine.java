@@ -129,7 +129,7 @@ public abstract class MixinSkyLightEngine extends MixinLayerLightEngine<SkyLight
 
         if (chunk == null) {
             //Client can have null chunks when trying to render an entity in a chunk that hasn't arrived yet (neither has the cube at that point)
-            assert ((Level)this.chunkSource.getLevel()).isClientSide;
+            assert ((Level) this.chunkSource.getLevel()).isClientSide;
             return;
         }
 
