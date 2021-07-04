@@ -351,6 +351,7 @@ public class VanillaCompatibilityGenerator implements ICubeGenerator {
                 }
 
                 try {
+                    CompatHandler.beforePopulate(world, vanilla);
                     vanilla.populate(cube.getX(), cube.getZ());
                 } catch (IllegalArgumentException ex) {
                     StackTraceElement[] stack = ex.getStackTrace();
@@ -361,6 +362,8 @@ public class VanillaCompatibilityGenerator implements ICubeGenerator {
                     } else {
                         CubicChunks.LOGGER.error("Error while populating. Likely known mod issue, ignoring...", ex);
                     }
+                } finally {
+                    CompatHandler.afterPopulate(world);
                 }
                 applyModGenerators(cube.getX(), cube.getZ(), world, vanilla, world.getChunkProvider());
             }

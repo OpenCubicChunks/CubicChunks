@@ -56,6 +56,7 @@ import sun.misc.Unsafe;
 
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
+import net.minecraft.world.gen.IChunkGenerator;
 
 public class CompatHandler {
 
@@ -81,6 +82,9 @@ public class CompatHandler {
 
     private static final Set<String> FAKE_CHUNK_LOAD = ImmutableSet.of(
             "zerocore"
+    );
+    private static Set<String> vanillaCompatPopulationFakeHeight = ImmutableSet.of(
+            "biomesoplenty" // temporary workaround: biomesoplenty fires population events directly instead of going through forge event factory
     );
 
     private static final Map<String, String> packageToModId = getPackageToModId();
@@ -124,6 +128,17 @@ public class CompatHandler {
             }
         }
         return mods;
+    }
+
+    public static void beforePopulate(World world, IChunkGenerator vanilla) {
+        String modid = packageToModId.get(vanilla.getClass().getPackage().getName());
+        if (vanillaCompatPopulationFakeHeight.contains(modid)) {
+            ((ICubicWorldInternal.Server) world).fakeWorldHeight(256);
+        }
+    }
+
+    public static void afterPopulate(World world) {
+        ((ICubicWorldInternal.Server) world).fakeWorldHeight(0);
     }
 
     public static void beforeGenerate(World world, IWorldGenerator generator) {
@@ -268,5 +283,4 @@ public class CompatHandler {
 
         return newList.toArray(new IEventListener[0]);
     }
-
 }
