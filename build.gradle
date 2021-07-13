@@ -8,10 +8,13 @@ buildscript {
             url = 'https://maven.fabricmc.net/'
         }
     }
+
     dependencies {
         classpath 'net.fabricmc:fabric-loom:0.8.3'
     }
 }
+
+
 plugins {
     id 'maven-publish'
     id 'checkstyle'
@@ -182,6 +185,12 @@ switch (OperatingSystem.current()) {
         break
 }
 
+loom {
+    customManifest = "https://gist.githubusercontent.com/modmuss50/6e00baf80dcbaa42f3a2fc846b290128/raw/f035ef8f75164f56ec6352809a34841d326bae1c/1_18_experimental-snapshot-1.json"
+}
+
+
+
 dependencies {
     minecraft "com.mojang:minecraft:${project.minecraft_version}"
     def dummyConfig = configurations.create("dummyResolvingConfiguration")
@@ -191,7 +200,7 @@ dependencies {
     modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
 
     // Add each module as a dependency
-    ["fabric-api-base", "fabric-command-api-v1", "fabric-networking-v0", "fabric-lifecycle-events-v1", "fabric-resource-loader-v0"].forEach {
+    ["fabric-api-base", "fabric-command-api-v1", "fabric-networking-v0", "fabric-lifecycle-events-v1"].forEach {
         modImplementation(fabricApi.module(it, project.fabric_version))
     }
 

@@ -9,7 +9,7 @@ public class CubicCarvingContext extends CarvingContext {
     private final ChunkAccess chunk;
 
     public CubicCarvingContext(ChunkGenerator generator, ChunkAccess chunk) {
-        super(generator);
+        super(generator, chunk);
         this.chunk = chunk;
     }
 

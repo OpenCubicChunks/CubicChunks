@@ -2,6 +2,7 @@ package io.github.opencubicchunks.cubicchunks.mixin.core.common.chunk;
 
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.levelgen.synth.BlendedNoise;
+import net.minecraft.world.level.levelgen.synth.ImprovedNoise;
 import net.minecraft.world.level.levelgen.synth.PerlinNoise;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
@@ -32,8 +33,11 @@ public class MixinBlendedNoise {
             double sampleX = PerlinNoise.wrap(x * horizontalStretch);
             double sampleY = PerlinNoise.wrap(unwrappedY);
             double sampleZ = PerlinNoise.wrap(z * horizontalStretch);
-            main += mainNoise.getOctaveNoise(octave).noise(sampleX, sampleY, sampleZ, verticalStretch, unwrappedY) * amplitude;
+            ImprovedNoise octaveNoise = mainNoise.getOctaveNoise(octave);
 
+            if (octaveNoise != null) {
+                main += octaveNoise.noise(sampleX, sampleY, sampleZ, verticalStretch, unwrappedY) * amplitude;
+            }
             horizontalStretch *= 0.5;
             verticalStretch *= 0.5;
             amplitude *= 2.0;
@@ -52,8 +56,10 @@ public class MixinBlendedNoise {
                 double sampleY = PerlinNoise.wrap(unwrappedY);
                 double sampleZ = PerlinNoise.wrap(z * horizontalScale);
 
-                minLimit += minLimitNoise.getOctaveNoise(octave).noise(sampleX, sampleY, sampleZ, verticalScale, unwrappedY) * amplitude;
-
+                ImprovedNoise octaveNoise = minLimitNoise.getOctaveNoise(octave);
+                if (octaveNoise != null) {
+                    minLimit += octaveNoise.noise(sampleX, sampleY, sampleZ, verticalScale, unwrappedY) * amplitude;
+                }
                 horizontalScale *= 0.5;
                 verticalScale *= 0.5;
                 amplitude *= 2.0;
@@ -69,8 +75,10 @@ public class MixinBlendedNoise {
                 double sampleY = PerlinNoise.wrap(unwrappedY);
                 double sampleZ = PerlinNoise.wrap(z * horizontalScale);
 
-                maxLimit += maxLimitNoise.getOctaveNoise(octave).noise(sampleX, sampleY, sampleZ, verticalScale, unwrappedY) * amplitude;
-
+                ImprovedNoise octaveNoise = maxLimitNoise.getOctaveNoise(octave);
+                if (octaveNoise != null) {
+                    maxLimit += octaveNoise.noise(sampleX, sampleY, sampleZ, verticalScale, unwrappedY) * amplitude;
+                }
                 horizontalScale *= 0.5;
                 verticalScale *= 0.5;
                 amplitude *= 2.0;
@@ -87,9 +95,14 @@ public class MixinBlendedNoise {
                 double sampleY = PerlinNoise.wrap(unwrappedY);
                 double sampleZ = PerlinNoise.wrap(z * horizontalScale);
 
-                minLimit += minLimitNoise.getOctaveNoise(octave).noise(sampleX, sampleY, sampleZ, verticalScale, unwrappedY) * amplitude;
-                maxLimit += maxLimitNoise.getOctaveNoise(octave).noise(sampleX, sampleY, sampleZ, verticalScale, unwrappedY) * amplitude;
-
+                ImprovedNoise octaveNoise = minLimitNoise.getOctaveNoise(octave);
+                if (octaveNoise != null) {
+                    minLimit += octaveNoise.noise(sampleX, sampleY, sampleZ, verticalScale, unwrappedY) * amplitude;
+                }
+                ImprovedNoise octaveNoise1 = maxLimitNoise.getOctaveNoise(octave);
+                if (octaveNoise1 != null) {
+                    maxLimit += octaveNoise1.noise(sampleX, sampleY, sampleZ, verticalScale, unwrappedY) * amplitude;
+                }
                 horizontalScale *= 0.5;
                 verticalScale *= 0.5;
                 amplitude *= 2.0;

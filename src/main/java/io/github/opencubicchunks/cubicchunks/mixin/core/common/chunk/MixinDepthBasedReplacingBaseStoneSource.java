@@ -21,7 +21,7 @@ public class MixinDepthBasedReplacingBaseStoneSource {
     @Shadow @Final private BlockState replacementBlock;
 
     @Shadow @Final private long seed;
-    @Shadow @Final private WorldgenRandom random;
+    private WorldgenRandom random = new WorldgenRandom();
 
     private long seedX, seedY, seedZ;
 

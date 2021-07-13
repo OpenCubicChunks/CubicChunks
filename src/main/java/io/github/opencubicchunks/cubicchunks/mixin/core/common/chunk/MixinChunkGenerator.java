@@ -12,7 +12,6 @@ import io.github.opencubicchunks.cubicchunks.chunk.carver.CubicCarvingContext;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.CubePrimer;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CCWorldGenUtils;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
-import io.github.opencubicchunks.cubicchunks.mixin.access.common.OverworldBiomeSourceAccess;
 import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import io.github.opencubicchunks.cubicchunks.world.CubeWorldGenRandom;
 import io.github.opencubicchunks.cubicchunks.world.CubeWorldGenRegion;
@@ -29,12 +28,12 @@ import net.minecraft.data.worldgen.StructureFeatures;
 import net.minecraft.network.protocol.game.DebugPackets;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.LevelHeightAccessor;
 import net.minecraft.world.level.StructureFeatureManager;
 import net.minecraft.world.level.WorldGenLevel;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.biome.BiomeManager;
 import net.minecraft.world.level.biome.BiomeSource;
-import net.minecraft.world.level.biome.OverworldBiomeSource;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.ChunkGenerator;
 import net.minecraft.world.level.levelgen.GenerationStep;
@@ -72,12 +71,7 @@ public abstract class MixinChunkGenerator implements ICubeGenerator {
         method = "<init>(Lnet/minecraft/world/level/biome/BiomeSource;Lnet/minecraft/world/level/biome/BiomeSource;Lnet/minecraft/world/level/levelgen/StructureSettings;J)V")
     private void switchBiomeSource(BiomeSource biomeSourceIn, BiomeSource biomeSourceIn2, StructureSettings structureSettings, long l, CallbackInfo ci) {
         if (System.getProperty("cubicchunks.debug.biomes", "false").equalsIgnoreCase("true")) {
-            if (this.biomeSource instanceof OverworldBiomeSource) {
-                this.biomeSource = new StripedBiomeSource(((OverworldBiomeSourceAccess) this.biomeSource).getBiomes());
-            }
-            if (this.runtimeBiomeSource instanceof OverworldBiomeSource) {
-                this.runtimeBiomeSource = new StripedBiomeSource(((OverworldBiomeSourceAccess) this.runtimeBiomeSource).getBiomes());
-            }
+
         }
     }
 
@@ -267,7 +261,7 @@ public abstract class MixinChunkGenerator implements ICubeGenerator {
     }
 
     @Redirect(method = "applyCarvers", at = @At(value = "NEW", target = "net/minecraft/world/level/levelgen/carver/CarvingContext"))
-    private CarvingContext cubicContext(ChunkGenerator chunkGenerator, long seed, BiomeManager access, ChunkAccess chunk, GenerationStep.Carving carver) {
-        return new CubicCarvingContext(chunkGenerator, chunk);
+    private CarvingContext cubicContext(ChunkGenerator chunkGenerator, LevelHeightAccessor chunk) {
+        return new CubicCarvingContext(chunkGenerator, (ChunkAccess) chunk);
     }
 }

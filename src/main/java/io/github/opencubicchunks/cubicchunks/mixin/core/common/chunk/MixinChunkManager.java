@@ -685,7 +685,7 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
                     CompletableFuture<Either<IBigCube, ChunkHolder.ChunkLoadingFailure>> finalFuture = Utils.unsafeCast(
                         chunkStatusIn.generate(executor, this.level, this.generator, this.structureManager, this.lightEngine, (chunk) -> {
                             return Utils.unsafeCast(this.protoCubeToFullCube(chunkHolderIn));
-                        }, Utils.unsafeCast(neighborSections)));
+                        }, Utils.unsafeCast(neighborSections), false));
                     ((ICubeStatusListener) this.progressListener).onCubeStatusChange(cubePos, chunkStatusIn);
                     return finalFuture;
                 } catch (Exception exception) {

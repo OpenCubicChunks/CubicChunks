@@ -23,7 +23,6 @@
         "common.Matrix4fAccess",
         "common.NaturalSpawnerAccess",
         "common.NoiseGeneratorSettingsAccess",
-        "common.OverworldBiomeSourceAccess",
         "common.PlayerChunkTrackerFactoryAccess",
         "common.PlayerTicketTrackerFactoryAccess",
         "common.ProtoTickListAccess",

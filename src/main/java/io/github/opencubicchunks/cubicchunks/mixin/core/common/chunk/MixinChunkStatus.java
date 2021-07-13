@@ -92,7 +92,7 @@ public class MixinChunkStatus {
     @Inject(
         method = "lambda$static$2(Lnet/minecraft/world/level/chunk/ChunkStatus;Ljava/util/concurrent/Executor;Lnet/minecraft/server/level/ServerLevel;"
             + "Lnet/minecraft/world/level/chunk/ChunkGenerator;Lnet/minecraft/world/level/levelgen/structure/templatesystem/StructureManager;"
-            + "Lnet/minecraft/server/level/ThreadedLevelLightEngine;Ljava/util/function/Function;Ljava/util/List;Lnet/minecraft/world/level/chunk/ChunkAccess;)"
+            + "Lnet/minecraft/server/level/ThreadedLevelLightEngine;Ljava/util/function/Function;Ljava/util/List;Lnet/minecraft/world/level/chunk/ChunkAccess;Z)"
             + "Ljava/util/concurrent/CompletableFuture;",
         at = @At("HEAD"), cancellable = true
     )
@@ -100,7 +100,7 @@ public class MixinChunkStatus {
         ChunkStatus status, Executor executor, ServerLevel world, ChunkGenerator generator,
         StructureManager templateManager, ThreadedLevelLightEngine lightManager,
         Function<ChunkAccess, CompletableFuture<Either<ChunkAccess, ChunkHolder.ChunkLoadingFailure>>> func,
-        List<ChunkAccess> chunks, ChunkAccess chunk,
+        List<ChunkAccess> chunks, ChunkAccess chunk, boolean bl,
         CallbackInfoReturnable<CompletableFuture<Either<ChunkAccess, ChunkHolder.ChunkLoadingFailure>>> cir) {
 
         if (((CubicLevelHeightAccessor) world).generates2DChunks()) {
@@ -192,13 +192,14 @@ public class MixinChunkStatus {
     @Inject(
         method = "lambda$static$6(Lnet/minecraft/world/level/chunk/ChunkStatus;Ljava/util/concurrent/Executor;Lnet/minecraft/server/level/ServerLevel;"
             + "Lnet/minecraft/world/level/chunk/ChunkGenerator;Lnet/minecraft/world/level/levelgen/structure/templatesystem/StructureManager;"
-            + "Lnet/minecraft/server/level/ThreadedLevelLightEngine;Ljava/util/function/Function;Ljava/util/List;Lnet/minecraft/world/level/chunk/ChunkAccess;)"
+            + "Lnet/minecraft/server/level/ThreadedLevelLightEngine;Ljava/util/function/Function;Ljava/util/List;Lnet/minecraft/world/level/chunk/ChunkAccess;Z)"
             + "Ljava/util/concurrent/CompletableFuture;",
         at = @At("HEAD"), cancellable = true
     )
     private static void cubicChunksNoise(ChunkStatus status, Executor executor, ServerLevel world, ChunkGenerator generator, StructureManager structureFeatureManager,
                                          ThreadedLevelLightEngine lightEngine, Function<ChunkAccess, CompletableFuture<Either<ChunkAccess, ChunkHolder.ChunkLoadingFailure>>> function,
-                                         List<ChunkAccess> neighbors, ChunkAccess chunk, CallbackInfoReturnable<CompletableFuture<Either<ChunkAccess, ChunkHolder.ChunkLoadingFailure>>> ci) {
+                                         List<ChunkAccess> neighbors, ChunkAccess chunk,
+                                         boolean bl, CallbackInfoReturnable<CompletableFuture<Either<ChunkAccess, ChunkHolder.ChunkLoadingFailure>>>ci) {
 
         if (((CubicLevelHeightAccessor) world).generates2DChunks()) {
             if (chunk instanceof IBigCube) {
@@ -242,8 +243,8 @@ public class MixinChunkStatus {
                             generator.buildSurfaceAndBedrock(cubeWorldGenRegion, chunkAccess);
 
                             // Carvers
-                            generator.applyCarvers(world.getSeed(), world.getBiomeManager(), cubeAccessWrapper, GenerationStep.Carving.AIR);
-                            generator.applyCarvers(world.getSeed(), world.getBiomeManager(), cubeAccessWrapper, GenerationStep.Carving.LIQUID);
+//                            generator.applyCarvers(world.getSeed(), world.getBiomeManager(), cubeAccessWrapper, GenerationStep.Carving.AIR);
+//                            generator.applyCarvers(world.getSeed(), world.getBiomeManager(), cubeAccessWrapper, GenerationStep.Carving.LIQUID);
                             return chunkAccess;
                         });
                     if (completableFuture == null) {
@@ -377,7 +378,7 @@ public class MixinChunkStatus {
     @Inject(
         method = "lambda$static$10(Lnet/minecraft/world/level/chunk/ChunkStatus;Ljava/util/concurrent/Executor;Lnet/minecraft/server/level/ServerLevel;"
             + "Lnet/minecraft/world/level/chunk/ChunkGenerator;Lnet/minecraft/world/level/levelgen/structure/templatesystem/StructureManager;"
-            + "Lnet/minecraft/server/level/ThreadedLevelLightEngine;Ljava/util/function/Function;Ljava/util/List;Lnet/minecraft/world/level/chunk/ChunkAccess;)"
+            + "Lnet/minecraft/server/level/ThreadedLevelLightEngine;Ljava/util/function/Function;Ljava/util/List;Lnet/minecraft/world/level/chunk/ChunkAccess;Z)"
             + "Ljava/util/concurrent/CompletableFuture;",
         at = @At(value = "HEAD"), cancellable = true
     )
@@ -385,7 +386,7 @@ public class MixinChunkStatus {
         ChunkStatus status, Executor executor, ServerLevel world, ChunkGenerator generator,
         StructureManager templateManager, ThreadedLevelLightEngine lightManager,
         Function<ChunkAccess, CompletableFuture<Either<ChunkAccess, ChunkHolder.ChunkLoadingFailure>>> func,
-        List<ChunkAccess> chunks, ChunkAccess chunk,
+        List<ChunkAccess> chunks, ChunkAccess chunk, boolean bl,
         CallbackInfoReturnable<CompletableFuture<Either<ChunkAccess, ChunkHolder.ChunkLoadingFailure>>> cir) {
 
         if (((CubicLevelHeightAccessor) world).generates2DChunks()) {

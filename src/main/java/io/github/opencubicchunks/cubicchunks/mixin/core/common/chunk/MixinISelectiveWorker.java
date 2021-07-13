@@ -34,7 +34,7 @@ public interface MixinISelectiveWorker {
         ChunkStatus status, Executor executor, ServerLevel world, ChunkGenerator generator,
         StructureManager structureManager, ThreadedLevelLightEngine lightEngine,
         Function<ChunkAccess, CompletableFuture<Either<ChunkAccess, ChunkHolder.ChunkLoadingFailure>>> completableFuture,
-        List<ChunkAccess> neighbors, ChunkAccess chunk) {
+        List<ChunkAccess> neighbors, ChunkAccess chunk, boolean bl) {
 
         if (!((CubicLevelHeightAccessor) chunk).isCubic()) {
             if (!chunk.getStatus().isOrAfter(status)) {

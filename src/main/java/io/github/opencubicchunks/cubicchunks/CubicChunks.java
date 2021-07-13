@@ -86,50 +86,6 @@ public class CubicChunks implements ModInitializer {
         //Custom CC Features
         CCPlacement.init();
         CCFeatures.init();
-
-        if (SharedConstants.IS_RUNNING_IN_IDE) {
-            cubicChunksTrapezoidHeightProviderTest();
-        }
-    }
-
-    private void cubicChunksTrapezoidHeightProviderTest() {
-        TrapezoidHeight trapezoidHeight = TrapezoidHeight.of(VerticalAnchor.absolute(0), VerticalAnchor.absolute(40), 10);
-
-        class Context implements WorldGenerationContext {
-
-            @Override public int getMinGenY() {
-                throw new Error();
-            }
-
-            @Override public int getGenDepth() {
-                return 384;
-            }
-        }
-
-        WorldgenRandom random = new WorldgenRandom(1000);
-
-        int[] counts = new int[41];
-        int[] counts2 = new int[41];
-        for (int i = 0; i < 100000; i++) {
-            int sample = trapezoidHeight.sample(random, new Context());
-            OptionalInt cubeTrapezoidHeight = ((CubicHeightProvider) trapezoidHeight).sampleCubic(random, new Context(), 0, 64);
-
-            if (cubeTrapezoidHeight.isPresent()) {
-                counts2[cubeTrapezoidHeight.getAsInt()]++;
-            }
-
-            counts[sample]++;
-        }
-
-        List<String> collect = IntStream.of(counts).mapToObj(Objects::toString).collect(Collectors.toList());
-        List<String> collect2 = IntStream.of(counts2).mapToObj(Objects::toString).collect(Collectors.toList());
-
-        try {
-            Files.write(Paths.get("trapezoidHeight.txt"), collect, StandardOpenOption.CREATE);
-            Files.write(Paths.get("cubeTrapezoidHeight.txt"), collect2, StandardOpenOption.CREATE);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
     }
 
     public static Config config() {

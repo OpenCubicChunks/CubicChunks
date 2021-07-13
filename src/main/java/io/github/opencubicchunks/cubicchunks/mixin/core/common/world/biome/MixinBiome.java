@@ -49,9 +49,6 @@ public class MixinBiome implements BiomeGetter {
     @Final
     private BiomeGenerationSettings generationSettings;
 
-    @Shadow
-    @Final
-    private Map<Integer, List<StructureFeature<?>>> structuresByStep;
 
 
     private final Set<ResourceLocation> featureBlacklist = new HashSet<>();
@@ -65,26 +62,26 @@ public class MixinBiome implements BiomeGetter {
             int k = 0;
             if (structureManager.shouldGenerateFeatures()) {
 
-                for (StructureFeature<?> structure : this.structuresByStep.getOrDefault(genStepIDX, Collections.emptyList())) {
-
-                    random.setDecorationSeed(seed, k, genStepIDX);
-                    int minSectionX = Coords.sectionToMinBlock(Coords.blockToSection(blockPos.getX()));
-                    int minSectionY = Coords.sectionToMinBlock(Coords.blockToSection(blockPos.getY()));
-                    int minSectionZ = Coords.sectionToMinBlock(Coords.blockToSection(blockPos.getZ()));
-
-                    try {
-                        structureManager.startsForFeature(SectionPos.of(blockPos), structure).forEach((structureStart) -> {
-                            ((SetupCubeStructureStart) structureStart).placeInCube(region, structureManager, chunkGenerator, random,
-                                new BoundingBox(minSectionX, minSectionY, minSectionZ, minSectionX + 15, minSectionY + IBigCube.DIAMETER_IN_BLOCKS - 1, minSectionZ + 15), blockPos);
-                        });
-                    } catch (Exception e) {
-                        CrashReport crashReport = CrashReport.forThrowable(e, "Structure Feature placement");
-                        crashReport.addCategory("Feature").setDetail("Id", Registry.STRUCTURE_FEATURE.getKey(structure)).setDetail("Description", () -> {
-                            return structure.toString();
-                        });
-                        throw new ReportedException(crashReport);
-                    }
-                }
+//                for (StructureFeature<?> structure : this.structuresByStep.getOrDefault(genStepIDX, Collections.emptyList())) {
+//
+//                    random.setDecorationSeed(seed, k, genStepIDX);
+//                    int minSectionX = Coords.sectionToMinBlock(Coords.blockToSection(blockPos.getX()));
+//                    int minSectionY = Coords.sectionToMinBlock(Coords.blockToSection(blockPos.getY()));
+//                    int minSectionZ = Coords.sectionToMinBlock(Coords.blockToSection(blockPos.getZ()));
+//
+//                    try {
+//                        structureManager.startsForFeature(SectionPos.of(blockPos), structure).forEach((structureStart) -> {
+//                            ((SetupCubeStructureStart) structureStart).placeInCube(region, structureManager, chunkGenerator, random,
+//                                new BoundingBox(minSectionX, minSectionY, minSectionZ, minSectionX + 15, minSectionY + IBigCube.DIAMETER_IN_BLOCKS - 1, minSectionZ + 15), blockPos);
+//                        });
+//                    } catch (Exception e) {
+//                        CrashReport crashReport = CrashReport.forThrowable(e, "Structure Feature placement");
+//                        crashReport.addCategory("Feature").setDetail("Id", Registry.STRUCTURE_FEATURE.getKey(structure)).setDetail("Description", () -> {
+//                            return structure.toString();
+//                        });
+//                        throw new ReportedException(crashReport);
+//                    }
+//                }
             }
 
             if (featureBlacklist.isEmpty()) {
