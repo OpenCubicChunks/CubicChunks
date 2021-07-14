@@ -113,13 +113,21 @@ public class CompatHandler {
                         .toMap(AbstractMap.SimpleEntry::getKey, AbstractMap.SimpleEntry::getValue, (a, b) -> a.equals(b) ? a : a + " or " + b)));
     }
 
+    private static String getPackageName(Class<?> clazz) {
+        String canonicalName = clazz.getCanonicalName();
+        int dot = canonicalName.lastIndexOf('.'); //cannot occur anywhere in the class name itself
+        return dot < 0
+                ? "" //default package
+                : canonicalName.substring(0, dot);
+    }
+
     public static Set<String> getModsForStacktrace(StackTraceElement[] stacktrace) {
         Set<String> mods = new HashSet<>();
         for (StackTraceElement traceElement : stacktrace) {
             try {
                 Class<?> cl = Class.forName(traceElement.getClassName());
-                if (cl != null && cl.getPackage() != null) {
-                    String modid = packageToModId.get(cl.getPackage().getName());
+                if (cl != null) {
+                    String modid = packageToModId.get(getPackageName(cl));
                     if (modid != null && !modid.equals("minecraft") && !modid.equals("forge") && !modid.equals("cubicchunks")) {
                         mods.add(modid);
                     }
@@ -131,7 +139,7 @@ public class CompatHandler {
     }
 
     public static void beforePopulate(World world, IChunkGenerator vanilla) {
-        String modid = packageToModId.get(vanilla.getClass().getPackage().getName());
+        String modid = packageToModId.get(getPackageName(vanilla.getClass()));
         if (vanillaCompatPopulationFakeHeight.contains(modid)) {
             ((ICubicWorldInternal.Server) world).fakeWorldHeight(256);
         }
@@ -143,11 +151,11 @@ public class CompatHandler {
 
     public static void beforeGenerate(World world, IWorldGenerator generator) {
         Class<? extends IWorldGenerator> genClass = generator.getClass();
-        if (!packageToModId.containsKey(genClass.getPackage().getName())) {
+        String modid = packageToModId.get(getPackageName(genClass));
+        if (modid == null) {
             CubicChunks.bigWarning("Found IWorldGenerator %s that doesn't come from any mod! This is most likely a bug.", genClass);
             return;
         }
-        String modid = packageToModId.get(genClass.getPackage().getName());
         if (IWORLDGENERATOR_FAKE_HEIGHT.contains(modid)) {
             ((ICubicWorldInternal.Server) world).fakeWorldHeight(256);
         }
