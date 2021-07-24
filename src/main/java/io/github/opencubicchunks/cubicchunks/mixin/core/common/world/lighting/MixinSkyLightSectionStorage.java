@@ -42,6 +42,7 @@ public abstract class MixinSkyLightSectionStorage extends LayerLightSectionStora
 
     @Inject(method = "getLightValue(JZ)I", cancellable = true, at = @At("HEAD"))
     private void onGetLightValue(long blockPos, boolean cached, CallbackInfoReturnable<Integer> cir) {
+
         if (!isCubic) {
             return;
         }
@@ -53,27 +54,21 @@ public abstract class MixinSkyLightSectionStorage extends LayerLightSectionStora
         int x = BlockPos.getX(blockPos);
         int y = BlockPos.getY(blockPos);
         int z = BlockPos.getZ(blockPos);
+
         if (dataLayer == null) {
 
             int chunkX = Coords.blockToSection(x);
             int chunkZ = Coords.blockToSection(z);
             BlockGetter chunk = ((LayerLightSectionStorageAccess) this).getChunkSource().getChunkForLighting(chunkX, chunkZ);
 
-            Level level = (Level) ((LayerLightSectionStorageAccess) this).getChunkSource().getLevel();
 
             if (chunk == null) {
-                //TODO: re-enable asserts and remove temporary check once mojang fix mushroom generation https://bugs.mojang.com/browse/MC-229557
-                //mushroom generation checking light values before light stage has been reached causes these assets to trigger false positives
-                System.out.println("getLightValue: Missing chunk for lighting.");
-                if (level.isClientSide) {
-                    assert (((ICubicWorld) level).getCube(new BlockPos(x, y, z)) instanceof EmptyCube);
-                }
+                // clients can have null chunks when trying to render an entity in a chunk that hasn't arrived yet
+                // if a chunk were null on the server, it would cause errors during world gen
+                Level level = (Level) ((LayerLightSectionStorageAccess) this).getChunkSource().getLevel();
+                assert level.isClientSide;
 
-                //Client can have null chunks when trying to render an entity in a chunk that hasn't arrived yet (neither has the cube at that point)
-//                assert level.isClientSide;
-//                assert (((ICubicWorld) level).getCube(new BlockPos(x, y, z)) instanceof EmptyCube);
-
-                //Used as a default light value, eg for rendering entities that are not within a chunk/cube
+                // used as a default light value, eg for rendering entities that are not within an existing chunk
                 cir.setReturnValue(15);
                 return;
             }
