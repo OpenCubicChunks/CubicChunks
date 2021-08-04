@@ -42,6 +42,7 @@ public abstract class StorageFormatProviderBase implements IForgeRegistryEntry<S
                 .setType(StorageFormatProviderBase.class)
                 .setIDRange(0, 256)
                 .setName(new ResourceLocation("cubicchunks", "storage_format_provider_registry"))
+                .addCallback(StorageFormatCallbacks.INSTANCE)
                 .create();
     }
 
@@ -91,5 +92,23 @@ public abstract class StorageFormatProviderBase implements IForgeRegistryEntry<S
      */
     public boolean canBeDefault() {
         return false;
+    }
+
+    private static class StorageFormatCallbacks implements IForgeRegistry.MissingFactory<StorageFormatProviderBase> {
+        private static final StorageFormatCallbacks INSTANCE = new StorageFormatCallbacks();
+
+        @Override
+        public StorageFormatProviderBase createMissing(ResourceLocation key, boolean isNetwork) {
+            //allow players without a storage format to connect to a server with the storage format (which is perfectly fine, because the storage format
+            //  should never be being used on the client)
+            return isNetwork ? new DummyStorageFormat().setRegistryName(key) : null;
+        }
+
+        private static class DummyStorageFormat extends StorageFormatProviderBase {
+            @Override
+            public ICubicStorage provideStorage(World world, Path path) throws IOException {
+                throw new IllegalStateException("attempted to initialize storage for world " + world + " using dummy storage format " + this.getRegistryName());
+            }
+        }
     }
 }
