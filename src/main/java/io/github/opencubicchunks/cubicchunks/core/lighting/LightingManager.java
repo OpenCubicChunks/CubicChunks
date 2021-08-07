@@ -301,7 +301,7 @@ public class LightingManager implements ILightingManager {
             LightUpdateTracker tracker = manager.getTracker();
             ICubeProviderInternal cache = cubicWorld.getCubeCache();
 
-            if (!edgeNeedSkyLightUpdate.isEmpty() && cube.getWorld().isAreaLoaded(cube.getCoords().getCenterBlockPos(), 16)) {
+            if (!edgeNeedSkyLightUpdate.isEmpty() && cube.getWorld().isAreaLoaded(cube.getCoords().getCenterBlockPos(), 16, false)) {
                 EnumSet<EnumFacing> removed = EnumSet.noneOf(EnumFacing.class);
                 for (EnumFacing dir : EnumFacing.values()) {
                     if (this.edgeNeedSkyLightUpdate.contains(dir)) {
