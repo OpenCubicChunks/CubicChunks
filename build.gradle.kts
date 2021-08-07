@@ -457,8 +457,6 @@ publishing {
             }
         }
     }
-}
-afterEvaluate {
     tasks["publishModPublicationToMavenRepository"].dependsOn("reobfShadowJar")
     tasks["publishModPublicationToMavenRepository"].dependsOn(devShadowJar)
     if (System.getProperty("cubicchunks.isStandaloneBuild") == "true") {
