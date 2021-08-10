@@ -45,6 +45,8 @@ public abstract class MixinNoiseBasedChunkGenerator {
 
     @Mutable @Shadow @Final int cellCountY;
 
+    private AquiferSourceSampler aquiferSourceSampler;
+
     @Shadow @Final private int cellHeight;
 
     @Shadow @Final private NormalNoise barrierNoise;
@@ -54,8 +56,6 @@ public abstract class MixinNoiseBasedChunkGenerator {
     @Shadow @Final private NormalNoise lavaNoise;
 
     @Shadow public abstract int getSeaLevel();
-
-    private AquiferSourceSampler aquiferSourceSampler;
 
     @Inject(method = "<init>(Lnet/minecraft/world/level/biome/BiomeSource;Lnet/minecraft/world/level/biome/BiomeSource;JLjava/util/function/Supplier;)V", at = @At("RETURN"))
     private void init(BiomeSource biomeSource, BiomeSource biomeSource2, long l, Supplier<NoiseGeneratorSettings> supplier, CallbackInfo ci) {

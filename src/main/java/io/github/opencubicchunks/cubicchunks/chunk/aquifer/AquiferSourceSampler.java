@@ -36,13 +36,13 @@ public interface AquiferSourceSampler {
             double noiseY = gridY / 1.4;
             double noiseZ = z >> 6;
 
-            double levelNoise = this.levelNoise.getValue(noiseX, noiseY, noiseZ) * 30.0 - 10.0;
-            if (Math.abs(levelNoise) > 8.0) {
-                levelNoise *= 4.0;
+            double noiseValue = this.levelNoise.getValue(noiseX, noiseY, noiseZ) * 30.0 - 10.0;
+            if (Math.abs(noiseValue) > 8.0) {
+                noiseValue *= 4.0;
             }
 
             int gridMidY = gridY * 40 + 20;
-            int level = gridMidY + Mth.floor(levelNoise);
+            int level = gridMidY + Mth.floor(noiseValue);
             level = Math.min(56, level);
 
             boolean lava = Math.abs(this.lavaNoise.getValue(noiseX, noiseY, noiseZ)) > 0.22;
@@ -70,13 +70,13 @@ public interface AquiferSourceSampler {
             double noiseY = gridY / 1.4;
             double noiseZ = z >> 6;
 
-            double levelNoise = this.levelNoise.getValue(noiseX, noiseY, noiseZ) * 30.0 - 10.0;
-            if (Math.abs(levelNoise) > 8.0) {
-                levelNoise *= 4.0;
+            double noiseLevel = this.levelNoise.getValue(noiseX, noiseY, noiseZ) * 30.0 - 10.0;
+            if (Math.abs(noiseLevel) > 8.0) {
+                noiseLevel *= 4.0;
             }
 
             int gridMidY = gridY * 40 + 20;
-            int level = gridMidY + Mth.floor(levelNoise);
+            int level = gridMidY + Mth.floor(noiseLevel);
 
             return AquiferSample.lava(level);
         }
