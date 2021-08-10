@@ -23,6 +23,7 @@ import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.ChunkSerializerAccess;
 import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
+import io.github.opencubicchunks.cubicchunks.world.lighting.IWorldLightManager;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import net.minecraft.core.BlockPos;
@@ -84,9 +85,10 @@ public class CubeSerializer {
         LevelChunkSection[] sections = new LevelChunkSection[IBigCube.SECTION_COUNT];
         ChunkSource abstractchunkprovider = world.getChunkSource();
         LevelLightEngine worldlightmanager = abstractchunkprovider.getLightEngine();
-//            if (isLightOn) {
-//                worldlightmanager.retainData(cubePos, true);
-//            }
+
+        if (isLightOn) {
+            ((IWorldLightManager) worldlightmanager).retainData(cubePos, true);
+        }
 
         for (int i = 0; i < sectionsNBTList.size(); ++i) {
             CompoundTag sectionNBT = sectionsNBTList.getCompound(i);
