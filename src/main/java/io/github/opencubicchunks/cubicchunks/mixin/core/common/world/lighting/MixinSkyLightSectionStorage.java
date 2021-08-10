@@ -2,10 +2,8 @@ package io.github.opencubicchunks.cubicchunks.mixin.core.common.world.lighting;
 
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.LightHeightmapGetter;
-import io.github.opencubicchunks.cubicchunks.chunk.cube.EmptyCube;
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.LayerLightSectionStorageAccess;
 import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
-import io.github.opencubicchunks.cubicchunks.server.ICubicWorld;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import io.github.opencubicchunks.cubicchunks.world.lighting.ICubeLightProvider;
 import net.minecraft.core.BlockPos;
@@ -41,24 +39,23 @@ public abstract class MixinSkyLightSectionStorage extends LayerLightSectionStora
     }
 
     @Inject(method = "getLightValue(JZ)I", cancellable = true, at = @At("HEAD"))
-    private void onGetLightValue(long blockPos, boolean cached, CallbackInfoReturnable<Integer> cir) {
-
+    private void onGetLightValue(long blockPosLong, boolean cached, CallbackInfoReturnable<Integer> cir) {
         if (!isCubic) {
             return;
         }
 
         // Replace this method with an equivalent of BlockLightSectionStorage.getLightValue,
         // since we don't need sky light logic
-        long l = SectionPos.blockToSection(blockPos);
-        DataLayer dataLayer = this.getDataLayer(l, cached);
-        int x = BlockPos.getX(blockPos);
-        int y = BlockPos.getY(blockPos);
-        int z = BlockPos.getZ(blockPos);
+        long sectionPosLong = SectionPos.blockToSection(blockPosLong);
+        DataLayer dataLayer = this.getDataLayer(sectionPosLong, cached);
+        int blockX = BlockPos.getX(blockPosLong);
+        int blockY = BlockPos.getY(blockPosLong);
+        int blockZ = BlockPos.getZ(blockPosLong);
 
         if (dataLayer == null) {
 
-            int chunkX = Coords.blockToSection(x);
-            int chunkZ = Coords.blockToSection(z);
+            int chunkX = Coords.blockToSection(blockX);
+            int chunkZ = Coords.blockToSection(blockZ);
             BlockGetter chunk = ((LayerLightSectionStorageAccess) this).getChunkSource().getChunkForLighting(chunkX, chunkZ);
 
 
@@ -75,20 +72,20 @@ public abstract class MixinSkyLightSectionStorage extends LayerLightSectionStora
 
             //TODO: Optimize
             BlockGetter cube = ((ICubeLightProvider) ((LayerLightSectionStorageAccess) this).getChunkSource()).getCubeForLighting(
-                chunkX, Coords.blockToSection(y), chunkZ);
+                chunkX, Coords.blockToSection(blockY), chunkZ);
             if (cube == null || !((IBigCube) cube).getStatus().isOrAfter(ChunkStatus.LIGHT)) {
                 cir.setReturnValue(0);
                 return;
             }
 
             Heightmap lightHeightmap = ((LightHeightmapGetter) chunk).getLightHeightmap();
-            int height = lightHeightmap.getFirstAvailable(SectionPos.sectionRelative(x), SectionPos.sectionRelative(z));
-            cir.setReturnValue(height <= y ? 15 : 0);
+            int height = lightHeightmap.getFirstAvailable(SectionPos.sectionRelative(blockX), SectionPos.sectionRelative(blockZ));
+            cir.setReturnValue(height <= blockY ? 15 : 0);
         } else {
             cir.setReturnValue(dataLayer.get(
-                SectionPos.sectionRelative(x),
-                SectionPos.sectionRelative(y),
-                SectionPos.sectionRelative(z)));
+                SectionPos.sectionRelative(blockX),
+                SectionPos.sectionRelative(blockY),
+                SectionPos.sectionRelative(blockZ)));
         }
     }
 
