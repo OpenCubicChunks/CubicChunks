@@ -23,6 +23,7 @@ import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.ChunkSerializerAccess;
 import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
+import io.github.opencubicchunks.cubicchunks.utils.CuboidUtil;
 import io.github.opencubicchunks.cubicchunks.world.lighting.IWorldLightManager;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
@@ -60,34 +61,55 @@ public class CubeSerializer {
 
     public static IBigCube read(ServerLevel world, StructureManager structureManager, PoiManager poiManager, CubePos expectedCubePos, CompoundTag root) {
         CompoundTag level = root.getCompound("Level");
+        ChunkStatus.ChunkType chunkType = getChunkStatus(root);
+
+        boolean hybridStacked = ((CubicLevelHeightAccessor) world).worldStyle() == CubicLevelHeightAccessor.WorldStyle.HYBRID_STACKED && chunkType == ChunkStatus.ChunkType.PROTOCHUNK;
+        int sectionCount = SectionPos.blockToSectionCoord(world.dimensionType().height());
+        int cuboidHeight = CuboidUtil.getCuboidCubeHeight(sectionCount);
+
 
         CubePos cubePos = CubePos.of(level.getInt("xPos"), level.getInt("yPos"), level.getInt("zPos"));
+
+        int minCuboidCubeY = CuboidUtil.getMinCubeYForCuboid(cubePos.getY(), sectionCount);
+
+
         if (!Objects.equals(cubePos, expectedCubePos)) {
             CubicChunks.LOGGER.error("LevelCube file at {} is in the wrong location; relocating. (Expected {}, got {})", cubePos, expectedCubePos, cubePos);
         }
 
         int[] biomes1 = level.getIntArray("Biomes");
+        CubeBoundsLevelHeightAccessor levelHeightAccessor = new CubeBoundsLevelHeightAccessor(hybridStacked ? world.dimensionType().height() : BigCube.DIAMETER_IN_BLOCKS,
+            expectedCubePos.minCubeY(), ((CubicLevelHeightAccessor) world));
         CubeBiomeContainer cubeBiomeContainer = new CubeBiomeContainer(world.registryAccess().registryOrThrow(Registry.BIOME_REGISTRY),
-            new CubeBoundsLevelHeightAccessor(BigCube.DIAMETER_IN_BLOCKS, expectedCubePos.minCubeY(), ((CubicLevelHeightAccessor) world)), biomes1);
+            levelHeightAccessor,
+            biomes1);
 //            UpgradeData upgradedata = level.contains("UpgradeData", 10) ? new UpgradeData(level.getCompound("UpgradeData")) : UpgradeData.EMPTY;
 
         ImposterChunkPos imposterChunkPos = new ImposterChunkPos(cubePos);
         CubeProtoTickList<Block> blockProtoTickList = new CubeProtoTickList<>((block) -> {
             return block == null || block.defaultBlockState().isAir();
-        }, imposterChunkPos, root.getList("ToBeTicked", 9), new CubeProtoTickList.CubeProtoTickListHeightAccess(imposterChunkPos.toCubePos(), (CubicLevelHeightAccessor) world));
+        }, imposterChunkPos, root.getList("ToBeTicked", 9), levelHeightAccessor);
         CubeProtoTickList<Fluid> fluidProtoTickList = new CubeProtoTickList<>((fluid) -> {
             return fluid == null || fluid == Fluids.EMPTY;
-        }, imposterChunkPos, root.getList("LiquidsToBeTicked", 9), new CubeProtoTickList.CubeProtoTickListHeightAccess(imposterChunkPos.toCubePos(), (CubicLevelHeightAccessor) world));
+        }, imposterChunkPos, root.getList("LiquidsToBeTicked", 9), levelHeightAccessor);
 
 
         boolean isLightOn = level.getBoolean("isLightOn");
         ListTag sectionsNBTList = level.getList("Sections", 10);
-        LevelChunkSection[] sections = new LevelChunkSection[IBigCube.SECTION_COUNT];
+        LevelChunkSection[] sections = new LevelChunkSection[IBigCube.SECTION_COUNT * (hybridStacked ?
+            cuboidHeight : 1)];
+
         ChunkSource abstractchunkprovider = world.getChunkSource();
         LevelLightEngine worldlightmanager = abstractchunkprovider.getLightEngine();
 
         if (isLightOn) {
-            ((IWorldLightManager) worldlightmanager).retainData(cubePos, true);
+            if (hybridStacked) {
+                for (int cubeY = 0; cubeY < cuboidHeight; cubeY++) {
+                    ((IWorldLightManager) worldlightmanager).retainData(CubePos.of(cubePos.getX(), minCuboidCubeY + cubeY, cubePos.getZ()), true);
+                }
+            } else {
+                ((IWorldLightManager) worldlightmanager).retainData(cubePos, true);
+            }
         }
 
         for (int i = 0; i < sectionsNBTList.size(); ++i) {
@@ -120,7 +142,6 @@ public class CubeSerializer {
         }
 
         long inhabitedTime = level.getLong("InhabitedTime");
-        ChunkStatus.ChunkType chunkType = getChunkStatus(root);
         IBigCube icube;
         if (chunkType == ChunkStatus.ChunkType.LEVELCHUNK) {
             TickList<Block> blockTickList;

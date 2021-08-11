@@ -21,11 +21,11 @@ import net.minecraft.world.level.chunk.ProtoTickList;
 
 public class CubeProtoTickList<T> extends ProtoTickList<T> {
 
-    public CubeProtoTickList(Predicate<T> predicate, ImposterChunkPos chunkPos, ListTag listTag, CubeProtoTickListHeightAccess levelHeightAccessor) {
+    public CubeProtoTickList(Predicate<T> predicate, ImposterChunkPos chunkPos, ListTag listTag, LevelHeightAccessor levelHeightAccessor) {
         super(predicate, chunkPos, listTag, levelHeightAccessor);
     }
 
-    public CubeProtoTickList(Predicate<T> predicate, ImposterChunkPos chunkPos, CubeProtoTickListHeightAccess levelHeightAccessor) {
+    public CubeProtoTickList(Predicate<T> predicate, ImposterChunkPos chunkPos, LevelHeightAccessor levelHeightAccessor) {
         this(predicate, chunkPos, new ListTag(), levelHeightAccessor);
     }
 

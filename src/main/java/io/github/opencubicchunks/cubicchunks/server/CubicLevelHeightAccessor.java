@@ -20,13 +20,13 @@ public interface CubicLevelHeightAccessor {
     enum WorldStyle {
         CUBIC(true, false), // Primary Implementation (Generate Chunks 3D, infinite world height)
         HYBRID(true, true), // Soft implementation (Vanilla Chunk Generation, infinite world height)
+        HYBRID_STACKED(true, false), // Secondary implementation, involves the stacking of hybrid cuboids (Vanilla world Generation fired for per dimension height, infinite world height).
         CHUNK(false, true); //Vanilla (2D Generation, World Height is NOT infinite)
 
         private final boolean isCubic;
         private final boolean generates2DChunks;
 
         WorldStyle(boolean isCubic, boolean generates2DChunks) {
-
             this.isCubic = isCubic;
             this.generates2DChunks = generates2DChunks;
         }

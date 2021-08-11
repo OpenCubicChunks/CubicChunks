@@ -67,6 +67,7 @@ import io.github.opencubicchunks.cubicchunks.network.PacketUpdateLight;
 import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import io.github.opencubicchunks.cubicchunks.server.IServerChunkProvider;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
+import io.github.opencubicchunks.cubicchunks.utils.CuboidUtil;
 import io.github.opencubicchunks.cubicchunks.world.server.IServerWorld;
 import io.github.opencubicchunks.cubicchunks.world.server.IServerWorldLightManager;
 import io.github.opencubicchunks.cubicchunks.world.storage.CubeSerializer;
@@ -495,10 +496,31 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
     }
 
     private void markCubePositionReplaceable(CubePos cubePos) {
-        this.cubeTypeCache.put(cubePos.asLong(), (byte) -1);
+        if (((CubicLevelHeightAccessor) this.level).worldStyle() == CubicLevelHeightAccessor.WorldStyle.HYBRID_STACKED) {
+            int requestedCubeY = cubePos.getY();
+            int maxCubeYForCuboid = CuboidUtil.getMaxCubeYForCuboid(requestedCubeY,  SectionPos.blockToSectionCoord(this.level.dimensionType().height()));
+            int minCubeYForCuboid = CuboidUtil.getMinCubeYForCuboid(requestedCubeY,  SectionPos.blockToSectionCoord(this.level.dimensionType().height()));
+            int requestedCubeX = cubePos.getX();
+            int requestedCubeZ = cubePos.getZ();
+            for (int y = minCubeYForCuboid; y < maxCubeYForCuboid; y++) {
+                this.cubeTypeCache.put(CubePos.asLong(requestedCubeX, y, requestedCubeZ), (byte) -1);
+            }
+        } else {
+            this.cubeTypeCache.put(cubePos.asLong(), (byte) -1);
+        }
     }
 
     private byte markCubePosition(CubePos cubePos, ChunkStatus.ChunkType status) {
+        if (((CubicLevelHeightAccessor) this.level).worldStyle() == CubicLevelHeightAccessor.WorldStyle.HYBRID_STACKED) {
+            int requestedCubeY = cubePos.getY();
+            int maxCubeYForCuboid = CuboidUtil.getMaxCubeYForCuboid(requestedCubeY, SectionPos.blockToSectionCoord(this.level.dimensionType().height()));
+            int minCubeYForCuboid = CuboidUtil.getMinCubeYForCuboid(requestedCubeY, SectionPos.blockToSectionCoord(this.level.dimensionType().height()));
+            int requestedCubeX = cubePos.getX();
+            int requestedCubeZ = cubePos.getZ();
+            for (int y = minCubeYForCuboid; y < maxCubeYForCuboid; y++) {
+                this.cubeTypeCache.put(CubePos.asLong(requestedCubeX, y, requestedCubeZ), (byte) (status == ChunkStatus.ChunkType.PROTOCHUNK ? -1 : 1));
+            }
+        }
         return this.cubeTypeCache.put(cubePos.asLong(), (byte) (status == ChunkStatus.ChunkType.PROTOCHUNK ? -1 : 1));
     }
 

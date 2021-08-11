@@ -127,6 +127,10 @@ public class CubeBiomeContainer extends ChunkBiomeContainer {
         return biomeIDs;
     }
 
+    public ChunkBiomeContainer getContainerForColumn(int columnX, int columnZ) {
+        return containers[columnZ * IBigCube.DIAMETER_IN_SECTIONS + columnX];
+    }
+
     @Override public Biome getNoiseBiome(int biomeX, int biomeY, int biomeZ) {
         int chunkX = Coords.cubeLocalSection(QuartPos.toSection(biomeX));
         int chunkZ = Coords.cubeLocalSection(QuartPos.toSection(biomeZ));

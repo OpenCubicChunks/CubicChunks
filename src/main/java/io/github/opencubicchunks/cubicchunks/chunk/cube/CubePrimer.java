@@ -44,6 +44,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.LevelHeightAccessor;
+import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -134,11 +135,15 @@ public class CubePrimer extends ProtoChunk implements IBigCube, CubicLevelHeight
 
         this.cubePos = cubePosIn;
         this.levelHeightAccessor = levelHeightAccessor;
+        worldStyle = ((CubicLevelHeightAccessor) levelHeightAccessor).worldStyle();
 
         if (sectionsIn == null) {
-            this.sections = new LevelChunkSection[IBigCube.SECTION_COUNT];
+            this.sections = new LevelChunkSection[IBigCube.SECTION_COUNT * (worldStyle == WorldStyle.HYBRID_STACKED ?
+                SectionPos.blockToSectionCoord(((LevelReader) levelHeightAccessor).dimensionType().height()) : 1)];
         } else {
-            if (sectionsIn.length == IBigCube.SECTION_COUNT) {
+            if (worldStyle == WorldStyle.HYBRID_STACKED) {
+                this.sections = sectionsIn;
+            } else if (sectionsIn.length == IBigCube.SECTION_COUNT) {
                 this.sections = sectionsIn;
             } else {
                 throw new IllegalStateException("Number of Sections must equal IBigCube.CUBESIZE | " + IBigCube.SECTION_COUNT);
@@ -146,7 +151,6 @@ public class CubePrimer extends ProtoChunk implements IBigCube, CubicLevelHeight
         }
         isCubic = ((CubicLevelHeightAccessor) levelHeightAccessor).isCubic();
         generates2DChunks = ((CubicLevelHeightAccessor) levelHeightAccessor).generates2DChunks();
-        worldStyle = ((CubicLevelHeightAccessor) levelHeightAccessor).worldStyle();
 
         this.minBuildHeight = levelHeightAccessor.getMinBuildHeight();
         this.height = levelHeightAccessor.getHeight();
