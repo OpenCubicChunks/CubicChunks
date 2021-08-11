@@ -12,6 +12,7 @@ import com.mojang.datafixers.util.Either;
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.ICubeGenerator;
 import io.github.opencubicchunks.cubicchunks.chunk.NoiseAndSurfaceBuilderHelper;
+import io.github.opencubicchunks.cubicchunks.chunk.NoiseCubeGetter;
 import io.github.opencubicchunks.cubicchunks.chunk.biome.ColumnBiomeContainer;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.CubePrimer;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CCWorldGenUtils;
@@ -23,6 +24,7 @@ import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import io.github.opencubicchunks.cubicchunks.world.CubeWorldGenRegion;
 import io.github.opencubicchunks.cubicchunks.world.server.IServerWorldLightManager;
+import it.unimi.dsi.fastutil.longs.Long2ObjectArrayMap;
 import net.minecraft.core.Registry;
 import net.minecraft.server.level.ChunkHolder;
 import net.minecraft.server.level.ServerLevel;
@@ -214,10 +216,25 @@ public class MixinChunkStatus {
             CubeWorldGenRegion cubeWorldGenRegion = new CubeWorldGenRegion(world, unsafeCast(neighbors), status, chunk, 0);
 
             CubePos cubePos = ((IBigCube) chunk).getCubePos();
+            int cubeX = cubePos.getX();
             int cubeY = cubePos.getY();
+            int cubeZ = cubePos.getZ();
 
-            CubePrimer cubeAbove = new CubePrimer(CubePos.of(cubePos.getX(), cubeY + 1,
-                cubePos.getZ()), UpgradeData.EMPTY, cubeWorldGenRegion);
+            long cubePosUp = CubePos.asLong(cubeX, cubeY + 1, cubeZ);
+//            long cubePosDown = CubePos.asLong(cubeX, cubeY - 1, cubeZ);
+
+
+            Long2ObjectArrayMap<CubePrimer> noisePrimers = ((NoiseCubeGetter) world).getNoisePrimers();
+
+            boolean generateAbove = false;
+            CubePrimer cubeAbove;
+            if (!noisePrimers.containsKey(cubePosUp)) {
+                generateAbove = true;
+                cubeAbove = new CubePrimer(CubePos.of(cubeX, cubeY + 1,
+                    cubeZ), UpgradeData.EMPTY, cubeWorldGenRegion);
+            } else {
+                cubeAbove = noisePrimers.remove(cubePosUp);
+            }
 
             CompletableFuture<ChunkAccess> chainedNoiseFutures = null;
 
@@ -230,7 +247,7 @@ public class MixinChunkStatus {
 
                     ChunkPos pos = chunk.getPos();
 
-                    NoiseAndSurfaceBuilderHelper cubeAccessWrapper = new NoiseAndSurfaceBuilderHelper((IBigCube) chunk, cubeAbove);
+                    NoiseAndSurfaceBuilderHelper cubeAccessWrapper = new NoiseAndSurfaceBuilderHelper((IBigCube) chunk, cubeAbove, generateAbove);
                     cubeAccessWrapper.moveColumn(columnX, columnZ);
 
                     if (chainedNoiseFutures == null) {
@@ -247,6 +264,7 @@ public class MixinChunkStatus {
                 if (chunk instanceof CubePrimer) {
                     ((CubePrimer) chunk).setCubeStatus(status);
                 }
+                noisePrimers.put(cubePos.asLong(), (CubePrimer) chunk);
 
                 return Either.left(chunk);
             }));

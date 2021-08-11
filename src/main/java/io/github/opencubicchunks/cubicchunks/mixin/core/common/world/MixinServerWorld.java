@@ -7,7 +7,9 @@ import java.util.concurrent.Executor;
 import java.util.function.Supplier;
 
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
+import io.github.opencubicchunks.cubicchunks.chunk.NoiseCubeGetter;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.BigCube;
+import io.github.opencubicchunks.cubicchunks.chunk.cube.CubePrimer;
 import io.github.opencubicchunks.cubicchunks.chunk.heightmap.SurfaceTrackerWrapper;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
@@ -15,6 +17,7 @@ import io.github.opencubicchunks.cubicchunks.server.ICubicWorld;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import io.github.opencubicchunks.cubicchunks.world.entity.IsCubicEntityContext;
 import io.github.opencubicchunks.cubicchunks.world.server.IServerWorld;
+import it.unimi.dsi.fastutil.longs.Long2ObjectArrayMap;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.SectionPos;
 import net.minecraft.resources.ResourceKey;
@@ -47,8 +50,10 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(ServerLevel.class)
-public abstract class MixinServerWorld extends Level implements IServerWorld {
+public abstract class MixinServerWorld extends Level implements IServerWorld, NoiseCubeGetter {
     @Shadow @Final private PersistentEntitySectionManager<Entity> entityManager;
+
+    private final Long2ObjectArrayMap<CubePrimer> primers = new Long2ObjectArrayMap<>();
 
     protected MixinServerWorld(WritableLevelData p_i231617_1_, ResourceKey<Level> p_i231617_2_, DimensionType p_i231617_4_,
                                Supplier<ProfilerFiller> p_i231617_5_, boolean p_i231617_6_, boolean p_i231617_7_, long p_i231617_8_) {
@@ -149,5 +154,9 @@ public abstract class MixinServerWorld extends Level implements IServerWorld {
             }
         }
         profilerFiller.pop();
+    }
+
+    @Override public Long2ObjectArrayMap<CubePrimer> getNoisePrimers() {
+        return this.primers;
     }
 }
