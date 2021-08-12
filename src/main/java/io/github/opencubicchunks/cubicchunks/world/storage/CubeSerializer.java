@@ -169,6 +169,7 @@ public class CubeSerializer {
             //}
         }
         icube.setCubeLight(isLightOn);
+
         //TODO: reimplement heightmap in save format
         CompoundTag heightmapsNBT = level.getCompound("Heightmaps");
         for (Heightmap.Types types : icube.getStatus().heightmapsAfter()) {
@@ -177,6 +178,13 @@ public class CubeSerializer {
             for (Tag tag : heightmapsNBT.getList(types.getSerializationKey(), 10)) {
                 trackerSections[idx] = SurfaceTrackerSection.fromCubeSaveData(types, icube, (CompoundTag) tag);
                 idx++;
+            }
+
+            for (int i = idx; i < trackerSections.length; i++) {
+                SurfaceTrackerSection trackerSection = trackerSections[i];
+                if (trackerSection == null) {
+                    trackerSections[i] = new SurfaceTrackerSection(0, cubePos.getY(), null, icube, types);
+                }
             }
             icube.setSurfaceTrackers(types, trackerSections);
         }
