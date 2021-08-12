@@ -18,6 +18,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import io.github.opencubicchunks.cubicchunks.chunk.CubeMapGetter;
+import io.github.opencubicchunks.cubicchunks.chunk.CuboidPrimer;
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.ImposterChunkPos;
 import io.github.opencubicchunks.cubicchunks.chunk.LightHeightmapGetter;
@@ -138,10 +139,10 @@ public class CubePrimer extends ProtoChunk implements IBigCube, CubicLevelHeight
         worldStyle = ((CubicLevelHeightAccessor) levelHeightAccessor).worldStyle();
 
         if (sectionsIn == null) {
-            this.sections = new LevelChunkSection[IBigCube.SECTION_COUNT * (worldStyle == WorldStyle.HYBRID_STACKED ?
+            this.sections = new LevelChunkSection[IBigCube.SECTION_COUNT * (this instanceof CuboidPrimer ?
                 SectionPos.blockToSectionCoord(((LevelReader) levelHeightAccessor).dimensionType().height()) : 1)];
         } else {
-            if (worldStyle == WorldStyle.HYBRID_STACKED) {
+            if (this instanceof CuboidPrimer) {
                 this.sections = sectionsIn;
             } else if (sectionsIn.length == IBigCube.SECTION_COUNT) {
                 this.sections = sectionsIn;

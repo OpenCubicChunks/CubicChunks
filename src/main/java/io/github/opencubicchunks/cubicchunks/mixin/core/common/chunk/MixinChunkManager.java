@@ -1,6 +1,7 @@
 package io.github.opencubicchunks.cubicchunks.mixin.core.common.chunk;
 
 import static io.github.opencubicchunks.cubicchunks.CubicChunks.LOGGER;
+import static io.github.opencubicchunks.cubicchunks.world.storage.CubeSerializer.getChunkStatus;
 
 import java.io.File;
 import java.io.IOException;
@@ -34,6 +35,7 @@ import com.mojang.datafixers.util.Either;
 import io.github.opencubicchunks.cubicchunks.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.chunk.CubeCollectorFuture;
 import io.github.opencubicchunks.cubicchunks.chunk.CubePlayerProvider;
+import io.github.opencubicchunks.cubicchunks.chunk.CuboidPrimer;
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.IChunkManager;
 import io.github.opencubicchunks.cubicchunks.chunk.IChunkMapInternal;
@@ -347,7 +349,7 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
 
                 if (status.getChunkType() != ChunkStatus.ChunkType.LEVELCHUNK) {
                     CompoundTag compoundnbt = regionCubeIO.loadCubeNBT(cubePos);
-                    if (compoundnbt != null && CubeSerializer.getChunkStatus(compoundnbt) == ChunkStatus.ChunkType.LEVELCHUNK) {
+                    if (compoundnbt != null && getChunkStatus(compoundnbt) == ChunkStatus.ChunkType.LEVELCHUNK) {
                         return false;
                     }
 
@@ -372,6 +374,7 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
     }
 
     private CompletableFuture<Boolean> cubeSaveAsync(IBigCube cube) {
+        boolean stacked = ((CubicLevelHeightAccessor) this.level).worldStyle() == CubicLevelHeightAccessor.WorldStyle.HYBRID_STACKED;
         ((ISectionStorage) this.poiManager).flush(cube.getCubePos());
         if (!cube.isDirty()) {
             return CompletableFuture.completedFuture(false);
@@ -392,7 +395,7 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
 
                 if (status.getChunkType() != ChunkStatus.ChunkType.LEVELCHUNK) {
                     CompoundTag compoundnbt = regionCubeIO.loadCubeNBT(cubePos);
-                    if (compoundnbt != null && CubeSerializer.getChunkStatus(compoundnbt) == ChunkStatus.ChunkType.LEVELCHUNK) {
+                    if (compoundnbt != null && getChunkStatus(compoundnbt) == ChunkStatus.ChunkType.LEVELCHUNK) {
                         return CompletableFuture.completedFuture(false);
                     }
 
@@ -408,7 +411,8 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
                         LOGGER.error("Failed to save chunk {},{},{}", cubePos.getX(), cubePos.getY(), cubePos.getZ(), throwable);
                         return false;
                     });
-                this.cubeSavingFutures.put(cubePos, future);
+                this.cubeSavingFutures
+                    .put(cube.getStatus().getChunkType() == ChunkStatus.ChunkType.PROTOCHUNK && stacked ? CuboidUtil.getMinCubeFromRequested(cubePos, this.level) : cubePos, future);
                 return future;
             } catch (Exception exception) {
                 LOGGER.error("Failed to save chunk {},{},{}", cubePos.getX(), cubePos.getY(), cubePos.getZ(), exception);
@@ -498,13 +502,10 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
     private void markCubePositionReplaceable(CubePos cubePos) {
         if (((CubicLevelHeightAccessor) this.level).worldStyle() == CubicLevelHeightAccessor.WorldStyle.HYBRID_STACKED) {
             int requestedCubeY = cubePos.getY();
-            int maxCubeYForCuboid = CuboidUtil.getMaxCubeYForCuboid(requestedCubeY,  SectionPos.blockToSectionCoord(this.level.dimensionType().height()));
-            int minCubeYForCuboid = CuboidUtil.getMinCubeYForCuboid(requestedCubeY,  SectionPos.blockToSectionCoord(this.level.dimensionType().height()));
+            int minCubeYForCuboid = CuboidUtil.getMinCubeYForCuboid(requestedCubeY, this.level);
             int requestedCubeX = cubePos.getX();
             int requestedCubeZ = cubePos.getZ();
-            for (int y = minCubeYForCuboid; y < maxCubeYForCuboid; y++) {
-                this.cubeTypeCache.put(CubePos.asLong(requestedCubeX, y, requestedCubeZ), (byte) -1);
-            }
+            this.cubeTypeCache.put(CubePos.asLong(requestedCubeX, minCubeYForCuboid, requestedCubeZ), (byte) -1);
         } else {
             this.cubeTypeCache.put(cubePos.asLong(), (byte) -1);
         }
@@ -513,13 +514,10 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
     private byte markCubePosition(CubePos cubePos, ChunkStatus.ChunkType status) {
         if (((CubicLevelHeightAccessor) this.level).worldStyle() == CubicLevelHeightAccessor.WorldStyle.HYBRID_STACKED) {
             int requestedCubeY = cubePos.getY();
-            int maxCubeYForCuboid = CuboidUtil.getMaxCubeYForCuboid(requestedCubeY, SectionPos.blockToSectionCoord(this.level.dimensionType().height()));
-            int minCubeYForCuboid = CuboidUtil.getMinCubeYForCuboid(requestedCubeY, SectionPos.blockToSectionCoord(this.level.dimensionType().height()));
+            int minCubeYForCuboid = CuboidUtil.getMinCubeYForCuboid(requestedCubeY, this.level);
             int requestedCubeX = cubePos.getX();
             int requestedCubeZ = cubePos.getZ();
-            for (int y = minCubeYForCuboid; y < maxCubeYForCuboid; y++) {
-                this.cubeTypeCache.put(CubePos.asLong(requestedCubeX, y, requestedCubeZ), (byte) (status == ChunkStatus.ChunkType.PROTOCHUNK ? -1 : 1));
-            }
+            return this.cubeTypeCache.put(CubePos.asLong(requestedCubeX, minCubeYForCuboid, requestedCubeZ), (byte) (status == ChunkStatus.ChunkType.PROTOCHUNK ? -1 : 1));
         }
         return this.cubeTypeCache.put(cubePos.asLong(), (byte) (status == ChunkStatus.ChunkType.PROTOCHUNK ? -1 : 1));
     }
@@ -937,7 +935,7 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
     //scheduleChunkLoad
     private CompletableFuture<Either<IBigCube, ChunkHolder.ChunkLoadingFailure>> scheduleCubeLoad(CubePos cubePos) {
         this.level.getProfiler().incrementCounter("cubeLoad");
-
+        boolean stacked = ((CubicLevelHeightAccessor) this.level).worldStyle() == CubicLevelHeightAccessor.WorldStyle.HYBRID_STACKED;
         final CompletableFuture<Boolean> savingFuture = cubeSavingFutures.containsKey(cubePos) ? cubeSavingFutures.get(cubePos) : CompletableFuture.completedFuture(true);
         return savingFuture.thenComposeAsync(unused -> {
             final CompletableFuture<CompoundTag> cubeNBTFuture = regionCubeIO.getCubeNBTFuture(cubePos);
@@ -945,13 +943,24 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
             return cubeNBTFuture.thenCombineAsync(poiFuture, (cubeNBT, poiNBT) -> {
                 if (cubeNBT != null) {
                     boolean flag = cubeNBT.contains("Level", 10) && cubeNBT.getCompound("Level").contains("Status", 8);
+                    boolean isProtoChunk = getChunkStatus(cubeNBT) == ChunkStatus.ChunkType.PROTOCHUNK;
+
+
                     if (flag) {
                         ChunkIoMainThreadTaskUtils.executeMain(() -> {
                             if (poiNBT != null) {
-                                ((ISectionStorage) this.poiManager).updateCube(cubePos, poiNBT);
+                                if (stacked) {
+                                    for (int cubeY = CuboidUtil.getMinCubeYForCuboid(cubePos.getY(), this.level);
+                                         cubeY < CuboidUtil.getMaxCubeYForCuboid(cubePos.getY(), this.level); cubeY++) {
+                                        ((ISectionStorage) this.poiManager).updateCube(CubePos.of(cubePos.getX(), cubeY, cubePos.getZ()), poiNBT);
+                                    }
+                                } else {
+                                    ((ISectionStorage) this.poiManager).updateCube(cubePos, poiNBT);
+                                }
                             }
                         });
-                        return CubeSerializer.read(this.level, this.structureManager, poiManager, cubePos, cubeNBT);
+                        return CubeSerializer
+                            .read(this.level, this.structureManager, poiManager, stacked && isProtoChunk ? CuboidUtil.getMinCubeFromRequested(cubePos, this.level) : cubePos, cubeNBT);
                     }
                     LOGGER.error("Cube file at {} is missing level data, skipping", cubePos);
                 }
@@ -966,7 +975,10 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
                     return Either.left(iBigCube);
                 }
                 this.markCubePositionReplaceable(cubePos);
-                return Either.left(new CubePrimer(cubePos, UpgradeData.EMPTY, level));
+
+                return Either.left(stacked
+                    ? new CuboidPrimer(cubePos, UpgradeData.EMPTY, level) :
+                    new CubePrimer(cubePos, UpgradeData.EMPTY, level));
             }, this.mainThreadExecutor);
         }, this.mainThreadExecutor);
     }

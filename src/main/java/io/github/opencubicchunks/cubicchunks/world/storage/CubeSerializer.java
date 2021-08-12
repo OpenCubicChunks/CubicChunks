@@ -70,7 +70,7 @@ public class CubeSerializer {
 
         CubePos cubePos = CubePos.of(level.getInt("xPos"), level.getInt("yPos"), level.getInt("zPos"));
 
-        int minCuboidCubeY = CuboidUtil.getMinCubeYForCuboid(cubePos.getY(), sectionCount);
+        int minCuboidCubeY = CuboidUtil.getMinCubeYForCuboid(cubePos.getY(), world);
 
 
         if (!Objects.equals(cubePos, expectedCubePos)) {
@@ -267,13 +267,18 @@ public class CubeSerializer {
 
     public static CompoundTag write(ServerLevel world, IBigCube icube, AsyncSaveData data) {
         CubePos pos = icube.getCubePos();
+        ChunkStatus.ChunkType chunkType = icube.getCubeStatus().getChunkType();
+
+        boolean hybridStacked = ((CubicLevelHeightAccessor) world).worldStyle() == CubicLevelHeightAccessor.WorldStyle.HYBRID_STACKED && chunkType == ChunkStatus.ChunkType.PROTOCHUNK;
+        int sectionCount = SectionPos.blockToSectionCoord(world.dimensionType().height());
+        int cuboidHeight = CuboidUtil.getCuboidCubeHeight(sectionCount);
 
         CompoundTag root = new CompoundTag();
         CompoundTag level = new CompoundTag();
         root.put("Level", level);
 
         level.putInt("xPos", pos.getX());
-        level.putInt("yPos", pos.getY());
+        level.putInt("yPos", hybridStacked ? CuboidUtil.getMinCubeYForCuboid(pos.getY(), world) : pos.getY());
         level.putInt("zPos", pos.getZ());
 
         level.putLong("LastUpdate", world.getGameTime());
@@ -285,7 +290,7 @@ public class CubeSerializer {
         LevelLightEngine worldlightmanager = world.getChunkSource().getLightEngine();
         boolean cubeHasLight = icube.hasCubeLight();
 
-        for (int i = 0; i < IBigCube.SECTION_COUNT; ++i) {
+        for (int i = 0; i < sections.length; ++i) {
             LevelChunkSection section = sections[i];
 
             DataLayer blockData = data != null ? data.blockLight.get(Coords.sectionPosByIndex(pos, i)) :
@@ -345,7 +350,7 @@ public class CubeSerializer {
         }
 
         level.put("TileEntities", tileEntitiesNBTList);
-        if (icube.getCubeStatus().getChunkType() == ChunkStatus.ChunkType.PROTOCHUNK) {
+        if (chunkType == ChunkStatus.ChunkType.PROTOCHUNK) {
             CubePrimer cubePrimer = (CubePrimer) icube;
             ListTag listTag3 = new ListTag();
             listTag3.addAll(cubePrimer.getCubeEntities());

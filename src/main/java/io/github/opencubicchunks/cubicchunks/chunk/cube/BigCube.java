@@ -168,9 +168,9 @@ public class BigCube implements ChunkAccess, IBigCube, CubicLevelHeightAccessor 
         this.postLoadConsumer = postLoadConsumerIn;
 
         if (sectionsIn != null) {
-            if (sectionsIn.length != SECTION_COUNT) {
-                throw new IllegalStateException("Number of Sections must equal BigCube.CUBESIZE");
-            }
+//            if (sectionsIn.length != SECTION_COUNT) {
+//                throw new IllegalStateException("Number of Sections must equal BigCube.CUBESIZE");
+//            }
 
             for (int i = 0; i < sectionsIn.length; i++) {
                 int sectionYPos = cubeToSection(cubePosIn.getY(), indexToY(i));
