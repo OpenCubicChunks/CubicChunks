@@ -8,6 +8,7 @@ import javax.annotation.Nullable;
 import com.google.common.annotations.VisibleForTesting;
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.util.BitStorage;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.Heightmap;
@@ -50,9 +51,13 @@ public class SurfaceTrackerSection {
     }
 
     public SurfaceTrackerSection(int scale, int scaledY, SurfaceTrackerSection parent, IBigCube cube, Heightmap.Types types) {
+        this(scale, scaledY, parent, cube, types, null);
+    }
+
+    public SurfaceTrackerSection(int scale, int scaledY, SurfaceTrackerSection parent, IBigCube cube, Heightmap.Types types, @Nullable long[] rawData) {
 //      super((ChunkAccess) cube, types);
         // +1 in bit size to make room for null values
-        this.heights = new BitStorage(BASE_SIZE_BITS + 1 + scale * NODE_COUNT_BITS, WIDTH_BLOCKS * WIDTH_BLOCKS);
+        this.heights = new BitStorage(BASE_SIZE_BITS + 1 + scale * NODE_COUNT_BITS, WIDTH_BLOCKS * WIDTH_BLOCKS, rawData);
         this.dirtyPositions = new long[WIDTH_BLOCKS * WIDTH_BLOCKS / Long.SIZE];
         this.parent = parent;
         this.cubeOrNodes = scale == 0 ? cube : new SurfaceTrackerSection[NODE_COUNT];
@@ -321,5 +326,18 @@ public class SurfaceTrackerSection {
                 data.set(dx + dz * 16, y);
             }
         }
+    }
+
+    public CompoundTag writeCubeLocalHeightmap() {
+        if (scale != 0) {
+            throw new UnsupportedOperationException("This is not a cube local heightmap!");
+        }
+        CompoundTag tag = new CompoundTag();
+        tag.putLongArray("heights", this.heights.getRaw());
+        return tag;
+    }
+
+    public static SurfaceTrackerSection fromCubeSaveData(Heightmap.Types types, IBigCube cube, CompoundTag tag) {
+        return new SurfaceTrackerSection(0, cube.getCubePos().getY(), null, cube, types, tag.getLongArray("heights"));
     }
 }

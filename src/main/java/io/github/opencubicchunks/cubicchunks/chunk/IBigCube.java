@@ -90,6 +90,10 @@ public interface IBigCube extends BlockGetter, ChunkAccess, FeatureAccess {
     void setCubeInhabitedTime(long newCubeInhabitedTime);
     long getCubeInhabitedTime();
 
+    Map<Heightmap.Types, SurfaceTrackerSection[]> getSurfaceTrackers();
+
+    void setSurfaceTrackers(Heightmap.Types type, SurfaceTrackerSection[] trackers);
+
     int getCubeLocalHeight(Heightmap.Types heightmapType, int x, int z);
 
     default void loadHeightmapSection(SurfaceTrackerSection section, int localSectionX, int localSectionZZ) {

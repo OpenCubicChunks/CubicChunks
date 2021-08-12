@@ -167,6 +167,10 @@ public class CubePrimer extends ProtoChunk implements IBigCube, CubicLevelHeight
         }
     }
 
+    public Map<Heightmap.Types, SurfaceTrackerSection[]> getSurfaceTrackerSections() {
+        return this.heightmaps;
+    }
+
     @Override public CubePos getCubePos() {
         return this.cubePos;
     }
@@ -182,6 +186,8 @@ public class CubePrimer extends ProtoChunk implements IBigCube, CubicLevelHeight
             return ((ServerLevel) this.levelHeightAccessor).getChunkSource();
         }
     }
+
+
 
     //STATUS
     public void setCubeStatus(ChunkStatus newStatus) {
@@ -471,6 +477,13 @@ public class CubePrimer extends ProtoChunk implements IBigCube, CubicLevelHeight
         return this.inhabitedTime;
     }
 
+    @Override public Map<Heightmap.Types, SurfaceTrackerSection[]> getSurfaceTrackers() {
+        return this.heightmaps;
+    }
+
+    @Override public void setSurfaceTrackers(Heightmap.Types type, SurfaceTrackerSection[] trackers) {
+        this.heightmaps.put(type, trackers);
+    }
 
     @Override public FluidState getFluidState(BlockPos pos) {
         int x = pos.getX();

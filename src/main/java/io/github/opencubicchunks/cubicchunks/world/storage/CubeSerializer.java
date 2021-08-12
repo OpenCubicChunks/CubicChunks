@@ -2,6 +2,7 @@ package io.github.opencubicchunks.cubicchunks.world.storage;
 
 import java.util.Arrays;
 import java.util.BitSet;
+import java.util.EnumSet;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
@@ -16,6 +17,7 @@ import io.github.opencubicchunks.cubicchunks.chunk.biome.CubeBiomeContainer;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.BigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.CubePrimer;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.CubePrimerWrapper;
+import io.github.opencubicchunks.cubicchunks.chunk.heightmap.SurfaceTrackerSection;
 import io.github.opencubicchunks.cubicchunks.chunk.storage.AsyncSaveData;
 import io.github.opencubicchunks.cubicchunks.chunk.storage.POIDeserializationContext;
 import io.github.opencubicchunks.cubicchunks.chunk.util.ChunkIoMainThreadTaskUtils;
@@ -31,6 +33,7 @@ import net.minecraft.core.Registry;
 import net.minecraft.core.SectionPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.Tag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.ai.village.poi.PoiManager;
@@ -50,6 +53,7 @@ import net.minecraft.world.level.chunk.LevelChunkSection;
 import net.minecraft.world.level.chunk.ProtoTickList;
 import net.minecraft.world.level.chunk.storage.ChunkSerializer;
 import net.minecraft.world.level.levelgen.GenerationStep;
+import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.levelgen.feature.StructureFeature;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureManager;
 import net.minecraft.world.level.lighting.LevelLightEngine;
@@ -165,19 +169,17 @@ public class CubeSerializer {
         }
         icube.setCubeLight(isLightOn);
         //TODO: reimplement heightmap in save format
-//            CompoundTag compoundnbt3 = level.getCompound("Heightmaps");
-//            EnumSet<Heightmap.Type> enumset = EnumSet.noneOf(Heightmap.Type.class);
-//
-//            for(Heightmap.Type heightmap$type : icube.getCubeStatus().getHeightMaps()) {
-//                String s = heightmap$type.getId();
-//                if (compoundnbt3.contains(s, 12)) {
-//                    icube.setHeightmap(heightmap$type, compoundnbt3.getLongArray(s));
-//                } else {
-//                    enumset.add(heightmap$type);
-//                }
-//            }
-//
-//            Heightmap.updateChunkHeightmaps(icube, enumset);
+        CompoundTag heightmapsNBT = level.getCompound("Heightmaps");
+        for (Heightmap.Types types : EnumSet.allOf(Heightmap.Types.class)) {
+            SurfaceTrackerSection[] trackerSections = new SurfaceTrackerSection[IBigCube.DIAMETER_IN_SECTIONS * IBigCube.DIAMETER_IN_SECTIONS];
+            int idx = 0;
+            for (Tag tag : heightmapsNBT.getList(types.getSerializationKey(), 10)) {
+                trackerSections[idx] = SurfaceTrackerSection.fromCubeSaveData(types, icube, (CompoundTag) tag);
+                idx++;
+            }
+            icube.setSurfaceTrackers(types, trackerSections);
+        }
+
         CompoundTag structures = level.getCompound("Structures");
         icube.setAllStarts(ChunkSerializerAccess.invokeUnpackStructureStart(world, structures, world.getSeed()));
         icube.setAllReferences(unpackCubeStructureReferences(new ImposterChunkPos(cubePos), structures));
@@ -378,16 +380,17 @@ public class CubeSerializer {
         }
 
         level.put("PostProcessing", ChunkSerializer.packOffsets(icube.getPostProcessing()));
-//        CompoundTag compoundnbt6 = new CompoundTag();
-//
-        //TODO: reimplement heightmaps
-//        for(Map.Entry<Heightmap.Type, Heightmap> entry : icube.getHeightmaps()) {
-//            if (icube.getCubeStatus().getHeightMaps().contains(entry.getKey())) {
-//                compoundnbt6.put(entry.getKey().getId(), new LongArrayNBT(entry.getValue().getDataArray()));
-//            }
-//        }
-//
-//        level.put("Heightmaps", compoundnbt6);
+        CompoundTag heightMaps = new CompoundTag();
+
+        icube.getSurfaceTrackers().forEach((types, surfaceTrackerSections) -> {
+            ListTag cubeChunkHeightmaps = new ListTag();
+            for (SurfaceTrackerSection surfaceTrackerSection : surfaceTrackerSections) {
+                cubeChunkHeightmaps.add(surfaceTrackerSection.writeCubeLocalHeightmap());
+            }
+            heightMaps.put(types.getSerializationKey(), cubeChunkHeightmaps);
+        });
+
+        level.put("Heightmaps", heightMaps);
         level.put("Structures", ChunkSerializerAccess.invokePackStructureData(world, new ImposterChunkPos(icube.getCubePos()), icube.getAllStarts(), icube.getAllReferences()));
 
         return root;

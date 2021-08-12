@@ -221,6 +221,8 @@ public class BigCube implements ChunkAccess, IBigCube, CubicLevelHeightAccessor 
         this.setAllStarts(cubePrimer.getAllCubeStructureStarts());
         this.setAllReferences(cubePrimer.getAllReferences());
 
+        this.heightmaps.putAll(cubePrimer.getSurfaceTrackerSections());
+
         LightSurfaceTrackerSection[] primerLightHeightmaps = cubePrimer.getLightHeightmaps();
         for (int i = 0; i < IBigCube.CHUNK_COUNT; i++) {
             this.lightHeightmaps[i] = primerLightHeightmaps[i];
@@ -691,6 +693,10 @@ public class BigCube implements ChunkAccess, IBigCube, CubicLevelHeightAccessor 
         return this.inhabitedTime;
     }
 
+    @Override public Map<Heightmap.Types, SurfaceTrackerSection[]> getSurfaceTrackers() {
+        return this.heightmaps;
+    }
+
     @Deprecated @Override public void setInhabitedTime(long newInhabitedTime) {
         this.setCubeInhabitedTime(newInhabitedTime);
     }
@@ -824,6 +830,10 @@ public class BigCube implements ChunkAccess, IBigCube, CubicLevelHeightAccessor 
 
     @Override public void setHeightmap(Heightmap.Types type, long[] data) {
 
+    }
+
+    public void setSurfaceTrackers(Heightmap.Types type, SurfaceTrackerSection[] trackers) {
+        this.heightmaps.put(type, trackers);
     }
 
     @Override public Heightmap getOrCreateHeightmapUnprimed(Heightmap.Types typeIn) {
