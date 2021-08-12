@@ -44,6 +44,7 @@ import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.level.TickList;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.ChunkBiomeContainer;
 import net.minecraft.world.level.chunk.ChunkSource;
 import net.minecraft.world.level.chunk.ChunkStatus;
@@ -170,7 +171,7 @@ public class CubeSerializer {
         icube.setCubeLight(isLightOn);
         //TODO: reimplement heightmap in save format
         CompoundTag heightmapsNBT = level.getCompound("Heightmaps");
-        for (Heightmap.Types types : EnumSet.allOf(Heightmap.Types.class)) {
+        for (Heightmap.Types types : icube.getStatus().heightmapsAfter()) {
             SurfaceTrackerSection[] trackerSections = new SurfaceTrackerSection[IBigCube.DIAMETER_IN_SECTIONS * IBigCube.DIAMETER_IN_SECTIONS];
             int idx = 0;
             for (Tag tag : heightmapsNBT.getList(types.getSerializationKey(), 10)) {
@@ -383,11 +384,13 @@ public class CubeSerializer {
         CompoundTag heightMaps = new CompoundTag();
 
         icube.getSurfaceTrackers().forEach((types, surfaceTrackerSections) -> {
-            ListTag cubeChunkHeightmaps = new ListTag();
-            for (SurfaceTrackerSection surfaceTrackerSection : surfaceTrackerSections) {
-                cubeChunkHeightmaps.add(surfaceTrackerSection.writeCubeLocalHeightmap());
+            if (icube.getStatus().heightmapsAfter().contains(types)) {
+                ListTag cubeChunkHeightmaps = new ListTag();
+                for (SurfaceTrackerSection surfaceTrackerSection : surfaceTrackerSections) {
+                    cubeChunkHeightmaps.add(surfaceTrackerSection.writeCubeLocalHeightmap());
+                }
+                heightMaps.put(types.getSerializationKey(), cubeChunkHeightmaps);
             }
-            heightMaps.put(types.getSerializationKey(), cubeChunkHeightmaps);
         });
 
         level.put("Heightmaps", heightMaps);
