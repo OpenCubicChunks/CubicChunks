@@ -51,14 +51,15 @@ public class SurfaceTrackerSection {
     }
 
     public SurfaceTrackerSection(int scale, int scaledY, SurfaceTrackerSection parent, IBigCube cube, Heightmap.Types types) {
-        this(scale, scaledY, parent, cube, types, null);
+        this(scale, scaledY, parent, cube, types, null, null);
     }
 
-    public SurfaceTrackerSection(int scale, int scaledY, SurfaceTrackerSection parent, IBigCube cube, Heightmap.Types types, @Nullable long[] rawData) {
+    public SurfaceTrackerSection(int scale, int scaledY, SurfaceTrackerSection parent, IBigCube cube, Heightmap.Types types, @Nullable long[] dirtyPositions,
+                                 @Nullable long[] rawHeightData) {
 //      super((ChunkAccess) cube, types);
         // +1 in bit size to make room for null values
-        this.heights = new BitStorage(BASE_SIZE_BITS + 1 + scale * NODE_COUNT_BITS, WIDTH_BLOCKS * WIDTH_BLOCKS, rawData);
-        this.dirtyPositions = new long[WIDTH_BLOCKS * WIDTH_BLOCKS / Long.SIZE];
+        this.heights = new BitStorage(BASE_SIZE_BITS + 1 + scale * NODE_COUNT_BITS, WIDTH_BLOCKS * WIDTH_BLOCKS, rawHeightData);
+        this.dirtyPositions = dirtyPositions != null ? dirtyPositions : new long[WIDTH_BLOCKS * WIDTH_BLOCKS / Long.SIZE];
         this.parent = parent;
         this.cubeOrNodes = scale == 0 ? cube : new SurfaceTrackerSection[NODE_COUNT];
         this.scaledY = scaledY;
@@ -67,8 +68,7 @@ public class SurfaceTrackerSection {
     }
 
     /**
-     * Get the height for a given position. Recomputes the height if the column is marked dirty in this section.
-     * x and z are global coordinates.
+     * Get the height for a given position. Recomputes the height if the column is marked dirty in this section. x and z are global coordinates.
      */
     public int getHeight(int x, int z) {
         int idx = index(x, z);
@@ -333,11 +333,12 @@ public class SurfaceTrackerSection {
             throw new UnsupportedOperationException("This is not a cube local heightmap!");
         }
         CompoundTag tag = new CompoundTag();
+        tag.putLongArray("dirty", this.dirtyPositions);
         tag.putLongArray("heights", this.heights.getRaw());
         return tag;
     }
 
     public static SurfaceTrackerSection fromCubeSaveData(Heightmap.Types types, IBigCube cube, CompoundTag tag) {
-        return new SurfaceTrackerSection(0, cube.getCubePos().getY(), null, cube, types, tag.getLongArray("heights"));
+        return new SurfaceTrackerSection(0, cube.getCubePos().getY(), null, cube, types, tag.getLongArray("dirty"), tag.getLongArray("heights"));
     }
 }
