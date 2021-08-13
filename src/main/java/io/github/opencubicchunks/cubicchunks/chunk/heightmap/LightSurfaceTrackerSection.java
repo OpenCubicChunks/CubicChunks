@@ -8,6 +8,7 @@ import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.Heightmap;
@@ -28,6 +29,11 @@ public class LightSurfaceTrackerSection extends SurfaceTrackerSection {
         super(scale, scaledY, parent, cube, Heightmap.Types.WORLD_SURFACE);
     }
 
+    public LightSurfaceTrackerSection(int scale, int scaledY, SurfaceTrackerSection parent, IBigCube cube, Heightmap.Types types, @Nullable long[] dirtyPositions,
+                                      @Nullable long[] rawHeightData) {
+        super(scale, scaledY, parent, cube, types, dirtyPositions, rawHeightData);
+    }
+
     private LightSurfaceTrackerSection getRoot() {
         SurfaceTrackerSection section = this;
         while (section.parent != null) {
@@ -36,6 +42,9 @@ public class LightSurfaceTrackerSection extends SurfaceTrackerSection {
         return (LightSurfaceTrackerSection) section;
     }
 
+    public static LightSurfaceTrackerSection fromChunkTag(CompoundTag tag) {
+        return new LightSurfaceTrackerSection(tag.getByte("scale"), tag.getInt("scaledY"), null, null, Heightmap.Types.WORLD_SURFACE, null, tag.getLongArray("heights"));
+    }
     @Nullable
     @Override
     protected SurfaceTrackerSection loadNode(int newScaledY, int sectionScale, IBigCube newCube, boolean create) {

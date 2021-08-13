@@ -5,6 +5,7 @@ import static io.github.opencubicchunks.cubicchunks.utils.Coords.*;
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.HeightmapAccess;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.Tag;
 import net.minecraft.util.BitStorage;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.ChunkAccess;
@@ -59,12 +60,17 @@ public class SurfaceTrackerWrapper extends Heightmap {
         throw new UnsupportedOperationException();
     }
 
-    public void setRawSurfaceTrackerData(CompoundTag tag) {
+    public void setRawSurfaceTrackerDataFromTag(CompoundTag tag) {
 
     }
 
-    public CompoundTag save() {
-        return new CompoundTag();
+    public CompoundTag saveToDisk() {
+        this.surfaceTracker.clearDirtyPositions();
+        return this.surfaceTracker.getSaveTag();
+    }
+
+    public static SurfaceTrackerWrapper fromDiskCompound(ChunkAccess chunkAccess, Heightmap.Types type, CompoundTag chunkTag) {
+        return new SurfaceTrackerWrapper(chunkAccess, type, SurfaceTrackerSection.fromChunkTag(chunkTag, type));
     }
 
     @Override

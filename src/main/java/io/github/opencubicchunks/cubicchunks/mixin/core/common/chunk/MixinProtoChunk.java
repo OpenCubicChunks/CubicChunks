@@ -1,5 +1,8 @@
 package io.github.opencubicchunks.cubicchunks.mixin.core.common.chunk;
 
+import java.util.Map;
+
+import io.github.opencubicchunks.cubicchunks.chunk.ChunkHeightMapGetter;
 import io.github.opencubicchunks.cubicchunks.chunk.CubeMap;
 import io.github.opencubicchunks.cubicchunks.chunk.CubeMapGetter;
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
@@ -30,7 +33,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(ProtoChunk.class)
-public abstract class MixinProtoChunk implements LightHeightmapGetter, LevelHeightAccessor, CubeMapGetter, CubicLevelHeightAccessor {
+public abstract class MixinProtoChunk implements LightHeightmapGetter, LevelHeightAccessor, CubeMapGetter, CubicLevelHeightAccessor, ChunkHeightMapGetter {
 
     private boolean isCubic;
     private boolean generates2DChunks;
@@ -42,6 +45,8 @@ public abstract class MixinProtoChunk implements LightHeightmapGetter, LevelHeig
     @Shadow @Final private LevelHeightAccessor levelHeightAccessor;
 
     @Shadow public abstract ChunkStatus getStatus();
+
+    @Shadow @Final private Map<Heightmap.Types, Heightmap> heightmaps;
 
     @Override
     public Heightmap getLightHeightmap() {
@@ -58,6 +63,14 @@ public abstract class MixinProtoChunk implements LightHeightmapGetter, LevelHeig
             cubeMap = new CubeMap();
         }
         return cubeMap;
+    }
+
+    @Override public Map<Heightmap.Types, Heightmap> getHeightMaps() {
+        return this.heightmaps;
+    }
+
+    @Override public void setLightHeightmap(LightSurfaceTrackerWrapper surfaceTrackerWrapper) {
+        this.lightHeightmap = surfaceTrackerWrapper;
     }
 
     @Inject(method = "<init>(Lnet/minecraft/world/level/ChunkPos;Lnet/minecraft/world/level/chunk/UpgradeData;[Lnet/minecraft/world/level/chunk/LevelChunkSection;"

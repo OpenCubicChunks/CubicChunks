@@ -157,6 +157,18 @@ public class SurfaceTrackerSection {
         }
     }
 
+    public CompoundTag getSaveTag() {
+        CompoundTag tag = new CompoundTag();
+        tag.putLongArray("heights", this.heights.getRaw());
+        tag.putInt("scaledY", this.scaledY);
+        tag.putByte("scale", this.scale);
+        return tag;
+    }
+
+    public static SurfaceTrackerSection fromChunkTag(CompoundTag tag, Heightmap.Types types) {
+        return new SurfaceTrackerSection(tag.getByte("scale"), tag.getInt("scaledY"), null, null, types, null, tag.getLongArray("heights"));
+    }
+
     public void unloadCube(IBigCube cube) {
         if (this.cubeOrNodes == null) {
             throw new IllegalStateException("Attempting to unload cube " + cube.getCubePos() + " from an unloaded surface tracker section");
@@ -265,6 +277,19 @@ public class SurfaceTrackerSection {
         return (z & 0xF) * WIDTH_BLOCKS + (x & 0xF);
     }
 
+    public void clearDirtyPositions() {
+        SurfaceTrackerSection parent = this;
+//        while (parent.getParent() != null) {
+//            parent = parent.getParent();
+//        }
+
+        for (int x = 0; x < WIDTH_BLOCKS; x++) {
+            for (int z = 0; z < WIDTH_BLOCKS; z++) {
+                parent.getHeight(x, z);
+            }
+        }
+    }
+
     @VisibleForTesting
     static int indexOfRawHeightNode(int y, int nodeScale, int nodeScaledY) {
         if (nodeScale == 0) {
@@ -333,12 +358,11 @@ public class SurfaceTrackerSection {
             throw new UnsupportedOperationException("This is not a cube local heightmap!");
         }
         CompoundTag tag = new CompoundTag();
-        tag.putLongArray("dirty", this.dirtyPositions);
         tag.putLongArray("heights", this.heights.getRaw());
         return tag;
     }
 
     public static SurfaceTrackerSection fromCubeSaveData(Heightmap.Types types, IBigCube cube, CompoundTag tag) {
-        return new SurfaceTrackerSection(0, cube.getCubePos().getY(), null, cube, types, tag.getLongArray("dirty"), tag.getLongArray("heights"));
+        return new SurfaceTrackerSection(0, cube.getCubePos().getY(), null, cube, types, null, tag.getLongArray("heights"));
     }
 }

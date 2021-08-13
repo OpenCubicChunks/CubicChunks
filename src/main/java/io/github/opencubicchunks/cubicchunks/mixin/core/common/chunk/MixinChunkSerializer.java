@@ -2,15 +2,21 @@ package io.github.opencubicchunks.cubicchunks.mixin.core.common.chunk;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 
 import javax.annotation.Nullable;
 
+import io.github.opencubicchunks.cubicchunks.chunk.ChunkHeightMapGetter;
+import io.github.opencubicchunks.cubicchunks.chunk.LightHeightmapGetter;
 import io.github.opencubicchunks.cubicchunks.chunk.biome.ColumnBiomeContainer;
+import io.github.opencubicchunks.cubicchunks.chunk.heightmap.LightSurfaceTrackerWrapper;
+import io.github.opencubicchunks.cubicchunks.chunk.heightmap.SurfaceTrackerWrapper;
 import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import net.minecraft.SharedConstants;
 import net.minecraft.core.Registry;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.Tag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.ai.village.poi.PoiManager;
 import net.minecraft.world.level.ChunkPos;
@@ -24,6 +30,7 @@ import net.minecraft.world.level.chunk.ProtoChunk;
 import net.minecraft.world.level.chunk.ProtoTickList;
 import net.minecraft.world.level.chunk.UpgradeData;
 import net.minecraft.world.level.chunk.storage.ChunkSerializer;
+import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureManager;
 import net.minecraft.world.level.material.Fluids;
 import org.apache.logging.log4j.Logger;
@@ -82,14 +89,16 @@ public abstract class MixinChunkSerializer {
             }
         }
         newChunk.setLightCorrect(true);
-//        CompoundTag heightmaps = level.getCompound("Heightmaps");
-//
-//        for(Heightmap.Types heightmapType : newChunk.getStatus().heightmapsAfter()) {
-//            String s = heightmapType.getSerializationKey();
-//            if (heightmaps.contains(s, 12)) { // nbt long array
-//                newChunk.setHeightmap(heightmapType, heightmaps.getLongArray(s));
-//            }
-//        }
+        CompoundTag heightmaps = level.getCompound("Heightmaps");
+
+        for (Heightmap.Types heightmapType : newChunk.getStatus().heightmapsAfter()) {
+            String s = heightmapType.getSerializationKey();
+            if (heightmaps.contains(s)) {
+                ((ChunkHeightMapGetter) newChunk).getHeightMaps().put(heightmapType, SurfaceTrackerWrapper.fromDiskCompound(newChunk, heightmapType, heightmaps.getCompound(s)));
+            }
+        }
+        ((ChunkHeightMapGetter) newChunk).setLightHeightmap(LightSurfaceTrackerWrapper.fromDiskCompound(newChunk, level));
+
         // for ChunkSerializerMixin from fabric-structure-api-v1.mixins to target
         newChunk.setAllReferences(new HashMap<>());
         if (level.getBoolean("shouldSave")) {
@@ -108,7 +117,7 @@ public abstract class MixinChunkSerializer {
      * @reason Save only columns
      */
     @Inject(method = "write", at = @At("HEAD"), cancellable = true)
-    private static void write(ServerLevel worldIn, ChunkAccess chunkIn, CallbackInfoReturnable<CompoundTag> cir) {
+    private static void write(ServerLevel worldIn, ChunkAccess chunk, CallbackInfoReturnable<CompoundTag> cir) {
         if (!((CubicLevelHeightAccessor) worldIn).isCubic()) {
             return;
         }
@@ -116,23 +125,30 @@ public abstract class MixinChunkSerializer {
         cir.cancel();
 
 
-        ChunkPos chunkpos = chunkIn.getPos();
+        ChunkPos chunkpos = chunk.getPos();
         CompoundTag compoundnbt = new CompoundTag();
         CompoundTag level = new CompoundTag();
         compoundnbt.putInt("DataVersion", SharedConstants.getCurrentVersion().getWorldVersion());
         compoundnbt.put("Level", level);
         level.putInt("xPos", chunkpos.x);
         level.putInt("zPos", chunkpos.z);
-        level.putLong("InhabitedTime", chunkIn.getInhabitedTime());
-        level.putString("Status", chunkIn.getStatus().getName());
+        level.putLong("InhabitedTime", chunk.getInhabitedTime());
+        level.putString("Status", chunk.getStatus().getName());
 
-//        CompoundTag heightmaps = new CompoundTag();
-//        for(Map.Entry<Heightmap.Types, Heightmap> entry : chunkIn.getHeightmaps()) {
-//            if (chunkIn.getStatus().heightmapsAfter().contains(entry.getKey())) {
-//                heightmaps.put(entry.getKey().getSerializationKey(), new LongArrayTag(entry.getValue().getRawData()));
-//            }
-//        }
-//        level.put("Heightmaps", heightmaps);
+        CompoundTag heightmaps = new CompoundTag();
+
+        for (Map.Entry<Heightmap.Types, Heightmap> typesHeightmapEntry : chunk.getHeightmaps()) {
+            Map.Entry<Heightmap.Types, Heightmap> entry = typesHeightmapEntry;
+            if (chunk.getStatus().heightmapsAfter().contains(entry.getKey())) {
+                Heightmap value = entry.getValue();
+                if (value instanceof SurfaceTrackerWrapper) {
+                    Heightmap.Types heightMapType = typesHeightmapEntry.getKey();
+                    heightmaps.put(heightMapType.getSerializationKey(), ((SurfaceTrackerWrapper) value).saveToDisk());
+                }
+            }
+        }
+        level.put("Heightmaps", heightmaps);
+        level.put("LightHeightmap", ((LightHeightmapGetter) chunk).getServerLightHeightmap().saveToDisk());
         cir.setReturnValue(compoundnbt);
     }
 }

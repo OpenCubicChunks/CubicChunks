@@ -1,9 +1,11 @@
 package io.github.opencubicchunks.cubicchunks.mixin.core.common.chunk;
 
+import java.util.Map;
 import java.util.concurrent.CompletionException;
 import java.util.function.Consumer;
 
 import io.github.opencubicchunks.cubicchunks.chunk.ChunkCubeGetter;
+import io.github.opencubicchunks.cubicchunks.chunk.ChunkHeightMapGetter;
 import io.github.opencubicchunks.cubicchunks.chunk.CubeMap;
 import io.github.opencubicchunks.cubicchunks.chunk.CubeMapGetter;
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
@@ -51,7 +53,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(value = LevelChunk.class, priority = 0) //Priority 0 to always ensure our redirects are on top. Should also prevent fabric api crashes that have occur(ed) here. See removeTileEntity
 
-public abstract class MixinChunk implements ChunkAccess, LightHeightmapGetter, CubeMapGetter, CubicLevelHeightAccessor, ChunkCubeGetter {
+public abstract class MixinChunk implements ChunkAccess, LightHeightmapGetter, CubeMapGetter, CubicLevelHeightAccessor, ChunkCubeGetter, ChunkHeightMapGetter {
 
     @Shadow @Final private Level level;
     @Shadow @Final private ChunkPos chunkPos;
@@ -73,6 +75,8 @@ public abstract class MixinChunk implements ChunkAccess, LightHeightmapGetter, C
 
     @Shadow public abstract Level getLevel();
 
+    @Shadow @Final private Map<Heightmap.Types, Heightmap> heightmaps;
+
     @Override public boolean isYSpaceEmpty(int startY, int endY) {
         return false;
     }
@@ -83,6 +87,14 @@ public abstract class MixinChunk implements ChunkAccess, LightHeightmapGetter, C
             throw new UnsupportedOperationException("Attempted to get light heightmap on a non-cubic chunk");
         }
         return lightHeightmap;
+    }
+
+    @Override public Map<Heightmap.Types, Heightmap> getHeightMaps() {
+        return this.heightmaps;
+    }
+
+    @Override public void setLightHeightmap(LightSurfaceTrackerWrapper surfaceTrackerWrapper) {
+        this.lightHeightmap = surfaceTrackerWrapper;
     }
 
     @Override

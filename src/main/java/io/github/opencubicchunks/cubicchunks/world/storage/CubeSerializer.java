@@ -393,11 +393,12 @@ public class CubeSerializer {
 
         icube.getSurfaceTrackers().forEach((types, surfaceTrackerSections) -> {
             if (icube.getStatus().heightmapsAfter().contains(types)) {
-                ListTag cubeChunkHeightmaps = new ListTag();
+                ListTag cubeHeightmaps = new ListTag();
                 for (SurfaceTrackerSection surfaceTrackerSection : surfaceTrackerSections) {
-                    cubeChunkHeightmaps.add(surfaceTrackerSection.writeCubeLocalHeightmap());
+                    surfaceTrackerSection.clearDirtyPositions();
+                    cubeHeightmaps.add(surfaceTrackerSection.writeCubeLocalHeightmap());
                 }
-                heightMaps.put(types.getSerializationKey(), cubeChunkHeightmaps);
+                heightMaps.put(types.getSerializationKey(), cubeHeightmaps);
             }
         });
 
