@@ -21,6 +21,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.IntArrayTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.util.thread.ProcessorMailbox;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.level.chunk.storage.EntityStorage;
@@ -39,9 +40,9 @@ public abstract class MixinEntityStorage implements CubicEntityStorage {
 
     @Shadow @Final private ServerLevel level;
 
-    private RegionCubeIO cubeWorker;
+    @Shadow @Final private ProcessorMailbox<Runnable> entityDeserializerQueue;
 
-    @Shadow @Final private Executor mainThreadExecutor;
+    private RegionCubeIO cubeWorker;
 
     @Shadow protected abstract CompoundTag upgradeChunkTag(CompoundTag chunkTag);
 
@@ -76,7 +77,7 @@ public abstract class MixinEntityStorage implements CubicEntityStorage {
                 List<Entity> list = EntityType.loadEntitiesRecursive(listTag, this.level).collect(ImmutableList.toImmutableList());
                 return new ChunkEntities<>(new ImposterChunkPos(pos), list);
             }
-        }, this.mainThreadExecutor);
+        }, this.entityDeserializerQueue::tell);
     }
 
     private static ChunkEntities<Entity> emptyCube(CubePos pos) {
