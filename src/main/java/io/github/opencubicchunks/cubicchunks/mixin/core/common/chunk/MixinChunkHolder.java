@@ -190,7 +190,7 @@ public abstract class MixinChunkHolder implements ICubeHolder {
     @Dynamic
     @Inject(method = "updateCubeFutures",
         at = @At(
-            value = "FIELD", opcode = Opcodes.PUTFIELD, ordinal = 0,
+            value = "FIELD", opcode = Opcodes.PUTFIELD, ordinal = 0, shift = At.Shift.AFTER,
             target = "Lnet/minecraft/server/level/ChunkHolder;tickingChunkFuture:Ljava/util/concurrent/CompletableFuture;"
         ),
         slice = @Slice(
@@ -199,15 +199,22 @@ public abstract class MixinChunkHolder implements ICubeHolder {
                 target = "Lnet/minecraft/server/level/ChunkMap;prepareTickingChunk(Lnet/minecraft/server/level/ChunkHolder;)Ljava/util/concurrent/CompletableFuture;"
             )
         ))
-    private void onSetChunkTicking(ChunkMap chunkStorage, Executor executor, CallbackInfo ci) {
-        ServerTickList<Block> blockTicks = ((ChunkManagerAccess) chunkStorage).getLevel().getBlockTicks();
-        ServerTickList<Fluid> liquidTicks = ((ChunkManagerAccess) chunkStorage).getLevel().getLiquidTicks();
-        if (blockTicks instanceof CubicFastServerTickList) {
-            ((CubicFastServerTickList<Block>) blockTicks).onCubeStartTicking(this.cubePos);
-        }
-        if (liquidTicks instanceof CubicFastServerTickList) {
-            ((CubicFastServerTickList<Fluid>) liquidTicks).onCubeStartTicking(this.cubePos);
-        }
+    private void onSetChunkTicking(ChunkMap chunkStorage, Executor mainThreadExecutor, CallbackInfo ci) {
+        tickingChunkFuture.whenCompleteAsync((val, throwable) -> {
+            if (throwable != null) {
+                return;
+            }
+            val.left().ifPresent(cube -> {
+                ServerTickList<Block> blockTicks = ((ChunkManagerAccess) chunkStorage).getLevel().getBlockTicks();
+                ServerTickList<Fluid> liquidTicks = ((ChunkManagerAccess) chunkStorage).getLevel().getLiquidTicks();
+                if (blockTicks instanceof CubicFastServerTickList) {
+                    ((CubicFastServerTickList<Block>) blockTicks).onCubeStartTicking(this.cubePos);
+                }
+                if (liquidTicks instanceof CubicFastServerTickList) {
+                    ((CubicFastServerTickList<Fluid>) liquidTicks).onCubeStartTicking(this.cubePos);
+                }
+            });
+        }, mainThreadExecutor);
     }
 
     @Dynamic

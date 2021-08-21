@@ -23,6 +23,7 @@ import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.ChunkSerializerAccess;
 import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
+import io.github.opencubicchunks.cubicchunks.world.CubicServerTickList;
 import io.github.opencubicchunks.cubicchunks.world.lighting.IWorldLightManager;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
@@ -363,7 +364,7 @@ public class CubeSerializer {
         } else if (data != null) {
             level.put("TileTicks", data.serverBlockTicks.get());
         } else {
-            level.put("TileTicks", world.getBlockTicks().save(new ImposterChunkPos(icube.getCubePos())));
+            level.put("TileTicks", ((CubicServerTickList<?>) world.getBlockTicks()).save(icube.getCubePos()));
         }
 
         TickList<Fluid> tickList2 = icube.getLiquidTicks();
@@ -374,7 +375,7 @@ public class CubeSerializer {
         } else if (data != null) {
             level.put("LiquidTicks", data.serverLiquidTicks.get());
         } else {
-            level.put("LiquidTicks", world.getLiquidTicks().save(new ImposterChunkPos(icube.getCubePos())));
+            level.put("LiquidTicks", ((CubicServerTickList<?>) world.getLiquidTicks()).save(icube.getCubePos()));
         }
 
         level.put("PostProcessing", ChunkSerializer.packOffsets(icube.getPostProcessing()));
