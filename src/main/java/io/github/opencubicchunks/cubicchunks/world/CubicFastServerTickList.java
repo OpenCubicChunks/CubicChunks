@@ -234,12 +234,7 @@ public class CubicFastServerTickList<T> extends ServerTickList<T> implements Chu
             || pos.getX() >= bounds.maxX() || pos.getY() >= bounds.maxY() || pos.getZ() >= bounds.maxZ();
     }
 
-    @Override
-    public void copy(BoundingBox box, BlockPos offset) {
-        throw new UnsupportedOperationException("Not yet implemented");
-    }
-
-    // vanilla save() is fine
+    // vanilla save() and copy() is fine
 
     @Override public ListTag save(CubePos cubePos) {
         List<TickNextTickData<T>> list = this.fetchTicksInCube(cubePos, false, true);
