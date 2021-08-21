@@ -2,6 +2,10 @@ package io.github.opencubicchunks.cubicchunks.chunk.heightmap;
 
 import static io.github.opencubicchunks.cubicchunks.utils.Coords.*;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.HeightmapAccess;
 import net.minecraft.nbt.CompoundTag;
@@ -39,11 +43,11 @@ public class SurfaceTrackerWrapper extends Heightmap {
     }
 
     /**
-     *
      * @param columnLocalX column-local x
      * @param globalY global y
      * @param columnLocalZ column-local z
      * @param blockState unused.
+     *
      * @return currently unused; always false
      */
     @Override
@@ -62,10 +66,6 @@ public class SurfaceTrackerWrapper extends Heightmap {
     @Override
     public void setRawData(ChunkAccess clv, Types a, long[] ls) {
         throw new UnsupportedOperationException();
-    }
-
-    public void setRawSurfaceTrackerDataFromTag(CompoundTag tag) {
-
     }
 
     public CompoundTag saveToDisk() {

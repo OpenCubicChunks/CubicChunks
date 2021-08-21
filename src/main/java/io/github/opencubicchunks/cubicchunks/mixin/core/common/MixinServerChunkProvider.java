@@ -4,6 +4,7 @@ import static io.github.opencubicchunks.cubicchunks.chunk.util.Utils.*;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
@@ -23,6 +24,7 @@ import io.github.opencubicchunks.cubicchunks.chunk.IVerticalView;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.BigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.CubeStatus;
 import io.github.opencubicchunks.cubicchunks.chunk.graph.CCTicketType;
+import io.github.opencubicchunks.cubicchunks.chunk.heightmap.SurfaceTrackerSection;
 import io.github.opencubicchunks.cubicchunks.chunk.ticket.ITicketManager;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.ChunkManagerAccess;
@@ -52,6 +54,7 @@ import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.ChunkGenerator;
 import net.minecraft.world.level.chunk.ChunkStatus;
 import net.minecraft.world.level.entity.ChunkStatusUpdateListener;
+import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureManager;
 import net.minecraft.world.level.storage.DimensionDataStorage;
 import net.minecraft.world.level.storage.LevelData;
@@ -362,6 +365,7 @@ public abstract class MixinServerChunkProvider implements IServerChunkProvider, 
                 this.level.getProfiler().push("broadcast");
                 ((ICubeHolder) cubeHolder).broadcastChanges(cube);
                 this.level.getProfiler().pop();
+                Map<Heightmap.Types, List<SurfaceTrackerSection>[]> cubeHeightmapDirectParentChildren = cube.getCubeHeightmapDirectParentChildren();
 
                 if (!((IChunkManager) this.chunkMap).noPlayersCloseForSpawning(cube.getCubePos())) {
                     // TODO probably want to make sure column-based inhabited time works too

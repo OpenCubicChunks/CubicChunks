@@ -1,5 +1,7 @@
 package io.github.opencubicchunks.cubicchunks.chunk;
 
+import java.util.EnumMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Stream;
@@ -91,6 +93,22 @@ public interface IBigCube extends BlockGetter, ChunkAccess, FeatureAccess {
     long getCubeInhabitedTime();
 
     Map<Heightmap.Types, SurfaceTrackerSection[]> getSurfaceTrackers();
+
+    default Map<Heightmap.Types, List<SurfaceTrackerSection>[]> getCubeHeightmapDirectParentChildren() {
+        Map<Heightmap.Types, List<SurfaceTrackerSection>[]> childrenNodes = new EnumMap<>(Heightmap.Types.class);
+        this.getSurfaceTrackers().forEach(((types, surfaceTrackerSections) -> {
+            @SuppressWarnings("unchecked")
+            List<SurfaceTrackerSection>[] childrenSections = new List[IBigCube.DIAMETER_IN_SECTIONS * IBigCube.DIAMETER_IN_SECTIONS];
+
+            for (int i = 0, surfaceTrackerSectionsLength = surfaceTrackerSections.length; i < surfaceTrackerSectionsLength; i++) {
+                SurfaceTrackerSection surfaceTrackerSection = surfaceTrackerSections[i];
+                childrenSections[i] = surfaceTrackerSection.getDirectParentChildren();
+            }
+            childrenNodes.put(types, childrenSections);
+        }));
+
+        return childrenNodes;
+    }
 
     void setSurfaceTrackers(Heightmap.Types type, SurfaceTrackerSection[] trackers);
 

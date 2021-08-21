@@ -1,5 +1,6 @@
 package io.github.opencubicchunks.cubicchunks.chunk.heightmap;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.function.Predicate;
 
@@ -67,6 +68,39 @@ public class SurfaceTrackerSection {
         this.scale = (byte) scale;
         this.heightmapType = (byte) types.ordinal();
         this.fromDisk = rawHeightData != null;
+    }
+
+    public Object getCubeOrNodes() {
+        return cubeOrNodes;
+    }
+
+    public static void getDirectParentChildren(SurfaceTrackerSection surfaceTrackerSection, ArrayList<SurfaceTrackerSection> children) {
+        // Add current nodes cubes if children exist.
+        if (surfaceTrackerSection.cubeOrNodes instanceof SurfaceTrackerSection[]) {
+            Object cubeOrNodes = surfaceTrackerSection.getCubeOrNodes();
+            if (cubeOrNodes instanceof SurfaceTrackerSection[]) {
+                for (SurfaceTrackerSection cubeOrNode : ((SurfaceTrackerSection[]) cubeOrNodes)) {
+                    if (cubeOrNode != null) {
+                        children.add(cubeOrNode);
+                    }
+                }
+            }
+        }
+
+        // Call parent and add its children if they exist.
+        SurfaceTrackerSection parent = surfaceTrackerSection.getParent();
+        if (parent != null) {
+            getDirectParentChildren(parent, children);
+        }
+    }
+
+    public ArrayList<SurfaceTrackerSection> getDirectParentChildren() {
+        ArrayList<SurfaceTrackerSection> nodesForCube = new ArrayList<>();
+        if (this.parent != null) {
+            getDirectParentChildren(this.parent, nodesForCube);
+        }
+
+        return nodesForCube;
     }
 
     /**
