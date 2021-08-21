@@ -189,8 +189,7 @@ public class CubicFastServerTickList<T> extends ServerTickList<T> implements Chu
         CubePos cubePos = CubePos.from(pos);
         TickListSet<T> ticks = tickNextTickSet.computeIfAbsent(cubePos, x -> new TickListSet<>());
         TickNextTickData<T> tick = new TickNextTickData<>(pos, object, delay + this.level.getGameTime(), priority);
-        ticks.set.add(tick);
-        if (ticks.isFullyTicking()) {
+        if (ticks.set.add(tick) && ticks.isFullyTicking()) {
             tickNextTickList.add(tick);
         }
     }
