@@ -41,6 +41,7 @@ public class SurfaceTrackerSection {
     protected final int scaledY;
     protected final byte scale;
     private final byte heightmapType;
+    public final boolean fromDisk;
 
     public SurfaceTrackerSection(Heightmap.Types types) {
         this(MAX_SCALE, 0, null, types);
@@ -65,6 +66,7 @@ public class SurfaceTrackerSection {
         this.scaledY = scaledY;
         this.scale = (byte) scale;
         this.heightmapType = (byte) types.ordinal();
+        this.fromDisk = rawHeightData != null;
     }
 
     /**

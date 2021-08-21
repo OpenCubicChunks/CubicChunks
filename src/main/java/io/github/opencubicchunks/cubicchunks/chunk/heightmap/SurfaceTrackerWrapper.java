@@ -5,7 +5,6 @@ import static io.github.opencubicchunks.cubicchunks.utils.Coords.*;
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.HeightmapAccess;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.Tag;
 import net.minecraft.util.BitStorage;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.ChunkAccess;
@@ -18,12 +17,16 @@ public class SurfaceTrackerWrapper extends Heightmap {
     /** global z of min block in column */
     protected final int dz;
 
+    private final boolean fromDisk;
+
     public SurfaceTrackerWrapper(ChunkAccess chunkAccess, Types types) {
         super(chunkAccess, types);
         ((HeightmapAccess) this).setIsOpaque(null);
         this.surfaceTracker = new SurfaceTrackerSection(types);
         this.dx = sectionToMinBlock(chunkAccess.getPos().x);
         this.dz = sectionToMinBlock(chunkAccess.getPos().z);
+        this.fromDisk = false;
+
     }
 
     protected SurfaceTrackerWrapper(ChunkAccess chunkAccess, Types types, SurfaceTrackerSection root) {
@@ -32,6 +35,7 @@ public class SurfaceTrackerWrapper extends Heightmap {
         this.surfaceTracker = root;
         this.dx = sectionToMinBlock(chunkAccess.getPos().x);
         this.dz = sectionToMinBlock(chunkAccess.getPos().z);
+        this.fromDisk = root.fromDisk;
     }
 
     /**
@@ -82,7 +86,7 @@ public class SurfaceTrackerWrapper extends Heightmap {
 
     public void loadCube(IBigCube cube) {
         // TODO loading should only cause marking as dirty if not loading from save file
-        this.surfaceTracker.loadCube(blockToCubeLocalSection(dx), blockToCubeLocalSection(dz), cube, true);
+        this.surfaceTracker.loadCube(blockToCubeLocalSection(dx), blockToCubeLocalSection(dz), cube, !this.fromDisk);
     }
 
     public void unloadCube(IBigCube cube) {
