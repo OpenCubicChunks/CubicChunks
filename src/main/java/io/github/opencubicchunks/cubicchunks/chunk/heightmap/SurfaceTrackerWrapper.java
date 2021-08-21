@@ -92,4 +92,8 @@ public class SurfaceTrackerWrapper extends Heightmap {
     public void unloadCube(IBigCube cube) {
         this.surfaceTracker.getCubeNode(cube.getCubePos().getY()).unloadCube(cube);
     }
+
+    public SurfaceTrackerSection getSurfaceTracker() {
+        return surfaceTracker;
+    }
 }

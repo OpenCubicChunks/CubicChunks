@@ -600,6 +600,11 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
         return Iterables.unmodifiableIterable(this.visibleCubeMap.values());
     }
 
+    @Override
+    public Iterable<ChunkHolder> getUpdatingCubes() {
+        return Iterables.unmodifiableIterable(this.updatingCubeMap.values());
+    }
+
     // func_219244_a, schedule
     @Override
     public CompletableFuture<Either<IBigCube, ChunkHolder.ChunkLoadingFailure>> scheduleCube(ChunkHolder cubeHolder, ChunkStatus chunkStatusIn) {

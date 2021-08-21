@@ -6,6 +6,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.function.Consumer;
@@ -25,6 +26,7 @@ import io.github.opencubicchunks.cubicchunks.chunk.cube.BigCube;
 import io.github.opencubicchunks.cubicchunks.chunk.cube.CubeStatus;
 import io.github.opencubicchunks.cubicchunks.chunk.graph.CCTicketType;
 import io.github.opencubicchunks.cubicchunks.chunk.heightmap.SurfaceTrackerSection;
+import io.github.opencubicchunks.cubicchunks.chunk.heightmap.SurfaceTrackerWrapper;
 import io.github.opencubicchunks.cubicchunks.chunk.ticket.ITicketManager;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.ChunkManagerAccess;
@@ -34,6 +36,9 @@ import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import io.github.opencubicchunks.cubicchunks.world.CubicNaturalSpawner;
 import io.github.opencubicchunks.cubicchunks.world.lighting.ICubeLightProvider;
 import io.github.opencubicchunks.cubicchunks.world.server.IServerWorld;
+import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
+import it.unimi.dsi.fastutil.objects.ReferenceArraySet;
+import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
 import net.minecraft.Util;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.SectionPos;
@@ -53,6 +58,7 @@ import net.minecraft.world.level.NaturalSpawner;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.ChunkGenerator;
 import net.minecraft.world.level.chunk.ChunkStatus;
+import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.entity.ChunkStatusUpdateListener;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureManager;
@@ -93,6 +99,8 @@ public abstract class MixinServerChunkProvider implements IServerChunkProvider, 
     @Shadow @org.jetbrains.annotations.Nullable protected abstract ChunkHolder getVisibleChunkIfPresent(long pos);
 
     @Shadow abstract boolean runDistanceManagerUpdates();
+
+    @Shadow @org.jetbrains.annotations.Nullable public abstract ChunkAccess getChunk(int x, int z, ChunkStatus leastStatus, boolean create);
 
     @Override
     public <T> void addCubeRegionTicket(TicketType<T> type, CubePos pos, int distance, T value) {
@@ -318,6 +326,7 @@ public abstract class MixinServerChunkProvider implements IServerChunkProvider, 
                                                  ChunkStatusUpdateListener chunkStatusUpdateListener, Supplier<DimensionDataStorage> supplier, CallbackInfo ci) {
         ((IChunkManager) this.chunkMap).setServerChunkCache((ServerChunkCache) (Object) this);
     }
+
     /**
      * @author Barteks2x
      * @reason sections
@@ -357,6 +366,35 @@ public abstract class MixinServerChunkProvider implements IServerChunkProvider, 
             return;
         }
 
+        Set<SurfaceTrackerSection> allLoaded = new ReferenceOpenHashSet<>();
+
+
+        ((IChunkManager) this.chunkMap).getUpdatingCubes().forEach((cubeHolder) -> {
+            BigCube heightmapCube = ((ICubeHolder) cubeHolder).getCubeIfComplete();
+            if (heightmapCube != null) {
+                Map<Heightmap.Types, List<SurfaceTrackerSection>[]> cubeHeightmapDirectParentChildren = heightmapCube.getCubeHeightmapDirectParentChildren();
+                cubeHeightmapDirectParentChildren.forEach(((types, lists) -> {
+                    for (List<SurfaceTrackerSection> list : lists) {
+                        allLoaded.addAll(list);
+                    }
+                }));
+            }
+        });
+
+        for (ChunkHolder value : ((ChunkManagerAccess) this.chunkMap).getUpdatingChunkMap().values()) {
+            Either<LevelChunk, ChunkHolder.ChunkLoadingFailure> now = value.getFullChunkFuture().getNow(null);
+            if (now != null) {
+                Optional<LevelChunk> left = now.left();
+                if (left.isPresent()) {
+                    LevelChunk levelChunk = left.get();
+                    for (Map.Entry<Heightmap.Types, Heightmap> heightmap : levelChunk.getHeightmaps()) {
+                        SurfaceTrackerSection surfaceTracker = ((SurfaceTrackerWrapper) heightmap.getValue()).getSurfaceTracker();
+                        recursivelyRemoveChildren(surfaceTracker, allLoaded);
+                    }
+                }
+            }
+        }
+
         ((IChunkManager) this.chunkMap).getCubes().forEach((cubeHolder) -> {
             Optional<BigCube> optional =
                 ((ICubeHolder) cubeHolder).getCubeEntityTickingFuture().getNow(ICubeHolder.UNLOADED_CUBE).left();
@@ -365,7 +403,6 @@ public abstract class MixinServerChunkProvider implements IServerChunkProvider, 
                 this.level.getProfiler().push("broadcast");
                 ((ICubeHolder) cubeHolder).broadcastChanges(cube);
                 this.level.getProfiler().pop();
-                Map<Heightmap.Types, List<SurfaceTrackerSection>[]> cubeHeightmapDirectParentChildren = cube.getCubeHeightmapDirectParentChildren();
 
                 if (!((IChunkManager) this.chunkMap).noPlayersCloseForSpawning(cube.getCubePos())) {
                     // TODO probably want to make sure column-based inhabited time works too
@@ -380,6 +417,23 @@ public abstract class MixinServerChunkProvider implements IServerChunkProvider, 
                 }
             }
         });
+    }
+
+    private static void recursivelyRemoveChildren(SurfaceTrackerSection surfaceTrackerSection, Set<SurfaceTrackerSection> requiredSections) {
+        Object cubeOrNodes = surfaceTrackerSection.getCubeOrNodes();
+
+        if (cubeOrNodes instanceof SurfaceTrackerSection[] children) {
+            for (int i = 0, orNodesLength = children.length; i < orNodesLength; i++) {
+                SurfaceTrackerSection child = children[i];
+                if (child != null) {
+                    recursivelyRemoveChildren(child, requiredSections);
+                }
+                if (!requiredSections.contains(child)) {
+                    //TODO: Save then remove.
+                    children[i] = null;
+                }
+            }
+        }
     }
 
     private void getFullCube(long pos, Consumer<ChunkAccess> chunkConsumer) {

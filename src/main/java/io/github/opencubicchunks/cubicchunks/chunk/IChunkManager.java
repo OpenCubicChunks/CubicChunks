@@ -55,6 +55,8 @@ public interface IChunkManager {
 
     Iterable<ChunkHolder> getCubes();
 
+    Iterable<ChunkHolder> getUpdatingCubes();
+
     // func_219215_b, checkerboardDistance
     // replacement of func_219215_b, checkerboardDistance, checks iew distance instead of returning distance
     // because we also have vertical view distance

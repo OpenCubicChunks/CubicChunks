@@ -2,6 +2,7 @@ package io.github.opencubicchunks.cubicchunks.mixin.access.common;
 
 import javax.annotation.Nullable;
 
+import it.unimi.dsi.fastutil.longs.Long2ObjectLinkedOpenHashMap;
 import net.minecraft.server.level.ChunkHolder;
 import net.minecraft.server.level.ChunkMap;
 import net.minecraft.world.level.ChunkPos;
@@ -18,4 +19,6 @@ public interface ChunkManagerAccess {
     @Accessor int getViewDistance();
 
     @Invoker void invokeReleaseLightTicket(ChunkPos pos);
+
+    @Accessor Long2ObjectLinkedOpenHashMap<ChunkHolder> getUpdatingChunkMap();
 }
