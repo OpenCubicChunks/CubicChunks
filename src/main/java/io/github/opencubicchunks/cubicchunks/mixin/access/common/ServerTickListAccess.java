@@ -11,7 +11,7 @@ import org.spongepowered.asm.mixin.gen.Invoker;
 
 @Mixin(ServerTickList.class)
 public interface ServerTickListAccess {
-    @Invoker static <T> ListTag saveTickList(Function<T, ResourceLocation> identifierProvider, Iterable<TickNextTickData<T>> scheduledTicks, long time) {
+    @Invoker static <T> ListTag invokeSaveTickList(Function<T, ResourceLocation> identifierProvider, Iterable<TickNextTickData<T>> scheduledTicks, long time) {
         throw new Error("Mixin didn't apply");
     }
 }

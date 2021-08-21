@@ -171,7 +171,7 @@ public class CubicFastServerTickList<T> extends ServerTickList<T> implements Chu
 
     public ListTag save(CubePos chunkPos) {
         List<TickNextTickData<T>> list = this.fetchTicksInCube(chunkPos, false, true);
-        return ServerTickListAccess.saveTickList(this.toId, list, this.level.getGameTime());
+        return ServerTickListAccess.invokeSaveTickList(this.toId, list, this.level.getGameTime());
     }
 
     @Override
