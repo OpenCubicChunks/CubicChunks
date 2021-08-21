@@ -252,6 +252,9 @@ public class CubicFastServerTickList<T> extends ServerTickList<T> implements Chu
 
     @Override
     public void scheduleTick(BlockPos pos, T object, int delay, TickPriority priority) {
+        if (this.ignore.test(object)) {
+            return;
+        }
         TickListSet<T> ticks = tickNextTickCubeMap.computeIfAbsent(CubePos.asLong(pos), x -> new TickListSet<>());
         TickNextTickData<T> tick = new TickNextTickData<>(pos, object, delay + this.level.getGameTime(), priority);
         if (ticks.set.add(tick) && ticks.isFullyTicking()) {
