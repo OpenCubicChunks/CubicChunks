@@ -63,7 +63,7 @@ public abstract class MixinSkyLightSectionStorage extends LayerLightSectionStora
                 // clients can have null chunks when trying to render an entity in a chunk that hasn't arrived yet
                 // if a chunk were null on the server, it would cause errors during world gen
                 Level level = (Level) ((LayerLightSectionStorageAccess) this).getChunkSource().getLevel();
-                assert level.isClientSide;
+                //assert level.isClientSide; // can be true because of mushroom generation
 
                 // used as a default light value, eg for rendering entities that are not within an existing chunk
                 cir.setReturnValue(15);
