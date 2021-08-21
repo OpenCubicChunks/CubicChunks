@@ -1,5 +1,6 @@
 package io.github.opencubicchunks.cubicchunks.world;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -16,8 +17,9 @@ import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.ServerTickListAccess;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import io.github.opencubicchunks.cubicchunks.world.entity.ChunkEntityStateEventHandler;
+import it.unimi.dsi.fastutil.longs.Long2ObjectAVLTreeMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
-import it.unimi.dsi.fastutil.objects.ObjectAVLTreeSet;
+import it.unimi.dsi.fastutil.longs.Long2ObjectSortedMap;
 import net.minecraft.CrashReport;
 import net.minecraft.CrashReportCategory;
 import net.minecraft.ReportedException;
@@ -30,6 +32,7 @@ import net.minecraft.world.level.ServerTickList;
 import net.minecraft.world.level.TickNextTickData;
 import net.minecraft.world.level.TickPriority;
 import net.minecraft.world.level.levelgen.structure.BoundingBox;
+import org.jetbrains.annotations.NotNull;
 
 public class CubicFastServerTickList<T> extends ServerTickList<T> implements ChunkEntityStateEventHandler, CubicServerTickList<T> {
     private final Function<T, ResourceLocation> toId;
@@ -38,7 +41,7 @@ public class CubicFastServerTickList<T> extends ServerTickList<T> implements Chu
     private final Consumer<TickNextTickData<T>> ticker;
 
     private final Long2ObjectOpenHashMap<TickListSet<T>> tickNextTickCubeMap = new Long2ObjectOpenHashMap<>();
-    private final ObjectAVLTreeSet<TickNextTickData<T>> tickNextTickSorted = new ObjectAVLTreeSet<>(TickNextTickData.createTimeComparator());
+    private final Long2ObjectAVLTreeMap<TickListBucket<T>> tickNextTickSorted = new Long2ObjectAVLTreeMap<>();
 
     private final Queue<TickNextTickData<T>> currentlyTicking = Queues.newArrayDeque();
 
@@ -52,21 +55,21 @@ public class CubicFastServerTickList<T> extends ServerTickList<T> implements Chu
     }
 
     @Override public void onCubeEntitiesLoad(CubePos pos) {
-        TickListSet<T> ticks = tickNextTickCubeMap.computeIfAbsent(pos.asLong(), x -> new TickListSet<>());
+        TickListSet<T> ticks = cubeTickListFor(pos.asLong());
         assert !ticks.isFullyTicking();
         ticks.entitiesLoaded = true;
         if (ticks.isFullyTicking()) {
-            tickNextTickSorted.addAll(ticks.set);
+            ticks.set.forEach(this::addToSortedList);
         }
     }
 
     @Override public void onCubeEntitiesUnload(CubePos pos) {
         long posLong = pos.asLong();
-        TickListSet<T> ticks = tickNextTickCubeMap.computeIfAbsent(posLong, x -> new TickListSet<>());
+        TickListSet<T> ticks = cubeTickListFor(posLong);
         boolean prevTicking = ticks.isFullyTicking();
         ticks.entitiesLoaded = false;
         if (prevTicking) {
-            tickNextTickSorted.removeAll(ticks.set);
+            ticks.set.forEach(this::removeFromSortedList);
         }
         if (ticks.isUnloadable()) {
             tickNextTickCubeMap.remove(posLong);
@@ -74,32 +77,43 @@ public class CubicFastServerTickList<T> extends ServerTickList<T> implements Chu
     }
 
     public void onCubeStartTicking(CubePos pos) {
-        TickListSet<T> ticks = tickNextTickCubeMap.computeIfAbsent(pos.asLong(), x -> new TickListSet<>());
+        TickListSet<T> ticks = cubeTickListFor(pos.asLong());
         assert !ticks.isFullyTicking();
         ticks.tickable = true;
         if (ticks.isFullyTicking()) {
-            tickNextTickSorted.addAll(ticks.set);
+            ticks.set.forEach(this::addToSortedList);
         }
     }
 
     public void onCubeStopTicking(CubePos pos) {
         long posLong = pos.asLong();
-        TickListSet<T> ticks = tickNextTickCubeMap.computeIfAbsent(posLong, x -> new TickListSet<>());
+        TickListSet<T> ticks = cubeTickListFor(posLong);
         boolean prevTicking = ticks.isFullyTicking();
         ticks.tickable = false;
         if (prevTicking) {
-            tickNextTickSorted.removeAll(ticks.set);
+            ticks.set.forEach(this::removeFromSortedList);
         }
         if (ticks.isUnloadable()) {
             tickNextTickCubeMap.remove(posLong);
         }
     }
 
+    @NotNull private CubicFastServerTickList.TickListSet<T> cubeTickListFor(long l) {
+        return tickNextTickCubeMap.computeIfAbsent(l, x -> new TickListSet<>());
+    }
+
+    private void addToSortedList(TickNextTickData<T> t) {
+        tickNextTickSorted.computeIfAbsent(t.triggerTick, TickListBucket::new).add(t);
+    }
+
+    private void removeFromSortedList(TickNextTickData<T> tick) {
+        tickNextTickSorted.get(tick.triggerTick).remove(tick);
+    }
+
     @Override
     public void tick() {
-        int count = Math.min(65536, this.tickNextTickSorted.size());
         this.level.getProfiler().push("cleaning");
-        selectTicks(count);
+        selectTicks(65536);
         this.level.getProfiler().popPush("ticking");
         runTicks();
         this.level.getProfiler().pop();
@@ -121,25 +135,32 @@ public class CubicFastServerTickList<T> extends ServerTickList<T> implements Chu
     }
 
     private void selectTicks(int count) {
-        Iterator<TickNextTickData<T>> it = this.tickNextTickSorted.iterator();
+        Long2ObjectSortedMap<TickListBucket<T>> bucketsToTick = this.tickNextTickSorted.subMap(Long.MIN_VALUE, this.level.getGameTime());
 
         long lastCube = CubePos.asLong(0, 0, 0);
         TickListSet<T> lastTicks = tickNextTickCubeMap.get(lastCube);
 
-        while (count > 0 && it.hasNext()) {
-            TickNextTickData<T> tickData = it.next();
-            if (tickData.triggerTick > this.level.getGameTime()) {
-                break;
+        var iterator = bucketsToTick.long2ObjectEntrySet().iterator();
+        while (iterator.hasNext()) {
+            var entry = iterator.next();
+            for (ArrayDeque<TickNextTickData<T>> queue : entry.getValue().byPriority) {
+                while (!queue.isEmpty()) {
+                    if (count <= 0) {
+                        return;
+                    }
+                    count--;
+
+                    TickNextTickData<T> tickData = queue.pop();
+                    long cubeLong = CubePos.asLong(tickData.pos);
+                    if (lastCube != cubeLong) {
+                        lastCube = cubeLong;
+                        lastTicks = tickNextTickCubeMap.get(cubeLong);
+                    }
+                    lastTicks.set.remove(tickData);
+                    this.currentlyTicking.add(tickData);
+                }
             }
-            long cubeLong = CubePos.asLong(tickData.pos);
-            if (lastCube != cubeLong) {
-                lastCube = cubeLong;
-                lastTicks = tickNextTickCubeMap.get(cubeLong);
-            }
-            lastTicks.set.remove(tickData);
-            it.remove();
-            this.currentlyTicking.add(tickData);
-            --count;
+            iterator.remove();
         }
     }
 
@@ -166,7 +187,7 @@ public class CubicFastServerTickList<T> extends ServerTickList<T> implements Chu
         if (updateState) {
             tickNextTickCubeMap.remove(pos.asLong());
             if (ticks.isFullyTicking()) {
-                output.forEach(tickNextTickSorted::remove);
+                output.forEach(this::removeFromSortedList);
             }
         }
         return output;
@@ -223,7 +244,7 @@ public class CubicFastServerTickList<T> extends ServerTickList<T> implements Chu
                 }
                 it.remove();
                 if (fullyTicking) {
-                    tickNextTickSorted.remove(tick);
+                    removeFromSortedList(tick);
                 }
             }
         }
@@ -255,10 +276,10 @@ public class CubicFastServerTickList<T> extends ServerTickList<T> implements Chu
         if (this.ignore.test(object)) {
             return;
         }
-        TickListSet<T> ticks = tickNextTickCubeMap.computeIfAbsent(CubePos.asLong(pos), x -> new TickListSet<>());
+        TickListSet<T> ticks = cubeTickListFor(CubePos.asLong(pos));
         TickNextTickData<T> tick = new TickNextTickData<>(pos, object, delay + this.level.getGameTime(), priority);
         if (ticks.set.add(tick) && ticks.isFullyTicking()) {
-            tickNextTickSorted.add(tick);
+            addToSortedList(tick);
         }
     }
 
@@ -277,6 +298,31 @@ public class CubicFastServerTickList<T> extends ServerTickList<T> implements Chu
 
         public boolean isUnloadable() {
             return !entitiesLoaded && !tickable && set.isEmpty();
+        }
+    }
+
+    private static class TickListBucket<T> implements Comparable<TickListBucket<T>> {
+
+        final long time;
+        @SuppressWarnings("unchecked") final ArrayDeque<TickNextTickData<T>>[] byPriority = new ArrayDeque[TickPriority.values().length];
+
+        TickListBucket(long time) {
+            this.time = time;
+            for (int i = 0; i < this.byPriority.length; i++) {
+                this.byPriority[i] = new ArrayDeque<>();
+            }
+        }
+
+        void add(TickNextTickData<T> data) {
+            byPriority[data.priority.ordinal()].add(data);
+        }
+
+        public boolean remove(TickNextTickData<T> t) {
+            return byPriority[t.priority.ordinal()].remove(t);
+        }
+
+        @Override public int compareTo(@NotNull CubicFastServerTickList.TickListBucket<T> o) {
+            return Long.compare(time, o.time);
         }
     }
 }
