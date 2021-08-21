@@ -118,7 +118,6 @@ import net.minecraft.world.level.entity.ChunkStatusUpdateListener;
 import net.minecraft.world.level.levelgen.structure.StructureStart;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureManager;
 import net.minecraft.world.level.lighting.LevelLightEngine;
-import net.minecraft.world.level.storage.DimensionDataStorage;
 import net.minecraft.world.level.storage.LevelStorageSource;
 import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.spongepowered.asm.mixin.Final;
@@ -182,7 +181,7 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
 
     @Shadow @Final private ChunkGenerator generator;
 
-    @Shadow @Final private File storageFolder;
+    @Shadow @Final private String storageName;
 
     private int verticalViewDistance;
     private int incomingVerticalViewDistance;
@@ -220,27 +219,15 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
     }
 
     @Inject(method = "<init>", at = @At("RETURN"), locals = LocalCapture.CAPTURE_FAILHARD)
-    private void onConstruct(ServerLevel worldIn,
-                             LevelStorageSource.LevelStorageAccess levelSave,
-                             DataFixer p_i51538_3_,
-                             StructureManager templateManagerIn,
-                             Executor p_i51538_5_,
-                             BlockableEventLoop<Runnable> mainThreadIn,
-                             LightChunkGetter p_i51538_7_,
-                             ChunkGenerator generatorIn,
-                             ChunkProgressListener p_i51538_9_,
-                             ChunkStatusUpdateListener chunkStatusUpdateListener,
-                             Supplier<DimensionDataStorage> p_i51538_10_,
-                             int p_i51538_11_,
-                             boolean p_i232602_12_,
-                             CallbackInfo ci, ProcessorMailbox delegatedtaskexecutor,
+    private void onConstruct(ServerLevel serverLevel, LevelStorageSource.LevelStorageAccess levelStorageAccess, DataFixer dataFixer, StructureManager structureManager, Executor executor,
+                             BlockableEventLoop blockableEventLoop, LightChunkGetter lightChunkGetter, ChunkGenerator chunkGenerator, ChunkProgressListener chunkProgressListener, ChunkStatusUpdateListener chunkStatusUpdateListener, Supplier supplier, int i, boolean bl, CallbackInfo ci, File file, ProcessorMailbox delegatedtaskexecutor,
                              ProcessorHandle itaskexecutor, ProcessorMailbox delegatedtaskexecutor1) {
         if (!((CubicLevelHeightAccessor) this.level).isCubic()) {
             return;
         }
 
         this.cubeQueueSorter = new CubeTaskPriorityQueueSorter(ImmutableList.of(delegatedtaskexecutor,
-            itaskexecutor, delegatedtaskexecutor1), p_i51538_5_, Integer.MAX_VALUE);
+            itaskexecutor, delegatedtaskexecutor1), executor, Integer.MAX_VALUE);
         this.cubeWorldgenMailbox = this.cubeQueueSorter.createExecutor(delegatedtaskexecutor, false);
         this.cubeMainThreadMailbox = this.cubeQueueSorter.createExecutor(itaskexecutor, false);
 
@@ -248,7 +235,7 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
             this.cubeQueueSorter.createExecutor(delegatedtaskexecutor1, false));
 
         try {
-            regionCubeIO = new RegionCubeIO(storageFolder, "chunk", "cube");
+            regionCubeIO = new RegionCubeIO(file, "chunk", "cube");
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
@@ -307,7 +294,7 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
 
             this.processCubeUnloads(() -> true);
             regionCubeIO.flush();
-            LOGGER.info("Cube Storage ({}): All cubes are saved", this.storageFolder.getName());
+            LOGGER.info("Cube Storage ({}): All cubes are saved", this.storageName);
         } else {
             this.visibleCubeMap.values().stream().filter(ChunkHolder::wasAccessibleSinceLastSave).forEach((cubeHolder) -> {
                 IBigCube cube = ((ICubeHolder) cubeHolder).getCubeToSave().getNow(null);
