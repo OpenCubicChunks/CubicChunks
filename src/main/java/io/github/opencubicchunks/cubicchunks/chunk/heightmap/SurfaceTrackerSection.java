@@ -122,25 +122,26 @@ public class SurfaceTrackerSection {
             return;
         }
 
-        y = Coords.localToBlock(scaledY, Coords.blockToLocal(y));
+        int offsetY = Coords.localToBlock(scaledY, Coords.blockToLocal(y));
         int height = getHeight(x, z);
-        if (y < height) {
+        if (offsetY < height) {
             return;
         }
 
-        boolean test = HEIGHTMAP_TYPES[heightmapType].isOpaque().test(state);
-        if (y > height) {
-            if (!test) {
+        boolean opaque = HEIGHTMAP_TYPES[heightmapType].isOpaque().test(state);
+        if (offsetY > height) {
+            if (!opaque) {
                 return;
             }
 
             if (parent != null) {
                 parent.markDirty(x, z);
             }
-            this.heights.set(index, absToRelY(y, scaledY, scale));
+            this.heights.set(index, absToRelY(offsetY, scaledY, scale));
             return;
         }
-        if (test) {
+        //at this point offsetY == height
+        if (!opaque) { //if we're replacing the current (opaque) block with a non-opaque block
             markDirty(x, z);
         }
     }
@@ -219,6 +220,7 @@ public class SurfaceTrackerSection {
         return nodes[i];
     }
 
+    @Nullable
     public SurfaceTrackerSection getCubeNode(int y) {
         if (scale == 0) {
             if (y != scaledY) {
