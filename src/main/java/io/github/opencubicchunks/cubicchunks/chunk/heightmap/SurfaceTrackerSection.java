@@ -135,7 +135,8 @@ public class SurfaceTrackerSection {
             }
 
             if (parent != null) {
-                parent.markDirty(x, z);
+                //only mark parents dirty if the Y is above their current height
+                this.parent.markTreeDirtyIfRequired(x, z, y);
             }
             this.heights.set(index, absToRelY(offsetY, scaledY, scale));
             return;
@@ -150,6 +151,13 @@ public class SurfaceTrackerSection {
         setDirty(index(x, z));
         if (parent != null) {
             parent.markDirty(x, z);
+        }
+    }
+
+    private void markTreeDirtyIfRequired(int x, int z, int newHeight) {
+        if(newHeight > getHeight(x, z)) {
+            markDirty(x, z);
+            this.parent.markTreeDirtyIfRequired(x, z, newHeight);
         }
     }
 
