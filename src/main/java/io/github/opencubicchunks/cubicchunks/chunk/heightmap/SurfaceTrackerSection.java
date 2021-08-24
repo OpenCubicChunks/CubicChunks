@@ -104,32 +104,60 @@ public class SurfaceTrackerSection {
         }
     }
 
-    protected void clearDirty(int idx) {
-        dirtyPositions[idx >> 6] &= ~(1L << idx);
-    }
 
-    private void setDirty(int idx) {
-        dirtyPositions[idx >> 6] |= 1L << idx;
-    }
-
+    /** Returns if this SurfaceTrackerSection is dirty at the specified index */
     protected boolean isDirty(int idx) {
         return (dirtyPositions[idx >> 6] & (1L << idx)) != 0;
     }
 
+    /** Sets the index in this SurfaceTrackerSection to non-dirty */
+    protected void clearDirty(int idx) {
+        dirtyPositions[idx >> 6] &= ~(1L << idx);
+    }
+
+    /** Sets the index in this SurfaceTrackerSection to dirty */
+    protected void setDirty(int idx) {
+        dirtyPositions[idx >> 6] |= 1L << idx;
+    }
+
+    /** Sets the index in this and all parent SurfaceTrackerSections to dirty */
+    protected void markDirty(int x, int z) {
+        setDirty(index(x, z));
+        if (parent != null) {
+            parent.markDirty(x, z);
+        }
+    }
+
+    /** Sets this and parents dirty if new height > existing height */
+    private void markTreeDirtyIfRequired(int x, int z, int newHeight) {
+        if(newHeight > relToAbsY(heights.get(index(x, z)), scaledY, scale) || isDirty(index(x, z))) {
+            setDirty(index(x, z));
+            if(this.parent != null) {
+                this.parent.markTreeDirtyIfRequired(x, z, newHeight);
+            }
+        }
+    }
+
+    /**
+     * Updates the internal heightmap for this SurfaceTracker section, and any parents who are also affected by it
+     *
+     * Should only be called on scale 0 heightmaps
+     */
     public void onSetBlock(int x, int y, int z, BlockState state) {
         int index = index(x, z);
         if (isDirty(index)) {
             return;
         }
 
-        int offsetY = Coords.localToBlock(scaledY, Coords.blockToLocal(y));
+        //input coordinates could be cube local, so convert Y to global
+        int globalY = Coords.localToBlock(scaledY, Coords.blockToLocal(y));
         int height = getHeight(x, z);
-        if (offsetY < height) {
+        if (globalY < height) {
             return;
         }
 
         boolean opaque = HEIGHTMAP_TYPES[heightmapType].isOpaque().test(state);
-        if (offsetY > height) {
+        if (globalY > height) {
             if (!opaque) {
                 return;
             }
@@ -138,26 +166,12 @@ public class SurfaceTrackerSection {
                 //only mark parents dirty if the Y is above their current height
                 this.parent.markTreeDirtyIfRequired(x, z, y);
             }
-            this.heights.set(index, absToRelY(offsetY, scaledY, scale));
+            this.heights.set(index, absToRelY(globalY, scaledY, scale));
             return;
         }
-        //at this point offsetY == height
+        //at this point globalY == height
         if (!opaque) { //if we're replacing the current (opaque) block with a non-opaque block
             markDirty(x, z);
-        }
-    }
-
-    public void markDirty(int x, int z) {
-        setDirty(index(x, z));
-        if (parent != null) {
-            parent.markDirty(x, z);
-        }
-    }
-
-    private void markTreeDirtyIfRequired(int x, int z, int newHeight) {
-        if(newHeight > getHeight(x, z)) {
-            markDirty(x, z);
-            this.parent.markTreeDirtyIfRequired(x, z, newHeight);
         }
     }
 
