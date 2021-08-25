@@ -42,7 +42,7 @@ public class SurfaceTrackerWrapper extends Heightmap {
      */
     @Override
     public boolean update(int columnLocalX, int globalY, int columnLocalZ, BlockState blockState) {
-        surfaceTracker.getCubeNode(blockToCube(globalY)).markDirty(columnLocalX + dx, columnLocalZ + dz);
+        surfaceTracker.getCubeNode(blockToCube(globalY)).onSetBlock(dx + columnLocalX, globalY, dz + columnLocalZ, blockState);
         // We always return false, because the result is never used anywhere anyway (by either vanilla or us)
         return false;
     }
