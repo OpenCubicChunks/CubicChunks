@@ -130,9 +130,9 @@ public class SurfaceTrackerSection {
 
     /** Sets this and parents dirty if new height > existing height */
     private void markTreeDirtyIfRequired(int x, int z, int newHeight) {
-        if(newHeight > relToAbsY(heights.get(index(x, z)), scaledY, scale) || isDirty(index(x, z))) {
+        if (newHeight > relToAbsY(heights.get(index(x, z)), scaledY, scale) || isDirty(index(x, z))) {
             setDirty(index(x, z));
-            if(this.parent != null) {
+            if (this.parent != null) {
                 this.parent.markTreeDirtyIfRequired(x, z, newHeight);
             }
         }
