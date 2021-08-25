@@ -185,7 +185,7 @@ public class CubicFastServerTickList<T> extends ServerTickList<T> implements Chu
         }
         ArrayList<TickNextTickData<T>> output = new ArrayList<>(ticks.set);
         if (updateState) {
-            tickNextTickCubeMap.remove(pos.asLong());
+            ticks.set.clear(); // Vanilla calls this from packTicks, so don't remove from cube map
             if (ticks.isFullyTicking()) {
                 output.forEach(this::removeFromSortedList);
             }
