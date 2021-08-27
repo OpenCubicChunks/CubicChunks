@@ -30,6 +30,7 @@
         "common.PlayerTicketTrackerFactoryAccess",
         "common.PoiSectionAccess",
         "common.ProtoTickListAccess",
+        "common.ServerTickListAccess",
         "common.SpawnStateAccess",
         "common.StructureFeatureManagerAccess",
         "common.ThreadedLevelLightEngineAccess",

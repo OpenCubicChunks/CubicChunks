@@ -51,6 +51,19 @@ public class CubePos extends Vec3i {
         return i;
     }
 
+    public static boolean isLongInsideInclusive(long pos, int minX, int minY, int minZ, int maxX, int maxY, int maxZ) {
+        int x = extractX(pos);
+        if (x < minX || x > maxX) {
+            return false;
+        }
+        int y = extractY(pos);
+        if (y < minY || y > maxY) {
+            return false;
+        }
+        int z = extractZ(pos);
+        return z >= minZ && z <= maxZ;
+    }
+
     public static long asChunkPosLong(long cubePosIn, int localX, int localZ) {
         return ChunkPos.asLong(Coords.cubeToSection(CubePos.extractX(cubePosIn), localX), Coords.cubeToSection(CubePos.extractZ(cubePosIn), localZ));
     }
@@ -180,5 +193,10 @@ public class CubePos extends Vec3i {
 
     public static Stream<SectionPos> sectionsAroundCube(CubePos center, int radiusSections) {
         return SectionPos.cube(center.asSectionPos(), radiusSections);
+    }
+
+    public boolean isInsideInclusive(int minX, int minY, int minZ, int maxX, int maxY, int maxZ) {
+        return getX() >= minX && getY() >= minY && getZ() >= minZ
+            && getX() <= maxX && getY() <= maxY && getZ() <= maxZ;
     }
 }

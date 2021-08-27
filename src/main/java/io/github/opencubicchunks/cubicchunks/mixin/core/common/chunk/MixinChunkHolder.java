@@ -30,6 +30,7 @@ import io.github.opencubicchunks.cubicchunks.network.PacketCubeBlockChanges;
 import io.github.opencubicchunks.cubicchunks.network.PacketDispatcher;
 import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
+import io.github.opencubicchunks.cubicchunks.world.CubicFastServerTickList;
 import it.unimi.dsi.fastutil.shorts.ShortArrayList;
 import it.unimi.dsi.fastutil.shorts.ShortArraySet;
 import net.minecraft.core.BlockPos;
@@ -40,12 +41,16 @@ import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelHeightAccessor;
 import net.minecraft.world.level.LightLayer;
+import net.minecraft.world.level.ServerTickList;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.ChunkStatus;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.lighting.LevelLightEngine;
+import net.minecraft.world.level.material.Fluid;
+import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Dynamic;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -54,6 +59,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.Slice;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(ChunkHolder.class)
@@ -179,6 +185,59 @@ public abstract class MixinChunkHolder implements ICubeHolder {
         }
         ci.cancel();
         updateCubeFutures(chunkMap, executor);
+    }
+
+    @Dynamic
+    @Inject(method = "updateCubeFutures",
+        at = @At(
+            value = "FIELD", opcode = Opcodes.PUTFIELD, ordinal = 0, shift = At.Shift.AFTER,
+            target = "Lnet/minecraft/server/level/ChunkHolder;tickingChunkFuture:Ljava/util/concurrent/CompletableFuture;"
+        ),
+        slice = @Slice(
+            from = @At(
+                value = "INVOKE",
+                target = "Lnet/minecraft/server/level/ChunkMap;prepareTickingChunk(Lnet/minecraft/server/level/ChunkHolder;)Ljava/util/concurrent/CompletableFuture;"
+            )
+        ))
+    private void onSetChunkTicking(ChunkMap chunkStorage, Executor mainThreadExecutor, CallbackInfo ci) {
+        tickingChunkFuture.whenCompleteAsync((val, throwable) -> {
+            if (throwable != null) {
+                return;
+            }
+            val.left().ifPresent(cube -> {
+                ServerTickList<Block> blockTicks = ((ChunkManagerAccess) chunkStorage).getLevel().getBlockTicks();
+                ServerTickList<Fluid> liquidTicks = ((ChunkManagerAccess) chunkStorage).getLevel().getLiquidTicks();
+                if (blockTicks instanceof CubicFastServerTickList) {
+                    ((CubicFastServerTickList<Block>) blockTicks).onCubeStartTicking(this.cubePos);
+                }
+                if (liquidTicks instanceof CubicFastServerTickList) {
+                    ((CubicFastServerTickList<Fluid>) liquidTicks).onCubeStartTicking(this.cubePos);
+                }
+            });
+        }, mainThreadExecutor);
+    }
+
+    @Dynamic
+    @Inject(method = "updateCubeFutures",
+        at = @At(
+            value = "FIELD", opcode = Opcodes.PUTFIELD, ordinal = 0,
+            target = "Lnet/minecraft/server/level/ChunkHolder;tickingChunkFuture:Ljava/util/concurrent/CompletableFuture;"
+        ),
+        slice = @Slice(
+            from = @At(
+                value = "INVOKE",
+                target = "Ljava/util/concurrent/CompletableFuture;complete(Ljava/lang/Object;)Z"
+            )
+        ))
+    private void onSetChunkNotTicking(ChunkMap chunkStorage, Executor executor, CallbackInfo ci) {
+        ServerTickList<Block> blockTicks = ((ChunkManagerAccess) chunkStorage).getLevel().getBlockTicks();
+        ServerTickList<Fluid> liquidTicks = ((ChunkManagerAccess) chunkStorage).getLevel().getLiquidTicks();
+        if (blockTicks instanceof CubicFastServerTickList) {
+            ((CubicFastServerTickList<Block>) blockTicks).onCubeStopTicking(this.cubePos);
+        }
+        if (liquidTicks instanceof CubicFastServerTickList) {
+            ((CubicFastServerTickList<Fluid>) liquidTicks).onCubeStopTicking(this.cubePos);
+        }
     }
 
     @Redirect(method = "scheduleFullChunkPromotion", at = @At(
