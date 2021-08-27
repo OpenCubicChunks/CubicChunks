@@ -9,6 +9,8 @@
     },
     "mixins": [
         "common.BiomeContainerAccess",
+        "common.BiomeGenerationSettingsAccess",
+        "common.BiomeManagerAccess",
         "common.ChunkHolderAccess",
         "common.ChunkManagerAccess",
         "common.ChunkSectionAccess",
@@ -26,6 +28,7 @@
         "common.OverworldBiomeSourceAccess",
         "common.PlayerChunkTrackerFactoryAccess",
         "common.PlayerTicketTrackerFactoryAccess",
+        "common.PoiSectionAccess",
         "common.ProtoTickListAccess",
         "common.SpawnStateAccess",
         "common.StructureFeatureManagerAccess",
