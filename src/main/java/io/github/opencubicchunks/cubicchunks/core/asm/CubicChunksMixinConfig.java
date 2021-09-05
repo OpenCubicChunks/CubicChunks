@@ -80,7 +80,7 @@ public class CubicChunksMixinConfig implements IMixinConfigPlugin {
 
         if (optifineVersion == null) {
             optifineState = OptifineState.NOT_LOADED;
-        } else if (optifineVersion.compareTo("G5") >= 0) {
+        } else if (optifineVersion.compareTo("G5") > 0) {
             LOGGER.error("Unknown optifine version: " + optifineVersion + ", it may not work. Assuming E1-G5.");
             optifineState = OptifineState.LOADED_E1;
         } else if (optifineVersion.compareTo("E1") >= 0) {
