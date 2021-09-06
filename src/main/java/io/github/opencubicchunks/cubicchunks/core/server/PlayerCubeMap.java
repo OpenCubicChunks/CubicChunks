@@ -454,6 +454,7 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
         }
 
         if (!cubesToAddPlayerTo.isEmpty()) {
+            boolean changed = false;
             for (Iterator<EntityPlayerMP> iterator = cubesToAddPlayerTo.keySet().iterator(); iterator.hasNext(); ) {
                 EntityPlayerMP entityPlayerMP = iterator.next();
                 WatchersSortingList<CubeWatcher> watchers = cubesToAddPlayerTo.get(entityPlayerMP);
@@ -462,6 +463,7 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
                 for (iter = watchers.iterator(); toSend > 0 && iter.hasNext(); ) {
                     CubeWatcher watcher = iter.next();
                     watcher.addPlayer(entityPlayerMP);
+                    changed = true;
                     CubeWatcher.SendToPlayersResult state = watcher.sendToPlayers();
                     if (state == CubeWatcher.SendToPlayersResult.WAITING_LIGHT || state == CubeWatcher.SendToPlayersResult.WAITING) {
                         if (!cubesToGenerate.contains(watcher)) {
@@ -477,6 +479,9 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
                     iterator.remove();
                 }
             }
+            if (changed) {
+                setNeedSort();
+            }
         }
         getWorldServer().profiler.endStartSection("unload");
         //if there are no players - unload everything
@@ -491,6 +496,11 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
         if (!cubesToSend.isEmpty()) {
             for (EntityPlayerMP player : cubesToSend.keySet()) {
                 Collection<Cube> cubes = cubesToSend.get(player);
+                if (!players.containsKey(player.getEntityId())) {
+                    CubicChunks.LOGGER.info("Skipping sending " + cubes.size() +
+                            " chunks to player " + player.getName() + " that is no longer in this world!");
+                    continue;
+                }
                 if (vanillaNetworkHandler.hasCubicChunks(player)) {
                     PacketCubes packet = new PacketCubes(new ArrayList<>(cubes));
                     PacketDispatcher.sendTo(packet, player);
@@ -639,7 +649,7 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
             return;
         }
         // Minecraft does something evil there: this method is called *after* changing the player's position
-        // so we need to use managerPosition there
+        // so we need to use managedPosition there
         CubePos playerCubePos = CubePos.fromEntityCoords(player.managedPosX, playerWrapper.managedPosY, player.managedPosZ);
 
         // send unload columns later so that they get unloaded after their corresponding cubes
