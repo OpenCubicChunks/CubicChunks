@@ -15,11 +15,13 @@ import com.google.common.collect.Lists;
 import io.github.opencubicchunks.cubicchunks.chunk.ImposterChunkPos;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
+import io.github.opencubicchunks.cubicchunks.world.CubicServerTickList;
 import it.unimi.dsi.fastutil.objects.ObjectAVLTreeSet;
 import net.minecraft.CrashReport;
 import net.minecraft.CrashReportCategory;
 import net.minecraft.ReportedException;
 import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.ListTag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.ChunkPos;
@@ -38,7 +40,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(ServerTickList.class)
-public abstract class MixinServerTickList<T> implements TickList<T> {
+public abstract class MixinServerTickList<T> implements TickList<T>, CubicServerTickList<T> {
 
     @Mutable @Shadow @Final private Set<TickNextTickData<T>> tickNextTickList;
 
@@ -55,6 +57,8 @@ public abstract class MixinServerTickList<T> implements TickList<T> {
     @Shadow public abstract List<TickNextTickData<T>> fetchTicksInArea(BoundingBox bounds, boolean updateState, boolean getStaleTicks);
 
     @Shadow public abstract void scheduleTick(BlockPos pos, T object, int delay, TickPriority priority);
+
+    @Shadow public abstract ListTag save(ChunkPos chunkPos);
 
     @Inject(method = "<init>", at = @At(value = "RETURN"))
     private void useFasterSetImpl(ServerLevel serverLevel, Predicate<T> predicate, Function<T, ResourceLocation> function, Consumer<TickNextTickData<T>> consumer, CallbackInfo ci) {
@@ -120,12 +124,8 @@ public abstract class MixinServerTickList<T> implements TickList<T> {
         if (pos instanceof ImposterChunkPos) {
             CubePos cubePos = ((ImposterChunkPos) pos).toCubePos();
             // TODO: Follow up on this in 1.17 release, behavior is different from vanilla. Vanilla does NOT offset bb max by 2.
-            List<TickNextTickData<T>> fetchedTicks = this.fetchTicksInArea(new BoundingBox(cubePos.minCubeX() - 2, cubePos.minCubeY() - 2, cubePos.minCubeZ() - 2, cubePos.maxCubeX() + 1,
-                cubePos.maxCubeY() + 1, cubePos.maxCubeZ() + 1), updateState, getStaleTicks);
-
-            if (!fetchedTicks.isEmpty()) {
-                String s = "";
-            }
+            List<TickNextTickData<T>> fetchedTicks = this.fetchTicksInArea(new BoundingBox(cubePos.minCubeX() - 2, cubePos.minCubeY() - 2, cubePos.minCubeZ() - 2,
+                cubePos.maxCubeX() + 1, cubePos.maxCubeY() + 1, cubePos.maxCubeZ() + 1), updateState, getStaleTicks);
             cir.setReturnValue(fetchedTicks);
         }
     }
@@ -159,5 +159,14 @@ public abstract class MixinServerTickList<T> implements TickList<T> {
         }
 
         cir.setReturnValue(dst);
+    }
+
+    @Override public List<TickNextTickData<T>> fetchTicksInCube(CubePos cubePos, boolean updateState, boolean getStaleTicks) {
+        return this.fetchTicksInArea(new BoundingBox(cubePos.minCubeX() - 2, cubePos.minCubeY() - 2, cubePos.minCubeZ() - 2,
+            cubePos.maxCubeX() + 1, cubePos.maxCubeY() + 1, cubePos.maxCubeZ() + 1), updateState, getStaleTicks);
+    }
+
+    @Override public ListTag save(CubePos cubePos) {
+        return this.save(new ImposterChunkPos(cubePos));
     }
 }

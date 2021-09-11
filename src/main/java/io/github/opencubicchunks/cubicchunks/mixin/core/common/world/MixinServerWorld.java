@@ -4,6 +4,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.Executor;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
@@ -13,11 +16,15 @@ import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
 import io.github.opencubicchunks.cubicchunks.server.ICubicWorld;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
+import io.github.opencubicchunks.cubicchunks.world.CubicFastServerTickList;
+import io.github.opencubicchunks.cubicchunks.world.entity.ChunkEntityStateEventHandler;
+import io.github.opencubicchunks.cubicchunks.world.entity.ChunkEntityStateEventSource;
 import io.github.opencubicchunks.cubicchunks.world.entity.IsCubicEntityContext;
 import io.github.opencubicchunks.cubicchunks.world.server.IServerWorld;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.SectionPos;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.progress.ChunkProgressListener;
@@ -26,6 +33,9 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.CustomSpawner;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.ServerTickList;
+import net.minecraft.world.level.TickNextTickData;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.ChunkGenerator;
 import net.minecraft.world.level.chunk.ChunkStatus;
@@ -34,6 +44,7 @@ import net.minecraft.world.level.chunk.LevelChunkSection;
 import net.minecraft.world.level.dimension.DimensionType;
 import net.minecraft.world.level.entity.PersistentEntitySectionManager;
 import net.minecraft.world.level.levelgen.Heightmap;
+import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.storage.LevelStorageSource;
 import net.minecraft.world.level.storage.ServerLevelData;
@@ -50,9 +61,19 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public abstract class MixinServerWorld extends Level implements IServerWorld {
     @Shadow @Final private PersistentEntitySectionManager<Entity> entityManager;
 
+    @Shadow @Final private ServerTickList<Fluid> liquidTicks;
+
+    @Shadow @Final private ServerTickList<Block> blockTicks;
+
     protected MixinServerWorld(WritableLevelData p_i231617_1_, ResourceKey<Level> p_i231617_2_, DimensionType p_i231617_4_,
                                Supplier<ProfilerFiller> p_i231617_5_, boolean p_i231617_6_, boolean p_i231617_7_, long p_i231617_8_) {
         super(p_i231617_1_, p_i231617_2_, p_i231617_4_, p_i231617_5_, p_i231617_6_, p_i231617_7_, p_i231617_8_);
+    }
+
+    @Redirect(method = "<init>", at = @At(value = "NEW", target = "net/minecraft/world/level/ServerTickList"))
+    private <T> ServerTickList<T> constructTickList(ServerLevel serverLevel, Predicate<T> predicate, Function<T, ResourceLocation> function,
+                                                    Consumer<TickNextTickData<T>> consumer) {
+        return new CubicFastServerTickList<>(serverLevel, predicate, function, consumer);
     }
 
     @Inject(method = "<init>", at = @At(value = "RETURN"))
@@ -60,6 +81,12 @@ public abstract class MixinServerWorld extends Level implements IServerWorld {
                            ResourceKey<Level> resourceKey, DimensionType dimensionType, ChunkProgressListener chunkProgressListener, ChunkGenerator chunkGenerator, boolean bl, long l,
                            List<CustomSpawner> list, boolean bl2, CallbackInfo ci) {
         ((IsCubicEntityContext) this.entityManager).setIsCubic(((CubicLevelHeightAccessor) this).isCubic());
+        if (this.liquidTicks instanceof CubicFastServerTickList) {
+            ((ChunkEntityStateEventSource) this.entityManager).registerChunkEntityStateEventHandler((ChunkEntityStateEventHandler) this.liquidTicks);
+        }
+        if (this.blockTicks instanceof CubicFastServerTickList) {
+            ((ChunkEntityStateEventSource) this.entityManager).registerChunkEntityStateEventHandler((ChunkEntityStateEventHandler) this.blockTicks);
+        }
     }
 
     @Redirect(method = "tickChunk", at = @At(value = "INVOKE", target = "Ljava/util/Random;nextInt(I)I", ordinal = 1))
@@ -73,7 +100,7 @@ public abstract class MixinServerWorld extends Level implements IServerWorld {
         ChunkPos chunkPos = levelChunk.getPos();
         int x = chunkPos.getMinBlockX();
         int z = chunkPos.getMinBlockZ();
-        BlockPos pos = this.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING, this.getNextBlockRandomPos(x, 0, z, 15));
+        BlockPos pos = this.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING, this.getBlockRandomPos(x, 0, z, 15));
         if (!isInWorldBounds(pos)) {
             return -1;
         }
@@ -87,12 +114,6 @@ public abstract class MixinServerWorld extends Level implements IServerWorld {
     @Redirect(method = "isPositionTickingWithEntitiesLoaded", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/ChunkPos;asLong(Lnet/minecraft/core/BlockPos;)J"))
     private long useCubePosInCubicWorld(BlockPos blockPos) {
         return ((CubicLevelHeightAccessor) this).isCubic() ? CubePos.asLong(blockPos) : ChunkPos.asLong(blockPos);
-    }
-
-    private BlockPos getNextBlockRandomPos(int i, int j, int k, int l) {
-        int randValue = this.randValue * 3 + 1013904223;
-        int m = randValue >> 2;
-        return new BlockPos(i + (m & 15), j + (m >> 16 & l), k + (m >> 8 & 15));
     }
 
     @Override
@@ -131,7 +152,7 @@ public abstract class MixinServerWorld extends Level implements IServerWorld {
                     int minY = columnPos.minBlockY();
                     int minZ = columnPos.minBlockZ();
                     for (int j = 0; j < randomTicks; j++) {
-                        BlockPos blockPos = this.getNextBlockRandomPos(minX, minY, minZ, 15);
+                        BlockPos blockPos = this.getBlockRandomPos(minX, minY, minZ, 15);
                         profilerFiller.push("randomTick");
                         BlockState blockState = chunkSection.getBlockState(blockPos.getX() - minX, blockPos.getY() - minY, blockPos.getZ() - minZ);
                         if (blockState.isRandomlyTicking()) {
