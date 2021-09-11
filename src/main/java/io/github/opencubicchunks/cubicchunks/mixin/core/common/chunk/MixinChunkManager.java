@@ -1187,6 +1187,8 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
         int vViewDistanceCubes = Coords.sectionToCubeRenderDistance(this.verticalViewDistance);
 
         if (hNewViewDistanceCubes != hViewDistanceCubes || vNewViewDistanceCubes != vViewDistanceCubes) {
+            int oldViewDistance = this.viewDistance;
+            this.viewDistance = hViewDistanceSections;
             this.verticalViewDistance = vViewDistanceSections;
 
             ((ITicketManager) this.distanceManager).updatePlayerCubeTickets(hViewDistanceSections, vViewDistanceSections);
@@ -1200,6 +1202,8 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
                     this.updateCubeTracking(player, cubePos, objects, wasLoaded, isLoaded);
                 });
             }
+            // reset it so that vanilla code can still see the old value
+            this.viewDistance = oldViewDistance;
         }
     }
 
