@@ -100,7 +100,7 @@ public abstract class MixinServerWorld extends Level implements IServerWorld {
         ChunkPos chunkPos = levelChunk.getPos();
         int x = chunkPos.getMinBlockX();
         int z = chunkPos.getMinBlockZ();
-        BlockPos pos = this.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING, this.getNextBlockRandomPos(x, 0, z, 15));
+        BlockPos pos = this.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING, this.getBlockRandomPos(x, 0, z, 15));
         if (!isInWorldBounds(pos)) {
             return -1;
         }
@@ -114,12 +114,6 @@ public abstract class MixinServerWorld extends Level implements IServerWorld {
     @Redirect(method = "isPositionTickingWithEntitiesLoaded", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/ChunkPos;asLong(Lnet/minecraft/core/BlockPos;)J"))
     private long useCubePosInCubicWorld(BlockPos blockPos) {
         return ((CubicLevelHeightAccessor) this).isCubic() ? CubePos.asLong(blockPos) : ChunkPos.asLong(blockPos);
-    }
-
-    private BlockPos getNextBlockRandomPos(int i, int j, int k, int l) {
-        int randValue = this.randValue * 3 + 1013904223;
-        int m = randValue >> 2;
-        return new BlockPos(i + (m & 15), j + (m >> 16 & l), k + (m >> 8 & 15));
     }
 
     @Override
@@ -158,7 +152,7 @@ public abstract class MixinServerWorld extends Level implements IServerWorld {
                     int minY = columnPos.minBlockY();
                     int minZ = columnPos.minBlockZ();
                     for (int j = 0; j < randomTicks; j++) {
-                        BlockPos blockPos = this.getNextBlockRandomPos(minX, minY, minZ, 15);
+                        BlockPos blockPos = this.getBlockRandomPos(minX, minY, minZ, 15);
                         profilerFiller.push("randomTick");
                         BlockState blockState = chunkSection.getBlockState(blockPos.getX() - minX, blockPos.getY() - minY, blockPos.getZ() - minZ);
                         if (blockState.isRandomlyTicking()) {
