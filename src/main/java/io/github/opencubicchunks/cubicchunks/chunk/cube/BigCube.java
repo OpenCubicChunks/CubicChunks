@@ -466,7 +466,8 @@ public class BigCube implements ChunkAccess, IBigCube, CubicLevelHeightAccessor 
         return new BoundTickingBlockEntity(blockEntity, blockEntityTicker);
     }
 
-    private void removeBlockEntityTicker(BlockPos blockPos) {
+    // NOTE: this should not be in API
+    public void removeBlockEntityTicker(BlockPos blockPos) {
         RebindableTickingBlockEntityWrapper wrapper = this.tickersInLevel.remove(blockPos);
         if (wrapper != null) {
             wrapper.rebind(NULL_TICKER);

@@ -50,7 +50,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(value = LevelChunk.class, priority = 0) //Priority 0 to always ensure our redirects are on top. Should also prevent fabric api crashes that have occur(ed) here. See removeTileEntity
-
 public abstract class MixinChunk implements ChunkAccess, LightHeightmapGetter, CubeMapGetter, CubicLevelHeightAccessor, ChunkCubeGetter {
 
     @Shadow @Final private Level level;
@@ -306,7 +305,14 @@ public abstract class MixinChunk implements ChunkAccess, LightHeightmapGetter, C
         ((BigCube) getCube(Coords.blockToSection(blockEntity.getBlockPos().getY()))).updateBlockEntityTicker(blockEntity);
     }
 
-    //This should return object because Hashmap.get also does
+    @Inject(method = "removeBlockEntityTicker", at = @At("HEAD"), cancellable = true)
+    private void removeBlockEntityTicker(BlockPos pos, CallbackInfo ci) {
+        if (!this.isCubic) {
+            return;
+        }
+        ci.cancel();
+        ((BigCube) getCube(Coords.blockToSection(pos.getY()))).removeBlockEntityTicker(pos);
+    }
 
     @Redirect(method = "addAndRegisterBlockEntity",
         at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/chunk/LevelChunk;isInLevel()Z"))
