@@ -166,4 +166,9 @@ public abstract class MixinNoiseBasedChunkGenerator {
             cir.setReturnValue(new CubicAquifer(chunkPos, this.barrierNoise, this.aquiferSourceSampler, minY * cellHeight, this.defaultFluid));
         }
     }
+
+    @Redirect(method = "createAquifer", at = @At(value = "INVOKE", target = "Ljava/lang/Math;max(II)I"))
+    private int alwaysUseChunkMinY(int a, int b, ChunkAccess chunk) {
+        return ((CubicLevelHeightAccessor) chunk).isCubic() ? chunk.getMinBuildHeight() : Math.max(a, b);
+    }
 }
