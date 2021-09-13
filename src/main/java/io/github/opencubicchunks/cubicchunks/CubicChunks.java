@@ -5,12 +5,12 @@ import java.util.HashMap;
 import java.util.Map;
 
 import io.github.opencubicchunks.cubicchunks.chunk.IChunkManager;
+import io.github.opencubicchunks.cubicchunks.levelgen.biome.StripedBiomeSource;
+import io.github.opencubicchunks.cubicchunks.levelgen.feature.CCFeatures;
+import io.github.opencubicchunks.cubicchunks.levelgen.placement.CCPlacement;
 import io.github.opencubicchunks.cubicchunks.meta.EarlyConfig;
 import io.github.opencubicchunks.cubicchunks.network.PacketDispatcher;
 import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
-import io.github.opencubicchunks.cubicchunks.world.biome.StripedBiomeSource;
-import io.github.opencubicchunks.cubicchunks.world.gen.feature.CCFeatures;
-import io.github.opencubicchunks.cubicchunks.world.gen.placement.CCPlacement;
 import net.fabricmc.api.ModInitializer;
 import net.minecraft.SharedConstants;
 import net.minecraft.Util;

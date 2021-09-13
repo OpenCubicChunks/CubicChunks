@@ -45,6 +45,12 @@ mixinGen {
         it.injectorsDefaultRequire = 1
     }
 
+    config("levelgen") {
+        it.required = true
+        it.conformVisibility = true
+        it.injectorsDefaultRequire = 1
+    }
+
     config("access") {
         it.required = true
         it.conformVisibility = true
@@ -62,9 +68,9 @@ mixinGen {
     }
 
     config("debug") {
-        it.required = true
+        it.required = false
         it.conformVisibility = true
-        it.injectorsDefaultRequire = 1
+        it.injectorsDefaultRequire = 0
         it.configurationPlugin = 'io.github.opencubicchunks.cubicchunks.mixin.DebugMixinConfig'
     }
 }

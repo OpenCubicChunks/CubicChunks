@@ -24,6 +24,7 @@
         "cubicchunks.mixins.access.json",
         "cubicchunks.mixins.asm.json",
         "cubicchunks.mixins.core.json",
+        "cubicchunks.mixins.levelgen.json",
         "cubicchunks.mixins.optifine.json",
         "cubicchunks.mixins.debug.json"
     ],
