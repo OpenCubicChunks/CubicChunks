@@ -34,7 +34,6 @@ public class MixinPortalForcer {
             serverChunkCache.addRegionTicket(ticketType, chunkPos, radius, argument);
             return;
         }
-        serverChunkCache.addRegionTicket(ticketType, chunkPos, radius, argument); // TODO: Load order?
         ((IServerChunkProvider) serverChunkCache).addCubeRegionTicket(ticketType, new CubePos((BlockPos) argument), Coords.sectionToCube(radius), argument);
     }
 

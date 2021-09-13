@@ -128,31 +128,6 @@ public abstract class MixinNaturalSpawner {
         return false;
     }
 
-//    @Redirect(method = "getTopNonCollidingPos", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/LevelReader;getMinBuildHeight()I"))
-//    private static int useCubeMinY(LevelReader levelReader) {
-//        if (!((CubicLevelHeightAccessor) levelReader).isCubic()) {
-//            return levelReader.getMinBuildHeight();
-//        }
-//        return Coords.cubeToMinBlock(((CubeWorldGenRegion) levelReader).getMainCubeY());
-//    }
-//
-//    @Redirect(method = "getTopNonCollidingPos", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/LevelReader;getBlockState(Lnet/minecraft/core/BlockPos;)"
-//        + "Lnet/minecraft/world/level/block/state/BlockState;", ordinal = 0))
-//    private static BlockState nullWhenOutOfBounds(LevelReader levelReader, BlockPos pos) {
-//        if (!((CubicLevelHeightAccessor) levelReader).isCubic()) {
-//            return levelReader.getBlockState(pos);
-//        }
-//        return null;
-//    }
-//
-//    @Redirect(method = "getTopNonCollidingPos", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/state/BlockState;isAir()Z", ordinal = 0))
-//    private static boolean stopDoingWhenBlockIsNull(BlockState state, LevelReader world, EntityType<?> entityType, int x, int z) {
-//        if (!((CubicLevelHeightAccessor) world).isCubic()) {
-//            return !state.isAir();
-//        }
-//        return state != null && !state.isAir();
-//    }
-
     //Called from ASM
     private static BlockPos getRandomPosWithinCube(Level level, ChunkAccess chunkAccess) {
         CubePos pos = ((IBigCube) chunkAccess).getCubePos();
