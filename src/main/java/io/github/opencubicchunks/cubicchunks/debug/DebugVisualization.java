@@ -20,6 +20,7 @@ import static org.lwjgl.glfw.GLFW.glfwSwapBuffers;
 import static org.lwjgl.glfw.GLFW.glfwWindowHint;
 import static org.lwjgl.opengl.GL11.GL_BLEND;
 import static org.lwjgl.opengl.GL11.GL_COLOR_BUFFER_BIT;
+import static org.lwjgl.opengl.GL11.GL_CULL_FACE;
 import static org.lwjgl.opengl.GL11.GL_DEPTH_BUFFER_BIT;
 import static org.lwjgl.opengl.GL11.GL_DEPTH_TEST;
 import static org.lwjgl.opengl.GL11.GL_FLOAT;
@@ -79,44 +80,53 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.ToIntFunction;
 
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.VertexFormat;
+import com.mojang.datafixers.util.Either;
 import com.mojang.datafixers.util.Pair;
 import com.mojang.math.Matrix4f;
 import com.mojang.math.Vector3f;
 import com.mojang.math.Vector4f;
 import io.github.opencubicchunks.cubicchunks.chunk.ICubeHolder;
+import io.github.opencubicchunks.cubicchunks.chunk.graph.CCTicketType;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
-import io.github.opencubicchunks.cubicchunks.debug.DebugVisualization.Vertex;
+import io.github.opencubicchunks.cubicchunks.client.CubicWorldLoadScreen;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import io.github.opencubicchunks.cubicchunks.utils.MathUtil;
+import io.github.opencubicchunks.cubicchunks.world.gen.placement.UserFunction;
 import it.unimi.dsi.fastutil.longs.Long2ByteLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.longs.Long2ByteMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectLinkedOpenHashMap;
+import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.screens.LevelLoadingScreen;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.core.Direction;
-import net.minecraft.core.Registry;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ChunkHolder;
 import net.minecraft.server.level.ChunkMap;
+import net.minecraft.server.level.DistanceManager;
 import net.minecraft.server.level.ServerChunkCache;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.Ticket;
+import net.minecraft.server.level.TicketType;
+import net.minecraft.util.SortedArraySet;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.chunk.ChunkAccess;
-import net.minecraft.world.level.chunk.ChunkSource;
 import net.minecraft.world.level.chunk.ChunkStatus;
+import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.dimension.LevelStem;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.lwjgl.glfw.GLFW;
 import org.lwjgl.glfw.GLFWErrorCallback;
 import org.lwjgl.glfw.GLFWVidMode;
 import org.lwjgl.opengl.GL;
+import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GLCapabilities;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.system.MemoryUtil;
@@ -164,6 +174,8 @@ public class DebugVisualization {
     private static float screenHeight = 480f;
     private static GLCapabilities debugGlCapabilities;
     private static boolean enabled;
+
+    private static VisualizationMode mode = VisualizationMode.AVAILABLE_MODES[0];
 
     private static PerfTimer timer() {
         if (perfTimer[perfTimerIdx] == null) {
@@ -263,6 +275,11 @@ public class DebugVisualization {
                 (vidmode.height() - pHeight.get(0)) / 2 + monPosTop.get(0));
         }
 
+        GLFW.glfwSetWindowSizeCallback(window, (window, width, height) -> {
+            GL11.glViewport(0, 0, width, height);
+            screenWidth = width;
+            screenHeight = height;
+        });
         initWindow();
     }
 
@@ -345,6 +362,16 @@ public class DebugVisualization {
     }
 
     public static void render() {
+        for (int i = GLFW.GLFW_KEY_1; i < GLFW.GLFW_KEY_9; i++) {
+            if (GLFW.glfwGetKey(window, i) == GLFW.GLFW_PRESS) {
+                int idx = i - GLFW.GLFW_KEY_1;
+                if (idx < VisualizationMode.AVAILABLE_MODES.length) {
+                    mode = VisualizationMode.AVAILABLE_MODES[idx];
+                }
+            }
+        }
+        glEnable(GL_CULL_FACE);
+        GLFW.glfwSetWindowTitle(window, "CubicChunks debug: " + mode.toString());
         perfTimerIdx++;
         perfTimerIdx %= perfTimer.length;
         timer().clear();
@@ -425,35 +452,10 @@ public class DebugVisualization {
         int playerY = player == null ? 0 : Coords.getCubeYForEntity(player);
         int playerZ = player == null ? 0 : Coords.getCubeZForEntity(player);
 
-        ChunkSource chunkProvider = world.getChunkSource();
-        if (chunkProvider instanceof ServerChunkCache) {
-            Long2ByteLinkedOpenHashMap cubeMap = buildStatusMaps((ServerChunkCache) chunkProvider);
-            timer().buildStatusMap = System.nanoTime();
-            buildQuads(builder, playerX, playerY, playerZ, cubeMap);
-            timer().buildQuads = System.nanoTime();
-        }
-
-    }
-
-    private static Long2ByteLinkedOpenHashMap buildStatusMaps(ServerChunkCache chunkProvider) {
-        ChunkMap chunkManager = chunkProvider.chunkMap;
-        Long2ObjectLinkedOpenHashMap<ChunkHolder> loadedCubes = getField(ChunkMap.class, chunkManager, "visibleCubeMap");
-
-        Object[] data = getField(Long2ObjectLinkedOpenHashMap.class, loadedCubes, "value");
-        long[] keys = getField(Long2ObjectLinkedOpenHashMap.class, loadedCubes, "key");
-        Long2ByteLinkedOpenHashMap cubeMap = new Long2ByteLinkedOpenHashMap(100000);
-        for (int i = 0, keysLength = keys.length; i < keysLength; i++) {
-            long pos = keys[i];
-            if (pos == 0) {
-                continue;
-            }
-            ChunkHolder holder = (ChunkHolder) data[i];
-            ChunkStatus status = holder == null ? null : ICubeHolder.getCubeStatusFromLevel(holder.getTicketLevel());
-            ChunkAccess chunk = holder == null ? null : holder.getChunkToSave().getNow(null);
-            ChunkStatus realStatus = chunk == null ? null : chunk.getStatus();
-            cubeMap.put(pos, realStatus == null ? (byte) 255 : (byte) Registry.CHUNK_STATUS.getId(realStatus));
-        }
-        return cubeMap;
+        Long2ByteMap cubeMap = mode.buildStateMap(world);
+        timer().buildStatusMap = System.nanoTime();
+        buildQuads(builder, playerX, playerY, playerZ, cubeMap);
+        timer().buildQuads = System.nanoTime();
     }
 
     private static <T> T getField(Class<?> cl, Object obj, String name) {
@@ -466,75 +468,48 @@ public class DebugVisualization {
         }
     }
 
-    private static void buildQuads(BufferBuilder builder, int playerX, int playerY, int playerZ, Long2ByteLinkedOpenHashMap cubeMap) {
-        Object2IntMap<ChunkStatus> colors = getField(
-            LevelLoadingScreen.class, null, "COLORS" // TODO: intermediary name
-        );
-        int[] colorsArray = new int[256];
-        ChunkStatus[] statusLookup = new ChunkStatus[256];
-        for (ChunkStatus chunkStatus : colors.keySet()) {
-            int id = Registry.CHUNK_STATUS.getId(chunkStatus);
-            colorsArray[id] = colors.get(chunkStatus);
-            statusLookup[id] = chunkStatus;
-        }
-        colorsArray[255] = 0x00FF00FF;
+    private static void buildQuads(BufferBuilder builder, int playerX, int playerY, int playerZ, Long2ByteMap cubeMap) {
+        int[] colorsArray = mode.getColorMap();
 
         Direction[] directions = Direction.values();
-        float ratioFactor = 1 / (float) ChunkStatus.FULL.getIndex();
         final boolean drawNull = false;
 
-        Map<ChunkStatus, List<Vertex>> verts = new HashMap<>();
-        for (ChunkStatus chunkStatus : ChunkStatus.getStatusList()) {
-            verts.put(chunkStatus, new ArrayList<>());
-        }
+        Map<Integer, List<Vertex>> verts = new HashMap<>();
         for (Long2ByteMap.Entry e : cubeMap.long2ByteEntrySet()) {
             long posLong = e.getLongKey();
             int posX = CubePos.extractX(posLong);
             int posY = CubePos.extractY(posLong);
             int posZ = CubePos.extractZ(posLong);
             int status = e.getByteValue() & 0xFF;
-            if (!drawNull && status == 255) {
-                continue;
-            }
-            ChunkStatus statusObj = statusLookup[status];
-            float ratio = statusObj == null ? 1 : statusObj.getIndex() * ratioFactor;
-            int alpha = status == 255 ? 0x22 : (int) (0x20 + ratio * (0xFF - 0x20));
-            int c = colorsArray[status] | (alpha << 24);
+            int c = colorsArray[status];
 
             EnumSet<Direction> renderFaces = findRenderFaces(cubeMap, directions, drawNull, posX, posY, posZ, status);
 
-            List<Vertex> buffer = verts.get(statusObj);
-            if (buffer != null) {
-                drawCube(buffer, posX - playerX, posY - playerY, posZ - playerZ, 7, c, renderFaces);
-            }
+            List<Vertex> buffer = verts.computeIfAbsent(status, x -> new ArrayList<>());
+            drawCube(buffer, posX - playerX, posY - playerY, posZ - playerZ, 7, c, renderFaces);
         }
         buildVertices(builder, verts);
     }
 
-    private static EnumSet<Direction> findRenderFaces(Long2ByteLinkedOpenHashMap cubeMap, Direction[] directions, boolean drawNull, int posX, int posY, int posZ, int status) {
+    private static EnumSet<Direction> findRenderFaces(Long2ByteMap cubeMap, Direction[] directions, boolean drawNull, int posX, int posY, int posZ, int status) {
         EnumSet<Direction> renderFaces = EnumSet.noneOf(Direction.class);
         for (Direction value : directions) {
             long l = CubePos.asLong(posX + value.getStepX(), posY + value.getStepY(), posZ + value.getStepZ());
-            int cubeStatus = cubeMap.get(l) & 0xFF;
-            // this.ordinal() >= status.ordinal();
-            if (drawNull) {
-                if (status == 255 || cubeStatus == 255 || cubeStatus < status) {
-                    renderFaces.add(value);
-                }
-            } else {
-                if (status != 255 && (cubeStatus == 255 || cubeStatus < status)) {
-                    renderFaces.add(value);
-                }
+            int cubeStatus = cubeMap.getOrDefault(l, (byte) 255) & 0xFF;
+            if (status != 255 && (cubeStatus == 255 || cubeStatus < status)) {
+                renderFaces.add(value);
             }
         }
         return renderFaces;
     }
 
-    private static void buildVertices(BufferBuilder builder, Map<ChunkStatus, List<Vertex>> verts) {
-        List<ChunkStatus> statusList = ChunkStatus.getStatusList();
-        for (int i = statusList.size() - 1; i >= 0; i--) {
-            ChunkStatus chunkStatus = statusList.get(i);
-            for (Vertex v : verts.get(chunkStatus)) {
+    private static void buildVertices(BufferBuilder builder, Map<Integer, List<Vertex>> verts) {
+        for (int i = 255; i >= 0; i--) {
+            List<Vertex> vertices = verts.get(i);
+            if (vertices == null) {
+                continue;
+            }
+            for (Vertex v : vertices) {
                 vertex(builder, v.x, v.y, v.z, v.nx, v.ny, v.nz, v.rgba);
             }
         }
@@ -683,7 +658,7 @@ public class DebugVisualization {
 
 
         Pair<BufferBuilder.DrawState, ByteBuffer> nextBuffer = perfGraphBuilder.popNextBuffer();
-        nextBuffer.getSecond().clear();
+        nextBuffer.getSecond().clear().order(ByteOrder.nativeOrder());
         Pair<Integer, FloatBuffer> buf = toTriangles(nextBuffer);
         buf.getSecond().clear();
         glBufferData(GL_ARRAY_BUFFER, buf.getSecond(), GL_STREAM_DRAW);
@@ -716,26 +691,27 @@ public class DebugVisualization {
         if (renderFaces.contains(Direction.DOWN)) {
             int c = darken(color, 40);
             // down face
-            buffer.add(new Vertex(x0, y0, z0, 0, 1, 0, color));
-            buffer.add(new Vertex(x0, y0, z1, 0, 1, 0, color));
-            buffer.add(new Vertex(x1, y0, z1, 0, 1, 0, color));
             buffer.add(new Vertex(x1, y0, z0, 0, 1, 0, color));
+            buffer.add(new Vertex(x1, y0, z1, 0, 1, 0, color));
+            buffer.add(new Vertex(x0, y0, z1, 0, 1, 0, color));
+            buffer.add(new Vertex(x0, y0, z0, 0, 1, 0, color));
         }
         if (renderFaces.contains(Direction.EAST)) {
             int c = darken(color, 30);
             // right face
-            buffer.add(new Vertex(x1, y1, z0, 1, 0, 0, c));
             buffer.add(new Vertex(x1, y1, z1, 1, 0, 0, c));
             buffer.add(new Vertex(x1, y0, z1, 1, 0, 0, c));
             buffer.add(new Vertex(x1, y0, z0, 1, 0, 0, c));
+            buffer.add(new Vertex(x1, y1, z0, 1, 0, 0, c));
+
         }
         if (renderFaces.contains(Direction.WEST)) {
             int c = darken(color, 30);
             // left face
-            buffer.add(new Vertex(x0, y1, z0, 1, 0, 0, c));
-            buffer.add(new Vertex(x0, y1, z1, 1, 0, 0, c));
-            buffer.add(new Vertex(x0, y0, z1, 1, 0, 0, c));
             buffer.add(new Vertex(x0, y0, z0, 1, 0, 0, c));
+            buffer.add(new Vertex(x0, y0, z1, 1, 0, 0, c));
+            buffer.add(new Vertex(x0, y1, z1, 1, 0, 0, c));
+            buffer.add(new Vertex(x0, y1, z0, 1, 0, 0, c));
         }
         if (renderFaces.contains(Direction.NORTH)) {
             int c = darken(color, 20);
@@ -748,10 +724,10 @@ public class DebugVisualization {
         if (renderFaces.contains(Direction.SOUTH)) {
             int c = darken(color, 20);
             // back face
-            buffer.add(new Vertex(x0, y1, z1, 0, 0, -1, c));
-            buffer.add(new Vertex(x1, y1, z1, 0, 0, -1, c));
-            buffer.add(new Vertex(x1, y0, z1, 0, 0, -1, c));
             buffer.add(new Vertex(x0, y0, z1, 0, 0, -1, c));
+            buffer.add(new Vertex(x1, y0, z1, 0, 0, -1, c));
+            buffer.add(new Vertex(x1, y1, z1, 0, 0, -1, c));
+            buffer.add(new Vertex(x0, y1, z1, 0, 0, -1, c));
         }
     }
 
@@ -826,7 +802,7 @@ public class DebugVisualization {
         }
 
         public void drawTimer(FloatBiConsumer line) {
-            double scale = 0.3f / TimeUnit.MILLISECONDS.toNanos(1);
+            double scale = 0.5f / TimeUnit.MILLISECONDS.toNanos(1);
 
 
             double glFinishTime = this.glFinish;
@@ -875,5 +851,191 @@ public class DebugVisualization {
     public interface FloatBiConsumer {
 
         void accept(float a, float b);
+    }
+
+    private interface VisualizationMode {
+        VisualizationMode[] AVAILABLE_MODES = new VisualizationMode[] {
+            new ChunkStatusVisualizationMode(ChunkStatusVisualizationMode.Type.TICKET_LEVEL),
+            new ChunkStatusVisualizationMode(ChunkStatusVisualizationMode.Type.TICKET_LEVEL_FULL_CHUNK_STATUS),
+            new ChunkStatusVisualizationMode(ChunkStatusVisualizationMode.Type.TO_SAVE_LEVEL),
+            new ChunkStatusVisualizationMode(ChunkStatusVisualizationMode.Type.HIGHEST_LOADED),
+            new ChunkStatusVisualizationMode(ChunkStatusVisualizationMode.Type.ACTUAL_FULL_CHUNK_STATUS),
+            new ChunkTicketVisualizationMode()
+        };
+
+        Long2ByteMap buildStateMap(Level level);
+
+        int[] getColorMap();
+    }
+
+    private static final class ChunkStatusVisualizationMode implements VisualizationMode {
+
+        private static final int[] COLORS = new int[256];
+
+        static {
+            UserFunction alphaFunc =
+                UserFunction.builder().point(0, 0.1f)
+                    .point(ChunkStatus.STRUCTURE_STARTS.getIndex(), 0.15f)
+                    .point(ChunkStatus.STRUCTURE_REFERENCES.getIndex(), 0.28f)
+                    .point(ChunkStatus.CARVERS.getIndex(), 0.7f)
+                    .point(ChunkStatus.LIQUID_CARVERS.getIndex(), 0.2f)
+                    .point(ChunkStatus.FULL.getIndex(), 1).build();
+
+            for (Object2IntMap.Entry<ChunkStatus> entry : CubicWorldLoadScreen.getStatusColorMap().object2IntEntrySet()) {
+                int idx = entry.getKey().getIndex();
+                int alpha = (int) (255 * alphaFunc.getValue(idx));
+                COLORS[idx] = entry.getIntValue() | alpha << 24;
+            }
+            // INACCESSIBLE
+            // BORDER
+            // TICKING
+            // ENTITY_TICKING
+            COLORS[128] = 0x20FF0000;
+            COLORS[129] = 0x40FFFF00;
+            COLORS[130] = 0x8000FF00;
+            COLORS[131] = 0x400000FF;
+            COLORS[255] = 0xFFFF00FF;
+        }
+
+        private final Long2ByteMap map = new Long2ByteLinkedOpenHashMap();
+
+        private final Type type;
+
+        ChunkStatusVisualizationMode(Type type) {
+            this.type = type;
+        }
+
+        @Override public String toString() {
+            return "Status [" + type + "]";
+        }
+
+        @Override public Long2ByteMap buildStateMap(Level level) {
+            map.clear();
+
+            if (!(level instanceof ServerLevel)) {
+                return map;
+            }
+            ChunkMap chunkManager = ((ServerChunkCache) level.getChunkSource()).chunkMap;
+            Long2ObjectLinkedOpenHashMap<ChunkHolder> loadedCubes = getField(ChunkMap.class, chunkManager, "visibleCubeMap");
+
+            Object[] data = getField(Long2ObjectLinkedOpenHashMap.class, loadedCubes, "value");
+            long[] keys = getField(Long2ObjectLinkedOpenHashMap.class, loadedCubes, "key");
+            Long2ByteLinkedOpenHashMap cubeMap = new Long2ByteLinkedOpenHashMap(100000);
+            for (int i = 0, keysLength = keys.length; i < keysLength; i++) {
+                long pos = keys[i];
+                if (pos == 0) {
+                    continue;
+                }
+                ChunkHolder holder = (ChunkHolder) data[i];
+                cubeMap.put(pos, (byte) type.getIndex(holder));
+            }
+            return cubeMap;
+        }
+
+        @Override public int[] getColorMap() {
+            return COLORS;
+        }
+
+        enum Type {
+            TICKET_LEVEL(chunkHolder -> {
+                int index = ICubeHolder.getCubeStatusFromLevel(chunkHolder.getTicketLevel()).getIndex();
+                return index;
+            }),
+            TICKET_LEVEL_FULL_CHUNK_STATUS(holder -> ChunkHolder.getFullChunkStatus(holder.getTicketLevel()).ordinal() + 128),
+            TO_SAVE_LEVEL(holder -> {
+                ChunkAccess cube = holder.getChunkToSave().getNow(null);
+                return cube == null ? 255 : cube.getStatus().getIndex();
+            }),
+            HIGHEST_LOADED(holder -> {
+                ChunkStatus lastAvailableStatus = holder.getLastAvailableStatus();
+                return lastAvailableStatus == null ? 255 : lastAvailableStatus.getIndex();
+            }),
+            ACTUAL_FULL_CHUNK_STATUS(holder -> {
+                int base = 128;
+                Either<LevelChunk, ChunkHolder.ChunkLoadingFailure> entityTicking = holder.getEntityTickingChunkFuture().getNow(null);
+                if (entityTicking != null && entityTicking.left().isPresent()) {
+                    return base + ChunkHolder.FullChunkStatus.ENTITY_TICKING.ordinal();
+                }
+                Either<LevelChunk, ChunkHolder.ChunkLoadingFailure> ticking = holder.getTickingChunkFuture().getNow(null);
+                if (ticking != null && ticking.left().isPresent()) {
+                    return base + ChunkHolder.FullChunkStatus.TICKING.ordinal();
+                }
+                Either<LevelChunk, ChunkHolder.ChunkLoadingFailure> border = holder.getFullChunkFuture().getNow(null);
+                if (border != null && border.left().isPresent()) {
+                    return base + ChunkHolder.FullChunkStatus.BORDER.ordinal();
+                }
+                return base + ChunkHolder.FullChunkStatus.INACCESSIBLE.ordinal();
+            });
+
+            private final ToIntFunction<ChunkHolder> function;
+
+            Type(ToIntFunction<ChunkHolder> function) {
+                this.function = function;
+            }
+
+            int getIndex(ChunkHolder holder) {
+                return function.applyAsInt(holder);
+            }
+        }
+    }
+
+    private static final class ChunkTicketVisualizationMode implements VisualizationMode {
+        private static final int[] COLORS = new int[256];
+
+        static {
+            COLORS[0] = 0x90FF0000;
+            COLORS[1] = 0x9000FF00;
+            COLORS[2] = 0x900000FF;
+            COLORS[3] = 0x90FFFF00;
+            COLORS[4] = 0x90FF00FF;
+            COLORS[5] = 0x9000FFFF;
+            COLORS[255] = 0x90FF00FF;
+        }
+
+        private final Long2ByteLinkedOpenHashMap cubeMap = new Long2ByteLinkedOpenHashMap();
+
+        @Override public Long2ByteMap buildStateMap(Level level) {
+            try {
+                this.cubeMap.clear();
+                if (!(level instanceof ServerLevel)) {
+                    return cubeMap;
+                }
+                ChunkMap chunkMap = ((ServerChunkCache) level.getChunkSource()).chunkMap;
+                Field distManF = ChunkMap.class.getDeclaredField("distanceManager");
+                distManF.setAccessible(true);
+                ChunkMap.DistanceManager distMan = (ChunkMap.DistanceManager) distManF.get(chunkMap);
+                Field ticketsF = DistanceManager.class.getDeclaredField("cubeTickets");
+                ticketsF.setAccessible(true);
+                Long2ObjectOpenHashMap<SortedArraySet<Ticket<?>>> tickets = (Long2ObjectOpenHashMap<SortedArraySet<Ticket<?>>>) ticketsF.get(distMan);
+
+                tickets.long2ObjectEntrySet().fastForEach(entry -> {
+                    long posLong = entry.getLongKey();
+                    for (Ticket<?> ticket : entry.getValue()) {
+                        TicketType<?> type = ticket.getType();
+                        if (type == TicketType.PLAYER || type == CCTicketType.CCPLAYER) {
+                            cubeMap.put(posLong, (byte) 0);
+                        } else if (type == TicketType.START) {
+                            cubeMap.put(posLong, (byte) 1);
+                        } else if (type == TicketType.UNKNOWN || type == CCTicketType.CCUNKNOWN) {
+                            cubeMap.put(posLong, (byte) 2);
+                        } else if (type == TicketType.LIGHT || type == CCTicketType.CCLIGHT) {
+                            cubeMap.put(posLong, (byte) 3);
+                        } else if (type == TicketType.FORCED || type == CCTicketType.CCFORCED) {
+                            cubeMap.put(posLong, (byte) 4);
+                        } else {
+                            cubeMap.put(posLong, (byte) 5);
+                        }
+                    }
+                });
+
+            } catch (ReflectiveOperationException e) {
+                e.printStackTrace();
+            }
+            return cubeMap;
+        }
+
+        @Override public int[] getColorMap() {
+            return COLORS;
+        }
     }
 }

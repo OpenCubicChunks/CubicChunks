@@ -26,6 +26,7 @@ import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import io.github.opencubicchunks.cubicchunks.world.gen.placement.UserFunction;
 import it.unimi.dsi.fastutil.objects.Object2IntArrayMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
+import it.unimi.dsi.fastutil.objects.Object2IntMaps;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiComponent;
@@ -44,6 +45,10 @@ public class CubicWorldLoadScreen {
             .point(ChunkStatus.CARVERS.getIndex(), 0.7f)
             .point(ChunkStatus.LIQUID_CARVERS.getIndex(), 0.2f)
             .point(ChunkStatus.FULL.getIndex(), 1).build();
+
+    public static Object2IntMap<ChunkStatus> getStatusColorMap() {
+        return Object2IntMaps.unmodifiable(STATUS_COLORS);
+    }
 
     @SuppressWarnings("unused") private static void unusedColors() {
         //@formatter:off
