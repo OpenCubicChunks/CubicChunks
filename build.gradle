@@ -1,4 +1,3 @@
-import io.github.opencubicchunks.gradle.MergedMappingsDependency
 import org.gradle.internal.os.OperatingSystem
 
 buildscript {
@@ -9,7 +8,7 @@ buildscript {
         }
     }
     dependencies {
-        classpath 'net.fabricmc:fabric-loom:0.8.3'
+        classpath 'net.fabricmc:fabric-loom:0.9.51'
     }
 }
 plugins {
@@ -92,7 +91,6 @@ sourceSets {
 }
 
 repositories{
-    jcenter()
     mavenCentral()
     mavenLocal()
     maven {
@@ -101,14 +99,19 @@ repositories{
     maven {
         url 'https://repo.spongepowered.org/maven/'
     }
+    jcenter()
+    maven {
+        name = "ParchmentMC"
+        url = "https://maven.parchmentmc.net/"
+    }
     maven {
         name = "JitPack"
         url = "https://jitpack.io"
     }
 }
 
-minecraft {
-    accessWidener "src/main/resources/cubicchunks.accesswidener"
+loom {
+    accessWidenerPath = file('src/main/resources/cubicchunks.accesswidener')
     // intermediaryUrl = { "http://localhost:9000/intermediary-20w49a-v2.jar" }
 
     def dependency = project.configurations.detachedConfiguration(project.dependencies.create("net.fabricmc:sponge-mixin:0.9.4+mixin.0.8.2"))
@@ -138,29 +141,25 @@ minecraft {
     runConfigs {
         client {
             client()
-            ideConfigGenerated = true
-            vmArgs(args)
             vmArgs("-Xmx2G")
         }
         server {
             server()
-            ideConfigGenerated = true
-            vmArgs(args)
             vmArgs("-Xmx2G")
         }
 
         client4g {
             client()
-            ideConfigGenerated = true
-            vmArgs(args)
             vmArgs("-Xmx4G")
         }
         server4g {
             server()
-            ideConfigGenerated = true
-            vmArgs(args)
             vmArgs("-Xmx4G")
         }
+    }
+    runConfigs.configureEach {
+        ideConfigGenerated = true
+        vmArgs(args)
     }
 }
 
@@ -185,10 +184,10 @@ switch (OperatingSystem.current()) {
 
 dependencies {
     minecraft "com.mojang:minecraft:${project.minecraft_version}"
-    def dummyConfig = configurations.create("dummyResolvingConfiguration")
-    mappings new MergedMappingsDependency(project, dummyConfig,
-            minecraft.officialMojangMappings(),
-            dependencies.add("dummyResolvingConfiguration", dependencies.create("net.fabricmc:yarn:${project.yarn_version}:v2")))
+    mappings loom.layered() {
+        officialMojangMappings()
+        parchment("org.parchmentmc.data:parchment-1.17.1:2021.09.05@zip")
+    }
     modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
 
     // Add each module as a dependency
