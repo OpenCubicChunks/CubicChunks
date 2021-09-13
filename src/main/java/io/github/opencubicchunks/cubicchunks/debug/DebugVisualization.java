@@ -130,6 +130,7 @@ import org.lwjgl.opengl.GLCapabilities;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.system.MemoryUtil;
 
+@SuppressWarnings("FieldMayBeFinal")
 public class DebugVisualization {
 
     private static final String VERT_SHADER =
@@ -153,8 +154,8 @@ public class DebugVisualization {
             }""";
     private static final Logger LOGGER = LogManager.getLogger();
 
-    private static final Map<ResourceKey<?>, Level> serverWorlds = new ConcurrentHashMap<>();
-    private static final AtomicBoolean initialized = new AtomicBoolean();
+    private static Map<ResourceKey<?>, Level> serverWorlds = new ConcurrentHashMap<>();
+    private static AtomicBoolean initialized = new AtomicBoolean();
     private static long window;
     private static int shaderProgram;
     private static int matrixLocation;
@@ -163,9 +164,9 @@ public class DebugVisualization {
     private static BufferBuilder bufferBuilder;
     private static BufferBuilder perfGraphBuilder;
 
-    private static final Matrix4f mvpMatrix = new Matrix4f();
-    private static final Matrix4f inverseMatrix = new Matrix4f();
-    private static final PerfTimer[] perfTimer = new PerfTimer[128];
+    private static Matrix4f mvpMatrix = new Matrix4f();
+    private static Matrix4f inverseMatrix = new Matrix4f();
+    private static PerfTimer[] perfTimer = new PerfTimer[128];
     private static int perfTimerIdx = 0;
     private static float screenWidth = 854.0f;
     private static float screenHeight = 480f;
