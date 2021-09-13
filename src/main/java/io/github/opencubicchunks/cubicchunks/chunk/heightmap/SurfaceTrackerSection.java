@@ -22,23 +22,23 @@ public class SurfaceTrackerSection {
     /** Number of children nodes */
     public static final int NODE_COUNT = 1 << NODE_COUNT_BITS;
 
+    // Use width of 16 to match columns.
+    public static final int WIDTH_BLOCKS = 16;
+
     private static final Heightmap.Types[] HEIGHTMAP_TYPES = Heightmap.Types.values();
 
     /** Number of bits needed to represent height (excluding null) at scale zero (i.e. log2(scale0 height)) */
     private static final int BASE_SIZE_BITS = IBigCube.SIZE_BITS;
 
-    // Use width of 16 to match columns.
-    private static final int WIDTH_BLOCKS = 16;
-
-    private final BitStorage heights;
-    private final long[] dirtyPositions; // bitset has 100% memory usage overhead due to pointers and object headers
-    private SurfaceTrackerSection parent;
-    private Object cubeOrNodes;
+    protected final BitStorage heights;
+    protected final long[] dirtyPositions; // bitset has 100% memory usage overhead due to pointers and object headers
+    protected SurfaceTrackerSection parent;
+    protected Object cubeOrNodes;
     /**
      * Position of this section, within all sections of this size e.g. with 64-block sections, y=0-63 would be section 0, y=64-127 would be section 1, etc.
      */
-    private final int scaledY;
-    private final byte scale;
+    protected final int scaledY;
+    protected final byte scale;
     private final byte heightmapType;
 
     public SurfaceTrackerSection(Heightmap.Types types) {
@@ -61,7 +61,10 @@ public class SurfaceTrackerSection {
         this.heightmapType = (byte) types.ordinal();
     }
 
-    /** Get the height for a given position. Recomputes the height if the column is marked dirty in this section. */
+    /**
+     * Get the height for a given position. Recomputes the height if the column is marked dirty in this section.
+     * x and z are global coordinates.
+     */
     public int getHeight(int x, int z) {
         int idx = index(x, z);
         if (!isDirty(idx)) {
@@ -101,51 +104,74 @@ public class SurfaceTrackerSection {
         }
     }
 
-    private void clearDirty(int idx) {
-        dirtyPositions[idx >> 6] &= ~(1L << idx);
-    }
 
-    private void setDirty(int idx) {
-        dirtyPositions[idx >> 6] |= 1L << idx;
-    }
-
-    private boolean isDirty(int idx) {
+    /** Returns if this SurfaceTrackerSection is dirty at the specified index */
+    protected boolean isDirty(int idx) {
         return (dirtyPositions[idx >> 6] & (1L << idx)) != 0;
     }
 
+    /** Sets the index in this SurfaceTrackerSection to non-dirty */
+    protected void clearDirty(int idx) {
+        dirtyPositions[idx >> 6] &= ~(1L << idx);
+    }
+
+    /** Sets the index in this SurfaceTrackerSection to dirty */
+    protected void setDirty(int idx) {
+        dirtyPositions[idx >> 6] |= 1L << idx;
+    }
+
+    /** Sets the index in this and all parent SurfaceTrackerSections to dirty */
+    protected void markDirty(int x, int z) {
+        setDirty(index(x, z));
+        if (parent != null) {
+            parent.markDirty(x, z);
+        }
+    }
+
+    /** Sets this and parents dirty if new height > existing height */
+    private void markTreeDirtyIfRequired(int x, int z, int newHeight) {
+        if (newHeight > relToAbsY(heights.get(index(x, z)), scaledY, scale) || isDirty(index(x, z))) {
+            setDirty(index(x, z));
+            if (this.parent != null) {
+                this.parent.markTreeDirtyIfRequired(x, z, newHeight);
+            }
+        }
+    }
+
+    /**
+     * Updates the internal heightmap for this SurfaceTracker section, and any parents who are also affected by it
+     *
+     * Should only be called on scale 0 heightmaps
+     */
     public void onSetBlock(int x, int y, int z, BlockState state) {
         int index = index(x, z);
         if (isDirty(index)) {
             return;
         }
 
-        y = Coords.localToBlock(scaledY, Coords.blockToLocal(y));
+        //input coordinates could be cube local, so convert Y to global
+        int globalY = Coords.localToBlock(scaledY, Coords.blockToLocal(y));
         int height = getHeight(x, z);
-        if (y < height) {
+        if (globalY < height) {
             return;
         }
 
-        boolean test = HEIGHTMAP_TYPES[heightmapType].isOpaque().test(state);
-        if (y > height) {
-            if (!test) {
+        boolean opaque = HEIGHTMAP_TYPES[heightmapType].isOpaque().test(state);
+        if (globalY > height) {
+            if (!opaque) {
                 return;
             }
 
             if (parent != null) {
-                parent.markDirty(x, z);
+                //only mark parents dirty if the Y is above their current height
+                this.parent.markTreeDirtyIfRequired(x, z, y);
             }
-            this.heights.set(index, absToRelY(y, scaledY, scale));
+            this.heights.set(index, absToRelY(globalY, scaledY, scale));
             return;
         }
-        if (test) {
+        //at this point globalY == height
+        if (!opaque) { //if we're replacing the current (opaque) block with a non-opaque block
             markDirty(x, z);
-        }
-    }
-
-    public void markDirty(int x, int z) {
-        setDirty(index(x, z));
-        if (parent != null) {
-            parent.markDirty(x, z);
         }
     }
 
@@ -216,6 +242,7 @@ public class SurfaceTrackerSection {
         return nodes[i];
     }
 
+    @Nullable
     public SurfaceTrackerSection getCubeNode(int y) {
         if (scale == 0) {
             if (y != scaledY) {
@@ -241,7 +268,7 @@ public class SurfaceTrackerSection {
     }
 
     @Nullable
-    private SurfaceTrackerSection loadNode(int newScaledY, int sectionScale, IBigCube newCube, boolean create) {
+    protected SurfaceTrackerSection loadNode(int newScaledY, int sectionScale, IBigCube newCube, boolean create) {
         // TODO: loading from disk
         if (!create) {
             return null;
@@ -252,7 +279,8 @@ public class SurfaceTrackerSection {
         return new SurfaceTrackerSection(sectionScale, newScaledY, this, HEIGHTMAP_TYPES[this.heightmapType]);
     }
 
-    private int index(int x, int z) {
+    /** Get position x/z index within a column, from global/local pos */
+    protected int index(int x, int z) {
         return (z & 0xF) * WIDTH_BLOCKS + (x & 0xF);
     }
 

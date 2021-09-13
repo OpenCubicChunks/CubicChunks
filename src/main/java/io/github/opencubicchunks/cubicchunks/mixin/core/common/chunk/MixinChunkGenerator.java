@@ -31,6 +31,7 @@ import net.minecraft.data.worldgen.StructureFeatures;
 import net.minecraft.network.protocol.game.DebugPackets;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.LevelHeightAccessor;
 import net.minecraft.world.level.StructureFeatureManager;
 import net.minecraft.world.level.WorldGenLevel;
 import net.minecraft.world.level.biome.Biome;
@@ -272,7 +273,7 @@ public abstract class MixinChunkGenerator implements ICubeGenerator {
     }
 
     @Redirect(method = "applyCarvers", at = @At(value = "NEW", target = "net/minecraft/world/level/levelgen/carver/CarvingContext"))
-    private CarvingContext cubicContext(ChunkGenerator chunkGenerator, long seed, BiomeManager access, ChunkAccess chunk, GenerationStep.Carving carver) {
+    private CarvingContext cubicContext(ChunkGenerator chunkGenerator, LevelHeightAccessor accessor, long seed, BiomeManager access, ChunkAccess chunk, GenerationStep.Carving carver) {
         return new CubicCarvingContext(chunkGenerator, chunk);
     }
 }

@@ -1,11 +1,15 @@
 package io.github.opencubicchunks.cubicchunks.mixin.core.common.entity;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Queue;
 
 import io.github.opencubicchunks.cubicchunks.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.chunk.ImposterChunkPos;
 import io.github.opencubicchunks.cubicchunks.chunk.storage.CubicEntityStorage;
 import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
+import io.github.opencubicchunks.cubicchunks.world.entity.ChunkEntityStateEventHandler;
+import io.github.opencubicchunks.cubicchunks.world.entity.ChunkEntityStateEventSource;
 import io.github.opencubicchunks.cubicchunks.world.entity.IsCubicEntityContext;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import net.minecraft.core.BlockPos;
@@ -25,9 +29,10 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 @Mixin(PersistentEntitySectionManager.class)
-public abstract class MixinPersistentEntitySectionManager<T extends EntityAccess> implements IsCubicEntityContext {
+public abstract class MixinPersistentEntitySectionManager<T extends EntityAccess> implements IsCubicEntityContext, ChunkEntityStateEventSource {
 
 
     @Shadow @Final private Long2ObjectMap<Object> chunkLoadStatuses;
@@ -37,11 +42,16 @@ public abstract class MixinPersistentEntitySectionManager<T extends EntityAccess
     @Shadow @Final private Long2ObjectMap<Visibility> chunkVisibility;
 
     private boolean isCubic;
+    private List<ChunkEntityStateEventHandler> eventHandler = new ArrayList<>();
 
     @Shadow public abstract void updateChunkStatus(ChunkPos chunkPos, Visibility visibility);
 
     @Override public boolean isCubic() {
         return this.isCubic;
+    }
+
+    @Override public void registerChunkEntityStateEventHandler(ChunkEntityStateEventHandler handler) {
+        this.eventHandler.add(handler);
     }
 
     @Override public void setIsCubic(boolean isCubic) {
@@ -107,5 +117,33 @@ public abstract class MixinPersistentEntitySectionManager<T extends EntityAccess
         }
 
         cir.setReturnValue(this.chunkVisibility.get(CubePos.asLong(blockPos)).isTicking());
+    }
+
+    // "event handlers" for CubicFastServerTickList
+
+    @Inject(method = "processPendingLoads",
+        at = @At(value = "INVOKE", shift = At.Shift.AFTER, target = "Lit/unimi/dsi/fastutil/longs/Long2ObjectMap;put(JLjava/lang/Object;)Ljava/lang/Object;"),
+        locals = LocalCapture.CAPTURE_FAILHARD)
+    private void onLoad(CallbackInfo ci, ChunkEntities<T> entities) {
+        if (!isCubic) {
+            return;
+        }
+        if (!eventHandler.isEmpty()) {
+            var pos = ((ImposterChunkPos) entities.getPos()).toCubePos();
+            eventHandler.forEach(x -> x.onCubeEntitiesLoad(pos));
+        }
+    }
+
+    @Inject(method = "processChunkUnload",
+        at = @At(value = "INVOKE", shift = At.Shift.AFTER, target = "Lit/unimi/dsi/fastutil/longs/Long2ObjectMap;remove(J)Ljava/lang/Object;"))
+    private void onUnload(long posLong, CallbackInfoReturnable<Boolean> cir) {
+        if (!isCubic) {
+            return;
+        }
+        // posLong is cubePos if cubic, chunk pos if not cubic
+        if (eventHandler != null) {
+            var pos = CubePos.from(posLong);
+            eventHandler.forEach(x -> x.onCubeEntitiesUnload(pos));
+        }
     }
 }
