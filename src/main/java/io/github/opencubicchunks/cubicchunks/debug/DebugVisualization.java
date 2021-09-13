@@ -103,7 +103,6 @@ import it.unimi.dsi.fastutil.longs.Long2ObjectLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.core.Direction;
 import net.minecraft.resources.ResourceKey;
@@ -134,41 +133,39 @@ import org.lwjgl.system.MemoryUtil;
 public class DebugVisualization {
 
     private static final String VERT_SHADER =
-        "#version 330 core\n" +
-            "layout(location = 0) in vec3 posIn;\n" +
-            "layout(location = 1) in vec4 colorIn;\n" +
-            "smooth out vec4 fragColor;\n" +
-            "uniform mat4 mvpMatrix;\n" +
-            "void main() {\n" +
-            "  gl_Position = mvpMatrix * vec4(posIn, 1);\n" +
-            "  fragColor = colorIn;\n" +
-            "}";
+        """
+            #version 330 core
+            layout(location = 0) in vec3 posIn;
+            layout(location = 1) in vec4 colorIn;
+            smooth out vec4 fragColor;
+            uniform mat4 mvpMatrix;
+            void main() {
+              gl_Position = mvpMatrix * vec4(posIn, 1);
+              fragColor = colorIn;
+            }""";
     private static final String FRAG_SHADER =
-        "#version 330 core\n" +
-            "smooth in vec4 fragColor;\n" +
-            "out vec4 outColor;\n" +
-            "void main() {\n" +
-            "  outColor = fragColor;\n" +
-            "}";
+        """
+            #version 330 core
+            smooth in vec4 fragColor;
+            out vec4 outColor;
+            void main() {
+              outColor = fragColor;
+            }""";
     private static final Logger LOGGER = LogManager.getLogger();
 
-    private static volatile Level clientWorld;
-    private static volatile Map<ResourceKey<?>, Level> serverWorlds = new ConcurrentHashMap<>();
-    private static AtomicBoolean initialized = new AtomicBoolean();
-    private static boolean shutdown = false;
+    private static final Map<ResourceKey<?>, Level> serverWorlds = new ConcurrentHashMap<>();
+    private static final AtomicBoolean initialized = new AtomicBoolean();
     private static long window;
     private static int shaderProgram;
     private static int matrixLocation;
-    private static int vao;
     private static int posAttrib;
     private static int colAttrib;
-    private static int glBuffer;
     private static BufferBuilder bufferBuilder;
     private static BufferBuilder perfGraphBuilder;
 
-    private static Matrix4f mvpMatrix = new Matrix4f();
-    private static Matrix4f inverseMatrix = new Matrix4f();
-    private static PerfTimer[] perfTimer = new PerfTimer[128];
+    private static final Matrix4f mvpMatrix = new Matrix4f();
+    private static final Matrix4f inverseMatrix = new Matrix4f();
+    private static final PerfTimer[] perfTimer = new PerfTimer[128];
     private static int perfTimerIdx = 0;
     private static float screenWidth = 854.0f;
     private static float screenHeight = 480f;
@@ -191,9 +188,6 @@ public class DebugVisualization {
 
     public static void onRender() {
         if (!enabled) {
-            return;
-        }
-        if (shutdown) {
             return;
         }
 
@@ -229,9 +223,7 @@ public class DebugVisualization {
         if (!enabled) {
             return;
         }
-        if (w instanceof ClientLevel) {
-            clientWorld = w;
-        } else if (w instanceof ServerLevel) {
+        if (w instanceof ServerLevel) {
             serverWorlds.put(w.dimension(), w);
         }
 
@@ -271,11 +263,12 @@ public class DebugVisualization {
             glfwGetWindowSize(window, pWidth, pHeight);
             GLFWVidMode vidmode = glfwGetVideoMode(glfwGetPrimaryMonitor());
             glfwGetMonitorPos(glfwGetPrimaryMonitor(), monPosLeft, monPosTop);
+            assert vidmode != null;
             glfwSetWindowPos(window, (vidmode.width() - pWidth.get(0)) / 2 + monPosLeft.get(0),
                 (vidmode.height() - pHeight.get(0)) / 2 + monPosTop.get(0));
         }
 
-        GLFW.glfwSetWindowSizeCallback(window, (window, width, height) -> {
+        GLFW.glfwSetWindowSizeCallback(window, (resizedWindow, width, height) -> {
             screenWidth = width;
             screenHeight = height;
         });
@@ -310,11 +303,11 @@ public class DebugVisualization {
         System.out.println("E6=" + glGetError());
         matrixLocation = glGetUniformLocation(shaderProgram, "mvpMatrix");
         System.out.println("E7=" + glGetError());
-        vao = glGenVertexArrays();
+        int vao = glGenVertexArrays();
         System.out.println("E8=" + glGetError());
         glBindVertexArray(vao);
         System.out.println("E9=" + glGetError());
-        glBuffer = glGenBuffers();
+        int glBuffer = glGenBuffers();
         glBindBuffer(GL_ARRAY_BUFFER, glBuffer);
         System.out.println("E10=" + glGetError());
         bufferBuilder = new BufferBuilder(4096);
@@ -459,7 +452,7 @@ public class DebugVisualization {
         timer().buildQuads = System.nanoTime();
     }
 
-    private static <T> T getField(Class<?> cl, Object obj, String name) {
+    @SuppressWarnings("unchecked") private static <T> T getField(Class<?> cl, Object obj, String name) {
         try {
             Field f = cl.getDeclaredField(name);
             f.setAccessible(true);
@@ -473,7 +466,6 @@ public class DebugVisualization {
         int[] colorsArray = mode.getColorMap();
 
         Direction[] directions = Direction.values();
-        final boolean drawNull = false;
 
         Map<Integer, List<Vertex>> verts = new HashMap<>();
         for (Long2ByteMap.Entry e : cubeMap.long2ByteEntrySet()) {
@@ -484,7 +476,7 @@ public class DebugVisualization {
             int status = e.getByteValue() & 0xFF;
             int c = colorsArray[status];
 
-            EnumSet<Direction> renderFaces = findRenderFaces(cubeMap, directions, drawNull, posX, posY, posZ, status);
+            EnumSet<Direction> renderFaces = findRenderFaces(cubeMap, directions, posX, posY, posZ, status);
 
             List<Vertex> buffer = verts.computeIfAbsent(status, x -> new ArrayList<>());
             drawCube(buffer, posX - playerX, posY - playerY, posZ - playerZ, 7, c, renderFaces);
@@ -492,7 +484,7 @@ public class DebugVisualization {
         buildVertices(builder, verts);
     }
 
-    private static EnumSet<Direction> findRenderFaces(Long2ByteMap cubeMap, Direction[] directions, boolean drawNull, int posX, int posY, int posZ, int status) {
+    private static EnumSet<Direction> findRenderFaces(Long2ByteMap cubeMap, Direction[] directions, int posX, int posY, int posZ, int status) {
         EnumSet<Direction> renderFaces = EnumSet.noneOf(Direction.class);
         for (Direction value : directions) {
             long l = CubePos.asLong(posX + value.getStepX(), posY + value.getStepY(), posZ + value.getStepZ());
@@ -511,7 +503,7 @@ public class DebugVisualization {
                 continue;
             }
             for (Vertex v : vertices) {
-                vertex(builder, v.x, v.y, v.z, v.nx, v.ny, v.nz, v.rgba);
+                vertex(builder, v.x, v.y, v.z, v.rgba);
             }
         }
     }
@@ -669,12 +661,13 @@ public class DebugVisualization {
     }
 
     private static void quad2d(BufferBuilder buf, float x1, float y1, float x2, float y2, int color) {
-        vertex(buf, x1, y1, 1, 0, 0, 0, color);
-        vertex(buf, x1, y2, 1, 0, 0, 0, color);
-        vertex(buf, x2, y2, 1, 0, 0, 0, color);
-        vertex(buf, x2, y1, 1, 0, 0, 0, color);
+        vertex(buf, x1, y1, 1, color);
+        vertex(buf, x1, y2, 1, color);
+        vertex(buf, x2, y2, 1, color);
+        vertex(buf, x2, y1, 1, color);
     }
 
+    @SuppressWarnings({ "DuplicatedCode", "SameParameterValue" })
     private static void drawCube(List<Vertex> buffer, int x, int y, int z, float scale, int color, EnumSet<Direction> renderFaces) {
         float x0 = x * scale;
         float x1 = x0 + scale;
@@ -692,18 +685,18 @@ public class DebugVisualization {
         if (renderFaces.contains(Direction.DOWN)) {
             int c = darken(color, 40);
             // down face
-            buffer.add(new Vertex(x1, y0, z0, 0, 1, 0, color));
-            buffer.add(new Vertex(x1, y0, z1, 0, 1, 0, color));
-            buffer.add(new Vertex(x0, y0, z1, 0, 1, 0, color));
-            buffer.add(new Vertex(x0, y0, z0, 0, 1, 0, color));
+            buffer.add(new Vertex(x1, y0, z0, 0, 1, 0, c));
+            buffer.add(new Vertex(x1, y0, z1, 0, 1, 0, c));
+            buffer.add(new Vertex(x0, y0, z1, 0, 1, 0, c));
+            buffer.add(new Vertex(x0, y0, z0, 0, 1, 0, c));
         }
         if (renderFaces.contains(Direction.EAST)) {
             int c = darken(color, 30);
             // right face
+            buffer.add(new Vertex(x1, y1, z0, 1, 0, 0, c));
             buffer.add(new Vertex(x1, y1, z1, 1, 0, 0, c));
             buffer.add(new Vertex(x1, y0, z1, 1, 0, 0, c));
             buffer.add(new Vertex(x1, y0, z0, 1, 0, 0, c));
-            buffer.add(new Vertex(x1, y1, z0, 1, 0, 0, c));
 
         }
         if (renderFaces.contains(Direction.WEST)) {
@@ -732,7 +725,7 @@ public class DebugVisualization {
         }
     }
 
-    private static int darken(int color, int amount) {
+    @SuppressWarnings("DuplicatedCode") private static int darken(int color, int amount) {
         int r = color >>> 16 & 0xFF;
         r -= (r * amount) / 100;
         int g = color >>> 8 & 0xFF;
@@ -742,7 +735,7 @@ public class DebugVisualization {
         return color & 0xFF000000 | r << 16 | g << 8 | b;
     }
 
-    private static void vertex(BufferBuilder buffer, float x, float y, float z, int nx, int ny, int nz, int color) {
+    private static void vertex(BufferBuilder buffer, float x, float y, float z, int color) {
         // color = (color & 0xFF000000) | ((~color) & 0x00FFFFFF);
         int r = color >>> 16 & 0xFF;
         int g = color >>> 8 & 0xFF;
@@ -802,7 +795,7 @@ public class DebugVisualization {
             glFinish = 0;
         }
 
-        public void drawTimer(FloatBiConsumer line) {
+        @SuppressWarnings({ "DuplicatedCode", "UnusedAssignment" }) public void drawTimer(FloatBiConsumer line) {
             double scale = 0.5f / TimeUnit.MILLISECONDS.toNanos(1);
 
 
@@ -938,10 +931,7 @@ public class DebugVisualization {
         }
 
         enum Type {
-            TICKET_LEVEL(chunkHolder -> {
-                int index = ICubeHolder.getCubeStatusFromLevel(chunkHolder.getTicketLevel()).getIndex();
-                return index;
-            }),
+            TICKET_LEVEL(chunkHolder -> ICubeHolder.getCubeStatusFromLevel(chunkHolder.getTicketLevel()).getIndex()),
             TICKET_LEVEL_FULL_CHUNK_STATUS(holder -> ChunkHolder.getFullChunkStatus(holder.getTicketLevel()).ordinal() + 128),
             TO_SAVE_LEVEL(holder -> {
                 ChunkAccess cube = holder.getChunkToSave().getNow(null);
@@ -1005,8 +995,10 @@ public class DebugVisualization {
                 Field distManF = ChunkMap.class.getDeclaredField("distanceManager");
                 distManF.setAccessible(true);
                 ChunkMap.DistanceManager distMan = (ChunkMap.DistanceManager) distManF.get(chunkMap);
+                @SuppressWarnings("JavaReflectionMemberAccess")
                 Field ticketsF = DistanceManager.class.getDeclaredField("cubeTickets");
                 ticketsF.setAccessible(true);
+                @SuppressWarnings("unchecked")
                 Long2ObjectOpenHashMap<SortedArraySet<Ticket<?>>> tickets = (Long2ObjectOpenHashMap<SortedArraySet<Ticket<?>>>) ticketsF.get(distMan);
 
                 tickets.long2ObjectEntrySet().fastForEach(entry -> {
