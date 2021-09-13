@@ -263,7 +263,10 @@ public abstract class MixinChunkHolder implements ICubeHolder {
     @Redirect(method = "demoteFullChunk", at = @At(value = "FIELD",
         target = "Lnet/minecraft/server/level/ChunkHolder;pos:Lnet/minecraft/world/level/ChunkPos;"))
     private ChunkPos chunkPos(ChunkHolder holder) {
-        return (this.cubePos != null) ? new ImposterChunkPos(this.cubePos) : this.pos;
+        if (this.cubePos != null) {
+            return new ImposterChunkPos(this.cubePos);
+        }
+        return this.pos;
     }
 
     @Redirect(method = "scheduleFullChunkPromotion", at = @At(
@@ -289,15 +292,12 @@ public abstract class MixinChunkHolder implements ICubeHolder {
         });
     }
 
-    @Inject(method = "demoteFullChunk", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ChunkMap;onFullChunkStatusChange"
-        + "(Lnet/minecraft/world/level/ChunkPos;Lnet/minecraft/server/level/ChunkHolder$FullChunkStatus;)V"), cancellable = true)
-    private void onDemoteFullChunk(ChunkMap chunkMap, ChunkHolder.FullChunkStatus fullChunkStatus, CallbackInfo ci) {
-        if (!((CubicLevelHeightAccessor) this.levelHeightAccessor).isCubic()) {
-            return;
-        }
-
-        if (cubePos != null) {
-            ci.cancel();
+    // TODO: is there a better way than redirect?
+    @Redirect(method = "demoteFullChunk", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ChunkMap;onFullChunkStatusChange"
+        + "(Lnet/minecraft/world/level/ChunkPos;Lnet/minecraft/server/level/ChunkHolder$FullChunkStatus;)V"))
+    private void onDemoteFullChunk(ChunkMap chunkMap, ChunkPos chunkPos, ChunkHolder.FullChunkStatus fullChunkStatus) {
+        if (!((CubicLevelHeightAccessor) this.levelHeightAccessor).isCubic() || cubePos != null) {
+            ((ChunkManagerAccess) chunkMap).invokeOnFullChunkStatusChange(chunkPos, fullChunkStatus);
         }
     }
 
