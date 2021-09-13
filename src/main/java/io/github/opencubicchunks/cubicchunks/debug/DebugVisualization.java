@@ -276,7 +276,6 @@ public class DebugVisualization {
         }
 
         GLFW.glfwSetWindowSizeCallback(window, (window, width, height) -> {
-            GL11.glViewport(0, 0, width, height);
             screenWidth = width;
             screenHeight = height;
         });
@@ -411,6 +410,8 @@ public class DebugVisualization {
     }
 
     private static void matrixSetup() {
+        GL11.glViewport(0, 0, (int) screenWidth, (int) screenHeight);
+
         mvpMatrix.setIdentity();
         // mvp = projection*view*model
         // projection
@@ -644,8 +645,8 @@ public class DebugVisualization {
         glUseProgram(shaderProgram);
 
         Matrix4f ortho = MathUtil.createMatrix(new float[] {
-            2f / 854f, 0, 0, -1f,
-            0, 2f / 480f, 0, -1f,
+            2f / screenWidth, 0, 0, -1f,
+            0, 2f / screenHeight, 0, -1f,
             0, 0, -2f / 2000f, 0,
             0, 0, 0, 1
         });
