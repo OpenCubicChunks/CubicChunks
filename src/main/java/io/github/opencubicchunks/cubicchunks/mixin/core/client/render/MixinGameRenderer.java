@@ -1,7 +1,7 @@
-package io.github.opencubicchunks.cubicchunks.mixin.core.client;
+package io.github.opencubicchunks.cubicchunks.mixin.core.client.render;
 
 import io.github.opencubicchunks.cubicchunks.CubicChunks;
-import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
+import io.github.opencubicchunks.cubicchunks.world.level.CubicLevelHeightAccessor;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GameRenderer;
 import org.spongepowered.asm.mixin.Final;

@@ -4,8 +4,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
 
-import io.github.opencubicchunks.cubicchunks.chunk.ImposterChunkPos;
-import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
+import io.github.opencubicchunks.cubicchunks.world.ImposterChunkPos;
+import io.github.opencubicchunks.cubicchunks.world.level.CubicLevelHeightAccessor;
 import io.github.opencubicchunks.cubicchunks.world.SetupCubeStructureStart;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Vec3i;

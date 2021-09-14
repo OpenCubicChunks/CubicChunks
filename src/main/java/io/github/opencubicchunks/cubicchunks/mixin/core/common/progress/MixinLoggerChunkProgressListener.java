@@ -2,9 +2,9 @@ package io.github.opencubicchunks.cubicchunks.mixin.core.common.progress;
 
 import javax.annotation.Nullable;
 
-import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
-import io.github.opencubicchunks.cubicchunks.chunk.ICubeStatusListener;
-import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
+import io.github.opencubicchunks.cubicchunks.world.level.chunk.CubeAccess;
+import io.github.opencubicchunks.cubicchunks.server.level.progress.CubeProgressListener;
+import io.github.opencubicchunks.cubicchunks.world.level.CubePos;
 import net.minecraft.server.level.progress.LoggerChunkProgressListener;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.chunk.ChunkStatus;
@@ -20,7 +20,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(LoggerChunkProgressListener.class)
-public abstract class MixinLoggingChunkStatusListener implements ICubeStatusListener {
+public abstract class MixinLoggerChunkProgressListener implements CubeProgressListener {
 
     private int loadedCubes;
     private int totalCubes;
@@ -34,11 +34,11 @@ public abstract class MixinLoggingChunkStatusListener implements ICubeStatusList
         // Except we subtract one before the ceil and readd it after, for... some reason
         // Multiply by two to convert cube radius -> diameter,
         // And then add one for the center cube
-        int ccCubeRadius = 1 + (int) Math.ceil((vanillaSpawnRadius - 1) / ((float) IBigCube.DIAMETER_IN_SECTIONS));
+        int ccCubeRadius = 1 + (int) Math.ceil((vanillaSpawnRadius - 1) / ((float) CubeAccess.DIAMETER_IN_SECTIONS));
         int ccCubeDiameter = ccCubeRadius * 2 + 1;
         totalCubes = ccCubeDiameter * ccCubeDiameter * ccCubeDiameter;
 
-        int ccChunkRadius = ccCubeRadius * IBigCube.DIAMETER_IN_SECTIONS;
+        int ccChunkRadius = ccCubeRadius * CubeAccess.DIAMETER_IN_SECTIONS;
         int ccChunkDiameter = ccChunkRadius * 2 + 1;
         maxCount = ccChunkDiameter * ccChunkDiameter;
     }
@@ -61,7 +61,7 @@ public abstract class MixinLoggingChunkStatusListener implements ICubeStatusList
 
     /**
      * @author CursedFlames & NotStirred
-     * @reason number of chunks is different due to rounding to chunks rounding to 1 cubes to 1, 2, 4, 8 depending on {@link IBigCube#DIAMETER_IN_SECTIONS}
+     * @reason number of chunks is different due to rounding to chunks rounding to 1 cubes to 1, 2, 4, 8 depending on {@link CubeAccess#DIAMETER_IN_SECTIONS}
      */
     @Inject(method = "getProgress", at = @At("HEAD"), cancellable = true)
     private void getProgress(CallbackInfoReturnable<Integer> cir) {

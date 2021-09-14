@@ -1,23 +1,24 @@
-package io.github.opencubicchunks.cubicchunks.chunk.ticket;
+package io.github.opencubicchunks.cubicchunks.server.level;
 
-import io.github.opencubicchunks.cubicchunks.chunk.IChunkManager;
-import io.github.opencubicchunks.cubicchunks.chunk.graph.CubeDistanceGraph;
+import io.github.opencubicchunks.cubicchunks.server.level.CubeMap;
+import io.github.opencubicchunks.cubicchunks.server.level.CubeTracker;
+import io.github.opencubicchunks.cubicchunks.server.level.CubicDistanceManager;
 import net.minecraft.server.level.ChunkHolder;
 import net.minecraft.server.level.Ticket;
 import net.minecraft.util.SortedArraySet;
 
-public class CubeTicketTracker extends CubeDistanceGraph {
-    private final ITicketManager iTicketManager;
+public class CubeTicketTracker extends CubeTracker {
+    private final CubicDistanceManager cubicDistanceManager;
 
-    public CubeTicketTracker(ITicketManager iTicketManager) {
+    public CubeTicketTracker(CubicDistanceManager cubicDistanceManager) {
         //TODO: change the arguments passed into super to CCCubeManager or CCColumnManager
-        super(IChunkManager.MAX_CUBE_DISTANCE + 2, 16, 256);
-        this.iTicketManager = iTicketManager;
+        super(CubeMap.MAX_CUBE_DISTANCE + 2, 16, 256);
+        this.cubicDistanceManager = cubicDistanceManager;
     }
 
     @Override
     protected int getSourceLevel(long pos) {
-        SortedArraySet<Ticket<?>> sortedarrayset = iTicketManager.getCubeTickets().get(pos);
+        SortedArraySet<Ticket<?>> sortedarrayset = cubicDistanceManager.getCubeTickets().get(pos);
         if (sortedarrayset == null) {
             return Integer.MAX_VALUE;
         } else {
@@ -27,24 +28,24 @@ public class CubeTicketTracker extends CubeDistanceGraph {
 
     @Override
     protected int getLevel(long cubePosIn) {
-        if (!iTicketManager.containsCubes(cubePosIn)) {
-            ChunkHolder chunkholder = iTicketManager.getCubeHolder(cubePosIn);
+        if (!cubicDistanceManager.containsCubes(cubePosIn)) {
+            ChunkHolder chunkholder = cubicDistanceManager.getCubeHolder(cubePosIn);
             if (chunkholder != null) {
                 return chunkholder.getTicketLevel();
             }
         }
 
-        return IChunkManager.MAX_CUBE_DISTANCE + 1;
+        return CubeMap.MAX_CUBE_DISTANCE + 1;
     }
 
     @Override
     protected void setLevel(long cubePosIn, int level) {
-        ChunkHolder chunkholder = iTicketManager.getCubeHolder(cubePosIn);
-        int i = chunkholder == null ? IChunkManager.MAX_CUBE_DISTANCE + 1 : chunkholder.getTicketLevel();
+        ChunkHolder chunkholder = cubicDistanceManager.getCubeHolder(cubePosIn);
+        int i = chunkholder == null ? CubeMap.MAX_CUBE_DISTANCE + 1 : chunkholder.getTicketLevel();
         if (i != level) {
-            chunkholder = iTicketManager.updateCubeScheduling(cubePosIn, level, chunkholder, i);
+            chunkholder = cubicDistanceManager.updateCubeScheduling(cubePosIn, level, chunkholder, i);
             if (chunkholder != null) {
-                iTicketManager.getCubesToUpdateFutures().add(chunkholder);
+                cubicDistanceManager.getCubesToUpdateFutures().add(chunkholder);
             }
 
         }

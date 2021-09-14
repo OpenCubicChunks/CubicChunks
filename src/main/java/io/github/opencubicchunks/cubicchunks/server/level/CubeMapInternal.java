@@ -1,8 +1,8 @@
-package io.github.opencubicchunks.cubicchunks.chunk;
+package io.github.opencubicchunks.cubicchunks.server.level;
 
-import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
+import io.github.opencubicchunks.cubicchunks.world.level.CubePos;
 
-public interface IChunkMapInternal {
+public interface CubeMapInternal {
 
     boolean isExistingCubeFull(CubePos pos);
 }

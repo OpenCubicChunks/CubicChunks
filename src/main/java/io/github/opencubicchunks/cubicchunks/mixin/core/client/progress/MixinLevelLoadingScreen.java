@@ -1,8 +1,8 @@
 package io.github.opencubicchunks.cubicchunks.mixin.core.client.progress;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import io.github.opencubicchunks.cubicchunks.client.CubicWorldLoadScreen;
-import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
+import io.github.opencubicchunks.cubicchunks.client.gui.screens.CubicLevelLoadingScreen;
+import io.github.opencubicchunks.cubicchunks.world.level.CubicLevelHeightAccessor;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.LevelLoadingScreen;
@@ -19,11 +19,11 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(LevelLoadingScreen.class)
-public class MixinWorldLoadProgressScreen extends Screen {
+public class MixinLevelLoadingScreen extends Screen {
 
     @Shadow @Final private static Object2IntMap<ChunkStatus> COLORS;
 
-    protected MixinWorldLoadProgressScreen(Component titleIn) {
+    protected MixinLevelLoadingScreen(Component titleIn) {
         super(titleIn);
     }
 
@@ -39,7 +39,7 @@ public class MixinWorldLoadProgressScreen extends Screen {
         }
 
         ci.cancel();
-        CubicWorldLoadScreen.doRender(mStack, trackerParam, xBase, yBase, scale, spacing, COLORS);
+        CubicLevelLoadingScreen.doRender(mStack, trackerParam, xBase, yBase, scale, spacing, COLORS);
 
     }
 }

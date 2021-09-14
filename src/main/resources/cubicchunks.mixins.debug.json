@@ -17,7 +17,11 @@
         "common.MixinPlayerRespawnLogic"
     ],
     "client": [
-        "client.MixinLevelRenderer"
+        "client.MixinClientLevel",
+        "client.MixinGameRenderer",
+        "client.MixinLevelRenderer",
+        "client.MixinMinecraft",
+        "client.MixinMinecraftServer"
     ],
     "server": []
 }

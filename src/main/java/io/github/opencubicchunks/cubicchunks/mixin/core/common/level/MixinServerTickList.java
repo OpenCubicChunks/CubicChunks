@@ -1,4 +1,4 @@
-package io.github.opencubicchunks.cubicchunks.mixin.core.common.world;
+package io.github.opencubicchunks.cubicchunks.mixin.core.common.level;
 
 import java.util.Collection;
 import java.util.Iterator;
@@ -12,9 +12,9 @@ import java.util.function.Predicate;
 import javax.annotation.Nullable;
 
 import com.google.common.collect.Lists;
-import io.github.opencubicchunks.cubicchunks.chunk.ImposterChunkPos;
-import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
-import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
+import io.github.opencubicchunks.cubicchunks.world.ImposterChunkPos;
+import io.github.opencubicchunks.cubicchunks.world.level.CubePos;
+import io.github.opencubicchunks.cubicchunks.world.level.CubicLevelHeightAccessor;
 import io.github.opencubicchunks.cubicchunks.world.CubicServerTickList;
 import it.unimi.dsi.fastutil.objects.ObjectAVLTreeSet;
 import net.minecraft.CrashReport;

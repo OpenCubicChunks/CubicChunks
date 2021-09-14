@@ -1,11 +1,11 @@
-package io.github.opencubicchunks.cubicchunks.chunk.heightmap;
+package io.github.opencubicchunks.cubicchunks.world.level.levelgen.heightmap;
 
 import java.util.Arrays;
 
 import javax.annotation.Nullable;
 
-import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
-import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
+import io.github.opencubicchunks.cubicchunks.world.level.chunk.CubeAccess;
+import io.github.opencubicchunks.cubicchunks.world.level.CubePos;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.block.Blocks;
@@ -24,7 +24,7 @@ public class LightSurfaceTrackerSection extends SurfaceTrackerSection {
         super(scale, scaledY, parent, Heightmap.Types.WORLD_SURFACE);
     }
 
-    public LightSurfaceTrackerSection(int scale, int scaledY, SurfaceTrackerSection parent, IBigCube cube) {
+    public LightSurfaceTrackerSection(int scale, int scaledY, SurfaceTrackerSection parent, CubeAccess cube) {
         super(scale, scaledY, parent, cube, Heightmap.Types.WORLD_SURFACE);
     }
 
@@ -38,7 +38,7 @@ public class LightSurfaceTrackerSection extends SurfaceTrackerSection {
 
     @Nullable
     @Override
-    protected SurfaceTrackerSection loadNode(int newScaledY, int sectionScale, IBigCube newCube, boolean create) {
+    protected SurfaceTrackerSection loadNode(int newScaledY, int sectionScale, CubeAccess newCube, boolean create) {
         // TODO: loading from disk
         if (!create) {
             return null;
@@ -69,15 +69,15 @@ public class LightSurfaceTrackerSection extends SurfaceTrackerSection {
         synchronized (this) {
             int maxY = Integer.MIN_VALUE;
             if (scale == 0) {
-                IBigCube cube = (IBigCube) cubeOrNodes;
+                CubeAccess cube = (CubeAccess) cubeOrNodes;
                 CubePos cubePos = cube.getCubePos();
 
                 LightSurfaceTrackerSection sectionAbove = this.getSectionAbove();
 
-                int dy = IBigCube.DIAMETER_IN_BLOCKS - 1;
+                int dy = CubeAccess.DIAMETER_IN_BLOCKS - 1;
 
                 // TODO unknown behavior for occlusion on a loading boundary (i.e. sectionAbove == null)
-                BlockState above = sectionAbove == null ? Blocks.AIR.defaultBlockState() : ((IBigCube) sectionAbove.cubeOrNodes).getBlockState(x, 0, z);
+                BlockState above = sectionAbove == null ? Blocks.AIR.defaultBlockState() : ((CubeAccess) sectionAbove.cubeOrNodes).getBlockState(x, 0, z);
                 BlockState state = cube.getBlockState(x, dy, z);
 
                 // note that this BlockPos relies on `cubePos.blockY` returning correct results when the local coord is not inside the cube
@@ -89,7 +89,7 @@ public class LightSurfaceTrackerSection extends SurfaceTrackerSection {
                 while (dy >= 0) {
                     int lightBlock = state.getLightBlock(cube, new BlockPos(cubePos.blockX(x), cubePos.blockY(dy), cubePos.blockZ(z)));
                     if (lightBlock > 0 || Shapes.faceShapeOccludes(voxelShapeAbove, voxelShape)) {
-                        int minY = scaledY * IBigCube.DIAMETER_IN_BLOCKS;
+                        int minY = scaledY * CubeAccess.DIAMETER_IN_BLOCKS;
                         maxY = minY + dy;
                         break;
                     }
@@ -124,7 +124,7 @@ public class LightSurfaceTrackerSection extends SurfaceTrackerSection {
     /**
      * Used when upgrading CubePrimers to BigCubes; should never be used elsewhere.
      */
-    public void upgradeCube(IBigCube cube) {
+    public void upgradeCube(CubeAccess cube) {
         if (this.scale != 0) {
             throw new IllegalStateException("Attempted to upgrade the cube on a non-zero scale section");
         }
@@ -136,7 +136,7 @@ public class LightSurfaceTrackerSection extends SurfaceTrackerSection {
     }
 
     @Override
-    public void loadCube(int sectionX, int sectionZ, IBigCube newCube, boolean markDirty) {
+    public void loadCube(int sectionX, int sectionZ, CubeAccess newCube, boolean markDirty) {
         if (this.cubeOrNodes == null) {
             throw new IllegalStateException("Attempting to load cube " + newCube.getCubePos() + " into an unloaded surface tracker section");
         }
@@ -163,6 +163,6 @@ public class LightSurfaceTrackerSection extends SurfaceTrackerSection {
     }
 
     protected VoxelShape getShape(BlockState blockState, BlockPos pos, Direction facing) {
-        return blockState.canOcclude() && blockState.useShapeForLightOcclusion() ? blockState.getFaceOcclusionShape((IBigCube) this.cubeOrNodes, pos, facing) : Shapes.empty();
+        return blockState.canOcclude() && blockState.useShapeForLightOcclusion() ? blockState.getFaceOcclusionShape((CubeAccess) this.cubeOrNodes, pos, facing) : Shapes.empty();
     }
 }

@@ -1,12 +1,12 @@
-package io.github.opencubicchunks.cubicchunks.chunk.graph;
+package io.github.opencubicchunks.cubicchunks.server.level;
 
 import java.util.Comparator;
 
-import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
+import io.github.opencubicchunks.cubicchunks.world.level.CubePos;
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.TicketTypeAccess;
 import net.minecraft.server.level.TicketType;
 
-public class CCTicketType {
+public class CubicTicketType {
     public static final TicketType<CubePos> CCPLAYER = create("player", Comparator.comparingLong(CubePos::asLong));
     public static final TicketType<CubePos> CCFORCED = create("forced", Comparator.comparingLong(CubePos::asLong));
     public static final TicketType<CubePos> CCLIGHT = create("light", Comparator.comparingLong(CubePos::asLong));

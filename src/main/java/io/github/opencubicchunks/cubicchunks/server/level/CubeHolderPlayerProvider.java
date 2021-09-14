@@ -1,10 +1,10 @@
-package io.github.opencubicchunks.cubicchunks.chunk;
+package io.github.opencubicchunks.cubicchunks.server.level;
 
 import java.util.stream.Stream;
 
-import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
+import io.github.opencubicchunks.cubicchunks.world.level.CubePos;
 import net.minecraft.server.level.ServerPlayer;
 
-public interface CubePlayerProvider {
+public interface CubeHolderPlayerProvider {
     Stream<ServerPlayer> getPlayers(CubePos cubePos, boolean onlyOnWatchDistanceEdge);
 }

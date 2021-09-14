@@ -1,8 +1,8 @@
-package io.github.opencubicchunks.cubicchunks.mixin.core.common.world;
+package io.github.opencubicchunks.cubicchunks.mixin.core.common.level;
 
-import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
-import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
-import io.github.opencubicchunks.cubicchunks.server.IServerChunkProvider;
+import io.github.opencubicchunks.cubicchunks.world.level.CubePos;
+import io.github.opencubicchunks.cubicchunks.world.level.CubicLevelHeightAccessor;
+import io.github.opencubicchunks.cubicchunks.server.level.ServerCubeCache;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -34,7 +34,7 @@ public class MixinPortalForcer {
             serverChunkCache.addRegionTicket(ticketType, chunkPos, radius, argument);
             return;
         }
-        ((IServerChunkProvider) serverChunkCache).addCubeRegionTicket(ticketType, new CubePos((BlockPos) argument), Coords.sectionToCube(radius), argument);
+        ((ServerCubeCache) serverChunkCache).addCubeRegionTicket(ticketType, new CubePos((BlockPos) argument), Coords.sectionToCube(radius), argument);
     }
 
     @Redirect(method = "createPortal", at = @At(value = "INVOKE", target = "Ljava/lang/Math;min(II)I", ordinal = 0))

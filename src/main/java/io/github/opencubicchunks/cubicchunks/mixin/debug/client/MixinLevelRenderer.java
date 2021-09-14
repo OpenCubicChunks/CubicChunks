@@ -10,9 +10,9 @@ import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import com.mojang.math.Matrix4f;
 import com.mojang.math.Vector3f;
-import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
-import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
-import io.github.opencubicchunks.cubicchunks.client.CubicWorldLoadScreen;
+import io.github.opencubicchunks.cubicchunks.world.level.chunk.CubeAccess;
+import io.github.opencubicchunks.cubicchunks.world.level.CubePos;
+import io.github.opencubicchunks.cubicchunks.client.gui.screens.CubicLevelLoadingScreen;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import it.unimi.dsi.fastutil.longs.Long2ObjectLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
@@ -60,11 +60,11 @@ public class MixinLevelRenderer {
         bufferBuilder.begin(VertexFormat.Mode.TRIANGLE_STRIP, DefaultVertexFormat.POSITION_COLOR);
 
         Object2IntMap<ChunkStatus> colors = getField(
-            CubicWorldLoadScreen.class, null, "STATUS_COLORS" // TODO: intermediary name
+            CubicLevelLoadingScreen.class, null, "STATUS_COLORS" // TODO: intermediary name
         );
 
         int renderRadius = 5;
-        int chunkRenderRadius = renderRadius * IBigCube.DIAMETER_IN_SECTIONS;
+        int chunkRenderRadius = renderRadius * CubeAccess.DIAMETER_IN_SECTIONS;
         Long2ObjectLinkedOpenHashMap<ChunkHolder> loadedColumns = getField(ChunkMap.class, levelAccessor.getChunkSource().chunkMap, "updatingChunkMap");
 
         Object[] data = getField(Long2ObjectLinkedOpenHashMap.class, loadedColumns, "value");

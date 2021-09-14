@@ -1,8 +1,8 @@
-package io.github.opencubicchunks.cubicchunks.mixin.core.common.tileentity;
+package io.github.opencubicchunks.cubicchunks.mixin.core.common.blockentity;
 
 import java.util.List;
 
-import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
+import io.github.opencubicchunks.cubicchunks.world.level.CubicLevelHeightAccessor;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.ConduitBlockEntity;
@@ -12,7 +12,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
 @Mixin(ConduitBlockEntity.class)
-public class MixinConduitTileEntity {
+public class MixinConduitBlockEntity {
     /**
      * @author NotStirred
      * @reason Conduits now only affect players within +256 of the block. This prevents near infinite cube loading in the conduit's column

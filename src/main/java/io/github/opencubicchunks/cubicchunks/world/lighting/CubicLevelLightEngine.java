@@ -1,8 +1,8 @@
 package io.github.opencubicchunks.cubicchunks.world.lighting;
 
-import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
+import io.github.opencubicchunks.cubicchunks.world.level.CubePos;
 
-public interface IWorldLightManager {
+public interface CubicLevelLightEngine {
 
     void retainData(CubePos cubePos, boolean retain);
 

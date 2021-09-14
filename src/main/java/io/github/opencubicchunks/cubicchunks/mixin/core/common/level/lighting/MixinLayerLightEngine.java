@@ -1,14 +1,14 @@
-package io.github.opencubicchunks.cubicchunks.mixin.core.common.world.lighting;
+package io.github.opencubicchunks.cubicchunks.mixin.core.common.level.lighting;
 
 import javax.annotation.Nullable;
 
-import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
-import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
+import io.github.opencubicchunks.cubicchunks.world.level.chunk.CubeAccess;
+import io.github.opencubicchunks.cubicchunks.world.level.CubePos;
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.LayerLightSectionStorageAccess;
-import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
-import io.github.opencubicchunks.cubicchunks.world.lighting.ICubeLightProvider;
-import io.github.opencubicchunks.cubicchunks.world.lighting.ILightEngine;
-import io.github.opencubicchunks.cubicchunks.world.lighting.ISectionLightStorage;
+import io.github.opencubicchunks.cubicchunks.world.level.CubicLevelHeightAccessor;
+import io.github.opencubicchunks.cubicchunks.world.lighting.CubicLayerLightEngine;
+import io.github.opencubicchunks.cubicchunks.world.lighting.CubicLayerLightSectionStorage;
+import io.github.opencubicchunks.cubicchunks.world.level.chunk.LightCubeGetter;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.SectionPos;
 import net.minecraft.world.level.BlockGetter;
@@ -28,7 +28,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(LayerLightEngine.class)
-public abstract class MixinLayerLightEngine<M extends DataLayerStorageMap<M>, S extends LayerLightSectionStorage<M>> extends MixinDynamicGraphMinFixedPoint implements ILightEngine {
+public abstract class MixinLayerLightEngine<M extends DataLayerStorageMap<M>, S extends LayerLightSectionStorage<M>> extends MixinDynamicGraphMinFixedPoint implements CubicLayerLightEngine {
 
     @Shadow @Final protected S storage;
 
@@ -50,15 +50,15 @@ public abstract class MixinLayerLightEngine<M extends DataLayerStorageMap<M>, S 
     @Override
     public void retainCubeData(CubePos posIn, boolean retain) {
         long i = posIn.asSectionPos().asLong();
-        ((ISectionLightStorage) this.storage).retainCubeData(i, retain);
+        ((CubicLayerLightSectionStorage) this.storage).retainCubeData(i, retain);
     }
 
     @Override
     public void enableLightSources(CubePos cubePos, boolean enable) {
         ChunkPos chunkPos = cubePos.asChunkPos();
         //TODO: implement invokeEnableLightSources for CubePos in SkyLightStorage
-        for (int x = 0; x < IBigCube.DIAMETER_IN_SECTIONS; x++) {
-            for (int z = 0; z < IBigCube.DIAMETER_IN_SECTIONS; z++) {
+        for (int x = 0; x < CubeAccess.DIAMETER_IN_SECTIONS; x++) {
+            for (int z = 0; z < CubeAccess.DIAMETER_IN_SECTIONS; z++) {
                 ((LayerLightSectionStorageAccess) this.storage).invokeSetColumnEnabled(new ChunkPos(chunkPos.x + x, chunkPos.z + z).toLong(), enable);
             }
         }
@@ -93,7 +93,7 @@ public abstract class MixinLayerLightEngine<M extends DataLayerStorageMap<M>, S 
             }
         }
 
-        BlockGetter iblockreader = ((ICubeLightProvider) this.chunkSource).getCubeForLighting(sectionX, sectionY, sectionZ);
+        BlockGetter iblockreader = ((LightCubeGetter) this.chunkSource).getCubeForLighting(sectionX, sectionY, sectionZ);
 
         for (int k = 1; k > 0; --k) {
             this.lastChunkPos[k] = this.lastChunkPos[k - 1];

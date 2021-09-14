@@ -6,7 +6,7 @@ import java.util.Random;
 import java.util.stream.Stream;
 
 import com.mojang.serialization.Codec;
-import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
+import io.github.opencubicchunks.cubicchunks.world.level.chunk.CubeAccess;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.levelgen.placement.DecorationContext;
@@ -22,10 +22,10 @@ public class SurfaceProjectedDecorator extends FeatureDecorator<CubicLakePlaceme
     public Stream<BlockPos> getPositions(DecorationContext decorationContext, Random random, CubicLakePlacementConfig config, BlockPos blockPos) {
         List<BlockPos> positions = new ArrayList<>();
 
-        for (int i = 0; i < IBigCube.DIAMETER_IN_SECTIONS; i++) {
+        for (int i = 0; i < CubeAccess.DIAMETER_IN_SECTIONS; i++) {
 
             int x = blockPos.getX() + random.nextInt(16);
-            int y = blockPos.getY() + random.nextInt(IBigCube.DIAMETER_IN_BLOCKS);
+            int y = blockPos.getY() + random.nextInt(CubeAccess.DIAMETER_IN_BLOCKS);
             int z = blockPos.getZ() + random.nextInt(16);
             int surfaceHeight = decorationContext.getHeight(Heightmap.Types.WORLD_SURFACE_WG, x, z);
 
@@ -33,7 +33,7 @@ public class SurfaceProjectedDecorator extends FeatureDecorator<CubicLakePlaceme
                 continue;
             }
 
-            if (surfaceHeight >= blockPos.getY() + IBigCube.DIAMETER_IN_BLOCKS) {
+            if (surfaceHeight >= blockPos.getY() + CubeAccess.DIAMETER_IN_BLOCKS) {
                 float probability = config.getSurfaceProbability().getValue(surfaceHeight);
                 if (random.nextFloat() < probability) {
                     positions.add(new BlockPos(x, surfaceHeight, z));

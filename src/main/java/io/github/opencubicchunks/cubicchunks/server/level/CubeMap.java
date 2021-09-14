@@ -1,4 +1,4 @@
-package io.github.opencubicchunks.cubicchunks.chunk;
+package io.github.opencubicchunks.cubicchunks.server.level;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -8,9 +8,10 @@ import java.util.function.IntSupplier;
 import javax.annotation.Nullable;
 
 import com.mojang.datafixers.util.Either;
-import io.github.opencubicchunks.cubicchunks.chunk.cube.BigCube;
-import io.github.opencubicchunks.cubicchunks.chunk.cube.CubeStatus;
-import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
+import io.github.opencubicchunks.cubicchunks.world.level.chunk.CubeAccess;
+import io.github.opencubicchunks.cubicchunks.world.level.chunk.CubeStatus;
+import io.github.opencubicchunks.cubicchunks.world.level.chunk.LevelCube;
+import io.github.opencubicchunks.cubicchunks.world.level.CubePos;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import net.minecraft.core.SectionPos;
@@ -19,7 +20,7 @@ import net.minecraft.server.level.ServerChunkCache;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.chunk.ChunkStatus;
 
-public interface IChunkManager {
+public interface CubeMap {
     int MAX_CUBE_DISTANCE = 33 + CubeStatus.maxDistance();
 
     int getTickingGeneratedCubes();
@@ -38,20 +39,20 @@ public interface IChunkManager {
     @Nullable
     ChunkHolder getImmutableCubeHolder(long cubePosIn);
 
-    CompletableFuture<Either<IBigCube, ChunkHolder.ChunkLoadingFailure>> scheduleCube(ChunkHolder chunkHolderIn,
-                                                                                      ChunkStatus chunkStatusIn);
+    CompletableFuture<Either<CubeAccess, ChunkHolder.ChunkLoadingFailure>> scheduleCube(ChunkHolder chunkHolderIn,
+                                                                                        ChunkStatus chunkStatusIn);
 
-    CompletableFuture<Either<BigCube, ChunkHolder.ChunkLoadingFailure>> unpackCubeTicks(ChunkHolder chunkHolder);
+    CompletableFuture<Either<LevelCube, ChunkHolder.ChunkLoadingFailure>> unpackCubeTicks(ChunkHolder chunkHolder);
 
 
-    CompletableFuture<Either<BigCube, ChunkHolder.ChunkLoadingFailure>> postProcessCube(ChunkHolder chunkHolder);
+    CompletableFuture<Either<LevelCube, ChunkHolder.ChunkLoadingFailure>> postProcessCube(ChunkHolder chunkHolder);
 
-    CompletableFuture<Either<List<IBigCube>, ChunkHolder.ChunkLoadingFailure>> getCubeRangeFuture(CubePos pos, int p_219236_2_,
-                                                                                                  IntFunction<ChunkStatus> p_219236_3_);
+    CompletableFuture<Either<List<CubeAccess>, ChunkHolder.ChunkLoadingFailure>> getCubeRangeFuture(CubePos pos, int p_219236_2_,
+                                                                                                    IntFunction<ChunkStatus> p_219236_3_);
 
-    CompletableFuture<Void> packCubeTicks(BigCube cubeIn);
+    CompletableFuture<Void> packCubeTicks(LevelCube cubeIn);
 
-    CompletableFuture<Either<BigCube, ChunkHolder.ChunkLoadingFailure>> getCubeEntityTickingRangeFuture(CubePos pos);
+    CompletableFuture<Either<LevelCube, ChunkHolder.ChunkLoadingFailure>> getCubeEntityTickingRangeFuture(CubePos pos);
 
     Iterable<ChunkHolder> getCubes();
 

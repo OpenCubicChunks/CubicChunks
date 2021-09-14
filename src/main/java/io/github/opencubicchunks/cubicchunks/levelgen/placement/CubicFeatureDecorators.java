@@ -6,7 +6,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.levelgen.feature.configurations.DecoratorConfiguration;
 import net.minecraft.world.level.levelgen.placement.FeatureDecorator;
 
-public class CCPlacement {
+public class CubicFeatureDecorators {
 
     public static final FeatureDecorator<CubicLakePlacementConfig> CUBIC_LAKE = featureDecorator("cubic_lake", new SurfaceProjectedDecorator(CubicLakePlacementConfig.CODEC));
 

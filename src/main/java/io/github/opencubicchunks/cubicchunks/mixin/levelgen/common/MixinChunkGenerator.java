@@ -5,20 +5,20 @@ import static io.github.opencubicchunks.cubicchunks.utils.Coords.*;
 import java.util.List;
 import java.util.function.Supplier;
 
-import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
-import io.github.opencubicchunks.cubicchunks.chunk.cube.CubePrimer;
-import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
+import io.github.opencubicchunks.cubicchunks.world.level.chunk.CubeAccess;
+import io.github.opencubicchunks.cubicchunks.world.level.chunk.ProtoCube;
+import io.github.opencubicchunks.cubicchunks.world.level.CubePos;
 import io.github.opencubicchunks.cubicchunks.levelgen.CubeWorldGenRandom;
 import io.github.opencubicchunks.cubicchunks.levelgen.CubeWorldGenRegion;
 import io.github.opencubicchunks.cubicchunks.levelgen.biome.BiomeGetter;
 import io.github.opencubicchunks.cubicchunks.levelgen.biome.StripedBiomeSource;
 import io.github.opencubicchunks.cubicchunks.levelgen.carver.CubicCarvingContext;
-import io.github.opencubicchunks.cubicchunks.levelgen.chunk.ICubeGenerator;
-import io.github.opencubicchunks.cubicchunks.levelgen.util.CCWorldGenUtils;
+import io.github.opencubicchunks.cubicchunks.levelgen.chunk.CubeGenerator;
+import io.github.opencubicchunks.cubicchunks.levelgen.util.CubicWorldGenUtils;
 import io.github.opencubicchunks.cubicchunks.levelgen.util.NonAtomicWorldgenRandom;
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.BiomeManagerAccess;
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.OverworldBiomeSourceAccess;
-import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
+import io.github.opencubicchunks.cubicchunks.world.level.CubicLevelHeightAccessor;
 import net.minecraft.CrashReport;
 import net.minecraft.CrashReportCategory;
 import net.minecraft.ReportedException;
@@ -61,7 +61,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(ChunkGenerator.class)
-public abstract class MixinChunkGenerator implements ICubeGenerator {
+public abstract class MixinChunkGenerator implements CubeGenerator {
 
     @Mutable @Shadow @Final protected BiomeSource biomeSource;
     @Mutable @Shadow @Final protected BiomeSource runtimeBiomeSource;
@@ -91,7 +91,7 @@ public abstract class MixinChunkGenerator implements ICubeGenerator {
         if (((CubicLevelHeightAccessor) chunkAccess).generates2DChunks()) {
             return;
         }
-        if (!(chunkAccess instanceof IBigCube)) {
+        if (!(chunkAccess instanceof CubeAccess)) {
             return;
         }
         ci.cancel();
@@ -100,7 +100,7 @@ public abstract class MixinChunkGenerator implements ICubeGenerator {
         //TODO: Patch entity game crashes in order to spawn villages(village pieces spawn villagers)
         //TODO: Setup a 2D and 3D placement.
 
-        IBigCube cube = (IBigCube) chunkAccess;
+        CubeAccess cube = (CubeAccess) chunkAccess;
 
         CubePos cubePos = cube.getCubePos();
 
@@ -113,7 +113,7 @@ public abstract class MixinChunkGenerator implements ICubeGenerator {
     }
 
 
-    private void createCCStructure(ConfiguredStructureFeature<?, ?> configuredStructureFeature, RegistryAccess registryAccess, StructureFeatureManager structureFeatureManager, IBigCube cube,
+    private void createCCStructure(ConfiguredStructureFeature<?, ?> configuredStructureFeature, RegistryAccess registryAccess, StructureFeatureManager structureFeatureManager, CubeAccess cube,
                                    StructureManager structureManager, long seed, CubePos cubePos, Biome biome) {
         StructureStart<?> structureStart = structureFeatureManager
             .getStartForFeature(/*SectionPos.of(cube.getPos(), 0) We return null as a sectionPos Arg is not used in the method*/null, configuredStructureFeature.feature, cube);
@@ -136,13 +136,13 @@ public abstract class MixinChunkGenerator implements ICubeGenerator {
             return;
         }
 
-        if (!(chunkAccess instanceof IBigCube)) {
+        if (!(chunkAccess instanceof CubeAccess)) {
             return;
         }
 
         ci.cancel();
 
-        IBigCube cube = (IBigCube) chunkAccess;
+        CubeAccess cube = (CubeAccess) chunkAccess;
 
         CubeWorldGenRegion world = (CubeWorldGenRegion) worldGenLevel;
 
@@ -154,9 +154,9 @@ public abstract class MixinChunkGenerator implements ICubeGenerator {
         int blockY = cubeToMinBlock(cubeY);
         int blockZ = cubeToMinBlock(cubeZ);
 
-        for (int x = cubeX - 8 / IBigCube.DIAMETER_IN_SECTIONS; x <= cubeX + 8 / IBigCube.DIAMETER_IN_SECTIONS; ++x) {
-            for (int y = cubeY - 8 / IBigCube.DIAMETER_IN_SECTIONS; y <= cubeY + 8 / IBigCube.DIAMETER_IN_SECTIONS; ++y) {
-                for (int z = cubeZ - 8 / IBigCube.DIAMETER_IN_SECTIONS; z <= cubeZ + 8 / IBigCube.DIAMETER_IN_SECTIONS; ++z) {
+        for (int x = cubeX - 8 / CubeAccess.DIAMETER_IN_SECTIONS; x <= cubeX + 8 / CubeAccess.DIAMETER_IN_SECTIONS; ++x) {
+            for (int y = cubeY - 8 / CubeAccess.DIAMETER_IN_SECTIONS; y <= cubeY + 8 / CubeAccess.DIAMETER_IN_SECTIONS; ++y) {
+                for (int z = cubeZ - 8 / CubeAccess.DIAMETER_IN_SECTIONS; z <= cubeZ + 8 / CubeAccess.DIAMETER_IN_SECTIONS; ++z) {
                     long cubePosAsLong = CubePos.asLong(x, y, z);
 
                     for (StructureStart<?> structureStart : world.getCube(CubePos.of(x, y, z)).getAllCubeStructureStarts().values()) {
@@ -164,9 +164,9 @@ public abstract class MixinChunkGenerator implements ICubeGenerator {
                             if (structureStart != StructureStart.INVALID_START && structureStart.getBoundingBox().intersects(
                                 //We use a new Bounding Box and check if it intersects a given cube.
                                 new BoundingBox(blockX, blockY, blockZ,
-                                    blockX + IBigCube.DIAMETER_IN_BLOCKS - 1,
-                                    blockY + IBigCube.DIAMETER_IN_BLOCKS - 1,
-                                    blockZ + IBigCube.DIAMETER_IN_BLOCKS - 1))) {
+                                    blockX + CubeAccess.DIAMETER_IN_BLOCKS - 1,
+                                    blockY + CubeAccess.DIAMETER_IN_BLOCKS - 1,
+                                    blockZ + CubeAccess.DIAMETER_IN_BLOCKS - 1))) {
                                 //The First Param is a SectionPos arg that is not used anywhere so we make it null.
                                 featureManager.addReferenceForFeature(null, structureStart.getFeature(), cubePosAsLong, cube);
                                 DebugPackets.sendStructurePacket(world, structureStart);
@@ -224,7 +224,7 @@ public abstract class MixinChunkGenerator implements ICubeGenerator {
     }
 
     @Override
-    public void decorate(CubeWorldGenRegion region, StructureFeatureManager structureManager, CubePrimer chunk) {
+    public void decorate(CubeWorldGenRegion region, StructureFeatureManager structureManager, ProtoCube chunk) {
         int mainCubeX = region.getMainCubeX();
         int mainCubeY = region.getMainCubeY();
         int mainCubeZ = region.getMainCubeZ();
@@ -239,10 +239,10 @@ public abstract class MixinChunkGenerator implements ICubeGenerator {
         //Get each individual column from a given cube no matter the size. Where y height is the same per column.
         //Feed the given columnMinPos into the feature decorators.
         int cubeY = chunk.getCubePos().getY();
-        for (int columnX = 0; columnX < IBigCube.DIAMETER_IN_SECTIONS; columnX++) {
-            for (int columnZ = 0; columnZ < IBigCube.DIAMETER_IN_SECTIONS; columnZ++) {
+        for (int columnX = 0; columnX < CubeAccess.DIAMETER_IN_SECTIONS; columnX++) {
+            for (int columnZ = 0; columnZ < CubeAccess.DIAMETER_IN_SECTIONS; columnZ++) {
                 chunk.moveColumns(columnX, columnZ);
-                if (CCWorldGenUtils.areSectionsEmpty(cubeY, chunk.getPos(), chunk)) {
+                if (CubicWorldGenUtils.areSectionsEmpty(cubeY, chunk.getPos(), chunk)) {
                     continue;
                 }
 
@@ -252,7 +252,7 @@ public abstract class MixinChunkGenerator implements ICubeGenerator {
 
                 Biome biome = ((ChunkGenerator) (Object) this).getBiomeSource().getNoiseBiome(
                     QuartPos.fromSection(cubeToSection(mainCubeX, columnX)) + BiomeManagerAccess.getChunkCenterQuart(),
-                    QuartPos.fromSection(cubeToSection(mainCubeY, 0)) + BiomeManagerAccess.getChunkCenterQuart() * IBigCube.DIAMETER_IN_SECTIONS,
+                    QuartPos.fromSection(cubeToSection(mainCubeY, 0)) + BiomeManagerAccess.getChunkCenterQuart() * CubeAccess.DIAMETER_IN_SECTIONS,
                     QuartPos.fromSection(cubeToSection(mainCubeZ, columnZ)) + BiomeManagerAccess.getChunkCenterQuart());
                 try {
                     ((BiomeGetter) (Object) biome).generate(structureManager, ((ChunkGenerator) (Object) this), region, seed, worldgenRandom, columnMinPos);

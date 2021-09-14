@@ -1,8 +1,8 @@
-package io.github.opencubicchunks.cubicchunks.chunk.storage;
+package io.github.opencubicchunks.cubicchunks.world.level.chunk.storage;
 
 import java.util.concurrent.CompletableFuture;
 
-import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
+import io.github.opencubicchunks.cubicchunks.world.level.CubePos;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.entity.ChunkEntities;
 

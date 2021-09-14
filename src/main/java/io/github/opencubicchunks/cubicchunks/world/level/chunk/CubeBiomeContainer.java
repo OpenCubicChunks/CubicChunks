@@ -1,9 +1,8 @@
-package io.github.opencubicchunks.cubicchunks.chunk.biome;
+package io.github.opencubicchunks.cubicchunks.world.level.chunk;
 
-import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
-import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
-import io.github.opencubicchunks.cubicchunks.mixin.access.common.BiomeContainerAccess;
-import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
+import io.github.opencubicchunks.cubicchunks.world.level.CubePos;
+import io.github.opencubicchunks.cubicchunks.mixin.access.common.ChunkBiomeContainerAccess;
+import io.github.opencubicchunks.cubicchunks.world.level.CubicLevelHeightAccessor;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import net.minecraft.core.IdMap;
 import net.minecraft.core.QuartPos;
@@ -23,17 +22,17 @@ public class CubeBiomeContainer extends ChunkBiomeContainer {
             throw new UnsupportedOperationException("Calling a cube class in a non cubic world.");
         }
 
-        this.containers = new ChunkBiomeContainer[IBigCube.DIAMETER_IN_SECTIONS * IBigCube.DIAMETER_IN_SECTIONS];
+        this.containers = new ChunkBiomeContainer[CubeAccess.DIAMETER_IN_SECTIONS * CubeAccess.DIAMETER_IN_SECTIONS];
     }
 
     public CubeBiomeContainer(IdMap<Biome> idMap, LevelHeightAccessor heightAccessor, int[] incomingBiomes) {
         this(idMap, heightAccessor);
-        int biomeArraySize = (1 << BiomeContainerAccess.getWidthBits() + BiomeContainerAccess.getWidthBits()) * ceilDiv(heightAccessor.getHeight(), 4);
+        int biomeArraySize = (1 << ChunkBiomeContainerAccess.getWidthBits() + ChunkBiomeContainerAccess.getWidthBits()) * ceilDiv(heightAccessor.getHeight(), 4);
         int[][] perBiomeContainerBiomeArray = new int[containers.length][];
 
-        for (int columnX = 0; columnX < IBigCube.DIAMETER_IN_SECTIONS; columnX++) {
-            for (int columnZ = 0; columnZ < IBigCube.DIAMETER_IN_SECTIONS; columnZ++) {
-                int containerIDX = columnZ * IBigCube.DIAMETER_IN_SECTIONS + columnX;
+        for (int columnX = 0; columnX < CubeAccess.DIAMETER_IN_SECTIONS; columnX++) {
+            for (int columnZ = 0; columnZ < CubeAccess.DIAMETER_IN_SECTIONS; columnZ++) {
+                int containerIDX = columnZ * CubeAccess.DIAMETER_IN_SECTIONS + columnX;
                 int[] biomeArray = new int[biomeArraySize];
 
                 int offset = (incomingBiomes.length / containers.length) * containerIDX;
@@ -60,14 +59,14 @@ public class CubeBiomeContainer extends ChunkBiomeContainer {
 
     public CubeBiomeContainer(IdMap<Biome> idMap, LevelHeightAccessor heightAccessor, CubePos cubePos, BiomeSource biomeSource, @Nullable int[] incomingBiomes) {
         this(idMap, heightAccessor);
-        int biomeArraySize = (1 << BiomeContainerAccess.getWidthBits() + BiomeContainerAccess.getWidthBits()) * ceilDiv(heightAccessor.getHeight(), 4);
+        int biomeArraySize = (1 << ChunkBiomeContainerAccess.getWidthBits() + ChunkBiomeContainerAccess.getWidthBits()) * ceilDiv(heightAccessor.getHeight(), 4);
 
         int[][] perBiomeContainerBiomeArray = new int[containers.length][];
 
         if (incomingBiomes != null) {
-            for (int columnX = 0; columnX < IBigCube.DIAMETER_IN_SECTIONS; columnX++) {
-                for (int columnZ = 0; columnZ < IBigCube.DIAMETER_IN_SECTIONS; columnZ++) {
-                    int containerIDX = columnZ * IBigCube.DIAMETER_IN_SECTIONS + columnX;
+            for (int columnX = 0; columnX < CubeAccess.DIAMETER_IN_SECTIONS; columnX++) {
+                for (int columnZ = 0; columnZ < CubeAccess.DIAMETER_IN_SECTIONS; columnZ++) {
+                    int containerIDX = columnZ * CubeAccess.DIAMETER_IN_SECTIONS + columnX;
                     int[] biomeArray = new int[biomeArraySize];
 
                     int offset = (incomingBiomes.length / containers.length) * containerIDX;
@@ -88,9 +87,9 @@ public class CubeBiomeContainer extends ChunkBiomeContainer {
                 }
             }
         } else {
-            for (int columnX = 0; columnX < IBigCube.DIAMETER_IN_SECTIONS; columnX++) {
-                for (int columnZ = 0; columnZ < IBigCube.DIAMETER_IN_SECTIONS; columnZ++) {
-                    int containerIDX = columnZ * IBigCube.DIAMETER_IN_SECTIONS + columnX;
+            for (int columnX = 0; columnX < CubeAccess.DIAMETER_IN_SECTIONS; columnX++) {
+                for (int columnZ = 0; columnZ < CubeAccess.DIAMETER_IN_SECTIONS; columnZ++) {
+                    int containerIDX = columnZ * CubeAccess.DIAMETER_IN_SECTIONS + columnX;
                     ChunkPos pos = cubePos.asChunkPos(columnX, columnZ);
                     containers[containerIDX] = new ChunkBiomeContainer(idMap, heightAccessor, pos, biomeSource, incomingBiomes);
                 }
@@ -103,7 +102,7 @@ public class CubeBiomeContainer extends ChunkBiomeContainer {
     }
 
     public void setContainerForColumn(int columnX, int columnZ, ChunkBiomeContainer container) {
-        containers[columnZ * IBigCube.DIAMETER_IN_SECTIONS + columnX] = container;
+        containers[columnZ * CubeAccess.DIAMETER_IN_SECTIONS + columnX] = container;
     }
 
     @Override public int[] writeBiomes() {
@@ -112,7 +111,7 @@ public class CubeBiomeContainer extends ChunkBiomeContainer {
 
         for (int i = 0, containersLength = containers.length; i < containersLength; i++) {
             ChunkBiomeContainer container = containers[i];
-            allBiomes[i] = ((BiomeContainerAccess) container).getBiomes();
+            allBiomes[i] = ((ChunkBiomeContainerAccess) container).getBiomes();
             totalLength += allBiomes[i].length;
         }
         int[] biomeIDs = new int[totalLength];
@@ -120,7 +119,7 @@ public class CubeBiomeContainer extends ChunkBiomeContainer {
         int i = 0;
         for (Biome[] biome : allBiomes) {
             for (Biome biome1 : biome) {
-                biomeIDs[i] = ((BiomeContainerAccess) this).getBiomeRegistry().getId(biome1);
+                biomeIDs[i] = ((ChunkBiomeContainerAccess) this).getBiomeRegistry().getId(biome1);
                 i++;
             }
         }
@@ -131,7 +130,7 @@ public class CubeBiomeContainer extends ChunkBiomeContainer {
         int chunkX = Coords.cubeLocalSection(QuartPos.toSection(biomeX));
         int chunkZ = Coords.cubeLocalSection(QuartPos.toSection(biomeZ));
 
-        ChunkBiomeContainer container = containers[chunkZ * IBigCube.DIAMETER_IN_SECTIONS + chunkX];
+        ChunkBiomeContainer container = containers[chunkZ * CubeAccess.DIAMETER_IN_SECTIONS + chunkX];
         return container.getNoiseBiome(biomeX, biomeY, biomeZ);
     }
 }

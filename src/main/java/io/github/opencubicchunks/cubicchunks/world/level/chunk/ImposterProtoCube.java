@@ -1,4 +1,4 @@
-package io.github.opencubicchunks.cubicchunks.chunk.cube;
+package io.github.opencubicchunks.cubicchunks.world.level.chunk;
 
 import java.util.BitSet;
 import java.util.Map;
@@ -6,9 +6,9 @@ import java.util.stream.Stream;
 
 import javax.annotation.Nullable;
 
-import io.github.opencubicchunks.cubicchunks.chunk.ImposterChunkPos;
-import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
-import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
+import io.github.opencubicchunks.cubicchunks.world.ImposterChunkPos;
+import io.github.opencubicchunks.cubicchunks.world.level.CubePos;
+import io.github.opencubicchunks.cubicchunks.world.level.CubicLevelHeightAccessor;
 import io.github.opencubicchunks.cubicchunks.world.storage.CubeProtoTickList;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import net.minecraft.Util;
@@ -31,11 +31,11 @@ import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.material.Fluids;
 
 @SuppressWarnings("deprecation")
-public class CubePrimerWrapper extends CubePrimer {
+public class ImposterProtoCube extends ProtoCube {
 
-    private final BigCube cube;
+    private final LevelCube cube;
 
-    public CubePrimerWrapper(BigCube cubeIn, LevelHeightAccessor levelHeightAccessor) {
+    public ImposterProtoCube(LevelCube cubeIn, LevelHeightAccessor levelHeightAccessor) {
         super(cubeIn.getCubePos(), UpgradeData.EMPTY, cubeIn.getCubeSections(), new CubeProtoTickList<>((block) -> {
                 return block == null || block.defaultBlockState().isAir();
             }, new ImposterChunkPos(cubeIn.getCubePos()), new CubeProtoTickList.CubeProtoTickListHeightAccess(cubeIn.getCubePos(), (CubicLevelHeightAccessor) levelHeightAccessor)),
@@ -47,7 +47,7 @@ public class CubePrimerWrapper extends CubePrimer {
         this.cube = cubeIn;
     }
 
-    public BigCube getCube() {
+    public LevelCube getCube() {
         return this.cube;
     }
 

@@ -1,26 +1,25 @@
-package io.github.opencubicchunks.cubicchunks.chunk.ticket;
+package io.github.opencubicchunks.cubicchunks.server.level;
 
-import io.github.opencubicchunks.cubicchunks.chunk.graph.CubeDistanceGraph;
 import it.unimi.dsi.fastutil.longs.Long2ByteMap;
 import it.unimi.dsi.fastutil.longs.Long2ByteOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectSet;
 import net.minecraft.server.level.ServerPlayer;
 
-public class HorizontalGraphGroup extends CubeDistanceGraph {
+public class HorizontalGraphGroup extends CubeTracker {
     public final Long2ByteMap cubesInRange = new Long2ByteOpenHashMap();
     protected final int range;
 
-    private final ITicketManager iTicketManager;
-    private final PlayerCubeTicketTracker ticketTracker;
+    private final CubicDistanceManager cubicDistanceManager;
+    private final CubicPlayerTicketTracker ticketTracker;
     private final Vertical vertical;
 
-    public HorizontalGraphGroup(ITicketManager iTicketManager, int i, PlayerCubeTicketTracker ticketTracker) {
+    public HorizontalGraphGroup(CubicDistanceManager cubicDistanceManager, int i, CubicPlayerTicketTracker ticketTracker) {
         super(i + 2, 16, 256, 1, 0, 1);
         this.ticketTracker = ticketTracker;
-        this.vertical = new Vertical(iTicketManager, i);
+        this.vertical = new Vertical(cubicDistanceManager, i);
         this.range = i;
         this.cubesInRange.defaultReturnValue((byte) (i + 2));
-        this.iTicketManager = iTicketManager;
+        this.cubicDistanceManager = cubicDistanceManager;
     }
 
     @Override
@@ -58,17 +57,17 @@ public class HorizontalGraphGroup extends CubeDistanceGraph {
         vertical.updateSourceLevel(pos, level, isDecreasing);
     }
 
-    private class Vertical extends CubeDistanceGraph {
+    private class Vertical extends CubeTracker {
         private final int range;
         private final Long2ByteMap cubesInRange = new Long2ByteOpenHashMap();
-        private final ITicketManager iTicketManager;
+        private final CubicDistanceManager cubicDistanceManager;
         private final HorizontalGraphGroup superior;
 
-        Vertical(ITicketManager iTicketManager, int range) {
+        Vertical(CubicDistanceManager cubicDistanceManager, int range) {
             super(range + 2, 16, 256, 0, 1, 0);
             this.range = range;
             this.cubesInRange.defaultReturnValue((byte) (range + 2));
-            this.iTicketManager = iTicketManager;
+            this.cubicDistanceManager = cubicDistanceManager;
             this.superior = HorizontalGraphGroup.this;
 
         }
@@ -102,7 +101,7 @@ public class HorizontalGraphGroup extends CubeDistanceGraph {
         }
 
         private boolean hasPlayerInChunk(long cubePosIn) {
-            ObjectSet<ServerPlayer> objectset = iTicketManager.getPlayersPerCube().get(cubePosIn);
+            ObjectSet<ServerPlayer> objectset = cubicDistanceManager.getPlayersPerCube().get(cubePosIn);
             return objectset != null && !objectset.isEmpty();
         }
 

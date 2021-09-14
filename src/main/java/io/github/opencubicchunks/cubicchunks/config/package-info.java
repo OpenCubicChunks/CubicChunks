@@ -1,6 +1,6 @@
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-package io.github.opencubicchunks.cubicchunks.mixin.core.common.world.lighting;
+package io.github.opencubicchunks.cubicchunks.config;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 

@@ -1,9 +1,9 @@
-package io.github.opencubicchunks.cubicchunks.mixin.core.client.debug;
+package io.github.opencubicchunks.cubicchunks.mixin.debug.client;
 
 import java.util.function.Supplier;
 
 import io.github.opencubicchunks.cubicchunks.debug.DebugVisualization;
-import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
+import io.github.opencubicchunks.cubicchunks.world.level.CubicLevelHeightAccessor;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.client.renderer.LevelRenderer;
@@ -18,9 +18,9 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(ClientLevel.class)
-public abstract class MixinClientWorld extends Level {
+public abstract class MixinClientLevel extends Level {
 
-    protected MixinClientWorld(WritableLevelData writableLevelData,
+    protected MixinClientLevel(WritableLevelData writableLevelData,
                                ResourceKey<Level> resourceKey, DimensionType dimensionType,
                                Supplier<ProfilerFiller> supplier, boolean bl, boolean bl2, long l) {
         super(writableLevelData, resourceKey, dimensionType, supplier, bl, bl2, l);

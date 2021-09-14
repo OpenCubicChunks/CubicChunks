@@ -1,4 +1,4 @@
-package io.github.opencubicchunks.cubicchunks.chunk.cube;
+package io.github.opencubicchunks.cubicchunks.world.level.chunk;
 
 import static net.minecraft.world.level.chunk.LevelChunk.EMPTY_SECTION;
 
@@ -17,20 +17,16 @@ import javax.annotation.Nullable;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import io.github.opencubicchunks.cubicchunks.chunk.CubeMapGetter;
-import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
-import io.github.opencubicchunks.cubicchunks.chunk.ImposterChunkPos;
-import io.github.opencubicchunks.cubicchunks.chunk.LightHeightmapGetter;
-import io.github.opencubicchunks.cubicchunks.chunk.biome.CubeBiomeContainer;
-import io.github.opencubicchunks.cubicchunks.chunk.heightmap.LightSurfaceTrackerSection;
-import io.github.opencubicchunks.cubicchunks.chunk.heightmap.LightSurfaceTrackerWrapper;
-import io.github.opencubicchunks.cubicchunks.chunk.heightmap.SurfaceTrackerSection;
-import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
+import io.github.opencubicchunks.cubicchunks.world.ImposterChunkPos;
+import io.github.opencubicchunks.cubicchunks.world.level.levelgen.heightmap.LightSurfaceTrackerSection;
+import io.github.opencubicchunks.cubicchunks.world.level.levelgen.heightmap.LightSurfaceTrackerWrapper;
+import io.github.opencubicchunks.cubicchunks.world.level.levelgen.heightmap.SurfaceTrackerSection;
+import io.github.opencubicchunks.cubicchunks.world.level.CubePos;
 import io.github.opencubicchunks.cubicchunks.levelgen.CubeWorldGenRegion;
-import io.github.opencubicchunks.cubicchunks.mixin.access.common.BiomeContainerAccess;
-import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
+import io.github.opencubicchunks.cubicchunks.mixin.access.common.ChunkBiomeContainerAccess;
+import io.github.opencubicchunks.cubicchunks.world.level.CubicLevelHeightAccessor;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
-import io.github.opencubicchunks.cubicchunks.world.lighting.ISkyLightColumnChecker;
+import io.github.opencubicchunks.cubicchunks.world.lighting.SkyLightColumnChecker;
 import io.github.opencubicchunks.cubicchunks.world.storage.CubeProtoTickList;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
@@ -66,7 +62,7 @@ import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.material.Fluids;
 
 //ProtoChunk
-public class CubePrimer extends ProtoChunk implements IBigCube, CubicLevelHeightAccessor {
+public class ProtoCube extends ProtoChunk implements CubeAccess, CubicLevelHeightAccessor {
 
     private static final BlockState EMPTY_BLOCK = Blocks.AIR.defaultBlockState();
     private static final FluidState EMPTY_FLUID = Fluids.EMPTY.defaultFluidState();
@@ -81,7 +77,7 @@ public class CubePrimer extends ProtoChunk implements IBigCube, CubicLevelHeight
 
     private final Map<Heightmap.Types, SurfaceTrackerSection[]> heightmaps;
 
-    private final LightSurfaceTrackerSection[] lightHeightmaps = new LightSurfaceTrackerSection[IBigCube.DIAMETER_IN_SECTIONS * IBigCube.DIAMETER_IN_SECTIONS];
+    private final LightSurfaceTrackerSection[] lightHeightmaps = new LightSurfaceTrackerSection[CubeAccess.DIAMETER_IN_SECTIONS * CubeAccess.DIAMETER_IN_SECTIONS];
 
 
     private final List<CompoundTag> entities = Lists.newArrayList();
@@ -114,7 +110,7 @@ public class CubePrimer extends ProtoChunk implements IBigCube, CubicLevelHeight
     private int minBuildHeight;
     private int height;
 
-    public CubePrimer(CubePos cubePos, UpgradeData upgradeData, LevelHeightAccessor levelHeightAccessor) {
+    public ProtoCube(CubePos cubePos, UpgradeData upgradeData, LevelHeightAccessor levelHeightAccessor) {
         this(cubePos, upgradeData, null, new CubeProtoTickList<>((block) -> {
             return block == null || block.defaultBlockState().isAir();
         }, new ImposterChunkPos(cubePos), new CubeProtoTickList.CubeProtoTickListHeightAccess(cubePos, (CubicLevelHeightAccessor) levelHeightAccessor)), new CubeProtoTickList<>((fluid) -> {
@@ -122,9 +118,9 @@ public class CubePrimer extends ProtoChunk implements IBigCube, CubicLevelHeight
         }, new ImposterChunkPos(cubePos), new CubeProtoTickList.CubeProtoTickListHeightAccess(cubePos, (CubicLevelHeightAccessor) levelHeightAccessor)), levelHeightAccessor);
     }
 
-    public CubePrimer(CubePos cubePosIn, UpgradeData upgradeData, @Nullable LevelChunkSection[] sectionsIn, ProtoTickList<Block> blockProtoTickList, ProtoTickList<Fluid> fluidProtoTickList,
-                      LevelHeightAccessor levelHeightAccessor) {
-        super(cubePosIn.asChunkPos(), upgradeData, sectionsIn, blockProtoTickList, fluidProtoTickList, new FakeSectionCount(levelHeightAccessor, IBigCube.SECTION_COUNT));
+    public ProtoCube(CubePos cubePosIn, UpgradeData upgradeData, @Nullable LevelChunkSection[] sectionsIn, ProtoTickList<Block> blockProtoTickList, ProtoTickList<Fluid> fluidProtoTickList,
+                     LevelHeightAccessor levelHeightAccessor) {
+        super(cubePosIn.asChunkPos(), upgradeData, sectionsIn, blockProtoTickList, fluidProtoTickList, new FakeSectionCount(levelHeightAccessor, CubeAccess.SECTION_COUNT));
 
         this.heightmaps = Maps.newEnumMap(Heightmap.Types.class);
         this.carvingMasks = new Object2ObjectArrayMap<>();
@@ -136,12 +132,12 @@ public class CubePrimer extends ProtoChunk implements IBigCube, CubicLevelHeight
         this.levelHeightAccessor = levelHeightAccessor;
 
         if (sectionsIn == null) {
-            this.sections = new LevelChunkSection[IBigCube.SECTION_COUNT];
+            this.sections = new LevelChunkSection[CubeAccess.SECTION_COUNT];
         } else {
-            if (sectionsIn.length == IBigCube.SECTION_COUNT) {
+            if (sectionsIn.length == CubeAccess.SECTION_COUNT) {
                 this.sections = sectionsIn;
             } else {
-                throw new IllegalStateException("Number of Sections must equal IBigCube.CUBESIZE | " + IBigCube.SECTION_COUNT);
+                throw new IllegalStateException("Number of Sections must equal IBigCube.CUBESIZE | " + CubeAccess.SECTION_COUNT);
             }
         }
         isCubic = ((CubicLevelHeightAccessor) levelHeightAccessor).isCubic();
@@ -160,7 +156,7 @@ public class CubePrimer extends ProtoChunk implements IBigCube, CubicLevelHeight
     public void setHeightToCubeBounds(boolean cubeBounds) {
         if (cubeBounds) {
             this.minBuildHeight = this.cubePos.minCubeY();
-            this.height = IBigCube.DIAMETER_IN_BLOCKS;
+            this.height = CubeAccess.DIAMETER_IN_BLOCKS;
         } else {
             this.minBuildHeight = this.levelHeightAccessor.getMinBuildHeight();
             this.height = this.levelHeightAccessor.getHeight();
@@ -199,8 +195,8 @@ public class CubePrimer extends ProtoChunk implements IBigCube, CubicLevelHeight
     public void onEnteringFeaturesStatus() {
         ChunkSource chunkSource = getChunkSource();
 
-        for (int dx = 0; dx < IBigCube.DIAMETER_IN_SECTIONS; dx++) {
-            for (int dz = 0; dz < IBigCube.DIAMETER_IN_SECTIONS; dz++) {
+        for (int dx = 0; dx < CubeAccess.DIAMETER_IN_SECTIONS; dx++) {
+            for (int dz = 0; dz < CubeAccess.DIAMETER_IN_SECTIONS; dz++) {
 
                 // get the chunk for this section
                 ChunkPos chunkPos = this.cubePos.asChunkPos(dx, dz);
@@ -212,7 +208,7 @@ public class CubePrimer extends ProtoChunk implements IBigCube, CubicLevelHeight
                 // the load order guarantees the chunk being present
                 assert (chunk != null && chunk.getStatus().isOrAfter(ChunkStatus.FEATURES));
 
-                ((CubeMapGetter) chunk).getCubeMap().markLoaded(this.cubePos.getY());
+                ((ColumnCubeMapGetter) chunk).getCubeMap().markLoaded(this.cubePos.getY());
 
                 LightSurfaceTrackerWrapper lightHeightmap = ((LightHeightmapGetter) chunk).getServerLightHeightmap();
 
@@ -230,7 +226,7 @@ public class CubePrimer extends ProtoChunk implements IBigCube, CubicLevelHeight
                         int beforeValue = beforeValues[z * SECTION_DIAMETER + x];
                         int afterValue = lightHeightmap.getFirstAvailable(x, z);
                         if (beforeValue != afterValue) {
-                            ((ISkyLightColumnChecker) chunkSource.getLightEngine()).checkSkyLightColumn((CubeMapGetter) chunk,
+                            ((SkyLightColumnChecker) chunkSource.getLightEngine()).checkSkyLightColumn((ColumnCubeMapGetter) chunk,
                                 chunkPos.getBlockX(x), chunkPos.getBlockZ(z), beforeValue, afterValue);
                         }
                     }
@@ -300,7 +296,7 @@ public class CubePrimer extends ProtoChunk implements IBigCube, CubicLevelHeight
             lightHeightmap.update(relX, pos.getY(), relZ, state);
             int newHeight = lightHeightmap.getFirstAvailable(relX, relZ);
             if (newHeight != oldHeight) {
-                ((ISkyLightColumnChecker) chunkSource.getLightEngine()).checkSkyLightColumn((CubeMapGetter) chunk, pos.getX(), pos.getZ(), oldHeight, newHeight);
+                ((SkyLightColumnChecker) chunkSource.getLightEngine()).checkSkyLightColumn((ColumnCubeMapGetter) chunk, pos.getX(), pos.getZ(), oldHeight, newHeight);
             }
 
             lightManager.checkBlock(pos);
@@ -329,11 +325,11 @@ public class CubePrimer extends ProtoChunk implements IBigCube, CubicLevelHeight
         SurfaceTrackerSection[] surfaceTrackerSections = heightmaps.get(type);
 
         if (surfaceTrackerSections == null) {
-            surfaceTrackerSections = new SurfaceTrackerSection[IBigCube.DIAMETER_IN_SECTIONS * IBigCube.DIAMETER_IN_SECTIONS];
+            surfaceTrackerSections = new SurfaceTrackerSection[CubeAccess.DIAMETER_IN_SECTIONS * CubeAccess.DIAMETER_IN_SECTIONS];
 
-            for (int dx = 0; dx < IBigCube.DIAMETER_IN_SECTIONS; dx++) {
-                for (int dz = 0; dz < IBigCube.DIAMETER_IN_SECTIONS; dz++) {
-                    int idx = dx + dz * IBigCube.DIAMETER_IN_SECTIONS;
+            for (int dx = 0; dx < CubeAccess.DIAMETER_IN_SECTIONS; dx++) {
+                for (int dz = 0; dz < CubeAccess.DIAMETER_IN_SECTIONS; dz++) {
+                    int idx = dx + dz * CubeAccess.DIAMETER_IN_SECTIONS;
                     surfaceTrackerSections[idx] = new SurfaceTrackerSection(0, cubePos.getY(), null, this, type);
                     surfaceTrackerSections[idx].loadCube(dx, dz, this, true);
                 }
@@ -361,11 +357,11 @@ public class CubePrimer extends ProtoChunk implements IBigCube, CubicLevelHeight
 
     private void primeHeightMaps(EnumSet<Heightmap.Types> toInitialize) {
         for (Heightmap.Types type : toInitialize) {
-            SurfaceTrackerSection[] surfaceTrackerSections = new SurfaceTrackerSection[IBigCube.DIAMETER_IN_SECTIONS * IBigCube.DIAMETER_IN_SECTIONS];
+            SurfaceTrackerSection[] surfaceTrackerSections = new SurfaceTrackerSection[CubeAccess.DIAMETER_IN_SECTIONS * CubeAccess.DIAMETER_IN_SECTIONS];
 
-            for (int dx = 0; dx < IBigCube.DIAMETER_IN_SECTIONS; dx++) {
-                for (int dz = 0; dz < IBigCube.DIAMETER_IN_SECTIONS; dz++) {
-                    int idx = dx + dz * IBigCube.DIAMETER_IN_SECTIONS;
+            for (int dx = 0; dx < CubeAccess.DIAMETER_IN_SECTIONS; dx++) {
+                for (int dz = 0; dz < CubeAccess.DIAMETER_IN_SECTIONS; dz++) {
+                    int idx = dx + dz * CubeAccess.DIAMETER_IN_SECTIONS;
                     surfaceTrackerSections[idx] = new SurfaceTrackerSection(0, cubePos.getY(), null, this, type);
                     surfaceTrackerSections[idx].loadCube(dx, dz, this, true);
                 }
@@ -583,7 +579,7 @@ public class CubePrimer extends ProtoChunk implements IBigCube, CubicLevelHeight
 
     @Override public void setBiomes(ChunkBiomeContainer biomes) {
         if (cubeBiomeContainer == null) {
-            cubeBiomeContainer = new CubeBiomeContainer(((BiomeContainerAccess) biomes).getBiomeRegistry(), this.levelHeightAccessor);
+            cubeBiomeContainer = new CubeBiomeContainer(((ChunkBiomeContainerAccess) biomes).getBiomeRegistry(), this.levelHeightAccessor);
         }
 
         cubeBiomeContainer.setContainerForColumn(columnX, columnZ, biomes);
@@ -629,7 +625,7 @@ public class CubePrimer extends ProtoChunk implements IBigCube, CubicLevelHeight
 
     @Override public BitSet getOrCreateCarvingMask(GenerationStep.Carving type) {
         return this.carvingMasks.computeIfAbsent(type, (carvingx) -> {
-            return new BitSet(IBigCube.BLOCK_COUNT);
+            return new BitSet(CubeAccess.BLOCK_COUNT);
         });
     }
 

@@ -1,8 +1,8 @@
 package io.github.opencubicchunks.cubicchunks.mixin.core.common.chunk;
 
-import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
+import io.github.opencubicchunks.cubicchunks.world.level.chunk.CubeAccess;
 import io.github.opencubicchunks.cubicchunks.levelgen.CubeWorldGenRegion;
-import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
+import io.github.opencubicchunks.cubicchunks.world.level.CubicLevelHeightAccessor;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import net.minecraft.core.BlockPos;
@@ -38,7 +38,7 @@ public class MixinBulkSectionAccess {
         ChunkAccess chunkAccess = ((CubeWorldGenRegion) this.level).getCube(blockPos);
         int sectionIDX = Coords.blockToIndex(blockPos.getX(), blockPos.getY(), blockPos.getZ());
 
-        if (sectionIDX >= 0 && sectionIDX < IBigCube.SECTION_COUNT) {
+        if (sectionIDX >= 0 && sectionIDX < CubeAccess.SECTION_COUNT) {
             long sectionLong = SectionPos.asLong(blockPos);
             if (this.lastSection == null || this.lastSectionKey != sectionLong) {
                 this.lastSection = this.acquiredSections.computeIfAbsent(sectionLong, (lx) -> {

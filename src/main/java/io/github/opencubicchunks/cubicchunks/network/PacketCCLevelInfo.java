@@ -1,6 +1,6 @@
 package io.github.opencubicchunks.cubicchunks.network;
 
-import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
+import io.github.opencubicchunks.cubicchunks.world.level.CubicLevelHeightAccessor;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.level.Level;
 

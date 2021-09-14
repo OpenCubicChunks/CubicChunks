@@ -1,6 +1,6 @@
 package io.github.opencubicchunks.cubicchunks.mixin.core.client.entity;
 
-import io.github.opencubicchunks.cubicchunks.world.entity.IsCubicEntityContext;
+import io.github.opencubicchunks.cubicchunks.chunk.entity.IsCubicEntityContext;
 import net.minecraft.world.level.entity.EntityAccess;
 import net.minecraft.world.level.entity.EntitySectionStorage;
 import net.minecraft.world.level.entity.TransientEntitySectionManager;

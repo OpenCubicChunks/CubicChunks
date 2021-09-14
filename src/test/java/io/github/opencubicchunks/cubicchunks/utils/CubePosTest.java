@@ -2,7 +2,7 @@ package io.github.opencubicchunks.cubicchunks.utils;
 
 import static org.junit.Assert.assertEquals;
 
-import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
+import io.github.opencubicchunks.cubicchunks.world.level.CubePos;
 import net.minecraft.core.SectionPos;
 import net.minecraft.world.level.ChunkPos;
 import org.junit.Test;

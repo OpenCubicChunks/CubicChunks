@@ -1,16 +1,15 @@
-package io.github.opencubicchunks.cubicchunks.chunk;
+package io.github.opencubicchunks.cubicchunks.client.multiplayer;
 
 import java.util.concurrent.atomic.AtomicReferenceArray;
 
 import javax.annotation.Nullable;
 
-import io.github.opencubicchunks.cubicchunks.chunk.cube.BigCube;
-import io.github.opencubicchunks.cubicchunks.world.client.IClientWorld;
+import io.github.opencubicchunks.cubicchunks.world.level.chunk.LevelCube;
 import net.minecraft.client.multiplayer.ClientLevel;
 
-public class ClientChunkProviderCubeArray {
+public class ClientCubeCacheStorage {
 
-    public final AtomicReferenceArray<BigCube> cubes;
+    public final AtomicReferenceArray<LevelCube> cubes;
     public final int horizontalViewDistance;
     public final int verticalViewDistance;
     public volatile int centerX;
@@ -23,7 +22,7 @@ public class ClientChunkProviderCubeArray {
     private final ClientLevel world;
     private final int sideArea;
 
-    public ClientChunkProviderCubeArray(int horizontalViewDistance, int verticalViewDistance, ClientLevel world) {
+    public ClientCubeCacheStorage(int horizontalViewDistance, int verticalViewDistance, ClientLevel world) {
         this.horizontalViewDistance = horizontalViewDistance;
         this.verticalViewDistance = verticalViewDistance;
         this.horizontalSideLength = horizontalViewDistance * 2 + 1;
@@ -39,11 +38,11 @@ public class ClientChunkProviderCubeArray {
             + Math.floorMod(x, this.horizontalSideLength);
     }
 
-    public void replace(int cubeIdx, @Nullable BigCube chunkIn) {
-        BigCube cube = this.cubes.getAndSet(cubeIdx, chunkIn);
+    public void replace(int cubeIdx, @Nullable LevelCube chunkIn) {
+        LevelCube cube = this.cubes.getAndSet(cubeIdx, chunkIn);
         if (cube != null) {
             --this.loaded;
-            ((IClientWorld) this.world).onCubeUnload(cube);
+            ((CubicClientLevel) this.world).onCubeUnload(cube);
         }
 
         if (chunkIn != null) {
@@ -52,11 +51,11 @@ public class ClientChunkProviderCubeArray {
 
     }
 
-    public BigCube unload(int chunkIndex, BigCube cube, @Nullable BigCube replaceWith) {
+    public LevelCube unload(int chunkIndex, LevelCube cube, @Nullable LevelCube replaceWith) {
         if (this.cubes.compareAndSet(chunkIndex, cube, replaceWith) && replaceWith == null) {
             --this.loaded;
         }
-        ((IClientWorld) this.world).onCubeUnload(cube);
+        ((CubicClientLevel) this.world).onCubeUnload(cube);
         return cube;
     }
 
@@ -67,7 +66,7 @@ public class ClientChunkProviderCubeArray {
     }
 
     @Nullable
-    public BigCube get(int chunkIndex) {
+    public LevelCube get(int chunkIndex) {
         return this.cubes.get(chunkIndex);
     }
 }

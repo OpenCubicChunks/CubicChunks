@@ -32,43 +32,43 @@ import com.google.common.collect.Queues;
 import com.mojang.datafixers.DataFixer;
 import com.mojang.datafixers.util.Either;
 import io.github.opencubicchunks.cubicchunks.CubicChunks;
-import io.github.opencubicchunks.cubicchunks.chunk.CubeCollectorFuture;
-import io.github.opencubicchunks.cubicchunks.chunk.CubePlayerProvider;
-import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
-import io.github.opencubicchunks.cubicchunks.chunk.IChunkManager;
-import io.github.opencubicchunks.cubicchunks.chunk.IChunkMapInternal;
-import io.github.opencubicchunks.cubicchunks.chunk.ICubeHolder;
-import io.github.opencubicchunks.cubicchunks.chunk.ICubeStatusListener;
-import io.github.opencubicchunks.cubicchunks.chunk.IVerticalView;
-import io.github.opencubicchunks.cubicchunks.chunk.cube.BigCube;
-import io.github.opencubicchunks.cubicchunks.chunk.cube.CubePrimer;
-import io.github.opencubicchunks.cubicchunks.chunk.cube.CubePrimerWrapper;
-import io.github.opencubicchunks.cubicchunks.chunk.cube.CubeStatus;
-import io.github.opencubicchunks.cubicchunks.chunk.graph.CCTicketType;
-import io.github.opencubicchunks.cubicchunks.chunk.storage.AsyncSaveData;
-import io.github.opencubicchunks.cubicchunks.chunk.storage.ISectionStorage;
-import io.github.opencubicchunks.cubicchunks.chunk.ticket.CubeTaskPriorityQueue;
-import io.github.opencubicchunks.cubicchunks.chunk.ticket.CubeTaskPriorityQueueSorter;
-import io.github.opencubicchunks.cubicchunks.chunk.ticket.ITicketManager;
-import io.github.opencubicchunks.cubicchunks.chunk.util.ChunkIoMainThreadTaskUtils;
-import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
-import io.github.opencubicchunks.cubicchunks.chunk.util.ExecutorUtils;
-import io.github.opencubicchunks.cubicchunks.chunk.util.Utils;
-import io.github.opencubicchunks.cubicchunks.mixin.access.common.EntityTrackerAccess;
+import io.github.opencubicchunks.cubicchunks.world.level.chunk.CubeAccess;
+import io.github.opencubicchunks.cubicchunks.utils.CubeCollectorFuture;
+import io.github.opencubicchunks.cubicchunks.server.level.CubeHolder;
+import io.github.opencubicchunks.cubicchunks.server.level.CubeMap;
+import io.github.opencubicchunks.cubicchunks.server.level.CubeMapInternal;
+import io.github.opencubicchunks.cubicchunks.server.level.CubeHolderPlayerProvider;
+import io.github.opencubicchunks.cubicchunks.server.level.progress.CubeProgressListener;
+import io.github.opencubicchunks.cubicchunks.chunk.VerticalViewDistanceListener;
+import io.github.opencubicchunks.cubicchunks.world.level.chunk.CubeStatus;
+import io.github.opencubicchunks.cubicchunks.world.level.chunk.ImposterProtoCube;
+import io.github.opencubicchunks.cubicchunks.world.level.chunk.LevelCube;
+import io.github.opencubicchunks.cubicchunks.world.level.chunk.ProtoCube;
+import io.github.opencubicchunks.cubicchunks.server.level.CubicTicketType;
+import io.github.opencubicchunks.cubicchunks.world.level.chunk.storage.AsyncSaveData;
+import io.github.opencubicchunks.cubicchunks.world.level.chunk.storage.CubicSectionStorage;
+import io.github.opencubicchunks.cubicchunks.server.level.CubicDistanceManager;
+import io.github.opencubicchunks.cubicchunks.server.level.CubeTaskPriorityQueue;
+import io.github.opencubicchunks.cubicchunks.server.level.CubeTaskPriorityQueueSorter;
+import io.github.opencubicchunks.cubicchunks.utils.ChunkIoMainThreadTaskUtils;
+import io.github.opencubicchunks.cubicchunks.world.level.CubePos;
+import io.github.opencubicchunks.cubicchunks.utils.ExecutorUtils;
+import io.github.opencubicchunks.cubicchunks.utils.Utils;
+import io.github.opencubicchunks.cubicchunks.mixin.access.common.ChunkMapTrackedEntityAccess;
+import io.github.opencubicchunks.cubicchunks.mixin.access.common.DistanceManagerAccess;
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.IOWorkerAccess;
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.TicketAccess;
-import io.github.opencubicchunks.cubicchunks.mixin.access.common.TicketManagerAccess;
 import io.github.opencubicchunks.cubicchunks.network.PacketCubes;
 import io.github.opencubicchunks.cubicchunks.network.PacketDispatcher;
 import io.github.opencubicchunks.cubicchunks.network.PacketHeightmap;
 import io.github.opencubicchunks.cubicchunks.network.PacketUnloadCube;
 import io.github.opencubicchunks.cubicchunks.network.PacketUpdateCubePosition;
 import io.github.opencubicchunks.cubicchunks.network.PacketUpdateLight;
-import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
-import io.github.opencubicchunks.cubicchunks.server.IServerChunkProvider;
+import io.github.opencubicchunks.cubicchunks.world.level.CubicLevelHeightAccessor;
+import io.github.opencubicchunks.cubicchunks.server.level.ServerCubeCache;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
-import io.github.opencubicchunks.cubicchunks.world.server.IServerWorld;
-import io.github.opencubicchunks.cubicchunks.world.server.IServerWorldLightManager;
+import io.github.opencubicchunks.cubicchunks.world.server.CubicServerLevel;
+import io.github.opencubicchunks.cubicchunks.world.server.CubicThreadedLevelLightEngine;
 import io.github.opencubicchunks.cubicchunks.world.storage.CubeSerializer;
 import io.github.opencubicchunks.cubicchunks.world.storage.RegionCubeIO;
 import io.netty.buffer.Unpooled;
@@ -132,7 +132,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 @Mixin(ChunkMap.class)
-public abstract class MixinChunkManager implements IChunkManager, IChunkMapInternal, IVerticalView, CubePlayerProvider {
+public abstract class MixinChunkMap implements CubeMap, CubeMapInternal, VerticalViewDistanceListener, CubeHolderPlayerProvider {
 
     private static final double TICK_UPDATE_DISTANCE = 128.0;
     private static final boolean USE_ASYNC_SERIALIZATION = true;
@@ -214,7 +214,7 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
     @SuppressWarnings("UnresolvedMixinReference") @Redirect(method = "<init>", at = @At(value = "NEW", target = "net/minecraft/server/level/ChunkMap$DistanceManager"))
     private ChunkMap.DistanceManager setIsCubic(ChunkMap chunkMap, Executor executor, Executor executor2, ServerLevel worldIn) {
         ChunkMap.DistanceManager distanceManager1 = chunkMap.new DistanceManager(executor, executor2);
-        ((ITicketManager) distanceManager1).hasCubicTickets(((CubicLevelHeightAccessor) this.level).isCubic());
+        ((CubicDistanceManager) distanceManager1).hasCubicTickets(((CubicLevelHeightAccessor) this.level).isCubic());
         return distanceManager1;
     }
 
@@ -232,7 +232,7 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
         this.cubeWorldgenMailbox = this.cubeQueueSorter.createExecutor(delegatedtaskexecutor, false);
         this.cubeMainThreadMailbox = this.cubeQueueSorter.createExecutor(itaskexecutor, false);
 
-        ((IServerWorldLightManager) this.lightEngine).postConstructorSetup(this.cubeQueueSorter,
+        ((CubicThreadedLevelLightEngine) this.lightEngine).postConstructorSetup(this.cubeQueueSorter,
             this.cubeQueueSorter.createExecutor(delegatedtaskexecutor1, false));
 
         try {
@@ -275,14 +275,14 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
             do {
                 savedAny.setFalse();
                 @SuppressWarnings("unchecked") final CompletableFuture<Boolean>[] saveFutures = list.stream().map((cubeHolder) -> {
-                    CompletableFuture<IBigCube> cubeFuture;
+                    CompletableFuture<CubeAccess> cubeFuture;
                     do {
-                        cubeFuture = ((ICubeHolder) cubeHolder).getCubeToSave();
+                        cubeFuture = ((CubeHolder) cubeHolder).getCubeToSave();
                         this.mainThreadExecutor.managedBlock(cubeFuture::isDone);
-                    } while (cubeFuture != ((ICubeHolder) cubeHolder).getCubeToSave());
+                    } while (cubeFuture != ((CubeHolder) cubeHolder).getCubeToSave());
 
                     return cubeFuture.join();
-                }).filter((cube) -> cube instanceof CubePrimerWrapper || cube instanceof BigCube)
+                }).filter((cube) -> cube instanceof ImposterProtoCube || cube instanceof LevelCube)
                     .map(cube1 -> USE_ASYNC_SERIALIZATION ? cubeSaveAsync(cube1) : CompletableFuture.completedFuture(cubeSave(cube1)))
                     .distinct().toArray(CompletableFuture[]::new);
                 for (CompletableFuture<Boolean> future : saveFutures) {
@@ -298,8 +298,8 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
             LOGGER.info("Cube Storage ({}): All cubes are saved", this.storageName);
         } else {
             this.visibleCubeMap.values().stream().filter(ChunkHolder::wasAccessibleSinceLastSave).forEach((cubeHolder) -> {
-                IBigCube cube = ((ICubeHolder) cubeHolder).getCubeToSave().getNow(null);
-                if (cube instanceof CubePrimerWrapper || cube instanceof BigCube) {
+                CubeAccess cube = ((CubeHolder) cubeHolder).getCubeToSave().getNow(null);
+                if (cube instanceof ImposterProtoCube || cube instanceof LevelCube) {
                     this.cubeSave(cube);
                     cubeHolder.refreshAccessibility();
                 }
@@ -313,8 +313,8 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
     }
 
     // chunkSave
-    private boolean cubeSave(IBigCube cube) {
-        ((ISectionStorage) this.poiManager).flush(cube.getCubePos());
+    private boolean cubeSave(CubeAccess cube) {
+        ((CubicSectionStorage) this.poiManager).flush(cube.getCubePos());
         if (!cube.isDirty()) {
             return false;
         } else {
@@ -358,8 +358,8 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
         }
     }
 
-    private CompletableFuture<Boolean> cubeSaveAsync(IBigCube cube) {
-        ((ISectionStorage) this.poiManager).flush(cube.getCubePos());
+    private CompletableFuture<Boolean> cubeSaveAsync(CubeAccess cube) {
+        ((CubicSectionStorage) this.poiManager).flush(cube.getCubePos());
         if (!cube.isDirty()) {
             return CompletableFuture.completedFuture(false);
         } else {
@@ -436,15 +436,15 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
 
 
     private void scheduleCubeUnload(long cubePos, ChunkHolder chunkHolderIn) {
-        CompletableFuture<IBigCube> completablefuture = ((ICubeHolder) chunkHolderIn).getCubeToSave();
+        CompletableFuture<CubeAccess> completablefuture = ((CubeHolder) chunkHolderIn).getCubeToSave();
         completablefuture.thenAcceptAsync((icube) -> {
-            CompletableFuture<IBigCube> completablefuture1 = ((ICubeHolder) chunkHolderIn).getCubeToSave();
+            CompletableFuture<CubeAccess> completablefuture1 = ((CubeHolder) chunkHolderIn).getCubeToSave();
             if (completablefuture1 != completablefuture) {
                 this.scheduleCubeUnload(cubePos, chunkHolderIn);
             } else {
                 if (this.pendingCubeUnloads.remove(cubePos, chunkHolderIn) && icube != null) {
-                    if (icube instanceof BigCube) {
-                        ((BigCube) icube).setLoaded(false);
+                    if (icube instanceof LevelCube) {
+                        ((LevelCube) icube).setLoaded(false);
                         //TODO: reimplement forge event ChunkEvent#Unload.
                         //net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.event.world.ChunkEvent.Unload((Chunk)cube));
                     }
@@ -454,21 +454,21 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
                     } else {
                         this.cubeSave(icube);
                     }
-                    if (this.cubeEntitiesInLevel.remove(cubePos) && icube instanceof BigCube) {
-                        ((IServerWorld) this.level).onCubeUnloading((BigCube) icube);
+                    if (this.cubeEntitiesInLevel.remove(cubePos) && icube instanceof LevelCube) {
+                        ((CubicServerLevel) this.level).onCubeUnloading((LevelCube) icube);
                     }
 
-                    ((IServerWorldLightManager) this.lightEngine).setCubeStatusEmpty(icube.getCubePos());
+                    ((CubicThreadedLevelLightEngine) this.lightEngine).setCubeStatusEmpty(icube.getCubePos());
                     this.lightEngine.tryScheduleUpdate();
                     CubePos pos = CubePos.from(cubePos);
 
-                    for (int localX = 0; localX < IBigCube.DIAMETER_IN_SECTIONS; localX++) {
-                        for (int localZ = 0; localZ < IBigCube.DIAMETER_IN_SECTIONS; localZ++) {
+                    for (int localX = 0; localX < CubeAccess.DIAMETER_IN_SECTIONS; localX++) {
+                        for (int localZ = 0; localZ < CubeAccess.DIAMETER_IN_SECTIONS; localZ++) {
                             long chunkPos = pos.asChunkPos(localX, localZ).toLong();
-                            Ticket<?>[] tickets = ((TicketManagerAccess) distanceManager).invokeGetTickets(chunkPos).stream().filter((ticket ->
-                                ticket.getType() == CCTicketType.CCCOLUMN && ((TicketAccess) ticket).getKey().equals(pos))).toArray(Ticket[]::new);
+                            Ticket<?>[] tickets = ((DistanceManagerAccess) distanceManager).invokeGetTickets(chunkPos).stream().filter((ticket ->
+                                ticket.getType() == CubicTicketType.CCCOLUMN && ((TicketAccess) ticket).getKey().equals(pos))).toArray(Ticket[]::new);
                             for (Ticket<?> ticket : tickets) {
-                                ((TicketManagerAccess) this.distanceManager).invokeRemoveTicket(chunkPos, ticket);
+                                ((DistanceManagerAccess) this.distanceManager).invokeRemoveTicket(chunkPos, ticket);
                             }
                         }
                     }
@@ -477,7 +477,7 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
             }
         }, this.cubeUnloadQueue::add).whenComplete((p_223171_1_, p_223171_2_) -> {
             if (p_223171_2_ != null) {
-                LOGGER.error("Failed to save cube " + ((ICubeHolder) chunkHolderIn).getCubePos(), p_223171_2_);
+                LOGGER.error("Failed to save cube " + ((CubeHolder) chunkHolderIn).getCubePos(), p_223171_2_);
             }
         });
     }
@@ -522,9 +522,9 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
             return;
         }
 
-        if (((ICubeHolder) chunkHolderIn).getCubePos() != null) {
-            ((ICubeStatusListener) progressListener).onCubeStatusChange(
-                ((ICubeHolder) chunkHolderIn).getCubePos(),
+        if (((CubeHolder) chunkHolderIn).getCubePos() != null) {
+            ((CubeProgressListener) progressListener).onCubeStatusChange(
+                ((CubeHolder) chunkHolderIn).getCubePos(),
                 chunkStatusIn);
         }
     }
@@ -542,9 +542,9 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
             return;
         }
 
-        if (((ICubeHolder) chunkHolderIn).getCubePos() != null) {
-            ((ICubeStatusListener) progressListener).onCubeStatusChange(
-                ((ICubeHolder) chunkHolderIn).getCubePos(), null);
+        if (((CubeHolder) chunkHolderIn).getCubePos() != null) {
+            ((CubeProgressListener) progressListener).onCubeStatusChange(
+                ((CubeHolder) chunkHolderIn).getCubePos(), null);
         }
     }
 
@@ -564,9 +564,9 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
         if (!((CubicLevelHeightAccessor) this.level).isCubic()) {
             return;
         }
-        if (((ICubeHolder) chunkHolderIn).getCubePos() != null) {
-            ((ICubeStatusListener) progressListener).onCubeStatusChange(
-                ((ICubeHolder) chunkHolderIn).getCubePos(), null);
+        if (((CubeHolder) chunkHolderIn).getCubePos() != null) {
+            ((CubeProgressListener) progressListener).onCubeStatusChange(
+                ((CubeHolder) chunkHolderIn).getCubePos(), null);
         }
     }
 
@@ -590,16 +590,16 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
 
     // func_219244_a, schedule
     @Override
-    public CompletableFuture<Either<IBigCube, ChunkHolder.ChunkLoadingFailure>> scheduleCube(ChunkHolder cubeHolder, ChunkStatus chunkStatusIn) {
-        CubePos cubePos = ((ICubeHolder) cubeHolder).getCubePos();
+    public CompletableFuture<Either<CubeAccess, ChunkHolder.ChunkLoadingFailure>> scheduleCube(ChunkHolder cubeHolder, ChunkStatus chunkStatusIn) {
+        CubePos cubePos = ((CubeHolder) cubeHolder).getCubePos();
         if (chunkStatusIn == ChunkStatus.EMPTY) {
-            CompletableFuture<Either<IBigCube, ChunkHolder.ChunkLoadingFailure>> cubeFuture = this.scheduleCubeLoad(cubePos);
+            CompletableFuture<Either<CubeAccess, ChunkHolder.ChunkLoadingFailure>> cubeFuture = this.scheduleCubeLoad(cubePos);
             return cubeFuture.thenCompose(maybeCube -> {
-                Optional<IBigCube> left = maybeCube.left();
+                Optional<CubeAccess> left = maybeCube.left();
                 ChunkStatus target = left.map(ChunkAccess::getStatus).orElse(chunkStatusIn);
                 return scheduleAndWaitForColumns(target, cubePos).thenApplyAsync(columns -> {
                     maybeCube.left().ifPresent(cube -> {
-                        if (!(cube instanceof CubePrimerWrapper) && cube instanceof CubePrimer primer && primer.getCubeStatus().isOrAfter(ChunkStatus.FEATURES)) {
+                        if (!(cube instanceof ImposterProtoCube) && cube instanceof ProtoCube primer && primer.getCubeStatus().isOrAfter(ChunkStatus.FEATURES)) {
                             primer.onEnteringFeaturesStatus();
                         }
                     });
@@ -609,25 +609,25 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
         } else {
             CompletableFuture<Either<ChunkAccess, ChunkHolder.ChunkLoadingFailure>> columnFutures = scheduleAndWaitForColumns(chunkStatusIn, cubePos);
 
-            CompletableFuture<Either<IBigCube, ChunkHolder.ChunkLoadingFailure>> parentCubeFuture = Utils.unsafeCast(
-                ((ICubeHolder) cubeHolder).getOrScheduleCubeFuture(chunkStatusIn.getParent(), (ChunkMap) (Object) this)
+            CompletableFuture<Either<CubeAccess, ChunkHolder.ChunkLoadingFailure>> parentCubeFuture = Utils.unsafeCast(
+                ((CubeHolder) cubeHolder).getOrScheduleCubeFuture(chunkStatusIn.getParent(), (ChunkMap) (Object) this)
             );
             return columnFutures.thenComposeAsync(columns -> parentCubeFuture).thenComposeAsync(
-                (Either<IBigCube, ChunkHolder.ChunkLoadingFailure> inputSection) -> {
-                    Optional<IBigCube> optional = inputSection.left();
+                (Either<CubeAccess, ChunkHolder.ChunkLoadingFailure> inputSection) -> {
+                    Optional<CubeAccess> optional = inputSection.left();
                     if (!optional.isPresent()) {
                         return CompletableFuture.completedFuture(inputSection);
                     } else {
                         if (chunkStatusIn == ChunkStatus.LIGHT) {
-                            ((ITicketManager) this.distanceManager).addCubeTicket(CCTicketType.CCLIGHT, cubePos,
+                            ((CubicDistanceManager) this.distanceManager).addCubeTicket(CubicTicketType.CCLIGHT, cubePos,
                                 33 + CubeStatus.getDistance(ChunkStatus.FEATURES), cubePos);
                         }
 
-                        IBigCube cube = optional.get();
+                        CubeAccess cube = optional.get();
                         if (cube.getCubeStatus().isOrAfter(chunkStatusIn)) {
-                            CompletableFuture<Either<IBigCube, ChunkHolder.ChunkLoadingFailure>> completablefuture1 = Utils
+                            CompletableFuture<Either<CubeAccess, ChunkHolder.ChunkLoadingFailure>> completablefuture1 = Utils
                                 .unsafeCast(chunkStatusIn.load(this.level, this.structureManager, this.lightEngine, (chunk) -> Utils.unsafeCast(this.protoCubeToFullCube(cubeHolder)), cube));
-                            ((ICubeStatusListener) this.progressListener).onCubeStatusChange(cubePos, chunkStatusIn);
+                            ((CubeProgressListener) this.progressListener).onCubeStatusChange(cubePos, chunkStatusIn);
                             return completablefuture1;
                         } else {
                             return this.scheduleCubeGeneration(cubeHolder, chunkStatusIn);
@@ -650,9 +650,9 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
     }
 
     //scheduleChunkGeneration
-    private CompletableFuture<Either<IBigCube, ChunkHolder.ChunkLoadingFailure>> scheduleCubeGeneration(ChunkHolder chunkHolderIn, ChunkStatus chunkStatusIn) {
-        CubePos cubePos = ((ICubeHolder) chunkHolderIn).getCubePos();
-        CompletableFuture<Either<List<IBigCube>, ChunkHolder.ChunkLoadingFailure>> future =
+    private CompletableFuture<Either<CubeAccess, ChunkHolder.ChunkLoadingFailure>> scheduleCubeGeneration(ChunkHolder chunkHolderIn, ChunkStatus chunkStatusIn) {
+        CubePos cubePos = ((CubeHolder) chunkHolderIn).getCubePos();
+        CompletableFuture<Either<List<CubeAccess>, ChunkHolder.ChunkLoadingFailure>> future =
             this.getCubeRangeFuture(cubePos, CubeStatus.getCubeTaskRange(chunkStatusIn), (count) -> this.getCubeDependencyStatus(chunkStatusIn, count));
         this.level.getProfiler().incrementCounter(() -> "cubeGenerate " + chunkStatusIn.getName());
 
@@ -661,10 +661,10 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
         return future.thenComposeAsync((sectionOrError) -> {
             return sectionOrError.map((neighborSections) -> {
                 try {
-                    CompletableFuture<Either<IBigCube, ChunkHolder.ChunkLoadingFailure>> finalFuture = Utils.unsafeCast(
+                    CompletableFuture<Either<CubeAccess, ChunkHolder.ChunkLoadingFailure>> finalFuture = Utils.unsafeCast(
                         chunkStatusIn.generate(executor, this.level, this.generator, this.structureManager, this.lightEngine,
                             (chunk) -> Utils.unsafeCast(this.protoCubeToFullCube(chunkHolderIn)), Utils.unsafeCast(neighborSections)));
-                    ((ICubeStatusListener) this.progressListener).onCubeStatusChange(cubePos, chunkStatusIn);
+                    ((CubeProgressListener) this.progressListener).onCubeStatusChange(cubePos, chunkStatusIn);
                     return finalFuture;
                 } catch (Exception exception) {
                     CrashReport crashreport = CrashReport.forThrowable(exception, "Exception generating new chunk");
@@ -685,11 +685,11 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
 
         CompletableFuture<CompletableFuture<Either<ChunkAccess, ChunkHolder.ChunkLoadingFailure>>> nestedChainedFuture = CompletableFuture.supplyAsync(() -> {
             CompletableFuture<Either<ChunkAccess, ChunkHolder.ChunkLoadingFailure>> chainedFutures = null;
-            for (int localX = 0; localX < IBigCube.DIAMETER_IN_SECTIONS; localX++) {
-                for (int localZ = 0; localZ < IBigCube.DIAMETER_IN_SECTIONS; localZ++) {
+            for (int localX = 0; localX < CubeAccess.DIAMETER_IN_SECTIONS; localX++) {
+                for (int localZ = 0; localZ < CubeAccess.DIAMETER_IN_SECTIONS; localZ++) {
                     ChunkPos chunkPos = cubePos.asChunkPos(localX, localZ);
                     CompletableFuture<Either<ChunkAccess, ChunkHolder.ChunkLoadingFailure>> columnFutureForCube =
-                        ((IServerChunkProvider) serverChunkCache).getColumnFutureForCube(cubePos, chunkPos.x, chunkPos.z, chunkStatusIn, true);
+                        ((ServerCubeCache) serverChunkCache).getColumnFutureForCube(cubePos, chunkPos.x, chunkPos.z, chunkStatusIn, true);
                     if (chainedFutures == null) {
                         chainedFutures = columnFutureForCube;
                     } else {
@@ -703,7 +703,7 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
     }
 
     // func_219236_a, getChunkRangeFuture
-    public CompletableFuture<Either<List<IBigCube>, ChunkHolder.ChunkLoadingFailure>> getCubeRangeFuture(
+    public CompletableFuture<Either<List<CubeAccess>, ChunkHolder.ChunkLoadingFailure>> getCubeRangeFuture(
         CubePos pos, int radius, IntFunction<ChunkStatus> getParentStatus) {
         int x = pos.getX();
         int y = pos.getY();
@@ -728,7 +728,7 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
                     long posLong = cubePos.asLong();
 
                     // get the required cube's chunk holder
-                    ICubeHolder chunkholder = (ICubeHolder) this.getUpdatingCubeIfPresent(posLong);
+                    CubeHolder chunkholder = (CubeHolder) this.getUpdatingCubeIfPresent(posLong);
                     if (chunkholder == null) {
                         //noinspection MixinInnerClass
                         return CompletableFuture.completedFuture(Either.right(new ChunkHolder.ChunkLoadingFailure() {
@@ -747,7 +747,7 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
                             collectorFuture.add(idx2, either, error);
                         }, Utils.unsafeCast(this));
                     } else {
-                        CompletableFuture<Either<IBigCube, ChunkHolder.ChunkLoadingFailure>> future =
+                        CompletableFuture<Either<CubeAccess, ChunkHolder.ChunkLoadingFailure>> future =
                             chunkholder.getOrScheduleCubeFuture(parentStatus, Utils.unsafeCast(this));
                         future.whenComplete((either, error) -> collectorFuture.add(idx2, either, error));
                     }
@@ -758,11 +758,11 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
 
 //        CompletableFuture<List<Either<IBigCube, ChunkHolder.IChunkLoadingError>>> futures = Util.gather(list);
         return collectorFuture.thenApply((cubeEithers) -> {
-            List<IBigCube> returnFutures = Lists.newArrayList();
+            List<CubeAccess> returnFutures = Lists.newArrayList();
             int i = 0;
 
-            for (final Either<IBigCube, ChunkHolder.ChunkLoadingFailure> either : cubeEithers) {
-                Optional<IBigCube> optional = either.left();
+            for (final Either<CubeAccess, ChunkHolder.ChunkLoadingFailure> either : cubeEithers) {
+                Optional<CubeAccess> optional = either.left();
                 if (!optional.isPresent()) {
                     final int d = radius * 2 + 1;
                     final int idx = i;
@@ -790,7 +790,7 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
     @Override
     public void releaseLightTicket(CubePos cubePos) {
         this.mainThreadExecutor.tell(Util.name(() -> {
-            ((ITicketManager) this.distanceManager).removeCubeTicket(CCTicketType.CCLIGHT,
+            ((CubicDistanceManager) this.distanceManager).removeCubeTicket(CubicTicketType.CCLIGHT,
                 cubePos, 33 + CubeStatus.getDistance(ChunkStatus.FEATURES), cubePos);
         }, () -> {
             return "release light ticket " + cubePos;
@@ -798,22 +798,22 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
     }
 
     // func_219200_b, protoChunkToFullChunk
-    private CompletableFuture<Either<IBigCube, ChunkHolder.ChunkLoadingFailure>> protoCubeToFullCube(ChunkHolder holder) {
-        CompletableFuture<Either<IBigCube, ChunkHolder.ChunkLoadingFailure>> fullFuture =
-            ((ICubeHolder) holder).getCubeFutureIfPresentUnchecked(ChunkStatus.FULL.getParent());
+    private CompletableFuture<Either<CubeAccess, ChunkHolder.ChunkLoadingFailure>> protoCubeToFullCube(ChunkHolder holder) {
+        CompletableFuture<Either<CubeAccess, ChunkHolder.ChunkLoadingFailure>> fullFuture =
+            ((CubeHolder) holder).getCubeFutureIfPresentUnchecked(ChunkStatus.FULL.getParent());
         return fullFuture.thenApplyAsync((sectionOrError) -> {
-            ChunkStatus chunkstatus = ICubeHolder.getCubeStatusFromLevel(holder.getTicketLevel());
-            return !chunkstatus.isOrAfter(ChunkStatus.FULL) ? ICubeHolder.MISSING_CUBE : sectionOrError.mapLeft((prevCube) -> {
-                CubePos cubePos = ((ICubeHolder) holder).getCubePos();
-                BigCube cube;
-                if (prevCube instanceof CubePrimerWrapper) {
-                    cube = ((CubePrimerWrapper) prevCube).getCube();
+            ChunkStatus chunkstatus = CubeHolder.getCubeStatusFromLevel(holder.getTicketLevel());
+            return !chunkstatus.isOrAfter(ChunkStatus.FULL) ? CubeHolder.MISSING_CUBE : sectionOrError.mapLeft((prevCube) -> {
+                CubePos cubePos = ((CubeHolder) holder).getCubePos();
+                LevelCube cube;
+                if (prevCube instanceof ImposterProtoCube) {
+                    cube = ((ImposterProtoCube) prevCube).getCube();
                 } else {
-                    cube = new BigCube(this.level, (CubePrimer) prevCube, (bigCube) -> {
+                    cube = new LevelCube(this.level, (ProtoCube) prevCube, (bigCube) -> {
                         //TODO: Verify this is ok
-                        postLoadProtoChunk(this.level, ((CubePrimer) prevCube).getCubeEntities());
+                        postLoadProtoChunk(this.level, ((ProtoCube) prevCube).getCubeEntities());
                     });
-                    ((ICubeHolder) holder).replaceProtoCube(new CubePrimerWrapper(cube, level));
+                    ((CubeHolder) holder).replaceProtoCube(new ImposterProtoCube(cube, level));
                 }
 
                 cube.setFullStatus(() -> ChunkHolder.getFullChunkStatus(holder.getTicketLevel()));
@@ -826,16 +826,16 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
             });
         }, (runnable) -> {
             this.cubeMainThreadMailbox.tell(CubeTaskPriorityQueueSorter.createMsg(
-                runnable, ((ICubeHolder) holder).getCubePos().asLong(), holder::getTicketLevel));
+                runnable, ((CubeHolder) holder).getCubePos().asLong(), holder::getTicketLevel));
         });
     }
 
     // func_222961_b, unpackTicks
     @Override
-    public CompletableFuture<Either<BigCube, ChunkHolder.ChunkLoadingFailure>> unpackCubeTicks(ChunkHolder chunkHolder) {
-        return ((ICubeHolder) chunkHolder).getOrScheduleCubeFuture(ChunkStatus.FULL, (ChunkMap) (Object) this).thenApplyAsync((o) -> {
+    public CompletableFuture<Either<LevelCube, ChunkHolder.ChunkLoadingFailure>> unpackCubeTicks(ChunkHolder chunkHolder) {
+        return ((CubeHolder) chunkHolder).getOrScheduleCubeFuture(ChunkStatus.FULL, (ChunkMap) (Object) this).thenApplyAsync((o) -> {
             return o.mapLeft((icube) -> {
-                BigCube cube = (BigCube) icube;
+                LevelCube cube = (LevelCube) icube;
                 cube.unpackTicks();
                 return cube;
             });
@@ -846,16 +846,16 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
 
     // func_219179_a, postProcess
     @Override
-    public CompletableFuture<Either<BigCube, ChunkHolder.ChunkLoadingFailure>> postProcessCube(ChunkHolder chunkHolder) {
-        CubePos cubePos = ((ICubeHolder) chunkHolder).getCubePos();
-        CompletableFuture<Either<List<IBigCube>, ChunkHolder.ChunkLoadingFailure>> completablefuture = this.getCubeRangeFuture(cubePos, 1,
+    public CompletableFuture<Either<LevelCube, ChunkHolder.ChunkLoadingFailure>> postProcessCube(ChunkHolder chunkHolder) {
+        CubePos cubePos = ((CubeHolder) chunkHolder).getCubePos();
+        CompletableFuture<Either<List<CubeAccess>, ChunkHolder.ChunkLoadingFailure>> completablefuture = this.getCubeRangeFuture(cubePos, 1,
             (i) -> {
                 return ChunkStatus.FULL;
             });
-        CompletableFuture<Either<BigCube, ChunkHolder.ChunkLoadingFailure>> completablefuture1 =
+        CompletableFuture<Either<LevelCube, ChunkHolder.ChunkLoadingFailure>> completablefuture1 =
             completablefuture.thenApplyAsync((o) -> {
                 return o.flatMap((p_219208_0_) -> {
-                    BigCube cube = (BigCube) p_219208_0_.get(p_219208_0_.size() / 2);
+                    LevelCube cube = (LevelCube) p_219208_0_.get(p_219208_0_.size() / 2);
                     cube.postProcessGeneration();
                     return Either.left(cube);
                 });
@@ -869,8 +869,8 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
                 this.getPlayers(cubePos, false).forEach((serverPlayerEntity) -> {
                     this.playerLoadedCube(serverPlayerEntity, objects, cube);
                 });
-                for (int dx = 0; dx < IBigCube.DIAMETER_IN_SECTIONS; dx++) {
-                    for (int dz = 0; dz < IBigCube.DIAMETER_IN_SECTIONS; dz++) {
+                for (int dx = 0; dx < CubeAccess.DIAMETER_IN_SECTIONS; dx++) {
+                    for (int dz = 0; dz < CubeAccess.DIAMETER_IN_SECTIONS; dz++) {
                         ChunkPos pos = cubePos.asChunkPos(dx, dz);
                         this.getPlayers(pos, false).forEach(player -> {
                             this.updatePlayerHeightmap(player, pos);
@@ -913,20 +913,20 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
     }
 
     //scheduleChunkLoad
-    private CompletableFuture<Either<IBigCube, ChunkHolder.ChunkLoadingFailure>> scheduleCubeLoad(CubePos cubePos) {
+    private CompletableFuture<Either<CubeAccess, ChunkHolder.ChunkLoadingFailure>> scheduleCubeLoad(CubePos cubePos) {
         this.level.getProfiler().incrementCounter("cubeLoad");
 
         final CompletableFuture<Boolean> savingFuture = cubeSavingFutures.containsKey(cubePos) ? cubeSavingFutures.get(cubePos) : CompletableFuture.completedFuture(true);
         return savingFuture.thenComposeAsync(unused -> {
             final CompletableFuture<CompoundTag> cubeNBTFuture = regionCubeIO.getCubeNBTFuture(cubePos);
-            final CompletableFuture<CompoundTag> poiFuture = ((IOWorkerAccess) ((ISectionStorage) this.poiManager).getIOWorker()).invokeLoadAsync(cubePos.asChunkPos());
+            final CompletableFuture<CompoundTag> poiFuture = ((IOWorkerAccess) ((CubicSectionStorage) this.poiManager).getIOWorker()).invokeLoadAsync(cubePos.asChunkPos());
             return cubeNBTFuture.thenCombineAsync(poiFuture, (cubeNBT, poiNBT) -> {
                 if (cubeNBT != null) {
                     boolean flag = cubeNBT.contains("Level", 10) && cubeNBT.getCompound("Level").contains("Status", 8);
                     if (flag) {
                         ChunkIoMainThreadTaskUtils.executeMain(() -> {
                             if (poiNBT != null) {
-                                ((ISectionStorage) this.poiManager).updateCube(cubePos, poiNBT);
+                                ((CubicSectionStorage) this.poiManager).updateCube(cubePos, poiNBT);
                             }
                         });
                         return CubeSerializer.read(this.level, this.structureManager, poiManager, cubePos, cubeNBT);
@@ -944,7 +944,7 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
                     return Either.left(iBigCube);
                 }
                 this.markCubePositionReplaceable(cubePos);
-                return Either.left(new CubePrimer(cubePos, UpgradeData.EMPTY, level));
+                return Either.left(new ProtoCube(cubePos, UpgradeData.EMPTY, level));
             }, this.mainThreadExecutor);
         }, this.mainThreadExecutor);
     }
@@ -961,8 +961,8 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
         int hViewDistanceCubes = Coords.sectionToCubeRenderDistance(this.viewDistance);
         int vViewDistanceCubes = Coords.sectionToCubeRenderDistance(this.verticalViewDistance);
         return this.playerMap.getPlayers(pos.asLong()).filter((serverPlayerEntity) -> {
-            int hDist = IChunkManager.getCubeCheckerboardDistanceXZ(pos, serverPlayerEntity, true);
-            int vDist = IChunkManager.getCubeCheckerboardDistanceY(pos, serverPlayerEntity, true);
+            int hDist = CubeMap.getCubeCheckerboardDistanceXZ(pos, serverPlayerEntity, true);
+            int vDist = CubeMap.getCubeCheckerboardDistanceY(pos, serverPlayerEntity, true);
             if (hDist > hViewDistanceCubes || vDist > vViewDistanceCubes) {
                 return false;
             } else {
@@ -992,7 +992,7 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
             this.updatePlayerCubePos(player); //This also sends the vanilla packet, as player#ManagedSectionPos is changed in this method.
             if (!cannotGenerateChunks) {
                 this.distanceManager.addPlayer(SectionPos.of(player), player); //Vanilla
-                ((ITicketManager) this.distanceManager).addCubePlayer(CubePos.from(SectionPos.of(player)), player);
+                ((CubicDistanceManager) this.distanceManager).addCubePlayer(CubePos.from(SectionPos.of(player)), player);
             }
         } else {
             SectionPos managedSectionPos = player.getLastSectionPos(); //Vanilla
@@ -1000,7 +1000,7 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
             this.playerMap.removePlayer(cubePos.asChunkPos().toLong(), player);
             if (!cannotGenerateChunksTracker) {
                 this.distanceManager.removePlayer(managedSectionPos, player); //Vanilla
-                ((ITicketManager) this.distanceManager).removeCubePlayer(cubePos, player);
+                ((CubicDistanceManager) this.distanceManager).removeCubePlayer(cubePos, player);
             }
         }
 
@@ -1042,7 +1042,7 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
         }
         ci.cancel();
         for (ChunkMap.TrackedEntity trackedEntity : this.entityMap.values()) {
-            if (((EntityTrackerAccess) trackedEntity).getEntity() == player) {
+            if (((ChunkMapTrackedEntityAccess) trackedEntity).getEntity() == player) {
                 trackedEntity.updatePlayers(this.level.players());
             } else {
                 trackedEntity.updatePlayer(player);
@@ -1071,7 +1071,7 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
             // remove player is generation was allowed on last update
             if (!prevNoGenerate) {
                 this.distanceManager.removePlayer(managedSectionPos, player);
-                ((ITicketManager) this.distanceManager).removeCubePlayer(cubePosManaged, player);
+                ((CubicDistanceManager) this.distanceManager).removeCubePlayer(cubePosManaged, player);
 
             }
 
@@ -1079,7 +1079,7 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
             if (!nowNoGenerate) {
                 // we are mixin into this method, so it should work as this:
                 this.distanceManager.addPlayer(newSectionPos, player); //Vanilla
-                ((ITicketManager) this.distanceManager).addCubePlayer(newCubePos, player);
+                ((CubicDistanceManager) this.distanceManager).addCubePlayer(newCubePos, player);
             }
 
             if (!prevNoGenerate && nowNoGenerate) {
@@ -1121,8 +1121,8 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
                 for (int iz = minZ; iz <= maxZ; ++iz) {
                     for (int iy = minY; iy <= maxY; ++iy) {
                         CubePos cubePos1 = CubePos.of(ix, iy, iz);
-                        boolean loadedBefore = IChunkManager.isInCubeDistance(cubePos1, managedX, managedY, managedZ, hViewDistanceCubes, vViewDistanceCubes);
-                        boolean loadedNow = IChunkManager.isInCubeDistance(cubePos1, newCubeX, newCubeY, newCubeZ, hViewDistanceCubes, vViewDistanceCubes);
+                        boolean loadedBefore = CubeMap.isInCubeDistance(cubePos1, managedX, managedY, managedZ, hViewDistanceCubes, vViewDistanceCubes);
+                        boolean loadedNow = CubeMap.isInCubeDistance(cubePos1, newCubeX, newCubeY, newCubeZ, hViewDistanceCubes, vViewDistanceCubes);
                         this.updateCubeTracking(player, cubePos1, new Object[2], loadedBefore, loadedNow);
                     }
                 }
@@ -1203,14 +1203,14 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
             this.viewDistance = hViewDistanceSections;
             this.verticalViewDistance = vViewDistanceSections;
 
-            ((ITicketManager) this.distanceManager).updatePlayerCubeTickets(hViewDistanceSections, vViewDistanceSections);
+            ((CubicDistanceManager) this.distanceManager).updatePlayerCubeTickets(hViewDistanceSections, vViewDistanceSections);
 
             for (ChunkHolder chunkholder : this.updatingCubeMap.values()) {
-                CubePos cubePos = ((ICubeHolder) chunkholder).getCubePos();
+                CubePos cubePos = ((CubeHolder) chunkholder).getCubePos();
                 Object[] objects = new Object[2];
                 this.getPlayers(cubePos, false).forEach((player) -> {
-                    boolean wasLoaded = IChunkManager.isInViewDistance(cubePos, player, true, hViewDistanceCubes, vViewDistanceCubes);
-                    boolean isLoaded = IChunkManager.isInViewDistance(cubePos, player, true, hNewViewDistanceCubes, vNewViewDistanceCubes);
+                    boolean wasLoaded = CubeMap.isInViewDistance(cubePos, player, true, hViewDistanceCubes, vViewDistanceCubes);
+                    boolean isLoaded = CubeMap.isInViewDistance(cubePos, player, true, hNewViewDistanceCubes, vNewViewDistanceCubes);
                     this.updateCubeTracking(player, cubePos, objects, wasLoaded, isLoaded);
                 });
             }
@@ -1238,13 +1238,13 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
             //TODO: reimplement forge event
             //net.minecraftforge.event.ForgeEventFactory.fireChunkWatch(wasLoaded, load, player, cubePosIn, this.world);
             if (load && !wasLoaded) {
-                ChunkHolder chunkholder = ((IChunkManager) this).getImmutableCubeHolder(cubePosIn.asLong());
+                ChunkHolder chunkholder = ((CubeMap) this).getImmutableCubeHolder(cubePosIn.asLong());
                 if (chunkholder != null) {
-                    BigCube cube = ((ICubeHolder) chunkholder).getCubeIfComplete();
+                    LevelCube cube = ((CubeHolder) chunkholder).getCubeIfComplete();
                     if (cube != null) {
                         this.playerLoadedCube(player, packetCache, cube);
-                        for (int dx = 0; dx < IBigCube.DIAMETER_IN_SECTIONS; dx++) {
-                            for (int dz = 0; dz < IBigCube.DIAMETER_IN_SECTIONS; dz++) {
+                        for (int dx = 0; dx < CubeAccess.DIAMETER_IN_SECTIONS; dx++) {
+                            for (int dz = 0; dz < CubeAccess.DIAMETER_IN_SECTIONS; dz++) {
                                 ChunkPos pos = cubePosIn.asChunkPos(dx, dz);
                                 this.getPlayers(pos, false).forEach(p -> {
                                     this.updatePlayerHeightmap(p, pos);
@@ -1269,19 +1269,19 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
 
     // func_222973_a, packTicks
     @Override
-    public CompletableFuture<Void> packCubeTicks(BigCube cubeIn) {
+    public CompletableFuture<Void> packCubeTicks(LevelCube cubeIn) {
         return this.mainThreadExecutor.submit(() -> {
             cubeIn.packTicks(this.level);
         });
     }
 
     // func_219188_b, getEntityTickingRangeFuture
-    public CompletableFuture<Either<BigCube, ChunkHolder.ChunkLoadingFailure>> getCubeEntityTickingRangeFuture(CubePos pos) {
+    public CompletableFuture<Either<LevelCube, ChunkHolder.ChunkLoadingFailure>> getCubeEntityTickingRangeFuture(CubePos pos) {
         return this.getCubeRangeFuture(pos, 2, (index) -> {
             return ChunkStatus.FULL;
         }).thenApplyAsync((eitherSectionError) -> {
             return eitherSectionError.mapLeft((cubes) -> {
-                return (BigCube) cubes.get(cubes.size() / 2);
+                return (LevelCube) cubes.get(cubes.size() / 2);
             });
         }, this.mainThreadExecutor);
     }
@@ -1322,7 +1322,7 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
     }
 
     // playerLoadedChunk
-    private void playerLoadedCube(ServerPlayer player, Object[] packetCache, BigCube cubeIn) {
+    private void playerLoadedCube(ServerPlayer player, Object[] packetCache, LevelCube cubeIn) {
         if (packetCache[0] == null) {
             packetCache[0] = new PacketCubes(Collections.singletonList(cubeIn));
             packetCache[1] = new PacketUpdateLight(cubeIn.getCubePos(), this.lightEngine, true);
@@ -1336,7 +1336,7 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
         List<Entity> passengerEntities = Lists.newArrayList();
 
         for (ChunkMap.TrackedEntity entityTracker : this.entityMap.values()) {
-            Entity entity = ((EntityTrackerAccess) entityTracker).getEntity();
+            Entity entity = ((ChunkMapTrackedEntityAccess) entityTracker).getEntity();
             if (entity != player && CubePos.from(entity).equals(pos)) {
                 entityTracker.updatePlayer(player);
                 if (entity instanceof Mob && ((Mob) entity).getLeashHolder() != null) {
@@ -1365,7 +1365,7 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
     @Override
     public boolean noPlayersCloseForSpawning(CubePos cubePos) {
         long cubePosAsLong = cubePos.asLong();
-        return !((ITicketManager) this.distanceManager).hasCubePlayersNearby(cubePosAsLong) || this.playerMap.getPlayers(cubePosAsLong).noneMatch(
+        return !((CubicDistanceManager) this.distanceManager).hasCubePlayersNearby(cubePosAsLong) || this.playerMap.getPlayers(cubePosAsLong).noneMatch(
             (serverPlayer) -> !serverPlayer.isSpectator() && euclideanDistanceSquared(cubePos, serverPlayer) < (TICK_UPDATE_DISTANCE * TICK_UPDATE_DISTANCE));
     }
 

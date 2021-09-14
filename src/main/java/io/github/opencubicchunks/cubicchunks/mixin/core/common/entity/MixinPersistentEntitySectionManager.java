@@ -5,12 +5,12 @@ import java.util.List;
 import java.util.Queue;
 
 import io.github.opencubicchunks.cubicchunks.CubicChunks;
-import io.github.opencubicchunks.cubicchunks.chunk.ImposterChunkPos;
-import io.github.opencubicchunks.cubicchunks.chunk.storage.CubicEntityStorage;
-import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
-import io.github.opencubicchunks.cubicchunks.world.entity.ChunkEntityStateEventHandler;
-import io.github.opencubicchunks.cubicchunks.world.entity.ChunkEntityStateEventSource;
-import io.github.opencubicchunks.cubicchunks.world.entity.IsCubicEntityContext;
+import io.github.opencubicchunks.cubicchunks.world.ImposterChunkPos;
+import io.github.opencubicchunks.cubicchunks.world.level.chunk.storage.CubicEntityStorage;
+import io.github.opencubicchunks.cubicchunks.world.level.CubePos;
+import io.github.opencubicchunks.cubicchunks.chunk.entity.ChunkEntityStateEventHandler;
+import io.github.opencubicchunks.cubicchunks.chunk.entity.ChunkEntityStateEventSource;
+import io.github.opencubicchunks.cubicchunks.chunk.entity.IsCubicEntityContext;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ChunkHolder;

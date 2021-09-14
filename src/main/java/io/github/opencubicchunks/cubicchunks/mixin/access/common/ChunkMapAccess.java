@@ -11,7 +11,7 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 import org.spongepowered.asm.mixin.gen.Invoker;
 
 @Mixin(ChunkMap.class)
-public interface ChunkManagerAccess {
+public interface ChunkMapAccess {
 
     @Accessor ServerLevel getLevel();
 

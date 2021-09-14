@@ -1,16 +1,16 @@
-package io.github.opencubicchunks.cubicchunks.mixin.core.common.world.lighting;
+package io.github.opencubicchunks.cubicchunks.mixin.core.common.level.lighting;
 
 
-import io.github.opencubicchunks.cubicchunks.chunk.CubeMap;
-import io.github.opencubicchunks.cubicchunks.chunk.CubeMapGetter;
-import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
-import io.github.opencubicchunks.cubicchunks.chunk.LightHeightmapGetter;
-import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
+import io.github.opencubicchunks.cubicchunks.world.level.chunk.CubeAccess;
+import io.github.opencubicchunks.cubicchunks.world.level.chunk.ColumnCubeMap;
+import io.github.opencubicchunks.cubicchunks.world.level.chunk.ColumnCubeMapGetter;
+import io.github.opencubicchunks.cubicchunks.world.level.chunk.LightHeightmapGetter;
+import io.github.opencubicchunks.cubicchunks.world.level.CubePos;
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.LayerLightSectionStorageAccess;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
-import io.github.opencubicchunks.cubicchunks.world.lighting.ICubeLightProvider;
-import io.github.opencubicchunks.cubicchunks.world.lighting.ICubicSkyLightEngine;
-import io.github.opencubicchunks.cubicchunks.world.lighting.ISkyLightColumnChecker;
+import io.github.opencubicchunks.cubicchunks.world.lighting.CubicSkyLightEngine;
+import io.github.opencubicchunks.cubicchunks.world.level.chunk.LightCubeGetter;
+import io.github.opencubicchunks.cubicchunks.world.lighting.SkyLightColumnChecker;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.SectionPos;
@@ -30,8 +30,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(SkyLightEngine.class)
-public abstract class MixinSkyLightEngine extends MixinLayerLightEngine<SkyLightSectionStorage.SkyDataLayerStorageMap, SkyLightSectionStorage> implements ISkyLightColumnChecker,
-    ICubicSkyLightEngine {
+public abstract class MixinSkyLightEngine extends MixinLayerLightEngine<SkyLightSectionStorage.SkyDataLayerStorageMap, SkyLightSectionStorage> implements SkyLightColumnChecker,
+    CubicSkyLightEngine {
     @Shadow @Final private static Direction[] DIRECTIONS;
 
     /**
@@ -48,9 +48,9 @@ public abstract class MixinSkyLightEngine extends MixinLayerLightEngine<SkyLight
     }
 
     /** all parameters are global coordinates */
-    @Override public void checkSkyLightColumn(CubeMapGetter chunk, int x, int z, int oldHeight, int newHeight) {
+    @Override public void checkSkyLightColumn(ColumnCubeMapGetter chunk, int x, int z, int oldHeight, int newHeight) {
         ((LayerLightSectionStorageAccess) this.storage).invokeRunAllUpdates();
-        CubeMap cubeMap = chunk.getCubeMap();
+        ColumnCubeMap columnCubeMap = chunk.getCubeMap();
         int oldHeightCube = Coords.blockToCube(oldHeight - 1);
         int newHeightCube = Coords.blockToCube(newHeight);
         if (oldHeight > newHeight) {
@@ -59,10 +59,10 @@ public abstract class MixinSkyLightEngine extends MixinLayerLightEngine<SkyLight
 
             // TODO cube iteration order might still be important here
             //      (int y = oldHeight-1; y >= newHeight; y--)
-            for (int cubeY : cubeMap.getLoaded()) {
+            for (int cubeY : columnCubeMap.getLoaded()) {
                 if (oldHeightCube <= cubeY && cubeY <= newHeightCube) {
-                    for (int dy = IBigCube.DIAMETER_IN_BLOCKS - 1; dy >= 0; dy--) {
-                        int y = cubeY * IBigCube.DIAMETER_IN_BLOCKS + dy;
+                    for (int dy = CubeAccess.DIAMETER_IN_BLOCKS - 1; dy >= 0; dy--) {
+                        int y = cubeY * CubeAccess.DIAMETER_IN_BLOCKS + dy;
 
                         if (y >= oldHeight) {
                             continue;
@@ -81,10 +81,10 @@ public abstract class MixinSkyLightEngine extends MixinLayerLightEngine<SkyLight
         } else {
             // TODO cube iteration order might still be important here
             //      (int y = oldHeight; y < newHeight; y++)
-            for (int cubeY : cubeMap.getLoaded()) {
+            for (int cubeY : columnCubeMap.getLoaded()) {
                 if (oldHeightCube <= cubeY && cubeY <= newHeightCube) {
-                    for (int dy = 0; dy < IBigCube.DIAMETER_IN_BLOCKS; dy++) {
-                        int y = cubeY * IBigCube.DIAMETER_IN_BLOCKS + dy;
+                    for (int dy = 0; dy < CubeAccess.DIAMETER_IN_BLOCKS; dy++) {
+                        int y = cubeY * CubeAccess.DIAMETER_IN_BLOCKS + dy;
 
                         if (y < oldHeight) {
                             continue;
@@ -119,9 +119,9 @@ public abstract class MixinSkyLightEngine extends MixinLayerLightEngine<SkyLight
         }
         BlockPos pos = BlockPos.of(id);
 
-        BlockGetter cube = ((ICubeLightProvider) this.chunkSource).getCubeForLighting(
+        BlockGetter cube = ((LightCubeGetter) this.chunkSource).getCubeForLighting(
             Coords.blockToSection(pos.getX()), Coords.blockToSection(pos.getY()), Coords.blockToSection(pos.getZ()));
-        if (cube == null || !((IBigCube) cube).getStatus().isOrAfter(ChunkStatus.LIGHT)) {
+        if (cube == null || !((CubeAccess) cube).getStatus().isOrAfter(ChunkStatus.LIGHT)) {
             return;
         }
 
@@ -142,21 +142,21 @@ public abstract class MixinSkyLightEngine extends MixinLayerLightEngine<SkyLight
     }
 
     @Override
-    public void doSkyLightForCube(IBigCube cube) {
+    public void doSkyLightForCube(CubeAccess cube) {
         CubePos cubePos = cube.getCubePos();
         ChunkPos chunkPos = cubePos.asChunkPos();
         int minY = cubePos.minCubeY();
         int maxY = cubePos.maxCubeY();
-        for (int sectionX = 0; sectionX < IBigCube.DIAMETER_IN_SECTIONS; sectionX++) {
-            for (int sectionZ = 0; sectionZ < IBigCube.DIAMETER_IN_SECTIONS; sectionZ++) {
+        for (int sectionX = 0; sectionX < CubeAccess.DIAMETER_IN_SECTIONS; sectionX++) {
+            for (int sectionZ = 0; sectionZ < CubeAccess.DIAMETER_IN_SECTIONS; sectionZ++) {
 
                 BlockGetter chunk = this.chunkSource.getChunkForLighting(chunkPos.x + sectionX, chunkPos.z + sectionZ);
 
                 // the load order guarantees the chunk being present
                 assert (chunk != null);
 
-                CubeMap cubeMap = ((CubeMapGetter) chunk).getCubeMap();
-                if (!cubeMap.isLoaded(cubePos.getY())) {
+                ColumnCubeMap columnCubeMap = ((ColumnCubeMapGetter) chunk).getCubeMap();
+                if (!columnCubeMap.isLoaded(cubePos.getY())) {
                     // This is probably only happening because we don't have load order fixed yet
                     System.out.println(cube.getCubePos() + " : Cube not in cubemap during sky lighting");
                 }

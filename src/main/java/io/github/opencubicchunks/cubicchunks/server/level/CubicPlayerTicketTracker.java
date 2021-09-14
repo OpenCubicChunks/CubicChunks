@@ -1,9 +1,8 @@
-package io.github.opencubicchunks.cubicchunks.chunk.ticket;
+package io.github.opencubicchunks.cubicchunks.server.level;
 
 import io.github.opencubicchunks.cubicchunks.CubicChunks;
-import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
-import io.github.opencubicchunks.cubicchunks.chunk.graph.CCTicketType;
-import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
+import io.github.opencubicchunks.cubicchunks.world.level.chunk.CubeAccess;
+import io.github.opencubicchunks.cubicchunks.world.level.CubePos;
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.TicketAccess;
 import it.unimi.dsi.fastutil.longs.Long2ByteMap;
 import it.unimi.dsi.fastutil.longs.Long2IntMap;
@@ -14,24 +13,24 @@ import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import net.minecraft.server.level.Ticket;
 
-public class PlayerCubeTicketTracker extends PlayerCubeTracker {
+public class CubicPlayerTicketTracker extends FixedPlayerDistanceCubeTracker {
     private int horizontalViewDistance;
     private int verticalViewDistance;
 
     private final Long2IntMap horizDistances = Long2IntMaps.synchronize(new Long2IntOpenHashMap());
     private final Long2IntMap vertDistances = Long2IntMaps.synchronize(new Long2IntOpenHashMap());
     private final LongSet positionsAffected = new LongOpenHashSet();
-    private final ITicketManager iTicketManager;
+    private final CubicDistanceManager cubicDistanceManager;
     private final HorizontalGraphGroup horizontalGraphGroup;
     private final VerticalGraphGroup verticalGraphGroup;
 
 
-    public PlayerCubeTicketTracker(ITicketManager iTicketManager, int i) {
+    public CubicPlayerTicketTracker(CubicDistanceManager cubicDistanceManager, int i) {
         //possibly make this a constant - there is only ever one playercubeticketracker at a time, so this should be fine.
-        super(iTicketManager, (32 / IBigCube.DIAMETER_IN_SECTIONS) + 1);
-        horizontalGraphGroup = new HorizontalGraphGroup(iTicketManager, (32 / IBigCube.DIAMETER_IN_SECTIONS) + 1, this);
-        verticalGraphGroup = new VerticalGraphGroup(iTicketManager, (32 / IBigCube.DIAMETER_IN_SECTIONS) + 1, this);
-        this.iTicketManager = iTicketManager;
+        super(cubicDistanceManager, (32 / CubeAccess.DIAMETER_IN_SECTIONS) + 1);
+        horizontalGraphGroup = new HorizontalGraphGroup(cubicDistanceManager, (32 / CubeAccess.DIAMETER_IN_SECTIONS) + 1, this);
+        verticalGraphGroup = new VerticalGraphGroup(cubicDistanceManager, (32 / CubeAccess.DIAMETER_IN_SECTIONS) + 1, this);
+        this.cubicDistanceManager = cubicDistanceManager;
         this.horizontalViewDistance = 0;
         this.verticalViewDistance = 0;
         this.horizDistances.defaultReturnValue(i + 2);
@@ -73,23 +72,23 @@ public class PlayerCubeTicketTracker extends PlayerCubeTracker {
      */
     private void updateTicket(long pos, int distance, boolean oldWithinViewDistance, boolean withinViewDistance) {
         if (oldWithinViewDistance != withinViewDistance) {
-            Ticket<?> ticket = TicketAccess.createNew(CCTicketType.CCPLAYER, ITicketManager.PLAYER_CUBE_TICKET_LEVEL, CubePos.from(pos));
+            Ticket<?> ticket = TicketAccess.createNew(CubicTicketType.CCPLAYER, CubicDistanceManager.PLAYER_CUBE_TICKET_LEVEL, CubePos.from(pos));
             if (withinViewDistance) {
-                iTicketManager.getCubeTicketThrottlerInput().tell(CubeTaskPriorityQueueSorter.createMsg(() ->
-                    iTicketManager.getMainThreadExecutor().execute(() -> {
+                cubicDistanceManager.getCubeTicketThrottlerInput().tell(CubeTaskPriorityQueueSorter.createMsg(() ->
+                    cubicDistanceManager.getMainThreadExecutor().execute(() -> {
                         if (this.isWithinViewDistance(horizontalGraphGroup.getLevel(pos), verticalGraphGroup.getLevel(pos))) {
-                            iTicketManager.addCubeTicket(pos, ticket);
-                            iTicketManager.getCubeTicketsToRelease().add(pos);
+                            cubicDistanceManager.addCubeTicket(pos, ticket);
+                            cubicDistanceManager.getCubeTicketsToRelease().add(pos);
                         } else {
-                            iTicketManager.getCubeTicketThrottlerReleaser().tell(CubeTaskPriorityQueueSorter.createSorterMsg(() -> {
+                            cubicDistanceManager.getCubeTicketThrottlerReleaser().tell(CubeTaskPriorityQueueSorter.createSorterMsg(() -> {
                             }, pos, false));
                         }
 
                     }), pos, () -> distance));
             } else {
-                iTicketManager.getCubeTicketThrottlerReleaser().tell(CubeTaskPriorityQueueSorter.createSorterMsg(() ->
-                        iTicketManager.getMainThreadExecutor().execute(() ->
-                            iTicketManager.removeCubeTicket(pos, ticket)),
+                cubicDistanceManager.getCubeTicketThrottlerReleaser().tell(CubeTaskPriorityQueueSorter.createSorterMsg(() ->
+                        cubicDistanceManager.getMainThreadExecutor().execute(() ->
+                            cubicDistanceManager.removeCubeTicket(pos, ticket)),
                     pos, true));
             }
         }
@@ -113,7 +112,7 @@ public class PlayerCubeTicketTracker extends PlayerCubeTracker {
 
                 if (oldHorizDistance != horizCurrentDistance || oldVertDistance != vertCurrentDistance) {
                     //func_219066_a = update level
-                    iTicketManager.getCubeTicketThrottler()
+                    cubicDistanceManager.getCubeTicketThrottler()
                         .onCubeLevelChange(CubePos.from(pos), () -> Math.max(this.horizDistances.get(pos), this.vertDistances.get(pos)), Math.max(horizCurrentDistance, vertCurrentDistance),
                             (distance) -> {
                                 if (horizCurrentDistance >= this.horizDistances.defaultReturnValue() || vertCurrentDistance >= this.vertDistances.defaultReturnValue()) {

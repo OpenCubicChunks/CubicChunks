@@ -1,22 +1,23 @@
-package io.github.opencubicchunks.cubicchunks.chunk.ticket;
+package io.github.opencubicchunks.cubicchunks.server.level;
 
-import io.github.opencubicchunks.cubicchunks.chunk.graph.CubeDistanceGraph;
+import io.github.opencubicchunks.cubicchunks.server.level.CubeTracker;
+import io.github.opencubicchunks.cubicchunks.server.level.CubicDistanceManager;
 import it.unimi.dsi.fastutil.longs.Long2ByteMap;
 import it.unimi.dsi.fastutil.longs.Long2ByteOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectSet;
 import net.minecraft.server.level.ServerPlayer;
 
-public class PlayerCubeTracker extends CubeDistanceGraph {
+public class FixedPlayerDistanceCubeTracker extends CubeTracker {
     public final Long2ByteMap cubesInRange = new Long2ByteOpenHashMap();
     protected final int range;
 
-    private final ITicketManager iTicketManager;
+    private final CubicDistanceManager cubicDistanceManager;
 
-    public PlayerCubeTracker(ITicketManager iTicketManager, int i) {
+    public FixedPlayerDistanceCubeTracker(CubicDistanceManager cubicDistanceManager, int i) {
         super(i + 2, 16, 256);
         this.range = i;
         this.cubesInRange.defaultReturnValue((byte) (i + 2));
-        this.iTicketManager = iTicketManager;
+        this.cubicDistanceManager = cubicDistanceManager;
     }
 
     protected int getLevel(long cubePosIn) {
@@ -42,7 +43,7 @@ public class PlayerCubeTracker extends CubeDistanceGraph {
     }
 
     private boolean hasPlayerInChunk(long cubePosIn) {
-        ObjectSet<ServerPlayer> objectset = iTicketManager.getPlayersPerCube().get(cubePosIn);
+        ObjectSet<ServerPlayer> objectset = cubicDistanceManager.getPlayersPerCube().get(cubePosIn);
         return objectset != null && !objectset.isEmpty();
     }
 

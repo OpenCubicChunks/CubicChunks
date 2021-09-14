@@ -1,7 +1,7 @@
-package io.github.opencubicchunks.cubicchunks.chunk;
+package io.github.opencubicchunks.cubicchunks.world.level.chunk;
 
-import io.github.opencubicchunks.cubicchunks.chunk.heightmap.ClientLightSurfaceTracker;
-import io.github.opencubicchunks.cubicchunks.chunk.heightmap.LightSurfaceTrackerWrapper;
+import io.github.opencubicchunks.cubicchunks.world.level.levelgen.heightmap.ClientLightSurfaceTracker;
+import io.github.opencubicchunks.cubicchunks.world.level.levelgen.heightmap.LightSurfaceTrackerWrapper;
 import net.minecraft.world.level.levelgen.Heightmap;
 
 public interface LightHeightmapGetter {

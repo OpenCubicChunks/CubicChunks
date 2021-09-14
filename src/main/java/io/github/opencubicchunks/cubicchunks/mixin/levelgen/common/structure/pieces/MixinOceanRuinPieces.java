@@ -2,7 +2,7 @@ package io.github.opencubicchunks.cubicchunks.mixin.levelgen.common.structure.pi
 
 import java.util.Random;
 
-import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
+import io.github.opencubicchunks.cubicchunks.world.level.CubicLevelHeightAccessor;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.ChunkPos;

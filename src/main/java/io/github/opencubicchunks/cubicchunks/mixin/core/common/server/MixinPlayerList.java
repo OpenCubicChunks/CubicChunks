@@ -2,11 +2,11 @@ package io.github.opencubicchunks.cubicchunks.mixin.core.common.server;
 
 import java.util.List;
 
-import io.github.opencubicchunks.cubicchunks.chunk.IVerticalView;
+import io.github.opencubicchunks.cubicchunks.chunk.VerticalViewDistanceListener;
 import io.github.opencubicchunks.cubicchunks.network.PacketCCLevelInfo;
 import io.github.opencubicchunks.cubicchunks.network.PacketCubeCacheRadius;
 import io.github.opencubicchunks.cubicchunks.network.PacketDispatcher;
-import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
+import io.github.opencubicchunks.cubicchunks.world.level.CubicLevelHeightAccessor;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -19,7 +19,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(PlayerList.class)
-public abstract class MixinPlayerList implements IVerticalView {
+public abstract class MixinPlayerList implements VerticalViewDistanceListener {
 
     @Shadow @Final private MinecraftServer server;
     @Shadow @Final private List<ServerPlayer> players;
@@ -44,7 +44,7 @@ public abstract class MixinPlayerList implements IVerticalView {
         for (ServerLevel serverLevel : this.server.getAllLevels()) {
             if (serverLevel != null) {
                 if (((CubicLevelHeightAccessor) serverLevel).isCubic()) {
-                    ((IVerticalView) serverLevel.getChunkSource()).setIncomingVerticalViewDistance(this.verticalViewDistance);
+                    ((VerticalViewDistanceListener) serverLevel.getChunkSource()).setIncomingVerticalViewDistance(this.verticalViewDistance);
                 }
             }
         }

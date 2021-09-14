@@ -1,4 +1,4 @@
-package io.github.opencubicchunks.cubicchunks.chunk.heightmap;
+package io.github.opencubicchunks.cubicchunks.world.level.levelgen.heightmap;
 
 import java.util.function.Predicate;
 

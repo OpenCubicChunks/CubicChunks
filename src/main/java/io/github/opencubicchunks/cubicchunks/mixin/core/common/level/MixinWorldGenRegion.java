@@ -1,8 +1,8 @@
-package io.github.opencubicchunks.cubicchunks.mixin.core.common.world;
+package io.github.opencubicchunks.cubicchunks.mixin.core.common.level;
 
 import java.util.List;
 
-import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
+import io.github.opencubicchunks.cubicchunks.world.level.CubicLevelHeightAccessor;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.WorldGenRegion;
 import net.minecraft.world.level.chunk.ChunkAccess;

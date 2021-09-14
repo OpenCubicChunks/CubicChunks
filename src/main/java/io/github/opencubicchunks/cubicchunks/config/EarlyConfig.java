@@ -1,4 +1,4 @@
-package io.github.opencubicchunks.cubicchunks.meta;
+package io.github.opencubicchunks.cubicchunks.config;
 
 import java.io.File;
 import java.io.FileOutputStream;

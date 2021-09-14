@@ -1,10 +1,10 @@
 package io.github.opencubicchunks.cubicchunks.network;
 
-import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
-import io.github.opencubicchunks.cubicchunks.chunk.IClientCubeProvider;
-import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
+import io.github.opencubicchunks.cubicchunks.world.level.chunk.CubeAccess;
+import io.github.opencubicchunks.cubicchunks.client.multiplayer.ClientCubeCache;
+import io.github.opencubicchunks.cubicchunks.world.level.CubePos;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
-import io.github.opencubicchunks.cubicchunks.world.lighting.IWorldLightManager;
+import io.github.opencubicchunks.cubicchunks.world.lighting.CubicLevelLightEngine;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.SectionPos;
 import net.minecraft.network.FriendlyByteBuf;
@@ -32,15 +32,15 @@ public class PacketUnloadCube {
     public static class Handler {
         public static void handle(PacketUnloadCube packet, Level worldIn) {
             ChunkSource chunkProvider = worldIn.getChunkSource();
-            ((IClientCubeProvider) chunkProvider).drop(packet.pos.getX(), packet.pos.getY(), packet.pos.getZ());
+            ((ClientCubeCache) chunkProvider).drop(packet.pos.getX(), packet.pos.getY(), packet.pos.getZ());
             LevelLightEngine lightEngine = chunkProvider.getLightEngine();
 
-            for (int i = 0; i < IBigCube.SECTION_COUNT; ++i) {
+            for (int i = 0; i < CubeAccess.SECTION_COUNT; ++i) {
                 SectionPos pos = Coords.sectionPosByIndex(packet.pos, i);
                 ((ClientLevel) worldIn).setSectionDirtyWithNeighbors(pos.x(), pos.y(), pos.z());
                 lightEngine.updateSectionStatus(pos, true);
             }
-            ((IWorldLightManager) lightEngine).enableLightSources(packet.pos, false);
+            ((CubicLevelLightEngine) lightEngine).enableLightSources(packet.pos, false);
 
         }
     }

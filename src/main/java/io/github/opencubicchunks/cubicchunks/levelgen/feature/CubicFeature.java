@@ -7,7 +7,8 @@ import net.minecraft.world.level.levelgen.feature.Feature;
 import net.minecraft.world.level.levelgen.feature.configurations.FeatureConfiguration;
 import net.minecraft.world.level.levelgen.feature.configurations.NoneFeatureConfiguration;
 
-public class CCFeature {
+// TODO: make this a base class for cubic chunks features, extend Feature here
+public class CubicFeature {
 
     public static final Feature<NoneFeatureConfiguration> LAVA_LEAK_FIX = createFeature("lava_leak_fix", new LavaLeakFix(NoneFeatureConfiguration.CODEC));
 

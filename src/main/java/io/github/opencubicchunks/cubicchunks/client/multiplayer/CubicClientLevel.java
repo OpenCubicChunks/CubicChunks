@@ -1,10 +1,10 @@
-package io.github.opencubicchunks.cubicchunks.world.client;
+package io.github.opencubicchunks.cubicchunks.client.multiplayer;
 
-import io.github.opencubicchunks.cubicchunks.chunk.cube.BigCube;
+import io.github.opencubicchunks.cubicchunks.world.level.chunk.LevelCube;
 
-public interface IClientWorld {
+public interface CubicClientLevel {
 
     void onCubeLoaded(int cubeX, int cubeY, int cubeZ);
 
-    void onCubeUnload(BigCube cube);
+    void onCubeUnload(LevelCube cube);
 }

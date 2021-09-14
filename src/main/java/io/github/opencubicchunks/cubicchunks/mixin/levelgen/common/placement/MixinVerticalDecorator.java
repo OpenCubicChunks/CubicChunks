@@ -5,7 +5,7 @@ import java.util.stream.Stream;
 
 import io.github.opencubicchunks.cubicchunks.levelgen.CubeWorldGenRegion;
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.DecorationContextAccess;
-import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
+import io.github.opencubicchunks.cubicchunks.world.level.CubicLevelHeightAccessor;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.levelgen.feature.configurations.DecoratorConfiguration;
 import net.minecraft.world.level.levelgen.placement.DecorationContext;

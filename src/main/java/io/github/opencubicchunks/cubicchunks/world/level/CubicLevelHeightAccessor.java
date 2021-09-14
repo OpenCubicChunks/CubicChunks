@@ -1,4 +1,4 @@
-package io.github.opencubicchunks.cubicchunks.server;
+package io.github.opencubicchunks.cubicchunks.world.level;
 
 public interface CubicLevelHeightAccessor {
 

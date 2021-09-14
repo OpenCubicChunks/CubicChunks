@@ -1,4 +1,4 @@
-package io.github.opencubicchunks.cubicchunks.world;
+package io.github.opencubicchunks.cubicchunks.world.level;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -12,11 +12,11 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 
 import com.google.common.collect.Queues;
-import io.github.opencubicchunks.cubicchunks.chunk.ImposterChunkPos;
-import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
+import io.github.opencubicchunks.cubicchunks.world.CubicServerTickList;
+import io.github.opencubicchunks.cubicchunks.world.ImposterChunkPos;
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.ServerTickListAccess;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
-import io.github.opencubicchunks.cubicchunks.world.entity.ChunkEntityStateEventHandler;
+import io.github.opencubicchunks.cubicchunks.chunk.entity.ChunkEntityStateEventHandler;
 import it.unimi.dsi.fastutil.longs.Long2ObjectAVLTreeMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectSortedMap;

@@ -1,35 +1,34 @@
-package io.github.opencubicchunks.cubicchunks.server;
+package io.github.opencubicchunks.cubicchunks.world.level;
 
 import javax.annotation.Nullable;
 
-import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
-import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
+import io.github.opencubicchunks.cubicchunks.world.level.chunk.CubeAccess;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.chunk.ChunkStatus;
 
-public interface ICubicWorld extends CubicLevelHeightAccessor { //TODO: maybe rename this class? I think this name is reserved by the API
-    IBigCube getCube(int cubeX, int cubeY, int cubeZ);
+public interface CubicLevelAccessor extends CubicLevelHeightAccessor { //TODO: maybe rename this class? I think this name is reserved by the API
+    CubeAccess getCube(int cubeX, int cubeY, int cubeZ);
 
-    default IBigCube getCube(CubePos cubePos) {
+    default CubeAccess getCube(CubePos cubePos) {
         return getCube(cubePos.getX(), cubePos.getY(), cubePos.getZ());
     }
 
-    IBigCube getCube(int cubeX, int cubeY, int cubeZ, ChunkStatus status);
+    CubeAccess getCube(int cubeX, int cubeY, int cubeZ, ChunkStatus status);
 
-    default IBigCube getCube(CubePos cubePos, ChunkStatus status) {
+    default CubeAccess getCube(CubePos cubePos, ChunkStatus status) {
         return getCube(cubePos.getX(), cubePos.getY(), cubePos.getZ(), status);
     }
 
-    default IBigCube getCube(BlockPos pos) {
+    default CubeAccess getCube(BlockPos pos) {
         return getCube(CubePos.from(pos));
     }
 
     @Nullable
-    default IBigCube getCube(BlockPos pos, ChunkStatus status, boolean notnull) {
+    default CubeAccess getCube(BlockPos pos, ChunkStatus status, boolean notnull) {
         return getCube(Coords.blockToCube(pos.getX()), Coords.blockToCube(pos.getY()), Coords.blockToCube(pos.getZ()), status, notnull);
     }
 
     @Nullable
-    IBigCube getCube(int cubeX, int cubeY, int cubeZ, ChunkStatus status, boolean notnull);
+    CubeAccess getCube(int cubeX, int cubeY, int cubeZ, ChunkStatus status, boolean notnull);
 }

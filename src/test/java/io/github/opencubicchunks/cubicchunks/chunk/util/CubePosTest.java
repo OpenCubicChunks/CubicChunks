@@ -2,6 +2,7 @@ package io.github.opencubicchunks.cubicchunks.chunk.util;
 
 import static org.junit.Assert.assertEquals;
 
+import io.github.opencubicchunks.cubicchunks.world.level.CubePos;
 import org.junit.Test;
 
 public class CubePosTest {

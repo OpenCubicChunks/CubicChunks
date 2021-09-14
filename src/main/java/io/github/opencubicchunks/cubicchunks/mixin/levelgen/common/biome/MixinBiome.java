@@ -10,13 +10,13 @@ import java.util.Set;
 import java.util.function.Supplier;
 
 import io.github.opencubicchunks.cubicchunks.CubicChunks;
-import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
+import io.github.opencubicchunks.cubicchunks.world.level.chunk.CubeAccess;
 import io.github.opencubicchunks.cubicchunks.levelgen.CubeWorldGenRandom;
 import io.github.opencubicchunks.cubicchunks.levelgen.CubeWorldGenRegion;
 import io.github.opencubicchunks.cubicchunks.levelgen.biome.BiomeGetter;
 import io.github.opencubicchunks.cubicchunks.levelgen.chunk.NoiseAndSurfaceBuilderHelper;
-import io.github.opencubicchunks.cubicchunks.levelgen.feature.CCFeatures;
-import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
+import io.github.opencubicchunks.cubicchunks.levelgen.feature.CubicFeatures;
+import io.github.opencubicchunks.cubicchunks.world.level.CubicLevelHeightAccessor;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import io.github.opencubicchunks.cubicchunks.world.SetupCubeStructureStart;
 import net.minecraft.CrashReport;
@@ -75,7 +75,7 @@ public class MixinBiome implements BiomeGetter {
                     try {
                         structureManager.startsForFeature(SectionPos.of(blockPos), structure).forEach((structureStart) -> {
                             ((SetupCubeStructureStart) structureStart).placeInCube(region, structureManager, chunkGenerator, random,
-                                new BoundingBox(minSectionX, minSectionY, minSectionZ, minSectionX + 15, minSectionY + IBigCube.DIAMETER_IN_BLOCKS - 1, minSectionZ + 15), blockPos);
+                                new BoundingBox(minSectionX, minSectionY, minSectionZ, minSectionX + 15, minSectionY + CubeAccess.DIAMETER_IN_BLOCKS - 1, minSectionZ + 15), blockPos);
                         });
                     } catch (Exception e) {
                         CrashReport crashReport = CrashReport.forThrowable(e, "Structure Feature placement");
@@ -99,9 +99,9 @@ public class MixinBiome implements BiomeGetter {
                     ResourceLocation key = region.getLevel().getServer().registryAccess().registry(Registry.CONFIGURED_FEATURE_REGISTRY).get().getKey(configuredFeature);
                     if (key != null) {
                         if (key.equals(new ResourceLocation("lake_lava"))) {
-                            configuredFeature = CCFeatures.CC_LAVA_LAKE;
+                            configuredFeature = CubicFeatures.CC_LAVA_LAKE;
                         } else if (key.equals(new ResourceLocation("lake_water"))) {
-                            configuredFeature = CCFeatures.CC_WATER_LAKE;
+                            configuredFeature = CubicFeatures.CC_WATER_LAKE;
                         }
                     }
 

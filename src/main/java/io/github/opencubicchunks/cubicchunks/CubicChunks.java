@@ -4,13 +4,13 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.Map;
 
-import io.github.opencubicchunks.cubicchunks.chunk.IChunkManager;
+import io.github.opencubicchunks.cubicchunks.server.level.CubeMap;
 import io.github.opencubicchunks.cubicchunks.levelgen.biome.StripedBiomeSource;
-import io.github.opencubicchunks.cubicchunks.levelgen.feature.CCFeatures;
-import io.github.opencubicchunks.cubicchunks.levelgen.placement.CCPlacement;
-import io.github.opencubicchunks.cubicchunks.meta.EarlyConfig;
+import io.github.opencubicchunks.cubicchunks.levelgen.feature.CubicFeatures;
+import io.github.opencubicchunks.cubicchunks.levelgen.placement.CubicFeatureDecorators;
+import io.github.opencubicchunks.cubicchunks.config.EarlyConfig;
 import io.github.opencubicchunks.cubicchunks.network.PacketDispatcher;
-import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
+import io.github.opencubicchunks.cubicchunks.world.level.CubicLevelHeightAccessor;
 import net.fabricmc.api.ModInitializer;
 import net.minecraft.SharedConstants;
 import net.minecraft.Util;
@@ -49,7 +49,7 @@ public class CubicChunks implements ModInitializer {
     private static final Config CONFIG = new Config();
 
     public CubicChunks() {
-        if (!(IChunkManager.class.isAssignableFrom(ChunkMap.class))) {
+        if (!(CubeMap.class.isAssignableFrom(ChunkMap.class))) {
             throw new IllegalStateException("Mixin not applied!");
         }
         EarlyConfig.getDiameterInSections();
@@ -64,8 +64,8 @@ public class CubicChunks implements ModInitializer {
         }
 
         //Custom CC Features
-        CCPlacement.init();
-        CCFeatures.init();
+        CubicFeatureDecorators.init();
+        CubicFeatures.init();
     }
 
     public static Config config() {

@@ -1,12 +1,12 @@
-package io.github.opencubicchunks.cubicchunks.mixin.core.client.world;
+package io.github.opencubicchunks.cubicchunks.mixin.core.client.level;
 
 import java.util.function.Supplier;
 
-import io.github.opencubicchunks.cubicchunks.chunk.ImposterChunkPos;
-import io.github.opencubicchunks.cubicchunks.chunk.cube.BigCube;
-import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
-import io.github.opencubicchunks.cubicchunks.world.client.IClientWorld;
-import io.github.opencubicchunks.cubicchunks.world.entity.IsCubicEntityContext;
+import io.github.opencubicchunks.cubicchunks.world.ImposterChunkPos;
+import io.github.opencubicchunks.cubicchunks.world.level.chunk.LevelCube;
+import io.github.opencubicchunks.cubicchunks.world.level.CubicLevelHeightAccessor;
+import io.github.opencubicchunks.cubicchunks.client.multiplayer.CubicClientLevel;
+import io.github.opencubicchunks.cubicchunks.chunk.entity.IsCubicEntityContext;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.client.renderer.LevelRenderer;
@@ -27,11 +27,11 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(ClientLevel.class)
-public abstract class MixinClientWorld extends Level implements IClientWorld {
+public abstract class MixinClientLevel extends Level implements CubicClientLevel {
 
     @Shadow @Final private TransientEntitySectionManager<Entity> entityStorage;
 
-    protected MixinClientWorld(WritableLevelData p_i231617_1_, ResourceKey<Level> p_i231617_2_, DimensionType p_i231617_4_,
+    protected MixinClientLevel(WritableLevelData p_i231617_1_, ResourceKey<Level> p_i231617_2_, DimensionType p_i231617_4_,
                                Supplier<ProfilerFiller> p_i231617_5_, boolean p_i231617_6_, boolean p_i231617_7_, long p_i231617_8_) {
         super(p_i231617_1_, p_i231617_2_, p_i231617_4_, p_i231617_5_, p_i231617_6_, p_i231617_7_, p_i231617_8_);
     }
@@ -52,7 +52,7 @@ public abstract class MixinClientWorld extends Level implements IClientWorld {
         this.entityStorage.startTicking(new ImposterChunkPos(cubeX, cubeY, cubeZ));
     }
 
-    @Override public void onCubeUnload(BigCube cube) {
+    @Override public void onCubeUnload(LevelCube cube) {
         this.entityStorage.stopTicking(new ImposterChunkPos(cube.getCubePos()));
     }
 

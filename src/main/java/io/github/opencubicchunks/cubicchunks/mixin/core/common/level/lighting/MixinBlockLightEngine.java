@@ -1,7 +1,7 @@
-package io.github.opencubicchunks.cubicchunks.mixin.core.common.world.lighting;
+package io.github.opencubicchunks.cubicchunks.mixin.core.common.level.lighting;
 
-import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
-import io.github.opencubicchunks.cubicchunks.world.lighting.ICubeLightProvider;
+import io.github.opencubicchunks.cubicchunks.world.level.CubicLevelHeightAccessor;
+import io.github.opencubicchunks.cubicchunks.world.level.chunk.LightCubeGetter;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.SectionPos;
 import net.minecraft.world.level.BlockGetter;
@@ -29,7 +29,7 @@ public abstract class MixinBlockLightEngine extends MixinLayerLightEngine {
         int blockX = BlockPos.getX(worldPos);
         int blockY = BlockPos.getY(worldPos);
         int blockZ = BlockPos.getZ(worldPos);
-        BlockGetter iblockreader = ((ICubeLightProvider) this.chunkSource).getCubeForLighting(
+        BlockGetter iblockreader = ((LightCubeGetter) this.chunkSource).getCubeForLighting(
             SectionPos.blockToSectionCoord(blockX),
             SectionPos.blockToSectionCoord(blockY),
             SectionPos.blockToSectionCoord(blockZ)

@@ -8,12 +8,12 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import io.github.opencubicchunks.cubicchunks.CubicChunks;
-import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
-import io.github.opencubicchunks.cubicchunks.chunk.IClientCubeProvider;
-import io.github.opencubicchunks.cubicchunks.chunk.biome.CubeBiomeContainer;
-import io.github.opencubicchunks.cubicchunks.chunk.cube.BigCube;
-import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
-import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
+import io.github.opencubicchunks.cubicchunks.world.level.chunk.CubeAccess;
+import io.github.opencubicchunks.cubicchunks.client.multiplayer.ClientCubeCache;
+import io.github.opencubicchunks.cubicchunks.world.level.chunk.CubeBiomeContainer;
+import io.github.opencubicchunks.cubicchunks.world.level.chunk.LevelCube;
+import io.github.opencubicchunks.cubicchunks.world.level.CubePos;
+import io.github.opencubicchunks.cubicchunks.world.level.CubicLevelHeightAccessor;
 import io.github.opencubicchunks.cubicchunks.utils.MathUtil;
 import io.github.opencubicchunks.cubicchunks.world.storage.CubeSerializer;
 import io.netty.buffer.ByteBuf;
@@ -30,17 +30,17 @@ import net.minecraft.world.level.chunk.ChunkBiomeContainer;
 
 public class PacketCubes {
     // vanilla has max chunk size of 2MB, it works out to be 128kB for a 32^3 cube
-    private static final int MAX_CUBE_SIZE = (IBigCube.DIAMETER_IN_SECTIONS * IBigCube.DIAMETER_IN_SECTIONS * IBigCube.DIAMETER_IN_SECTIONS) * 128 * 1024;
+    private static final int MAX_CUBE_SIZE = (CubeAccess.DIAMETER_IN_SECTIONS * CubeAccess.DIAMETER_IN_SECTIONS * CubeAccess.DIAMETER_IN_SECTIONS) * 128 * 1024;
 
     private final CubePos[] cubePositions;
-    private final BigCube[] cubes;
+    private final LevelCube[] cubes;
     private final BitSet cubeExists;
     private final List<int[]> biomeDataArrays;
     private final byte[] packetData;
     private final List<CompoundTag> tileEntityTags;
 
-    public PacketCubes(List<BigCube> cubes) {
-        this.cubes = cubes.toArray(new BigCube[0]);
+    public PacketCubes(List<LevelCube> cubes) {
+        this.cubes = cubes.toArray(new LevelCube[0]);
         this.cubePositions = new CubePos[this.cubes.length];
         this.cubeExists = new BitSet(cubes.size());
         this.biomeDataArrays = fillBiomeData();
@@ -54,7 +54,7 @@ public class PacketCubes {
 
     PacketCubes(FriendlyByteBuf buf) {
         int count = buf.readVarInt();
-        this.cubes = new BigCube[count];
+        this.cubes = new LevelCube[count];
         this.cubePositions = new CubePos[count];
         for (int i = 0; i < count; i++) {
             cubePositions[i] = CubePos.of(buf.readInt(), buf.readInt(), buf.readInt());
@@ -85,7 +85,7 @@ public class PacketCubes {
 
     void encode(FriendlyByteBuf buf) {
         buf.writeVarInt(cubes.length);
-        for (BigCube cube : cubes) {
+        for (LevelCube cube : cubes) {
             buf.writeInt(cube.getCubePos().getX());
             buf.writeInt(cube.getCubePos().getY());
             buf.writeInt(cube.getCubePos().getZ());
@@ -104,10 +104,10 @@ public class PacketCubes {
         }
     }
 
-    private static void fillDataBuffer(FriendlyByteBuf buf, List<BigCube> cubes, BitSet existingChunks) {
+    private static void fillDataBuffer(FriendlyByteBuf buf, List<LevelCube> cubes, BitSet existingChunks) {
         buf.writerIndex(0);
         int i = 0;
-        for (BigCube cube : cubes) {
+        for (LevelCube cube : cubes) {
             if (!cube.isEmptyCube()) {
                 existingChunks.set(i);
                 cube.write(buf);
@@ -121,13 +121,13 @@ public class PacketCubes {
         return new FriendlyByteBuf(bytebuf);
     }
 
-    private static int calculateDataSize(List<BigCube> cubes) {
-        return cubes.stream().filter(c -> !c.isEmptyCube()).mapToInt(BigCube::getSize).sum();
+    private static int calculateDataSize(List<LevelCube> cubes) {
+        return cubes.stream().filter(c -> !c.isEmptyCube()).mapToInt(LevelCube::getSize).sum();
     }
 
     private List<int[]> fillBiomeData() {
         List<int[]> dataArrays = new ArrayList<>(cubes.length);
-        for (BigCube cube : cubes) {
+        for (LevelCube cube : cubes) {
             ChunkBiomeContainer cubeBiomeContainer = cube.getBiomes();
             if (cubeBiomeContainer != null) {
                 dataArrays.add(cubeBiomeContainer.writeBiomes());
@@ -154,18 +154,18 @@ public class PacketCubes {
 
                 CubeBiomeContainer cubeBiomeContainer =
                     new CubeBiomeContainer(Minecraft.getInstance().level.registryAccess().registryOrThrow(Registry.BIOME_REGISTRY),
-                        new CubeSerializer.CubeBoundsLevelHeightAccessor(IBigCube.DIAMETER_IN_BLOCKS, pos.minCubeY(), (CubicLevelHeightAccessor) world), packet.biomeDataArrays.get(i));
+                        new CubeSerializer.CubeBoundsLevelHeightAccessor(CubeAccess.DIAMETER_IN_BLOCKS, pos.minCubeY(), (CubicLevelHeightAccessor) world), packet.biomeDataArrays.get(i));
 
-                ((IClientCubeProvider) world.getChunkSource()).replaceWithPacketData(
+                ((ClientCubeCache) world.getChunkSource()).replaceWithPacketData(
                     x, y, z, cubeBiomeContainer, dataReader, new CompoundTag(), cubeExists.get(i));
 
                 // TODO: full cube info
                 //            if (cube != null /*&&fullCube*/) {
                 //                world.addEntitiesToChunk(cube.getColumn());
                 //            }
-                for (int dx = 0; dx < IBigCube.DIAMETER_IN_SECTIONS; dx++) {
-                    for (int dy = 0; dy < IBigCube.DIAMETER_IN_SECTIONS; dy++) {
-                        for (int dz = 0; dz < IBigCube.DIAMETER_IN_SECTIONS; dz++) {
+                for (int dx = 0; dx < CubeAccess.DIAMETER_IN_SECTIONS; dx++) {
+                    for (int dy = 0; dy < CubeAccess.DIAMETER_IN_SECTIONS; dy++) {
+                        for (int dz = 0; dz < CubeAccess.DIAMETER_IN_SECTIONS; dz++) {
                             world.setSectionDirtyWithNeighbors(
                                 cubeToSection(x, dx),
                                 cubeToSection(y, dy),

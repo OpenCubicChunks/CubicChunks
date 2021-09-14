@@ -11,13 +11,13 @@ import com.google.common.collect.Lists;
 import com.mojang.authlib.GameProfileRepository;
 import com.mojang.authlib.minecraft.MinecraftSessionService;
 import com.mojang.datafixers.DataFixer;
-import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
-import io.github.opencubicchunks.cubicchunks.chunk.ICubeStatusListener;
-import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
-import io.github.opencubicchunks.cubicchunks.levelgen.feature.CCFeatures;
+import io.github.opencubicchunks.cubicchunks.world.level.chunk.CubeAccess;
+import io.github.opencubicchunks.cubicchunks.server.level.progress.CubeProgressListener;
+import io.github.opencubicchunks.cubicchunks.world.level.CubePos;
+import io.github.opencubicchunks.cubicchunks.levelgen.feature.CubicFeatures;
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.BiomeGenerationSettingsAccess;
-import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
-import io.github.opencubicchunks.cubicchunks.server.IServerChunkProvider;
+import io.github.opencubicchunks.cubicchunks.world.level.CubicLevelHeightAccessor;
+import io.github.opencubicchunks.cubicchunks.server.level.ServerCubeCache;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import io.github.opencubicchunks.cubicchunks.world.ForcedCubesSaveData;
 import it.unimi.dsi.fastutil.longs.LongIterator;
@@ -72,7 +72,7 @@ public abstract class MixinMinecraftServer {
         for (Map.Entry<ResourceKey<Biome>, Biome> entry : this.registryAccess().registry(Registry.BIOME_REGISTRY).get().entrySet()) {
             Biome biome = entry.getValue();
             if (biome.getBiomeCategory() == Biome.BiomeCategory.NETHER) {
-                addFeatureToBiome(biome, GenerationStep.Decoration.RAW_GENERATION, CCFeatures.LAVA_LEAK_FIX);
+                addFeatureToBiome(biome, GenerationStep.Decoration.RAW_GENERATION, CubicFeatures.LAVA_LEAK_FIX);
             }
         }
     }
@@ -113,24 +113,24 @@ public abstract class MixinMinecraftServer {
         CubePos spawnPosCube = CubePos.from(spawnPos);
 
         statusListener.updateSpawnPos(new ChunkPos(spawnPos));
-        ((ICubeStatusListener) statusListener).startCubes(spawnPosCube);
+        ((CubeProgressListener) statusListener).startCubes(spawnPosCube);
 
         ServerChunkCache serverchunkprovider = serverworld.getChunkSource();
         serverchunkprovider.getLightEngine().setTaskPerBatch(500);
         this.nextTickTime = Util.getMillis();
-        int radius = (int) Math.ceil(10 * (16 / (float) IBigCube.DIAMETER_IN_BLOCKS)); //vanilla is 10, 32: 5, 64: 3
+        int radius = (int) Math.ceil(10 * (16 / (float) CubeAccess.DIAMETER_IN_BLOCKS)); //vanilla is 10, 32: 5, 64: 3
         int chunkDiameter = Coords.cubeToSection(radius, 0) * 2 + 1;
         int d = radius * 2 + 1;
-        ((IServerChunkProvider) serverchunkprovider).addCubeRegionTicket(TicketType.START, spawnPosCube, radius + 1, Unit.INSTANCE);
+        ((ServerCubeCache) serverchunkprovider).addCubeRegionTicket(TicketType.START, spawnPosCube, radius + 1, Unit.INSTANCE);
 //        serverchunkprovider.addRegionTicket(TicketType.START, spawnPosCube.asChunkPos(), Coords.cubeToSection(radius + 1, 0), Unit.INSTANCE);
 
         while (this.isRunning() && (/*serverchunkprovider.getTickingGenerated() < chunkDiameter * chunkDiameter
-            ||*/ ((IServerChunkProvider) serverchunkprovider).getTickingGeneratedCubes() < d * d * d)) {
+            ||*/ ((ServerCubeCache) serverchunkprovider).getTickingGeneratedCubes() < d * d * d)) {
             // from CC
             this.nextTickTime = Util.getMillis() + 10L;
             this.waitUntilNextTick();
         }
-        LOGGER.info("Current loaded chunks: " + serverchunkprovider.getTickingGenerated() + " | " + ((IServerChunkProvider) serverchunkprovider).getTickingGeneratedCubes());
+        LOGGER.info("Current loaded chunks: " + serverchunkprovider.getTickingGenerated() + " | " + ((ServerCubeCache) serverchunkprovider).getTickingGeneratedCubes());
         this.nextTickTime = Util.getMillis() + 10L;
         this.waitUntilNextTick();
 
@@ -149,7 +149,7 @@ public abstract class MixinMinecraftServer {
                 while (longiteratorCubes.hasNext()) {
                     long i = longiteratorCubes.nextLong();
                     CubePos cubePos = CubePos.from(i);
-                    ((IServerChunkProvider) serverworld1).forceCube(cubePos, true);
+                    ((ServerCubeCache) serverworld1).forceCube(cubePos, true);
                 }
             }
         }

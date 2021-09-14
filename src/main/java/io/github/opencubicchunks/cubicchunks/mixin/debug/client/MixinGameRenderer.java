@@ -1,8 +1,8 @@
-package io.github.opencubicchunks.cubicchunks.mixin.core.client.debug;
+package io.github.opencubicchunks.cubicchunks.mixin.debug.client;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import io.github.opencubicchunks.cubicchunks.debug.DebugVisualization;
-import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
+import io.github.opencubicchunks.cubicchunks.world.level.CubicLevelHeightAccessor;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GameRenderer;
 import org.spongepowered.asm.mixin.Mixin;

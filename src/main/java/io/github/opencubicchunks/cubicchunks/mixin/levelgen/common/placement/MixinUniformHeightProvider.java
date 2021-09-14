@@ -3,7 +3,7 @@ package io.github.opencubicchunks.cubicchunks.mixin.levelgen.common.placement;
 import java.util.OptionalInt;
 import java.util.Random;
 
-import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
+import io.github.opencubicchunks.cubicchunks.world.level.chunk.CubeAccess;
 import io.github.opencubicchunks.cubicchunks.levelgen.placement.CubicHeightProvider;
 import net.minecraft.world.level.levelgen.VerticalAnchor;
 import net.minecraft.world.level.levelgen.WorldGenerationContext;
@@ -25,7 +25,7 @@ public abstract class MixinUniformHeightProvider implements CubicHeightProvider 
         double bottomOffset = minHeight == (((DecorationContext) context).getLevel()).getLevel().dimensionType().minY() ? Double.NEGATIVE_INFINITY : minHeight;
 
         int maxHeight = this.maxInclusive.resolveY(context);
-        double probability = 1.0 / ((maxHeight - minHeight + 1) / (256.0 / IBigCube.DIAMETER_IN_BLOCKS));
+        double probability = 1.0 / ((maxHeight - minHeight + 1) / (256.0 / CubeAccess.DIAMETER_IN_BLOCKS));
 
         if (rand.nextDouble() > probability) {
             return OptionalInt.empty();

@@ -1,8 +1,8 @@
-package io.github.opencubicchunks.cubicchunks.chunk;
+package io.github.opencubicchunks.cubicchunks.world;
 
 import java.util.Objects;
 
-import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
+import io.github.opencubicchunks.cubicchunks.world.level.CubePos;
 import net.minecraft.world.level.ChunkPos;
 
 /**

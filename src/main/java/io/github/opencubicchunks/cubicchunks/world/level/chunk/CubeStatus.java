@@ -1,9 +1,9 @@
-package io.github.opencubicchunks.cubicchunks.chunk.cube;
+package io.github.opencubicchunks.cubicchunks.world.level.chunk;
 
 import java.util.List;
 
 import com.google.common.collect.ImmutableList;
-import io.github.opencubicchunks.cubicchunks.meta.EarlyConfig;
+import io.github.opencubicchunks.cubicchunks.config.EarlyConfig;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;

@@ -1,12 +1,12 @@
-package io.github.opencubicchunks.cubicchunks.chunk.ticket;
+package io.github.opencubicchunks.cubicchunks.server.level;
 
 import java.util.Set;
 import java.util.concurrent.Executor;
 
 import javax.annotation.Nullable;
 
-import io.github.opencubicchunks.cubicchunks.chunk.cube.CubeStatus;
-import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
+import io.github.opencubicchunks.cubicchunks.world.level.chunk.CubeStatus;
+import io.github.opencubicchunks.cubicchunks.world.level.CubePos;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.longs.LongSet;
@@ -20,7 +20,7 @@ import net.minecraft.util.SortedArraySet;
 import net.minecraft.util.thread.ProcessorHandle;
 import net.minecraft.world.level.chunk.ChunkStatus;
 
-public interface ITicketManager {
+public interface CubicDistanceManager {
     int PLAYER_CUBE_TICKET_LEVEL = 33 + CubeStatus.getDistance(ChunkStatus.FULL) - 2;
 
     boolean processUpdates(ChunkMap chunkManager);

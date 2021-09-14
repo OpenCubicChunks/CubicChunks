@@ -1,6 +1,6 @@
-package io.github.opencubicchunks.cubicchunks.mixin.core.common.world;
+package io.github.opencubicchunks.cubicchunks.mixin.core.common.level;
 
-import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
+import io.github.opencubicchunks.cubicchunks.world.level.CubicLevelHeightAccessor;
 import net.minecraft.world.level.LevelHeightAccessor;
 import org.spongepowered.asm.mixin.Mixin;
 

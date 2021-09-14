@@ -1,4 +1,4 @@
-package io.github.opencubicchunks.cubicchunks.chunk.util;
+package io.github.opencubicchunks.cubicchunks.utils;
 
 import java.util.concurrent.ForkJoinPool;
 

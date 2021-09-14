@@ -1,7 +1,7 @@
 package io.github.opencubicchunks.cubicchunks.network;
 
 
-import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
+import io.github.opencubicchunks.cubicchunks.world.level.chunk.CubeAccess;
 import io.github.opencubicchunks.cubicchunks.utils.BufferUtils;
 import it.unimi.dsi.fastutil.shorts.ShortList;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -35,7 +35,7 @@ public class PacketCubeBlockChanges {
         }
     }
 
-    public PacketCubeBlockChanges(IBigCube cube, SectionPos sectionPos, ShortList localAddresses) {
+    public PacketCubeBlockChanges(CubeAccess cube, SectionPos sectionPos, ShortList localAddresses) {
         this.sectionPos = sectionPos;
         this.localAddresses = localAddresses.toShortArray();
         this.blockStates = new BlockState[localAddresses.size()];

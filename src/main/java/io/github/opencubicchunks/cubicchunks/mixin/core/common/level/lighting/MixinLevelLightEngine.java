@@ -1,14 +1,14 @@
-package io.github.opencubicchunks.cubicchunks.mixin.core.common.world.lighting;
+package io.github.opencubicchunks.cubicchunks.mixin.core.common.level.lighting;
 
 import javax.annotation.Nullable;
 
-import io.github.opencubicchunks.cubicchunks.chunk.CubeMapGetter;
-import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
-import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
-import io.github.opencubicchunks.cubicchunks.world.lighting.ICubicSkyLightEngine;
-import io.github.opencubicchunks.cubicchunks.world.lighting.ILightEngine;
-import io.github.opencubicchunks.cubicchunks.world.lighting.ISkyLightColumnChecker;
-import io.github.opencubicchunks.cubicchunks.world.lighting.IWorldLightManager;
+import io.github.opencubicchunks.cubicchunks.world.level.chunk.CubeAccess;
+import io.github.opencubicchunks.cubicchunks.world.level.chunk.ColumnCubeMapGetter;
+import io.github.opencubicchunks.cubicchunks.world.level.CubePos;
+import io.github.opencubicchunks.cubicchunks.world.lighting.CubicLayerLightEngine;
+import io.github.opencubicchunks.cubicchunks.world.lighting.CubicLevelLightEngine;
+import io.github.opencubicchunks.cubicchunks.world.lighting.CubicSkyLightEngine;
+import io.github.opencubicchunks.cubicchunks.world.lighting.SkyLightColumnChecker;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.SectionPos;
 import net.minecraft.world.level.LevelHeightAccessor;
@@ -22,7 +22,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 
 @Mixin(LevelLightEngine.class)
-public abstract class MixinLevelLightEngine implements IWorldLightManager, LightEventListener, ISkyLightColumnChecker {
+public abstract class MixinLevelLightEngine implements CubicLevelLightEngine, LightEventListener, SkyLightColumnChecker {
     @Shadow @Final protected LevelHeightAccessor levelHeightAccessor;
 
     @Shadow @Final @Nullable private LayerLightEngine<?, ?> blockEngine;
@@ -47,35 +47,35 @@ public abstract class MixinLevelLightEngine implements IWorldLightManager, Light
     @Override
     public void retainData(CubePos cubePos, boolean retain) {
         if (this.blockEngine != null) {
-            ((ILightEngine) this.blockEngine).retainCubeData(cubePos, retain);
+            ((CubicLayerLightEngine) this.blockEngine).retainCubeData(cubePos, retain);
         }
 
         if (this.skyEngine != null) {
-            ((ILightEngine) this.skyEngine).retainCubeData(cubePos, retain);
+            ((CubicLayerLightEngine) this.skyEngine).retainCubeData(cubePos, retain);
         }
     }
 
     @Override
     public void enableLightSources(CubePos cubePos, boolean retain) {
         if (this.blockEngine != null) {
-            ((ILightEngine) this.blockEngine).enableLightSources(cubePos, retain);
+            ((CubicLayerLightEngine) this.blockEngine).enableLightSources(cubePos, retain);
         }
 
         if (this.skyEngine != null) {
-            ((ILightEngine) this.skyEngine).enableLightSources(cubePos, retain);
+            ((CubicLayerLightEngine) this.skyEngine).enableLightSources(cubePos, retain);
         }
     }
 
-    protected void doSkyLightForCube(IBigCube cube) {
+    protected void doSkyLightForCube(CubeAccess cube) {
         if (this.skyEngine != null) {
-            ((ICubicSkyLightEngine) this.skyEngine).doSkyLightForCube(cube);
+            ((CubicSkyLightEngine) this.skyEngine).doSkyLightForCube(cube);
         }
     }
 
     @Override
-    public void checkSkyLightColumn(CubeMapGetter chunk, int x, int z, int oldHeight, int newHeight) {
+    public void checkSkyLightColumn(ColumnCubeMapGetter chunk, int x, int z, int oldHeight, int newHeight) {
         if (this.skyEngine != null) {
-            ((ISkyLightColumnChecker) skyEngine).checkSkyLightColumn(chunk, x, z, oldHeight, newHeight);
+            ((SkyLightColumnChecker) skyEngine).checkSkyLightColumn(chunk, x, z, oldHeight, newHeight);
         }
     }
 }

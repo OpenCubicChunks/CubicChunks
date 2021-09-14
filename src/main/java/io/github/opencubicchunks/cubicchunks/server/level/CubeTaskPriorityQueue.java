@@ -1,4 +1,4 @@
-package io.github.opencubicchunks.cubicchunks.chunk.ticket;
+package io.github.opencubicchunks.cubicchunks.server.level;
 
 import java.util.List;
 import java.util.Optional;
@@ -10,14 +10,13 @@ import javax.annotation.Nullable;
 
 import com.google.common.collect.Lists;
 import com.mojang.datafixers.util.Either;
-import io.github.opencubicchunks.cubicchunks.chunk.IChunkManager;
-import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
+import io.github.opencubicchunks.cubicchunks.world.level.CubePos;
 import it.unimi.dsi.fastutil.longs.Long2ObjectLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
 
 public class CubeTaskPriorityQueue<T> {
-    public static final int LEVEL_COUNT = IChunkManager.MAX_CUBE_DISTANCE + 2;
+    public static final int LEVEL_COUNT = CubeMap.MAX_CUBE_DISTANCE + 2;
     private final List<Long2ObjectLinkedOpenHashMap<List<Optional<T>>>> levelToPosToElements =
         IntStream.range(0, LEVEL_COUNT).mapToObj((p_219415_0_) -> new Long2ObjectLinkedOpenHashMap<List<Optional<T>>>()).collect(Collectors.toList());
     private volatile int firstNonEmptyLvl = LEVEL_COUNT;

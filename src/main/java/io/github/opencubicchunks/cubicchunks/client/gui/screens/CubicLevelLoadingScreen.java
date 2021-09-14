@@ -1,4 +1,4 @@
-package io.github.opencubicchunks.cubicchunks.client;
+package io.github.opencubicchunks.cubicchunks.client.gui.screens;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -20,8 +20,8 @@ import com.mojang.math.Quaternion;
 import com.mojang.math.Transformation;
 import com.mojang.math.Vector3f;
 import com.mojang.math.Vector4f;
-import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
-import io.github.opencubicchunks.cubicchunks.chunk.ITrackingCubeStatusListener;
+import io.github.opencubicchunks.cubicchunks.world.level.chunk.CubeAccess;
+import io.github.opencubicchunks.cubicchunks.server.level.progress.StoringCubeProgressListener;
 import io.github.opencubicchunks.cubicchunks.levelgen.placement.UserFunction;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import it.unimi.dsi.fastutil.objects.Object2IntArrayMap;
@@ -35,7 +35,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.server.level.progress.StoringChunkProgressListener;
 import net.minecraft.world.level.chunk.ChunkStatus;
 
-public class CubicWorldLoadScreen {
+public class CubicLevelLoadingScreen {
     private static final Object2IntArrayMap<ChunkStatus> STATUS_COLORS = getStatusColors();
 
     private static final UserFunction STATUS_ALPHAS =
@@ -186,7 +186,7 @@ public class CubicWorldLoadScreen {
                                  Object2IntMap<ChunkStatus> colors) {
         float aspectRatio = Minecraft.getInstance().screen.width / (float) Minecraft.getInstance().screen.height;
 
-        float scaleWithCineSize = scale * IBigCube.DIAMETER_IN_SECTIONS / 2.0f;
+        float scaleWithCineSize = scale * CubeAccess.DIAMETER_IN_SECTIONS / 2.0f;
 
         RenderSystem.setShader(GameRenderer::getPositionColorShader);
         RenderSystem.disableTexture();
@@ -225,13 +225,13 @@ public class CubicWorldLoadScreen {
                 int alpha = 0xB0;
                 int c = colors.getOrDefault(columnStatus, 0xFFFF00FF) | (alpha << 24);
                 drawCube(buffer, cdx - sectionRenderRadius / 2, -30, cdz - sectionRenderRadius / 2,
-                    0.12f * scale / IBigCube.DIAMETER_IN_SECTIONS, c, EnumSet.of(Direction.UP));
+                    0.12f * scale / CubeAccess.DIAMETER_IN_SECTIONS, c, EnumSet.of(Direction.UP));
             }
         }
 
         final int renderRadius = Coords.sectionToCubeCeil(sectionRenderRadius);
 
-        ITrackingCubeStatusListener tracker = (ITrackingCubeStatusListener) trackerParam;
+        StoringCubeProgressListener tracker = (StoringCubeProgressListener) trackerParam;
         for (int dx = -1; dx <= renderRadius + 1; dx++) {
             for (int dz = -1; dz <= renderRadius + 1; dz++) {
                 for (int dy = -1; dy <= renderRadius + 1; dy++) {
@@ -373,7 +373,7 @@ public class CubicWorldLoadScreen {
             for (int dz = 0; dz < totalDiameter; ++dz) {
                 Map<ChunkStatus, Integer> statusCounts = new HashMap<>();
                 for (int dy = 0; dy < totalDiameter; dy++) {
-                    ChunkStatus chunkstatus = ((ITrackingCubeStatusListener) trackerParam).getCubeStatus(dx, dy, dz);
+                    ChunkStatus chunkstatus = ((StoringCubeProgressListener) trackerParam).getCubeStatus(dx, dy, dz);
                     statusCounts.putIfAbsent(chunkstatus, 0);
                     //noinspection ConstantConditions
                     statusCounts.compute(chunkstatus, (status, count) -> count + 1);

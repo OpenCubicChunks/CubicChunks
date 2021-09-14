@@ -1,6 +1,6 @@
-package io.github.opencubicchunks.cubicchunks.chunk;
+package io.github.opencubicchunks.cubicchunks.world.level.chunk;
 
-public interface ChunkCubeGetter {
+public interface ColumnCubeGetter {
 
-    IBigCube getCube(int y);
+    CubeAccess getCube(int y);
 }

@@ -3,8 +3,8 @@ package io.github.opencubicchunks.cubicchunks.mixin.optifine.client.vanilla;
 import javax.annotation.Nullable;
 
 import io.github.opencubicchunks.cubicchunks.CubicChunks;
-import io.github.opencubicchunks.cubicchunks.mixin.access.client.ViewFrustumAccess;
-import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
+import io.github.opencubicchunks.cubicchunks.mixin.access.client.ViewAreaAccess;
+import io.github.opencubicchunks.cubicchunks.world.level.CubicLevelHeightAccessor;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -76,7 +76,7 @@ public abstract class MixinWorldRenderer_Vanilla {
         if (Mth.abs(playerPos.getX() - blockpos.getX()) <= this.lastViewDistance * 16
             && Mth.abs(playerPos.getY() - blockpos.getY()) <= this.lastVerticalViewDistance * 16
             && Mth.abs(playerPos.getZ() - blockpos.getZ()) <= this.lastViewDistance * 16) {
-            cir.setReturnValue(((ViewFrustumAccess) this.viewArea).invokeGetRenderChunkAt(blockpos));
+            cir.setReturnValue(((ViewAreaAccess) this.viewArea).invokeGetRenderChunkAt(blockpos));
         } else {
             cir.setReturnValue(null);
         }

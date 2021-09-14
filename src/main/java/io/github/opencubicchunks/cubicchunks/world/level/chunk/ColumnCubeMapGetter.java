@@ -1,5 +1,5 @@
-package io.github.opencubicchunks.cubicchunks.chunk;
+package io.github.opencubicchunks.cubicchunks.world.level.chunk;
 
-public interface CubeMapGetter {
-    CubeMap getCubeMap();
+public interface ColumnCubeMapGetter {
+    ColumnCubeMap getCubeMap();
 }

@@ -1,7 +1,7 @@
 package io.github.opencubicchunks.cubicchunks.levelgen.feature;
 
 import io.github.opencubicchunks.cubicchunks.CubicChunks;
-import io.github.opencubicchunks.cubicchunks.levelgen.placement.CCPlacement;
+import io.github.opencubicchunks.cubicchunks.levelgen.placement.CubicFeatureDecorators;
 import io.github.opencubicchunks.cubicchunks.levelgen.placement.CubicLakePlacementConfig;
 import io.github.opencubicchunks.cubicchunks.levelgen.placement.UserFunction;
 import net.minecraft.core.Registry;
@@ -16,11 +16,11 @@ import net.minecraft.world.level.levelgen.feature.configurations.NoneDecoratorCo
 import net.minecraft.world.level.levelgen.feature.configurations.NoneFeatureConfiguration;
 import net.minecraft.world.level.levelgen.placement.FeatureDecorator;
 
-public class CCFeatures {
+public class CubicFeatures {
 
     public static final ConfiguredFeature<?, ?> CC_WATER_LAKE = createCCConfiguredFeature("lake_water", Feature.LAKE
         .configured(new BlockStateConfiguration(Blocks.WATER.defaultBlockState()))
-        .decorated(CCPlacement.CUBIC_LAKE
+        .decorated(CubicFeatureDecorators.CUBIC_LAKE
             .configured(new CubicLakePlacementConfig(
                 UserFunction.builder()
                     // same as vanilla
@@ -39,7 +39,7 @@ public class CCFeatures {
 
     public static final ConfiguredFeature<?, ?> CC_LAVA_LAKE = createCCConfiguredFeature("lake_lava", Feature.LAKE
         .configured(new BlockStateConfiguration(Blocks.LAVA.defaultBlockState()))
-        .decorated(CCPlacement.CUBIC_LAKE
+        .decorated(CubicFeatureDecorators.CUBIC_LAKE
             .configured(new CubicLakePlacementConfig(
                 UserFunction.builder()
                     // same as vanilla for y0-127, probabilities near y=256 are very low, so don't use them
@@ -65,7 +65,7 @@ public class CCFeatures {
         ));
 
     public static final ConfiguredFeature<?, ?> LAVA_LEAK_FIX = createCCConfiguredFeature("lava_leak_fix",
-        CCFeature.LAVA_LEAK_FIX.configured(NoneFeatureConfiguration.INSTANCE).decorated(FeatureDecorator.NOPE.configured(NoneDecoratorConfiguration.INSTANCE)));
+        CubicFeature.LAVA_LEAK_FIX.configured(NoneFeatureConfiguration.INSTANCE).decorated(FeatureDecorator.NOPE.configured(NoneDecoratorConfiguration.INSTANCE)));
 
     public static void init() {
     }

@@ -8,7 +8,7 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 import org.spongepowered.asm.mixin.gen.Invoker;
 
 @Mixin(targets = "net.minecraft.client.multiplayer.ClientChunkCache$Storage")
-public interface ClientChunkProviderChunkArrayAccess {
+public interface ClientChunkCacheStorageAccess {
 
     @Invoker boolean invokeInRange(int x, int z);
     @Invoker int invokeGetIndex(int x, int z);

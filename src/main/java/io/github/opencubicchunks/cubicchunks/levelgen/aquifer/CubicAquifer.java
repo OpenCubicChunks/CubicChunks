@@ -2,7 +2,7 @@ package io.github.opencubicchunks.cubicchunks.levelgen.aquifer;
 
 import java.util.Arrays;
 
-import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
+import io.github.opencubicchunks.cubicchunks.world.level.chunk.CubeAccess;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.ChunkPos;
@@ -61,7 +61,7 @@ public final class CubicAquifer implements Aquifer {
         this.minGridY = gridY(minYInput) - 1;
         this.minGridZ = gridZ(chunkPos.getMinBlockZ()) - 1;
         this.minY = minYInput;
-        this.sizeY = IBigCube.DIAMETER_IN_BLOCKS;
+        this.sizeY = CubeAccess.DIAMETER_IN_BLOCKS;
 
         typeToBlock = new BlockState[] {
             waterState,

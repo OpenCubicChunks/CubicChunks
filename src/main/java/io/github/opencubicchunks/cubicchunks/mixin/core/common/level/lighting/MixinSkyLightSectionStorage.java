@@ -1,11 +1,11 @@
-package io.github.opencubicchunks.cubicchunks.mixin.core.common.world.lighting;
+package io.github.opencubicchunks.cubicchunks.mixin.core.common.level.lighting;
 
-import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
-import io.github.opencubicchunks.cubicchunks.chunk.LightHeightmapGetter;
+import io.github.opencubicchunks.cubicchunks.world.level.chunk.CubeAccess;
+import io.github.opencubicchunks.cubicchunks.world.level.chunk.LightHeightmapGetter;
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.LayerLightSectionStorageAccess;
-import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
+import io.github.opencubicchunks.cubicchunks.world.level.CubicLevelHeightAccessor;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
-import io.github.opencubicchunks.cubicchunks.world.lighting.ICubeLightProvider;
+import io.github.opencubicchunks.cubicchunks.world.level.chunk.LightCubeGetter;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.SectionPos;
 import net.minecraft.world.level.BlockGetter;
@@ -71,9 +71,9 @@ public abstract class MixinSkyLightSectionStorage extends LayerLightSectionStora
             }
 
             //TODO: Optimize
-            BlockGetter cube = ((ICubeLightProvider) ((LayerLightSectionStorageAccess) this).getChunkSource()).getCubeForLighting(
+            BlockGetter cube = ((LightCubeGetter) ((LayerLightSectionStorageAccess) this).getChunkSource()).getCubeForLighting(
                 chunkX, Coords.blockToSection(blockY), chunkZ);
-            if (cube == null || !((IBigCube) cube).getStatus().isOrAfter(ChunkStatus.LIGHT)) {
+            if (cube == null || !((CubeAccess) cube).getStatus().isOrAfter(ChunkStatus.LIGHT)) {
                 cir.setReturnValue(0);
                 return;
             }

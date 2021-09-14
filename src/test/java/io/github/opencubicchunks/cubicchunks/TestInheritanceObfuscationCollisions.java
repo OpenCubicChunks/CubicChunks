@@ -9,7 +9,7 @@ import java.util.Arrays;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
+import io.github.opencubicchunks.cubicchunks.world.level.chunk.CubeAccess;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import org.junit.Test;
 import org.objectweb.asm.Type;
@@ -17,7 +17,7 @@ import org.objectweb.asm.Type;
 public class TestInheritanceObfuscationCollisions {
     @Test
     public void tesChunkCube() {
-        verifyNoCollision(IBigCube.class, ChunkAccess.class);
+        verifyNoCollision(CubeAccess.class, ChunkAccess.class);
     }
 
     private void verifyNoCollision(Class<?> ccClass, Class<?> mcClass) {

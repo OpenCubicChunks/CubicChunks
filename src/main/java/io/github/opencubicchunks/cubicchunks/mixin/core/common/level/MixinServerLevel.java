@@ -1,4 +1,4 @@
-package io.github.opencubicchunks.cubicchunks.mixin.core.common.world;
+package io.github.opencubicchunks.cubicchunks.mixin.core.common.level;
 
 import java.util.List;
 import java.util.Map;
@@ -9,18 +9,18 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
-import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
-import io.github.opencubicchunks.cubicchunks.chunk.cube.BigCube;
-import io.github.opencubicchunks.cubicchunks.chunk.heightmap.SurfaceTrackerWrapper;
-import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
-import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
-import io.github.opencubicchunks.cubicchunks.server.ICubicWorld;
+import io.github.opencubicchunks.cubicchunks.world.level.chunk.CubeAccess;
+import io.github.opencubicchunks.cubicchunks.world.level.chunk.LevelCube;
+import io.github.opencubicchunks.cubicchunks.world.level.levelgen.heightmap.SurfaceTrackerWrapper;
+import io.github.opencubicchunks.cubicchunks.world.level.CubePos;
+import io.github.opencubicchunks.cubicchunks.world.level.CubicLevelAccessor;
+import io.github.opencubicchunks.cubicchunks.world.level.CubicLevelHeightAccessor;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
-import io.github.opencubicchunks.cubicchunks.world.CubicFastServerTickList;
-import io.github.opencubicchunks.cubicchunks.world.entity.ChunkEntityStateEventHandler;
-import io.github.opencubicchunks.cubicchunks.world.entity.ChunkEntityStateEventSource;
-import io.github.opencubicchunks.cubicchunks.world.entity.IsCubicEntityContext;
-import io.github.opencubicchunks.cubicchunks.world.server.IServerWorld;
+import io.github.opencubicchunks.cubicchunks.world.level.CubicFastServerTickList;
+import io.github.opencubicchunks.cubicchunks.chunk.entity.ChunkEntityStateEventHandler;
+import io.github.opencubicchunks.cubicchunks.chunk.entity.ChunkEntityStateEventSource;
+import io.github.opencubicchunks.cubicchunks.chunk.entity.IsCubicEntityContext;
+import io.github.opencubicchunks.cubicchunks.world.server.CubicServerLevel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.SectionPos;
 import net.minecraft.resources.ResourceKey;
@@ -58,14 +58,14 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(ServerLevel.class)
-public abstract class MixinServerWorld extends Level implements IServerWorld {
+public abstract class MixinServerLevel extends Level implements CubicServerLevel {
     @Shadow @Final private PersistentEntitySectionManager<Entity> entityManager;
 
     @Shadow @Final private ServerTickList<Fluid> liquidTicks;
 
     @Shadow @Final private ServerTickList<Block> blockTicks;
 
-    protected MixinServerWorld(WritableLevelData p_i231617_1_, ResourceKey<Level> p_i231617_2_, DimensionType p_i231617_4_,
+    protected MixinServerLevel(WritableLevelData p_i231617_1_, ResourceKey<Level> p_i231617_2_, DimensionType p_i231617_4_,
                                Supplier<ProfilerFiller> p_i231617_5_, boolean p_i231617_6_, boolean p_i231617_7_, long p_i231617_8_) {
         super(p_i231617_1_, p_i231617_2_, p_i231617_4_, p_i231617_5_, p_i231617_6_, p_i231617_7_, p_i231617_8_);
     }
@@ -104,7 +104,7 @@ public abstract class MixinServerWorld extends Level implements IServerWorld {
         if (!isInWorldBounds(pos)) {
             return -1;
         }
-        if (((ICubicWorld) this).getCube(pos, ChunkStatus.FULL, false) == null) {
+        if (((CubicLevelAccessor) this).getCube(pos, ChunkStatus.FULL, false) == null) {
             return -1;
         }
         return this.random.nextInt(16);
@@ -117,12 +117,12 @@ public abstract class MixinServerWorld extends Level implements IServerWorld {
     }
 
     @Override
-    public void onCubeUnloading(BigCube cube) {
+    public void onCubeUnloading(LevelCube cube) {
         cube.invalidateAllBlockEntities();
 
         ChunkPos pos = cube.getCubePos().asChunkPos();
-        for (int x = 0; x < IBigCube.DIAMETER_IN_SECTIONS; x++) {
-            for (int z = 0; z < IBigCube.DIAMETER_IN_SECTIONS; z++) {
+        for (int x = 0; x < CubeAccess.DIAMETER_IN_SECTIONS; x++) {
+            for (int z = 0; z < CubeAccess.DIAMETER_IN_SECTIONS; z++) {
                 // TODO this might cause columns to reload after they've already been unloaded
                 LevelChunk chunk = this.getChunk(pos.x + x, pos.z + z);
                 for (Map.Entry<Heightmap.Types, Heightmap> entry : chunk.getHeightmaps()) {
@@ -135,7 +135,7 @@ public abstract class MixinServerWorld extends Level implements IServerWorld {
     }
 
     @Override
-    public void tickCube(BigCube cube, int randomTicks) {
+    public void tickCube(LevelCube cube, int randomTicks) {
         ProfilerFiller profilerFiller = this.getProfiler();
 
         // TODO lightning and snow/freezing - see ServerLevel.tickChunk()

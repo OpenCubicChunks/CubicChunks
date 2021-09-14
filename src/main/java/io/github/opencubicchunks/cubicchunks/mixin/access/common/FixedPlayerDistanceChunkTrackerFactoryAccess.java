@@ -5,7 +5,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Invoker;
 
 @Mixin(DistanceManager.FixedPlayerDistanceChunkTracker.class)
-public interface PlayerChunkTrackerFactoryAccess {
+public interface FixedPlayerDistanceChunkTrackerFactoryAccess {
 
     @Invoker("<init>")
     static DistanceManager.FixedPlayerDistanceChunkTracker construct(DistanceManager ticketManager, int p_i50684_2_) {

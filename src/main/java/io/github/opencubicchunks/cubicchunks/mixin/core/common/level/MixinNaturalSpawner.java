@@ -1,11 +1,11 @@
-package io.github.opencubicchunks.cubicchunks.mixin.core.common.world;
+package io.github.opencubicchunks.cubicchunks.mixin.core.common.level;
 
 import java.util.Iterator;
 
-import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
-import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
+import io.github.opencubicchunks.cubicchunks.world.level.chunk.CubeAccess;
+import io.github.opencubicchunks.cubicchunks.world.level.CubePos;
 import io.github.opencubicchunks.cubicchunks.levelgen.CubeWorldGenRegion;
-import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
+import io.github.opencubicchunks.cubicchunks.world.level.CubicLevelHeightAccessor;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import io.github.opencubicchunks.cubicchunks.world.CubicNaturalSpawner;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
@@ -130,9 +130,9 @@ public abstract class MixinNaturalSpawner {
 
     //Called from ASM
     private static BlockPos getRandomPosWithinCube(Level level, ChunkAccess chunkAccess) {
-        CubePos pos = ((IBigCube) chunkAccess).getCubePos();
-        int blockX = pos.minCubeX() + level.random.nextInt(IBigCube.DIAMETER_IN_BLOCKS);
-        int blockZ = pos.minCubeZ() + level.random.nextInt(IBigCube.DIAMETER_IN_BLOCKS);
+        CubePos pos = ((CubeAccess) chunkAccess).getCubePos();
+        int blockX = pos.minCubeX() + level.random.nextInt(CubeAccess.DIAMETER_IN_BLOCKS);
+        int blockZ = pos.minCubeZ() + level.random.nextInt(CubeAccess.DIAMETER_IN_BLOCKS);
 
         int height = level.getHeight(Heightmap.Types.WORLD_SURFACE, blockX, blockZ) + 1; //This is wrong, we need to use the one from the BigCube(ChunkAccess)
 
@@ -142,7 +142,7 @@ public abstract class MixinNaturalSpawner {
         }
 
         if (pos.maxCubeY() <= height) {
-            int blockY = minY + level.random.nextInt(IBigCube.DIAMETER_IN_BLOCKS);
+            int blockY = minY + level.random.nextInt(CubeAccess.DIAMETER_IN_BLOCKS);
             return new BlockPos(blockX, blockY, blockZ);
         }
 
@@ -188,7 +188,7 @@ public abstract class MixinNaturalSpawner {
     @Redirect(method = "isRightDistanceToPlayerAndSpawnPointForCube", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/chunk/ChunkAccess;getPos()"
         + "Lio/github/opencubicchunks/cubicchunks/chunk/util/CubePos;", remap = false), require = 0, remap = false)
     private static CubePos useGetCubePos(ChunkAccess chunkAccess) {
-        return ((IBigCube) chunkAccess).getCubePos();
+        return ((CubeAccess) chunkAccess).getCubePos();
     }
 
     @Dynamic
@@ -196,6 +196,6 @@ public abstract class MixinNaturalSpawner {
     @Redirect(method = "isRightDistanceToPlayerAndSpawnPointForCube", at = @At(value = "INVOKE", target = "Lnet/minecraft/class_2791;method_12004()"
         + "Lio/github/opencubicchunks/cubicchunks/chunk/util/CubePos;", remap = false), require = 0, remap = false)
     private static CubePos useGetCubePosMapping(ChunkAccess chunkAccess) {
-        return ((IBigCube) chunkAccess).getCubePos();
+        return ((CubeAccess) chunkAccess).getCubePos();
     }
 }

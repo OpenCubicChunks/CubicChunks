@@ -1,10 +1,10 @@
 package io.github.opencubicchunks.cubicchunks.mixin.levelgen.common.structure;
 
-import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
-import io.github.opencubicchunks.cubicchunks.chunk.ImposterChunkPos;
-import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
-import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
-import io.github.opencubicchunks.cubicchunks.server.ICubicWorld;
+import io.github.opencubicchunks.cubicchunks.world.level.chunk.CubeAccess;
+import io.github.opencubicchunks.cubicchunks.world.ImposterChunkPos;
+import io.github.opencubicchunks.cubicchunks.world.level.CubePos;
+import io.github.opencubicchunks.cubicchunks.world.level.CubicLevelAccessor;
+import io.github.opencubicchunks.cubicchunks.world.level.CubicLevelHeightAccessor;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.SectionPos;
@@ -41,7 +41,7 @@ public abstract class MixinStructureFeature {
         }
 
         int spacing = structureFeatureConfiguration.spacing();
-        int ySpacing = IBigCube.DIAMETER_IN_SECTIONS;
+        int ySpacing = CubeAccess.DIAMETER_IN_SECTIONS;
 
         int mainSectionX = SectionPos.blockToSectionCoord(blockPos.getX());
         int mainSectionY = SectionPos.blockToSectionCoord(blockPos.getY());
@@ -67,9 +67,9 @@ public abstract class MixinStructureFeature {
                         int zPos = mainSectionZ + spacing * dz;
 
                         CubePos pos = this.getPotentialFeatureChunk(structureFeatureConfiguration, seed, worldgenRandom, xPos, yPos, zPos);
-                        IBigCube cube = null;
-                        for (int sectionX = 0; sectionX < IBigCube.DIAMETER_IN_SECTIONS; sectionX++) {
-                            for (int sectionZ = 0; sectionZ < IBigCube.DIAMETER_IN_SECTIONS; sectionZ++) {
+                        CubeAccess cube = null;
+                        for (int sectionX = 0; sectionX < CubeAccess.DIAMETER_IN_SECTIONS; sectionX++) {
+                            for (int sectionZ = 0; sectionZ < CubeAccess.DIAMETER_IN_SECTIONS; sectionZ++) {
                                 SectionPos sp = SectionPos.of(
                                     Coords.cubeToSection(pos.getX(), sectionX),
                                     Coords.cubeToSection(pos.getY(), 0),
@@ -81,7 +81,7 @@ public abstract class MixinStructureFeature {
                                     continue;
                                 }
                                 if (cube == null) {
-                                    cube = ((ICubicWorld) level).getCube(pos, ChunkStatus.STRUCTURE_STARTS);
+                                    cube = ((CubicLevelAccessor) level).getCube(pos, ChunkStatus.STRUCTURE_STARTS);
                                 }
                                 StructureStart<?> structureStart = manager.getStartForFeature(sp, (StructureFeature<?>) (Object) this, cube);
                                 if (structureStart == null || !structureStart.isValid()) {

@@ -1,7 +1,7 @@
 package io.github.opencubicchunks.cubicchunks.world.lighting;
 
-import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
+import io.github.opencubicchunks.cubicchunks.world.level.chunk.CubeAccess;
 
-public interface ICubicSkyLightEngine {
-    void doSkyLightForCube(IBigCube cube);
+public interface CubicSkyLightEngine {
+    void doSkyLightForCube(CubeAccess cube);
 }

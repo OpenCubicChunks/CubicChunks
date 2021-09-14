@@ -1,22 +1,22 @@
-package io.github.opencubicchunks.cubicchunks.chunk.graph;
+package io.github.opencubicchunks.cubicchunks.server.level;
 
-import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
+import io.github.opencubicchunks.cubicchunks.world.level.CubePos;
 import net.minecraft.world.level.lighting.DynamicGraphMinFixedPoint;
 
-public abstract class CubeDistanceGraph extends DynamicGraphMinFixedPoint {
+public abstract class CubeTracker extends DynamicGraphMinFixedPoint {
 
     private final int xR;
     private final int yR;
     private final int zR;
 
-    protected CubeDistanceGraph(int levelCount, int expectedUpdatesByLevel, int expectedPropagationLevels, int xR, int yR, int zR) {
+    protected CubeTracker(int levelCount, int expectedUpdatesByLevel, int expectedPropagationLevels, int xR, int yR, int zR) {
         super(levelCount, expectedUpdatesByLevel, expectedPropagationLevels);
         this.xR = xR;
         this.yR = yR;
         this.zR = zR;
     }
 
-    protected CubeDistanceGraph(int levelCount, int expectedUpdatesByLevel, int expectedPropagationLevels) {
+    protected CubeTracker(int levelCount, int expectedUpdatesByLevel, int expectedPropagationLevels) {
         this(levelCount, expectedUpdatesByLevel, expectedPropagationLevels, 1, 1, 1);
     }
 

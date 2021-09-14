@@ -9,11 +9,11 @@ import java.util.stream.Stream;
 
 import com.mojang.datafixers.DataFixer;
 import com.mojang.datafixers.util.Pair;
-import io.github.opencubicchunks.cubicchunks.chunk.storage.POIDeserializationContext;
-import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
+import io.github.opencubicchunks.cubicchunks.world.level.chunk.storage.PoiDeserializationContext;
+import io.github.opencubicchunks.cubicchunks.world.level.CubePos;
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.PoiSectionAccess;
-import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
-import io.github.opencubicchunks.cubicchunks.server.ICubicWorld;
+import io.github.opencubicchunks.cubicchunks.world.level.CubicLevelAccessor;
+import io.github.opencubicchunks.cubicchunks.world.level.CubicLevelHeightAccessor;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import net.minecraft.Util;
 import net.minecraft.core.BlockPos;
@@ -37,7 +37,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(PoiManager.class)
-public abstract class MixinPoiManager extends SectionStorage<PoiSection> implements POIDeserializationContext {
+public abstract class MixinPoiManager extends SectionStorage<PoiSection> implements PoiDeserializationContext {
 
     @Shadow @Final private LongSet loadedChunks; // Loaded cubes
 
@@ -105,7 +105,7 @@ public abstract class MixinPoiManager extends SectionStorage<PoiSection> impleme
         }).filter((cubePos) -> {
             return this.loadedChunks.add(cubePos.asLong());
         }).forEach((cubePos) -> {
-            ((ICubicWorld) world).getCube(cubePos.getX(), cubePos.getY(), cubePos.getZ(), ChunkStatus.EMPTY);
+            ((CubicLevelAccessor) world).getCube(cubePos.getX(), cubePos.getY(), cubePos.getZ(), ChunkStatus.EMPTY);
         });
     }
 }

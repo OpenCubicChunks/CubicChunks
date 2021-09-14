@@ -1,4 +1,4 @@
-package io.github.opencubicchunks.cubicchunks.chunk.ticket;
+package io.github.opencubicchunks.cubicchunks.server.level;
 
 import java.util.List;
 import java.util.Map;
@@ -14,10 +14,8 @@ import java.util.stream.Stream;
 
 import com.google.common.collect.Sets;
 import com.mojang.datafixers.util.Either;
-import io.github.opencubicchunks.cubicchunks.chunk.ICubeHolder;
-import io.github.opencubicchunks.cubicchunks.chunk.ICubeHolderListener;
-import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
-import io.github.opencubicchunks.cubicchunks.chunk.util.Utils;
+import io.github.opencubicchunks.cubicchunks.world.level.CubePos;
+import io.github.opencubicchunks.cubicchunks.utils.Utils;
 import net.minecraft.Util;
 import net.minecraft.server.level.ChunkHolder;
 import net.minecraft.util.Unit;
@@ -26,7 +24,7 @@ import net.minecraft.util.thread.ProcessorMailbox;
 import net.minecraft.util.thread.StrictQueue;
 import net.minecraft.world.level.ChunkPos;
 
-public class CubeTaskPriorityQueueSorter implements AutoCloseable, ChunkHolder.LevelChangeListener, ICubeHolderListener {
+public class CubeTaskPriorityQueueSorter implements AutoCloseable, ChunkHolder.LevelChangeListener, CubeHolderLevelChangeListener {
 
     private final Map<ProcessorHandle<?>, CubeTaskPriorityQueue<? extends Function<ProcessorHandle<Unit>, ?>>> queues;
     private final Set<ProcessorHandle<?>> actors;
@@ -49,7 +47,7 @@ public class CubeTaskPriorityQueueSorter implements AutoCloseable, ChunkHolder.L
 
     // func_219081_a, message
     public static CubeTaskPriorityQueueSorter.FunctionEntry<Runnable> createMsg(ChunkHolder holder, Runnable p_219081_1_) {
-        return createMsg(p_219081_1_, ((ICubeHolder) holder).getCubePos().asLong(), holder::getQueueLevel);
+        return createMsg(p_219081_1_, ((CubeHolder) holder).getCubePos().asLong(), holder::getQueueLevel);
     }
 
     // func_219073_a, release

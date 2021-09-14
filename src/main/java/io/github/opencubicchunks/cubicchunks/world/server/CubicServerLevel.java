@@ -1,9 +1,9 @@
 package io.github.opencubicchunks.cubicchunks.world.server;
 
-import io.github.opencubicchunks.cubicchunks.chunk.cube.BigCube;
+import io.github.opencubicchunks.cubicchunks.world.level.chunk.LevelCube;
 
-public interface IServerWorld {
-    void onCubeUnloading(BigCube cubeIn);
+public interface CubicServerLevel {
+    void onCubeUnloading(LevelCube cubeIn);
 
-    void tickCube(BigCube cube, int randomTicks);
+    void tickCube(LevelCube cube, int randomTicks);
 }

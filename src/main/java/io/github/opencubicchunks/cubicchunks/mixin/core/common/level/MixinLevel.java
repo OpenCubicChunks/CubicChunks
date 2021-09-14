@@ -1,11 +1,11 @@
-package io.github.opencubicchunks.cubicchunks.mixin.core.common.world;
+package io.github.opencubicchunks.cubicchunks.mixin.core.common.level;
 
 import java.util.function.Supplier;
 
 import io.github.opencubicchunks.cubicchunks.CubicChunks;
-import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
-import io.github.opencubicchunks.cubicchunks.chunk.ICubeProvider;
-import io.github.opencubicchunks.cubicchunks.server.ICubicWorld;
+import io.github.opencubicchunks.cubicchunks.world.level.chunk.CubeAccess;
+import io.github.opencubicchunks.cubicchunks.world.level.chunk.CubeSource;
+import io.github.opencubicchunks.cubicchunks.world.level.CubicLevelAccessor;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceKey;
@@ -23,7 +23,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(Level.class)
-public abstract class MixinWorld implements ICubicWorld, LevelReader {
+public abstract class MixinLevel implements CubicLevelAccessor, LevelReader {
 
     private boolean isCubic;
     private boolean generates2DChunks;
@@ -73,7 +73,7 @@ public abstract class MixinWorld implements ICubicWorld, LevelReader {
         this.getCubeAt(blockPos).setDirty(true);
     }
 
-    public IBigCube getCubeAt(BlockPos pos) {
+    public CubeAccess getCubeAt(BlockPos pos) {
         return this.getCube(Coords.blockToCube(pos.getX()), Coords.blockToCube(pos.getY()), Coords.blockToCube(pos.getZ()));
     }
 
@@ -96,19 +96,19 @@ public abstract class MixinWorld implements ICubicWorld, LevelReader {
     }
 
     @Override
-    public IBigCube getCube(int cubeX, int cubeY, int cubeZ) {
+    public CubeAccess getCube(int cubeX, int cubeY, int cubeZ) {
         return this.getCube(cubeX, cubeY, cubeZ, ChunkStatus.FULL, true);
     }
 
     @Override
-    public IBigCube getCube(int cubeX, int cubeY, int cubeZ, ChunkStatus status) {
+    public CubeAccess getCube(int cubeX, int cubeY, int cubeZ, ChunkStatus status) {
         return this.getCube(cubeX, cubeY, cubeZ, status, true);
     }
 
     //The method .getWorld() No longer exists
     @Override
-    public IBigCube getCube(int cubeX, int cubeY, int cubeZ, ChunkStatus requiredStatus, boolean nonnull) {
-        IBigCube icube = ((ICubeProvider) ((Level) (Object) this).getChunkSource()).getCube(cubeX, cubeY, cubeZ, requiredStatus, nonnull);
+    public CubeAccess getCube(int cubeX, int cubeY, int cubeZ, ChunkStatus requiredStatus, boolean nonnull) {
+        CubeAccess icube = ((CubeSource) ((Level) (Object) this).getChunkSource()).getCube(cubeX, cubeY, cubeZ, requiredStatus, nonnull);
         if (icube == null && nonnull) {
             throw new IllegalStateException("Should always be able to create a cube!");
         } else {

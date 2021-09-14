@@ -1,18 +1,18 @@
-package io.github.opencubicchunks.cubicchunks.server;
+package io.github.opencubicchunks.cubicchunks.server.level;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 
 import com.mojang.datafixers.util.Either;
-import io.github.opencubicchunks.cubicchunks.chunk.ICubeProvider;
-import io.github.opencubicchunks.cubicchunks.chunk.cube.BigCube;
-import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
+import io.github.opencubicchunks.cubicchunks.world.level.chunk.CubeSource;
+import io.github.opencubicchunks.cubicchunks.world.level.chunk.LevelCube;
+import io.github.opencubicchunks.cubicchunks.world.level.CubePos;
 import net.minecraft.server.level.ChunkHolder;
 import net.minecraft.server.level.TicketType;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.ChunkStatus;
 
-public interface IServerChunkProvider extends ICubeProvider {
+public interface ServerCubeCache extends CubeSource {
     // TODO check whether this is still needed
     // ChunkHolder getChunkHolderForce(ChunkPos chunkPos, ChunkStatus requiredStatus);
 
@@ -26,5 +26,5 @@ public interface IServerChunkProvider extends ICubeProvider {
     // TODO check whether this is still needed
     // boolean isEntityTickingCube(CubePos pos);
 
-    boolean checkCubeFuture(long cubePosLong, Function<ChunkHolder, CompletableFuture<Either<BigCube, ChunkHolder.ChunkLoadingFailure>>> futureFunction);
+    boolean checkCubeFuture(long cubePosLong, Function<ChunkHolder, CompletableFuture<Either<LevelCube, ChunkHolder.ChunkLoadingFailure>>> futureFunction);
 }

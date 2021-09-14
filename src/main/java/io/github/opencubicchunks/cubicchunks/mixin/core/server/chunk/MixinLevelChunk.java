@@ -4,9 +4,9 @@ import java.util.Map;
 
 import javax.annotation.Nullable;
 
-import io.github.opencubicchunks.cubicchunks.chunk.ChunkCubeGetter;
-import io.github.opencubicchunks.cubicchunks.chunk.cube.BigCube;
-import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
+import io.github.opencubicchunks.cubicchunks.world.level.chunk.ColumnCubeGetter;
+import io.github.opencubicchunks.cubicchunks.world.level.chunk.LevelCube;
+import io.github.opencubicchunks.cubicchunks.world.level.CubicLevelHeightAccessor;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
@@ -26,7 +26,7 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 // TODO: Maybe Resolve redirect conflict with fabric-lifecycle-events-v1.mixins.json:client .WorldChunkMixin->@Redirect::onRemoveBlockEntity(Fabric API). We implement their events
 @Environment(EnvType.SERVER)
 @Mixin(value = LevelChunk.class, priority = 0) // Priority 0 to always ensure our redirects are on top. Should also prevent fabric api crashes that have occur(ed) here. See removeTileEntity
-public abstract class MixinChunk {
+public abstract class MixinLevelChunk {
 
     @Shadow @Final private Map<BlockPos, BlockEntity> blockEntities;
 
@@ -42,13 +42,13 @@ public abstract class MixinChunk {
             if (!((CubicLevelHeightAccessor) this).isCubic()) {
                 return map.get(key);
             }
-            BigCube cube = (BigCube) ((ChunkCubeGetter) this).getCube(Coords.blockToSection(((BlockPos) key).getY()));
+            LevelCube cube = (LevelCube) ((ColumnCubeGetter) this).getCube(Coords.blockToSection(((BlockPos) key).getY()));
             return cube.getTileEntityMap().get(key);
         } else if (map == this.pendingBlockEntities) {
             if (!((CubicLevelHeightAccessor) this).isCubic()) {
                 return map.get(key);
             }
-            BigCube cube = (BigCube) ((ChunkCubeGetter) this).getCube(Coords.blockToSection(((BlockPos) key).getY()));
+            LevelCube cube = (LevelCube) ((ColumnCubeGetter) this).getCube(Coords.blockToSection(((BlockPos) key).getY()));
             return cube.getDeferredTileEntityMap().get(key);
         }
         return map.get(key);
@@ -72,7 +72,7 @@ public abstract class MixinChunk {
                 }
                 return removed;
             }
-            BigCube cube = (BigCube) ((ChunkCubeGetter) this).getCube(Coords.blockToSection(((BlockPos) key).getY()));
+            LevelCube cube = (LevelCube) ((ColumnCubeGetter) this).getCube(Coords.blockToSection(((BlockPos) key).getY()));
 
             @Nullable
             BlockEntity removed = cube.getTileEntityMap().remove(key);
@@ -85,7 +85,7 @@ public abstract class MixinChunk {
             if (!((CubicLevelHeightAccessor) this).isCubic()) {
                 return map.remove(key);
             }
-            BigCube cube = (BigCube) ((ChunkCubeGetter) this).getCube(Coords.blockToSection(((BlockPos) key).getY()));
+            LevelCube cube = (LevelCube) ((ColumnCubeGetter) this).getCube(Coords.blockToSection(((BlockPos) key).getY()));
             return cube.getDeferredTileEntityMap().remove(key);
         }
         return map.remove(key);
@@ -103,13 +103,13 @@ public abstract class MixinChunk {
             if (!((CubicLevelHeightAccessor) this).isCubic()) {
                 return map.put(key, value);
             }
-            BigCube cube = (BigCube) ((ChunkCubeGetter) this).getCube(Coords.blockToSection(((BlockPos) key).getY()));
+            LevelCube cube = (LevelCube) ((ColumnCubeGetter) this).getCube(Coords.blockToSection(((BlockPos) key).getY()));
             return cube.getTileEntityMap().put((BlockPos) key, (BlockEntity) value);
         } else if (map == this.pendingBlockEntities) {
             if (!((CubicLevelHeightAccessor) this).isCubic()) {
                 return map.put(key, value);
             }
-            BigCube cube = (BigCube) ((ChunkCubeGetter) this).getCube(Coords.blockToSection(((BlockPos) key).getY()));
+            LevelCube cube = (LevelCube) ((ColumnCubeGetter) this).getCube(Coords.blockToSection(((BlockPos) key).getY()));
             return cube.getDeferredTileEntityMap().put((BlockPos) key, (CompoundTag) value);
         }
         return map.put(key, value);

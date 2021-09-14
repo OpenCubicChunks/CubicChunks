@@ -1,7 +1,7 @@
 package io.github.opencubicchunks.cubicchunks.mixin.core.common.entity;
 
 import com.mojang.authlib.GameProfile;
-import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
+import io.github.opencubicchunks.cubicchunks.world.level.CubicLevelHeightAccessor;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.server.level.ServerLevel;
@@ -15,8 +15,8 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
 @Mixin(ServerPlayer.class)
-public abstract class MixinServerPlayerEntity extends Player {
-    public MixinServerPlayerEntity(Level level, BlockPos blockPos, float f, GameProfile gameProfile) {
+public abstract class MixinServerPlayer extends Player {
+    public MixinServerPlayer(Level level, BlockPos blockPos, float f, GameProfile gameProfile) {
         super(level, blockPos, f, gameProfile);
     }
 

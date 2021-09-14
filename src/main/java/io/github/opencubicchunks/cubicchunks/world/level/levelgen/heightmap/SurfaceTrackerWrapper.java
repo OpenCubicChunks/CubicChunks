@@ -1,8 +1,8 @@
-package io.github.opencubicchunks.cubicchunks.chunk.heightmap;
+package io.github.opencubicchunks.cubicchunks.world.level.levelgen.heightmap;
 
 import static io.github.opencubicchunks.cubicchunks.utils.Coords.*;
 
-import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
+import io.github.opencubicchunks.cubicchunks.world.level.chunk.CubeAccess;
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.HeightmapAccess;
 import net.minecraft.util.BitStorage;
 import net.minecraft.world.level.block.state.BlockState;
@@ -65,12 +65,12 @@ public class SurfaceTrackerWrapper extends Heightmap {
         return data.getRaw();
     }
 
-    public void loadCube(IBigCube cube) {
+    public void loadCube(CubeAccess cube) {
         // TODO loading should only cause marking as dirty if not loading from save file
         this.surfaceTracker.loadCube(blockToCubeLocalSection(dx), blockToCubeLocalSection(dz), cube, true);
     }
 
-    public void unloadCube(IBigCube cube) {
+    public void unloadCube(CubeAccess cube) {
         this.surfaceTracker.getCubeNode(cube.getCubePos().getY()).unloadCube(cube);
     }
 }

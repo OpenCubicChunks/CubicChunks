@@ -1,8 +1,8 @@
-package io.github.opencubicchunks.cubicchunks.mixin.core.client;
+package io.github.opencubicchunks.cubicchunks.mixin.core.client.render;
 
 import io.github.opencubicchunks.cubicchunks.mixin.access.client.ChunkRenderDispatcherAccess;
-import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
-import io.github.opencubicchunks.cubicchunks.server.ICubicWorld;
+import io.github.opencubicchunks.cubicchunks.world.level.CubicLevelAccessor;
+import io.github.opencubicchunks.cubicchunks.world.level.CubicLevelHeightAccessor;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -47,7 +47,7 @@ public abstract class MixinRenderChunk {
                 Coords.blockToSection(blockPos.getZ()),
                 ChunkStatus.FULL,
                 false) != null &&
-                ((ICubicWorld) ((ChunkRenderDispatcherAccess) this$0).getLevel()).getCube(
+                ((CubicLevelAccessor) ((ChunkRenderDispatcherAccess) this$0).getLevel()).getCube(
                     Coords.blockToCube(blockPos.getX()),
                     Coords.blockToCube(blockPos.getY()),
                     Coords.blockToCube(blockPos.getZ()),

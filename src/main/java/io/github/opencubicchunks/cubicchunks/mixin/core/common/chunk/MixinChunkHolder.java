@@ -1,6 +1,6 @@
 package io.github.opencubicchunks.cubicchunks.mixin.core.common.chunk;
 
-import static io.github.opencubicchunks.cubicchunks.chunk.util.Utils.*;
+import static io.github.opencubicchunks.cubicchunks.utils.Utils.*;
 
 import java.util.ArrayList;
 import java.util.BitSet;
@@ -15,22 +15,22 @@ import java.util.function.Consumer;
 import javax.annotation.Nullable;
 
 import com.mojang.datafixers.util.Either;
-import io.github.opencubicchunks.cubicchunks.chunk.CubePlayerProvider;
-import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
-import io.github.opencubicchunks.cubicchunks.chunk.IChunkManager;
-import io.github.opencubicchunks.cubicchunks.chunk.ICubeHolder;
-import io.github.opencubicchunks.cubicchunks.chunk.ImposterChunkPos;
-import io.github.opencubicchunks.cubicchunks.chunk.LightHeightmapGetter;
-import io.github.opencubicchunks.cubicchunks.chunk.cube.BigCube;
-import io.github.opencubicchunks.cubicchunks.chunk.cube.CubePrimer;
-import io.github.opencubicchunks.cubicchunks.chunk.cube.CubePrimerWrapper;
-import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
-import io.github.opencubicchunks.cubicchunks.mixin.access.common.ChunkManagerAccess;
+import io.github.opencubicchunks.cubicchunks.world.level.chunk.CubeAccess;
+import io.github.opencubicchunks.cubicchunks.server.level.CubeHolder;
+import io.github.opencubicchunks.cubicchunks.server.level.CubeMap;
+import io.github.opencubicchunks.cubicchunks.server.level.CubeHolderPlayerProvider;
+import io.github.opencubicchunks.cubicchunks.world.ImposterChunkPos;
+import io.github.opencubicchunks.cubicchunks.world.level.chunk.LightHeightmapGetter;
+import io.github.opencubicchunks.cubicchunks.world.level.chunk.ImposterProtoCube;
+import io.github.opencubicchunks.cubicchunks.world.level.chunk.LevelCube;
+import io.github.opencubicchunks.cubicchunks.world.level.chunk.ProtoCube;
+import io.github.opencubicchunks.cubicchunks.world.level.CubePos;
+import io.github.opencubicchunks.cubicchunks.mixin.access.common.ChunkMapAccess;
 import io.github.opencubicchunks.cubicchunks.network.PacketCubeBlockChanges;
 import io.github.opencubicchunks.cubicchunks.network.PacketDispatcher;
-import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
+import io.github.opencubicchunks.cubicchunks.world.level.CubicLevelHeightAccessor;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
-import io.github.opencubicchunks.cubicchunks.world.CubicFastServerTickList;
+import io.github.opencubicchunks.cubicchunks.world.level.CubicFastServerTickList;
 import it.unimi.dsi.fastutil.shorts.ShortArrayList;
 import it.unimi.dsi.fastutil.shorts.ShortArraySet;
 import net.minecraft.core.BlockPos;
@@ -63,7 +63,7 @@ import org.spongepowered.asm.mixin.injection.Slice;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(ChunkHolder.class)
-public abstract class MixinChunkHolder implements ICubeHolder {
+public abstract class MixinChunkHolder implements CubeHolder {
 
     @Shadow private int ticketLevel;
     @Mutable @Final @Shadow private ChunkPos pos;
@@ -71,10 +71,10 @@ public abstract class MixinChunkHolder implements ICubeHolder {
     // these are using java type erasure as a feature - because the generic type information
     // doesn't exist at runtime, we can shadow those fields with different generic types
     // and as long as we are consistent, we can use them with different types than the declaration in the original class
-    @Shadow @Final private AtomicReferenceArray<CompletableFuture<Either<IBigCube, ChunkHolder.ChunkLoadingFailure>>> futures;
-    @Shadow private volatile CompletableFuture<Either<BigCube, ChunkHolder.ChunkLoadingFailure>> tickingChunkFuture;
-    @Shadow private volatile CompletableFuture<Either<BigCube, ChunkHolder.ChunkLoadingFailure>> entityTickingChunkFuture;
-    @Shadow private CompletableFuture<IBigCube> chunkToSave;
+    @Shadow @Final private AtomicReferenceArray<CompletableFuture<Either<CubeAccess, ChunkHolder.ChunkLoadingFailure>>> futures;
+    @Shadow private volatile CompletableFuture<Either<LevelCube, ChunkHolder.ChunkLoadingFailure>> tickingChunkFuture;
+    @Shadow private volatile CompletableFuture<Either<LevelCube, ChunkHolder.ChunkLoadingFailure>> entityTickingChunkFuture;
+    @Shadow private CompletableFuture<CubeAccess> chunkToSave;
 
 
     @Shadow @Final private BitSet skyChangedLightSectionFilter;
@@ -89,10 +89,10 @@ public abstract class MixinChunkHolder implements ICubeHolder {
 
     private CubePos cubePos; // set from ASM
 
-    private final ShortArraySet[] changedLocalBlocks = new ShortArraySet[IBigCube.SECTION_COUNT];
+    private final ShortArraySet[] changedLocalBlocks = new ShortArraySet[CubeAccess.SECTION_COUNT];
 
     //@formatter:off SPLITTING THIS LINE BREAKS MIXIN https://github.com/SpongePowered/Mixin/issues/418
-    @SuppressWarnings("LineLengthCode") private final AtomicReferenceArray<ArrayList<BiConsumer<Either<IBigCube, ChunkHolder.ChunkLoadingFailure>, Throwable>>> listenerLists = new AtomicReferenceArray<>(ChunkStatus.getStatusList().size());
+    @SuppressWarnings("LineLengthCode") private final AtomicReferenceArray<ArrayList<BiConsumer<Either<CubeAccess, ChunkHolder.ChunkLoadingFailure>, Throwable>>> listenerLists = new AtomicReferenceArray<>(ChunkStatus.getStatusList().size());
     //@formatter:on
 
     @Shadow protected abstract void broadcastBlockEntity(Level worldIn, BlockPos posIn);
@@ -106,7 +106,7 @@ public abstract class MixinChunkHolder implements ICubeHolder {
 
     @Shadow public abstract CompletableFuture<Either<ChunkAccess, ChunkHolder.ChunkLoadingFailure>> getFutureIfPresentUnchecked(ChunkStatus p_219301_1_);
 
-    @Shadow public abstract CompletableFuture<Either<IBigCube, ChunkHolder.ChunkLoadingFailure>> getOrScheduleFuture(ChunkStatus chunkStatus, ChunkMap chunkManager);
+    @Shadow public abstract CompletableFuture<Either<CubeAccess, ChunkHolder.ChunkLoadingFailure>> getOrScheduleFuture(ChunkStatus chunkStatus, ChunkMap chunkManager);
 
     @Shadow @Nullable public abstract LevelChunk getTickingChunk();
 
@@ -165,7 +165,7 @@ public abstract class MixinChunkHolder implements ICubeHolder {
 
     // used from ASM
     private static ChunkStatus getCubeStatus(int cubeLevel) {
-        return ICubeHolder.getCubeStatusFromLevel(cubeLevel);
+        return CubeHolder.getCubeStatusFromLevel(cubeLevel);
     }
 
     @Inject(method = "updateFutures", at = @At("HEAD"), cancellable = true)
@@ -205,8 +205,8 @@ public abstract class MixinChunkHolder implements ICubeHolder {
                 return;
             }
             val.left().ifPresent(cube -> {
-                ServerTickList<Block> blockTicks = ((ChunkManagerAccess) chunkStorage).getLevel().getBlockTicks();
-                ServerTickList<Fluid> liquidTicks = ((ChunkManagerAccess) chunkStorage).getLevel().getLiquidTicks();
+                ServerTickList<Block> blockTicks = ((ChunkMapAccess) chunkStorage).getLevel().getBlockTicks();
+                ServerTickList<Fluid> liquidTicks = ((ChunkMapAccess) chunkStorage).getLevel().getLiquidTicks();
                 if (blockTicks instanceof CubicFastServerTickList) {
                     ((CubicFastServerTickList<Block>) blockTicks).onCubeStartTicking(this.cubePos);
                 }
@@ -230,8 +230,8 @@ public abstract class MixinChunkHolder implements ICubeHolder {
             )
         ))
     private void onSetChunkNotTicking(ChunkMap chunkStorage, Executor executor, CallbackInfo ci) {
-        ServerTickList<Block> blockTicks = ((ChunkManagerAccess) chunkStorage).getLevel().getBlockTicks();
-        ServerTickList<Fluid> liquidTicks = ((ChunkManagerAccess) chunkStorage).getLevel().getLiquidTicks();
+        ServerTickList<Block> blockTicks = ((ChunkMapAccess) chunkStorage).getLevel().getBlockTicks();
+        ServerTickList<Fluid> liquidTicks = ((ChunkMapAccess) chunkStorage).getLevel().getLiquidTicks();
         if (blockTicks instanceof CubicFastServerTickList) {
             ((CubicFastServerTickList<Block>) blockTicks).onCubeStopTicking(this.cubePos);
         }
@@ -256,7 +256,7 @@ public abstract class MixinChunkHolder implements ICubeHolder {
             return completableFuture.thenRunAsync(action, executor);
         }
         return completableFuture.thenRunAsync(() -> {
-            ((ChunkManagerAccess) chunkMap).invokeOnFullChunkStatusChange(new ImposterChunkPos(this.cubePos), fullChunkStatus);
+            ((ChunkMapAccess) chunkMap).invokeOnFullChunkStatusChange(new ImposterChunkPos(this.cubePos), fullChunkStatus);
         }, executor);
     }
 
@@ -285,8 +285,8 @@ public abstract class MixinChunkHolder implements ICubeHolder {
             return completableFuture.thenAccept(action);
         }
         //noinspection unchecked
-        return ((CompletableFuture<Either<BigCube, ChunkHolder.ChunkLoadingFailure>>) unsafeCast(completableFuture)).thenAccept((either) -> {
-            either.ifLeft((BigCube levelChunk) -> {
+        return ((CompletableFuture<Either<LevelCube, ChunkHolder.ChunkLoadingFailure>>) unsafeCast(completableFuture)).thenAccept((either) -> {
+            either.ifLeft((LevelCube levelChunk) -> {
                 f2.complete(null);
             });
         });
@@ -297,7 +297,7 @@ public abstract class MixinChunkHolder implements ICubeHolder {
         + "(Lnet/minecraft/world/level/ChunkPos;Lnet/minecraft/server/level/ChunkHolder$FullChunkStatus;)V"))
     private void onDemoteFullChunk(ChunkMap chunkMap, ChunkPos chunkPos, ChunkHolder.FullChunkStatus fullChunkStatus) {
         if (!((CubicLevelHeightAccessor) this.levelHeightAccessor).isCubic() || cubePos != null) {
-            ((ChunkManagerAccess) chunkMap).invokeOnFullChunkStatusChange(chunkPos, fullChunkStatus);
+            ((ChunkMapAccess) chunkMap).invokeOnFullChunkStatusChange(chunkPos, fullChunkStatus);
         }
     }
 
@@ -309,32 +309,32 @@ public abstract class MixinChunkHolder implements ICubeHolder {
     // getChunkIfComplete, TODO: rename to getTickingCube
     @Nullable
     @Override
-    public BigCube getCubeIfComplete() {
-        CompletableFuture<Either<BigCube, ChunkHolder.ChunkLoadingFailure>> completablefuture = this.tickingChunkFuture;
-        Either<BigCube, ChunkHolder.ChunkLoadingFailure> either = completablefuture.getNow(null);
+    public LevelCube getCubeIfComplete() {
+        CompletableFuture<Either<LevelCube, ChunkHolder.ChunkLoadingFailure>> completablefuture = this.tickingChunkFuture;
+        Either<LevelCube, ChunkHolder.ChunkLoadingFailure> either = completablefuture.getNow(null);
         return either == null ? null : either.left().orElse(null);
     }
 
     @Override
-    public CompletableFuture<Either<BigCube, ChunkHolder.ChunkLoadingFailure>> getCubeEntityTickingFuture() {
+    public CompletableFuture<Either<LevelCube, ChunkHolder.ChunkLoadingFailure>> getCubeEntityTickingFuture() {
         return this.entityTickingChunkFuture;
     }
 
     // func_219301_a, getFutureIfPresentUnchecked
     @Override
-    public CompletableFuture<Either<IBigCube, ChunkHolder.ChunkLoadingFailure>> getCubeFutureIfPresentUnchecked(ChunkStatus chunkStatus) {
+    public CompletableFuture<Either<CubeAccess, ChunkHolder.ChunkLoadingFailure>> getCubeFutureIfPresentUnchecked(ChunkStatus chunkStatus) {
         return unsafeCast(getFutureIfPresentUnchecked(chunkStatus));
     }
 
     // func_219302_f, getChunkToSave
     @Override
-    public CompletableFuture<IBigCube> getCubeToSave() {
+    public CompletableFuture<CubeAccess> getCubeToSave() {
         return chunkToSave;
     }
 
     // func_225410_b, getFutureIfPresent
-    @Override public CompletableFuture<Either<IBigCube, ChunkHolder.ChunkLoadingFailure>> getCubeFutureIfPresent(ChunkStatus chunkStatus) {
-        return ICubeHolder.getCubeStatusFromLevel(this.ticketLevel).isOrAfter(chunkStatus) ?
+    @Override public CompletableFuture<Either<CubeAccess, ChunkHolder.ChunkLoadingFailure>> getCubeFutureIfPresent(ChunkStatus chunkStatus) {
+        return CubeHolder.getCubeStatusFromLevel(this.ticketLevel).isOrAfter(chunkStatus) ?
             unsafeCast(this.getFutureIfPresentUnchecked(chunkStatus)) : // getFutureIfPresentUnchecked = getFutureByCubeStatus
             MISSING_CUBE_FUTURE;
     }
@@ -366,27 +366,27 @@ public abstract class MixinChunkHolder implements ICubeHolder {
         if (!((CubicLevelHeightAccessor) this.levelHeightAccessor).isCubic() || cubePos == null) {
             return chunkManager.schedule(_this, status);
         } else {
-            return ((IChunkManager) chunkManager).scheduleCube(_this, status);
+            return ((CubeMap) chunkManager).scheduleCube(_this, status);
         }
     }
 
     // func_219276_a, getOrScheduleFuture
-    @Override public CompletableFuture<Either<IBigCube, ChunkHolder.ChunkLoadingFailure>> getOrScheduleCubeFuture(ChunkStatus chunkStatus, ChunkMap chunkManager) {
+    @Override public CompletableFuture<Either<CubeAccess, ChunkHolder.ChunkLoadingFailure>> getOrScheduleCubeFuture(ChunkStatus chunkStatus, ChunkMap chunkManager) {
         return getOrScheduleFuture(chunkStatus, chunkManager);
     }
 
-    public void addCubeStageListener(ChunkStatus status, BiConsumer<Either<IBigCube, ChunkHolder.ChunkLoadingFailure>, Throwable> consumer, ChunkMap chunkManager) {
-        CompletableFuture<Either<IBigCube, ChunkHolder.ChunkLoadingFailure>> future = getOrScheduleFuture(status, chunkManager);
+    public void addCubeStageListener(ChunkStatus status, BiConsumer<Either<CubeAccess, ChunkHolder.ChunkLoadingFailure>, Throwable> consumer, ChunkMap chunkManager) {
+        CompletableFuture<Either<CubeAccess, ChunkHolder.ChunkLoadingFailure>> future = getOrScheduleFuture(status, chunkManager);
 
         if (future.isDone()) {
             consumer.accept(future.getNow(null), null);
         } else {
-            List<BiConsumer<Either<IBigCube, ChunkHolder.ChunkLoadingFailure>, Throwable>> listenerList = this.listenerLists.get(status.getIndex());
+            List<BiConsumer<Either<CubeAccess, ChunkHolder.ChunkLoadingFailure>, Throwable>> listenerList = this.listenerLists.get(status.getIndex());
             if (listenerList == null) {
 
-                final ArrayList<BiConsumer<Either<IBigCube, ChunkHolder.ChunkLoadingFailure>, Throwable>> listeners = new ArrayList<>();
+                final ArrayList<BiConsumer<Either<CubeAccess, ChunkHolder.ChunkLoadingFailure>, Throwable>> listeners = new ArrayList<>();
                 future.whenComplete((either, throwable) -> {
-                    for (BiConsumer<Either<IBigCube, ChunkHolder.ChunkLoadingFailure>, Throwable> listener : listeners) {
+                    for (BiConsumer<Either<CubeAccess, ChunkHolder.ChunkLoadingFailure>, Throwable> listener : listeners) {
                         listener.accept(either, throwable);
                     }
                     listeners.clear();
@@ -456,7 +456,7 @@ public abstract class MixinChunkHolder implements ICubeHolder {
             return;
         }
 
-        BigCube cube = getCubeIfComplete();
+        LevelCube cube = getCubeIfComplete();
         if (cube == null) {
             return;
         }
@@ -516,7 +516,7 @@ public abstract class MixinChunkHolder implements ICubeHolder {
             return;
         }
 
-        BigCube levelChunk = getCubeIfComplete();
+        LevelCube levelChunk = getCubeIfComplete();
         if (levelChunk != null) {
             levelChunk.setUnsaved(true);
             if (lightType == LightLayer.SKY) {
@@ -529,7 +529,7 @@ public abstract class MixinChunkHolder implements ICubeHolder {
     }
 
     @Override
-    public void broadcastChanges(BigCube cube) {
+    public void broadcastChanges(LevelCube cube) {
         if (cubePos == null) {
             throw new IllegalStateException("broadcastChanges(BigCube) called on column holder!");
         }
@@ -584,7 +584,7 @@ public abstract class MixinChunkHolder implements ICubeHolder {
     }
 
     private void sendToTracking(Object packetIn, boolean boundaryOnly) {
-        ((CubePlayerProvider) this.playerProvider).getPlayers(this.cubePos, boundaryOnly)
+        ((CubeHolderPlayerProvider) this.playerProvider).getPlayers(this.cubePos, boundaryOnly)
             .forEach(player -> PacketDispatcher.sendTo(packetIn, player));
     }
 
@@ -595,17 +595,17 @@ public abstract class MixinChunkHolder implements ICubeHolder {
 
     // func_219294_a, replaceProtoChunk
     @Override
-    public void replaceProtoCube(CubePrimerWrapper primer) {
+    public void replaceProtoCube(ImposterProtoCube primer) {
         for (int i = 0; i < this.futures.length(); ++i) {
-            CompletableFuture<Either<IBigCube, ChunkHolder.ChunkLoadingFailure>> future = this.futures.get(i);
+            CompletableFuture<Either<CubeAccess, ChunkHolder.ChunkLoadingFailure>> future = this.futures.get(i);
             if (future != null) {
-                Optional<IBigCube> optional = future.getNow(MISSING_CUBE).left();
-                if (optional.isPresent() && optional.get() instanceof CubePrimer) {
+                Optional<CubeAccess> optional = future.getNow(MISSING_CUBE).left();
+                if (optional.isPresent() && optional.get() instanceof ProtoCube) {
                     this.futures.set(i, CompletableFuture.completedFuture(Either.left(primer)));
                 }
             }
         }
 
-        this.updateChunkToSave(unsafeCast(CompletableFuture.completedFuture(Either.left((IBigCube) primer.getCube()))), "replaceProtoCube");
+        this.updateChunkToSave(unsafeCast(CompletableFuture.completedFuture(Either.left((CubeAccess) primer.getCube()))), "replaceProtoCube");
     }
 }

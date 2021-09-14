@@ -1,4 +1,4 @@
-package io.github.opencubicchunks.cubicchunks.chunk;
+package io.github.opencubicchunks.cubicchunks.world.level.chunk;
 
 import java.util.Map;
 import java.util.Set;
@@ -6,10 +6,10 @@ import java.util.stream.Stream;
 
 import javax.annotation.Nullable;
 
-import io.github.opencubicchunks.cubicchunks.chunk.heightmap.LightSurfaceTrackerSection;
-import io.github.opencubicchunks.cubicchunks.chunk.heightmap.SurfaceTrackerSection;
-import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
-import io.github.opencubicchunks.cubicchunks.meta.EarlyConfig;
+import io.github.opencubicchunks.cubicchunks.world.level.levelgen.heightmap.LightSurfaceTrackerSection;
+import io.github.opencubicchunks.cubicchunks.world.level.levelgen.heightmap.SurfaceTrackerSection;
+import io.github.opencubicchunks.cubicchunks.world.level.CubePos;
+import io.github.opencubicchunks.cubicchunks.config.EarlyConfig;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
@@ -25,7 +25,7 @@ import net.minecraft.world.level.levelgen.feature.StructureFeature;
 import net.minecraft.world.level.levelgen.structure.StructureStart;
 import org.apache.logging.log4j.LogManager;
 
-public interface IBigCube extends BlockGetter, ChunkAccess, FeatureAccess {
+public interface CubeAccess extends BlockGetter, ChunkAccess, FeatureAccess {
 
     int SECTION_DIAMETER = 16;
     int DIAMETER_IN_SECTIONS = EarlyConfig.getDiameterInSections();

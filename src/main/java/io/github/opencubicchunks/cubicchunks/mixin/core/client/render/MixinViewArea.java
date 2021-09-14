@@ -1,7 +1,7 @@
-package io.github.opencubicchunks.cubicchunks.mixin.core.client;
+package io.github.opencubicchunks.cubicchunks.mixin.core.client.render;
 
 import io.github.opencubicchunks.cubicchunks.CubicChunks;
-import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
+import io.github.opencubicchunks.cubicchunks.world.level.CubicLevelHeightAccessor;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.ViewArea;
@@ -17,7 +17,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(ViewArea.class)
-public abstract class MixinViewFrustum {
+public abstract class MixinViewArea {
     @Shadow public ChunkRenderDispatcher.RenderChunk[] chunks;
     @Shadow protected int chunkGridSizeY;
     @Shadow protected int chunkGridSizeX;

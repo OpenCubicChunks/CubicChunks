@@ -1,4 +1,4 @@
-package io.github.opencubicchunks.cubicchunks.chunk.heightmap;
+package io.github.opencubicchunks.cubicchunks.world.level.levelgen.heightmap;
 
 import java.util.Arrays;
 import java.util.function.Predicate;
@@ -6,7 +6,7 @@ import java.util.function.Predicate;
 import javax.annotation.Nullable;
 
 import com.google.common.annotations.VisibleForTesting;
-import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
+import io.github.opencubicchunks.cubicchunks.world.level.chunk.CubeAccess;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import net.minecraft.util.BitStorage;
 import net.minecraft.world.level.block.state.BlockState;
@@ -28,7 +28,7 @@ public class SurfaceTrackerSection {
     private static final Heightmap.Types[] HEIGHTMAP_TYPES = Heightmap.Types.values();
 
     /** Number of bits needed to represent height (excluding null) at scale zero (i.e. log2(scale0 height)) */
-    private static final int BASE_SIZE_BITS = IBigCube.SIZE_BITS;
+    private static final int BASE_SIZE_BITS = CubeAccess.SIZE_BITS;
 
     protected final BitStorage heights;
     protected final long[] dirtyPositions; // bitset has 100% memory usage overhead due to pointers and object headers
@@ -49,7 +49,7 @@ public class SurfaceTrackerSection {
         this(scale, scaledY, parent, null, types);
     }
 
-    public SurfaceTrackerSection(int scale, int scaledY, SurfaceTrackerSection parent, IBigCube cube, Heightmap.Types types) {
+    public SurfaceTrackerSection(int scale, int scaledY, SurfaceTrackerSection parent, CubeAccess cube, Heightmap.Types types) {
 //      super((ChunkAccess) cube, types);
         // +1 in bit size to make room for null values
         this.heights = new BitStorage(BASE_SIZE_BITS + 1 + scale * NODE_COUNT_BITS, WIDTH_BLOCKS * WIDTH_BLOCKS);
@@ -75,11 +75,11 @@ public class SurfaceTrackerSection {
         synchronized(this) {
             int maxY = Integer.MIN_VALUE;
             if (scale == 0) {
-                IBigCube cube = (IBigCube) cubeOrNodes;
+                CubeAccess cube = (CubeAccess) cubeOrNodes;
                 Predicate<BlockState> isOpaque = HEIGHTMAP_TYPES[this.heightmapType].isOpaque();
-                for (int dy = IBigCube.DIAMETER_IN_BLOCKS - 1; dy >= 0; dy--) {
+                for (int dy = CubeAccess.DIAMETER_IN_BLOCKS - 1; dy >= 0; dy--) {
                     if (isOpaque.test(cube.getBlockState(x, dy, z))) {
-                        int minY = scaledY * IBigCube.DIAMETER_IN_BLOCKS;
+                        int minY = scaledY * CubeAccess.DIAMETER_IN_BLOCKS;
                         maxY = minY + dy;
                         break;
                     }
@@ -175,7 +175,7 @@ public class SurfaceTrackerSection {
         }
     }
 
-    public void unloadCube(IBigCube cube) {
+    public void unloadCube(CubeAccess cube) {
         if (this.cubeOrNodes == null) {
             throw new IllegalStateException("Attempting to unload cube " + cube.getCubePos() + " from an unloaded surface tracker section");
         }
@@ -207,7 +207,7 @@ public class SurfaceTrackerSection {
         }
     }
 
-    public void loadCube(int sectionX, int sectionZ, IBigCube newCube, boolean markDirty) {
+    public void loadCube(int sectionX, int sectionZ, CubeAccess newCube, boolean markDirty) {
         if (this.cubeOrNodes == null) {
             throw new IllegalStateException("Attempting to load cube " + newCube.getCubePos() + " into an unloaded surface tracker section");
         }
@@ -259,8 +259,8 @@ public class SurfaceTrackerSection {
         return node.getCubeNode(y);
     }
 
-    public IBigCube getCube() {
-        return (IBigCube) cubeOrNodes;
+    public CubeAccess getCube() {
+        return (CubeAccess) cubeOrNodes;
     }
 
     public Heightmap.Types getType() {
@@ -268,7 +268,7 @@ public class SurfaceTrackerSection {
     }
 
     @Nullable
-    protected SurfaceTrackerSection loadNode(int newScaledY, int sectionScale, IBigCube newCube, boolean create) {
+    protected SurfaceTrackerSection loadNode(int newScaledY, int sectionScale, CubeAccess newCube, boolean create) {
         // TODO: loading from disk
         if (!create) {
             return null;
@@ -322,7 +322,7 @@ public class SurfaceTrackerSection {
         if (relativeY == 0) {
             return Integer.MIN_VALUE;
         }
-        return relativeY - 1 + scaledYBottomY(scaledY, scale) * IBigCube.DIAMETER_IN_BLOCKS;
+        return relativeY - 1 + scaledYBottomY(scaledY, scale) * CubeAccess.DIAMETER_IN_BLOCKS;
     }
 
     /** Get the relative y coordinate for a given absoluteY, scaledY and scale */
@@ -331,7 +331,7 @@ public class SurfaceTrackerSection {
         if (absoluteY == Integer.MIN_VALUE) {
             return 0;
         }
-        return absoluteY + 1 - scaledYBottomY(scaledY, scale) * IBigCube.DIAMETER_IN_BLOCKS;
+        return absoluteY + 1 - scaledYBottomY(scaledY, scale) * CubeAccess.DIAMETER_IN_BLOCKS;
     }
 
     public void writeData(int mainX, int mainZ, BitStorage data, int minValue) {

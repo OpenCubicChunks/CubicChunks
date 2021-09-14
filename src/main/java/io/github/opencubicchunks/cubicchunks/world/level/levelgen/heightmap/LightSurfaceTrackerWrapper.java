@@ -1,8 +1,8 @@
-package io.github.opencubicchunks.cubicchunks.chunk.heightmap;
+package io.github.opencubicchunks.cubicchunks.world.level.levelgen.heightmap;
 
 import static io.github.opencubicchunks.cubicchunks.utils.Coords.*;
 
-import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
+import io.github.opencubicchunks.cubicchunks.world.level.chunk.CubeAccess;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.ChunkAccess;
 
@@ -22,7 +22,7 @@ public class LightSurfaceTrackerWrapper extends SurfaceTrackerWrapper {
             if (section != null) {
                 section.markDirty(columnLocalX, columnLocalZ);
             }
-        } else if (relY == IBigCube.DIAMETER_IN_BLOCKS - 1) {
+        } else if (relY == CubeAccess.DIAMETER_IN_BLOCKS - 1) {
             SurfaceTrackerSection section = surfaceTracker.getCubeNode(blockToCube(globalY + 1));
             if (section != null) {
                 section.markDirty(columnLocalX, columnLocalZ);

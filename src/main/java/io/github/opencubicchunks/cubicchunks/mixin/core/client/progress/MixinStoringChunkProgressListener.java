@@ -2,9 +2,9 @@ package io.github.opencubicchunks.cubicchunks.mixin.core.client.progress;
 
 import javax.annotation.Nullable;
 
-import io.github.opencubicchunks.cubicchunks.chunk.ICubeStatusListener;
-import io.github.opencubicchunks.cubicchunks.chunk.ITrackingCubeStatusListener;
-import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
+import io.github.opencubicchunks.cubicchunks.server.level.progress.CubeProgressListener;
+import io.github.opencubicchunks.cubicchunks.server.level.progress.StoringCubeProgressListener;
+import io.github.opencubicchunks.cubicchunks.world.level.CubePos;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import net.minecraft.server.level.progress.LoggerChunkProgressListener;
@@ -19,7 +19,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(StoringChunkProgressListener.class)
-public abstract class MixinTrackingChunkStatusListener implements ICubeStatusListener, ITrackingCubeStatusListener {
+public abstract class MixinStoringChunkProgressListener implements CubeProgressListener, StoringCubeProgressListener {
 
     @Shadow private boolean started;
 
@@ -33,7 +33,7 @@ public abstract class MixinTrackingChunkStatusListener implements ICubeStatusLis
     @Override
     public void startCubes(CubePos spawn) {
         if (this.started) {
-            ((ICubeStatusListener) this.delegate).startCubes(spawn);
+            ((CubeProgressListener) this.delegate).startCubes(spawn);
             this.spawnCube = spawn;
             this.spawnPos = spawnCube.asChunkPos();
         }
@@ -42,7 +42,7 @@ public abstract class MixinTrackingChunkStatusListener implements ICubeStatusLis
     @Override
     public void onCubeStatusChange(CubePos cubePos, @Nullable ChunkStatus newStatus) {
         if (this.started) {
-            ((ICubeStatusListener) this.delegate).onCubeStatusChange(cubePos, newStatus);
+            ((CubeProgressListener) this.delegate).onCubeStatusChange(cubePos, newStatus);
             if (newStatus == null) {
                 this.cubeStatuses.remove(cubePos.asLong());
             } else {

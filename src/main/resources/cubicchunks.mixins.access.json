@@ -8,25 +8,26 @@
         "conformVisibility": true
     },
     "mixins": [
-        "common.BiomeContainerAccess",
         "common.BiomeGenerationSettingsAccess",
         "common.BiomeManagerAccess",
+        "common.ChunkBiomeContainerAccess",
         "common.ChunkHolderAccess",
-        "common.ChunkManagerAccess",
-        "common.ChunkSectionAccess",
+        "common.ChunkMapAccess",
+        "common.ChunkMapTrackedEntityAccess",
         "common.ChunkSerializerAccess",
         "common.ChunkTicketTrackerFactoryAccess",
         "common.DecorationContextAccess",
-        "common.EntityTrackerAccess",
+        "common.DistanceManagerAccess",
+        "common.DynamicGraphMinFixedPointAccess",
+        "common.FixedPlayerDistanceChunkTrackerFactoryAccess",
         "common.HeightmapAccess",
         "common.IOWorkerAccess",
         "common.LayerLightSectionStorageAccess",
-        "common.LevelBasedGraphAccess",
+        "common.LevelChunkSectionAccess",
         "common.Matrix4fAccess",
         "common.NaturalSpawnerAccess",
         "common.NoiseGeneratorSettingsAccess",
         "common.OverworldBiomeSourceAccess",
-        "common.PlayerChunkTrackerFactoryAccess",
         "common.PlayerTicketTrackerFactoryAccess",
         "common.PoiSectionAccess",
         "common.ProtoTickListAccess",
@@ -35,16 +36,15 @@
         "common.StructureFeatureManagerAccess",
         "common.ThreadedLevelLightEngineAccess",
         "common.TicketAccess",
-        "common.TicketManagerAccess",
         "common.TicketTypeAccess",
         "common.VerticalAnchorAccess",
         "common.WorldGenRegionAccess"
     ],
     "client": [
         "client.ChunkRenderDispatcherAccess",
-        "client.ClientChunkProviderChunkArrayAccess",
+        "client.ClientChunkCacheStorageAccess",
         "client.OptionAccess",
-        "client.ViewFrustumAccess"
+        "client.ViewAreaAccess"
     ],
     "server": []
 }

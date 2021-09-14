@@ -3,7 +3,7 @@ package io.github.opencubicchunks.cubicchunks.mixin.levelgen.common.feature.neth
 import java.util.Random;
 
 import io.github.opencubicchunks.cubicchunks.levelgen.CubeWorldGenRegion;
-import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
+import io.github.opencubicchunks.cubicchunks.world.level.CubicLevelHeightAccessor;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import net.minecraft.core.BlockPos;
 import net.minecraft.tags.FluidTags;

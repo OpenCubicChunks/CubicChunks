@@ -3,8 +3,8 @@ package io.github.opencubicchunks.cubicchunks.levelgen.feature;
 import java.util.Random;
 
 import com.mojang.serialization.Codec;
-import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
-import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
+import io.github.opencubicchunks.cubicchunks.world.level.chunk.CubeAccess;
+import io.github.opencubicchunks.cubicchunks.world.level.CubePos;
 import io.github.opencubicchunks.cubicchunks.levelgen.CubeWorldGenRegion;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import net.minecraft.core.BlockPos;
@@ -37,16 +37,16 @@ public class LavaLeakFix extends Feature<NoneFeatureConfiguration> {
         }
 
         CubeWorldGenRegion level = (CubeWorldGenRegion) context.level();
-        IBigCube cube = level.getCube(level.getMainCubeX(), level.getMainCubeY(), level.getMainCubeZ());
+        CubeAccess cube = level.getCube(level.getMainCubeX(), level.getMainCubeY(), level.getMainCubeZ());
         CubePos cubePos = cube.getCubePos();
         Random random = context.random();
 
         ChunkGenerator generator = context.chunkGenerator();
 
         BlockPos.MutableBlockPos mutable = new BlockPos.MutableBlockPos();
-        for (int localY = 0; localY < IBigCube.DIAMETER_IN_BLOCKS; localY++) {
-            for (int localX = 0; localX < IBigCube.DIAMETER_IN_BLOCKS; localX++) {
-                for (int localZ = 0; localZ < IBigCube.DIAMETER_IN_BLOCKS; localZ++) {
+        for (int localY = 0; localY < CubeAccess.DIAMETER_IN_BLOCKS; localY++) {
+            for (int localX = 0; localX < CubeAccess.DIAMETER_IN_BLOCKS; localX++) {
+                for (int localZ = 0; localZ < CubeAccess.DIAMETER_IN_BLOCKS; localZ++) {
                     mutable.set(localX, localY, localZ);
                     if (cube.getBlockState(localX, localY, localZ).getBlock() != Blocks.LAVA) {
                         continue;

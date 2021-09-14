@@ -7,7 +7,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 
 @Mixin(ChunkBiomeContainer.class)
-public interface BiomeContainerAccess {
+public interface ChunkBiomeContainerAccess {
     @Accessor Biome[] getBiomes();
 
     @Accessor IdMap<Biome> getBiomeRegistry();

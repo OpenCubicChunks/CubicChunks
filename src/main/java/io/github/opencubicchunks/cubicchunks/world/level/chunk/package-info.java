@@ -1,6 +1,6 @@
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-package io.github.opencubicchunks.cubicchunks.meta;
+package io.github.opencubicchunks.cubicchunks.world.level.chunk;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 

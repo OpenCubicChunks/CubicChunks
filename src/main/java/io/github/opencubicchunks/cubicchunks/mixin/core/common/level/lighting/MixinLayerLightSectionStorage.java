@@ -1,9 +1,9 @@
-package io.github.opencubicchunks.cubicchunks.mixin.core.common.world.lighting;
+package io.github.opencubicchunks.cubicchunks.mixin.core.common.level.lighting;
 
-import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
-import io.github.opencubicchunks.cubicchunks.mixin.access.common.LevelBasedGraphAccess;
-import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
-import io.github.opencubicchunks.cubicchunks.world.lighting.ISectionLightStorage;
+import io.github.opencubicchunks.cubicchunks.world.level.CubePos;
+import io.github.opencubicchunks.cubicchunks.mixin.access.common.DynamicGraphMinFixedPointAccess;
+import io.github.opencubicchunks.cubicchunks.world.level.CubicLevelHeightAccessor;
+import io.github.opencubicchunks.cubicchunks.world.lighting.CubicLayerLightSectionStorage;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
@@ -25,7 +25,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(LayerLightSectionStorage.class)
-public abstract class MixinLayerLightSectionStorage<M extends DataLayerStorageMap<M>> extends SectionTracker implements ISectionLightStorage {
+public abstract class MixinLayerLightSectionStorage<M extends DataLayerStorageMap<M>> extends SectionTracker implements CubicLayerLightSectionStorage {
 
     @Shadow @Final private static Direction[] DIRECTIONS;
 
@@ -113,7 +113,7 @@ public abstract class MixinLayerLightSectionStorage<M extends DataLayerStorageMa
                 }
             }
 
-            LevelBasedGraphAccess engineAccess = ((LevelBasedGraphAccess) engine);
+            DynamicGraphMinFixedPointAccess engineAccess = ((DynamicGraphMinFixedPointAccess) engine);
 
             this.updatingSectionData.clearCache();
             if (!updateBlockLight) {

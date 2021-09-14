@@ -8,7 +8,7 @@ import java.util.function.Supplier;
 import io.github.opencubicchunks.cubicchunks.levelgen.aquifer.AquiferSourceSampler;
 import io.github.opencubicchunks.cubicchunks.levelgen.aquifer.CubicAquifer;
 import io.github.opencubicchunks.cubicchunks.levelgen.util.NonAtomicWorldgenRandom;
-import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
+import io.github.opencubicchunks.cubicchunks.world.level.CubicLevelHeightAccessor;
 import net.minecraft.server.level.WorldGenRegion;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.ChunkPos;

@@ -7,18 +7,18 @@ import java.util.concurrent.Executor;
 
 import com.google.common.collect.ImmutableList;
 import com.mojang.datafixers.util.Either;
-import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
-import io.github.opencubicchunks.cubicchunks.chunk.IChunkManager;
-import io.github.opencubicchunks.cubicchunks.chunk.ICubeHolder;
-import io.github.opencubicchunks.cubicchunks.chunk.IVerticalView;
-import io.github.opencubicchunks.cubicchunks.chunk.cube.BigCube;
-import io.github.opencubicchunks.cubicchunks.chunk.graph.CCTicketType;
-import io.github.opencubicchunks.cubicchunks.chunk.ticket.CubeTaskPriorityQueueSorter;
-import io.github.opencubicchunks.cubicchunks.chunk.ticket.CubeTicketTracker;
-import io.github.opencubicchunks.cubicchunks.chunk.ticket.ITicketManager;
-import io.github.opencubicchunks.cubicchunks.chunk.ticket.PlayerCubeTicketTracker;
-import io.github.opencubicchunks.cubicchunks.chunk.ticket.PlayerCubeTracker;
-import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
+import io.github.opencubicchunks.cubicchunks.world.level.chunk.CubeAccess;
+import io.github.opencubicchunks.cubicchunks.server.level.CubeHolder;
+import io.github.opencubicchunks.cubicchunks.server.level.CubeMap;
+import io.github.opencubicchunks.cubicchunks.chunk.VerticalViewDistanceListener;
+import io.github.opencubicchunks.cubicchunks.world.level.chunk.LevelCube;
+import io.github.opencubicchunks.cubicchunks.server.level.CubicTicketType;
+import io.github.opencubicchunks.cubicchunks.server.level.CubicDistanceManager;
+import io.github.opencubicchunks.cubicchunks.server.level.CubeTaskPriorityQueueSorter;
+import io.github.opencubicchunks.cubicchunks.server.level.CubeTicketTracker;
+import io.github.opencubicchunks.cubicchunks.server.level.CubicPlayerTicketTracker;
+import io.github.opencubicchunks.cubicchunks.server.level.FixedPlayerDistanceCubeTracker;
+import io.github.opencubicchunks.cubicchunks.world.level.CubePos;
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.ChunkHolderAccess;
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.TicketAccess;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
@@ -48,7 +48,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(DistanceManager.class)
-public abstract class MixinTicketManager implements ITicketManager, IVerticalView {
+public abstract class MixinDistanceManager implements CubicDistanceManager, VerticalViewDistanceListener {
 
     @Final @Shadow Executor mainThreadExecutor;
     @Shadow private long ticketTickCounter;
@@ -60,8 +60,8 @@ public abstract class MixinTicketManager implements ITicketManager, IVerticalVie
     private final LongSet cubeTicketsToRelease = new LongOpenHashSet();
 
     private final CubeTicketTracker cubeTicketTracker = new CubeTicketTracker(this);
-    private final PlayerCubeTracker naturalSpawnCubeCounter = new PlayerCubeTracker(this, 8 / IBigCube.DIAMETER_IN_SECTIONS);
-    private final PlayerCubeTicketTracker playerCubeTicketTracker = new PlayerCubeTicketTracker(this, MathUtil.ceilDiv(33, IBigCube.DIAMETER_IN_SECTIONS));
+    private final FixedPlayerDistanceCubeTracker naturalSpawnCubeCounter = new FixedPlayerDistanceCubeTracker(this, 8 / CubeAccess.DIAMETER_IN_SECTIONS);
+    private final CubicPlayerTicketTracker cubicPlayerTicketTracker = new CubicPlayerTicketTracker(this, MathUtil.ceilDiv(33, CubeAccess.DIAMETER_IN_SECTIONS));
     private CubeTaskPriorityQueueSorter cubeTicketThrottler;
     private ProcessorHandle<CubeTaskPriorityQueueSorter.FunctionEntry<Runnable>> cubeTicketThrottlerInput;
     private ProcessorHandle<CubeTaskPriorityQueueSorter.RunnableEntry> cubeTicketThrottlerReleaser;
@@ -90,10 +90,10 @@ public abstract class MixinTicketManager implements ITicketManager, IVerticalVie
 
         // force a ticket on the cube's columns
         CubePos cubePos = CubePos.from(cubePosIn);
-        for (int localX = 0; localX < IBigCube.DIAMETER_IN_SECTIONS; localX++) {
-            for (int localZ = 0; localZ < IBigCube.DIAMETER_IN_SECTIONS; localZ++) {
+        for (int localX = 0; localX < CubeAccess.DIAMETER_IN_SECTIONS; localX++) {
+            for (int localZ = 0; localZ < CubeAccess.DIAMETER_IN_SECTIONS; localZ++) {
                 //do not need to handle region tickets due to the additional CCColumn tickets added in cube generation stages
-                addTicket(CubePos.asChunkPosLong(cubePosIn, localX, localZ), TicketAccess.createNew(CCTicketType.CCCOLUMN, ticketIn.getTicketLevel(), cubePos));
+                addTicket(CubePos.asChunkPosLong(cubePosIn, localX, localZ), TicketAccess.createNew(CubicTicketType.CCCOLUMN, ticketIn.getTicketLevel(), cubePos));
             }
         }
 
@@ -151,7 +151,7 @@ public abstract class MixinTicketManager implements ITicketManager, IVerticalVie
         }
 
         this.naturalSpawnCubeCounter.processAllUpdates();
-        this.playerCubeTicketTracker.processAllUpdates();
+        this.cubicPlayerTicketTracker.processAllUpdates();
         int updatesCompleted = Integer.MAX_VALUE - this.cubeTicketTracker.update(Integer.MAX_VALUE);
         if (!this.cubesToUpdateFutures.isEmpty()) {
             this.cubesToUpdateFutures.forEach((cubeHolder) -> ((ChunkHolderAccess) cubeHolder).invokeUpdateFutures(chunkManager, this.mainThreadExecutor));
@@ -163,14 +163,14 @@ public abstract class MixinTicketManager implements ITicketManager, IVerticalVie
 
                 while (ticketsToRelease.hasNext()) {
                     long cubePosToRelease = ticketsToRelease.nextLong();
-                    if (this.getCubeTickets(cubePosToRelease).stream().anyMatch((cubeTicket) -> cubeTicket.getType() == CCTicketType.CCPLAYER)) {
-                        ChunkHolder cubeHolder = ((IChunkManager) chunkManager).getCubeHolder(cubePosToRelease);
+                    if (this.getCubeTickets(cubePosToRelease).stream().anyMatch((cubeTicket) -> cubeTicket.getType() == CubicTicketType.CCPLAYER)) {
+                        ChunkHolder cubeHolder = ((CubeMap) chunkManager).getCubeHolder(cubePosToRelease);
                         if (cubeHolder == null) {
                             throw new IllegalStateException();
                         }
 
-                        CompletableFuture<Either<BigCube, ChunkHolder.ChunkLoadingFailure>> cubeEntityTickingFuture =
-                            ((ICubeHolder) cubeHolder).getCubeEntityTickingFuture();
+                        CompletableFuture<Either<LevelCube, ChunkHolder.ChunkLoadingFailure>> cubeEntityTickingFuture =
+                            ((CubeHolder) cubeHolder).getCubeEntityTickingFuture();
                         cubeEntityTickingFuture.thenAccept((cubeEither) -> this.mainThreadExecutor.execute(() ->
                             this.cubeTicketThrottlerReleaser.tell(CubeTaskPriorityQueueSorter.createSorterMsg(() -> {
                         }, cubePosToRelease, false))));
@@ -208,7 +208,7 @@ public abstract class MixinTicketManager implements ITicketManager, IVerticalVie
     // updateChunkForced
     @Override
     public void updateCubeForced(CubePos pos, boolean add) {
-        Ticket<CubePos> ticket = TicketAccess.createNew(CCTicketType.CCFORCED, 31, pos);
+        Ticket<CubePos> ticket = TicketAccess.createNew(CubicTicketType.CCFORCED, 31, pos);
         if (add) {
             this.addCubeTicket(pos.asLong(), ticket);
         } else {
@@ -221,7 +221,7 @@ public abstract class MixinTicketManager implements ITicketManager, IVerticalVie
         long cubePosLong = cubePos.asLong();
         this.playersPerCube.computeIfAbsent(cubePosLong, (pos) -> new ObjectOpenHashSet<>()).add(player);
         this.naturalSpawnCubeCounter.updateSourceLevel(cubePosLong, 0, true);
-        this.playerCubeTicketTracker.updateSourceLevel(cubePosLong, 0, true);
+        this.cubicPlayerTicketTracker.updateSourceLevel(cubePosLong, 0, true);
     }
 
     @Override
@@ -232,7 +232,7 @@ public abstract class MixinTicketManager implements ITicketManager, IVerticalVie
         if (playersInCube.isEmpty()) {
             this.playersPerCube.remove(cubePosLong);
             this.naturalSpawnCubeCounter.updateSourceLevel(cubePosLong, Integer.MAX_VALUE, false);
-            this.playerCubeTicketTracker.updateSourceLevel(cubePosLong, Integer.MAX_VALUE, false);
+            this.cubicPlayerTicketTracker.updateSourceLevel(cubePosLong, Integer.MAX_VALUE, false);
         }
     }
 
@@ -302,6 +302,6 @@ public abstract class MixinTicketManager implements ITicketManager, IVerticalVie
     }
 
     @Override public void updatePlayerCubeTickets(int horizontalDistance, int verticalDistance) {
-        this.playerCubeTicketTracker.updateCubeViewDistance(Coords.sectionToCubeRenderDistance(horizontalDistance), Coords.sectionToCubeRenderDistance(verticalDistance));
+        this.cubicPlayerTicketTracker.updateCubeViewDistance(Coords.sectionToCubeRenderDistance(horizontalDistance), Coords.sectionToCubeRenderDistance(verticalDistance));
     }
 }

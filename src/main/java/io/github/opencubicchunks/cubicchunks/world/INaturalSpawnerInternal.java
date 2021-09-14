@@ -1,7 +1,7 @@
 package io.github.opencubicchunks.cubicchunks.world;
 
-import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
-import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
+import io.github.opencubicchunks.cubicchunks.world.level.chunk.CubeAccess;
+import io.github.opencubicchunks.cubicchunks.world.level.CubePos;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.Level;
@@ -13,9 +13,9 @@ public interface INaturalSpawnerInternal {
 
 
     static BlockPos getRandomPosWithinCube(Level level, ChunkAccess chunkAccess) {
-        CubePos pos = ((IBigCube) chunkAccess).getCubePos();
-        int blockX = pos.minCubeX() + level.random.nextInt(IBigCube.DIAMETER_IN_BLOCKS);
-        int blockZ = pos.minCubeZ() + level.random.nextInt(IBigCube.DIAMETER_IN_BLOCKS);
+        CubePos pos = ((CubeAccess) chunkAccess).getCubePos();
+        int blockX = pos.minCubeX() + level.random.nextInt(CubeAccess.DIAMETER_IN_BLOCKS);
+        int blockZ = pos.minCubeZ() + level.random.nextInt(CubeAccess.DIAMETER_IN_BLOCKS);
 
         int height = level.getHeight(Heightmap.Types.WORLD_SURFACE, blockX, blockZ) + 1; //This is wrong, we need to use the one from the BigCube(ChunkAccess)
 
@@ -25,7 +25,7 @@ public interface INaturalSpawnerInternal {
         }
 
         if (pos.maxCubeY() <= height) {
-            int blockY = minY + level.random.nextInt(IBigCube.DIAMETER_IN_BLOCKS);
+            int blockY = minY + level.random.nextInt(CubeAccess.DIAMETER_IN_BLOCKS);
             return new BlockPos(blockX, blockY, blockZ);
         }
 

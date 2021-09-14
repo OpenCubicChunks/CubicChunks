@@ -1,10 +1,8 @@
-package io.github.opencubicchunks.cubicchunks.chunk.biome;
+package io.github.opencubicchunks.cubicchunks.world.level.chunk;
 
 import javax.annotation.Nullable;
 
 import io.github.opencubicchunks.cubicchunks.CubicChunks;
-import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
-import io.github.opencubicchunks.cubicchunks.chunk.ICubeProvider;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import net.minecraft.core.IdMap;
 import net.minecraft.data.BuiltinRegistries;
@@ -39,7 +37,7 @@ public class ColumnBiomeContainer extends ChunkBiomeContainer {
         int blockX = biomeX << 2;
         int blockY = biomeY << 2;
         int blockZ = biomeZ << 2;
-        IBigCube icube = ((ICubeProvider) level.getChunkSource()).getCube(Coords.blockToCube(blockX), Coords.blockToCube(blockY), Coords.blockToCube(blockZ), ChunkStatus.BIOMES, false);
+        CubeAccess icube = ((CubeSource) level.getChunkSource()).getCube(Coords.blockToCube(blockX), Coords.blockToCube(blockY), Coords.blockToCube(blockZ), ChunkStatus.BIOMES, false);
         if (icube == null) {
             if (!level.isClientSide()) {
                 CubicChunks.LOGGER.warn("Tried to get biome at BLOCK pos {} {} {}, but cube isn't loaded. Returning dummy biome", blockX, blockY, blockZ);

@@ -6,9 +6,9 @@ import java.util.stream.Stream;
 
 import javax.annotation.Nullable;
 
-import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
-import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
-import io.github.opencubicchunks.cubicchunks.server.ICubicWorld;
+import io.github.opencubicchunks.cubicchunks.world.level.CubePos;
+import io.github.opencubicchunks.cubicchunks.world.level.CubicLevelAccessor;
+import io.github.opencubicchunks.cubicchunks.world.level.CubicLevelHeightAccessor;
 import net.minecraft.core.SectionPos;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.StructureFeatureManager;
@@ -37,11 +37,11 @@ public abstract class MixinStructureFeatureManager {
             return;
         }
 
-        cir.setReturnValue(((ICubicWorld) this.level).getCube(sectionToCube(sectionPos.x()), sectionToCube(sectionPos.y()), sectionToCube(sectionPos.z()), ChunkStatus.STRUCTURE_REFERENCES)
+        cir.setReturnValue(((CubicLevelAccessor) this.level).getCube(sectionToCube(sectionPos.x()), sectionToCube(sectionPos.y()), sectionToCube(sectionPos.z()), ChunkStatus.STRUCTURE_REFERENCES)
             .getReferencesForFeature(structureFeature).stream().map((seed) -> {
                 return CubePos.from(seed);
             }).map((cubePos) -> {
-                return this.getStartForFeature(null, structureFeature, ((ICubicWorld) this.level).getCube(cubePos, ChunkStatus.STRUCTURE_STARTS));
+                return this.getStartForFeature(null, structureFeature, ((CubicLevelAccessor) this.level).getCube(cubePos, ChunkStatus.STRUCTURE_STARTS));
             }).filter((structureStart) -> {
                 return structureStart != null && structureStart.isValid();
             }));

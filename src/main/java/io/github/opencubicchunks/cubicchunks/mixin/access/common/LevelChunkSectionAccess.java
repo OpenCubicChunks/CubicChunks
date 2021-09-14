@@ -8,7 +8,7 @@ import org.spongepowered.asm.mixin.Mutable;
 import org.spongepowered.asm.mixin.gen.Accessor;
 
 @Mixin(LevelChunkSection.class)
-public interface ChunkSectionAccess {
+public interface LevelChunkSectionAccess {
     @Accessor short getNonEmptyBlockCount();
     @Accessor short getTickingBlockCount();
     @Accessor short getTickingFluidCount();

@@ -90,10 +90,10 @@ import com.mojang.datafixers.util.Pair;
 import com.mojang.math.Matrix4f;
 import com.mojang.math.Vector3f;
 import com.mojang.math.Vector4f;
-import io.github.opencubicchunks.cubicchunks.chunk.ICubeHolder;
-import io.github.opencubicchunks.cubicchunks.chunk.graph.CCTicketType;
-import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
-import io.github.opencubicchunks.cubicchunks.client.CubicWorldLoadScreen;
+import io.github.opencubicchunks.cubicchunks.server.level.CubeHolder;
+import io.github.opencubicchunks.cubicchunks.server.level.CubicTicketType;
+import io.github.opencubicchunks.cubicchunks.world.level.CubePos;
+import io.github.opencubicchunks.cubicchunks.client.gui.screens.CubicLevelLoadingScreen;
 import io.github.opencubicchunks.cubicchunks.levelgen.placement.UserFunction;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import io.github.opencubicchunks.cubicchunks.utils.MathUtil;
@@ -876,7 +876,7 @@ public class DebugVisualization {
                     .point(ChunkStatus.LIQUID_CARVERS.getIndex(), 0.2f)
                     .point(ChunkStatus.FULL.getIndex(), 1).build();
 
-            for (Object2IntMap.Entry<ChunkStatus> entry : CubicWorldLoadScreen.getStatusColorMap().object2IntEntrySet()) {
+            for (Object2IntMap.Entry<ChunkStatus> entry : CubicLevelLoadingScreen.getStatusColorMap().object2IntEntrySet()) {
                 int idx = entry.getKey().getIndex();
                 int alpha = (int) (255 * alphaFunc.getValue(idx));
                 COLORS[idx] = entry.getIntValue() | alpha << 24;
@@ -932,7 +932,7 @@ public class DebugVisualization {
         }
 
         enum Type {
-            TICKET_LEVEL(chunkHolder -> ICubeHolder.getCubeStatusFromLevel(chunkHolder.getTicketLevel()).getIndex()),
+            TICKET_LEVEL(chunkHolder -> CubeHolder.getCubeStatusFromLevel(chunkHolder.getTicketLevel()).getIndex()),
             TICKET_LEVEL_FULL_CHUNK_STATUS(holder -> ChunkHolder.getFullChunkStatus(holder.getTicketLevel()).ordinal() + 128),
             TO_SAVE_LEVEL(holder -> {
                 ChunkAccess cube = holder.getChunkToSave().getNow(null);
@@ -1006,15 +1006,15 @@ public class DebugVisualization {
                     long posLong = entry.getLongKey();
                     for (Ticket<?> ticket : entry.getValue()) {
                         TicketType<?> type = ticket.getType();
-                        if (type == TicketType.PLAYER || type == CCTicketType.CCPLAYER) {
+                        if (type == TicketType.PLAYER || type == CubicTicketType.CCPLAYER) {
                             cubeMap.put(posLong, (byte) 0);
                         } else if (type == TicketType.START) {
                             cubeMap.put(posLong, (byte) 1);
-                        } else if (type == TicketType.UNKNOWN || type == CCTicketType.CCUNKNOWN) {
+                        } else if (type == TicketType.UNKNOWN || type == CubicTicketType.CCUNKNOWN) {
                             cubeMap.put(posLong, (byte) 2);
-                        } else if (type == TicketType.LIGHT || type == CCTicketType.CCLIGHT) {
+                        } else if (type == TicketType.LIGHT || type == CubicTicketType.CCLIGHT) {
                             cubeMap.put(posLong, (byte) 3);
-                        } else if (type == TicketType.FORCED || type == CCTicketType.CCFORCED) {
+                        } else if (type == TicketType.FORCED || type == CubicTicketType.CCFORCED) {
                             cubeMap.put(posLong, (byte) 4);
                         } else {
                             cubeMap.put(posLong, (byte) 5);

@@ -1,4 +1,4 @@
-package io.github.opencubicchunks.cubicchunks.mixin.core.common.world.lighting;
+package io.github.opencubicchunks.cubicchunks.mixin.core.common.level.lighting;
 
 import net.minecraft.world.level.lighting.DynamicGraphMinFixedPoint;
 import org.spongepowered.asm.mixin.Mixin;

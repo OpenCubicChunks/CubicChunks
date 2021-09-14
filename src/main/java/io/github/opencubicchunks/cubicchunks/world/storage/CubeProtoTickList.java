@@ -3,12 +3,12 @@ package io.github.opencubicchunks.cubicchunks.world.storage;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
-import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
-import io.github.opencubicchunks.cubicchunks.chunk.ImposterChunkPos;
-import io.github.opencubicchunks.cubicchunks.chunk.cube.CubePrimer;
-import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
+import io.github.opencubicchunks.cubicchunks.world.level.chunk.CubeAccess;
+import io.github.opencubicchunks.cubicchunks.world.ImposterChunkPos;
+import io.github.opencubicchunks.cubicchunks.world.level.chunk.ProtoCube;
+import io.github.opencubicchunks.cubicchunks.world.level.CubePos;
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.ProtoTickListAccess;
-import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
+import io.github.opencubicchunks.cubicchunks.world.level.CubicLevelHeightAccessor;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.ListTag;
@@ -39,7 +39,7 @@ public class CubeProtoTickList<T> extends ProtoTickList<T> {
             if (((ProtoTickListAccess) this).getToBeTicked()[tickListIDX] != null) {
 
                 for (Short sectionRel : ((ProtoTickListAccess) this).getToBeTicked()[tickListIDX]) {
-                    BlockPos blockPos = CubePrimer.unpackToWorld(sectionRel, tickListIDX, ((ImposterChunkPos) ((ProtoTickListAccess) this).getChunkPos()).toCubePos());
+                    BlockPos blockPos = ProtoCube.unpackToWorld(sectionRel, tickListIDX, ((ImposterChunkPos) ((ProtoTickListAccess) this).getChunkPos()).toCubePos());
                     scheduler.scheduleTick(blockPos, dataMapper.apply(blockPos), 0);
                 }
 
@@ -67,7 +67,7 @@ public class CubeProtoTickList<T> extends ProtoTickList<T> {
         }
 
         @Override public int getSectionsCount() {
-            return IBigCube.SECTION_COUNT;
+            return CubeAccess.SECTION_COUNT;
         }
 
         @Override public int getSectionYFromSectionIndex(int index) {

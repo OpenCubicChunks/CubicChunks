@@ -6,8 +6,8 @@ import java.util.concurrent.Executor;
 import java.util.function.Function;
 
 import com.mojang.datafixers.util.Either;
-import io.github.opencubicchunks.cubicchunks.chunk.cube.CubePrimer;
-import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
+import io.github.opencubicchunks.cubicchunks.world.level.chunk.ProtoCube;
+import io.github.opencubicchunks.cubicchunks.world.level.CubicLevelHeightAccessor;
 import net.minecraft.server.level.ChunkHolder;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ThreadedLevelLightEngine;
@@ -21,7 +21,7 @@ import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 
 @Mixin(targets = "net.minecraft.world.level.chunk.ChunkStatus$SimpleGenerationTask")
-public interface MixinISelectiveWorker {
+public interface MixinChunkStatusSimpleGenerationTask {
 
     @Shadow void doWork(ChunkStatus status, ServerLevel world, ChunkGenerator generator, List<ChunkAccess> neighbors, ChunkAccess chunk);
 
@@ -50,8 +50,8 @@ public interface MixinISelectiveWorker {
             this.doWork(status, world, generator, neighbors, chunk);
             if (chunk instanceof ProtoChunk) {
                 ((ProtoChunk) chunk).setStatus(status);
-            } else if (chunk instanceof CubePrimer) {
-                ((CubePrimer) chunk).updateCubeStatus(status);
+            } else if (chunk instanceof ProtoCube) {
+                ((ProtoCube) chunk).updateCubeStatus(status);
             }
         }
         return CompletableFuture.completedFuture(Either.left(chunk));

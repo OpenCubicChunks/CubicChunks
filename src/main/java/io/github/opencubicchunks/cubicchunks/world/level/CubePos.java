@@ -1,4 +1,4 @@
-package io.github.opencubicchunks.cubicchunks.chunk.util;
+package io.github.opencubicchunks.cubicchunks.world.level;
 
 import static io.github.opencubicchunks.cubicchunks.utils.Coords.*;
 

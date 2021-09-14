@@ -2,7 +2,7 @@ package io.github.opencubicchunks.cubicchunks.world;
 
 import java.util.List;
 
-import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
+import io.github.opencubicchunks.cubicchunks.world.level.CubePos;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.world.level.TickNextTickData;
 

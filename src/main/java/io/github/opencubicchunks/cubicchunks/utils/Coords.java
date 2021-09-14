@@ -25,9 +25,9 @@
 
 package io.github.opencubicchunks.cubicchunks.utils;
 
-import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
-import io.github.opencubicchunks.cubicchunks.chunk.cube.BigCube;
-import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
+import io.github.opencubicchunks.cubicchunks.world.level.chunk.CubeAccess;
+import io.github.opencubicchunks.cubicchunks.world.level.chunk.LevelCube;
+import io.github.opencubicchunks.cubicchunks.world.level.CubePos;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.SectionPos;
 import net.minecraft.util.Mth;
@@ -47,12 +47,12 @@ public class Coords {
 
     public static final int NO_HEIGHT = Integer.MIN_VALUE + 32;
 
-    private static final int LOG2_BLOCK_SIZE = MathUtil.log2(IBigCube.DIAMETER_IN_BLOCKS);
+    private static final int LOG2_BLOCK_SIZE = MathUtil.log2(CubeAccess.DIAMETER_IN_BLOCKS);
 
-    private static final int BLOCK_SIZE_MINUS_1 = IBigCube.DIAMETER_IN_BLOCKS - 1;
-    private static final int BLOCK_SIZE_DIV_2 = IBigCube.DIAMETER_IN_BLOCKS / 2;
-    private static final int BLOCK_SIZE_DIV_16 = IBigCube.DIAMETER_IN_BLOCKS / 16;
-    private static final int BLOCK_SIZE_DIV_32 = IBigCube.DIAMETER_IN_BLOCKS / 32;
+    private static final int BLOCK_SIZE_MINUS_1 = CubeAccess.DIAMETER_IN_BLOCKS - 1;
+    private static final int BLOCK_SIZE_DIV_2 = CubeAccess.DIAMETER_IN_BLOCKS / 2;
+    private static final int BLOCK_SIZE_DIV_16 = CubeAccess.DIAMETER_IN_BLOCKS / 16;
+    private static final int BLOCK_SIZE_DIV_32 = CubeAccess.DIAMETER_IN_BLOCKS / 32;
 
     private static final int POS_TO_INDEX_MASK = getPosToIndexMask();
     private static final int INDEX_TO_POS_MASK = POS_TO_INDEX_MASK >> 4;
@@ -62,11 +62,11 @@ public class Coords {
     private static final int INDEX_TO_N_Z = INDEX_TO_N_Y * 2;
 
     /**
-     * <it><b>CC INTERNAL</b></it> | Mask used for converting BlockPos to ChunkSection index within a {@link BigCube}.
+     * <it><b>CC INTERNAL</b></it> | Mask used for converting BlockPos to ChunkSection index within a {@link LevelCube}.
      */
     private static int getPosToIndexMask() {
         int mask = 0;
-        for (int i = IBigCube.DIAMETER_IN_BLOCKS / 2; i >= 16; i /= 2) {
+        for (int i = CubeAccess.DIAMETER_IN_BLOCKS / 2; i >= 16; i /= 2) {
             mask += i;
         }
         return mask;
@@ -85,14 +85,14 @@ public class Coords {
     }
 
     /**
-     * Gets the offset of a {@link BlockPos} inside it's {@link BigCube}
+     * Gets the offset of a {@link BlockPos} inside it's {@link LevelCube}
      *
      * @param val A single value of the position
      *
-     * @return The position relative to the {@link BigCube} this block is in
+     * @return The position relative to the {@link LevelCube} this block is in
      */
     public static int blockToLocal(int val) {
-        return val & (IBigCube.DIAMETER_IN_BLOCKS - 1);
+        return val & (CubeAccess.DIAMETER_IN_BLOCKS - 1);
     }
 
     /** See {@link Coords#blockToLocal} */
@@ -146,7 +146,7 @@ public class Coords {
     /**
      * @param cubeVal A single dimension of a {@link CubePos}
      *
-     * @return The minimum {@link BlockPos} inside that {@link BigCube}
+     * @return The minimum {@link BlockPos} inside that {@link LevelCube}
      */
     public static int cubeToMinBlock(int cubeVal) {
         return cubeVal << LOG2_BLOCK_SIZE;
@@ -155,7 +155,7 @@ public class Coords {
     /**
      * @param cubeVal A single dimension of a {@link CubePos}
      *
-     * @return The maximum {@link BlockPos} inside that {@link BigCube}
+     * @return The maximum {@link BlockPos} inside that {@link LevelCube}
      */
     public static int cubeToMaxBlock(int cubeVal) {
         return cubeToMinBlock(cubeVal) + BLOCK_SIZE_MINUS_1;
@@ -198,7 +198,7 @@ public class Coords {
      * @param blockYVal Y position
      * @param blockZVal Z position
      *
-     * @return The {@link ChunkSection} index inside the {@link BigCube} the position specified falls within
+     * @return The {@link ChunkSection} index inside the {@link LevelCube} the position specified falls within
      *     <p>
      *     This uses the internal methods such as {@link Coords#blockToIndex16} to allow the JVM to optimise out the variable bit shifts that would occur otherwise
      */
@@ -223,16 +223,16 @@ public class Coords {
 
         //        mask needs to be every power of 2 below IBigCube.BLOCK_SIZE that's > 16
 
-        if (IBigCube.DIAMETER_IN_SECTIONS == 1) {
+        if (CubeAccess.DIAMETER_IN_SECTIONS == 1) {
             return blockToIndex16(blockXVal, blockYVal, blockZVal);
-        } else if (IBigCube.DIAMETER_IN_SECTIONS == 2) {
+        } else if (CubeAccess.DIAMETER_IN_SECTIONS == 2) {
             return blockToIndex32(blockXVal, blockYVal, blockZVal);
-        } else if (IBigCube.DIAMETER_IN_SECTIONS == 4) {
+        } else if (CubeAccess.DIAMETER_IN_SECTIONS == 4) {
             return blockToIndex64(blockXVal, blockYVal, blockZVal);
-        } else if (IBigCube.DIAMETER_IN_SECTIONS == 8) {
+        } else if (CubeAccess.DIAMETER_IN_SECTIONS == 8) {
             return blockToIndex128(blockXVal, blockYVal, blockZVal);
         }
-        throw new UnsupportedOperationException("Unsupported cube size " + IBigCube.DIAMETER_IN_SECTIONS);
+        throw new UnsupportedOperationException("Unsupported cube size " + CubeAccess.DIAMETER_IN_SECTIONS);
     }
     public static int blockToIndex(BlockPos pos) {
         return blockToIndex(pos.getX(), pos.getY(), pos.getZ());
@@ -268,7 +268,7 @@ public class Coords {
     }
 
     /**
-     * @param idx Index of the {@link ChunkSection} within it's {@link BigCube}
+     * @param idx Index of the {@link ChunkSection} within it's {@link LevelCube}
      *
      * @return The X offset (as a  {@link SectionPos}) from it's {@link CubePos} (as a  {@link SectionPos})
      */
@@ -277,7 +277,7 @@ public class Coords {
     }
 
     /**
-     * @param idx Index of the {@link ChunkSection} within it's {@link BigCube}
+     * @param idx Index of the {@link ChunkSection} within it's {@link LevelCube}
      *
      * @return The Y offset (as a  {@link SectionPos}) from it's {@link CubePos} (as a  {@link SectionPos})
      */
@@ -286,7 +286,7 @@ public class Coords {
     }
 
     /**
-     * @param idx Index of the {@link ChunkSection} within it's {@link BigCube}
+     * @param idx Index of the {@link ChunkSection} within it's {@link LevelCube}
      *
      * @return The Z offset (as a  {@link SectionPos}) from it's {@link CubePos} (as a  {@link SectionPos})
      */
@@ -308,7 +308,7 @@ public class Coords {
      * @param sectionY A section Y
      * @param sectionZ A section Z
      *
-     * @return The index of the {@link ChunkSection} that the specified {@link SectionPos} describes inside it's {@link BigCube}
+     * @return The index of the {@link ChunkSection} that the specified {@link SectionPos} describes inside it's {@link LevelCube}
      */
     public static int sectionToIndex(int sectionX, int sectionY, int sectionZ) {
         return blockToIndex(sectionX << 4, sectionY << 4, sectionZ << 4);
@@ -338,7 +338,7 @@ public class Coords {
     }
 
     public static int sectionToCubeCeil(int viewDistance) {
-        return MathUtil.ceilDiv(viewDistance, IBigCube.DIAMETER_IN_SECTIONS);
+        return MathUtil.ceilDiv(viewDistance, CubeAccess.DIAMETER_IN_SECTIONS);
     }
 
     public static int sectionToCubeRenderDistance(int viewDistance) {
@@ -389,12 +389,12 @@ public class Coords {
     }
 
     public static int blockToCubeLocalSection(int x) {
-        return (x >> 4) & (IBigCube.DIAMETER_IN_SECTIONS - 1);
+        return (x >> 4) & (CubeAccess.DIAMETER_IN_SECTIONS - 1);
 
     }
 
     public static int cubeLocalSection(int section) {
-        return section & (IBigCube.DIAMETER_IN_SECTIONS - 1);
+        return section & (CubeAccess.DIAMETER_IN_SECTIONS - 1);
     }
 
     public static BlockPos sectionPosToMinBlockPos(SectionPos sectionPos) {

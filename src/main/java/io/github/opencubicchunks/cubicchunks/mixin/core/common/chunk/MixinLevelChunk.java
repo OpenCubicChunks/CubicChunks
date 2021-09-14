@@ -3,23 +3,23 @@ package io.github.opencubicchunks.cubicchunks.mixin.core.common.chunk;
 import java.util.concurrent.CompletionException;
 import java.util.function.Consumer;
 
-import io.github.opencubicchunks.cubicchunks.chunk.ChunkCubeGetter;
-import io.github.opencubicchunks.cubicchunks.chunk.CubeMap;
-import io.github.opencubicchunks.cubicchunks.chunk.CubeMapGetter;
-import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
-import io.github.opencubicchunks.cubicchunks.chunk.ICubeProvider;
-import io.github.opencubicchunks.cubicchunks.chunk.LightHeightmapGetter;
-import io.github.opencubicchunks.cubicchunks.chunk.biome.ColumnBiomeContainer;
-import io.github.opencubicchunks.cubicchunks.chunk.cube.BigCube;
-import io.github.opencubicchunks.cubicchunks.chunk.cube.EmptyCube;
-import io.github.opencubicchunks.cubicchunks.chunk.heightmap.ClientLightSurfaceTracker;
-import io.github.opencubicchunks.cubicchunks.chunk.heightmap.ClientSurfaceTracker;
-import io.github.opencubicchunks.cubicchunks.chunk.heightmap.LightSurfaceTrackerWrapper;
-import io.github.opencubicchunks.cubicchunks.chunk.heightmap.SurfaceTrackerWrapper;
-import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
-import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
+import io.github.opencubicchunks.cubicchunks.world.level.chunk.CubeAccess;
+import io.github.opencubicchunks.cubicchunks.world.level.chunk.ColumnCubeGetter;
+import io.github.opencubicchunks.cubicchunks.world.level.chunk.ColumnCubeMap;
+import io.github.opencubicchunks.cubicchunks.world.level.chunk.ColumnCubeMapGetter;
+import io.github.opencubicchunks.cubicchunks.world.level.chunk.CubeSource;
+import io.github.opencubicchunks.cubicchunks.world.level.chunk.LightHeightmapGetter;
+import io.github.opencubicchunks.cubicchunks.world.level.chunk.ColumnBiomeContainer;
+import io.github.opencubicchunks.cubicchunks.world.level.chunk.EmptyLevelCube;
+import io.github.opencubicchunks.cubicchunks.world.level.chunk.LevelCube;
+import io.github.opencubicchunks.cubicchunks.world.level.levelgen.heightmap.ClientLightSurfaceTracker;
+import io.github.opencubicchunks.cubicchunks.world.level.levelgen.heightmap.ClientSurfaceTracker;
+import io.github.opencubicchunks.cubicchunks.world.level.levelgen.heightmap.LightSurfaceTrackerWrapper;
+import io.github.opencubicchunks.cubicchunks.world.level.levelgen.heightmap.SurfaceTrackerWrapper;
+import io.github.opencubicchunks.cubicchunks.world.level.CubePos;
+import io.github.opencubicchunks.cubicchunks.world.level.CubicLevelHeightAccessor;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
-import io.github.opencubicchunks.cubicchunks.world.lighting.ISkyLightColumnChecker;
+import io.github.opencubicchunks.cubicchunks.world.lighting.SkyLightColumnChecker;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Registry;
 import net.minecraft.server.level.ServerLevel;
@@ -50,7 +50,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(value = LevelChunk.class, priority = 0) //Priority 0 to always ensure our redirects are on top. Should also prevent fabric api crashes that have occur(ed) here. See removeTileEntity
-public abstract class MixinChunk implements ChunkAccess, LightHeightmapGetter, CubeMapGetter, CubicLevelHeightAccessor, ChunkCubeGetter {
+public abstract class MixinLevelChunk implements ChunkAccess, LightHeightmapGetter, ColumnCubeMapGetter, CubicLevelHeightAccessor, ColumnCubeGetter {
 
     @Shadow @Final private Level level;
     @Shadow @Final private ChunkPos chunkPos;
@@ -64,7 +64,7 @@ public abstract class MixinChunk implements ChunkAccess, LightHeightmapGetter, C
     private WorldStyle worldStyle;
 
     private Heightmap lightHeightmap;
-    private CubeMap cubeMap;
+    private ColumnCubeMap columnCubeMap;
 
     @Shadow public abstract ChunkStatus getStatus();
 
@@ -85,8 +85,8 @@ public abstract class MixinChunk implements ChunkAccess, LightHeightmapGetter, C
     }
 
     @Override
-    public CubeMap getCubeMap() {
-        return cubeMap;
+    public ColumnCubeMap getCubeMap() {
+        return columnCubeMap;
     }
 
     @Inject(
@@ -116,7 +116,7 @@ public abstract class MixinChunk implements ChunkAccess, LightHeightmapGetter, C
             lightHeightmap = new LightSurfaceTrackerWrapper(this);
         }
         // TODO might want 4 columns that share the same BigCubes to have a reference to the same CubeMap?
-        cubeMap = new CubeMap();
+        columnCubeMap = new ColumnCubeMap();
     }
 
     @Inject(
@@ -128,7 +128,7 @@ public abstract class MixinChunk implements ChunkAccess, LightHeightmapGetter, C
             return;
         }
         lightHeightmap = ((LightHeightmapGetter) protoChunk).getLightHeightmap();
-        cubeMap = ((CubeMapGetter) protoChunk).getCubeMap();
+        columnCubeMap = ((ColumnCubeMapGetter) protoChunk).getCubeMap();
     }
 
     @Inject(
@@ -153,7 +153,7 @@ public abstract class MixinChunk implements ChunkAccess, LightHeightmapGetter, C
             serverLightHeightmap.update(relX, pos.getY(), relZ, state);
             int newHeight = serverLightHeightmap.getFirstAvailable(relX, relZ);
             if (newHeight != oldHeight) {
-                ((ISkyLightColumnChecker) this.level.getChunkSource().getLightEngine()).checkSkyLightColumn(this, pos.getX(), pos.getZ(), oldHeight, newHeight);
+                ((SkyLightColumnChecker) this.level.getChunkSource().getLightEngine()).checkSkyLightColumn(this, pos.getX(), pos.getZ(), oldHeight, newHeight);
             }
         }
     }
@@ -200,8 +200,8 @@ public abstract class MixinChunk implements ChunkAccess, LightHeightmapGetter, C
         }
 
         int sectionY = getSectionYFromSectionIndex(sectionIndex);
-        IBigCube cube = this.getCube(sectionY);
-        if (cube instanceof EmptyCube) {
+        CubeAccess cube = this.getCube(sectionY);
+        if (cube instanceof EmptyLevelCube) {
             return null;
         }
         LevelChunkSection[] cubeSections = cube.getCubeSections();
@@ -210,9 +210,9 @@ public abstract class MixinChunk implements ChunkAccess, LightHeightmapGetter, C
 
     @SuppressWarnings("ConstantConditions")
     @Override
-    public IBigCube getCube(int y) {
+    public CubeAccess getCube(int y) {
         try {
-            return ((ICubeProvider) level.getChunkSource()).getCube(
+            return ((CubeSource) level.getChunkSource()).getCube(
                 Coords.sectionToCube(chunkPos.x),
                 Coords.sectionToCube(y),
                 Coords.sectionToCube(chunkPos.z), getStatus(), true);
@@ -265,8 +265,8 @@ public abstract class MixinChunk implements ChunkAccess, LightHeightmapGetter, C
         }
 
         int sectionY = getSectionYFromSectionIndex(sectionIndex);
-        IBigCube cube = this.getCube(sectionY);
-        if (cube instanceof EmptyCube) {
+        CubeAccess cube = this.getCube(sectionY);
+        if (cube instanceof EmptyLevelCube) {
             return;
         }
         cube.getCubeSections()[Coords.sectionToIndex(chunkPos.x, sectionY, chunkPos.z)] = newVal;
@@ -293,7 +293,7 @@ public abstract class MixinChunk implements ChunkAccess, LightHeightmapGetter, C
             return;
         }
         ci.cancel();
-        ((BigCube) getCube(Coords.blockToSection(blockEntity.getBlockPos().getY()))).addAndRegisterBlockEntity(blockEntity);
+        ((LevelCube) getCube(Coords.blockToSection(blockEntity.getBlockPos().getY()))).addAndRegisterBlockEntity(blockEntity);
     }
 
     @Inject(method = "updateBlockEntityTicker", at = @At("HEAD"), cancellable = true)
@@ -302,7 +302,7 @@ public abstract class MixinChunk implements ChunkAccess, LightHeightmapGetter, C
             return;
         }
         ci.cancel();
-        ((BigCube) getCube(Coords.blockToSection(blockEntity.getBlockPos().getY()))).updateBlockEntityTicker(blockEntity);
+        ((LevelCube) getCube(Coords.blockToSection(blockEntity.getBlockPos().getY()))).updateBlockEntityTicker(blockEntity);
     }
 
     @Inject(method = "removeBlockEntityTicker", at = @At("HEAD"), cancellable = true)
@@ -311,7 +311,7 @@ public abstract class MixinChunk implements ChunkAccess, LightHeightmapGetter, C
             return;
         }
         ci.cancel();
-        ((BigCube) getCube(Coords.blockToSection(pos.getY()))).removeBlockEntityTicker(pos);
+        ((LevelCube) getCube(Coords.blockToSection(pos.getY()))).removeBlockEntityTicker(pos);
     }
 
     @Redirect(method = "addAndRegisterBlockEntity",
@@ -321,7 +321,7 @@ public abstract class MixinChunk implements ChunkAccess, LightHeightmapGetter, C
             return this.isInLevel();
         }
 
-        return ((BigCube) this.getCube(Coords.blockToSection(tileEntity.getBlockPos().getY()))).isInLevel();
+        return ((LevelCube) this.getCube(Coords.blockToSection(tileEntity.getBlockPos().getY()))).isInLevel();
     }
 
     @Redirect(method = "removeBlockEntity", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/chunk/LevelChunk;isInLevel()Z"))
@@ -330,7 +330,7 @@ public abstract class MixinChunk implements ChunkAccess, LightHeightmapGetter, C
             return this.isInLevel();
         }
 
-        return ((BigCube) this.getCube(Coords.blockToSection(pos.getY()))).isInLevel();
+        return ((LevelCube) this.getCube(Coords.blockToSection(pos.getY()))).isInLevel();
     }
 
     @Redirect(method = "isTicking", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/ChunkPos;asLong(Lnet/minecraft/core/BlockPos;)J"))

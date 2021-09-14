@@ -1,4 +1,4 @@
-package io.github.opencubicchunks.cubicchunks.chunk.storage;
+package io.github.opencubicchunks.cubicchunks.world.level.chunk.storage;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -7,10 +7,10 @@ import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
-import io.github.opencubicchunks.cubicchunks.chunk.ImposterChunkPos;
-import io.github.opencubicchunks.cubicchunks.chunk.cube.BigCube;
-import io.github.opencubicchunks.cubicchunks.chunk.cube.CubePrimer;
+import io.github.opencubicchunks.cubicchunks.world.level.chunk.CubeAccess;
+import io.github.opencubicchunks.cubicchunks.world.ImposterChunkPos;
+import io.github.opencubicchunks.cubicchunks.world.level.chunk.LevelCube;
+import io.github.opencubicchunks.cubicchunks.world.level.chunk.ProtoCube;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import io.github.opencubicchunks.cubicchunks.world.storage.CubeProtoTickList;
 import net.minecraft.core.BlockPos;
@@ -36,10 +36,10 @@ public class AsyncSaveData {
     public final Map<BlockPos, BlockEntity> blockEntities;
     public final Map<BlockPos, CompoundTag> blockEntitiesDeferred;
 
-    public AsyncSaveData(ServerLevel level, IBigCube cube) {
-        this.blockLight = new HashMap<>(IBigCube.SECTION_COUNT, 1f);
-        this.skyLight = new HashMap<>(IBigCube.SECTION_COUNT, 1f);
-        for (int i = 0; i < IBigCube.SECTION_COUNT; i++) {
+    public AsyncSaveData(ServerLevel level, CubeAccess cube) {
+        this.blockLight = new HashMap<>(CubeAccess.SECTION_COUNT, 1f);
+        this.skyLight = new HashMap<>(CubeAccess.SECTION_COUNT, 1f);
+        for (int i = 0; i < CubeAccess.SECTION_COUNT; i++) {
             final SectionPos sectionPos = Coords.sectionPosByIndex(cube.getCubePos(), i);
             DataLayer blockData = level.getChunkSource().getLightEngine().getLayerListener(LightLayer.BLOCK).getDataLayerData(sectionPos);
             DataLayer skyData = level.getChunkSource().getLightEngine().getLayerListener(LightLayer.SKY).getDataLayerData(sectionPos);
@@ -64,10 +64,10 @@ public class AsyncSaveData {
             .map(cube::getBlockEntity)
             .filter(Objects::nonNull)
             .collect(Collectors.toMap(BlockEntity::getBlockPos, Function.identity()));
-        if (cube instanceof BigCube) {
-            this.blockEntitiesDeferred = new HashMap<>(((BigCube) cube).getDeferredTileEntityMap());
-        } else if (cube instanceof CubePrimer) {
-            this.blockEntitiesDeferred = new HashMap<>(((CubePrimer) cube).getDeferredTileEntities());
+        if (cube instanceof LevelCube) {
+            this.blockEntitiesDeferred = new HashMap<>(((LevelCube) cube).getDeferredTileEntityMap());
+        } else if (cube instanceof ProtoCube) {
+            this.blockEntitiesDeferred = new HashMap<>(((ProtoCube) cube).getDeferredTileEntities());
         } else {
             this.blockEntitiesDeferred = new HashMap<>();
         }

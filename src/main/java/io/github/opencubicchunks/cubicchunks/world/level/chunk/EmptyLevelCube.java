@@ -1,12 +1,12 @@
-package io.github.opencubicchunks.cubicchunks.chunk.cube;
+package io.github.opencubicchunks.cubicchunks.world.level.chunk;
 
-import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
+import io.github.opencubicchunks.cubicchunks.world.level.CubePos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.chunk.LevelChunkSection;
 
-public class EmptyCube extends BigCube {
+public class EmptyLevelCube extends LevelCube {
 
-    public EmptyCube(Level worldIn) {
+    public EmptyLevelCube(Level worldIn) {
         super(worldIn, CubePos.of(0, 0, 0), null);
     }
 

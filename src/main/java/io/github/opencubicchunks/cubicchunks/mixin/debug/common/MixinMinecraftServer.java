@@ -4,8 +4,8 @@ import java.util.Iterator;
 import java.util.Map;
 
 import io.github.opencubicchunks.cubicchunks.CubicChunks;
-import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
-import io.github.opencubicchunks.cubicchunks.server.IServerChunkProvider;
+import io.github.opencubicchunks.cubicchunks.world.level.CubePos;
+import io.github.opencubicchunks.cubicchunks.server.level.ServerCubeCache;
 import it.unimi.dsi.fastutil.longs.LongIterator;
 import net.minecraft.Util;
 import net.minecraft.core.BlockPos;
@@ -49,7 +49,7 @@ public abstract class MixinMinecraftServer {
         count++;
     }
 
-    private void addCube(IServerChunkProvider serverChunkProvider, CubePos pos) {
+    private void addCube(ServerCubeCache serverChunkProvider, CubePos pos) {
         serverChunkProvider.addCubeRegionTicket(TicketType.START, pos, 1, Unit.INSTANCE);
         count++;
     }
@@ -73,7 +73,7 @@ public abstract class MixinMinecraftServer {
         serverChunkCache.getLightEngine().setTaskPerBatch(500);
         this.nextTickTime = Util.getMillis();
 
-        IServerChunkProvider prov = (IServerChunkProvider) serverChunkCache;
+        ServerCubeCache prov = (ServerCubeCache) serverChunkCache;
         addChunk(serverChunkCache, new ChunkPos(0, 0));
         addCube(prov, CubePos.of(0, 0, 0));
 

@@ -1,6 +1,6 @@
 package io.github.opencubicchunks.cubicchunks.chunk;
 
-public interface IVerticalView {
+public interface VerticalViewDistanceListener {
 
     void setIncomingVerticalViewDistance(int verticalDistance);
 

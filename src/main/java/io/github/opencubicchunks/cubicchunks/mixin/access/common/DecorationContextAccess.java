@@ -8,6 +8,5 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 @Mixin(DecorationContext.class)
 public interface DecorationContextAccess {
 
-
     @Accessor WorldGenLevel getLevel();
 }

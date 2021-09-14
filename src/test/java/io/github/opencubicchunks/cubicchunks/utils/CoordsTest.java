@@ -8,7 +8,7 @@ import static org.junit.Assert.assertThat;
 import java.util.HashSet;
 import java.util.Set;
 
-import io.github.opencubicchunks.cubicchunks.chunk.IBigCube;
+import io.github.opencubicchunks.cubicchunks.world.level.chunk.CubeAccess;
 import org.junit.Test;
 
 public class CoordsTest {
@@ -24,12 +24,12 @@ public class CoordsTest {
         }
 
         Set<Integer> coords = new HashSet<>();
-        for (int i = 0; i < (IBigCube.DIAMETER_IN_SECTIONS * IBigCube.DIAMETER_IN_SECTIONS * IBigCube.DIAMETER_IN_SECTIONS); i++) {
+        for (int i = 0; i < (CubeAccess.DIAMETER_IN_SECTIONS * CubeAccess.DIAMETER_IN_SECTIONS * CubeAccess.DIAMETER_IN_SECTIONS); i++) {
             coords.add(i);
         }
-        for (int x = 0; x < IBigCube.DIAMETER_IN_SECTIONS; x++) {
-            for (int y = 0; y < IBigCube.DIAMETER_IN_SECTIONS; y++) {
-                for (int z = 0; z < IBigCube.DIAMETER_IN_SECTIONS; z++) {
+        for (int x = 0; x < CubeAccess.DIAMETER_IN_SECTIONS; x++) {
+            for (int y = 0; y < CubeAccess.DIAMETER_IN_SECTIONS; y++) {
+                for (int z = 0; z < CubeAccess.DIAMETER_IN_SECTIONS; z++) {
                     int v = Coords.blockToIndex(x * 16, y * 16, z * 16);
 
                     System.out.printf("%d %d %d\n", x, y, z);
@@ -42,9 +42,9 @@ public class CoordsTest {
 
     @Test
     public void testBlockToIndex() {
-        for (int x = 0; x < IBigCube.DIAMETER_IN_SECTIONS; x++) {
-            for (int y = 0; y < IBigCube.DIAMETER_IN_SECTIONS; y++) {
-                for (int z = 0; z < IBigCube.DIAMETER_IN_SECTIONS; z++) {
+        for (int x = 0; x < CubeAccess.DIAMETER_IN_SECTIONS; x++) {
+            for (int y = 0; y < CubeAccess.DIAMETER_IN_SECTIONS; y++) {
+                for (int z = 0; z < CubeAccess.DIAMETER_IN_SECTIONS; z++) {
                     int index = Coords.blockToIndex(x * 16, y * 16, z * 16);
                     assertEquals(x, Coords.indexToX(index));
                     assertEquals(y, Coords.indexToY(index));

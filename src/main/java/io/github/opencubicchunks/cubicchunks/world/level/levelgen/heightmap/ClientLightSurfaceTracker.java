@@ -1,8 +1,8 @@
-package io.github.opencubicchunks.cubicchunks.chunk.heightmap;
+package io.github.opencubicchunks.cubicchunks.world.level.levelgen.heightmap;
 
-import io.github.opencubicchunks.cubicchunks.chunk.CubeMapGetter;
+import io.github.opencubicchunks.cubicchunks.world.level.chunk.ColumnCubeMapGetter;
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.HeightmapAccess;
-import io.github.opencubicchunks.cubicchunks.world.lighting.ISkyLightColumnChecker;
+import io.github.opencubicchunks.cubicchunks.world.lighting.SkyLightColumnChecker;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -51,7 +51,7 @@ public class ClientLightSurfaceTracker extends ClientSurfaceTracker {
                 int oldHeight = oldStorage.get(index) + minHeight;
                 int newHeight = storage.get(index) + minHeight;
                 if (oldHeight != newHeight) {
-                    ((ISkyLightColumnChecker) Minecraft.getInstance().level.getLightEngine()).checkSkyLightColumn((CubeMapGetter) chunk, baseX + x, baseZ + z, oldHeight, newHeight);
+                    ((SkyLightColumnChecker) Minecraft.getInstance().level.getLightEngine()).checkSkyLightColumn((ColumnCubeMapGetter) chunk, baseX + x, baseZ + z, oldHeight, newHeight);
                 }
             }
         }

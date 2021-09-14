@@ -1,7 +1,7 @@
-package io.github.opencubicchunks.cubicchunks.mixin.core.common.tileentity;
+package io.github.opencubicchunks.cubicchunks.mixin.core.common.blockentity;
 
 import io.github.opencubicchunks.cubicchunks.CubicChunks;
-import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
+import io.github.opencubicchunks.cubicchunks.world.level.CubicLevelHeightAccessor;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.level.Level;
@@ -14,7 +14,7 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 
 
 @Mixin(BeaconBlockEntity.class)
-public abstract class MixinBeaconTileEntity {
+public abstract class MixinBeaconBlockEntity {
     /**
      * @author OverInfrared & NotStirred
      * @reason Beacons now only affect players within +256 of the block. This prevents near infinite cube loading in the beacon's column

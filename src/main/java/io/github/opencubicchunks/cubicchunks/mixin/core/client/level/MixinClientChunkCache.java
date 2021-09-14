@@ -1,18 +1,18 @@
-package io.github.opencubicchunks.cubicchunks.mixin.core.client.world;
+package io.github.opencubicchunks.cubicchunks.mixin.core.client.level;
 
 import javax.annotation.Nullable;
 
 import io.github.opencubicchunks.cubicchunks.CubicChunks;
-import io.github.opencubicchunks.cubicchunks.chunk.ClientChunkProviderCubeArray;
-import io.github.opencubicchunks.cubicchunks.chunk.IClientCubeProvider;
-import io.github.opencubicchunks.cubicchunks.chunk.cube.BigCube;
-import io.github.opencubicchunks.cubicchunks.chunk.cube.EmptyCube;
-import io.github.opencubicchunks.cubicchunks.chunk.util.CubePos;
-import io.github.opencubicchunks.cubicchunks.mixin.access.client.ClientChunkProviderChunkArrayAccess;
-import io.github.opencubicchunks.cubicchunks.server.CubicLevelHeightAccessor;
+import io.github.opencubicchunks.cubicchunks.client.multiplayer.ClientCubeCacheStorage;
+import io.github.opencubicchunks.cubicchunks.client.multiplayer.ClientCubeCache;
+import io.github.opencubicchunks.cubicchunks.world.level.chunk.EmptyLevelCube;
+import io.github.opencubicchunks.cubicchunks.world.level.chunk.LevelCube;
+import io.github.opencubicchunks.cubicchunks.world.level.CubePos;
+import io.github.opencubicchunks.cubicchunks.mixin.access.client.ClientChunkCacheStorageAccess;
+import io.github.opencubicchunks.cubicchunks.world.level.CubicLevelHeightAccessor;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
-import io.github.opencubicchunks.cubicchunks.world.client.IClientWorld;
-import io.github.opencubicchunks.cubicchunks.world.lighting.IWorldLightManager;
+import io.github.opencubicchunks.cubicchunks.client.multiplayer.CubicClientLevel;
+import io.github.opencubicchunks.cubicchunks.world.lighting.CubicLevelLightEngine;
 import net.minecraft.client.multiplayer.ClientChunkCache;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.nbt.CompoundTag;
@@ -31,7 +31,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(ClientChunkCache.class)
-public abstract class MixinClientChunkProvider implements IClientCubeProvider {
+public abstract class MixinClientChunkCache implements ClientCubeCache {
 
     @Shadow @Final private static Logger LOGGER;
 
@@ -39,8 +39,8 @@ public abstract class MixinClientChunkProvider implements IClientCubeProvider {
 
     @Shadow private volatile ClientChunkCache.Storage storage;
 
-    private volatile ClientChunkProviderCubeArray cubeArray;
-    private EmptyCube emptyCube;
+    private volatile ClientCubeCacheStorage cubeArray;
+    private EmptyLevelCube emptyLevelCube;
 
     @Shadow public abstract int getLoadedChunksCount();
 
@@ -52,15 +52,15 @@ public abstract class MixinClientChunkProvider implements IClientCubeProvider {
             return;
         }
 
-        this.cubeArray = new ClientChunkProviderCubeArray(adjustCubeViewDistance(viewDistance), adjustCubeViewDistance(CubicChunks.config().client.verticalViewDistance), this.level);
-        this.emptyCube = new EmptyCube(level);
+        this.cubeArray = new ClientCubeCacheStorage(adjustCubeViewDistance(viewDistance), adjustCubeViewDistance(CubicChunks.config().client.verticalViewDistance), this.level);
+        this.emptyLevelCube = new EmptyLevelCube(level);
     }
 
     private int adjustCubeViewDistance(int viewDistance) {
         return Math.max(2, Coords.sectionToCubeCeil(viewDistance)) + 3;
     }
 
-    private static boolean isCubeValid(@Nullable BigCube cube, int x, int y, int z) {
+    private static boolean isCubeValid(@Nullable LevelCube cube, int x, int y, int z) {
         if (cube == null) {
             return false;
         }
@@ -74,7 +74,7 @@ public abstract class MixinClientChunkProvider implements IClientCubeProvider {
             return;
         }
         int index = this.cubeArray.getIndex(x, y, z);
-        BigCube cube = this.cubeArray.get(index);
+        LevelCube cube = this.cubeArray.get(index);
         if (isCubeValid(cube, x, y, z)) {
             // TODO: forge cube unload event
             // net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.event.world.ChunkEvent.Unload(chunk));
@@ -85,34 +85,34 @@ public abstract class MixinClientChunkProvider implements IClientCubeProvider {
 
     @Nullable
     @Override
-    public BigCube getCube(int cubeX, int cubeY, int cubeZ, ChunkStatus requiredStatus, boolean load) {
+    public LevelCube getCube(int cubeX, int cubeY, int cubeZ, ChunkStatus requiredStatus, boolean load) {
         if (this.cubeArray.inView(cubeX, cubeY, cubeZ)) {
-            BigCube chunk = this.cubeArray.get(this.cubeArray.getIndex(cubeX, cubeY, cubeZ));
+            LevelCube chunk = this.cubeArray.get(this.cubeArray.getIndex(cubeX, cubeY, cubeZ));
             if (isCubeValid(chunk, cubeX, cubeY, cubeZ)) {
                 return chunk;
             }
         }
 
-        return load ? this.emptyCube : null;
+        return load ? this.emptyLevelCube : null;
     }
 
     @Override
-    public BigCube replaceWithPacketData(int cubeX, int cubeY, int cubeZ,
-                                         @Nullable ChunkBiomeContainer biomes, FriendlyByteBuf readBuffer, CompoundTag nbtTagIn, boolean cubeExists) {
+    public LevelCube replaceWithPacketData(int cubeX, int cubeY, int cubeZ,
+                                           @Nullable ChunkBiomeContainer biomes, FriendlyByteBuf readBuffer, CompoundTag nbtTagIn, boolean cubeExists) {
 
         if (!this.cubeArray.inView(cubeX, cubeY, cubeZ)) {
             LOGGER.warn("Ignoring cube since it's not in the view range: {}, {}, {}", cubeX, cubeY, cubeZ);
             return null;
         }
         int index = this.cubeArray.getIndex(cubeX, cubeY, cubeZ);
-        BigCube cube = this.cubeArray.cubes.get(index);
+        LevelCube cube = this.cubeArray.cubes.get(index);
         if (!isCubeValid(cube, cubeX, cubeY, cubeZ)) {
             if (biomes == null) {
                 LOGGER.warn("Ignoring cube since we don't have complete data: {}, {}, {}", cubeX, cubeY, cubeZ);
                 return null;
             }
 
-            cube = new BigCube(this.level, CubePos.of(cubeX, cubeY, cubeZ), biomes);
+            cube = new LevelCube(this.level, CubePos.of(cubeX, cubeY, cubeZ), biomes);
             cube.read(biomes, readBuffer, nbtTagIn, cubeExists);
             this.cubeArray.replace(index, cube);
         } else {
@@ -120,7 +120,7 @@ public abstract class MixinClientChunkProvider implements IClientCubeProvider {
         }
 
         LevelLightEngine worldlightmanager = this.getLightEngine();
-        ((IWorldLightManager) worldlightmanager).enableLightSources(CubePos.of(cubeX, cubeY, cubeZ), true);
+        ((CubicLevelLightEngine) worldlightmanager).enableLightSources(CubePos.of(cubeX, cubeY, cubeZ), true);
 
         LevelChunkSection[] cubeSections = cube.getCubeSections();
         for (int i = 0; i < cubeSections.length; ++i) {
@@ -128,7 +128,7 @@ public abstract class MixinClientChunkProvider implements IClientCubeProvider {
             worldlightmanager.updateSectionStatus(Coords.sectionPosByIndex(cube.getCubePos(), i), LevelChunkSection.isEmpty(chunksection));
         }
 
-        ((IClientWorld) this.level).onCubeLoaded(cubeX, cubeY, cubeZ);
+        ((CubicClientLevel) this.level).onCubeLoaded(cubeX, cubeY, cubeZ);
         // TODO: forge client cube load event
         // net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.event.world.ChunkEvent.Load(cube));
         return cube;
@@ -157,13 +157,13 @@ public abstract class MixinClientChunkProvider implements IClientCubeProvider {
         if (oldHDistance == newHDistance && oldVDistance == newVDistance) {
             return;
         }
-        ClientChunkProviderCubeArray array = new ClientChunkProviderCubeArray(newHDistance, newVDistance, this.level);
+        ClientCubeCacheStorage array = new ClientCubeCacheStorage(newHDistance, newVDistance, this.level);
         array.centerX = this.cubeArray.centerX;
         array.centerY = this.cubeArray.centerY;
         array.centerZ = this.cubeArray.centerZ;
 
         for (int k = 0; k < this.cubeArray.cubes.length(); ++k) {
-            BigCube chunk = this.cubeArray.cubes.get(k);
+            LevelCube chunk = this.cubeArray.cubes.get(k);
             if (chunk == null) {
                 continue;
             }
@@ -187,7 +187,7 @@ public abstract class MixinClientChunkProvider implements IClientCubeProvider {
         }
 
         //noinspection ConstantConditions
-        cir.setReturnValue("Client Chunk Cache: " + ((ClientChunkProviderChunkArrayAccess) (Object) this.storage).getChunks().length() + ", " + this.getLoadedChunksCount() +
+        cir.setReturnValue("Client Chunk Cache: " + ((ClientChunkCacheStorageAccess) (Object) this.storage).getChunks().length() + ", " + this.getLoadedChunksCount() +
             " | " + this.cubeArray.cubes.length() + ", " + getLoadedCubesCount());
     }
 

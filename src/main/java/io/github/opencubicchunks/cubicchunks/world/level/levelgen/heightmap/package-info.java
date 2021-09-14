@@ -1,6 +1,6 @@
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-package io.github.opencubicchunks.cubicchunks.chunk.graph;
+package io.github.opencubicchunks.cubicchunks.world.level.levelgen.heightmap;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
