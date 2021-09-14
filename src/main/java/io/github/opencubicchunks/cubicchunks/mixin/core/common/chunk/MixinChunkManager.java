@@ -592,11 +592,23 @@ public abstract class MixinChunkManager implements IChunkManager, IChunkMapInter
     @Override
     public CompletableFuture<Either<IBigCube, ChunkHolder.ChunkLoadingFailure>> scheduleCube(ChunkHolder cubeHolder, ChunkStatus chunkStatusIn) {
         CubePos cubePos = ((ICubeHolder) cubeHolder).getCubePos();
-        CompletableFuture<Either<ChunkAccess, ChunkHolder.ChunkLoadingFailure>> columnFutures = scheduleAndWaitForColumns(chunkStatusIn, cubePos);
         if (chunkStatusIn == ChunkStatus.EMPTY) {
             CompletableFuture<Either<IBigCube, ChunkHolder.ChunkLoadingFailure>> cubeFuture = this.scheduleCubeLoad(cubePos);
-            return columnFutures.thenComposeAsync(columns -> cubeFuture);
+            return cubeFuture.thenCompose(maybeCube -> {
+                Optional<IBigCube> left = maybeCube.left();
+                ChunkStatus target = left.map(ChunkAccess::getStatus).orElse(chunkStatusIn);
+                return scheduleAndWaitForColumns(target, cubePos).thenApplyAsync(columns -> {
+                    maybeCube.left().ifPresent(cube -> {
+                        if (!(cube instanceof CubePrimerWrapper) && cube instanceof CubePrimer primer && primer.getCubeStatus().isOrAfter(ChunkStatus.FEATURES)) {
+                            primer.onEnteringFeaturesStatus();
+                        }
+                    });
+                    return maybeCube;
+                }, mainThreadExecutor);
+            });
         } else {
+            CompletableFuture<Either<ChunkAccess, ChunkHolder.ChunkLoadingFailure>> columnFutures = scheduleAndWaitForColumns(chunkStatusIn, cubePos);
+
             CompletableFuture<Either<IBigCube, ChunkHolder.ChunkLoadingFailure>> parentCubeFuture = Utils.unsafeCast(
                 ((ICubeHolder) cubeHolder).getOrScheduleCubeFuture(chunkStatusIn.getParent(), (ChunkMap) (Object) this)
             );

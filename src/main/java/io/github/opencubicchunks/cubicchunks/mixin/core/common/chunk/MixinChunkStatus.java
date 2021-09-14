@@ -83,7 +83,7 @@ public class MixinChunkStatus {
 
 
         if (chunk instanceof CubePrimer && !chunk.getStatus().isOrAfter(status)) {
-            ((CubePrimer) chunk).setCubeStatus(status);
+            ((CubePrimer) chunk).updateCubeStatus(status);
         }
     }
 
@@ -112,7 +112,7 @@ public class MixinChunkStatus {
 
             if (!((IBigCube) chunk).getCubeStatus().isOrAfter(status)) {
                 if (chunk instanceof CubePrimer) {
-                    ((CubePrimer) chunk).setCubeStatus(status);
+                    ((CubePrimer) chunk).updateCubeStatus(status);
                 }
             }
             cir.setReturnValue(CompletableFuture.completedFuture(Either.left(chunk)));
@@ -132,7 +132,7 @@ public class MixinChunkStatus {
             }
 
             if (chunk instanceof CubePrimer) {
-                ((CubePrimer) chunk).setCubeStatus(status);
+                ((CubePrimer) chunk).updateCubeStatus(status);
             }
         }
     }
@@ -245,7 +245,7 @@ public class MixinChunkStatus {
             assert chainedNoiseFutures != null;
             ci.setReturnValue(chainedNoiseFutures.thenApply(ignored -> {
                 if (chunk instanceof CubePrimer) {
-                    ((CubePrimer) chunk).setCubeStatus(status);
+                    ((CubePrimer) chunk).updateCubeStatus(status);
                 }
 
                 return Either.left(chunk);
@@ -404,7 +404,7 @@ public class MixinChunkStatus {
 
             CubePrimer cubePrimer = (CubePrimer) chunk;
             if (!cubePrimer.getCubeStatus().isOrAfter(status)) {
-                cubePrimer.setCubeStatus(status);
+                cubePrimer.updateCubeStatus(status);
             }
             cir.setReturnValue(CompletableFuture.completedFuture(Either.left(chunk)));
             return;
@@ -431,7 +431,7 @@ public class MixinChunkStatus {
 //            if (cubePrimer.getCubePos().getY() >= 0)
             cubePrimer.applyFeatureStates();
             ((ICubeGenerator) generator).decorate(cubeWorldGenRegion, structureFeatureManager, (CubePrimer) chunk);
-            cubePrimer.setCubeStatus(status);
+            cubePrimer.updateCubeStatus(status);
         }
         cir.setReturnValue(CompletableFuture.completedFuture(Either.left(chunk)));
     }
@@ -457,7 +457,7 @@ public class MixinChunkStatus {
         }
         boolean flag = ((CubePrimer) chunk).getCubeStatus().isOrAfter(status) && ((CubePrimer) chunk).hasCubeLight();
         if (!chunk.getStatus().isOrAfter(status)) {
-            ((CubePrimer) chunk).setCubeStatus(status);
+            ((CubePrimer) chunk).updateCubeStatus(status);
         }
         cir.setReturnValue(unsafeCast(((IServerWorldLightManager) lightManager).lightCube((IBigCube) chunk, flag).thenApply(Either::left)));
     }

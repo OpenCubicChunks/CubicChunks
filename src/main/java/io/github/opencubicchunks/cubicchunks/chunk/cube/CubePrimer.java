@@ -186,41 +186,52 @@ public class CubePrimer extends ProtoChunk implements IBigCube, CubicLevelHeight
     //STATUS
     public void setCubeStatus(ChunkStatus newStatus) {
         this.status = newStatus;
+    }
+
+    public void updateCubeStatus(ChunkStatus newStatus) {
+        this.status = newStatus;
 
         if (this.status == ChunkStatus.FEATURES) {
-            ChunkSource chunkSource = getChunkSource();
+            onEnteringFeaturesStatus();
+        }
+    }
 
-            for (int dx = 0; dx < IBigCube.DIAMETER_IN_SECTIONS; dx++) {
-                for (int dz = 0; dz < IBigCube.DIAMETER_IN_SECTIONS; dz++) {
+    public void onEnteringFeaturesStatus() {
+        ChunkSource chunkSource = getChunkSource();
 
-                    // get the chunk for this section
-                    ChunkPos chunkPos = this.cubePos.asChunkPos(dx, dz);
-                    ChunkAccess chunk = chunkSource.getChunk(chunkPos.x, chunkPos.z, ChunkStatus.EMPTY, false);
+        for (int dx = 0; dx < IBigCube.DIAMETER_IN_SECTIONS; dx++) {
+            for (int dz = 0; dz < IBigCube.DIAMETER_IN_SECTIONS; dz++) {
 
-                    // the load order guarantees the chunk being present
-                    assert (chunk != null && chunk.getStatus().isOrAfter(ChunkStatus.FEATURES));
+                // get the chunk for this section
+                ChunkPos chunkPos = this.cubePos.asChunkPos(dx, dz);
+                ChunkAccess chunk = chunkSource.getChunk(chunkPos.x, chunkPos.z, ChunkStatus.EMPTY, false);
 
-                    ((CubeMapGetter) chunk).getCubeMap().markLoaded(this.cubePos.getY());
+                if (!(chunk != null && chunk.getStatus().isOrAfter(ChunkStatus.FEATURES))) {
+                    int j = 0;
+                }
+                // the load order guarantees the chunk being present
+                assert (chunk != null && chunk.getStatus().isOrAfter(ChunkStatus.FEATURES));
 
-                    LightSurfaceTrackerWrapper lightHeightmap = ((LightHeightmapGetter) chunk).getServerLightHeightmap();
+                ((CubeMapGetter) chunk).getCubeMap().markLoaded(this.cubePos.getY());
 
-                    int[] beforeValues = new int[SECTION_DIAMETER * SECTION_DIAMETER];
-                    for (int z = 0; z < SECTION_DIAMETER; z++) {
-                        for (int x = 0; x < SECTION_DIAMETER; x++) {
-                            beforeValues[z * SECTION_DIAMETER + x] = lightHeightmap.getFirstAvailable(x, z);
-                        }
+                LightSurfaceTrackerWrapper lightHeightmap = ((LightHeightmapGetter) chunk).getServerLightHeightmap();
+
+                int[] beforeValues = new int[SECTION_DIAMETER * SECTION_DIAMETER];
+                for (int z = 0; z < SECTION_DIAMETER; z++) {
+                    for (int x = 0; x < SECTION_DIAMETER; x++) {
+                        beforeValues[z * SECTION_DIAMETER + x] = lightHeightmap.getFirstAvailable(x, z);
                     }
+                }
 
-                    lightHeightmap.loadCube(this);
+                lightHeightmap.loadCube(this);
 
-                    for (int z = 0; z < SECTION_DIAMETER; z++) {
-                        for (int x = 0; x < SECTION_DIAMETER; x++) {
-                            int beforeValue = beforeValues[z * SECTION_DIAMETER + x];
-                            int afterValue = lightHeightmap.getFirstAvailable(x, z);
-                            if (beforeValue != afterValue) {
-                                ((ISkyLightColumnChecker) chunkSource.getLightEngine()).checkSkyLightColumn((CubeMapGetter) chunk,
-                                        chunkPos.getBlockX(x), chunkPos.getBlockZ(z), beforeValue, afterValue);
-                            }
+                for (int z = 0; z < SECTION_DIAMETER; z++) {
+                    for (int x = 0; x < SECTION_DIAMETER; x++) {
+                        int beforeValue = beforeValues[z * SECTION_DIAMETER + x];
+                        int afterValue = lightHeightmap.getFirstAvailable(x, z);
+                        if (beforeValue != afterValue) {
+                            ((ISkyLightColumnChecker) chunkSource.getLightEngine()).checkSkyLightColumn((CubeMapGetter) chunk,
+                                chunkPos.getBlockX(x), chunkPos.getBlockZ(z), beforeValue, afterValue);
                         }
                     }
                 }
@@ -599,7 +610,7 @@ public class CubePrimer extends ProtoChunk implements IBigCube, CubicLevelHeight
     }
 
     @Override public void setStatus(ChunkStatus status) {
-        this.setCubeStatus(status);
+        this.updateCubeStatus(status);
     }
 
     @Override public Map<BlockPos, CompoundTag> getBlockEntityNbts() {
