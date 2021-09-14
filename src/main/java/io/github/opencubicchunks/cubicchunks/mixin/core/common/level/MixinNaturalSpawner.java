@@ -2,12 +2,12 @@ package io.github.opencubicchunks.cubicchunks.mixin.core.common.level;
 
 import java.util.Iterator;
 
-import io.github.opencubicchunks.cubicchunks.world.level.chunk.CubeAccess;
-import io.github.opencubicchunks.cubicchunks.world.level.CubePos;
 import io.github.opencubicchunks.cubicchunks.levelgen.CubeWorldGenRegion;
-import io.github.opencubicchunks.cubicchunks.world.level.CubicLevelHeightAccessor;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import io.github.opencubicchunks.cubicchunks.world.CubicNaturalSpawner;
+import io.github.opencubicchunks.cubicchunks.world.level.CubePos;
+import io.github.opencubicchunks.cubicchunks.world.level.CubicLevelHeightAccessor;
+import io.github.opencubicchunks.cubicchunks.world.level.chunk.CubeAccess;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -162,7 +162,8 @@ public abstract class MixinNaturalSpawner {
     private static ThreadLocal<BlockPos> capturedPos = new ThreadLocal<>();
 
     @Dynamic
-    @Inject(method = "createCubicState", at = @At(value = "INVOKE", target = "Lio/github/opencubicchunks/cubicchunks/chunk/util/CubePos;asLong(II)J"), locals = LocalCapture.CAPTURE_FAILHARD)
+    @Inject(method = "createCubicState", at = @At(value = "INVOKE", target = "Lio/github/opencubicchunks/cubicchunks/world/level/CubePos;asLong(II)J"),
+        locals = LocalCapture.CAPTURE_FAILHARD)
     private static void createCubicState(int spawningChunkCount, Iterable<?> entities, CubicNaturalSpawner.CubeGetter chunkSource, CallbackInfoReturnable<NaturalSpawner.SpawnState> cir,
                                          PotentialCalculator potentialCalculator, Object2IntOpenHashMap<?> object2IntOpenHashMap, Iterator<?> var5, Entity entity, MobCategory mobCategory,
                                          BlockPos blockPos) {
@@ -170,7 +171,7 @@ public abstract class MixinNaturalSpawner {
     }
 
     @Dynamic
-    @Redirect(method = "createCubicState", at = @At(value = "INVOKE", target = "Lio/github/opencubicchunks/cubicchunks/chunk/util/CubePos;asLong(II)J"))
+    @Redirect(method = "createCubicState", at = @At(value = "INVOKE", target = "Lio/github/opencubicchunks/cubicchunks/world/level/CubePos;asLong(II)J"))
     private static long packCubePosLongNoSectionPos(int x, int z) {
         BlockPos pos = capturedPos.get();
         return CubePos.asLong(
@@ -186,7 +187,7 @@ public abstract class MixinNaturalSpawner {
     @Dynamic
     @Group(name = "isRightDistanceToPlayerAndSpawnPointForCube", min = 1, max = 1)
     @Redirect(method = "isRightDistanceToPlayerAndSpawnPointForCube", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/chunk/ChunkAccess;getPos()"
-        + "Lio/github/opencubicchunks/cubicchunks/chunk/util/CubePos;", remap = false), require = 0, remap = false)
+        + "Lio/github/opencubicchunks/cubicchunks/world/level/CubePos;", remap = false), require = 0, remap = false)
     private static CubePos useGetCubePos(ChunkAccess chunkAccess) {
         return ((CubeAccess) chunkAccess).getCubePos();
     }
@@ -194,7 +195,7 @@ public abstract class MixinNaturalSpawner {
     @Dynamic
     @Group(name = "isRightDistanceToPlayerAndSpawnPointForCube", min = 1, max = 1)
     @Redirect(method = "isRightDistanceToPlayerAndSpawnPointForCube", at = @At(value = "INVOKE", target = "Lnet/minecraft/class_2791;method_12004()"
-        + "Lio/github/opencubicchunks/cubicchunks/chunk/util/CubePos;", remap = false), require = 0, remap = false)
+        + "Lio/github/opencubicchunks/cubicchunks/world/level/CubePos;", remap = false), require = 0, remap = false)
     private static CubePos useGetCubePosMapping(ChunkAccess chunkAccess) {
         return ((CubeAccess) chunkAccess).getCubePos();
     }
