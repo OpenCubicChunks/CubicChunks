@@ -1,7 +1,7 @@
 package io.github.opencubicchunks.cubicchunks.world.level.levelgen.heightmap;
 
-import io.github.opencubicchunks.cubicchunks.world.level.chunk.ColumnCubeMapGetter;
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.HeightmapAccess;
+import io.github.opencubicchunks.cubicchunks.world.level.chunk.ColumnCubeMapGetter;
 import io.github.opencubicchunks.cubicchunks.world.lighting.SkyLightColumnChecker;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;

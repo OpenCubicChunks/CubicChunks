@@ -2,8 +2,8 @@ package io.github.opencubicchunks.cubicchunks.world.level.levelgen.heightmap;
 
 import static io.github.opencubicchunks.cubicchunks.utils.Coords.*;
 
-import io.github.opencubicchunks.cubicchunks.world.level.chunk.CubeAccess;
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.HeightmapAccess;
+import io.github.opencubicchunks.cubicchunks.world.level.chunk.CubeAccess;
 import net.minecraft.util.BitStorage;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.ChunkAccess;

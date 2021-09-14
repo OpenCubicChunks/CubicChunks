@@ -4,10 +4,10 @@ import java.util.Map;
 
 import javax.annotation.Nullable;
 
+import io.github.opencubicchunks.cubicchunks.utils.Coords;
+import io.github.opencubicchunks.cubicchunks.world.level.CubicLevelHeightAccessor;
 import io.github.opencubicchunks.cubicchunks.world.level.chunk.ColumnCubeGetter;
 import io.github.opencubicchunks.cubicchunks.world.level.chunk.LevelCube;
-import io.github.opencubicchunks.cubicchunks.world.level.CubicLevelHeightAccessor;
-import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientBlockEntityEvents;

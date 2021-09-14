@@ -1,7 +1,5 @@
 package io.github.opencubicchunks.cubicchunks.server.level;
 
-import io.github.opencubicchunks.cubicchunks.server.level.CubeTracker;
-import io.github.opencubicchunks.cubicchunks.server.level.CubicDistanceManager;
 import it.unimi.dsi.fastutil.longs.Long2ByteMap;
 import it.unimi.dsi.fastutil.longs.Long2ByteOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectSet;

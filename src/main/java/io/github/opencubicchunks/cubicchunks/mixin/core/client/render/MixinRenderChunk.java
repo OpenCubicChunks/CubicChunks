@@ -1,9 +1,9 @@
 package io.github.opencubicchunks.cubicchunks.mixin.core.client.render;
 
 import io.github.opencubicchunks.cubicchunks.mixin.access.client.ChunkRenderDispatcherAccess;
+import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import io.github.opencubicchunks.cubicchunks.world.level.CubicLevelAccessor;
 import io.github.opencubicchunks.cubicchunks.world.level.CubicLevelHeightAccessor;
-import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.chunk.ChunkRenderDispatcher;

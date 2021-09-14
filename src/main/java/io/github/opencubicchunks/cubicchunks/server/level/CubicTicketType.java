@@ -2,8 +2,8 @@ package io.github.opencubicchunks.cubicchunks.server.level;
 
 import java.util.Comparator;
 
-import io.github.opencubicchunks.cubicchunks.world.level.CubePos;
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.TicketTypeAccess;
+import io.github.opencubicchunks.cubicchunks.world.level.CubePos;
 import net.minecraft.server.level.TicketType;
 
 public class CubicTicketType {

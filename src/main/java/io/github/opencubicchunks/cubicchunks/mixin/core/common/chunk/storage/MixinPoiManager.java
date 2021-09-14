@@ -9,11 +9,11 @@ import java.util.stream.Stream;
 
 import com.mojang.datafixers.DataFixer;
 import com.mojang.datafixers.util.Pair;
-import io.github.opencubicchunks.cubicchunks.world.level.chunk.storage.PoiDeserializationContext;
-import io.github.opencubicchunks.cubicchunks.world.level.CubePos;
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.PoiSectionAccess;
+import io.github.opencubicchunks.cubicchunks.world.level.CubePos;
 import io.github.opencubicchunks.cubicchunks.world.level.CubicLevelAccessor;
 import io.github.opencubicchunks.cubicchunks.world.level.CubicLevelHeightAccessor;
+import io.github.opencubicchunks.cubicchunks.world.level.chunk.storage.PoiDeserializationContext;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import net.minecraft.Util;
 import net.minecraft.core.BlockPos;

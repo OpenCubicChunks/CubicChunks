@@ -5,9 +5,6 @@ import static io.github.opencubicchunks.cubicchunks.utils.Coords.*;
 import java.util.List;
 import java.util.function.Supplier;
 
-import io.github.opencubicchunks.cubicchunks.world.level.chunk.CubeAccess;
-import io.github.opencubicchunks.cubicchunks.world.level.chunk.ProtoCube;
-import io.github.opencubicchunks.cubicchunks.world.level.CubePos;
 import io.github.opencubicchunks.cubicchunks.levelgen.CubeWorldGenRandom;
 import io.github.opencubicchunks.cubicchunks.levelgen.CubeWorldGenRegion;
 import io.github.opencubicchunks.cubicchunks.levelgen.biome.BiomeGetter;
@@ -18,7 +15,10 @@ import io.github.opencubicchunks.cubicchunks.levelgen.util.CubicWorldGenUtils;
 import io.github.opencubicchunks.cubicchunks.levelgen.util.NonAtomicWorldgenRandom;
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.BiomeManagerAccess;
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.OverworldBiomeSourceAccess;
+import io.github.opencubicchunks.cubicchunks.world.level.CubePos;
 import io.github.opencubicchunks.cubicchunks.world.level.CubicLevelHeightAccessor;
+import io.github.opencubicchunks.cubicchunks.world.level.chunk.CubeAccess;
+import io.github.opencubicchunks.cubicchunks.world.level.chunk.ProtoCube;
 import net.minecraft.CrashReport;
 import net.minecraft.CrashReportCategory;
 import net.minecraft.ReportedException;
@@ -113,8 +113,8 @@ public abstract class MixinChunkGenerator implements CubeGenerator {
     }
 
 
-    private void createCCStructure(ConfiguredStructureFeature<?, ?> configuredStructureFeature, RegistryAccess registryAccess, StructureFeatureManager structureFeatureManager, CubeAccess cube,
-                                   StructureManager structureManager, long seed, CubePos cubePos, Biome biome) {
+    private void createCCStructure(ConfiguredStructureFeature<?, ?> configuredStructureFeature, RegistryAccess registryAccess, StructureFeatureManager structureFeatureManager,
+                                   CubeAccess cube, StructureManager structureManager, long seed, CubePos cubePos, Biome biome) {
         StructureStart<?> structureStart = structureFeatureManager
             .getStartForFeature(/*SectionPos.of(cube.getPos(), 0) We return null as a sectionPos Arg is not used in the method*/null, configuredStructureFeature.feature, cube);
         int i = structureStart != null ? structureStart.getReferences() : 0;

@@ -11,7 +11,7 @@
     <suppress checks="MultipleStringLiterals" files=".*Transformer\.java"/>
     <!-- implementations of ChunkAccess, getHeight for heightmap and world height are semantically not overloads but have the same name -->
     <suppress checks="OverloadMethodsDeclarationOrder"
-              files="SectionSizeCubeAccessWrapper.java|BigCube.java|CubePrimer.java|CubePrimerWrapper.java|NoiseAndSurfaceBuilderHelper.java|CubeWorldGenRegion.java"/>
+              files="SectionSizeCubeAccessWrapper.java|LevelCube.java|ProtoCube.java|ImposterProtoCube.java|NoiseAndSurfaceBuilderHelper.java|CubeWorldGenRegion.java"/>
     <!-- mixins may have multiple inject methods with the same name, it's better to group them by their functionality -->
     <suppress checks="OverloadMethodsDeclarationOrder" files=".*Mixin.*\.java"/>
     <!-- TODO: DebugVulkan doesn't work yet anyway, and this requires some refactoring -->
@@ -19,15 +19,15 @@
     <!-- Mixins don't count for now until ASM is done -->
     <suppress checks="CyclomaticComplexity" files=".*Mixin.*\.java"/>
     <!-- we are not fixing setBlockState -->
-    <suppress checks="CyclomaticComplexity" files="BigCube.java|CubePrimer.java"/>
+    <suppress checks="CyclomaticComplexity" files="LevelCube.java|ProtoCube.java"/>
     <!-- TODO: These probably need refactoring -->
-    <suppress checks="CyclomaticComplexity" files="CubicWorldLoadScreen.java|CubeSerializer.java|DebugVisualization.java|LightSurfaceTrackerSection.java"/>
+    <suppress checks="CyclomaticComplexity" files="CubicLevelLoadingScreen.java|CubeSerializer.java|DebugVisualization.java|LightSurfaceTrackerSection.java"/>
     <!-- TODO: DebugVulkan doesn't work yet anyway, and this requires some refactoring -->
     <suppress checks="NPathComplexity" files="DebugVulkan.java"/>
     <!-- Mixins don't count for now until ASM is done -->
     <suppress checks="NPathComplexity" files=".*Mixin.*\.java"/>
     <!-- TODO These need refactoring -->
-    <suppress checks="NPathComplexity" files="BigCube.java|CubePrimer.java|CubeSerializer.java"/>
+    <suppress checks="NPathComplexity" files="LevelCube.java|ProtoCube.java|CubeSerializer.java"/>
     <!-- Mixins need shadows and sometimes may want soft implements with special characters in prefix -->
     <suppress checks="MemberName" files=".*Mixin.*\.java"/>
     <suppress checks="MethodName" files=".*Mixin.*\.java"/>

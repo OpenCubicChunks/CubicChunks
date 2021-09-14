@@ -2,8 +2,8 @@ package io.github.opencubicchunks.cubicchunks.mixin.core.common.level;
 
 import javax.annotation.Nullable;
 
-import io.github.opencubicchunks.cubicchunks.world.level.CubicLevelHeightAccessor;
 import io.github.opencubicchunks.cubicchunks.world.SpawnPlaceFinder;
+import io.github.opencubicchunks.cubicchunks.world.level.CubicLevelHeightAccessor;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.PlayerRespawnLogic;
 import net.minecraft.server.level.ServerLevel;

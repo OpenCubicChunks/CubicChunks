@@ -1,9 +1,9 @@
 package io.github.opencubicchunks.cubicchunks.network;
 
 import io.github.opencubicchunks.cubicchunks.CubicChunks;
-import io.github.opencubicchunks.cubicchunks.world.level.chunk.LightHeightmapGetter;
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.HeightmapAccess;
 import io.github.opencubicchunks.cubicchunks.utils.AddressTools;
+import io.github.opencubicchunks.cubicchunks.world.level.chunk.LightHeightmapGetter;
 import it.unimi.dsi.fastutil.shorts.ShortArrayList;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.level.ChunkPos;

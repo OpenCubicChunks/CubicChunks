@@ -12,10 +12,10 @@ import java.util.function.Predicate;
 import javax.annotation.Nullable;
 
 import com.google.common.collect.Lists;
+import io.github.opencubicchunks.cubicchunks.world.CubicServerTickList;
 import io.github.opencubicchunks.cubicchunks.world.ImposterChunkPos;
 import io.github.opencubicchunks.cubicchunks.world.level.CubePos;
 import io.github.opencubicchunks.cubicchunks.world.level.CubicLevelHeightAccessor;
-import io.github.opencubicchunks.cubicchunks.world.CubicServerTickList;
 import it.unimi.dsi.fastutil.objects.ObjectAVLTreeSet;
 import net.minecraft.CrashReport;
 import net.minecraft.CrashReportCategory;

@@ -4,9 +4,9 @@ import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 
 import com.mojang.datafixers.util.Either;
+import io.github.opencubicchunks.cubicchunks.world.level.CubePos;
 import io.github.opencubicchunks.cubicchunks.world.level.chunk.CubeSource;
 import io.github.opencubicchunks.cubicchunks.world.level.chunk.LevelCube;
-import io.github.opencubicchunks.cubicchunks.world.level.CubePos;
 import net.minecraft.server.level.ChunkHolder;
 import net.minecraft.server.level.TicketType;
 import net.minecraft.world.level.chunk.ChunkAccess;

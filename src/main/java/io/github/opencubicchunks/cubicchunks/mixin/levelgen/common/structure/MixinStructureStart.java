@@ -5,8 +5,8 @@ import java.util.List;
 import java.util.Random;
 
 import io.github.opencubicchunks.cubicchunks.world.ImposterChunkPos;
-import io.github.opencubicchunks.cubicchunks.world.level.CubicLevelHeightAccessor;
 import io.github.opencubicchunks.cubicchunks.world.SetupCubeStructureStart;
+import io.github.opencubicchunks.cubicchunks.world.level.CubicLevelHeightAccessor;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Vec3i;
 import net.minecraft.nbt.CompoundTag;

@@ -2,13 +2,13 @@ package io.github.opencubicchunks.cubicchunks.mixin.core.common.level.lighting;
 
 import javax.annotation.Nullable;
 
-import io.github.opencubicchunks.cubicchunks.world.level.chunk.CubeAccess;
-import io.github.opencubicchunks.cubicchunks.world.level.CubePos;
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.LayerLightSectionStorageAccess;
+import io.github.opencubicchunks.cubicchunks.world.level.CubePos;
 import io.github.opencubicchunks.cubicchunks.world.level.CubicLevelHeightAccessor;
+import io.github.opencubicchunks.cubicchunks.world.level.chunk.CubeAccess;
+import io.github.opencubicchunks.cubicchunks.world.level.chunk.LightCubeGetter;
 import io.github.opencubicchunks.cubicchunks.world.lighting.CubicLayerLightEngine;
 import io.github.opencubicchunks.cubicchunks.world.lighting.CubicLayerLightSectionStorage;
-import io.github.opencubicchunks.cubicchunks.world.level.chunk.LightCubeGetter;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.SectionPos;
 import net.minecraft.world.level.BlockGetter;

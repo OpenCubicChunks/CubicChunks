@@ -4,12 +4,12 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.Map;
 
-import io.github.opencubicchunks.cubicchunks.server.level.CubeMap;
+import io.github.opencubicchunks.cubicchunks.config.EarlyConfig;
 import io.github.opencubicchunks.cubicchunks.levelgen.biome.StripedBiomeSource;
 import io.github.opencubicchunks.cubicchunks.levelgen.feature.CubicFeatures;
 import io.github.opencubicchunks.cubicchunks.levelgen.placement.CubicFeatureDecorators;
-import io.github.opencubicchunks.cubicchunks.config.EarlyConfig;
 import io.github.opencubicchunks.cubicchunks.network.PacketDispatcher;
+import io.github.opencubicchunks.cubicchunks.server.level.CubeMap;
 import io.github.opencubicchunks.cubicchunks.world.level.CubicLevelHeightAccessor;
 import net.fabricmc.api.ModInitializer;
 import net.minecraft.SharedConstants;

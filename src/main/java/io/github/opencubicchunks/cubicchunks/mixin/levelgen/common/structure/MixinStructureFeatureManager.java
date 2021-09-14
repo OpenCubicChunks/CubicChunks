@@ -37,7 +37,8 @@ public abstract class MixinStructureFeatureManager {
             return;
         }
 
-        cir.setReturnValue(((CubicLevelAccessor) this.level).getCube(sectionToCube(sectionPos.x()), sectionToCube(sectionPos.y()), sectionToCube(sectionPos.z()), ChunkStatus.STRUCTURE_REFERENCES)
+        cir.setReturnValue(((CubicLevelAccessor) this.level)
+            .getCube(sectionToCube(sectionPos.x()), sectionToCube(sectionPos.y()), sectionToCube(sectionPos.z()), ChunkStatus.STRUCTURE_REFERENCES)
             .getReferencesForFeature(structureFeature).stream().map((seed) -> {
                 return CubePos.from(seed);
             }).map((cubePos) -> {

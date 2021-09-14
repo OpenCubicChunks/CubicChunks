@@ -6,8 +6,8 @@ import java.util.Objects;
 
 import javax.annotation.Nullable;
 
-import io.github.opencubicchunks.cubicchunks.world.level.chunk.ColumnBiomeContainer;
 import io.github.opencubicchunks.cubicchunks.world.level.CubicLevelHeightAccessor;
+import io.github.opencubicchunks.cubicchunks.world.level.chunk.ColumnBiomeContainer;
 import net.minecraft.SharedConstants;
 import net.minecraft.core.Registry;
 import net.minecraft.nbt.CompoundTag;

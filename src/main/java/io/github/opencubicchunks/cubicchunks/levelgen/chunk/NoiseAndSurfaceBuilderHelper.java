@@ -5,11 +5,11 @@ import java.util.Collections;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
-import io.github.opencubicchunks.cubicchunks.world.level.chunk.CubeAccess;
-import io.github.opencubicchunks.cubicchunks.world.level.chunk.ProtoCube;
-import io.github.opencubicchunks.cubicchunks.world.level.CubicLevelHeightAccessor;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import io.github.opencubicchunks.cubicchunks.world.DummyHeightmap;
+import io.github.opencubicchunks.cubicchunks.world.level.CubicLevelHeightAccessor;
+import io.github.opencubicchunks.cubicchunks.world.level.chunk.CubeAccess;
+import io.github.opencubicchunks.cubicchunks.world.level.chunk.ProtoCube;
 import io.github.opencubicchunks.cubicchunks.world.storage.CubeProtoTickList;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.Entity;

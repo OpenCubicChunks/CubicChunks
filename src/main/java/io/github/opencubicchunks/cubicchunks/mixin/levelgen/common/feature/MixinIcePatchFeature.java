@@ -1,8 +1,8 @@
 package io.github.opencubicchunks.cubicchunks.mixin.levelgen.common.feature;
 
 import io.github.opencubicchunks.cubicchunks.levelgen.CubeWorldGenRegion;
-import io.github.opencubicchunks.cubicchunks.world.level.CubicLevelHeightAccessor;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
+import io.github.opencubicchunks.cubicchunks.world.level.CubicLevelHeightAccessor;
 import net.minecraft.world.level.WorldGenLevel;
 import net.minecraft.world.level.levelgen.feature.IcePatchFeature;
 import org.spongepowered.asm.mixin.Mixin;

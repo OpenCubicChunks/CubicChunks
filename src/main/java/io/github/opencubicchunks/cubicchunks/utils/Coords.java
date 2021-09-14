@@ -25,9 +25,9 @@
 
 package io.github.opencubicchunks.cubicchunks.utils;
 
+import io.github.opencubicchunks.cubicchunks.world.level.CubePos;
 import io.github.opencubicchunks.cubicchunks.world.level.chunk.CubeAccess;
 import io.github.opencubicchunks.cubicchunks.world.level.chunk.LevelCube;
-import io.github.opencubicchunks.cubicchunks.world.level.CubePos;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.SectionPos;
 import net.minecraft.util.Mth;

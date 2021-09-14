@@ -1,9 +1,9 @@
 package io.github.opencubicchunks.cubicchunks.world.level.chunk;
 
-import io.github.opencubicchunks.cubicchunks.world.level.CubePos;
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.ChunkBiomeContainerAccess;
-import io.github.opencubicchunks.cubicchunks.world.level.CubicLevelHeightAccessor;
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
+import io.github.opencubicchunks.cubicchunks.world.level.CubePos;
+import io.github.opencubicchunks.cubicchunks.world.level.CubicLevelHeightAccessor;
 import net.minecraft.core.IdMap;
 import net.minecraft.core.QuartPos;
 import net.minecraft.world.level.ChunkPos;
