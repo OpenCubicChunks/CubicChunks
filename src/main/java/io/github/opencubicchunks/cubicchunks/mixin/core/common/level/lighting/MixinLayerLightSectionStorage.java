@@ -38,8 +38,8 @@ public abstract class MixinLayerLightSectionStorage<M extends DataLayerStorageMa
 
     private final LongSet cubesToRetain = new LongOpenHashSet();
 
-    protected MixinLayerLightSectionStorage(int p_i50706_1_, int p_i50706_2_, int p_i50706_3_) {
-        super(p_i50706_1_, p_i50706_2_, p_i50706_3_);
+    protected MixinLayerLightSectionStorage(int i, int j, int k) {
+        super(i, j, k);
     }
 
     @Shadow protected abstract void clearQueuedSectionBlocks(LayerLightEngine<?, ?> engine, long sectionPosIn);
@@ -49,7 +49,6 @@ public abstract class MixinLayerLightSectionStorage<M extends DataLayerStorageMa
     @Shadow protected abstract boolean storingLightForSection(long sectionPosIn);
 
     @Shadow protected abstract boolean hasInconsistencies();
-
 
     @Override
     public void retainCubeData(long cubeSectionPos, boolean retain) {
@@ -69,17 +68,13 @@ public abstract class MixinLayerLightSectionStorage<M extends DataLayerStorageMa
         if (!((CubicLevelHeightAccessor) this.chunkSource.getLevel()).isCubic()) {
             return;
         }
-
         ci.cancel();
-
 
         if (this.hasInconsistencies() || !this.queuedSections.isEmpty()) {
             for (long noLightPos : this.toRemove) {
                 this.clearQueuedSectionBlocks(engine, noLightPos);
                 DataLayer nibblearray = this.queuedSections.remove(noLightPos);
                 DataLayer nibblearray1 = this.updatingSectionData.removeLayer(noLightPos);
-                // FIXME this commented out check is probably important, but also breaks client-side lighting
-                //       should investigate why it breaks things instead of just disabling it.
                 if (this.cubesToRetain.contains(CubePos.sectionToCubeSectionLong(noLightPos))) {
                     if (nibblearray != null) {
                         this.queuedSections.put(noLightPos, nibblearray);
@@ -101,8 +96,6 @@ public abstract class MixinLayerLightSectionStorage<M extends DataLayerStorageMa
 
             for (Long2ObjectMap.Entry<DataLayer> entry : this.queuedSections.long2ObjectEntrySet()) {
                 long entryPos = entry.getLongKey();
-                // FIXME this commented out check is also probably important, but this one breaks *server-side* lighting
-                //       should investigate why it breaks things instead of just disabling it.
                 if (this.storingLightForSection(entryPos)) {
                     DataLayer nibblearray2 = entry.getValue();
                     if (this.updatingSectionData.getLayer(entryPos) != nibblearray2) {
@@ -131,29 +124,30 @@ public abstract class MixinLayerLightSectionStorage<M extends DataLayerStorageMa
                                         long k1;
                                         long l1;
                                         switch (direction) {
-                                            case DOWN:
+                                            case DOWN -> {
                                                 k1 = BlockPos.asLong(newX + j1, newY, newZ + i1);
                                                 l1 = BlockPos.asLong(newX + j1, newY - 1, newZ + i1);
-                                                break;
-                                            case UP:
+                                            }
+                                            case UP -> {
                                                 k1 = BlockPos.asLong(newX + j1, newY + 16 - 1, newZ + i1);
                                                 l1 = BlockPos.asLong(newX + j1, newY + 16, newZ + i1);
-                                                break;
-                                            case NORTH:
+                                            }
+                                            case NORTH -> {
                                                 k1 = BlockPos.asLong(newX + i1, newY + j1, newZ);
                                                 l1 = BlockPos.asLong(newX + i1, newY + j1, newZ - 1);
-                                                break;
-                                            case SOUTH:
+                                            }
+                                            case SOUTH -> {
                                                 k1 = BlockPos.asLong(newX + i1, newY + j1, newZ + 16 - 1);
                                                 l1 = BlockPos.asLong(newX + i1, newY + j1, newZ + 16);
-                                                break;
-                                            case WEST:
+                                            }
+                                            case WEST -> {
                                                 k1 = BlockPos.asLong(newX, newY + i1, newZ + j1);
                                                 l1 = BlockPos.asLong(newX - 1, newY + i1, newZ + j1);
-                                                break;
-                                            default:
+                                            }
+                                            default -> {
                                                 k1 = BlockPos.asLong(newX + 16 - 1, newY + i1, newZ + j1);
                                                 l1 = BlockPos.asLong(newX + 16, newY + i1, newZ + j1);
+                                            }
                                         }
 
                                         engineAccess.invokeCheckEdge(k1, l1, engineAccess.invokeComputeLevelFromNeighbor(k1, l1, engineAccess.invokeGetLevel(k1)),
@@ -177,8 +171,6 @@ public abstract class MixinLayerLightSectionStorage<M extends DataLayerStorageMa
                     objectiterator.remove();
                 }
             }
-
         }
     }
-
 }

@@ -21,7 +21,6 @@ import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 @Mixin(RandomPatchFeature.class)
 public class MixinRandomPatchFeature {
 
-
     @Inject(method = "place", at = @At(value = "INVOKE_ASSIGN",
         target = "Lnet/minecraft/world/level/WorldGenLevel;getHeightmapPos(Lnet/minecraft/world/level/levelgen/Heightmap$Types;Lnet/minecraft/core/BlockPos;)Lnet/minecraft/core/BlockPos;",
         ordinal = 0, shift = At.Shift.AFTER), locals = LocalCapture.CAPTURE_FAILHARD, cancellable = true)
@@ -36,7 +35,6 @@ public class MixinRandomPatchFeature {
                 return;
             }
         }
-
         CubeWorldGenRegion cubeWorldGenRegion = (CubeWorldGenRegion) worldGenLevel;
         if (!cubeWorldGenRegion.insideCubeHeight(blockPos2.getY())) {
             cir.setReturnValue(false);

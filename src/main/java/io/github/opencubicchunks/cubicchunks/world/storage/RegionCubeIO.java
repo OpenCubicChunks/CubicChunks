@@ -119,7 +119,6 @@ public class RegionCubeIO {
         }
     }
 
-
     public CompletableFuture<Void> saveCubeNBT(CubePos cubePos, CompoundTag cubeNBT) {
         return this.submitCubeTask(() -> {
             SaveEntry entry = this.pendingCubeWrites.computeIfAbsent(cubePos, (p_235977_1_) -> new SaveEntry(cubeNBT));

@@ -13,7 +13,8 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 
 @Mixin(VideoSettingsScreen.class)
 public class MixinVideoSettingsScreen {
-
+    // TODO: do it better without replacing the entire options array
+    // TODO: add lang entries
     private static final Option[] MODIFIED_OPTIONS;
 
     private static final ProgressOption VERTICAL_RENDER_DISTANCE = new ProgressOption("options.renderDistance", 2.0D,
@@ -27,7 +28,6 @@ public class MixinVideoSettingsScreen {
         double value = option.get(gameOptions);
         return ((OptionAccess) option).invokeGenericValueLabel(new TranslatableComponent("options.chunks", (int) value));
     });
-
 
     @Redirect(method = "init", at = @At(value = "FIELD", target = "Lnet/minecraft/client/gui/screens/VideoSettingsScreen;OPTIONS:[Lnet/minecraft/client/Option;"))
     private Option[] getOptionsMixin() {

@@ -3,6 +3,8 @@ package io.github.opencubicchunks.cubicchunks.mixin.core.common.chunk;
 import java.util.concurrent.CompletionException;
 import java.util.function.Consumer;
 
+import javax.annotation.Nullable;
+
 import io.github.opencubicchunks.cubicchunks.utils.Coords;
 import io.github.opencubicchunks.cubicchunks.world.level.CubePos;
 import io.github.opencubicchunks.cubicchunks.world.level.CubicLevelHeightAccessor;
@@ -72,6 +74,7 @@ public abstract class MixinLevelChunk implements ChunkAccess, LightHeightmapGett
 
     @Shadow public abstract Level getLevel();
 
+    // TODO: implement this
     @Override public boolean isYSpaceEmpty(int startY, int endY) {
         return false;
     }
@@ -94,7 +97,7 @@ public abstract class MixinLevelChunk implements ChunkAccess, LightHeightmapGett
             + "Lnet/minecraft/world/level/chunk/UpgradeData;Lnet/minecraft/world/level/TickList;Lnet/minecraft/world/level/TickList;J[Lnet/minecraft/world/level/chunk/LevelChunkSection;"
             + "Ljava/util/function/Consumer;)V",
         at = @At("RETURN"))
-    private void onInit(Level levelIn, ChunkPos pos, ChunkBiomeContainer chunkBiomeContainer, UpgradeData upgradeData, TickList<Block> tickList, TickList<Fluid> tickList2, long l,
+    private void onInit(Level levelIn, ChunkPos pos, ChunkBiomeContainer chunkBiomeContainer, UpgradeData upgradeData, TickList<Block> blockTicks, TickList<Fluid> fluidTicks, long l,
                         LevelChunkSection[] levelChunkSections, Consumer<LevelChunk> consumer, CallbackInfo ci) {
         isCubic = ((CubicLevelHeightAccessor) level).isCubic();
         generates2DChunks = ((CubicLevelHeightAccessor) level).generates2DChunks();
@@ -103,9 +106,8 @@ public abstract class MixinLevelChunk implements ChunkAccess, LightHeightmapGett
         if (!this.isCubic()) {
             return;
         }
-
-        //TODO: is cubicworld
-        //Client will already supply a ColumnBiomeContainer, server will not
+        // TODO: is cubicworld
+        // Client will already supply a ColumnBiomeContainer, server will not
         if (!(biomes instanceof ColumnBiomeContainer)) {
             this.biomes = new ColumnBiomeContainer(levelIn.registryAccess().registryOrThrow(Registry.BIOME_REGISTRY), levelIn, levelIn);
         }
@@ -142,11 +144,11 @@ public abstract class MixinLevelChunk implements ChunkAccess, LightHeightmapGett
         // TODO how do we want to handle client side light heightmap updates on block updates?
         //      note that either way there'll still need to be synchronization, since updates can happen outside of the client's vertically loaded range
         if (this.level.isClientSide) {
-            ClientLightSurfaceTracker clientLightHeightmap = ((LightHeightmapGetter) this).getClientLightHeightmap();
+            ClientLightSurfaceTracker clientLightHeightmap = this.getClientLightHeightmap();
         } else {
             int relX = pos.getX() & 15;
             int relZ = pos.getZ() & 15;
-            LightSurfaceTrackerWrapper serverLightHeightmap = ((LightHeightmapGetter) this).getServerLightHeightmap();
+            LightSurfaceTrackerWrapper serverLightHeightmap = this.getServerLightHeightmap();
             int oldHeight = serverLightHeightmap.getFirstAvailable(relX, relZ);
             // Light heightmap update needs to occur before the light engine update.
             // LevelChunk.setBlockState is called before the light engine is updated, so this works fine currently, but if this update call is ever moved, that must still be the case.
@@ -163,11 +165,10 @@ public abstract class MixinLevelChunk implements ChunkAccess, LightHeightmapGett
             + "Lnet/minecraft/world/level/chunk/UpgradeData;Lnet/minecraft/world/level/TickList;Lnet/minecraft/world/level/TickList;J[Lnet/minecraft/world/level/chunk/LevelChunkSection;"
             + "Ljava/util/function/Consumer;)V",
         at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/Level;getSectionsCount()I"))
-    private int getFakeSectionCount(Level levelIn) {
-        if (!((CubicLevelHeightAccessor) levelIn).isCubic()) { // The fields are not initialized here yet.
-            return levelIn.getSectionsCount();
+    private int getFakeSectionCount(Level level) {
+        if (!((CubicLevelHeightAccessor) level).isCubic()) { // The fields are not initialized here yet.
+            return level.getSectionsCount();
         }
-
         return 16; // TODO: properly handle Chunk
     }
 
@@ -176,11 +177,10 @@ public abstract class MixinLevelChunk implements ChunkAccess, LightHeightmapGett
             + "Lnet/minecraft/world/level/chunk/UpgradeData;Lnet/minecraft/world/level/TickList;Lnet/minecraft/world/level/TickList;J[Lnet/minecraft/world/level/chunk/LevelChunkSection;"
             + "Ljava/util/function/Consumer;)V",
         at = @At(value = "NEW", target = "net/minecraft/world/level/levelgen/Heightmap"))
-    private Heightmap getCCHeightmap(ChunkAccess chunkAccess, Heightmap.Types type) {
+    private Heightmap createSurfaceTracker(ChunkAccess chunkAccess, Heightmap.Types type) {
         if (!((CubicLevelHeightAccessor) this.level).isCubic()) { // The fields are not initialized here yet.
             return new Heightmap(chunkAccess, type);
         }
-
         if (this.level.isClientSide()) {
             return new ClientSurfaceTracker(chunkAccess, type);
         } else {
@@ -188,6 +188,7 @@ public abstract class MixinLevelChunk implements ChunkAccess, LightHeightmapGett
         }
     }
 
+    @Nullable
     @Redirect(method = { "getBlockState", "getFluidState(III)Lnet/minecraft/world/level/material/FluidState;", "setBlockState" },
         at = @At(
             value = "FIELD",
@@ -198,7 +199,6 @@ public abstract class MixinLevelChunk implements ChunkAccess, LightHeightmapGett
         if (!this.isCubic()) {
             return array[sectionIndex];
         }
-
         int sectionY = getSectionYFromSectionIndex(sectionIndex);
         CubeAccess cube = this.getCube(sectionY);
         if (cube instanceof EmptyLevelCube) {
@@ -263,7 +263,6 @@ public abstract class MixinLevelChunk implements ChunkAccess, LightHeightmapGett
             array[sectionIndex] = newVal;
             return;
         }
-
         int sectionY = getSectionYFromSectionIndex(sectionIndex);
         CubeAccess cube = this.getCube(sectionY);
         if (cube instanceof EmptyLevelCube) {
@@ -278,8 +277,6 @@ public abstract class MixinLevelChunk implements ChunkAccess, LightHeightmapGett
             this.unsaved = isModifiedIn;
             return;
         }
-
-
 //        if (isColumn) {
         this.getCube(Coords.blockToSection(pos.getY())).setDirty(isModifiedIn);
 //        } else {
@@ -316,12 +313,11 @@ public abstract class MixinLevelChunk implements ChunkAccess, LightHeightmapGett
 
     @Redirect(method = "addAndRegisterBlockEntity",
         at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/chunk/LevelChunk;isInLevel()Z"))
-    private boolean getLoadedFromBlockEntity(LevelChunk chunk, BlockEntity tileEntity) {
+    private boolean getLoadedFromBlockEntity(LevelChunk chunk, BlockEntity blockEntity) {
         if (!this.isCubic()) {
             return this.isInLevel();
         }
-
-        return ((LevelCube) this.getCube(Coords.blockToSection(tileEntity.getBlockPos().getY()))).isInLevel();
+        return ((LevelCube) this.getCube(Coords.blockToSection(blockEntity.getBlockPos().getY()))).isInLevel();
     }
 
     @Redirect(method = "removeBlockEntity", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/chunk/LevelChunk;isInLevel()Z"))
@@ -329,7 +325,6 @@ public abstract class MixinLevelChunk implements ChunkAccess, LightHeightmapGett
         if (!this.isCubic()) {
             return this.isInLevel();
         }
-
         return ((LevelCube) this.getCube(Coords.blockToSection(pos.getY()))).isInLevel();
     }
 

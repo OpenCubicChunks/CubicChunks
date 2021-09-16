@@ -25,9 +25,9 @@ public class PacketCubeCacheRadius {
     }
 
     public static class Handler {
-        public static void handle(PacketCubeCacheRadius packet, Level worldIn) {
-            ChunkSource chunkProvider = worldIn.getChunkSource();
-            ((ClientCubeCache) chunkProvider).updateCubeViewRadius(packet.hDistance, packet.vDistance);
+        public static void handle(PacketCubeCacheRadius packet, Level level) {
+            ChunkSource chunkSource = level.getChunkSource();
+            ((ClientCubeCache) chunkSource).updateCubeViewRadius(packet.hDistance, packet.vDistance);
         }
     }
 }

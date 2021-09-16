@@ -20,6 +20,7 @@ public abstract class MixinBiasedToBottomHeight {
 
     @Shadow @Final private VerticalAnchor maxInclusive;
 
+    // TODO: why is this necessary?
     @Inject(method = "sample", at = @At("HEAD"), cancellable = true)
     private void shutupLogger(Random random, WorldGenerationContext worldGenerationContext, CallbackInfoReturnable<Integer> cir) {
         int min = this.minInclusive.resolveY(worldGenerationContext);

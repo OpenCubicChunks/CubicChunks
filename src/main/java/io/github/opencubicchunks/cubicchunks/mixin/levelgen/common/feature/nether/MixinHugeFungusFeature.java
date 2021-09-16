@@ -24,7 +24,7 @@ import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 public class MixinHugeFungusFeature {
 
     @Redirect(method = "place", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/chunk/ChunkGenerator;getGenDepth()I"))
-    private int useRegionBounds(ChunkGenerator chunkGenerator, FeaturePlaceContext<HugeFungusConfiguration> context) {
+    private int useCubeRegionBounds(ChunkGenerator chunkGenerator, FeaturePlaceContext<HugeFungusConfiguration> context) {
         if (!((CubicLevelHeightAccessor) context.level()).isCubic()) {
             return chunkGenerator.getGenDepth();
         }

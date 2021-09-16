@@ -89,13 +89,11 @@ public abstract class MixinEntityStorage implements CubicEntityStorage {
         if (!((CubicLevelHeightAccessor) this.level).isCubic()) {
             return;
         }
-
         ci.cancel();
 
         if (!(dataList.getPos() instanceof ImposterChunkPos)) {
             throw new IllegalStateException(dataList.getPos().getClass().getSimpleName() + " was not an instanceOf " + ImposterChunkPos.class.getSimpleName());
         }
-
         CubePos cubePos = ((ImposterChunkPos) dataList.getPos()).toCubePos();
         if (dataList.isEmpty()) {
             if (this.emptyChunks.add(cubePos.asLong())) {

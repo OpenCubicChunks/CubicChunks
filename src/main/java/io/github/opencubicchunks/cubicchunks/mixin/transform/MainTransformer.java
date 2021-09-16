@@ -60,16 +60,16 @@ public class MainTransformer {
         ), "getCubeStatus");
         methods.put(new ClassMethod(
             getObjectType("net/minecraft/class_3898"), // ChunkMap
-            getMethod("java.util.concurrent.CompletableFuture method_31417(net.minecraft.class_3193)") // prepareAccessibleChunks(ChunkHolder)
-        ), "unpackCubeTicks");
+            getMethod("java.util.concurrent.CompletableFuture method_31417(net.minecraft.class_3193)") // prepareAccessibleChunk(ChunkHolder)
+        ), "prepareAccessibleCube");
         methods.put(new ClassMethod(
             getObjectType("net/minecraft/class_3898"), // ChunkMap
             getMethod("java.util.concurrent.CompletableFuture method_17235(net.minecraft.class_3193)") // prepareTickingChunk(ChunkHolder)
-        ), "postProcessCube");
+        ), "prepareTickingCube");
         methods.put(new ClassMethod(
             getObjectType("net/minecraft/class_3898"), // ChunkMap
-            getMethod("java.util.concurrent.CompletableFuture method_17247(net.minecraft.class_1923)") // getEntityTickingRangeFuture(ChunkPos)
-        ), "getCubeEntityTickingRangeFuture");
+            getMethod("java.util.concurrent.CompletableFuture method_17247(net.minecraft.class_1923)") // prepareEntityTickingChunk(ChunkPos)
+        ), "prepareEntityTickingCube");
         methods.put(new ClassMethod(
             getObjectType("net/minecraft/class_3898"), // ChunkMap
             getMethod("java.util.concurrent.CompletableFuture method_20576(net.minecraft.class_2818)") // packTicks(LevelChunk)

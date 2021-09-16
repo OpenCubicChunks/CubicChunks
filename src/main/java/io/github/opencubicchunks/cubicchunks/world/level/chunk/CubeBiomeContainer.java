@@ -21,7 +21,6 @@ public class CubeBiomeContainer extends ChunkBiomeContainer {
         if (!((CubicLevelHeightAccessor) heightAccessor).isCubic()) {
             throw new UnsupportedOperationException("Calling a cube class in a non cubic world.");
         }
-
         this.containers = new ChunkBiomeContainer[CubeAccess.DIAMETER_IN_SECTIONS * CubeAccess.DIAMETER_IN_SECTIONS];
     }
 
@@ -38,10 +37,7 @@ public class CubeBiomeContainer extends ChunkBiomeContainer {
                 int offset = (incomingBiomes.length / containers.length) * containerIDX;
                 int iterateRange = (incomingBiomes.length / containers.length) * (containerIDX + 1);
 
-                for (int i = offset; i < iterateRange; i++) {
-                    int incomingBiome = incomingBiomes[i];
-                    biomeArray[i - offset] = incomingBiome;
-                }
+                System.arraycopy(incomingBiomes, offset, biomeArray, 0, iterateRange - offset);
 
                 perBiomeContainerBiomeArray[containerIDX] = biomeArray;
 
@@ -53,8 +49,8 @@ public class CubeBiomeContainer extends ChunkBiomeContainer {
     }
 
 
-    public CubeBiomeContainer(IdMap<Biome> idMap, LevelHeightAccessor levelHeightAccessor, CubePos chunkPos, BiomeSource biomeSource) {
-        this(idMap, levelHeightAccessor, chunkPos, biomeSource, null);
+    public CubeBiomeContainer(IdMap<Biome> idMap, LevelHeightAccessor levelHeightAccessor, CubePos cubePos, BiomeSource biomeSource) {
+        this(idMap, levelHeightAccessor, cubePos, biomeSource, null);
     }
 
     public CubeBiomeContainer(IdMap<Biome> idMap, LevelHeightAccessor heightAccessor, CubePos cubePos, BiomeSource biomeSource, @Nullable int[] incomingBiomes) {
@@ -72,10 +68,7 @@ public class CubeBiomeContainer extends ChunkBiomeContainer {
                     int offset = (incomingBiomes.length / containers.length) * containerIDX;
                     int iterateRange = (incomingBiomes.length / containers.length) * (containerIDX + 1);
 
-                    for (int i = offset; i < iterateRange; i++) {
-                        int incomingBiome = incomingBiomes[i];
-                        biomeArray[i] = incomingBiome;
-                    }
+                    System.arraycopy(incomingBiomes, offset, biomeArray, offset, iterateRange - offset);
 
                     perBiomeContainerBiomeArray[containerIDX] = biomeArray;
 

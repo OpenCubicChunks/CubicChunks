@@ -65,9 +65,9 @@ public abstract class MixinServerLevel extends Level implements CubicServerLevel
 
     @Shadow @Final private ServerTickList<Block> blockTicks;
 
-    protected MixinServerLevel(WritableLevelData p_i231617_1_, ResourceKey<Level> p_i231617_2_, DimensionType p_i231617_4_,
-                               Supplier<ProfilerFiller> p_i231617_5_, boolean p_i231617_6_, boolean p_i231617_7_, long p_i231617_8_) {
-        super(p_i231617_1_, p_i231617_2_, p_i231617_4_, p_i231617_5_, p_i231617_6_, p_i231617_7_, p_i231617_8_);
+    protected MixinServerLevel(WritableLevelData data, ResourceKey<Level> resourceKey, DimensionType type,
+                               Supplier<ProfilerFiller> supplier, boolean bl1, boolean bl2, long l) {
+        super(data, resourceKey, type, supplier, bl1, bl2, l);
     }
 
     @Redirect(method = "<init>", at = @At(value = "NEW", target = "net/minecraft/world/level/ServerTickList"))
@@ -91,12 +91,9 @@ public abstract class MixinServerLevel extends Level implements CubicServerLevel
 
     @Redirect(method = "tickChunk", at = @At(value = "INVOKE", target = "Ljava/util/Random;nextInt(I)I", ordinal = 1))
     private int onRandNextInt(Random random, int bound, LevelChunk levelChunk, int i) {
-
         if (!((CubicLevelHeightAccessor) levelChunk).isCubic()) {
             return random.nextInt(bound);
         }
-
-
         ChunkPos chunkPos = levelChunk.getPos();
         int x = chunkPos.getMinBlockX();
         int z = chunkPos.getMinBlockZ();
@@ -109,7 +106,6 @@ public abstract class MixinServerLevel extends Level implements CubicServerLevel
         }
         return this.random.nextInt(16);
     }
-
 
     @Redirect(method = "isPositionTickingWithEntitiesLoaded", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/ChunkPos;asLong(Lnet/minecraft/core/BlockPos;)J"))
     private long useCubePosInCubicWorld(BlockPos blockPos) {
@@ -139,7 +135,6 @@ public abstract class MixinServerLevel extends Level implements CubicServerLevel
         ProfilerFiller profilerFiller = this.getProfiler();
 
         // TODO lightning and snow/freezing - see ServerLevel.tickChunk()
-
         profilerFiller.push("tickBlocks");
         if (randomTicks > 0) {
             LevelChunkSection[] sections = cube.getCubeSections();
@@ -163,7 +158,6 @@ public abstract class MixinServerLevel extends Level implements CubicServerLevel
                         if (fluidState.isRandomlyTicking()) {
                             fluidState.randomTick(this, blockPos, this.random);
                         }
-
                         profilerFiller.pop();
                     }
                 }

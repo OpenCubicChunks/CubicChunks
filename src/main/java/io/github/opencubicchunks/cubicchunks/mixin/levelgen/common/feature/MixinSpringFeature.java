@@ -18,7 +18,6 @@ public class MixinSpringFeature {
         if (!((CubicLevelHeightAccessor) featurePlaceContext.level()).isCubic()) {
             return;
         }
-
         cir.setReturnValue(true);
     }
 }

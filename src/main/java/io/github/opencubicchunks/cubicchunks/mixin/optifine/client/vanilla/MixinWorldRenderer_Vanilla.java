@@ -1,7 +1,5 @@
 package io.github.opencubicchunks.cubicchunks.mixin.optifine.client.vanilla;
 
-import javax.annotation.Nullable;
-
 import io.github.opencubicchunks.cubicchunks.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.mixin.access.client.ViewAreaAccess;
 import io.github.opencubicchunks.cubicchunks.world.level.CubicLevelHeightAccessor;
@@ -40,7 +38,6 @@ public abstract class MixinWorldRenderer_Vanilla {
 
     @Shadow public abstract void allChanged();
 
-
     /**
      * @author AidanLovelace
      * @reason Make sure we load the renderers again if the vertical view distance changed but not if the normal render distance changed because then they'll be loaded again anyways.
@@ -62,7 +59,6 @@ public abstract class MixinWorldRenderer_Vanilla {
      * @author Barteks2x
      * @reason Vanilla doesn't use y pos, and constrains between 0 and 256
      */
-    @Nullable
     @Inject(method = "getRelativeFrom", at = @At("HEAD"), cancellable = true)
     private void getRelativeFrom(BlockPos playerPos, ChunkRenderDispatcher.RenderChunk renderChunkBase, Direction facing,
                                  CallbackInfoReturnable<ChunkRenderDispatcher.RenderChunk> cir) {

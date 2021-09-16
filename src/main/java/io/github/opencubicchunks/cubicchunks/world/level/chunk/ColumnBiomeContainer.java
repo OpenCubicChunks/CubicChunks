@@ -27,9 +27,6 @@ public class ColumnBiomeContainer extends ChunkBiomeContainer {
         this.level = level;
     }
 
-
-
-
     public Biome getNoiseBiome(int biomeX, int biomeY, int biomeZ) {
         if (this.level == null) {
             return DUMMY_BIOME;
@@ -37,15 +34,14 @@ public class ColumnBiomeContainer extends ChunkBiomeContainer {
         int blockX = biomeX << 2;
         int blockY = biomeY << 2;
         int blockZ = biomeZ << 2;
-        CubeAccess icube = ((CubeSource) level.getChunkSource()).getCube(Coords.blockToCube(blockX), Coords.blockToCube(blockY), Coords.blockToCube(blockZ), ChunkStatus.BIOMES, false);
-        if (icube == null) {
+        CubeAccess cube = ((CubeSource) level.getChunkSource()).getCube(Coords.blockToCube(blockX), Coords.blockToCube(blockY), Coords.blockToCube(blockZ), ChunkStatus.BIOMES, false);
+        if (cube == null) {
             if (!level.isClientSide()) {
                 CubicChunks.LOGGER.warn("Tried to get biome at BLOCK pos {} {} {}, but cube isn't loaded. Returning dummy biome", blockX, blockY, blockZ);
             }
             return DUMMY_BIOME;
         }
-
-        ChunkBiomeContainer cubeBiomes = icube.getBiomes();
+        ChunkBiomeContainer cubeBiomes = cube.getBiomes();
         if (cubeBiomes != null) {
             return cubeBiomes.getNoiseBiome(biomeX, biomeY, biomeZ);
         }

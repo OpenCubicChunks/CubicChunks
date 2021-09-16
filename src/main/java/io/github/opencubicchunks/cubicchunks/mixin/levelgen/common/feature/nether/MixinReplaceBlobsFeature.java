@@ -17,7 +17,6 @@ public class MixinReplaceBlobsFeature {
         if (!((CubicLevelHeightAccessor) levelAccessor).isCubic()) {
             return levelAccessor.getMinBuildHeight();
         }
-
         return Coords.cubeToMinBlock(((CubeWorldGenRegion) levelAccessor).getMainCubeY());
     }
 }

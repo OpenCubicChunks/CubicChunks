@@ -35,16 +35,16 @@ public class MixinBulkSectionAccess {
         if (!((CubicLevelHeightAccessor) this.level).isCubic()) {
             return;
         }
-        ChunkAccess chunkAccess = ((CubeWorldGenRegion) this.level).getCube(blockPos);
-        int sectionIDX = Coords.blockToIndex(blockPos.getX(), blockPos.getY(), blockPos.getZ());
+        ChunkAccess cube = ((CubeWorldGenRegion) this.level).getCube(blockPos);
+        int sectionIdx = Coords.blockToIndex(blockPos.getX(), blockPos.getY(), blockPos.getZ());
 
-        if (sectionIDX >= 0 && sectionIDX < CubeAccess.SECTION_COUNT) {
+        if (sectionIdx >= 0 && sectionIdx < CubeAccess.SECTION_COUNT) {
             long sectionLong = SectionPos.asLong(blockPos);
             if (this.lastSection == null || this.lastSectionKey != sectionLong) {
                 this.lastSection = this.acquiredSections.computeIfAbsent(sectionLong, (lx) -> {
-                    LevelChunkSection levelChunkSection = chunkAccess.getOrCreateSection(sectionIDX);
-                    levelChunkSection.acquire();
-                    return levelChunkSection;
+                    LevelChunkSection section = cube.getOrCreateSection(sectionIdx);
+                    section.acquire();
+                    return section;
                 });
                 this.lastSectionKey = sectionLong;
             }

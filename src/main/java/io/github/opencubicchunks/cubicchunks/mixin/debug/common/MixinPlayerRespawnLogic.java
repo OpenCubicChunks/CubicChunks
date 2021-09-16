@@ -13,7 +13,7 @@ public class MixinPlayerRespawnLogic {
     private static final boolean DEBUG_LOAD_ORDER_ENABLED = System.getProperty("cubicchunks.debug.loadorder", "false").equals("true");
 
     @Inject(method = "getOverworldRespawnPos", at = @At("HEAD"), cancellable = true)
-    private static void fakeRespawnLocation(ServerLevel world, int x, int z, boolean validSpawnNeeded, CallbackInfoReturnable<BlockPos> cir) {
+    private static void fakeRespawnLocation(ServerLevel level, int x, int z, boolean validSpawnNeeded, CallbackInfoReturnable<BlockPos> cir) {
         if (!DEBUG_LOAD_ORDER_ENABLED) {
             return;
         }

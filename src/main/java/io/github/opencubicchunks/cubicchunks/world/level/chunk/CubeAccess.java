@@ -41,7 +41,6 @@ public interface CubeAccess extends BlockGetter, ChunkAccess, FeatureAccess {
 
     ChunkStatus getCubeStatus();
 
-
     default void setFeatureBlocks(BlockPos pos, BlockState state) {
         setBlock(pos, state, false);
     }
@@ -64,11 +63,11 @@ public interface CubeAccess extends BlockGetter, ChunkAccess, FeatureAccess {
     void setCubeBlockEntity(BlockEntity tileEntity);
     void removeCubeBlockEntity(BlockPos pos);
 
-    Set<BlockPos> getCubeTileEntitiesPos();
+    Set<BlockPos> getCubeBlockEntitiesPos();
 
     @Nullable CompoundTag getCubeBlockEntityNbtForSaving(BlockPos pos);
 
-    @Nullable CompoundTag getCubeDeferredTileEntity(BlockPos pos);
+    @Nullable CompoundTag getCubeBlockEntityNbt(BlockPos pos);
 
     Map<StructureFeature<?>, StructureStart<?>> getAllCubeStructureStarts();
 
@@ -77,7 +76,7 @@ public interface CubeAccess extends BlockGetter, ChunkAccess, FeatureAccess {
     boolean hasCubeLight();
     void setCubeLight(boolean lightCorrectIn);
 
-    Stream<BlockPos> getCubeLightSources();
+    Stream<BlockPos> getCubeLights();
 
     //MISC
     // can't be isModified due to obfuscation issues with IChunk

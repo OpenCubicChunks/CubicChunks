@@ -15,11 +15,11 @@ public class CubeTicketTracker extends CubeTracker {
 
     @Override
     protected int getSourceLevel(long pos) {
-        SortedArraySet<Ticket<?>> sortedarrayset = cubicDistanceManager.getCubeTickets().get(pos);
-        if (sortedarrayset == null) {
+        SortedArraySet<Ticket<?>> tickets = cubicDistanceManager.getCubeTickets().get(pos);
+        if (tickets == null) {
             return Integer.MAX_VALUE;
         } else {
-            return sortedarrayset.isEmpty() ? Integer.MAX_VALUE : sortedarrayset.first().getTicketLevel();
+            return tickets.isEmpty() ? Integer.MAX_VALUE : tickets.first().getTicketLevel();
         }
     }
 
@@ -31,7 +31,6 @@ public class CubeTicketTracker extends CubeTracker {
                 return chunkholder.getTicketLevel();
             }
         }
-
         return CubeMap.MAX_CUBE_DISTANCE + 1;
     }
 
@@ -44,7 +43,6 @@ public class CubeTicketTracker extends CubeTracker {
             if (chunkholder != null) {
                 cubicDistanceManager.getCubesToUpdateFutures().add(chunkholder);
             }
-
         }
     }
 

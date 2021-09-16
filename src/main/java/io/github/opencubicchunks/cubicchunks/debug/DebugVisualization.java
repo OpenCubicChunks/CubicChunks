@@ -1006,15 +1006,15 @@ public class DebugVisualization {
                     long posLong = entry.getLongKey();
                     for (Ticket<?> ticket : entry.getValue()) {
                         TicketType<?> type = ticket.getType();
-                        if (type == TicketType.PLAYER || type == CubicTicketType.CCPLAYER) {
+                        if (type == TicketType.PLAYER || type == CubicTicketType.PLAYER) {
                             cubeMap.put(posLong, (byte) 0);
                         } else if (type == TicketType.START) {
                             cubeMap.put(posLong, (byte) 1);
-                        } else if (type == TicketType.UNKNOWN || type == CubicTicketType.CCUNKNOWN) {
+                        } else if (type == TicketType.UNKNOWN || type == CubicTicketType.UNKNOWN) {
                             cubeMap.put(posLong, (byte) 2);
-                        } else if (type == TicketType.LIGHT || type == CubicTicketType.CCLIGHT) {
+                        } else if (type == TicketType.LIGHT || type == CubicTicketType.LIGHT) {
                             cubeMap.put(posLong, (byte) 3);
-                        } else if (type == TicketType.FORCED || type == CubicTicketType.CCFORCED) {
+                        } else if (type == TicketType.FORCED || type == CubicTicketType.FORCED) {
                             cubeMap.put(posLong, (byte) 4);
                         } else {
                             cubeMap.put(posLong, (byte) 5);

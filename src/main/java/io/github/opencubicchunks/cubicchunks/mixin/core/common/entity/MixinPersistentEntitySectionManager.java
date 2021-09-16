@@ -34,7 +34,6 @@ import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 @Mixin(PersistentEntitySectionManager.class)
 public abstract class MixinPersistentEntitySectionManager<T extends EntityAccess> implements IsCubicEntityContext, ChunkEntityStateEventSource {
 
-
     @Shadow @Final private Long2ObjectMap<Object> chunkLoadStatuses;
     @Shadow @Final private EntityPersistentStorage<T> permanentStorage;
     @Shadow @Final private Queue<ChunkEntities<T>> loadingInbox;
@@ -87,11 +86,10 @@ public abstract class MixinPersistentEntitySectionManager<T extends EntityAccess
             CubicChunks.LOGGER.error("Failed to read cube {}", cubePos, throwable);
             return null;
         });
-
     }
 
     @Redirect(method = "storeChunkSections", at = @At(value = "NEW", target = "net/minecraft/world/level/ChunkPos"))
-    private ChunkPos useImposterChunkPos(long pos) {
+    private ChunkPos storeCubePosAsChunkPos(long pos) {
         if (isCubic) {
             return new ImposterChunkPos(CubePos.from(pos));
         } else {
@@ -99,23 +97,22 @@ public abstract class MixinPersistentEntitySectionManager<T extends EntityAccess
         }
     }
 
+    // TODO: should we keep track of columns
     @Inject(method = "isPositionTicking(Lnet/minecraft/world/level/ChunkPos;)Z", at = @At("HEAD"), cancellable = true)
-    private void returnFalseIfCubic(ChunkPos chunkPos, CallbackInfoReturnable<Boolean> cir) {
+    private void isColumnPositionTicking(ChunkPos chunkPos, CallbackInfoReturnable<Boolean> cir) {
         if (chunkPos instanceof ImposterChunkPos) {
             return;
         }
-
         if (isCubic) {
             cir.setReturnValue(false);
         }
     }
 
     @Inject(method = "isPositionTicking(Lnet/minecraft/core/BlockPos;)Z", at = @At("HEAD"), cancellable = true)
-    private void useCubePos(BlockPos blockPos, CallbackInfoReturnable<Boolean> cir) {
+    private void isCubePositionTicking(BlockPos blockPos, CallbackInfoReturnable<Boolean> cir) {
         if (!isCubic) {
             return;
         }
-
         cir.setReturnValue(this.chunkVisibility.get(CubePos.asLong(blockPos)).isTicking());
     }
 

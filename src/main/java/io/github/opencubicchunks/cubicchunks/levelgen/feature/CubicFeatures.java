@@ -18,7 +18,7 @@ import net.minecraft.world.level.levelgen.placement.FeatureDecorator;
 
 public class CubicFeatures {
 
-    public static final ConfiguredFeature<?, ?> CC_WATER_LAKE = createCCConfiguredFeature("lake_water", Feature.LAKE
+    public static final ConfiguredFeature<?, ?> CC_WATER_LAKE = createConfiguredFeature("lake_water", Feature.LAKE
         .configured(new BlockStateConfiguration(Blocks.WATER.defaultBlockState()))
         .decorated(CubicFeatureDecorators.CUBIC_LAKE
             .configured(new CubicLakePlacementConfig(
@@ -37,7 +37,7 @@ public class CubicFeatures {
         ));
 
 
-    public static final ConfiguredFeature<?, ?> CC_LAVA_LAKE = createCCConfiguredFeature("lake_lava", Feature.LAKE
+    public static final ConfiguredFeature<?, ?> CC_LAVA_LAKE = createConfiguredFeature("lake_lava", Feature.LAKE
         .configured(new BlockStateConfiguration(Blocks.LAVA.defaultBlockState()))
         .decorated(CubicFeatureDecorators.CUBIC_LAKE
             .configured(new CubicLakePlacementConfig(
@@ -64,19 +64,19 @@ public class CubicFeatures {
             ))
         ));
 
-    public static final ConfiguredFeature<?, ?> LAVA_LEAK_FIX = createCCConfiguredFeature("lava_leak_fix",
+    public static final ConfiguredFeature<?, ?> LAVA_LEAK_FIX = createConfiguredFeature("lava_leak_fix",
         CubicFeature.LAVA_LEAK_FIX.configured(NoneFeatureConfiguration.INSTANCE).decorated(FeatureDecorator.NOPE.configured(NoneDecoratorConfiguration.INSTANCE)));
 
     public static void init() {
     }
 
-    public static <FC extends FeatureConfiguration, F extends Feature<FC>, CF extends ConfiguredFeature<FC, F>> CF createCCConfiguredFeature(String id, CF configuredFeature) {
-        ResourceLocation ccID = new ResourceLocation(CubicChunks.MODID, id);
-        if (BuiltinRegistries.CONFIGURED_FEATURE.keySet().contains(ccID)) {
-            throw new IllegalStateException("Configured Feature ID: \"" + ccID.toString() + "\" already exists in the Configured Features registry!");
+    public static <FC extends FeatureConfiguration, F extends Feature<FC>, CF extends ConfiguredFeature<FC, F>> CF createConfiguredFeature(String id, CF configuredFeature) {
+        ResourceLocation resourceLocation = new ResourceLocation(CubicChunks.MODID, id);
+        if (BuiltinRegistries.CONFIGURED_FEATURE.keySet().contains(resourceLocation)) {
+            throw new IllegalStateException("Configured Feature ID: \"" + resourceLocation + "\" already exists in the Configured Features registry!");
         }
 
-        Registry.register(BuiltinRegistries.CONFIGURED_FEATURE, ccID, configuredFeature);
+        Registry.register(BuiltinRegistries.CONFIGURED_FEATURE, resourceLocation, configuredFeature);
         return configuredFeature;
     }
 }

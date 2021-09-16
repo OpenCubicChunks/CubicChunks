@@ -18,7 +18,7 @@ public class MixinOptions {
     @Shadow public CloudStatus renderClouds;
 
     @Inject(method = "getCloudsType", at = @At("HEAD"), cancellable = true)
-    private void getCloudsForVerticalViewDistance(CallbackInfoReturnable<CloudStatus> cir) {
+    private void getCloudsTypeForVerticalViewDistance(CallbackInfoReturnable<CloudStatus> cir) {
         ClientLevel level = Minecraft.getInstance().level;
         if (level != null) {
             if (!((CubicLevelHeightAccessor) level).isCubic()) {

@@ -12,13 +12,11 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 @Mixin(TwistingVinesFeature.class)
 public class MixinTwistyVinesFeature {
 
-
     @Redirect(method = "findFirstAirBlockAboveGround", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/LevelAccessor;isOutsideBuildHeight(Lnet/minecraft/core/BlockPos;)Z"))
     private static boolean isOutsideCubeY(LevelAccessor levelAccessor, BlockPos blockPos) {
         if (!((CubicLevelHeightAccessor) levelAccessor).isCubic()) {
             return levelAccessor.isOutsideBuildHeight(blockPos);
         }
-
         return !((CubeWorldGenRegion) levelAccessor).insideCubeHeight(blockPos.getY());
     }
 }

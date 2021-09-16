@@ -13,7 +13,7 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 public class MixinChunkBorderRenderer {
 
     @Redirect(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/multiplayer/ClientLevel;getMinBuildHeight()I"))
-    public int MinHeight(ClientLevel clientLevel) {
+    public int minHeight(ClientLevel clientLevel) {
         Entity cameraEntity = Minecraft.getInstance().getCameraEntity();
         if (cameraEntity != null) {
             return Coords.sectionToMinBlock(Coords.blockToCube(Coords.getCubeYForEntity(cameraEntity))) - 256;
@@ -23,7 +23,7 @@ public class MixinChunkBorderRenderer {
     }
 
     @Redirect(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/multiplayer/ClientLevel;getMaxBuildHeight()I"))
-    public int MaxHeight(ClientLevel clientLevel) {
+    public int maxHeight(ClientLevel clientLevel) {
         Entity cameraEntity = Minecraft.getInstance().getCameraEntity();
         if (cameraEntity != null) {
             return Coords.sectionToMinBlock(Coords.blockToCube(Coords.getCubeYForEntity(cameraEntity))) + 256;

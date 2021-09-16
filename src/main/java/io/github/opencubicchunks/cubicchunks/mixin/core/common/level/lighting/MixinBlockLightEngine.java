@@ -20,21 +20,20 @@ public abstract class MixinBlockLightEngine extends MixinLayerLightEngine {
      * @reason Vanilla lighting is bye bye
      */
     @Inject(method = "getLightEmission", at = @At("HEAD"), cancellable = true)
-    private void getLightEmission(long worldPos, CallbackInfoReturnable<Integer> cir) {
+    private void getLightEmission(long blockPos, CallbackInfoReturnable<Integer> cir) {
         if (!((CubicLevelHeightAccessor) this.chunkSource.getLevel()).isCubic()) {
             return;
         }
-
         cir.cancel();
-        int blockX = BlockPos.getX(worldPos);
-        int blockY = BlockPos.getY(worldPos);
-        int blockZ = BlockPos.getZ(worldPos);
-        BlockGetter iblockreader = ((LightCubeGetter) this.chunkSource).getCubeForLighting(
+        int blockX = BlockPos.getX(blockPos);
+        int blockY = BlockPos.getY(blockPos);
+        int blockZ = BlockPos.getZ(blockPos);
+        // TODO: make this use cube pos
+        BlockGetter cube = ((LightCubeGetter) this.chunkSource).getCubeForLighting(
             SectionPos.blockToSectionCoord(blockX),
             SectionPos.blockToSectionCoord(blockY),
             SectionPos.blockToSectionCoord(blockZ)
         );
-        cir.setReturnValue(iblockreader != null ? iblockreader.getLightEmission(this.pos.set(blockX, blockY, blockZ)) : 0);
+        cir.setReturnValue(cube != null ? cube.getLightEmission(this.pos.set(blockX, blockY, blockZ)) : 0);
     }
-
 }

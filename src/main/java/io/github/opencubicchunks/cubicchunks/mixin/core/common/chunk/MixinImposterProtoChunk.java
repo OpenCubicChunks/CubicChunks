@@ -13,7 +13,6 @@ import org.spongepowered.asm.mixin.Shadow;
 @Mixin(ImposterProtoChunk.class)
 public class MixinImposterProtoChunk implements ColumnCubeMapGetter, LightHeightmapGetter {
 
-
     @Shadow @Final private LevelChunk wrapped;
 
     @Override public ColumnCubeMap getCubeMap() {

@@ -20,9 +20,9 @@ public class CubicNaturalSpawner {
     private static final Method CREATE_CUBIC_STATE;
     private static final Method IS_RIGHT_DISTANCE_TO_PLAYER_AND_SPAWN_POINT_FOR_CUBE;
 
-    public static void spawnForCube(ServerLevel world, ChunkAccess chunk, NaturalSpawner.SpawnState info, boolean spawnAnimals, boolean spawnMonsters, boolean shouldSpawnAnimals) {
+    public static void spawnForCube(ServerLevel level, ChunkAccess chunk, NaturalSpawner.SpawnState spawnState, boolean spawnAnimals, boolean spawnMonsters, boolean shouldSpawnAnimals) {
         try {
-            SPAWN_FOR_CUBE.invoke(null, world, chunk, info, spawnAnimals, spawnMonsters, shouldSpawnAnimals);
+            SPAWN_FOR_CUBE.invoke(null, level, chunk, spawnState, spawnAnimals, spawnMonsters, shouldSpawnAnimals);
         } catch (IllegalAccessException e) {
             throw new Error(e);
         } catch (InvocationTargetException e) {
@@ -30,10 +30,9 @@ public class CubicNaturalSpawner {
         }
     }
 
-
-    public static boolean isRightDistanceToPlayerAndSpawnPoint(ServerLevel world, ChunkAccess chunk, BlockPos.MutableBlockPos pos, double squaredDistance) {
+    public static boolean isRightDistanceToPlayerAndSpawnPoint(ServerLevel level, ChunkAccess chunk, BlockPos.MutableBlockPos pos, double squaredDistance) {
         try {
-            return (boolean) IS_RIGHT_DISTANCE_TO_PLAYER_AND_SPAWN_POINT_FOR_CUBE.invoke(null, world, chunk, pos, squaredDistance);
+            return (boolean) IS_RIGHT_DISTANCE_TO_PLAYER_AND_SPAWN_POINT_FOR_CUBE.invoke(null, level, chunk, pos, squaredDistance);
         } catch (IllegalAccessException e) {
             throw new Error(e);
         } catch (InvocationTargetException e) {
@@ -41,14 +40,13 @@ public class CubicNaturalSpawner {
         }
     }
 
-
-    public static NaturalSpawner.SpawnState createState(int spawningChunkCount, Iterable<Entity> entities, CubeGetter chunkAccessSource) {
-        return createCubicState(spawningChunkCount, entities, chunkAccessSource);
+    public static NaturalSpawner.SpawnState createState(int spawningChunkCount, Iterable<Entity> entities, CubeGetter cubeGetter) {
+        return createCubicState(spawningChunkCount, entities, cubeGetter);
     }
 
-    public static NaturalSpawner.SpawnState createCubicState(int spawningChunkCount, Iterable<Entity> entities, CubeGetter cubeSource) {
+    public static NaturalSpawner.SpawnState createCubicState(int spawningChunkCount, Iterable<Entity> entities, CubeGetter cubeGetter) {
         try {
-            return (NaturalSpawner.SpawnState) CREATE_CUBIC_STATE.invoke(null, spawningChunkCount, entities, cubeSource);
+            return (NaturalSpawner.SpawnState) CREATE_CUBIC_STATE.invoke(null, spawningChunkCount, entities, cubeGetter);
         } catch (IllegalAccessException e) {
             throw new Error(e);
         } catch (InvocationTargetException e) {

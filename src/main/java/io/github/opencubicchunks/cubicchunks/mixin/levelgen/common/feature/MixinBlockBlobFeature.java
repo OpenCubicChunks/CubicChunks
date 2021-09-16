@@ -19,6 +19,5 @@ public class MixinBlockBlobFeature {
             return worldGenLevel.getMinBuildHeight();
         }
         return Coords.cubeToMinBlock(((CubeWorldGenRegion) worldGenLevel).getMainCubeY());
-
     }
 }

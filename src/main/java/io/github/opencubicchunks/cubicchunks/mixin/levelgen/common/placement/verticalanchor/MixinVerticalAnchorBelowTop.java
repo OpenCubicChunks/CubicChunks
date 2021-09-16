@@ -13,7 +13,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public class MixinVerticalAnchorBelowTop {
 
     @Inject(method = "resolveY", at = @At("HEAD"), cancellable = true)
-    private void transformCorrectly(WorldGenerationContext context, CallbackInfoReturnable<Integer> cir) {
+    private void resolveCubicChunksY(WorldGenerationContext context, CallbackInfoReturnable<Integer> cir) {
         if (context instanceof CubicCarvingContext) {
             int defaultValue = ((CubicCarvingContext) context).getOriginalGenDepth() - 1 + ((CubicCarvingContext) context).getOriginalMinGenY() - ((VerticalAnchorAccess) this).invokeValue();
             cir.setReturnValue(defaultValue);

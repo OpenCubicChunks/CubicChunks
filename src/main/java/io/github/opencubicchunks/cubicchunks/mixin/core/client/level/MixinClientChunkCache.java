@@ -70,7 +70,7 @@ public abstract class MixinClientChunkCache implements ClientCubeCache {
 
     @Override
     public void drop(int x, int y, int z) {
-        if (!this.cubeArray.inView(x, y, z)) {
+        if (!this.cubeArray.inRange(x, y, z)) {
             return;
         }
         int index = this.cubeArray.getIndex(x, y, z);
@@ -78,7 +78,7 @@ public abstract class MixinClientChunkCache implements ClientCubeCache {
         if (isCubeValid(cube, x, y, z)) {
             // TODO: forge cube unload event
             // net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.event.world.ChunkEvent.Unload(chunk));
-            this.cubeArray.unload(index, cube, null);
+            this.cubeArray.replace(index, cube, null);
         }
 
     }
@@ -86,7 +86,7 @@ public abstract class MixinClientChunkCache implements ClientCubeCache {
     @Nullable
     @Override
     public LevelCube getCube(int cubeX, int cubeY, int cubeZ, ChunkStatus requiredStatus, boolean load) {
-        if (this.cubeArray.inView(cubeX, cubeY, cubeZ)) {
+        if (this.cubeArray.inRange(cubeX, cubeY, cubeZ)) {
             LevelCube chunk = this.cubeArray.get(this.cubeArray.getIndex(cubeX, cubeY, cubeZ));
             if (isCubeValid(chunk, cubeX, cubeY, cubeZ)) {
                 return chunk;
@@ -98,9 +98,9 @@ public abstract class MixinClientChunkCache implements ClientCubeCache {
 
     @Override
     public LevelCube replaceWithPacketData(int cubeX, int cubeY, int cubeZ,
-                                           @Nullable ChunkBiomeContainer biomes, FriendlyByteBuf readBuffer, CompoundTag nbtTagIn, boolean cubeExists) {
+                                           @Nullable ChunkBiomeContainer biomes, FriendlyByteBuf readBuffer, CompoundTag tag, boolean cubeExists) {
 
-        if (!this.cubeArray.inView(cubeX, cubeY, cubeZ)) {
+        if (!this.cubeArray.inRange(cubeX, cubeY, cubeZ)) {
             LOGGER.warn("Ignoring cube since it's not in the view range: {}, {}, {}", cubeX, cubeY, cubeZ);
             return null;
         }
@@ -113,10 +113,10 @@ public abstract class MixinClientChunkCache implements ClientCubeCache {
             }
 
             cube = new LevelCube(this.level, CubePos.of(cubeX, cubeY, cubeZ), biomes);
-            cube.read(biomes, readBuffer, nbtTagIn, cubeExists);
+            cube.read(biomes, readBuffer, tag, cubeExists);
             this.cubeArray.replace(index, cube);
         } else {
-            cube.read(biomes, readBuffer, nbtTagIn, cubeExists);
+            cube.read(biomes, readBuffer, tag, cubeExists);
         }
 
         LevelLightEngine worldlightmanager = this.getLightEngine();
@@ -134,7 +134,7 @@ public abstract class MixinClientChunkCache implements ClientCubeCache {
         return cube;
     }
 
-    @Override public void setCenter(int sectionX, int sectionY, int sectionZ) {
+    @Override public void updateViewCenter(int sectionX, int sectionY, int sectionZ) {
         this.cubeArray.centerX = Coords.sectionToCube(sectionX);
         this.cubeArray.centerY = Coords.sectionToCube(sectionY);
         this.cubeArray.centerZ = Coords.sectionToCube(sectionZ);
@@ -168,7 +168,7 @@ public abstract class MixinClientChunkCache implements ClientCubeCache {
                 continue;
             }
             CubePos cubePos = chunk.getCubePos();
-            if (array.inView(cubePos.getX(), cubePos.getY(), cubePos.getZ())) {
+            if (array.inRange(cubePos.getX(), cubePos.getY(), cubePos.getZ())) {
                 array.replace(array.getIndex(cubePos.getX(), cubePos.getY(), cubePos.getZ()), chunk);
             }
         }

@@ -62,7 +62,7 @@ public abstract class MixinProtoChunk implements LightHeightmapGetter, LevelHeig
 
     @Inject(method = "<init>(Lnet/minecraft/world/level/ChunkPos;Lnet/minecraft/world/level/chunk/UpgradeData;[Lnet/minecraft/world/level/chunk/LevelChunkSection;"
         + "Lnet/minecraft/world/level/chunk/ProtoTickList;Lnet/minecraft/world/level/chunk/ProtoTickList;Lnet/minecraft/world/level/LevelHeightAccessor;)V", at = @At("RETURN"))
-    private void setCubic(ChunkPos chunkPos, UpgradeData upgradeData, LevelChunkSection[] levelChunkSections, ProtoTickList<Block> protoTickList, ProtoTickList<Fluid> protoTickList2,
+    private void setCubic(ChunkPos chunkPos, UpgradeData upgradeData, LevelChunkSection[] levelChunkSections, ProtoTickList<Block> blockTicks, ProtoTickList<Fluid> fluidTicks,
                           LevelHeightAccessor heightAccessor, CallbackInfo ci) {
         isCubic = ((CubicLevelHeightAccessor) heightAccessor).isCubic();
         generates2DChunks = ((CubicLevelHeightAccessor) heightAccessor).generates2DChunks();
@@ -77,11 +77,9 @@ public abstract class MixinProtoChunk implements LightHeightmapGetter, LevelHeig
         if (!((CubicLevelHeightAccessor) accessor).isCubic()) {
             return levelHeightAccessor.getSectionsCount();
         }
-
         if (accessor instanceof ProtoCube.FakeSectionCount) {
             return accessor.getSectionsCount();
         }
-
         if (accessor instanceof Level) {
             if (((CubicLevelHeightAccessor) accessor).generates2DChunks()) {
                 int height = ((Level) accessor).dimensionType().height();
@@ -97,24 +95,23 @@ public abstract class MixinProtoChunk implements LightHeightmapGetter, LevelHeig
         if (accessor.getMaxBuildHeight() > 2048) {
             return 16;
         }
-
         return Math.min(CubeAccess.SECTION_COUNT * 2, accessor.getSectionsCount()); // TODO: properly handle ProtoChunk
     }
 
     @Inject(method = "getHeight()I", at = @At("HEAD"), cancellable = true)
     private void setHeight(CallbackInfoReturnable<Integer> cir) {
-        if (this.levelHeightAccessor instanceof Level) {
+        if (this.levelHeightAccessor instanceof Level level) {
             if (this.generates2DChunks()) {
-                cir.setReturnValue(((Level) levelHeightAccessor).dimensionType().height());
+                cir.setReturnValue(level.dimensionType().height());
             }
         }
     }
 
     @Inject(method = "getMinBuildHeight", at = @At("HEAD"), cancellable = true)
     private void setMinHeight(CallbackInfoReturnable<Integer> cir) {
-        if (this.levelHeightAccessor instanceof Level) {
+        if (this.levelHeightAccessor instanceof Level level) {
             if (this.generates2DChunks()) {
-                cir.setReturnValue(((Level) levelHeightAccessor).dimensionType().minY());
+                cir.setReturnValue(level.dimensionType().minY());
             }
         }
     }

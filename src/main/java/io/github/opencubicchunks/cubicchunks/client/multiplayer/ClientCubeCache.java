@@ -12,10 +12,10 @@ public interface ClientCubeCache extends CubeSource {
 
     void drop(int x, int y, int z);
 
-    void setCenter(int x, int y, int z);
+    void updateViewCenter(int x, int y, int z);
 
     void updateCubeViewRadius(int hDistance, int vDistance);
 
-    LevelCube replaceWithPacketData(int cubeX, int cubeY, int cubeZ, @Nullable ChunkBiomeContainer biomes, FriendlyByteBuf readBuffer, CompoundTag nbtTagIn,
+    LevelCube replaceWithPacketData(int cubeX, int cubeY, int cubeZ, @Nullable ChunkBiomeContainer biomes, FriendlyByteBuf readBuffer, CompoundTag tag,
                                     boolean cubeExists);
 }

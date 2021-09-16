@@ -30,14 +30,12 @@ public abstract class MixinUniformHeightProvider implements CubicHeightProvider 
         if (rand.nextDouble() > probability) {
             return OptionalInt.empty();
         }
-
         double maxBlockY = maxHeight + 1;
         int blockY = rand.nextInt(cubeMaxY - cubeMinY + 1) + cubeMinY/*Equivalent to cubepos.getMinBlockY in 1.12*/;
 
         if (blockY > maxBlockY || blockY < bottomOffset) {
             return OptionalInt.empty();
         }
-
         return OptionalInt.of(blockY);
     }
 }

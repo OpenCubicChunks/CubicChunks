@@ -104,32 +104,32 @@ public class CubeWorldGenRegion extends WorldGenRegion implements CubicLevelAcce
     private final TickList<Block> blockTicks = new WorldGenTickList<>((pos) -> this.getCube(pos).getBlockTicks());
     private final TickList<Fluid> liquidTicks = new WorldGenTickList<>((pos) -> this.getCube(pos).getLiquidTicks());
 
-    public CubeWorldGenRegion(ServerLevel worldIn, List<CubeAccess> cubesIn, ChunkStatus status, ChunkAccess access, int writeRadiusCutoff) {
-        super(worldIn, Collections.singletonList(new DummyChunkAccess()), status, writeRadiusCutoff);
+    // TODO: the "main chunk" is an awful idea, who did this?
+    public CubeWorldGenRegion(ServerLevel level, List<CubeAccess> cubes, ChunkStatus status, ChunkAccess mainChunk, int writeRadiusCutoff) {
+        super(level, Collections.singletonList(new DummyChunkAccess()), status, writeRadiusCutoff);
 
-        int cubeRoot = Mth.floor(Math.cbrt(cubesIn.size()));
-        if (cubeRoot * cubeRoot * cubeRoot != cubesIn.size()) {
+        int cubeRoot = Mth.floor(Math.cbrt(cubes.size()));
+        if (cubeRoot * cubeRoot * cubeRoot != cubes.size()) {
             throw Util.pauseInIde(new IllegalStateException("Cube World Gen Region Cache size is not a cube."));
         } else {
-            this.centerCubePos = cubesIn.get(cubesIn.size() / 2).getCubePos();
-            this.cubePrimers = cubesIn.toArray(new CubeAccess[0]);
+            this.centerCubePos = cubes.get(cubes.size() / 2).getCubePos();
+            this.cubePrimers = cubes.toArray(new CubeAccess[0]);
 
             this.mainCubeX = this.centerCubePos.getX();
             this.mainCubeY = this.centerCubePos.getY();
             this.mainCubeZ = this.centerCubePos.getZ();
             this.diameter = cubeRoot;
 
-            this.seed = worldIn.getSeed();
-            this.seaLevel = worldIn.getSeaLevel();
-            this.worldInfo = worldIn.getLevelData();
-            this.random = worldIn.getRandom();
-            this.dimension = worldIn.dimensionType();
+            this.seed = level.getSeed();
+            this.seaLevel = level.getSeaLevel();
+            this.worldInfo = level.getLevelData();
+            this.random = level.getRandom();
+            this.dimension = level.dimensionType();
 
-            this.biomeManager = new BiomeManager(this, BiomeManager.obfuscateSeed(this.seed), worldIn.dimensionType().getBiomeZoomer());
+            this.biomeManager = new BiomeManager(this, BiomeManager.obfuscateSeed(this.seed), level.dimensionType().getBiomeZoomer());
 
             CubeAccess minCube = this.cubePrimers[0];
             CubeAccess maxCube = this.cubePrimers[this.cubePrimers.length - 1];
-
 
             this.minCubeX = minCube.getCubePos().getX();
             this.minCubeY = minCube.getCubePos().getY();
@@ -139,7 +139,7 @@ public class CubeWorldGenRegion extends WorldGenRegion implements CubicLevelAcce
             this.maxCubeY = maxCube.getCubePos().getY();
             this.maxCubeZ = maxCube.getCubePos().getZ();
 
-            this.access = access;
+            this.access = mainChunk;
         }
     }
 

@@ -11,6 +11,6 @@ import org.spongepowered.asm.mixin.Mixin;
 @Mixin(ChunkHolder.LevelChangeListener.class)
 public interface MixinChunkHolderLevelChangeListener extends CubeHolderLevelChangeListener {
 
-    @Override default void onCubeLevelChange(CubePos pos, IntSupplier intSupplier, int p_219066_3_, IntConsumer p_219066_4_) {
+    @Override default void onCubeLevelChange(CubePos pos, IntSupplier intSupplier, int i, IntConsumer consumer) {
     }
 }

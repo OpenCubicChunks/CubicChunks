@@ -19,7 +19,6 @@ public class MixinNoiseSampler {
         if (noiseSettings.islandNoiseOverride()) { //If we're in the end, let it slide
             return;
         }
-
         cir.setReturnValue(noise);
     }
 }

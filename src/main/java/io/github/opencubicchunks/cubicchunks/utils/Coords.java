@@ -198,7 +198,7 @@ public class Coords {
      * @param blockYVal Y position
      * @param blockZVal Z position
      *
-     * @return The {@link ChunkSection} index inside the {@link LevelCube} the position specified falls within
+     * @return The {@link net.minecraft.world.level.chunk.LevelChunkSection} index inside the {@link LevelCube} the position specified falls within
      *     <p>
      *     This uses the internal methods such as {@link Coords#blockToIndex16} to allow the JVM to optimise out the variable bit shifts that would occur otherwise
      */
@@ -268,7 +268,7 @@ public class Coords {
     }
 
     /**
-     * @param idx Index of the {@link ChunkSection} within it's {@link LevelCube}
+     * @param idx Index of the {@link net.minecraft.world.level.chunk.LevelChunkSection} within it's {@link LevelCube}
      *
      * @return The X offset (as a  {@link SectionPos}) from it's {@link CubePos} (as a  {@link SectionPos})
      */
@@ -277,7 +277,7 @@ public class Coords {
     }
 
     /**
-     * @param idx Index of the {@link ChunkSection} within it's {@link LevelCube}
+     * @param idx Index of the {@link net.minecraft.world.level.chunk.LevelChunkSection} within it's {@link LevelCube}
      *
      * @return The Y offset (as a  {@link SectionPos}) from it's {@link CubePos} (as a  {@link SectionPos})
      */
@@ -286,7 +286,7 @@ public class Coords {
     }
 
     /**
-     * @param idx Index of the {@link ChunkSection} within it's {@link LevelCube}
+     * @param idx Index of the {@link net.minecraft.world.level.chunk.LevelChunkSection} within it's {@link LevelCube}
      *
      * @return The Z offset (as a  {@link SectionPos}) from it's {@link CubePos} (as a  {@link SectionPos})
      */
@@ -308,7 +308,7 @@ public class Coords {
      * @param sectionY A section Y
      * @param sectionZ A section Z
      *
-     * @return The index of the {@link ChunkSection} that the specified {@link SectionPos} describes inside it's {@link LevelCube}
+     * @return The index of the {@link net.minecraft.world.level.chunk.LevelChunkSection} that the specified {@link SectionPos} describes inside it's {@link LevelCube}
      */
     public static int sectionToIndex(int sectionX, int sectionY, int sectionZ) {
         return blockToIndex(sectionX << 4, sectionY << 4, sectionZ << 4);
@@ -369,9 +369,9 @@ public class Coords {
 
     /**
      * @param cubePos The {@link CubePos}
-     * @param i The index of the {@link ChunkSection} inside the {@link CubePos}
+     * @param i The index of the {@link net.minecraft.world.level.chunk.LevelChunkSection} inside the {@link CubePos}
      *
-     * @return The {@link SectionPos} of the {@link ChunkSection} at index i
+     * @return The {@link SectionPos} of the {@link net.minecraft.world.level.chunk.LevelChunkSection} at index i
      */
     public static SectionPos sectionPosByIndex(CubePos cubePos, int i) {
         return SectionPos.of(cubeToSection(cubePos.getX(), indexToX(i)), cubeToSection(cubePos.getY(), indexToY(i)), cubeToSection(cubePos.getZ(),
@@ -380,9 +380,9 @@ public class Coords {
 
     /**
      * @param cubePos The {@link CubePos}
-     * @param i The index of the {@link ChunkSection} inside the {@link CubePos}
+     * @param i The index of the {@link net.minecraft.world.level.chunk.LevelChunkSection} inside the {@link CubePos}
      *
-     * @return The {@link ChunkPos} of the column containing the {@link ChunkSection} at index i
+     * @return The {@link ChunkPos} of the column containing the {@link net.minecraft.world.level.chunk.LevelChunkSection} at index i
      */
     public static ChunkPos chunkPosByIndex(CubePos cubePos, int i) {
         return new ChunkPos(cubeToSection(cubePos.getX(), indexToX(i)), cubeToSection(cubePos.getZ(), indexToZ(i)));

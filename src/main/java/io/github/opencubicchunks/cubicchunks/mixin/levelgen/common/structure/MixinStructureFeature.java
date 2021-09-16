@@ -28,13 +28,11 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(StructureFeature.class)
 public abstract class MixinStructureFeature {
 
-
     @Shadow protected abstract boolean linearSeparation();
 
     @Inject(at = @At("HEAD"), method = "getNearestGeneratedFeature", cancellable = true)
     private void getNearestStructure3D(LevelReader level, StructureFeatureManager manager, BlockPos blockPos, int searchRadius, boolean skipExistingChunks, long seed,
                                        StructureFeatureConfiguration structureFeatureConfiguration, CallbackInfoReturnable<BlockPos> cir) {
-
 
         if (((CubicLevelHeightAccessor) level).generates2DChunks()) {
             return;
@@ -107,13 +105,11 @@ public abstract class MixinStructureFeature {
                         break;
                     }
                 }
-
                 if (radius == 0) {
                     break;
                 }
             }
         }
-
         cir.setReturnValue(null);
     }
 
@@ -126,7 +122,6 @@ public abstract class MixinStructureFeature {
             return nbt.contains("ChunkY") ? new ImposterChunkPos(x, nbt.getInt("ChunkY"), z) : original;
         }
     }
-
 
     public final CubePos getPotentialFeatureChunk(StructureFeatureConfiguration config, long seed, WorldgenRandom rand, int sectionX, int sectionY, int sectionZ) {
         int spacing = config.spacing();
@@ -144,7 +139,6 @@ public abstract class MixinStructureFeature {
             dx = (rand.nextInt(spacing - separation) + rand.nextInt(spacing - separation)) / 2;
             dz = (rand.nextInt(spacing - separation) + rand.nextInt(spacing - separation)) / 2;
         }
-
         return CubePos.of(Coords.sectionToCube(gridX * spacing + dx), sectionY, Coords.sectionToCube(gridZ * spacing + dz));
     }
 }

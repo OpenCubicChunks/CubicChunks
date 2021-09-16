@@ -56,9 +56,9 @@ public class PacketHeightmapChanges {
     }
 
     public static class Handler {
-        public static void handle(PacketHeightmapChanges packet, Level worldIn) {
-            ChunkSource chunkProvider = worldIn.getChunkSource();
-            LevelChunk chunk = chunkProvider.getChunk(packet.pos.x, packet.pos.z, false);
+        public static void handle(PacketHeightmapChanges packet, Level level) {
+            ChunkSource chunkSource = level.getChunkSource();
+            LevelChunk chunk = chunkSource.getChunk(packet.pos.x, packet.pos.z, false);
             if (chunk == null) {
                 CubicChunks.LOGGER.error("Chunk doesn't exist when receiving heightmap update at " + packet.pos);
                 return;

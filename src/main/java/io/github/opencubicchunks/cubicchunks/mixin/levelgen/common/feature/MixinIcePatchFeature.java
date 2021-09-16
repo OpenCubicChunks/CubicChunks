@@ -17,7 +17,6 @@ public class MixinIcePatchFeature {
         if (!((CubicLevelHeightAccessor) level).isCubic()) {
             return level.getMinBuildHeight();
         }
-
         return Coords.cubeToMinBlock(((CubeWorldGenRegion) level).getMainCubeY());
     }
 }

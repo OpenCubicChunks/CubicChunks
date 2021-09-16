@@ -21,11 +21,10 @@ public class MixinRangeDecorator {
 
     @Inject(method = "y", at = @At("RETURN"), cancellable = true)
     private void handleCubicRangeDecorator(DecorationContext decorationContext, Random random, RangeDecoratorConfiguration rangeDecoratorConfiguration, int i,
-                                     CallbackInfoReturnable<Integer> cir) {
+                                           CallbackInfoReturnable<Integer> cir) {
         if (!((CubicLevelHeightAccessor) decorationContext.getLevel()).isCubic()) {
             return;
         }
-
         CubeWorldGenRegion level = (CubeWorldGenRegion) decorationContext.getLevel();
         HeightProvider heightProvider = rangeDecoratorConfiguration.height;
 

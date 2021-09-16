@@ -24,7 +24,7 @@ public abstract class MixinClientPacketListener {
     @Shadow public abstract ClientLevel getLevel();
 
     @Inject(method = "handleLevelChunk", at = @At("HEAD"), cancellable = true)
-    public void handleLevelChunk(ClientboundLevelChunkPacket clientboundLevelChunkPacket, CallbackInfo ci) {
+    public void handleLevelChunk(ClientboundLevelChunkPacket packet, CallbackInfo ci) {
         if (level != null) {
             if (!((CubicLevelHeightAccessor) level).isCubic()) {
                 return;
@@ -32,16 +32,14 @@ public abstract class MixinClientPacketListener {
         }
         ci.cancel();
 
-        PacketUtils.ensureRunningOnSameThread(clientboundLevelChunkPacket, (ClientPacketListener) (Object) this, this.minecraft);
-        int chunkX = clientboundLevelChunkPacket.getX();
-        int chunkZ = clientboundLevelChunkPacket.getZ();
+        PacketUtils.ensureRunningOnSameThread(packet, (ClientPacketListener) (Object) this, this.minecraft);
+        int chunkX = packet.getX();
+        int chunkZ = packet.getZ();
 
         @SuppressWarnings("ConstantConditions") //Not an NPE because this method is client-side.
         ColumnBiomeContainer biomeContainer = new ColumnBiomeContainer(minecraft.level.registryAccess().registryOrThrow(Registry.BIOME_REGISTRY), level, level);
-        this.level.getChunkSource().replaceWithPacketData(chunkX, chunkZ, biomeContainer, clientboundLevelChunkPacket.getReadBuffer(), clientboundLevelChunkPacket.getHeightmaps(),
-            clientboundLevelChunkPacket.getAvailableSections());
+        this.level.getChunkSource().replaceWithPacketData(chunkX, chunkZ, biomeContainer, packet.getReadBuffer(), packet.getHeightmaps(), packet.getAvailableSections());
     }
-
 
     @Redirect(method = { "handleForgetLevelChunk", "handleLevelChunk" },
         at = @At(value = "INVOKE", target = "Lnet/minecraft/client/multiplayer/ClientLevel;getMaxSection()I"))
@@ -49,7 +47,6 @@ public abstract class MixinClientPacketListener {
         if (!((CubicLevelHeightAccessor) clientLevel).isCubic()) {
             return clientLevel.getMaxSection();
         }
-
         return clientLevel.getMinSection() - 1; // disable the loop, cube packets do the necessary work
     }
 }

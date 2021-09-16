@@ -41,6 +41,7 @@ public abstract class MixinDebugScreenOverlay {
                                 String s, BlockPos blockpos, Entity entity, Direction direction, String s1, /*ChunkPos chunkpos,*/ Level world, LongSet longset,
                                 List debugScreenList/*, String s2*/) {
         //noinspection unchecked
+        // TODO: use Coords class
         debugScreenList.add(String.format("Cube:  %d %d %d in %d %d %d",
             blockpos.getX() & (CubeAccess.DIAMETER_IN_BLOCKS - 1), blockpos.getY() & (CubeAccess.DIAMETER_IN_BLOCKS - 1), blockpos.getZ() & (CubeAccess.DIAMETER_IN_BLOCKS - 1),
             Coords.blockToCube(blockpos.getX()), Coords.blockToCube(blockpos.getY()), Coords.blockToCube(blockpos.getZ()))
@@ -72,9 +73,9 @@ public abstract class MixinDebugScreenOverlay {
         // No cubic check here because it's a vanilla feature that was removed anyway
         if (this.minecraft.getSingleplayerServer() != null) {
             if (serverChunk != null) {
-                LevelLightEngine lightingProvider = level.getChunkSource().getLightEngine();
-                list.add("Server Light: (" + lightingProvider.getLayerListener(LightLayer.SKY).getLightValue(pos) + " sky, "
-                    + lightingProvider.getLayerListener(LightLayer.BLOCK).getLightValue(pos) + " block)");
+                LevelLightEngine lightEngine = level.getChunkSource().getLightEngine();
+                list.add("Server Light: (" + lightEngine.getLayerListener(LightLayer.SKY).getLightValue(pos) + " sky, "
+                    + lightEngine.getLayerListener(LightLayer.BLOCK).getLightValue(pos) + " block)");
             } else {
                 list.add("Server Light: (?? sky, ?? block)");
             }

@@ -19,15 +19,15 @@ public class ClientCubeCacheStorage {
 
     private final int horizontalSideLength;
     private final int verticalSideLength;
-    private final ClientLevel world;
+    private final ClientLevel level;
     private final int sideArea;
 
-    public ClientCubeCacheStorage(int horizontalViewDistance, int verticalViewDistance, ClientLevel world) {
+    public ClientCubeCacheStorage(int horizontalViewDistance, int verticalViewDistance, ClientLevel level) {
         this.horizontalViewDistance = horizontalViewDistance;
         this.verticalViewDistance = verticalViewDistance;
         this.horizontalSideLength = horizontalViewDistance * 2 + 1;
         this.verticalSideLength = verticalViewDistance * 2 + 1;
-        this.world = world;
+        this.level = level;
         this.sideArea = this.horizontalSideLength * this.horizontalSideLength;
         this.cubes = new AtomicReferenceArray<>(this.horizontalSideLength * this.verticalSideLength * this.horizontalSideLength);
     }
@@ -38,35 +38,35 @@ public class ClientCubeCacheStorage {
             + Math.floorMod(x, this.horizontalSideLength);
     }
 
-    public void replace(int cubeIdx, @Nullable LevelCube chunkIn) {
-        LevelCube cube = this.cubes.getAndSet(cubeIdx, chunkIn);
-        if (cube != null) {
+    public void replace(int cubeIndex, @Nullable LevelCube replaceWith) {
+        LevelCube oldCUbe = this.cubes.getAndSet(cubeIndex, replaceWith);
+        if (oldCUbe != null) {
             --this.loaded;
-            ((CubicClientLevel) this.world).onCubeUnload(cube);
+            ((CubicClientLevel) this.level).unload(oldCUbe);
         }
 
-        if (chunkIn != null) {
+        if (replaceWith != null) {
             ++this.loaded;
         }
 
     }
 
-    public LevelCube unload(int chunkIndex, LevelCube cube, @Nullable LevelCube replaceWith) {
-        if (this.cubes.compareAndSet(chunkIndex, cube, replaceWith) && replaceWith == null) {
+    public LevelCube replace(int cubeIndex, LevelCube cube, @Nullable LevelCube replaceWith) {
+        if (this.cubes.compareAndSet(cubeIndex, cube, replaceWith) && replaceWith == null) {
             --this.loaded;
         }
-        ((CubicClientLevel) this.world).onCubeUnload(cube);
+        ((CubicClientLevel) this.level).unload(cube);
         return cube;
     }
 
-    public boolean inView(int x, int y, int z) {
+    public boolean inRange(int x, int y, int z) {
         return Math.abs(x - this.centerX) <= this.horizontalViewDistance
             && Math.abs(y - this.centerY) <= this.verticalViewDistance
             && Math.abs(z - this.centerZ) <= this.horizontalViewDistance;
     }
 
     @Nullable
-    public LevelCube get(int chunkIndex) {
-        return this.cubes.get(chunkIndex);
+    public LevelCube get(int cubeIndex) {
+        return this.cubes.get(cubeIndex);
     }
 }

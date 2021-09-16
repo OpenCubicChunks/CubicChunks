@@ -6,5 +6,5 @@ public interface CubicClientLevel {
 
     void onCubeLoaded(int cubeX, int cubeY, int cubeZ);
 
-    void onCubeUnload(LevelCube cube);
+    void unload(LevelCube cube);
 }

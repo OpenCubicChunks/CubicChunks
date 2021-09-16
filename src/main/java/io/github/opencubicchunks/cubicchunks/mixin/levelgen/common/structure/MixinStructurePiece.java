@@ -21,8 +21,7 @@ public class MixinStructurePiece {
         if (((CubicLevelHeightAccessor) worldGenLevel).generates2DChunks()) {
             return worldGenLevel.getChunk(blockPos);
         }
-
-        return (ChunkAccess) ((CubicLevelAccessor) worldGenLevel).getCube(blockPos);
+        return ((CubicLevelAccessor) worldGenLevel).getCube(blockPos);
     }
 
     @Redirect(method = "fillColumnDown", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/WorldGenLevel;getMinBuildHeight()I"))
@@ -30,7 +29,6 @@ public class MixinStructurePiece {
         if (!((CubicLevelHeightAccessor) level).isCubic()) {
             return level.getMinBuildHeight();
         }
-
         return Coords.cubeToMinBlock(((CubeWorldGenRegion) level).getMinCubeY());
     }
 }

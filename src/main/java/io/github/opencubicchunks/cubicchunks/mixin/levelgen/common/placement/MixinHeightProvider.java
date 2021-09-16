@@ -15,13 +15,10 @@ public abstract class MixinHeightProvider implements CubicHeightProvider {
     @Shadow public abstract int sample(Random random, WorldGenerationContext context);
 
     @Override public OptionalInt sampleCubic(Random random, WorldGenerationContext context, int minY, int maxY) {
-
         int sampledY = this.sample(random, context);
-
         if (sampledY <= maxY && sampledY >= minY) {
             return OptionalInt.of(sampledY);
         }
-
         return OptionalInt.empty();
     }
 }

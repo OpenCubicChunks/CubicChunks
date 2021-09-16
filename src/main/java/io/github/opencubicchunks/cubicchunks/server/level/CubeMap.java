@@ -23,8 +23,10 @@ import net.minecraft.world.level.chunk.ChunkStatus;
 public interface CubeMap {
     int MAX_CUBE_DISTANCE = 33 + CubeStatus.maxDistance();
 
+    // getTickingGenerated
     int getTickingGeneratedCubes();
 
+    // size()
     int sizeCubes();
 
     // implemented by ASM in MainTransformer
@@ -32,31 +34,40 @@ public interface CubeMap {
     ChunkHolder updateCubeScheduling(long cubePosIn, int newLevel, @Nullable ChunkHolder holder, int oldLevel);
 
     void setServerChunkCache(ServerChunkCache cache);
+
     LongSet getCubesToDrop();
 
+    // getUpdatingChunkIfPresent
     @Nullable
-    ChunkHolder getCubeHolder(long cubePosIn);
-    @Nullable
-    ChunkHolder getImmutableCubeHolder(long cubePosIn);
+    ChunkHolder getUpdatingCubeIfPresent(long cubePosIn);
 
+    // getVisibleChunkIfPresent
+    @Nullable
+    ChunkHolder getVisibleCubeIfPresent(long cubePosIn);
+
+    // schedule
     CompletableFuture<Either<CubeAccess, ChunkHolder.ChunkLoadingFailure>> scheduleCube(ChunkHolder chunkHolderIn,
                                                                                         ChunkStatus chunkStatusIn);
 
-    CompletableFuture<Either<LevelCube, ChunkHolder.ChunkLoadingFailure>> unpackCubeTicks(ChunkHolder chunkHolder);
+    // prepareAccessibleChunk
+    CompletableFuture<Either<LevelCube, ChunkHolder.ChunkLoadingFailure>> prepareAccessibleCube(ChunkHolder chunkHolder);
 
+    // prepareTickingChunk
+    CompletableFuture<Either<LevelCube, ChunkHolder.ChunkLoadingFailure>> prepareTickingCube(ChunkHolder chunkHolder);
 
-    CompletableFuture<Either<LevelCube, ChunkHolder.ChunkLoadingFailure>> postProcessCube(ChunkHolder chunkHolder);
-
+    // getChunkRangeFuture
     CompletableFuture<Either<List<CubeAccess>, ChunkHolder.ChunkLoadingFailure>> getCubeRangeFuture(CubePos pos, int p_219236_2_,
                                                                                                     IntFunction<ChunkStatus> p_219236_3_);
-
+    // packTicks
     CompletableFuture<Void> packCubeTicks(LevelCube cubeIn);
 
-    CompletableFuture<Either<LevelCube, ChunkHolder.ChunkLoadingFailure>> getCubeEntityTickingRangeFuture(CubePos pos);
+    // prepareEntityTickingChunk
+    CompletableFuture<Either<LevelCube, ChunkHolder.ChunkLoadingFailure>> prepareEntityTickingCube(CubePos pos);
 
+    // getChunks
     Iterable<ChunkHolder> getCubes();
 
-    // func_219215_b, checkerboardDistance
+    // checkerboardDistance
     // replacement of func_219215_b, checkerboardDistance, checks iew distance instead of returning distance
     // because we also have vertical view distance
     static boolean isInViewDistance(CubePos pos, ServerPlayer player, boolean useCameraPosition, int hDistance, int vDistance) {
@@ -100,7 +111,6 @@ public interface CubeMap {
         return getCubeDistanceXZ(pos, x, z);
     }
 
-
     static int getCubeCheckerboardDistanceY(CubePos pos, ServerPlayer player, boolean useCameraPosition) {
         int y;
         if (useCameraPosition) {
@@ -118,9 +128,12 @@ public interface CubeMap {
         return Math.max(Math.abs(dX), Math.abs(dZ));
     }
 
+    // getChunkQueueLevel
     IntSupplier getCubeQueueLevel(long cubePosIn);
 
-    void releaseLightTicket(CubePos cubePos);
+    // releaseLightTicket
+    void releaseCubeLightTicket(CubePos cubePos);
 
+    // noPlayersCloseForSpawning
     boolean noPlayersCloseForSpawning(CubePos cubePos);
 }

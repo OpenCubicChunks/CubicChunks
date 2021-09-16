@@ -35,29 +35,32 @@ public interface CubeHolder {
         return cubeLevel < 33 ? ChunkStatus.FULL : CubeStatus.getStatus(cubeLevel - 33);
     }
 
+    // getChunkIfComplete, TODO: rename to getTickingCube
     @Nullable
     LevelCube getCubeIfComplete();
 
     CubePos getCubePos();
 
-    // func_219276_a, getOrScheduleFuture
+    // getOrScheduleFuture
     CompletableFuture<Either<CubeAccess, ChunkHolder.ChunkLoadingFailure>> getOrScheduleCubeFuture(ChunkStatus chunkStatus, ChunkMap chunkManager);
 
+    // getFutureIfPresentUnchecked
     CompletableFuture<Either<CubeAccess, ChunkHolder.ChunkLoadingFailure>> getCubeFutureIfPresentUnchecked(ChunkStatus chunkStatus);
 
+    // getEntityTickingChunkFuture
     CompletableFuture<Either<LevelCube, ChunkHolder.ChunkLoadingFailure>> getCubeEntityTickingFuture();
 
-    // func_219294_a, replaceProtoChunk
+    // replaceProtoChunk
     void replaceProtoCube(ImposterProtoCube primer);
 
-    // func_225410_b, getFutureIfPresent
+    // getFutureIfPresent
     CompletableFuture<Either<CubeAccess, ChunkHolder.ChunkLoadingFailure>> getCubeFutureIfPresent(ChunkStatus chunkStatus);
 
     void addCubeStageListener(ChunkStatus status, BiConsumer<Either<CubeAccess, ChunkHolder.ChunkLoadingFailure>, Throwable> consumer, ChunkMap chunkManager);
 
-
     void broadcastChanges(LevelCube cube);
 
+    // getChunkToSave
     CompletableFuture<CubeAccess> getCubeToSave();
 
     // added with ASM, can't be shadow because mixin validates shadows before preApply runs
@@ -71,7 +74,7 @@ public interface CubeHolder {
         }
 
         @Override public String toString() {
-            return "Unloaded ticket level " + ((CubeHolder) holder).getCubePos().toString();
+            return "Unloaded ticket level " + ((CubeHolder) holder).getCubePos();
         }
     }
 }

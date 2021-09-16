@@ -62,7 +62,6 @@ public class PacketDispatcher {
         ENCODERS.put(clazz, encode);
         PACKET_IDS.put(clazz, new ResourceLocation(PACKET_LOCATION, id));
 
-
         if (FabricLoader.getInstance().getEnvironmentType() == EnvType.CLIENT) {
             ClientProxy.registerClientReceiver(id, decode, handler);
         }

@@ -34,7 +34,6 @@ public abstract class MixinEntitySectionStorage<T extends EntityAccess> implemen
         throw new Error("Mixin did not apply");
     }
 
-
     @SuppressWarnings("UnresolvedMixinReference")
     @Redirect(method = "*", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/entity/EntitySectionStorage;getChunkKeyFromSectionKey(J)J"))
     private long getCubeKeyFromSectionKey(long sectionKey) {
@@ -50,15 +49,14 @@ public abstract class MixinEntitySectionStorage<T extends EntityAccess> implemen
         if (!isCubic) {
             return;
         }
-
         int x = CubePos.extractX(cubePos);
         int y = CubePos.extractY(cubePos);
         int z = CubePos.extractZ(cubePos);
-        LongSortedSet longSortedSet = this.getCubeSections(x, y, z);
-        if (longSortedSet.isEmpty()) {
+        LongSortedSet cubeSections = this.getCubeSections(x, y, z);
+        if (cubeSections.isEmpty()) {
             cir.setReturnValue(LongStream.empty());
         } else {
-            PrimitiveIterator.OfLong ofLong = longSortedSet.iterator();
+            PrimitiveIterator.OfLong ofLong = cubeSections.iterator();
             cir.setReturnValue(StreamSupport.longStream(Spliterators.spliteratorUnknownSize(ofLong,
                 Spliterator.ORDERED | Spliterator.DISTINCT | Spliterator.SORTED | Spliterator.NONNULL | Spliterator.IMMUTABLE), false));
         }

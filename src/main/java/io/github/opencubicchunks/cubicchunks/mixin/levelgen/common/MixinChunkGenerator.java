@@ -71,9 +71,10 @@ public abstract class MixinChunkGenerator implements CubeGenerator {
 
     @Shadow protected abstract void generateStrongholds();
 
+    // TODO: move this to debug mixins
     @Inject(at = @At("RETURN"),
         method = "<init>(Lnet/minecraft/world/level/biome/BiomeSource;Lnet/minecraft/world/level/biome/BiomeSource;Lnet/minecraft/world/level/levelgen/StructureSettings;J)V")
-    private void switchBiomeSource(BiomeSource biomeSourceIn, BiomeSource biomeSourceIn2, StructureSettings structureSettings, long l, CallbackInfo ci) {
+    private void switchBiomeSource(BiomeSource biomeSource, BiomeSource biomeSource2, StructureSettings structureSettings, long l, CallbackInfo ci) {
         if (System.getProperty("cubicchunks.debug.biomes", "false").equalsIgnoreCase("true")) {
             if (this.biomeSource instanceof OverworldBiomeSource) {
                 this.biomeSource = new StripedBiomeSource(((OverworldBiomeSourceAccess) this.biomeSource).getBiomes());
@@ -83,7 +84,6 @@ public abstract class MixinChunkGenerator implements CubeGenerator {
             }
         }
     }
-
 
     // TODO: check which one is which
     @Inject(method = "createStructures", at = @At("HEAD"), cancellable = true)
@@ -96,14 +96,10 @@ public abstract class MixinChunkGenerator implements CubeGenerator {
         }
         ci.cancel();
 
-
         //TODO: Patch entity game crashes in order to spawn villages(village pieces spawn villagers)
         //TODO: Setup a 2D and 3D placement.
-
         CubeAccess cube = (CubeAccess) chunkAccess;
-
         CubePos cubePos = cube.getCubePos();
-
         Biome biome = this.biomeSource.getPrimaryBiome(cube.getCubePos().asChunkPos());
         this.createCCStructure(StructureFeatures.STRONGHOLD, registry, featureManager, cube, manager, seed, cubePos, biome);
 
@@ -111,7 +107,6 @@ public abstract class MixinChunkGenerator implements CubeGenerator {
             this.createCCStructure(configuredStructureFeatureSupplier.get(), registry, featureManager, cube, manager, seed, cubePos, biome);
         }
     }
-
 
     private void createCCStructure(ConfiguredStructureFeature<?, ?> configuredStructureFeature, RegistryAccess registryAccess, StructureFeatureManager structureFeatureManager,
                                    CubeAccess cube, StructureManager structureManager, long seed, CubePos cubePos, Biome biome) {
@@ -129,20 +124,15 @@ public abstract class MixinChunkGenerator implements CubeGenerator {
 
     }
 
-
     @Inject(method = "createReferences", at = @At("HEAD"), cancellable = true)
     public void createReferences(WorldGenLevel worldGenLevel, StructureFeatureManager featureManager, ChunkAccess chunkAccess, CallbackInfo ci) {
         if (((CubicLevelHeightAccessor) chunkAccess).generates2DChunks()) {
             return;
         }
-
-        if (!(chunkAccess instanceof CubeAccess)) {
+        if (!(chunkAccess instanceof CubeAccess cube)) {
             return;
         }
-
         ci.cancel();
-
-        CubeAccess cube = (CubeAccess) chunkAccess;
 
         CubeWorldGenRegion world = (CubeWorldGenRegion) worldGenLevel;
 
@@ -194,7 +184,6 @@ public abstract class MixinChunkGenerator implements CubeGenerator {
         if (((CubicLevelHeightAccessor) serverLevel).generates2DChunks()) {
             return;
         }
-
         if (!this.biomeSource.canGenerateStructure(structureFeature)) {
             cir.setReturnValue(null);
         } else if (structureFeature == StructureFeature.STRONGHOLD) {
@@ -224,7 +213,7 @@ public abstract class MixinChunkGenerator implements CubeGenerator {
     }
 
     @Override
-    public void decorate(CubeWorldGenRegion region, StructureFeatureManager structureManager, ProtoCube chunk) {
+    public void decorate(CubeWorldGenRegion region, StructureFeatureManager structureManager, ProtoCube cube) {
         int mainCubeX = region.getMainCubeX();
         int mainCubeY = region.getMainCubeY();
         int mainCubeZ = region.getMainCubeZ();
@@ -238,11 +227,11 @@ public abstract class MixinChunkGenerator implements CubeGenerator {
 
         //Get each individual column from a given cube no matter the size. Where y height is the same per column.
         //Feed the given columnMinPos into the feature decorators.
-        int cubeY = chunk.getCubePos().getY();
+        int cubeY = cube.getCubePos().getY();
         for (int columnX = 0; columnX < CubeAccess.DIAMETER_IN_SECTIONS; columnX++) {
             for (int columnZ = 0; columnZ < CubeAccess.DIAMETER_IN_SECTIONS; columnZ++) {
-                chunk.moveColumns(columnX, columnZ);
-                if (CubicWorldGenUtils.areSectionsEmpty(cubeY, chunk.getPos(), chunk)) {
+                cube.moveColumns(columnX, columnZ);
+                if (CubicWorldGenUtils.areSectionsEmpty(cubeY, cube.getPos(), cube)) {
                     continue;
                 }
 

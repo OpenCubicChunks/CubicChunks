@@ -18,7 +18,6 @@ public class PacketCubeBlockChanges {
     private final BlockState[] blockStates;
     private final SectionPos sectionPos;
 
-
     public PacketCubeBlockChanges(FriendlyByteBuf in) {
         this.sectionPos = SectionPos.of(
             BufferUtils.readSignedVarInt(in),
@@ -63,10 +62,10 @@ public class PacketCubeBlockChanges {
     }
 
     public static class Handler {
-        public static void handle(PacketCubeBlockChanges packet, Level world) {
-            ClientLevel worldClient = (ClientLevel) world;
+        public static void handle(PacketCubeBlockChanges packet, Level level) {
+            ClientLevel clientLevel = (ClientLevel) level;
             for (int i = 0; i < packet.localAddresses.length; i++) {
-                worldClient.setKnownState(packet.getPos(i), packet.blockStates[i]);
+                clientLevel.setKnownState(packet.getPos(i), packet.blockStates[i]);
             }
         }
     }

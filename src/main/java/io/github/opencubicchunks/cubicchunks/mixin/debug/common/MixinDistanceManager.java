@@ -18,7 +18,7 @@ public class MixinDistanceManager {
         if (!DEBUG_LOAD_ORDER_ENABLED) {
             return;
         }
-        if (ticket.getType() == TicketType.PLAYER || ticket.getType() == CubicTicketType.CCPLAYER) {
+        if (ticket.getType() == TicketType.PLAYER || ticket.getType() == CubicTicketType.PLAYER) {
             ci.cancel();
         }
     }

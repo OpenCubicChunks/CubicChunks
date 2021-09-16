@@ -28,15 +28,12 @@ public class LavaLeakFix extends Feature<NoneFeatureConfiguration> {
     }
 
     @Override public boolean place(FeaturePlaceContext<NoneFeatureConfiguration> context) {
-        if (!(context.level() instanceof CubeWorldGenRegion)) {
+        if (!(context.level() instanceof CubeWorldGenRegion level)) {
             return false;
         }
-
         if (context.level().getLevel().dimension() != Level.NETHER) {
             return false;
         }
-
-        CubeWorldGenRegion level = (CubeWorldGenRegion) context.level();
         CubeAccess cube = level.getCube(level.getMainCubeX(), level.getMainCubeY(), level.getMainCubeZ());
         CubePos cubePos = cube.getCubePos();
         Random random = context.random();

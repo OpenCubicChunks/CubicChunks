@@ -24,9 +24,9 @@ public class PacketUpdateCubePosition {
     }
 
     public static class Handler {
-        public static void handle(PacketUpdateCubePosition packet, Level worldIn) {
-            ChunkSource chunkProvider = worldIn.getChunkSource();
-            ((ClientCubeCache) chunkProvider).setCenter(packet.pos.getX(), packet.pos.getY(), packet.pos.getZ());
+        public static void handle(PacketUpdateCubePosition packet, Level level) {
+            ChunkSource chunkSource = level.getChunkSource();
+            ((ClientCubeCache) chunkSource).updateViewCenter(packet.pos.getX(), packet.pos.getY(), packet.pos.getZ());
         }
     }
 }

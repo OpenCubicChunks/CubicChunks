@@ -46,8 +46,6 @@ public abstract class MixinLoggerChunkProgressListener implements CubeProgressLi
     @Override public void startCubes(CubePos center) {
     }
 
-
-
     @Override public void onCubeStatusChange(CubePos cubePos, @Nullable ChunkStatus newStatus) {
         if (newStatus == ChunkStatus.FULL) {
             this.loadedCubes++;

@@ -15,6 +15,7 @@ import it.unimi.dsi.fastutil.longs.Long2ObjectLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
 
+// TODO: use ChunkTaskPriorityQueue internally, with imposter chunk pos
 public class CubeTaskPriorityQueue<T> {
     public static final int LEVEL_COUNT = CubeMap.MAX_CUBE_DISTANCE + 2;
     private final List<Long2ObjectLinkedOpenHashMap<List<Optional<T>>>> levelToPosToElements =
@@ -29,41 +30,39 @@ public class CubeTaskPriorityQueue<T> {
         this.sizeMax = maxSize;
     }
 
-    protected void updateCubeLevel(int p_219407_1_, CubePos pos, int p_219407_3_) {
-        if (p_219407_1_ < LEVEL_COUNT) {
-            Long2ObjectLinkedOpenHashMap<List<Optional<T>>> long2objectlinkedopenhashmap = this.levelToPosToElements.get(p_219407_1_);
-            List<Optional<T>> list = long2objectlinkedopenhashmap.remove(pos.asLong());
-            if (p_219407_1_ == this.firstNonEmptyLvl) {
+    protected void updateCubeLevel(int oldLevel, CubePos pos, int newLevel) {
+        if (oldLevel < LEVEL_COUNT) {
+            Long2ObjectLinkedOpenHashMap<List<Optional<T>>> elements = this.levelToPosToElements.get(oldLevel);
+            List<Optional<T>> list = elements.remove(pos.asLong());
+            if (oldLevel == this.firstNonEmptyLvl) {
                 while (this.firstNonEmptyLvl < LEVEL_COUNT && this.levelToPosToElements.get(this.firstNonEmptyLvl).isEmpty()) {
                     ++this.firstNonEmptyLvl;
                 }
             }
-
             if (list != null && !list.isEmpty()) {
-                this.levelToPosToElements.get(p_219407_3_).computeIfAbsent(pos.asLong(), (p_219411_0_) -> Lists.newArrayList()).addAll(list);
-                this.firstNonEmptyLvl = Math.min(this.firstNonEmptyLvl, p_219407_3_);
+                this.levelToPosToElements.get(newLevel).computeIfAbsent(pos.asLong(), i -> Lists.newArrayList()).addAll(list);
+                this.firstNonEmptyLvl = Math.min(this.firstNonEmptyLvl, newLevel);
             }
-
         }
     }
 
-    protected void add(Optional<T> p_219412_1_, long p_219412_2_, int p_219412_4_) {
-        this.levelToPosToElements.get(p_219412_4_).computeIfAbsent(p_219412_2_, (p_219410_0_) -> Lists.newArrayList()).add(p_219412_1_);
-        this.firstNonEmptyLvl = Math.min(this.firstNonEmptyLvl, p_219412_4_);
+    protected void add(Optional<T> value, long pos, int level) {
+        this.levelToPosToElements.get(level).computeIfAbsent(pos, (p_219410_0_) -> Lists.newArrayList()).add(value);
+        this.firstNonEmptyLvl = Math.min(this.firstNonEmptyLvl, level);
     }
 
-    protected void clearPostion(long p_219416_1_, boolean p_219416_3_) {
+    protected void clearPostion(long pos, boolean bl) {
         for (Long2ObjectLinkedOpenHashMap<List<Optional<T>>> long2objectlinkedopenhashmap : this.levelToPosToElements) {
-            List<Optional<T>> list = long2objectlinkedopenhashmap.get(p_219416_1_);
+            List<Optional<T>> list = long2objectlinkedopenhashmap.get(pos);
             if (list != null) {
-                if (p_219416_3_) {
+                if (bl) {
                     list.clear();
                 } else {
                     list.removeIf((p_219413_0_) -> !p_219413_0_.isPresent());
                 }
 
                 if (list.isEmpty()) {
-                    long2objectlinkedopenhashmap.remove(p_219416_1_);
+                    long2objectlinkedopenhashmap.remove(pos);
                 }
             }
         }
@@ -72,12 +71,12 @@ public class CubeTaskPriorityQueue<T> {
             ++this.firstNonEmptyLvl;
         }
 
-        this.cubePostions.remove(p_219416_1_);
+        this.cubePostions.remove(pos);
     }
 
-    private Runnable createCubePositionAdder(long p_219418_1_) {
+    private Runnable createCubePositionAdder(long pos) {
         return () -> {
-            this.cubePostions.add(p_219418_1_);
+            this.cubePostions.add(pos);
         };
     }
 
@@ -89,15 +88,14 @@ public class CubeTaskPriorityQueue<T> {
             return null;
         } else {
             int i = this.firstNonEmptyLvl;
-            Long2ObjectLinkedOpenHashMap<List<Optional<T>>> long2objectlinkedopenhashmap = this.levelToPosToElements.get(i);
-            long j = long2objectlinkedopenhashmap.firstLongKey();
+            Long2ObjectLinkedOpenHashMap<List<Optional<T>>> elements = this.levelToPosToElements.get(i);
+            long j = elements.firstLongKey();
 
             List<Optional<T>> list;
-            list = long2objectlinkedopenhashmap.removeFirst();
+            list = elements.removeFirst();
             while (this.firstNonEmptyLvl < LEVEL_COUNT && this.levelToPosToElements.get(this.firstNonEmptyLvl).isEmpty()) {
                 ++this.firstNonEmptyLvl;
             }
-
             return list.stream().map((p_219408_3_) -> p_219408_3_.<Either<T, Runnable>>map(Either::left).orElseGet(() -> {
                 return Either.right(this.createCubePositionAdder(j));
             }));

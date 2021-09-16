@@ -12,13 +12,11 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 @Mixin(HeightmapDecorator.class)
 public class MixinHeightMapDecorator {
 
-
     @Redirect(method = "getPositions", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/levelgen/placement/DecorationContext;getMinBuildHeight()I"))
     private int useMainCubePosY(DecorationContext decorationContext) {
         if (!((CubicLevelHeightAccessor) decorationContext.getLevel()).isCubic()) {
             return decorationContext.getMinBuildHeight();
         }
-
         return Coords.cubeToMinBlock(((CubeWorldGenRegion) decorationContext.getLevel()).getMainCubeY()) - 1;
     }
 }

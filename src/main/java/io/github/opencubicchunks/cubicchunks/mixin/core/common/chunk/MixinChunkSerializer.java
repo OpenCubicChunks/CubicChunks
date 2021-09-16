@@ -47,8 +47,8 @@ public abstract class MixinChunkSerializer {
      * @reason CubicChunks doesn't need much real data in columns
      */
     @Inject(method = "read", at = @At("HEAD"), cancellable = true)
-    private static void read(ServerLevel worldIn, StructureManager templateManagerIn, PoiManager poiManager, ChunkPos pos, CompoundTag compound, CallbackInfoReturnable<ProtoChunk> cir) {
-        if (!((CubicLevelHeightAccessor) worldIn).isCubic()) {
+    private static void read(ServerLevel serverLevel, StructureManager structureManager, PoiManager poiManager, ChunkPos pos, CompoundTag compound, CallbackInfoReturnable<ProtoChunk> cir) {
+        if (!((CubicLevelHeightAccessor) serverLevel).isCubic()) {
             return;
         }
         cir.cancel();
@@ -62,23 +62,23 @@ public abstract class MixinChunkSerializer {
         ChunkStatus.ChunkType statusType = getChunkTypeFromTag(compound);
         ChunkAccess newChunk;
         //TODO: Double Check that this is proper
-        ColumnBiomeContainer biomeContainerIn = new ColumnBiomeContainer(worldIn.registryAccess().registryOrThrow(Registry.BIOME_REGISTRY), worldIn, worldIn);
+        ColumnBiomeContainer biomeContainerIn = new ColumnBiomeContainer(serverLevel.registryAccess().registryOrThrow(Registry.BIOME_REGISTRY), serverLevel, serverLevel);
         if (statusType == ChunkStatus.ChunkType.LEVELCHUNK) {
-            newChunk = new LevelChunk(worldIn.getLevel(), pos, biomeContainerIn, UpgradeData.EMPTY,
+            newChunk = new LevelChunk(serverLevel.getLevel(), pos, biomeContainerIn, UpgradeData.EMPTY,
                 new ChunkTickList<>(Registry.BLOCK::getKey, new ArrayList<>(), 0), // TODO: supply game time
                 new ChunkTickList<>(Registry.FLUID::getKey, new ArrayList<>(), 0),
-                inhabitedTime, new LevelChunkSection[16], (chunk) -> { });
+                inhabitedTime, new LevelChunkSection[16], (chunk) -> {});
         } else {
             ProtoChunk chunkprimer = new ProtoChunk(pos, UpgradeData.EMPTY, new LevelChunkSection[16],
-                new ProtoTickList<>((block) -> block == null || block.defaultBlockState().isAir(), pos, worldIn),
-                new ProtoTickList<>((fluid) -> fluid == null || fluid == Fluids.EMPTY, pos, worldIn), worldIn);
+                new ProtoTickList<>((block) -> block == null || block.defaultBlockState().isAir(), pos, serverLevel),
+                new ProtoTickList<>((fluid) -> fluid == null || fluid == Fluids.EMPTY, pos, serverLevel), serverLevel);
 
             chunkprimer.setBiomes(biomeContainerIn); // setBiomes
             newChunk = chunkprimer;
             chunkprimer.setInhabitedTime(inhabitedTime);
             chunkprimer.setStatus(ChunkStatus.byName(level.getString("Status")));
             if (chunkprimer.getStatus().isOrAfter(ChunkStatus.FEATURES)) {
-                chunkprimer.setLightEngine(worldIn.getChunkSource().getLightEngine());
+                chunkprimer.setLightEngine(serverLevel.getChunkSource().getLightEngine());
             }
         }
         newChunk.setLightCorrect(true);
@@ -108,23 +108,21 @@ public abstract class MixinChunkSerializer {
      * @reason Save only columns
      */
     @Inject(method = "write", at = @At("HEAD"), cancellable = true)
-    private static void write(ServerLevel worldIn, ChunkAccess chunkIn, CallbackInfoReturnable<CompoundTag> cir) {
-        if (!((CubicLevelHeightAccessor) worldIn).isCubic()) {
+    private static void write(ServerLevel serverLevel, ChunkAccess column, CallbackInfoReturnable<CompoundTag> cir) {
+        if (!((CubicLevelHeightAccessor) serverLevel).isCubic()) {
             return;
         }
-
         cir.cancel();
 
-
-        ChunkPos chunkpos = chunkIn.getPos();
+        ChunkPos chunkpos = column.getPos();
         CompoundTag compoundnbt = new CompoundTag();
         CompoundTag level = new CompoundTag();
         compoundnbt.putInt("DataVersion", SharedConstants.getCurrentVersion().getWorldVersion());
         compoundnbt.put("Level", level);
         level.putInt("xPos", chunkpos.x);
         level.putInt("zPos", chunkpos.z);
-        level.putLong("InhabitedTime", chunkIn.getInhabitedTime());
-        level.putString("Status", chunkIn.getStatus().getName());
+        level.putLong("InhabitedTime", column.getInhabitedTime());
+        level.putString("Status", column.getStatus().getName());
 
 //        CompoundTag heightmaps = new CompoundTag();
 //        for(Map.Entry<Heightmap.Types, Heightmap> entry : chunkIn.getHeightmaps()) {

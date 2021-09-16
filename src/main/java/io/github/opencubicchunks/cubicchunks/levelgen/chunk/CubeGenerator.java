@@ -5,6 +5,6 @@ import io.github.opencubicchunks.cubicchunks.world.level.chunk.ProtoCube;
 import net.minecraft.world.level.StructureFeatureManager;
 
 public interface CubeGenerator {
-    default void decorate(CubeWorldGenRegion region, StructureFeatureManager structureManager, ProtoCube chunkAccess) {
+    default void decorate(CubeWorldGenRegion region, StructureFeatureManager structureManager, ProtoCube cube) {
     }
 }

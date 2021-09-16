@@ -84,11 +84,8 @@ public class CubicChunks implements ModInitializer {
     public static class Config {
         public Client client = new Client();
 
-
         public void markDirty() {
-
         }
-
 
         public static class Client {
             public int verticalViewDistance = 8;

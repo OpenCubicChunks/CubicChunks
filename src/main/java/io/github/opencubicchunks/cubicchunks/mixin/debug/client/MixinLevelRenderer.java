@@ -46,7 +46,7 @@ public class MixinLevelRenderer {
             return;
         }
 
-        ServerLevel levelAccessor = Minecraft.getInstance().getSingleplayerServer().getLevel(Level.OVERWORLD);
+        ServerLevel overworld = Minecraft.getInstance().getSingleplayerServer().getLevel(Level.OVERWORLD);
         RenderSystem.disableBlend();
         RenderSystem.disableTexture();
         RenderSystem.enableDepthTest();
@@ -65,7 +65,7 @@ public class MixinLevelRenderer {
 
         int renderRadius = 5;
         int chunkRenderRadius = renderRadius * CubeAccess.DIAMETER_IN_SECTIONS;
-        Long2ObjectLinkedOpenHashMap<ChunkHolder> loadedColumns = getField(ChunkMap.class, levelAccessor.getChunkSource().chunkMap, "updatingChunkMap");
+        Long2ObjectLinkedOpenHashMap<ChunkHolder> loadedColumns = getField(ChunkMap.class, overworld.getChunkSource().chunkMap, "updatingChunkMap");
 
         Object[] data = getField(Long2ObjectLinkedOpenHashMap.class, loadedColumns, "value");
         long[] keys = getField(Long2ObjectLinkedOpenHashMap.class, loadedColumns, "key");
@@ -96,7 +96,7 @@ public class MixinLevelRenderer {
                 zPos + 11.75F - cameraZ, vector3f.x(), vector3f.y(), vector3f.z(), 1.0F);
         }
 
-        Long2ObjectLinkedOpenHashMap<ChunkHolder> loadedCubes = getField(ChunkMap.class, levelAccessor.getChunkSource().chunkMap, "updatingCubeMap");
+        Long2ObjectLinkedOpenHashMap<ChunkHolder> loadedCubes = getField(ChunkMap.class, overworld.getChunkSource().chunkMap, "updatingCubeMap");
 
         data = getField(Long2ObjectLinkedOpenHashMap.class, loadedCubes, "value");
         keys = getField(Long2ObjectLinkedOpenHashMap.class, loadedCubes, "key");

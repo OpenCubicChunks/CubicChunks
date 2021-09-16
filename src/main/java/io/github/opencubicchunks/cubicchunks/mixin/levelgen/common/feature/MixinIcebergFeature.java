@@ -18,7 +18,6 @@ public class MixinIcebergFeature {
         if (!((CubicLevelHeightAccessor) featurePlaceContext.level()).isCubic()) {
             return;
         }
-
         if (featurePlaceContext.origin().getY() > featurePlaceContext.chunkGenerator().getSeaLevel()
             || featurePlaceContext.origin().getY() + CubeAccess.DIAMETER_IN_BLOCKS <= featurePlaceContext.chunkGenerator().getSeaLevel()) {
             cir.setReturnValue(true);

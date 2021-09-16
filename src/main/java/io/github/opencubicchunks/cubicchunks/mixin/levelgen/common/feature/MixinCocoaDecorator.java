@@ -18,7 +18,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class MixinCocoaDecorator {
 
     @Inject(method = "place", at = @At("HEAD"), cancellable = true)
-    private void exitIfListIsEmpty(LevelSimulatedReader world, BiConsumer<BlockPos, BlockState> replacer, Random random, List<BlockPos> logPositions, List<BlockPos> leavesPositions,
+    private void exitIfListIsEmpty(LevelSimulatedReader level, BiConsumer<BlockPos, BlockState> replacer, Random random, List<BlockPos> logPositions, List<BlockPos> leavesPositions,
                                    CallbackInfo ci) {
         if (leavesPositions.isEmpty() || logPositions.isEmpty()) {
             ci.cancel();

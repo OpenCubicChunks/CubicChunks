@@ -48,10 +48,8 @@ public abstract class MixinNaturalSpawner {
         if (!((CubicLevelHeightAccessor) serverLevel).isCubic()) {
             return;
         }
-
         ci.cancel();
     }
-
 
     @Inject(method = "isSpawnPositionOk", at = @At(value = "HEAD"), cancellable = true)
     private static void isSpawnPositionOkForCubeWorldGenRegion(SpawnPlacements.Type location, LevelReader reader, BlockPos pos, @Nullable EntityType<?> entityType,
@@ -59,11 +57,10 @@ public abstract class MixinNaturalSpawner {
         if (!((CubicLevelHeightAccessor) reader).isCubic()) {
             return;
         }
-
         if (reader instanceof CubeWorldGenRegion) {
-            CubeWorldGenRegion world = (CubeWorldGenRegion) reader;
-            int lowestAllowedY = Coords.cubeToMinBlock(world.getMainCubeY());
-            int highestAllowedY = Coords.cubeToMaxBlock(world.getMainCubeY());
+            CubeWorldGenRegion level = (CubeWorldGenRegion) reader;
+            int lowestAllowedY = Coords.cubeToMinBlock(level.getMainCubeY());
+            int highestAllowedY = Coords.cubeToMaxBlock(level.getMainCubeY());
             if (pos.getY() < lowestAllowedY + 1 || pos.getY() > highestAllowedY - 1) {
                 cir.setReturnValue(false);
             }
@@ -75,18 +72,16 @@ public abstract class MixinNaturalSpawner {
         if (!((CubicLevelHeightAccessor) reader).isCubic()) {
             return;
         }
-
-
         if (reader instanceof CubeWorldGenRegion) {
-            CubeWorldGenRegion world = (CubeWorldGenRegion) reader;
-            BlockPos.MutableBlockPos newPos = new BlockPos.MutableBlockPos(x, world.getHeight(SpawnPlacements.getHeightmapType(entityType), x, z), z);
-            int lowestAllowedY = Coords.cubeToMinBlock(world.getMainCubeY());
-            int highestAllowedY = Coords.cubeToMaxBlock(world.getMainCubeY());
+            CubeWorldGenRegion level = (CubeWorldGenRegion) reader;
+            BlockPos.MutableBlockPos newPos = new BlockPos.MutableBlockPos(x, level.getHeight(SpawnPlacements.getHeightmapType(entityType), x, z), z);
+            int lowestAllowedY = Coords.cubeToMinBlock(level.getMainCubeY());
+            int highestAllowedY = Coords.cubeToMaxBlock(level.getMainCubeY());
 
             BlockPos.MutableBlockPos mutableBlockPos = new BlockPos.MutableBlockPos().set(newPos);
 
-            if (world.dimensionType().hasCeiling() && USE_HAS_CEILING_SPAWN_LOGIC) {
-                cir.setReturnValue(ceilingLogic(entityType, world, newPos, lowestAllowedY, highestAllowedY, mutableBlockPos));
+            if (level.dimensionType().hasCeiling() && USE_HAS_CEILING_SPAWN_LOGIC) {
+                cir.setReturnValue(ceilingLogic(entityType, level, newPos, lowestAllowedY, highestAllowedY, mutableBlockPos));
                 return;
             }
 
@@ -97,15 +92,15 @@ public abstract class MixinNaturalSpawner {
     }
 
     // TODO: Is there a better way of doing this using the mixins commented out below?! We need the height checks before the air checks to ensure we don't throw out of bounds :/
-    private static BlockPos ceilingLogic(EntityType<?> entityType, CubeWorldGenRegion world, BlockPos.MutableBlockPos newPos, int lowestAllowedY,
+    private static BlockPos ceilingLogic(EntityType<?> entityType, CubeWorldGenRegion region, BlockPos.MutableBlockPos newPos, int lowestAllowedY,
                                          int highestAllowedY, BlockPos.MutableBlockPos mutableBlockPos) {
         do {
             mutableBlockPos.move(Direction.DOWN);
-        } while (mutableBlockPos.getY() > Coords.cubeToMinBlock(world.getMainCubeY()) + 1 && !world.getBlockState(mutableBlockPos).isAir());
+        } while (mutableBlockPos.getY() > Coords.cubeToMinBlock(region.getMainCubeY()) + 1 && !region.getBlockState(mutableBlockPos).isAir());
 
         do {
             mutableBlockPos.move(Direction.DOWN);
-        } while (mutableBlockPos.getY() > Coords.cubeToMinBlock(world.getMainCubeY()) + 1 && world.getBlockState(mutableBlockPos).isAir());
+        } while (mutableBlockPos.getY() > Coords.cubeToMinBlock(region.getMainCubeY()) + 1 && region.getBlockState(mutableBlockPos).isAir());
 
         if (SpawnPlacements.getPlacementType(entityType) == SpawnPlacements.Type.ON_GROUND) {
             BlockPos blockPos = mutableBlockPos.below();
@@ -113,7 +108,7 @@ public abstract class MixinNaturalSpawner {
                 return newPos;
             }
 
-            if (world.getBlockState(mutableBlockPos).isPathfindable(world, mutableBlockPos, PathComputationType.LAND)) {
+            if (region.getBlockState(mutableBlockPos).isPathfindable(region, mutableBlockPos, PathComputationType.LAND)) {
                 return mutableBlockPos;
             }
         }
@@ -121,8 +116,8 @@ public abstract class MixinNaturalSpawner {
     }
 
     @Redirect(method = "getTopNonCollidingPos", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/dimension/DimensionType;hasCeiling()Z"))
-    private static boolean useOverWorldLogic(DimensionType dimensionType, LevelReader world, EntityType<?> entityType, int x, int z) {
-        if (!((CubicLevelHeightAccessor) world).isCubic()) {
+    private static boolean useOverWorldLogic(DimensionType dimensionType, LevelReader level, EntityType<?> entityType, int x, int z) {
+        if (!((CubicLevelHeightAccessor) level).isCubic()) {
             return dimensionType.hasCeiling();
         }
         return false;
@@ -151,12 +146,11 @@ public abstract class MixinNaturalSpawner {
 
 
     @Inject(method = "isRightDistanceToPlayerAndSpawnPoint", at = @At("HEAD"), cancellable = true)
-    private static void useCubePos(ServerLevel world, ChunkAccess chunk, BlockPos.MutableBlockPos pos, double squaredDistance, CallbackInfoReturnable<Boolean> cir) {
-        if (!((CubicLevelHeightAccessor) world).isCubic()) {
+    private static void useCubePos(ServerLevel level, ChunkAccess chunk, BlockPos.MutableBlockPos pos, double squaredDistance, CallbackInfoReturnable<Boolean> cir) {
+        if (!((CubicLevelHeightAccessor) level).isCubic()) {
             return;
         }
-
-        cir.setReturnValue(CubicNaturalSpawner.isRightDistanceToPlayerAndSpawnPoint(world, chunk, pos, squaredDistance));
+        cir.setReturnValue(CubicNaturalSpawner.isRightDistanceToPlayerAndSpawnPoint(level, chunk, pos, squaredDistance));
     }
 
     private static ThreadLocal<BlockPos> capturedPos = new ThreadLocal<>();
@@ -164,7 +158,7 @@ public abstract class MixinNaturalSpawner {
     @Dynamic
     @Inject(method = "createCubicState", at = @At(value = "INVOKE", target = "Lio/github/opencubicchunks/cubicchunks/world/level/CubePos;asLong(II)J"),
         locals = LocalCapture.CAPTURE_FAILHARD)
-    private static void createCubicState(int spawningChunkCount, Iterable<?> entities, CubicNaturalSpawner.CubeGetter chunkSource, CallbackInfoReturnable<NaturalSpawner.SpawnState> cir,
+    private static void createCubicState(int spawningChunkCount, Iterable<?> entities, CubicNaturalSpawner.CubeGetter cubeGetter, CallbackInfoReturnable<NaturalSpawner.SpawnState> cir,
                                          PotentialCalculator potentialCalculator, Object2IntOpenHashMap<?> object2IntOpenHashMap, Iterator<?> var5, Entity entity, MobCategory mobCategory,
                                          BlockPos blockPos) {
         capturedPos.set(blockPos);

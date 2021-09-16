@@ -26,7 +26,6 @@ public abstract class MixinPlayerList implements VerticalViewDistanceListener {
     private int verticalViewDistance;
     private int incomingVerticalViewDistance;
 
-
     @Override public void setIncomingVerticalViewDistance(int verticalDistance) {
         this.incomingVerticalViewDistance = verticalDistance;
     }
@@ -36,7 +35,7 @@ public abstract class MixinPlayerList implements VerticalViewDistanceListener {
     }
 
     @Inject(method = "setViewDistance", at = @At("HEAD"), cancellable = true)
-    private void doVerticalChangesAswell(int viewDistance, CallbackInfo ci) {
+    private void setVerticalViewDistance(int viewDistance, CallbackInfo ci) {
         this.verticalViewDistance = incomingVerticalViewDistance;
 
         PacketDispatcher.sendTo(new PacketCubeCacheRadius(viewDistance, verticalViewDistance), this.players);
@@ -51,7 +50,7 @@ public abstract class MixinPlayerList implements VerticalViewDistanceListener {
     }
 
     @Inject(method = "sendLevelInfo", at = @At("HEAD"))
-    private void sendCubeInfo(ServerPlayer player, ServerLevel world, CallbackInfo ci) {
-        PacketDispatcher.sendTo(new PacketCCLevelInfo(((CubicLevelHeightAccessor) world).worldStyle()), player);
+    private void sendCubeInfo(ServerPlayer player, ServerLevel level, CallbackInfo ci) {
+        PacketDispatcher.sendTo(new PacketCCLevelInfo(((CubicLevelHeightAccessor) level).worldStyle()), player);
     }
 }

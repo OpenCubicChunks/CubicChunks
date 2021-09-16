@@ -53,8 +53,6 @@ public abstract class MixinViewArea {
                 return;
             }
         }
-
-
         Entity view = Minecraft.getInstance().getCameraEntity();
         double x = view.getX();
         double y = view.getY();
@@ -93,7 +91,6 @@ public abstract class MixinViewArea {
                 return;
             }
         }
-
         int x = Mth.intFloorDiv(pos.getX(), 16);
         int y = Mth.intFloorDiv(pos.getY(), 16);
         int z = Mth.intFloorDiv(pos.getZ(), 16);

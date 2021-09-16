@@ -24,7 +24,6 @@ public class CubicPlayerTicketTracker extends FixedPlayerDistanceCubeTracker {
     private final HorizontalGraphGroup horizontalGraphGroup;
     private final VerticalGraphGroup verticalGraphGroup;
 
-
     public CubicPlayerTicketTracker(CubicDistanceManager cubicDistanceManager, int i) {
         //possibly make this a constant - there is only ever one playercubeticketracker at a time, so this should be fine.
         super(cubicDistanceManager, (32 / CubeAccess.DIAMETER_IN_SECTIONS) + 1);
@@ -72,7 +71,7 @@ public class CubicPlayerTicketTracker extends FixedPlayerDistanceCubeTracker {
      */
     private void updateTicket(long pos, int distance, boolean oldWithinViewDistance, boolean withinViewDistance) {
         if (oldWithinViewDistance != withinViewDistance) {
-            Ticket<?> ticket = TicketAccess.createNew(CubicTicketType.CCPLAYER, CubicDistanceManager.PLAYER_CUBE_TICKET_LEVEL, CubePos.from(pos));
+            Ticket<?> ticket = TicketAccess.createNew(CubicTicketType.PLAYER, CubicDistanceManager.PLAYER_CUBE_TICKET_LEVEL, CubePos.from(pos));
             if (withinViewDistance) {
                 cubicDistanceManager.getCubeTicketThrottlerInput().tell(CubeTaskPriorityQueueSorter.createMsg(() ->
                     cubicDistanceManager.getMainThreadExecutor().execute(() -> {
@@ -92,7 +91,6 @@ public class CubicPlayerTicketTracker extends FixedPlayerDistanceCubeTracker {
                     pos, true));
             }
         }
-
     }
 
 

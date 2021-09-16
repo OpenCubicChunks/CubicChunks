@@ -49,8 +49,8 @@ public abstract class MixinMinecraftServer {
         count++;
     }
 
-    private void addCube(ServerCubeCache serverChunkProvider, CubePos pos) {
-        serverChunkProvider.addCubeRegionTicket(TicketType.START, pos, 1, Unit.INSTANCE);
+    private void addCube(ServerCubeCache serverCubeCache, CubePos pos) {
+        serverCubeCache.addCubeRegionTicket(TicketType.START, pos, 1, Unit.INSTANCE);
         count++;
     }
 
@@ -59,16 +59,15 @@ public abstract class MixinMinecraftServer {
      * @reason Custom chunk loading order for debugging
      */
     @Inject(method = "prepareLevels", at = @At("HEAD"), cancellable = true)
-    private void prepareLevels(ChunkProgressListener worldGenerationProgressListener, CallbackInfo ci) {
+    private void prepareLevels(ChunkProgressListener progressListener, CallbackInfo ci) {
         if (!DEBUG_LOAD_ORDER_ENABLED) {
             return;
         }
-
         ci.cancel();
         ServerLevel serverLevel = this.overworld();
         CubicChunks.LOGGER.info("Preparing start region for dimension {}", serverLevel.dimension().location());
         BlockPos blockPos = serverLevel.getSharedSpawnPos();
-        worldGenerationProgressListener.updateSpawnPos(new ChunkPos(blockPos));
+        progressListener.updateSpawnPos(new ChunkPos(blockPos));
         ServerChunkCache serverChunkCache = serverLevel.getChunkSource();
         serverChunkCache.getLightEngine().setTaskPerBatch(500);
         this.nextTickTime = Util.getMillis();
@@ -108,7 +107,7 @@ public abstract class MixinMinecraftServer {
                 if (!levelIter.hasNext()) {
                     this.nextTickTime = Util.getMillis() + 10L;
                     this.waitUntilNextTick();
-                    worldGenerationProgressListener.stop();
+                    progressListener.stop();
                     serverChunkCache.getLightEngine().setTaskPerBatch(5);
                     this.updateMobSpawningFlags();
                     return;

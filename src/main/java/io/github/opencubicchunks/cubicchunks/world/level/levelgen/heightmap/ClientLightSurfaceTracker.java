@@ -17,6 +17,7 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 public class ClientLightSurfaceTracker extends ClientSurfaceTracker {
     private final int bitsPerColumn;
     private final int minHeight;
+
     public ClientLightSurfaceTracker(ChunkAccess chunkAccess) {
         // type shouldn't matter
         super(chunkAccess, Types.WORLD_SURFACE);

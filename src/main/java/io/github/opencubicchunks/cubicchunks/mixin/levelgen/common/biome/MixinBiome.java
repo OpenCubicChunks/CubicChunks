@@ -49,24 +49,18 @@ public class MixinBiome implements BiomeGetter {
     @Final
     private BiomeGenerationSettings generationSettings;
 
-    @Shadow
-    @Final
-    private Map<Integer, List<StructureFeature<?>>> structuresByStep;
-
+    @Shadow @Final private Map<Integer, List<StructureFeature<?>>> structuresByStep;
 
     private final Set<ResourceLocation> featureBlacklist = new HashSet<>();
 
     @Override
-    public void generate(StructureFeatureManager structureManager, ChunkGenerator chunkGenerator, CubeWorldGenRegion region, long seed, CubeWorldGenRandom random,
-                         BlockPos blockPos) {
+    public void generate(StructureFeatureManager structureManager, ChunkGenerator chunkGenerator, CubeWorldGenRegion region, long seed, CubeWorldGenRandom random, BlockPos blockPos) {
         List<List<Supplier<ConfiguredFeature<?, ?>>>> list = this.generationSettings.features();
 
         for (int genStepIDX = 0; genStepIDX < GenerationStep.Decoration.values().length; ++genStepIDX) {
             int k = 0;
             if (structureManager.shouldGenerateFeatures()) {
-
                 for (StructureFeature<?> structure : this.structuresByStep.getOrDefault(genStepIDX, Collections.emptyList())) {
-
                     random.setDecorationSeed(seed, k, genStepIDX);
                     int minSectionX = Coords.sectionToMinBlock(Coords.blockToSection(blockPos.getX()));
                     int minSectionY = Coords.sectionToMinBlock(Coords.blockToSection(blockPos.getY()));
@@ -90,7 +84,6 @@ public class MixinBiome implements BiomeGetter {
             if (featureBlacklist.isEmpty()) {
                 getBlacklist();
             }
-
 
             if (list.size() > genStepIDX) {
                 for (Supplier<ConfiguredFeature<?, ?>> configuredFeatureSupplier : list.get(genStepIDX)) {
@@ -130,13 +123,11 @@ public class MixinBiome implements BiomeGetter {
      */
     @Inject(method = "buildSurfaceAt", at = @At("HEAD"), cancellable = true)
     public void buildSurfaceAt(Random random, ChunkAccess chunk, int x, int z, int worldHeight, double noise, BlockState defaultBlock, BlockState defaultFluid, int seaLevel,
-                               int surfaceMinHeight, long seed,
-                               CallbackInfo ci) {
+                               int surfaceMinHeight, long seed, CallbackInfo ci) {
 
         if (!((CubicLevelHeightAccessor) chunk).isCubic()) {
             return;
         }
-
         ci.cancel();
 
         ConfiguredSurfaceBuilder<?> configuredSurfaceBuilder = this.generationSettings.getSurfaceBuilder().get();
@@ -159,7 +150,6 @@ public class MixinBiome implements BiomeGetter {
 
     //TODO: Remove this blacklist.
     private void getBlacklist() {
-
         List<ResourceLocation> resourceLocationList = Arrays.asList(
             //Requires similar 1.12 implementation, see: https://github.com/OpenCubicChunks/CubicWorldGen/blob/27de56d2f792513873584b2f8fd9f3082fb259ec/src/main/java/io/github
             // /opencubicchunks/cubicchunks/cubicgen/customcubic/populator/DefaultDecorator.java#L331-L361
@@ -168,7 +158,6 @@ public class MixinBiome implements BiomeGetter {
             // /opencubicchunks/cubicchunks/cubicgen/customcubic/populator/DefaultDecorator.java#L331-L361
             new ResourceLocation("spring_lava")
         );
-
         featureBlacklist.addAll(resourceLocationList);
     }
 }

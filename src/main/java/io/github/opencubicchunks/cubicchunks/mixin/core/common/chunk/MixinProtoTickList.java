@@ -24,7 +24,6 @@ public class MixinProtoTickList<T> {
         if (!((CubicLevelHeightAccessor) accessor).isCubic() || accessor instanceof CubeProtoTickList.CubeProtoTickListHeightAccess) {
             return accessor.getSectionsCount();
         }
-
         return 0;
     }
 
@@ -38,7 +37,6 @@ public class MixinProtoTickList<T> {
         if (!((CubicLevelHeightAccessor) this.levelHeightAccessor).isCubic() || this.levelHeightAccessor instanceof CubeProtoTickList.CubeProtoTickListHeightAccess) {
             return;
         }
-
         ci.cancel();
         //ChunkAccess.getOrCreateOffsetList(this.toBeTicked, this.levelHeightAccessor.getSectionIndex(blockPos.getY())).add(ProtoChunk
         // .packOffsetCoordinates(blockPos));

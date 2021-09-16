@@ -48,7 +48,7 @@ public class PacketUpdateLight {
         }
     }
 
-    public PacketUpdateLight(CubePos pos, LevelLightEngine lightManager, boolean lightFlag) {
+    public PacketUpdateLight(CubePos pos, LevelLightEngine lightEngine, boolean lightFlag) {
         this.cubePos = pos;
         this.lightFlag = lightFlag;
         this.skyLightData = Lists.newArrayList();
@@ -57,18 +57,18 @@ public class PacketUpdateLight {
         this.dataExists = new BitSet(CubeAccess.SECTION_COUNT * 2);
 
         for (int i = 0; i < CubeAccess.SECTION_COUNT; ++i) {
-            DataLayer skyNibbleArray = lightManager.getLayerListener(LightLayer.SKY).getDataLayerData(Coords.sectionPosByIndex(pos, i));
-            DataLayer blockNibbleArray = lightManager.getLayerListener(LightLayer.BLOCK).getDataLayerData(Coords.sectionPosByIndex(pos, i));
-            if (skyNibbleArray != null) {
-                if (!skyNibbleArray.isEmpty()) {
+            DataLayer skyLayer = lightEngine.getLayerListener(LightLayer.SKY).getDataLayerData(Coords.sectionPosByIndex(pos, i));
+            DataLayer blockLayer = lightEngine.getLayerListener(LightLayer.BLOCK).getDataLayerData(Coords.sectionPosByIndex(pos, i));
+            if (skyLayer != null) {
+                if (!skyLayer.isEmpty()) {
                     this.dataExists.set(i * 2);
-                    this.skyLightData.add(skyNibbleArray.getData().clone());
+                    this.skyLightData.add(skyLayer.getData().clone());
                 }
             }
-            if (blockNibbleArray != null) {
-                if (!blockNibbleArray.isEmpty()) {
+            if (blockLayer != null) {
+                if (!blockLayer.isEmpty()) {
                     this.dataExists.set(i * 2 + 1);
-                    this.blockLightData.add(blockNibbleArray.getData().clone());
+                    this.blockLightData.add(blockLayer.getData().clone());
                 }
             }
         }
@@ -99,12 +99,11 @@ public class PacketUpdateLight {
     }
 
     public static class Handler {
-        public static void handle(PacketUpdateLight packet, Level worldIn) {
-            if (!(worldIn instanceof ClientLevel)) {
+        public static void handle(PacketUpdateLight packet, Level level) {
+            if (!(level instanceof ClientLevel clientLevel)) {
                 throw new Error("PacketUpdateLight handle called on server");
             }
-
-            LevelLightEngine worldlightmanager = worldIn.getChunkSource().getLightEngine();
+            LevelLightEngine lightEngine = level.getChunkSource().getLightEngine();
 
             Iterator<byte[]> skyIterator = packet.skyLightData.iterator();
             Iterator<byte[]> blockIterator = packet.blockLightData.iterator();
@@ -113,12 +112,12 @@ public class PacketUpdateLight {
                 SectionPos sectionPos = Coords.sectionPosByIndex(packet.cubePos, i);
 
                 if (packet.dataExists.get(i * 2)) {
-                    worldlightmanager.queueSectionData(LightLayer.SKY, sectionPos, new DataLayer(skyIterator.next()), packet.lightFlag);
-                    ((ClientLevel) worldIn).setSectionDirtyWithNeighbors(sectionPos.getX(), sectionPos.getY(), sectionPos.getZ());
+                    lightEngine.queueSectionData(LightLayer.SKY, sectionPos, new DataLayer(skyIterator.next()), packet.lightFlag);
+                    clientLevel.setSectionDirtyWithNeighbors(sectionPos.getX(), sectionPos.getY(), sectionPos.getZ());
                 }
                 if (packet.dataExists.get(i * 2 + 1)) {
-                    worldlightmanager.queueSectionData(LightLayer.BLOCK, sectionPos, new DataLayer(blockIterator.next()), packet.lightFlag);
-                    ((ClientLevel) worldIn).setSectionDirtyWithNeighbors(sectionPos.getX(), sectionPos.getY(), sectionPos.getZ());
+                    lightEngine.queueSectionData(LightLayer.BLOCK, sectionPos, new DataLayer(blockIterator.next()), packet.lightFlag);
+                    clientLevel.setSectionDirtyWithNeighbors(sectionPos.getX(), sectionPos.getY(), sectionPos.getZ());
                 }
             }
         }

@@ -171,7 +171,6 @@ public abstract class MixinSectionStorage<R> implements CubicSectionStorage {
 
     }
 
-
     private void writeCube(CubePos pos) {
         Dynamic<Tag> dynamic = this.writeCube(pos, NbtOps.INSTANCE);
         Tag tag = dynamic.getValue();

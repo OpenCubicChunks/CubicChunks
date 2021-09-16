@@ -17,6 +17,7 @@ public interface CubicLevelHeightAccessor {
     default void setWorldStyle(WorldStyle worldStyle) {
     }
 
+    // TODO: find better name for this
     enum WorldStyle {
         CUBIC(true, false), // Primary Implementation (Generate Chunks 3D, infinite world height)
         HYBRID(true, true), // Soft implementation (Vanilla Chunk Generation, infinite world height)

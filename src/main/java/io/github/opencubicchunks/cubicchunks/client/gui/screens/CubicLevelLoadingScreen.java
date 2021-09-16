@@ -100,28 +100,29 @@ public class CubicLevelLoadingScreen {
 
         switch (h) {
             case 0:
-                return rgbToString(value, t, p);
+                return packRgb(value, t, p);
             case 1:
-                return rgbToString(q, value, p);
+                return packRgb(q, value, p);
             case 2:
-                return rgbToString(p, value, t);
+                return packRgb(p, value, t);
             case 3:
-                return rgbToString(p, q, value);
+                return packRgb(p, q, value);
             case 4:
-                return rgbToString(t, p, value);
+                return packRgb(t, p, value);
             case 5:
-                return rgbToString(value, p, q);
+                return packRgb(value, p, q);
             default:
                 return 0;
         }
     }
-    public static int rgbToString(float r, float g, float b) {
+
+    public static int packRgb(float r, float g, float b) {
         return (int) (r * 255) << 16 | (int) (g * 255) << 8 | (int) (b * 255);
     }
 
-    public static void doRender(PoseStack mStack, StoringChunkProgressListener trackerParam, int xBase, int yBase, int scale, int spacing,
+    public static void doRender(PoseStack stack, StoringChunkProgressListener trackerParam, int xBase, int yBase, int scale, int spacing,
                                 Object2IntMap<ChunkStatus> colors) {
-        renderColorKey(STATUS_COLORS, mStack);
+        renderColorKey(STATUS_COLORS, stack);
         render3d(trackerParam, xBase, yBase, scale, spacing, STATUS_COLORS);
         // TODO: config option
         // render2d(mStack, trackerParam, xBase, yBase, scale, spacing, colors);

@@ -23,7 +23,7 @@ import org.spongepowered.asm.mixin.Shadow;
 @Mixin(targets = "net.minecraft.world.level.chunk.ChunkStatus$SimpleGenerationTask")
 public interface MixinChunkStatusSimpleGenerationTask {
 
-    @Shadow void doWork(ChunkStatus status, ServerLevel world, ChunkGenerator generator, List<ChunkAccess> neighbors, ChunkAccess chunk);
+    @Shadow void doWork(ChunkStatus status, ServerLevel level, ChunkGenerator generator, List<ChunkAccess> neighbors, ChunkAccess chunk);
 
     /**
      * @author Batrteks2x
@@ -31,14 +31,14 @@ public interface MixinChunkStatusSimpleGenerationTask {
      */
     @Overwrite(remap = false) //TODO: REMOVE "remap=false" WHEN INTERMEDIARY IS FIXED!
     default CompletableFuture<Either<ChunkAccess, ChunkHolder.ChunkLoadingFailure>> doWork(
-        ChunkStatus status, Executor executor, ServerLevel world, ChunkGenerator generator,
+        ChunkStatus status, Executor executor, ServerLevel level, ChunkGenerator generator,
         StructureManager structureManager, ThreadedLevelLightEngine lightEngine,
         Function<ChunkAccess, CompletableFuture<Either<ChunkAccess, ChunkHolder.ChunkLoadingFailure>>> completableFuture,
         List<ChunkAccess> neighbors, ChunkAccess chunk) {
 
         if (!((CubicLevelHeightAccessor) chunk).isCubic()) {
             if (!chunk.getStatus().isOrAfter(status)) {
-                this.doWork(status, world, generator, neighbors, chunk);
+                this.doWork(status, level, generator, neighbors, chunk);
                 if (chunk instanceof ProtoChunk) {
                     ((ProtoChunk) chunk).setStatus(status);
                 }
@@ -47,7 +47,7 @@ public interface MixinChunkStatusSimpleGenerationTask {
         }
 
         if (!chunk.getStatus().isOrAfter(status)) {
-            this.doWork(status, world, generator, neighbors, chunk);
+            this.doWork(status, level, generator, neighbors, chunk);
             if (chunk instanceof ProtoChunk) {
                 ((ProtoChunk) chunk).setStatus(status);
             } else if (chunk instanceof ProtoCube) {

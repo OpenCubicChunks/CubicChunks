@@ -13,5 +13,5 @@ public interface CubicThreadedLevelLightEngine {
 
     void setCubeStatusEmpty(CubePos cubePos);
 
-    CompletableFuture<CubeAccess> lightCube(CubeAccess icube, boolean p_215593_2_);
+    CompletableFuture<CubeAccess> lightCube(CubeAccess cube, boolean b);
 }

@@ -59,6 +59,7 @@ public abstract class MixinLayerLightEngine<M extends DataLayerStorageMap<M>, S 
         //TODO: implement invokeEnableLightSources for CubePos in SkyLightStorage
         for (int x = 0; x < CubeAccess.DIAMETER_IN_SECTIONS; x++) {
             for (int z = 0; z < CubeAccess.DIAMETER_IN_SECTIONS; z++) {
+                // TODO: avoid creating new objects here
                 ((LayerLightSectionStorageAccess) this.storage).invokeSetColumnEnabled(new ChunkPos(chunkPos.x + x, chunkPos.z + z).toLong(), enable);
             }
         }
@@ -72,8 +73,8 @@ public abstract class MixinLayerLightEngine<M extends DataLayerStorageMap<M>, S 
     }
 
     @Redirect(method = "getStateAndOpacity",
-            at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/lighting/LayerLightEngine;getChunk(II)Lnet/minecraft/world/level/BlockGetter;"))
-    private BlockGetter useCubicBlockGetter(LayerLightEngine layerLightEngine, int chunkX, int chunkZ, long blockPos) {
+        at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/lighting/LayerLightEngine;getChunk(II)Lnet/minecraft/world/level/BlockGetter;"))
+    private BlockGetter getCubeReader(LayerLightEngine layerLightEngine, int chunkX, int chunkZ, long blockPos) {
         if (!this.isCubic) {
             return this.getChunk(chunkX, chunkZ);
         }

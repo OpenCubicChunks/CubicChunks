@@ -12,7 +12,7 @@ public class MathUtil {
         return (int) (Math.log(n) / Math.log(2));
     }
 
-    public static Matrix4f createMatrix(float[] data) {
+    @SuppressWarnings("ConstantConditions") public static Matrix4f createMatrix(float[] data) {
         Matrix4fAccess m = (Matrix4fAccess) (Object) new Matrix4f();
         m.setM00(data[0]);
         m.setM01(data[1]);
@@ -32,7 +32,6 @@ public class MathUtil {
         m.setM33(data[15]);
         return (Matrix4f) (Object) m;
     }
-
 
     public static float unlerp(final float v, final float min, final float max) {
         return (v - min) / (max - min);

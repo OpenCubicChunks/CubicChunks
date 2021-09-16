@@ -30,14 +30,14 @@ public class PacketUnloadCube {
     }
 
     public static class Handler {
-        public static void handle(PacketUnloadCube packet, Level worldIn) {
-            ChunkSource chunkProvider = worldIn.getChunkSource();
-            ((ClientCubeCache) chunkProvider).drop(packet.pos.getX(), packet.pos.getY(), packet.pos.getZ());
-            LevelLightEngine lightEngine = chunkProvider.getLightEngine();
+        public static void handle(PacketUnloadCube packet, Level level) {
+            ChunkSource chunkSource = level.getChunkSource();
+            ((ClientCubeCache) chunkSource).drop(packet.pos.getX(), packet.pos.getY(), packet.pos.getZ());
+            LevelLightEngine lightEngine = chunkSource.getLightEngine();
 
             for (int i = 0; i < CubeAccess.SECTION_COUNT; ++i) {
                 SectionPos pos = Coords.sectionPosByIndex(packet.pos, i);
-                ((ClientLevel) worldIn).setSectionDirtyWithNeighbors(pos.x(), pos.y(), pos.z());
+                ((ClientLevel) level).setSectionDirtyWithNeighbors(pos.x(), pos.y(), pos.z());
                 lightEngine.updateSectionStatus(pos, true);
             }
             ((CubicLevelLightEngine) lightEngine).enableLightSources(packet.pos, false);

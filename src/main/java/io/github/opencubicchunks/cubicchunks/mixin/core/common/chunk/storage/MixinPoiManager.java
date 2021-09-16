@@ -9,6 +9,7 @@ import java.util.stream.Stream;
 
 import com.mojang.datafixers.DataFixer;
 import com.mojang.datafixers.util.Pair;
+import com.mojang.serialization.Codec;
 import io.github.opencubicchunks.cubicchunks.mixin.access.common.PoiSectionAccess;
 import io.github.opencubicchunks.cubicchunks.world.level.CubePos;
 import io.github.opencubicchunks.cubicchunks.world.level.CubicLevelAccessor;
@@ -41,7 +42,7 @@ public abstract class MixinPoiManager extends SectionStorage<PoiSection> impleme
 
     @Shadow @Final private LongSet loadedChunks; // Loaded cubes
 
-    public MixinPoiManager(File file, Function function, Function function2, DataFixer dataFixer,
+    public MixinPoiManager(File file, Function<Runnable, Codec<PoiSection>> function, Function<Runnable, PoiSection> function2, DataFixer dataFixer,
                            DataFixTypes dataFixTypes, boolean bl, LevelHeightAccessor levelHeightAccessor) {
         super(file, function, function2, dataFixer, dataFixTypes, bl, levelHeightAccessor);
     }
@@ -91,8 +92,8 @@ public abstract class MixinPoiManager extends SectionStorage<PoiSection> impleme
     }
 
     @Inject(method = "ensureLoadedAndValid", at = @At("HEAD"), cancellable = true)
-    private void ensureCubeLoadedAndValid(LevelReader world, BlockPos pos, int radius, CallbackInfo ci) {
-        if (!((CubicLevelHeightAccessor) world).isCubic()) {
+    private void ensureCubeLoadedAndValid(LevelReader level, BlockPos pos, int radius, CallbackInfo ci) {
+        if (!((CubicLevelHeightAccessor) level).isCubic()) {
             return;
         }
         ci.cancel();
@@ -105,7 +106,7 @@ public abstract class MixinPoiManager extends SectionStorage<PoiSection> impleme
         }).filter((cubePos) -> {
             return this.loadedChunks.add(cubePos.asLong());
         }).forEach((cubePos) -> {
-            ((CubicLevelAccessor) world).getCube(cubePos.getX(), cubePos.getY(), cubePos.getZ(), ChunkStatus.EMPTY);
+            ((CubicLevelAccessor) level).getCube(cubePos.getX(), cubePos.getY(), cubePos.getZ(), ChunkStatus.EMPTY);
         });
     }
 }

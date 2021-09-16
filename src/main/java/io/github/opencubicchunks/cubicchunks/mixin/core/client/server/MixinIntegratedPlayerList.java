@@ -8,8 +8,6 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 
 @Mixin(IntegratedPlayerList.class)
 public class MixinIntegratedPlayerList {
-
-
     @Redirect(method = "<init>", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/server/IntegratedPlayerList;setViewDistance(I)V"))
     private void setVerticalViewDistance(IntegratedPlayerList integratedPlayerList, int viewDistance) {
         ((VerticalViewDistanceListener) integratedPlayerList).setIncomingVerticalViewDistance(viewDistance);

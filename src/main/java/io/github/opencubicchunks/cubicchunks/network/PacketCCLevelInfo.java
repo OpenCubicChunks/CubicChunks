@@ -21,8 +21,8 @@ public class PacketCCLevelInfo {
     }
 
     public static class Handler {
-        public static void handle(PacketCCLevelInfo packet, Level worldIn) {
-            ((CubicLevelHeightAccessor) worldIn).setWorldStyle(CubicLevelHeightAccessor.WorldStyle.valueOf(packet.worldStyle.toUpperCase()));
+        public static void handle(PacketCCLevelInfo packet, Level level) {
+            ((CubicLevelHeightAccessor) level).setWorldStyle(CubicLevelHeightAccessor.WorldStyle.valueOf(packet.worldStyle.toUpperCase()));
         }
     }
 }

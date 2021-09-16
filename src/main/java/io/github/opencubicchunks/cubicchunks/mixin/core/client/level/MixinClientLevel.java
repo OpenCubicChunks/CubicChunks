@@ -31,11 +31,10 @@ public abstract class MixinClientLevel extends Level implements CubicClientLevel
 
     @Shadow @Final private TransientEntitySectionManager<Entity> entityStorage;
 
-    protected MixinClientLevel(WritableLevelData p_i231617_1_, ResourceKey<Level> p_i231617_2_, DimensionType p_i231617_4_,
-                               Supplier<ProfilerFiller> p_i231617_5_, boolean p_i231617_6_, boolean p_i231617_7_, long p_i231617_8_) {
-        super(p_i231617_1_, p_i231617_2_, p_i231617_4_, p_i231617_5_, p_i231617_6_, p_i231617_7_, p_i231617_8_);
+    protected MixinClientLevel(WritableLevelData levelData, ResourceKey<Level> resourceKey, DimensionType dimensionType,
+                               Supplier<ProfilerFiller> profiler, boolean b0, boolean b1, long l) {
+        super(levelData, resourceKey, dimensionType, profiler, b0, b1, l);
     }
-
 
     @Inject(method = "<init>", at = @At("RETURN"))
     private void setIsCubicContext(ClientPacketListener clientPacketListener, ClientLevel.ClientLevelData clientLevelData, ResourceKey<Level> resourceKey, DimensionType dimensionType, int i,
@@ -52,7 +51,7 @@ public abstract class MixinClientLevel extends Level implements CubicClientLevel
         this.entityStorage.startTicking(new ImposterChunkPos(cubeX, cubeY, cubeZ));
     }
 
-    @Override public void onCubeUnload(LevelCube cube) {
+    @Override public void unload(LevelCube cube) {
         this.entityStorage.stopTicking(new ImposterChunkPos(cube.getCubePos()));
     }
 

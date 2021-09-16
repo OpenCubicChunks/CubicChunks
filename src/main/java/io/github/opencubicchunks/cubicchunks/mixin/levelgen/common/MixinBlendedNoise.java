@@ -9,6 +9,7 @@ import org.spongepowered.asm.mixin.Shadow;
 
 @Mixin(BlendedNoise.class)
 public class MixinBlendedNoise {
+    // TODO: @Final
     @Shadow private PerlinNoise mainNoise;
     @Shadow private PerlinNoise minLimitNoise;
     @Shadow private PerlinNoise maxLimitNoise;

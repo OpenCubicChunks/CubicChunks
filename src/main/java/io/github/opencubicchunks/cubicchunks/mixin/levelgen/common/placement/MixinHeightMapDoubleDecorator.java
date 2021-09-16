@@ -27,7 +27,6 @@ public abstract class MixinHeightMapDoubleDecorator {
         if (!context.isCubic()) {
             return;
         }
-
         int x = blockPos.getX();
         int z = blockPos.getZ();
 

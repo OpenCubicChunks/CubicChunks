@@ -27,14 +27,11 @@ public abstract class MixinVerticalDecorator<DC extends DecoratorConfiguration> 
         if (!((CubicLevelHeightAccessor) context).isCubic()) {
             return;
         }
-
         int y = this.y(context, random, config, pos.getY());
-
         if (y == Integer.MIN_VALUE) {
             cir.setReturnValue(Stream.empty());
             return;
         }
-
         CubeWorldGenRegion cubeWorldGenRegion = (CubeWorldGenRegion) ((DecorationContextAccess) context).getLevel();
 
         if (!cubeWorldGenRegion.insideCubeHeight(y)) {

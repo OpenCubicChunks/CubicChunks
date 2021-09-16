@@ -14,6 +14,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+// Necessary for multithreaded chunk loading
 @Mixin(StructureManager.class)
 public class MixinStructureManager {
 
@@ -23,5 +24,4 @@ public class MixinStructureManager {
     private void onInit(CallbackInfo info) {
         this.structureRepository = new ConcurrentHashMap<>();
     }
-
 }

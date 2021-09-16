@@ -12,13 +12,11 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 @Mixin(LakeFeature.class)
 public class MixinLakeFeature {
 
-
     @Redirect(method = "place", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/WorldGenLevel;getMinBuildHeight()I", ordinal = 0))
-    private int cubicLakeFeature(WorldGenLevel worldGenLevel, FeaturePlaceContext<BlockStateConfiguration> featurePlaceContext) {
+    private int cubicLakeFeature(WorldGenLevel level, FeaturePlaceContext<BlockStateConfiguration> featurePlaceContext) {
         if (!((CubicLevelHeightAccessor) featurePlaceContext.level()).isCubic()) {
             return featurePlaceContext.level().getMinBuildHeight();
         }
-
         return featurePlaceContext.origin().getY();
     }
 }

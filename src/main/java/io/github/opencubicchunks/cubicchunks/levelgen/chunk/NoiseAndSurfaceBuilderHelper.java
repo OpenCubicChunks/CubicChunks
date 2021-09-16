@@ -31,8 +31,6 @@ import net.minecraft.world.level.material.Fluids;
 import org.jetbrains.annotations.Nullable;
 
 public class NoiseAndSurfaceBuilderHelper extends ProtoChunk implements CubicLevelHeightAccessor {
-
-
     private final ChunkAccess[] delegates;
     private int columnX;
     private int columnZ;
@@ -73,7 +71,6 @@ public class NoiseAndSurfaceBuilderHelper extends ProtoChunk implements CubicLev
             getSections()[relativeSectionY] = delegateCube.getCubeSections()[Coords.sectionToIndex(newColumnX, sectionY, newColumnZ)];
         }
     }
-
 
     public void applySections() {
         for (int relativeSectionY = 0; relativeSectionY < CubeAccess.DIAMETER_IN_SECTIONS * 2; relativeSectionY++) {
@@ -122,7 +119,6 @@ public class NoiseAndSurfaceBuilderHelper extends ProtoChunk implements CubicLev
         return cubeSections[sectionIndex];
     }
 
-
     @Override public Collection<Map.Entry<Heightmap.Types, Heightmap>> getHeightmaps() {
         return Collections.unmodifiableSet(this.heightmaps.entrySet());
     }
@@ -140,7 +136,6 @@ public class NoiseAndSurfaceBuilderHelper extends ProtoChunk implements CubicLev
         int cubeSectionIDX = sectionIndex % CubeAccess.DIAMETER_IN_SECTIONS;
         return getDelegateByIndex(delegateIDX).getCubePos().asSectionPos().getY() + cubeSectionIDX;
     }
-
 
     @Override public int getHeight() {
         return this.needsExtraHeight ? CubeAccess.DIAMETER_IN_BLOCKS + 8 : CubeAccess.DIAMETER_IN_BLOCKS;
@@ -287,17 +282,13 @@ public class NoiseAndSurfaceBuilderHelper extends ProtoChunk implements CubicLev
     }
 
     private static class HeightAccessor implements LevelHeightAccessor, CubicLevelHeightAccessor {
-
-
         private final int minBuildHeight;
         private final int height;
         private final boolean isCubic;
         private final boolean generates2DChunks;
         private final WorldStyle worldStyle;
 
-
         private HeightAccessor(ChunkAccess cube) {
-
             this.minBuildHeight = ((CubeAccess) cube).getCubePos().minCubeY();
             this.height = CubeAccess.DIAMETER_IN_BLOCKS * 2;
             isCubic = ((CubicLevelHeightAccessor) cube).isCubic();

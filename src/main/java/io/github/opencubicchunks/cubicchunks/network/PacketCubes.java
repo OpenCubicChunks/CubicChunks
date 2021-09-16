@@ -141,8 +141,8 @@ public class PacketCubes {
 
     public static class Handler {
 
-        public static void handle(PacketCubes packet, Level worldIn) {
-            ClientLevel world = (ClientLevel) worldIn;
+        public static void handle(PacketCubes packet, Level level) {
+            ClientLevel clientLevel = (ClientLevel) level;
 
             FriendlyByteBuf dataReader = wrapBuffer(packet.packetData);
             BitSet cubeExists = packet.cubeExists;
@@ -154,9 +154,10 @@ public class PacketCubes {
 
                 CubeBiomeContainer cubeBiomeContainer =
                     new CubeBiomeContainer(Minecraft.getInstance().level.registryAccess().registryOrThrow(Registry.BIOME_REGISTRY),
-                        new CubeSerializer.CubeBoundsLevelHeightAccessor(CubeAccess.DIAMETER_IN_BLOCKS, pos.minCubeY(), (CubicLevelHeightAccessor) world), packet.biomeDataArrays.get(i));
+                        new CubeSerializer.CubeBoundsLevelHeightAccessor(CubeAccess.DIAMETER_IN_BLOCKS, pos.minCubeY(), (CubicLevelHeightAccessor) clientLevel),
+                        packet.biomeDataArrays.get(i));
 
-                ((ClientCubeCache) world.getChunkSource()).replaceWithPacketData(
+                ((ClientCubeCache) clientLevel.getChunkSource()).replaceWithPacketData(
                     x, y, z, cubeBiomeContainer, dataReader, new CompoundTag(), cubeExists.get(i));
 
                 // TODO: full cube info
@@ -166,7 +167,7 @@ public class PacketCubes {
                 for (int dx = 0; dx < CubeAccess.DIAMETER_IN_SECTIONS; dx++) {
                     for (int dy = 0; dy < CubeAccess.DIAMETER_IN_SECTIONS; dy++) {
                         for (int dz = 0; dz < CubeAccess.DIAMETER_IN_SECTIONS; dz++) {
-                            world.setSectionDirtyWithNeighbors(
+                            clientLevel.setSectionDirtyWithNeighbors(
                                 cubeToSection(x, dx),
                                 cubeToSection(y, dy),
                                 cubeToSection(z, dz));
@@ -175,10 +176,10 @@ public class PacketCubes {
                 }
 
                 for (CompoundTag nbt : packet.tileEntityTags) {
-                    BlockPos tePos = new BlockPos(nbt.getInt("x"), nbt.getInt("y"), nbt.getInt("z"));
-                    BlockEntity te = world.getBlockEntity(tePos);
-                    if (te != null) {
-                        te.load(nbt);
+                    BlockPos blockPos = new BlockPos(nbt.getInt("x"), nbt.getInt("y"), nbt.getInt("z"));
+                    BlockEntity blockEntity = clientLevel.getBlockEntity(blockPos);
+                    if (blockEntity != null) {
+                        blockEntity.load(nbt);
                     }
                 }
             }

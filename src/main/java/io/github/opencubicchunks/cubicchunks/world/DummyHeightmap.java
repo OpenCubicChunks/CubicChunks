@@ -9,7 +9,6 @@ public class DummyHeightmap extends Heightmap {
         super(chunkAccess, types);
     }
 
-
     @Override public boolean update(int x, int y, int z, BlockState state) {
         return false;
     }
@@ -19,7 +18,6 @@ public class DummyHeightmap extends Heightmap {
     }
 
     @Override public void setRawData(ChunkAccess clv, Types a, long[] heightmap) {
-
     }
 
     @Override public long[] getRawData() {

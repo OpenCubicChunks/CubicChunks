@@ -60,14 +60,14 @@ public class AsyncSaveData {
         } else {
             this.serverLiquidTicks = Optional.empty();
         }
-        this.blockEntities = cube.getCubeTileEntitiesPos().stream()
+        this.blockEntities = cube.getCubeBlockEntitiesPos().stream()
             .map(cube::getBlockEntity)
             .filter(Objects::nonNull)
             .collect(Collectors.toMap(BlockEntity::getBlockPos, Function.identity()));
         if (cube instanceof LevelCube) {
-            this.blockEntitiesDeferred = new HashMap<>(((LevelCube) cube).getDeferredTileEntityMap());
+            this.blockEntitiesDeferred = new HashMap<>(((LevelCube) cube).getPendingBlockEntities());
         } else if (cube instanceof ProtoCube) {
-            this.blockEntitiesDeferred = new HashMap<>(((ProtoCube) cube).getDeferredTileEntities());
+            this.blockEntitiesDeferred = new HashMap<>(((ProtoCube) cube).getCubeBlockEntityNbts());
         } else {
             this.blockEntitiesDeferred = new HashMap<>();
         }

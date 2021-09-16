@@ -29,6 +29,8 @@ public abstract class MixinLevel implements CubicLevelAccessor, LevelReader {
     private boolean generates2DChunks;
     private WorldStyle worldStyle;
 
+    @Shadow public abstract ResourceKey<Level> dimension();
+
     @Inject(method = "<init>", at = @At("RETURN"))
     private void setCubic(WritableLevelData writableLevelData, ResourceKey<Level> resourceKey, DimensionType dimensionType, Supplier<ProfilerFiller> supplier, boolean bl, boolean bl2,
                           long l, CallbackInfo ci) {
@@ -37,14 +39,10 @@ public abstract class MixinLevel implements CubicLevelAccessor, LevelReader {
         generates2DChunks = worldStyle.generates2DChunks();
     }
 
-
-    @Shadow public abstract ResourceKey<Level> dimension();
-
     @Override public int getHeight() {
         if (!isCubic()) {
             return LevelReader.super.getHeight();
         }
-
         return 40000000;
     }
 
@@ -60,7 +58,6 @@ public abstract class MixinLevel implements CubicLevelAccessor, LevelReader {
         if (!isCubic()) {
             return LevelReader.super.getMinBuildHeight();
         }
-
         return -20000000;
     }
 
@@ -69,7 +66,6 @@ public abstract class MixinLevel implements CubicLevelAccessor, LevelReader {
         if (!isCubic()) {
             return;
         }
-
         this.getCubeAt(blockPos).setDirty(true);
     }
 
@@ -108,11 +104,11 @@ public abstract class MixinLevel implements CubicLevelAccessor, LevelReader {
     //The method .getWorld() No longer exists
     @Override
     public CubeAccess getCube(int cubeX, int cubeY, int cubeZ, ChunkStatus requiredStatus, boolean nonnull) {
-        CubeAccess icube = ((CubeSource) ((Level) (Object) this).getChunkSource()).getCube(cubeX, cubeY, cubeZ, requiredStatus, nonnull);
-        if (icube == null && nonnull) {
+        CubeAccess cube = ((CubeSource) ((Level) (Object) this).getChunkSource()).getCube(cubeX, cubeY, cubeZ, requiredStatus, nonnull);
+        if (cube == null && nonnull) {
             throw new IllegalStateException("Should always be able to create a cube!");
         } else {
-            return icube;
+            return cube;
         }
     }
 }

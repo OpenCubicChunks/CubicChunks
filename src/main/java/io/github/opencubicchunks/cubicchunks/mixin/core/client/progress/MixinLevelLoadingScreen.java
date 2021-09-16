@@ -28,8 +28,8 @@ public class MixinLevelLoadingScreen extends Screen {
     }
 
     @Inject(method = "renderChunks", at = @At("HEAD"), cancellable = true)
-    private static void onDraw(PoseStack mStack, StoringChunkProgressListener trackerParam,
-                               int xBase, int yBase, int scale, int spacing, CallbackInfo ci) {
+    private static void renderCubes(PoseStack mStack, StoringChunkProgressListener trackerParam,
+                                    int xBase, int yBase, int scale, int spacing, CallbackInfo ci) {
 
         ClientLevel level = Minecraft.getInstance().level;
         if (level != null) {
@@ -37,9 +37,7 @@ public class MixinLevelLoadingScreen extends Screen {
                 return;
             }
         }
-
         ci.cancel();
         CubicLevelLoadingScreen.doRender(mStack, trackerParam, xBase, yBase, scale, spacing, COLORS);
-
     }
 }

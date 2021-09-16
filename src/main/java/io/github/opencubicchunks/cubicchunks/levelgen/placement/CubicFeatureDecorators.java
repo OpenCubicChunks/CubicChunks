@@ -13,8 +13,8 @@ public class CubicFeatureDecorators {
     public static void init() {
     }
 
-    public static <T extends DecoratorConfiguration> FeatureDecorator<T> featureDecorator(String ID, FeatureDecorator<T> decorator) {
-        Registry.register(Registry.DECORATOR, new ResourceLocation(CubicChunks.MODID, ID), decorator);
+    public static <T extends DecoratorConfiguration> FeatureDecorator<T> featureDecorator(String id, FeatureDecorator<T> decorator) {
+        Registry.register(Registry.DECORATOR, new ResourceLocation(CubicChunks.MODID, id), decorator);
         return decorator;
     }
 

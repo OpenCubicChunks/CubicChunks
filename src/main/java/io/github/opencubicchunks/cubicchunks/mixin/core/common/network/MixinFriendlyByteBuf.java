@@ -32,7 +32,6 @@ public abstract class MixinFriendlyByteBuf {
         }
     }
 
-
     @Inject(method = "writeBlockPos", at = @At("HEAD"), cancellable = true)
     private void heightFixPosWrite(BlockPos pos, CallbackInfoReturnable<FriendlyByteBuf> cir) {
         int y = pos.getY();

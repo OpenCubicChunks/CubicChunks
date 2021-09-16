@@ -61,7 +61,7 @@ public abstract class MixinDistanceManager implements CubicDistanceManager, Vert
 
     private final CubeTicketTracker cubeTicketTracker = new CubeTicketTracker(this);
     private final FixedPlayerDistanceCubeTracker naturalSpawnCubeCounter = new FixedPlayerDistanceCubeTracker(this, 8 / CubeAccess.DIAMETER_IN_SECTIONS);
-    private final CubicPlayerTicketTracker cubicPlayerTicketTracker = new CubicPlayerTicketTracker(this, MathUtil.ceilDiv(33, CubeAccess.DIAMETER_IN_SECTIONS));
+    private final CubicPlayerTicketTracker cubicPlayerTicketManager = new CubicPlayerTicketTracker(this, MathUtil.ceilDiv(33, CubeAccess.DIAMETER_IN_SECTIONS));
     private CubeTaskPriorityQueueSorter cubeTicketThrottler;
     private ProcessorHandle<CubeTaskPriorityQueueSorter.FunctionEntry<Runnable>> cubeTicketThrottlerInput;
     private ProcessorHandle<CubeTaskPriorityQueueSorter.RunnableEntry> cubeTicketThrottlerReleaser;
@@ -93,7 +93,7 @@ public abstract class MixinDistanceManager implements CubicDistanceManager, Vert
         for (int localX = 0; localX < CubeAccess.DIAMETER_IN_SECTIONS; localX++) {
             for (int localZ = 0; localZ < CubeAccess.DIAMETER_IN_SECTIONS; localZ++) {
                 //do not need to handle region tickets due to the additional CCColumn tickets added in cube generation stages
-                addTicket(CubePos.asChunkPosLong(cubePosIn, localX, localZ), TicketAccess.createNew(CubicTicketType.CCCOLUMN, ticketIn.getTicketLevel(), cubePos));
+                addTicket(CubePos.asChunkPosLong(cubePosIn, localX, localZ), TicketAccess.createNew(CubicTicketType.COLUMN, ticketIn.getTicketLevel(), cubePos));
             }
         }
 
@@ -145,26 +145,25 @@ public abstract class MixinDistanceManager implements CubicDistanceManager, Vert
     }
 
     @Inject(method = "runAllUpdates", at = @At("RETURN"), cancellable = true)
-    public void processUpdates(ChunkMap chunkManager, CallbackInfoReturnable<Boolean> callbackInfoReturnable) {
+    public void runAllUpdatesCubicChunks(ChunkMap chunkManager, CallbackInfoReturnable<Boolean> cir) {
         if (!isCubic) {
             return;
         }
-
         this.naturalSpawnCubeCounter.processAllUpdates();
-        this.cubicPlayerTicketTracker.processAllUpdates();
+        this.cubicPlayerTicketManager.processAllUpdates();
         int updatesCompleted = Integer.MAX_VALUE - this.cubeTicketTracker.update(Integer.MAX_VALUE);
         if (!this.cubesToUpdateFutures.isEmpty()) {
             this.cubesToUpdateFutures.forEach((cubeHolder) -> ((ChunkHolderAccess) cubeHolder).invokeUpdateFutures(chunkManager, this.mainThreadExecutor));
             this.cubesToUpdateFutures.clear();
-            callbackInfoReturnable.setReturnValue(true);
+            cir.setReturnValue(true);
         } else {
             if (!this.cubeTicketsToRelease.isEmpty()) {
                 LongIterator ticketsToRelease = this.cubeTicketsToRelease.iterator();
 
                 while (ticketsToRelease.hasNext()) {
                     long cubePosToRelease = ticketsToRelease.nextLong();
-                    if (this.getCubeTickets(cubePosToRelease).stream().anyMatch((cubeTicket) -> cubeTicket.getType() == CubicTicketType.CCPLAYER)) {
-                        ChunkHolder cubeHolder = ((CubeMap) chunkManager).getCubeHolder(cubePosToRelease);
+                    if (this.getCubeTickets(cubePosToRelease).stream().anyMatch((cubeTicket) -> cubeTicket.getType() == CubicTicketType.PLAYER)) {
+                        ChunkHolder cubeHolder = ((CubeMap) chunkManager).getUpdatingCubeIfPresent(cubePosToRelease);
                         if (cubeHolder == null) {
                             throw new IllegalStateException();
                         }
@@ -173,13 +172,13 @@ public abstract class MixinDistanceManager implements CubicDistanceManager, Vert
                             ((CubeHolder) cubeHolder).getCubeEntityTickingFuture();
                         cubeEntityTickingFuture.thenAccept((cubeEither) -> this.mainThreadExecutor.execute(() ->
                             this.cubeTicketThrottlerReleaser.tell(CubeTaskPriorityQueueSorter.createSorterMsg(() -> {
-                        }, cubePosToRelease, false))));
+                            }, cubePosToRelease, false))));
                     }
                 }
                 this.cubeTicketsToRelease.clear();
             }
             boolean anyUpdatesCompleted = updatesCompleted != 0;
-            callbackInfoReturnable.setReturnValue(anyUpdatesCompleted | callbackInfoReturnable.getReturnValueZ());
+            cir.setReturnValue(anyUpdatesCompleted | cir.getReturnValueZ());
         }
     }
 
@@ -192,7 +191,6 @@ public abstract class MixinDistanceManager implements CubicDistanceManager, Vert
         if (!isCubic) {
             return;
         }
-
         ObjectIterator<Long2ObjectMap.Entry<SortedArraySet<Ticket<?>>>> cubeTicketsToPurge = this.cubeTickets.long2ObjectEntrySet().fastIterator();
         while (cubeTicketsToPurge.hasNext()) {
             Long2ObjectMap.Entry<SortedArraySet<Ticket<?>>> cubeTicketEntry = cubeTicketsToPurge.next();
@@ -205,10 +203,9 @@ public abstract class MixinDistanceManager implements CubicDistanceManager, Vert
         }
     }
 
-    // updateChunkForced
     @Override
     public void updateCubeForced(CubePos pos, boolean add) {
-        Ticket<CubePos> ticket = TicketAccess.createNew(CubicTicketType.CCFORCED, 31, pos);
+        Ticket<CubePos> ticket = TicketAccess.createNew(CubicTicketType.FORCED, 31, pos);
         if (add) {
             this.addCubeTicket(pos.asLong(), ticket);
         } else {
@@ -216,12 +213,13 @@ public abstract class MixinDistanceManager implements CubicDistanceManager, Vert
         }
     }
 
+    // TODO: vanilla versions of these use section pos, can we just mix into them?
     @Override
     public void addCubePlayer(CubePos cubePos, ServerPlayer player) {
         long cubePosLong = cubePos.asLong();
         this.playersPerCube.computeIfAbsent(cubePosLong, (pos) -> new ObjectOpenHashSet<>()).add(player);
         this.naturalSpawnCubeCounter.updateSourceLevel(cubePosLong, 0, true);
-        this.cubicPlayerTicketTracker.updateSourceLevel(cubePosLong, 0, true);
+        this.cubicPlayerTicketManager.updateSourceLevel(cubePosLong, 0, true);
     }
 
     @Override
@@ -232,7 +230,7 @@ public abstract class MixinDistanceManager implements CubicDistanceManager, Vert
         if (playersInCube.isEmpty()) {
             this.playersPerCube.remove(cubePosLong);
             this.naturalSpawnCubeCounter.updateSourceLevel(cubePosLong, Integer.MAX_VALUE, false);
-            this.cubicPlayerTicketTracker.updateSourceLevel(cubePosLong, Integer.MAX_VALUE, false);
+            this.cubicPlayerTicketManager.updateSourceLevel(cubePosLong, Integer.MAX_VALUE, false);
         }
     }
 
@@ -297,11 +295,11 @@ public abstract class MixinDistanceManager implements CubicDistanceManager, Vert
         return this.naturalSpawnCubeCounter.cubesInRange.containsKey(cubePos);
     }
 
-    @Override public void hasCubicTickets(boolean hasCubicTickets) {
-        this.isCubic = hasCubicTickets;
+    @Override public void initCubic(boolean isCubic) {
+        this.isCubic = isCubic;
     }
 
     @Override public void updatePlayerCubeTickets(int horizontalDistance, int verticalDistance) {
-        this.cubicPlayerTicketTracker.updateCubeViewDistance(Coords.sectionToCubeRenderDistance(horizontalDistance), Coords.sectionToCubeRenderDistance(verticalDistance));
+        this.cubicPlayerTicketManager.updateCubeViewDistance(Coords.sectionToCubeRenderDistance(horizontalDistance), Coords.sectionToCubeRenderDistance(verticalDistance));
     }
 }

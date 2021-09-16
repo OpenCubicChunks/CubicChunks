@@ -22,6 +22,6 @@ public abstract class MixinChunkMapDistanceManager extends MixinDistanceManager 
     @Override
     @Nullable
     public ChunkHolder getCubeHolder(long cubePosIn) {
-        return ((CubeMap) this$0).getCubeHolder(cubePosIn);
+        return ((CubeMap) this$0).getUpdatingCubeIfPresent(cubePosIn);
     }
 }

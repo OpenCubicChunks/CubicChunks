@@ -20,7 +20,7 @@ public class MixinGameRenderer {
     @Shadow private float renderDistance;
 
     @Inject(method = "getDepthFar", at = @At("HEAD"), cancellable = true)
-    private void cubicGetDepthFar(CallbackInfoReturnable<Float> cir) {
+    private void getDepthFarWithVerticalViewDistance(CallbackInfoReturnable<Float> cir) {
         if (!((CubicLevelHeightAccessor) this.minecraft.level).isCubic()) {
             return;
         }

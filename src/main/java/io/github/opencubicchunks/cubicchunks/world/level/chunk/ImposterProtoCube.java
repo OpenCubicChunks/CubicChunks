@@ -93,7 +93,7 @@ public class ImposterProtoCube extends ProtoCube {
     @Deprecated @Override public void addEntity(Entity entityIn) {
     }
 
-    @Override public void addCubeEntity(Entity entityIn) {
+    @Override public void addCubeEntity(Entity entity) {
     }
 
     //TILE ENTITY
@@ -112,7 +112,7 @@ public class ImposterProtoCube extends ProtoCube {
     @Deprecated @Override public void setBlockEntity(BlockEntity tileEntity) {
     }
 
-    @Override public void setCubeBlockEntity(BlockEntity tileEntityIn) {
+    @Override public void setCubeBlockEntity(BlockEntity blockEntity) {
     }
 
     @Override @Nullable public BlockEntity getBlockEntity(BlockPos pos) {
@@ -128,11 +128,11 @@ public class ImposterProtoCube extends ProtoCube {
     }
 
     @Deprecated @Override @Nullable public CompoundTag getBlockEntityNbt(BlockPos pos) {
-        return this.getCubeDeferredTileEntity(pos);
+        return this.getCubeBlockEntityNbt(pos);
     }
 
-    @Override @Nullable public CompoundTag getCubeDeferredTileEntity(BlockPos pos) {
-        return this.cube.getCubeDeferredTileEntity(pos);
+    @Override @Nullable public CompoundTag getCubeBlockEntityNbt(BlockPos pos) {
+        return this.cube.getCubeBlockEntityNbt(pos);
     }
 
     //LIGHTING
@@ -153,11 +153,11 @@ public class ImposterProtoCube extends ProtoCube {
     }
 
     @Deprecated @Override public Stream<BlockPos> getLights() {
-        return this.getCubeLightSources();
+        return this.getCubeLights();
     }
 
-    @Override public Stream<BlockPos> getCubeLightSources() {
-        return this.cube.getCubeLightSources();
+    @Override public Stream<BlockPos> getCubeLights() {
+        return this.cube.getCubeLights();
     }
 
     @Override public int getMaxLightLevel() {
@@ -166,11 +166,9 @@ public class ImposterProtoCube extends ProtoCube {
 
     //MISC
     @Deprecated @Override public void setUnsaved(boolean modified) {
-
     }
 
     @Override public void setDirty(boolean modified) {
-
     }
 
     @Deprecated @Override public boolean isUnsaved() {

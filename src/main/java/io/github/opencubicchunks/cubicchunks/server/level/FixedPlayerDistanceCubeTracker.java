@@ -29,7 +29,6 @@ public class FixedPlayerDistanceCubeTracker extends CubeTracker {
         } else {
             b0 = this.cubesInRange.put(cubePosIn, (byte) level);
         }
-
         this.chunkLevelChanged(cubePosIn, b0, level);
     }
 
@@ -41,8 +40,8 @@ public class FixedPlayerDistanceCubeTracker extends CubeTracker {
     }
 
     private boolean hasPlayerInChunk(long cubePosIn) {
-        ObjectSet<ServerPlayer> objectset = cubicDistanceManager.getPlayersPerCube().get(cubePosIn);
-        return objectset != null && !objectset.isEmpty();
+        ObjectSet<ServerPlayer> cubePlayers = cubicDistanceManager.getPlayersPerCube().get(cubePosIn);
+        return cubePlayers != null && !cubePlayers.isEmpty();
     }
 
     public void processAllUpdates() {

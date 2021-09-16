@@ -29,9 +29,7 @@ import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 @Mixin(StructureStart.class)
 public abstract class MixinStructureStart implements SetupCubeStructureStart {
 
-
     @Shadow @Final protected List<StructurePiece> pieces;
-
 
     @Override
     public void placeInCube(WorldGenLevel worldGenLevel, StructureFeatureManager structureFeatureManager, ChunkGenerator chunkGenerator, Random random, BoundingBox boundingBox,
@@ -59,12 +57,10 @@ public abstract class MixinStructureStart implements SetupCubeStructureStart {
 
     @Inject(method = "createTag", at = @At(value = "INVOKE", target = "Lnet/minecraft/nbt/CompoundTag;putInt(Ljava/lang/String;I)V", ordinal = 0), cancellable = true, locals =
         LocalCapture.CAPTURE_FAILHARD)
-    private void packCubeStructureData(ServerLevel world, ChunkPos chunkPos, CallbackInfoReturnable<CompoundTag> cir, CompoundTag compoundTag) {
-
-        if (!((CubicLevelHeightAccessor) world).isCubic()) {
+    private void packCubeStructureData(ServerLevel level, ChunkPos chunkPos, CallbackInfoReturnable<CompoundTag> cir, CompoundTag compoundTag) {
+        if (!((CubicLevelHeightAccessor) level).isCubic()) {
             return;
         }
-
         if (chunkPos instanceof ImposterChunkPos) {
             compoundTag.putInt("ChunkY", ((ImposterChunkPos) chunkPos).y);
         }

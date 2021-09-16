@@ -59,7 +59,7 @@ import net.minecraft.world.level.material.Fluids;
 
 public class CubeSerializer {
 
-    public static CubeAccess read(ServerLevel world, StructureManager structureManager, PoiManager poiManager, CubePos expectedCubePos, CompoundTag root) {
+    public static CubeAccess read(ServerLevel serverLevel, StructureManager structureManager, PoiManager poiManager, CubePos expectedCubePos, CompoundTag root) {
         CompoundTag level = root.getCompound("Level");
 
         CubePos cubePos = CubePos.of(level.getInt("xPos"), level.getInt("yPos"), level.getInt("zPos"));
@@ -68,27 +68,27 @@ public class CubeSerializer {
         }
 
         int[] biomes1 = level.getIntArray("Biomes");
-        CubeBiomeContainer cubeBiomeContainer = new CubeBiomeContainer(world.registryAccess().registryOrThrow(Registry.BIOME_REGISTRY),
-            new CubeBoundsLevelHeightAccessor(LevelCube.DIAMETER_IN_BLOCKS, expectedCubePos.minCubeY(), ((CubicLevelHeightAccessor) world)), biomes1);
+        CubeBiomeContainer cubeBiomeContainer = new CubeBiomeContainer(serverLevel.registryAccess().registryOrThrow(Registry.BIOME_REGISTRY),
+            new CubeBoundsLevelHeightAccessor(LevelCube.DIAMETER_IN_BLOCKS, expectedCubePos.minCubeY(), ((CubicLevelHeightAccessor) serverLevel)), biomes1);
 //            UpgradeData upgradedata = level.contains("UpgradeData", 10) ? new UpgradeData(level.getCompound("UpgradeData")) : UpgradeData.EMPTY;
 
         ImposterChunkPos imposterChunkPos = new ImposterChunkPos(cubePos);
         CubeProtoTickList<Block> blockProtoTickList = new CubeProtoTickList<>((block) -> {
             return block == null || block.defaultBlockState().isAir();
-        }, imposterChunkPos, root.getList("ToBeTicked", 9), new CubeProtoTickList.CubeProtoTickListHeightAccess(imposterChunkPos.toCubePos(), (CubicLevelHeightAccessor) world));
+        }, imposterChunkPos, root.getList("ToBeTicked", 9), new CubeProtoTickList.CubeProtoTickListHeightAccess(imposterChunkPos.toCubePos(), (CubicLevelHeightAccessor) serverLevel));
         CubeProtoTickList<Fluid> fluidProtoTickList = new CubeProtoTickList<>((fluid) -> {
             return fluid == null || fluid == Fluids.EMPTY;
-        }, imposterChunkPos, root.getList("LiquidsToBeTicked", 9), new CubeProtoTickList.CubeProtoTickListHeightAccess(imposterChunkPos.toCubePos(), (CubicLevelHeightAccessor) world));
+        }, imposterChunkPos, root.getList("LiquidsToBeTicked", 9), new CubeProtoTickList.CubeProtoTickListHeightAccess(imposterChunkPos.toCubePos(), (CubicLevelHeightAccessor) serverLevel));
 
 
         boolean isLightOn = level.getBoolean("isLightOn");
         ListTag sectionsNBTList = level.getList("Sections", 10);
         LevelChunkSection[] sections = new LevelChunkSection[CubeAccess.SECTION_COUNT];
-        ChunkSource abstractchunkprovider = world.getChunkSource();
-        LevelLightEngine worldlightmanager = abstractchunkprovider.getLightEngine();
+        ChunkSource chunkSource = serverLevel.getChunkSource();
+        LevelLightEngine lightEngine = chunkSource.getLightEngine();
 
         if (isLightOn) {
-            ((CubicLevelLightEngine) worldlightmanager).retainData(cubePos, true);
+            ((CubicLevelLightEngine) lightEngine).retainData(cubePos, true);
         }
 
         for (int i = 0; i < sectionsNBTList.size(); ++i) {
@@ -98,31 +98,29 @@ public class CubeSerializer {
             SectionPos sectionPos = Coords.sectionPosByIndex(cubePos, cubeIndex);
             if (sectionNBT.contains("Palette", 9) && sectionNBT.contains("BlockStates", 12)) {
                 int sectionY = sectionPos.getY();
-                LevelChunkSection chunksection = new LevelChunkSection(sectionY);
-                chunksection.getStates().read(sectionNBT.getList("Palette", 10), sectionNBT.getLongArray("BlockStates"));
-                chunksection.recalcBlockCounts();
-                if (!chunksection.isEmpty()) {
-                    sections[cubeIndex] = chunksection;
+                LevelChunkSection section = new LevelChunkSection(sectionY);
+                section.getStates().read(sectionNBT.getList("Palette", 10), sectionNBT.getLongArray("BlockStates"));
+                section.recalcBlockCounts();
+                if (!section.isEmpty()) {
+                    sections[cubeIndex] = section;
                 }
-
-                ChunkIoMainThreadTaskUtils.executeMain(() -> ((PoiDeserializationContext) poiManager).checkConsistencyWithBlocksForCube(sectionPos, chunksection));
+                ChunkIoMainThreadTaskUtils.executeMain(() -> ((PoiDeserializationContext) poiManager).checkConsistencyWithBlocksForCube(sectionPos, section));
             }
 
             if (isLightOn) {
                 if (sectionNBT.contains("BlockLight", 7)) {
-                    worldlightmanager.queueSectionData(LightLayer.BLOCK, sectionPos, new DataLayer(sectionNBT.getByteArray("BlockLight")), true);
+                    lightEngine.queueSectionData(LightLayer.BLOCK, sectionPos, new DataLayer(sectionNBT.getByteArray("BlockLight")), true);
                 }
-
                 //TODO: reimplement
-                if (world.dimensionType().hasSkyLight() && sectionNBT.contains("SkyLight", 7)) {
-                    worldlightmanager.queueSectionData(LightLayer.SKY, sectionPos, new DataLayer(sectionNBT.getByteArray("SkyLight")), true);
+                if (serverLevel.dimensionType().hasSkyLight() && sectionNBT.contains("SkyLight", 7)) {
+                    lightEngine.queueSectionData(LightLayer.SKY, sectionPos, new DataLayer(sectionNBT.getByteArray("SkyLight")), true);
                 }
             }
         }
 
         long inhabitedTime = level.getLong("InhabitedTime");
         ChunkStatus.ChunkType chunkType = getChunkStatus(root);
-        CubeAccess icube;
+        CubeAccess cube;
         if (chunkType == ChunkStatus.ChunkType.LEVELCHUNK) {
             TickList<Block> blockTickList;
             if (level.contains("TileTicks", 9)) {
@@ -138,52 +136,51 @@ public class CubeSerializer {
                 fluidTickList = fluidProtoTickList;
             }
 
-            icube = new LevelCube(world.getLevel(), cubePos, cubeBiomeContainer, null, blockTickList, fluidTickList, inhabitedTime, sections, (cube) -> {
-                readEntities(world, level, cube);
-            });
+            cube = new LevelCube(serverLevel.getLevel(), cubePos, cubeBiomeContainer, null, blockTickList, fluidTickList, inhabitedTime, sections,
+                c -> readEntities(serverLevel, level, c));
             //TODO: reimplement forge capabilities in save format
-//                if (level.contains("ForgeCaps")) ((LevelChunk)icube).readCapsFromNBT(level.getCompound("ForgeCaps"));
+//                if (level.contains("ForgeCaps")) ((LevelChunk)cube).readCapsFromNBT(level.getCompound("ForgeCaps"));
         } else {
             //TODO: updatedata
-            ProtoCube protoCube = new ProtoCube(cubePos, null, sections, blockProtoTickList, fluidProtoTickList, world);
+            ProtoCube protoCube = new ProtoCube(cubePos, null, sections, blockProtoTickList, fluidProtoTickList, serverLevel);
             protoCube.setCubeBiomeContainer(cubeBiomeContainer);
 
-            icube = protoCube;
+            cube = protoCube;
             protoCube.setInhabitedTime(inhabitedTime);
             protoCube.setCubeStatus(ChunkStatus.byName(level.getString("Status")));
             if (protoCube.getCubeStatus().isOrAfter(ChunkStatus.FEATURES)) {
-                protoCube.setCubeLightManager(worldlightmanager);
+                protoCube.setCubeLightEngine(lightEngine);
             }
 
             //if (!isLightOn && cubePrimer.getCubeStatus().isOrAfter(ChunkStatus.LIGHT)) {
             //    for (BlockPos blockpos : BlockPos.betweenClosed(cubePos.minCubeX(), cubePos.minCubeY(), cubePos.minCubeZ(), cubePos.maxCubeX(), cubePos.maxCubeY(), cubePos.maxCubeZ())) {
-            //        if (icube.getBlockState(blockpos).getLightEmission() != 0) {
+            //        if (cube.getBlockState(blockpos).getLightEmission() != 0) {
             //            //TODO: reimplement light positions in save format
             //                cubePrimer.addLightPosition(blockpos);
             //        }
             //    }
             //}
         }
-        icube.setCubeLight(isLightOn);
+        cube.setCubeLight(isLightOn);
         //TODO: reimplement heightmap in save format
 //            CompoundTag compoundnbt3 = level.getCompound("Heightmaps");
 //            EnumSet<Heightmap.Type> enumset = EnumSet.noneOf(Heightmap.Type.class);
 //
-//            for(Heightmap.Type heightmap$type : icube.getCubeStatus().getHeightMaps()) {
+//            for(Heightmap.Type heightmap$type : cube.getCubeStatus().getHeightMaps()) {
 //                String s = heightmap$type.getId();
 //                if (compoundnbt3.contains(s, 12)) {
-//                    icube.setHeightmap(heightmap$type, compoundnbt3.getLongArray(s));
+//                    cube.setHeightmap(heightmap$type, compoundnbt3.getLongArray(s));
 //                } else {
 //                    enumset.add(heightmap$type);
 //                }
 //            }
 //
-//            Heightmap.updateChunkHeightmaps(icube, enumset);
+//            Heightmap.updateChunkHeightmaps(cube, enumset);
         CompoundTag structures = level.getCompound("Structures");
-        icube.setAllStarts(ChunkSerializerAccess.invokeUnpackStructureStart(world, structures, world.getSeed()));
-        icube.setAllReferences(unpackCubeStructureReferences(new ImposterChunkPos(cubePos), structures));
+        cube.setAllStarts(ChunkSerializerAccess.invokeUnpackStructureStart(serverLevel, structures, serverLevel.getSeed()));
+        cube.setAllReferences(unpackCubeStructureReferences(new ImposterChunkPos(cubePos), structures));
         if (level.getBoolean("shouldSave")) {
-            icube.setDirty(true);
+            cube.setDirty(true);
         }
 
         ListTag postProcessingNBTList = level.getList("PostProcessing", 9);
@@ -192,16 +189,16 @@ public class CubeSerializer {
             ListTag listTag1 = postProcessingNBTList.getList(l1);
 
             for (int l = 0; l < listTag1.size(); ++l) {
-                icube.addPackedPostProcess(listTag1.getShort(l), l1);
+                cube.addPackedPostProcess(listTag1.getShort(l), l1);
             }
         }
 
         if (chunkType == ChunkStatus.ChunkType.LEVELCHUNK) {
             //TODO: reimplement forge chunk load event
-//                net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.event.world.ChunkDataEvent.Load(icube, level, chunkstatus$type));
-            return new ImposterProtoCube((LevelCube) icube, world);
+//                net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.event.serverLevel.ChunkDataEvent.Load(cube, level, chunkstatus$type));
+            return new ImposterProtoCube((LevelCube) cube, serverLevel);
         } else {
-            ProtoCube protoCube = (ProtoCube) icube;
+            ProtoCube protoCube = (ProtoCube) cube;
             ListTag entitiesNBT = level.getList("Entities", 10);
 
             for (int i2 = 0; i2 < entitiesNBT.size(); ++i2) {
@@ -212,7 +209,7 @@ public class CubeSerializer {
 
             for (int i1 = 0; i1 < tileEntitiesNBTList.size(); ++i1) {
                 CompoundTag tileEntityNBT = tileEntitiesNBTList.getCompound(i1);
-                icube.setCubeBlockEntity(tileEntityNBT);
+                cube.setCubeBlockEntity(tileEntityNBT);
             }
 
             ListTag lightsNBTList = level.getList("Lights", 9);
@@ -221,7 +218,7 @@ public class CubeSerializer {
                 ListTag lightList = lightsNBTList.getList(j2);
 
                 for (int j1 = 0; j1 < lightList.size(); ++j1) {
-                    protoCube.addCubeLightValue(lightList.getShort(j1), j2);
+                    protoCube.addCubeLight(lightList.getShort(j1), j2);
                 }
             }
 
@@ -239,14 +236,14 @@ public class CubeSerializer {
             });
 
             //TODO: reimplement forge ChunkDataEvent
-//                net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.event.world.ChunkDataEvent.Load(icube, level, chunkstatus$type));
+//                net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.event.serverLevel.ChunkDataEvent.Load(cube, level, chunkstatus$type));
 
             return protoCube;
         }
     }
 
-    public static CompoundTag write(ServerLevel world, CubeAccess icube, AsyncSaveData data) {
-        CubePos pos = icube.getCubePos();
+    public static CompoundTag write(ServerLevel serverLevel, CubeAccess cube, AsyncSaveData data) {
+        CubePos pos = cube.getCubePos();
 
         CompoundTag root = new CompoundTag();
         CompoundTag level = new CompoundTag();
@@ -256,22 +253,22 @@ public class CubeSerializer {
         level.putInt("yPos", pos.getY());
         level.putInt("zPos", pos.getZ());
 
-        level.putLong("LastUpdate", world.getGameTime());
-        level.putLong("InhabitedTime", icube.getCubeInhabitedTime());
-        level.putString("Status", icube.getCubeStatus().getName());
+        level.putLong("LastUpdate", serverLevel.getGameTime());
+        level.putLong("InhabitedTime", cube.getCubeInhabitedTime());
+        level.putString("Status", cube.getCubeStatus().getName());
 
-        LevelChunkSection[] sections = icube.getCubeSections();
+        LevelChunkSection[] sections = cube.getCubeSections();
         ListTag sectionsNBTList = new ListTag();
-        LevelLightEngine worldlightmanager = world.getChunkSource().getLightEngine();
-        boolean cubeHasLight = icube.hasCubeLight();
+        LevelLightEngine lightEngine = serverLevel.getChunkSource().getLightEngine();
+        boolean cubeHasLight = cube.hasCubeLight();
 
         for (int i = 0; i < CubeAccess.SECTION_COUNT; ++i) {
             LevelChunkSection section = sections[i];
 
             DataLayer blockData = data != null ? data.blockLight.get(Coords.sectionPosByIndex(pos, i)) :
-                worldlightmanager.getLayerListener(LightLayer.BLOCK).getDataLayerData(Coords.sectionPosByIndex(pos, i));
+                lightEngine.getLayerListener(LightLayer.BLOCK).getDataLayerData(Coords.sectionPosByIndex(pos, i));
             DataLayer skyData = data != null ? data.skyLight.get(Coords.sectionPosByIndex(pos, i)) :
-                worldlightmanager.getLayerListener(LightLayer.SKY).getDataLayerData(Coords.sectionPosByIndex(pos, i));
+                lightEngine.getLayerListener(LightLayer.SKY).getDataLayerData(Coords.sectionPosByIndex(pos, i));
             CompoundTag sectionNBT = new CompoundTag();
             if (section != LevelChunk.EMPTY_SECTION || blockData != null || skyData != null) {
 
@@ -297,7 +294,7 @@ public class CubeSerializer {
             level.putBoolean("isLightOn", true);
         }
 
-        ChunkBiomeContainer biomecontainer = icube.getBiomes();
+        ChunkBiomeContainer biomecontainer = cube.getBiomes();
         if (biomecontainer != null) {
             level.putIntArray("Biomes", biomecontainer.writeBiomes());
         }
@@ -307,16 +304,16 @@ public class CubeSerializer {
         if (data != null) {
             data.blockEntities.forEach((blockPos, blockEntity) -> {
                 CompoundTag tileEntityNBT = blockEntity.save(new CompoundTag());
-                if (icube instanceof LevelCube) tileEntityNBT.putBoolean("keepPacked", false);
+                if (cube instanceof LevelCube) tileEntityNBT.putBoolean("keepPacked", false);
                 tileEntitiesNBTList.add(tileEntityNBT);
             });
             data.blockEntitiesDeferred.forEach((blockPos, tag) -> {
-                if (icube instanceof LevelCube) tag.putBoolean("keepPacked", true);
+                if (cube instanceof LevelCube) tag.putBoolean("keepPacked", true);
                 tileEntitiesNBTList.add(tag);
             });
         } else {
-            for (BlockPos blockpos : icube.getCubeTileEntitiesPos()) {
-                CompoundTag tileEntityNBT = icube.getCubeBlockEntityNbtForSaving(blockpos);
+            for (BlockPos blockpos : cube.getCubeBlockEntitiesPos()) {
+                CompoundTag tileEntityNBT = cube.getCubeBlockEntityNbtForSaving(blockpos);
                 if (tileEntityNBT != null) {
                     CubicChunks.LOGGER.debug("Saving tile entity at " + blockpos.toString());
                     tileEntitiesNBTList.add(tileEntityNBT);
@@ -325,8 +322,8 @@ public class CubeSerializer {
         }
 
         level.put("TileEntities", tileEntitiesNBTList);
-        if (icube.getCubeStatus().getChunkType() == ChunkStatus.ChunkType.PROTOCHUNK) {
-            ProtoCube protoCube = (ProtoCube) icube;
+        if (cube.getCubeStatus().getChunkType() == ChunkStatus.ChunkType.PROTOCHUNK) {
+            ProtoCube protoCube = (ProtoCube) cube;
             ListTag listTag3 = new ListTag();
             listTag3.addAll(protoCube.getCubeEntities());
             level.put("Entities", listTag3);
@@ -356,40 +353,40 @@ public class CubeSerializer {
             level.put("featurestates", featuresStates);
         }
 
-        TickList<Block> tickList = icube.getBlockTicks();
-        if (tickList instanceof CubeProtoTickList) {
-            level.put("ToBeTicked", ((ProtoTickList) tickList).save());
-        } else if (tickList instanceof ChunkTickList) {
-            level.put("TileTicks", ((ChunkTickList) tickList).save());
+        TickList<Block> blockTicks = cube.getBlockTicks();
+        if (blockTicks instanceof CubeProtoTickList) {
+            level.put("ToBeTicked", ((ProtoTickList) blockTicks).save());
+        } else if (blockTicks instanceof ChunkTickList) {
+            level.put("TileTicks", ((ChunkTickList) blockTicks).save());
         } else if (data != null) {
             level.put("TileTicks", data.serverBlockTicks.get());
         } else {
-            level.put("TileTicks", ((CubicServerTickList<?>) world.getBlockTicks()).save(icube.getCubePos()));
+            level.put("TileTicks", ((CubicServerTickList<?>) serverLevel.getBlockTicks()).save(cube.getCubePos()));
         }
 
-        TickList<Fluid> tickList2 = icube.getLiquidTicks();
-        if (tickList2 instanceof ProtoTickList) {
-            level.put("LiquidsToBeTicked", ((ProtoTickList) tickList2).save());
-        } else if (tickList2 instanceof ChunkTickList) {
-            level.put("LiquidTicks", ((ChunkTickList) tickList2).save());
+        TickList<Fluid> liquidTicks = cube.getLiquidTicks();
+        if (liquidTicks instanceof ProtoTickList) {
+            level.put("LiquidsToBeTicked", ((ProtoTickList) liquidTicks).save());
+        } else if (liquidTicks instanceof ChunkTickList) {
+            level.put("LiquidTicks", ((ChunkTickList) liquidTicks).save());
         } else if (data != null) {
             level.put("LiquidTicks", data.serverLiquidTicks.get());
         } else {
-            level.put("LiquidTicks", ((CubicServerTickList<?>) world.getLiquidTicks()).save(icube.getCubePos()));
+            level.put("LiquidTicks", ((CubicServerTickList<?>) serverLevel.getLiquidTicks()).save(cube.getCubePos()));
         }
 
-        level.put("PostProcessing", ChunkSerializer.packOffsets(icube.getPostProcessing()));
+        level.put("PostProcessing", ChunkSerializer.packOffsets(cube.getPostProcessing()));
 //        CompoundTag compoundnbt6 = new CompoundTag();
 //
         //TODO: reimplement heightmaps
-//        for(Map.Entry<Heightmap.Type, Heightmap> entry : icube.getHeightmaps()) {
-//            if (icube.getCubeStatus().getHeightMaps().contains(entry.getKey())) {
+//        for(Map.Entry<Heightmap.Type, Heightmap> entry : cube.getHeightmaps()) {
+//            if (cube.getCubeStatus().getHeightMaps().contains(entry.getKey())) {
 //                compoundnbt6.put(entry.getKey().getId(), new LongArrayNBT(entry.getValue().getDataArray()));
 //            }
 //        }
 //
 //        level.put("Heightmaps", compoundnbt6);
-        level.put("Structures", ChunkSerializerAccess.invokePackStructureData(world, new ImposterChunkPos(icube.getCubePos()), icube.getAllStarts(), icube.getAllReferences()));
+        level.put("Structures", ChunkSerializerAccess.invokePackStructureData(serverLevel, new ImposterChunkPos(cube.getCubePos()), cube.getAllStarts(), cube.getAllReferences()));
 
         return root;
     }
@@ -401,7 +398,6 @@ public class CubeSerializer {
                 return chunkstatus.getChunkType();
             }
         }
-
         return ChunkStatus.ChunkType.PROTOCHUNK;
     }
 
@@ -413,17 +409,17 @@ public class CubeSerializer {
             }
         }
 
-        ListTag tileEntitiesNBT = compound.getList("TileEntities", 10);
-        for (int j = 0; j < tileEntitiesNBT.size(); ++j) {
-            CompoundTag compoundnbt1 = tileEntitiesNBT.getCompound(j);
-            boolean flag = compoundnbt1.getBoolean("keepPacked");
+        ListTag blockEntitiesNbt = compound.getList("TileEntities", 10);
+        for (int j = 0; j < blockEntitiesNbt.size(); ++j) {
+            CompoundTag beNbt = blockEntitiesNbt.getCompound(j);
+            boolean flag = beNbt.getBoolean("keepPacked");
             if (flag) {
-                cube.setCubeBlockEntity(compoundnbt1);
+                cube.setCubeBlockEntity(beNbt);
             } else {
-                BlockPos blockpos = new BlockPos(compoundnbt1.getInt("x"), compoundnbt1.getInt("y"), compoundnbt1.getInt("z"));
-                BlockEntity tileentity = BlockEntity.loadStatic(blockpos, cube.getBlockState(blockpos), compoundnbt1);
-                if (tileentity != null) {
-                    cube.setCubeBlockEntity(tileentity);
+                BlockPos blockpos = new BlockPos(beNbt.getInt("x"), beNbt.getInt("y"), beNbt.getInt("z"));
+                BlockEntity blockEntity = BlockEntity.loadStatic(blockpos, cube.getBlockState(blockpos), beNbt);
+                if (blockEntity != null) {
+                    cube.setCubeBlockEntity(blockEntity);
                 }
             }
         }

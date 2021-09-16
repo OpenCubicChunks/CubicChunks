@@ -17,16 +17,14 @@ public class MixinBasaltPillarFeature {
         if (!((CubicLevelHeightAccessor) worldGenLevel).isCubic()) {
             return worldGenLevel.isOutsideBuildHeight(blockPos);
         }
-
         return !((CubeWorldGenRegion) worldGenLevel).insideCubeHeight(blockPos.getY());
     }
 
     @Redirect(method = "place", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/WorldGenLevel;isEmptyBlock(Lnet/minecraft/core/BlockPos;)Z", ordinal = 4))
-    private boolean cancelOutsideBounds(WorldGenLevel level, BlockPos pos) {
+    private boolean cancelOutOfCubeBounds(WorldGenLevel level, BlockPos pos) {
         if (!((CubicLevelHeightAccessor) level).isCubic()) {
             return level.isEmptyBlock(pos);
         }
-
         return ((CubeWorldGenRegion) level).insideCubeHeight(pos.getY()) && level.isEmptyBlock(pos);
     }
 }

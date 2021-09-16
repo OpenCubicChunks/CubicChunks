@@ -13,11 +13,10 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 public class MixinCountMultiLayerDecorator {
 
     @Redirect(method = "findOnGroundYPosition", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/levelgen/placement/DecorationContext;getMinBuildHeight()I"))
-    private static int loopToBottomOfCube(DecorationContext decorationContext) {
+    private static int useMinCubeY(DecorationContext decorationContext) {
         if (!((CubicLevelHeightAccessor) decorationContext.getLevel()).isCubic()) {
             return decorationContext.getMinBuildHeight();
         }
-
         return Coords.cubeToMinBlock(((CubeWorldGenRegion) decorationContext.getLevel()).getMainCubeY());
     }
 }

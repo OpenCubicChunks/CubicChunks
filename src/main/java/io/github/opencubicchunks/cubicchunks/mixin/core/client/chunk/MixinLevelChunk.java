@@ -36,10 +36,11 @@ public abstract class MixinLevelChunk {
 
     @Shadow public abstract Level getLevel();
 
+    // TODO: don't target all Map.get()
     @SuppressWarnings({ "rawtypes", "UnresolvedMixinReference" })
     @Redirect(method = "*",
         at = @At(value = "INVOKE", target = "Ljava/util/Map;get(Ljava/lang/Object;)Ljava/lang/Object;"))
-    private Object getTileEntity(Map map, Object key) {
+    private Object getBlockEntity(Map map, Object key) {
         if (map == this.blockEntities) {
             if (!((CubicLevelHeightAccessor) this).isCubic()) {
                 return map.get(key);
@@ -51,7 +52,7 @@ public abstract class MixinLevelChunk {
                 return map.get(key);
             }
             LevelCube cube = (LevelCube) ((ColumnCubeGetter) this).getCube(Coords.blockToSection(((BlockPos) key).getY()));
-            return cube.getDeferredTileEntityMap().get(key);
+            return cube.getPendingBlockEntities().get(key);
         }
         return map.get(key);
     }
@@ -60,11 +61,11 @@ public abstract class MixinLevelChunk {
     @Redirect(
         method = "*",
         at = @At(value = "INVOKE", target = "Ljava/util/Map;remove(Ljava/lang/Object;)Ljava/lang/Object;"))
-    private Object removeTileEntity(Map map,
-                                    Object key) {
+    private Object removeBlockEntity(Map map, Object key) {
         // to respect our priority over theirs.
 
         if (map == this.blockEntities) {
+            // TODO: handle this better
             if (!((CubicLevelHeightAccessor) this).isCubic()) {
                 @Nullable
                 Object removed = map.remove(key);
@@ -92,7 +93,7 @@ public abstract class MixinLevelChunk {
                 return map.remove(key);
             }
             LevelCube cube = (LevelCube) ((ColumnCubeGetter) this).getCube(Coords.blockToSection(((BlockPos) key).getY()));
-            return cube.getDeferredTileEntityMap().remove(key);
+            return cube.getPendingBlockEntities().remove(key);
         }
         return map.remove(key);
     }
@@ -100,7 +101,7 @@ public abstract class MixinLevelChunk {
     @SuppressWarnings({ "rawtypes", "unchecked", "UnresolvedMixinReference" }) @Nullable
     @Redirect(method = "*",
         at = @At(value = "INVOKE", target = "Ljava/util/Map;put(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;"))
-    private Object putTileEntity(Map map, Object key, Object value) {
+    private Object putBlockEntity(Map map, Object key, Object value) {
         if (map == this.blockEntities) {
             if (this.getLevel() instanceof ServerLevel) {
                 ServerBlockEntityEvents.BLOCK_ENTITY_LOAD.invoker().onLoad((BlockEntity) value, (ServerLevel) this.getLevel());
@@ -118,9 +119,8 @@ public abstract class MixinLevelChunk {
                 return map.put(key, value);
             }
             LevelCube cube = (LevelCube) ((ColumnCubeGetter) this).getCube(Coords.blockToSection(((BlockPos) key).getY()));
-            return cube.getDeferredTileEntityMap().put((BlockPos) key, (CompoundTag) value);
+            return cube.getPendingBlockEntities().put((BlockPos) key, (CompoundTag) value);
         }
         return map.put(key, value);
     }
-
 }

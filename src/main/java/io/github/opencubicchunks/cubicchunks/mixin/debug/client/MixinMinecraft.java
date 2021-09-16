@@ -34,7 +34,6 @@ public class MixinMinecraft {
             if (!((CubicLevelHeightAccessor) this.level).isCubic()) {
                 return;
             }
-
             DebugVisualization.onWorldUnload(this.level);
         }
     }

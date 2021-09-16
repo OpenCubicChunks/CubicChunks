@@ -24,6 +24,7 @@ import net.minecraft.util.thread.ProcessorMailbox;
 import net.minecraft.util.thread.StrictQueue;
 import net.minecraft.world.level.ChunkPos;
 
+// TODO: use ChunkTaskPriorityQueueSorter internally with ImposterChunkPos
 public class CubeTaskPriorityQueueSorter implements AutoCloseable, ChunkHolder.LevelChangeListener, CubeHolderLevelChangeListener {
 
     private final Map<ProcessorHandle<?>, CubeTaskPriorityQueue<? extends Function<ProcessorHandle<Unit>, ?>>> queues;

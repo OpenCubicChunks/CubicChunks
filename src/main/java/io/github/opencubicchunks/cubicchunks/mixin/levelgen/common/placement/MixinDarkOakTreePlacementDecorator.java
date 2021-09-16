@@ -17,7 +17,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(DarkOakTreePlacementDecorator.class)
 public abstract class MixinDarkOakTreePlacementDecorator {
 
-
     @Inject(at = @At("HEAD"),
         method = "getPositions(Lnet/minecraft/world/level/levelgen/placement/DecorationContext;Ljava/util/Random;"
             + "Lnet/minecraft/world/level/levelgen/feature/configurations/NoneDecoratorConfiguration;Lnet/minecraft/core/BlockPos;)Ljava/util/stream/Stream;",
