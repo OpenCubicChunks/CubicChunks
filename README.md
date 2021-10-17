@@ -19,6 +19,8 @@ For the most up to date information about this mod and its related mods, as well
 [CurseForge - Main page](https://www.curseforge.com/minecraft/mc-mods/cubicworldgen)  
 [CurseForge - Downloads](https://www.curseforge.com/minecraft/mc-mods/cubicworldgen/files/all)
 
+[![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/CubicChunks-dev/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 ### Cloning the repository
 
 * Please go to our Discord server linked above for the newest info on compilation of this project. 
