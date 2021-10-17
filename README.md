@@ -1,15 +1,30 @@
 # Cubic Chunks Minecraft Mod
 
+This MinecraftForge mod extends Minecraft height and depth. The only limitation is size of 32-bit integer.
+
 [![Build Status](https://travis-ci.org/OpenCubicChunks/CubicChunks.svg?branch=MC_1.12)](https://travis-ci.org/OpenCubicChunks/CubicChunks)
+
+* For the most up to date information about this mod and its related mods, as well as the newest Downloads, please join us on the Cubic Chunks Discord linked below:
 
 [Discord server](https://discord.gg/kMfWg9m)
 
+[Github  Main page  for Cubic Chunks] (https://github.com/OpenCubicChunks/CubicChunks)
+[CurseForge Main page for Cubic Chunks] (https://www.curseforge.com/minecraft/mc-mods/opencubicchunks)
+[CurseForge Downloads for Cubic Chunks] (https://www.curseforge.com/minecraft/mc-mods/opencubicchunks/files/all)
+
+[Github  Main page  for Cubic World Gen] (https://github.com/OpenCubicChunks/CubicWorldGen)
+[CurseForge  Main page  for Cubic World Gen] (https://www.curseforge.com/minecraft/mc-mods/cubicworldgen)
+[CurseForge  Downloads  for Cubic World Gen] (https://www.curseforge.com/minecraft/mc-mods/cubicworldgen/files/all)
+
+
 [![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/CubicChunks-dev/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
-This MinecraftForge mod extends Minecraft height and depth. The only limitation is size of 32-bit integer.
 
 ### Cloning the repository
-Note: you need git installed to do that
+
+* Please go to our Discord server linked above for the newest info on compilation of this project. 
+
+Note: you need git installed to do the following:
 ```
 git clone --recursive
 ```
