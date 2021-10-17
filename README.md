@@ -4,29 +4,20 @@ This MinecraftForge mod extends Minecraft height and depth. The only limitation 
 
 [![Build Status](https://travis-ci.org/OpenCubicChunks/CubicChunks.svg?branch=MC_1.12)](https://travis-ci.org/OpenCubicChunks/CubicChunks)
 
-* For the most up to date information about this mod and its related mods, as well as the newest Downloads, please join us on the Cubic Chunks Discord linked below:
-
-* [Discord server](https://discord.gg/kMfWg9m)
+For the most up to date information about this mod and its related mods, as well as the newest Downloads, please join us on the Cubic Chunks Discord linked below:  
+[Discord server](https://discord.gg/kMfWg9m)
 
 **Cubic Chunks (CC)** - Links:
 
-[Github - Cubic Chunks](https://github.com/OpenCubicChunks/CubicChunks)
-
-[CurseForge - Main page](https://www.curseforge.com/minecraft/mc-mods/opencubicchunks)
-
+[Github - Cubic Chunks](https://github.com/OpenCubicChunks/CubicChunks)  
+[CurseForge - Main page](https://www.curseforge.com/minecraft/mc-mods/opencubicchunks)  
 [CurseForge - Downloads](https://www.curseforge.com/minecraft/mc-mods/opencubicchunks/files/all)
 
 **Cubic World Gen (CWG)** - Links:
 
-[Github - Cubic World Gen](https://github.com/OpenCubicChunks/CubicWorldGen)
-
-[CurseForge - Main page](https://www.curseforge.com/minecraft/mc-mods/cubicworldgen)
-
+[Github - Cubic World Gen](https://github.com/OpenCubicChunks/CubicWorldGen)  
+[CurseForge - Main page](https://www.curseforge.com/minecraft/mc-mods/cubicworldgen)  
 [CurseForge - Downloads](https://www.curseforge.com/minecraft/mc-mods/cubicworldgen/files/all)
-
-
-[![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/CubicChunks-dev/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
-
 
 ### Cloning the repository
 
