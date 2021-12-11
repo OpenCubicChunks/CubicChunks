@@ -24,14 +24,11 @@
  */
 package io.github.opencubicchunks.cubicchunks.core.server.chunkio;
 
-import static io.github.opencubicchunks.cubicchunks.api.util.Coords.localToBlock;
-
 import io.github.opencubicchunks.cubicchunks.api.util.Coords;
 import io.github.opencubicchunks.cubicchunks.api.world.IColumn;
 import io.github.opencubicchunks.cubicchunks.api.world.IHeightMap;
 import io.github.opencubicchunks.cubicchunks.core.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.core.CubicChunksConfig;
-import io.github.opencubicchunks.cubicchunks.core.asm.mixin.ICubicWorldInternal;
 import io.github.opencubicchunks.cubicchunks.core.lighting.LightingManager;
 import io.github.opencubicchunks.cubicchunks.core.world.ClientHeightMap;
 import io.github.opencubicchunks.cubicchunks.core.world.ServerHeightMap;
@@ -289,7 +286,6 @@ public class IONbtReader {
     private static void readLightingInfo(Cube cube, NBTTagCompound nbt, World world) {
         NBTTagCompound lightingInfo = nbt.getCompoundTag("LightingInfo");
         int[] lastHeightMap = lightingInfo.getIntArray("LastHeightMap"); // NO NO NO! TODO: Why is hightmap being stored in Cube's data?! kill it!
-        int[] currentHeightMap = cube.getColumn().getHeightMap();
         byte edgeNeedSkyLightUpdate = 0x3F;
         if (lightingInfo.hasKey("EdgeNeedSkyLightUpdate"))
             edgeNeedSkyLightUpdate = lightingInfo.getByte("EdgeNeedSkyLightUpdate");
@@ -301,43 +297,7 @@ public class IONbtReader {
                 }
             }
         }
-
-        // assume changes outside of this cube have no effect on this cube.
-        // In practice changes up to 15 blocks above can affect it,
-        // but it will be fixed by lighting update in other cube anyway
-        int minBlockY = Coords.cubeToMinBlock(cube.getY());
-        int maxBlockY = Coords.cubeToMaxBlock(cube.getY());
-        LightingManager lightManager = ((ICubicWorldInternal) cube.getWorld()).getLightingManager();
-        for (int i = 0; i < currentHeightMap.length; i++) {
-            int currentY = currentHeightMap[i];
-            int lastY = lastHeightMap[i];
-
-            //sort currentY and lastY
-            int minUpdateY = Math.min(currentY, lastY);
-            int maxUpdateY = Math.max(currentY, lastY);
-
-            boolean needLightUpdate = minUpdateY != maxUpdateY &&
-                    //if max update Y is below minY - nothing to update
-                    !(maxUpdateY < minBlockY) &&
-                    //if min update Y is above maxY - nothing to update
-                    !(minUpdateY > maxBlockY);
-            if (needLightUpdate) {
-
-                //clamp min/max update Y to be within current cube bounds
-                if (minUpdateY < minBlockY) {
-                    minUpdateY = minBlockY;
-                }
-                if (maxUpdateY > maxBlockY) {
-                    maxUpdateY = maxBlockY;
-                }
-                assert minUpdateY <= maxUpdateY : "minUpdateY > maxUpdateY: " + minUpdateY + ">" + maxUpdateY;
-
-                int localX = i & 0xF;
-                int localZ = i >> 4;
-                lightManager.markCubeBlockColumnForUpdate(cube,
-                        localToBlock(cube.getX(), localX), localToBlock(cube.getZ(), localZ));
-            }
-        }
+        cube.getCubeLightUpdateInfo().lastHeightMap = lastHeightMap;
     }
 
     private static void readBiomes(Cube cube, NBTTagCompound nbt) {// biomes

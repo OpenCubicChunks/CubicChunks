@@ -275,6 +275,10 @@ public class LightingManager implements ILightingManager {
          * Do neighbor need a sky light update when it is loaded?
          */
         public EnumSet<EnumFacing> edgeNeedSkyLightUpdate = EnumSet.noneOf(EnumFacing.class);
+        /**
+         * null value means no update from height change from last save
+         */
+        public int[] lastHeightMap = null;
 
         public CubeLightUpdateInfo(Cube cube, LightingManager lm) {
             this.cube = cube;
@@ -301,6 +305,38 @@ public class LightingManager implements ILightingManager {
             LightUpdateTracker tracker = manager.getTracker();
             ICubeProviderInternal cache = cubicWorld.getCubeCache();
 
+            lastSaveHeightUpdates();
+
+            edgeUpdates(manager, tracker, cache);
+            if (!this.hasUpdates) {
+                return;
+            }
+            scheduledLightUpdates(manager, tracker);
+            this.hasUpdates = false;
+        }
+
+        private void scheduledLightUpdates(LightingManager manager, LightUpdateTracker tracker) {
+            for (int localX = 0; localX < Cube.SIZE; localX++) {
+                for (int localZ = 0; localZ < Cube.SIZE; localZ++) {
+                    if (!toUpdateColumns[index(localX, localZ)]) {
+                        continue;
+                    }
+                    manager.relightMultiBlock(
+                            new BlockPos(localToBlock(cube.getX(), localX), cubeToMinBlock(cube.getY()), localToBlock(cube.getZ(), localZ)),
+                            new BlockPos(localToBlock(cube.getX(), localX), cubeToMaxBlock(cube.getY()), localToBlock(cube.getZ(), localZ)),
+                            EnumSkyBlock.SKY, pos -> {
+                                cube.getWorld().notifyLightSet(pos);
+                                if (tracker != null) {
+                                    tracker.onUpdate(pos);
+                                }
+                            }
+                    );
+                    toUpdateColumns[index(localX, localZ)] = false;
+                }
+            }
+        }
+
+        private void edgeUpdates(LightingManager manager, LightUpdateTracker tracker, ICubeProviderInternal cache) {
             if (!edgeNeedSkyLightUpdate.isEmpty() && cube.getWorld().isAreaLoaded(cube.getCoords().getCenterBlockPos(), 16, false)) {
                 EnumSet<EnumFacing> removed = EnumSet.noneOf(EnumFacing.class);
                 for (EnumFacing dir : EnumFacing.values()) {
@@ -372,28 +408,56 @@ public class LightingManager implements ILightingManager {
                     }
                 }
             }
-            if (!this.hasUpdates) {
+        }
+
+        /**
+         * If lastHeightMap is not null, update current height map from saved data
+         */
+        private void lastSaveHeightUpdates() {
+            //checking isSurfaceTracked because external tools could set it, and the heightmap could be wrong
+            if(this.lastHeightMap == null || !cube.isSurfaceTracked()) {
                 return;
             }
-            for (int localX = 0; localX < Cube.SIZE; localX++) {
-                for (int localZ = 0; localZ < Cube.SIZE; localZ++) {
-                    if (!toUpdateColumns[index(localX, localZ)]) {
-                        continue;
+
+            // assume changes outside this cube have no effect on this cube.
+            // In practice changes up to 15 blocks above can affect it,
+            // but it will be fixed by lighting update in other cube anyway
+            int minBlockY = Coords.cubeToMinBlock(cube.getY());
+            int maxBlockY = Coords.cubeToMaxBlock(cube.getY());
+            LightingManager lightManager = ((ICubicWorldInternal) cube.getWorld()).getLightingManager();
+            int[] currentHeightMap = cube.getColumn().getHeightMap();
+            for (int i = 0; i < currentHeightMap.length; i++) {
+                int currentY = currentHeightMap[i];
+                int lastY = this.lastHeightMap[i];
+
+                //sort currentY and lastY
+                int minUpdateY = Math.min(currentY, lastY);
+                int maxUpdateY = Math.max(currentY, lastY);
+
+                boolean needLightUpdate = minUpdateY != maxUpdateY &&
+                        //if max update Y is below minY - nothing to update
+                        !(maxUpdateY < minBlockY) &&
+                        //if min update Y is above maxY - nothing to update
+                        !(minUpdateY > maxBlockY);
+                if (needLightUpdate) {
+
+                    //clamp min/max update Y to be within current cube bounds
+                    if (minUpdateY < minBlockY) {
+                        minUpdateY = minBlockY;
                     }
-                    manager.relightMultiBlock(
-                            new BlockPos(localToBlock(cube.getX(), localX), cubeToMinBlock(cube.getY()), localToBlock(cube.getZ(), localZ)),
-                            new BlockPos(localToBlock(cube.getX(), localX), cubeToMaxBlock(cube.getY()), localToBlock(cube.getZ(), localZ)),
-                            EnumSkyBlock.SKY, pos -> {
-                                cube.getWorld().notifyLightSet(pos);
-                                if (tracker != null) {
-                                    tracker.onUpdate(pos);
-                                }
-                            }
-                    );
-                    toUpdateColumns[index(localX, localZ)] = false;
+                    if (maxUpdateY > maxBlockY) {
+                        maxUpdateY = maxBlockY;
+                    }
+                    assert minUpdateY <= maxUpdateY : "minUpdateY > maxUpdateY: " + minUpdateY + ">" + maxUpdateY;
+
+                    int localX = i & 0xF;
+                    int localZ = i >> 4;
+                    lightManager.markCubeBlockColumnForUpdate(cube,
+                            localToBlock(cube.getX(), localX), localToBlock(cube.getZ(), localZ));
                 }
             }
-            this.hasUpdates = false;
+
+            this.lastHeightMap = null;
         }
 
         private int index(int x, int z) {
