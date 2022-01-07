@@ -26,9 +26,11 @@ package io.github.opencubicchunks.cubicchunks.core.lighting;
 
 import io.github.opencubicchunks.cubicchunks.api.world.ICube;
 import mcp.MethodsReturnNonnullByDefault;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.chunk.Chunk;
+import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -37,12 +39,55 @@ import javax.annotation.ParametersAreNonnullByDefault;
 // TODO: make this a real API
 public interface ILightingManager {
 
-    void doOnBlockSetLightUpdates(Chunk column, int localX, int oldHeight, int changeY, int localZ);
+    default void doOnBlockSetLightUpdates(Chunk column, int localX, int y1, int y2, int localZ) {
+        updateLightBetween(column, localX, y1, y2, localZ);
+    }
 
-    void onTick();
+    void updateLightBetween(Chunk column, int localX, int y1, int y2, int localZ);
 
-    //TODO: make it private
-    void markCubeBlockColumnForUpdate(ICube cube, int blockX, int blockZ);
+    default void onSendCubes(Iterable<? extends ICube> cubes) {
+        processUpdates();
+    }
+
+    void onCubeLoad(ICube cube);
+
+    default void onCubeUnload(ICube cube) {
+        processUpdatesOnAccess();
+    }
+
+    default void onGetLight(EnumSkyBlock type, BlockPos pos) {
+        processUpdatesOnAccess();
+    }
+
+    default void onGetLightSubtracted(BlockPos pos) {
+        processUpdatesOnAccess();
+    }
+
+    void onCreateCubeStorage(ICube cube, ExtendedBlockStorage storage);
+
+    default void onTick() {
+        processUpdates();
+    }
 
     boolean checkLightFor(EnumSkyBlock lightType, BlockPos pos);
+
+    void processUpdates();
+
+    void processUpdatesOnAccess();
+
+    String getId();
+
+    void writeToNbt(ICube cube, NBTTagCompound lightingInfo);
+
+    void readFromNbt(ICube cube, NBTTagCompound lightingInfo);
+
+    Object createLightData(ICube cube);
+
+    boolean hasPendingLightUpdates(ICube cube);
+
+    void onHeightUpdate(BlockPos pos);
+
+    void onTrackCubeSurface(ICube cube);
+
+    void doFirstLight(ICube cube);
 }

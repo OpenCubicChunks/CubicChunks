@@ -29,7 +29,7 @@ import io.github.opencubicchunks.cubicchunks.api.world.IColumn;
 import io.github.opencubicchunks.cubicchunks.core.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.core.asm.mixin.ICubicWorldInternal;
 import io.github.opencubicchunks.cubicchunks.core.client.CubeProviderClient;
-import io.github.opencubicchunks.cubicchunks.core.lighting.LightingManager;
+import io.github.opencubicchunks.cubicchunks.core.lighting.ILightingManager;
 import io.github.opencubicchunks.cubicchunks.core.util.AddressTools;
 import io.github.opencubicchunks.cubicchunks.api.world.IHeightMap;
 import gnu.trove.list.TByteList;
@@ -38,6 +38,7 @@ import gnu.trove.list.array.TByteArrayList;
 import gnu.trove.list.array.TIntArrayList;
 import io.github.opencubicchunks.cubicchunks.core.world.ClientHeightMap;
 import io.netty.buffer.ByteBuf;
+import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.World;
@@ -47,8 +48,12 @@ import net.minecraftforge.fml.common.network.ByteBufUtils;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 
-import javax.annotation.Nullable;
+import java.util.BitSet;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@MethodsReturnNonnullByDefault
+@ParametersAreNonnullByDefault
 public class PacketHeightMapUpdate implements IMessage {
 
     private ChunkPos chunk;
@@ -58,17 +63,13 @@ public class PacketHeightMapUpdate implements IMessage {
     public PacketHeightMapUpdate() {
     }
 
-    public PacketHeightMapUpdate(ChunkPos chunk, TByteList updates, IHeightMap heightMap) {
+    public PacketHeightMapUpdate(ChunkPos chunk, BitSet updates, IHeightMap heightMap) {
         this.chunk = chunk;
         this.updates = new TByteArrayList();
         this.heights = new TIntArrayList();
-        for (int i = 0; i < updates.size(); i++) {
-            byte pos = updates.get(i);
-            if (this.updates.contains(pos)) {
-                continue;
-            }
-            this.updates.add(pos);
-            this.heights.add(heightMap.getTopBlockY(AddressTools.getLocalX(pos), AddressTools.getLocalZ(pos)));
+        for (int i = updates.nextSetBit(0); i >= 0; i = updates.nextSetBit(i + 1)) {
+            this.updates.add((byte) i);
+            this.heights.add(heightMap.getTopBlockY(AddressTools.getLocalX(i), AddressTools.getLocalZ(i)));
         }
     }
 
@@ -113,7 +114,7 @@ public class PacketHeightMapUpdate implements IMessage {
 
     public static class Handler extends AbstractClientMessageHandler<PacketHeightMapUpdate> {
 
-        @Nullable @Override
+        @Override
         public void handleClientMessage(World world, EntityPlayer player, PacketHeightMapUpdate message, MessageContext ctx) {
             ICubicWorldInternal.Client worldClient = (ICubicWorldInternal.Client) world;
             CubeProviderClient cubeCache = worldClient.getCubeCache();
@@ -128,7 +129,7 @@ public class PacketHeightMapUpdate implements IMessage {
             }
 
             ClientHeightMap index = (ClientHeightMap) ((IColumn) column).getOpacityIndex();
-            LightingManager lm = worldClient.getLightingManager();
+            ILightingManager lm = worldClient.getLightingManager();
 
             int size = message.getUpdates().size();
 
@@ -140,9 +141,7 @@ public class PacketHeightMapUpdate implements IMessage {
 
                 int oldHeight = index.getTopBlockY(x, z);
                 index.setHeight(x, z, height);
-                // Disable due to huge client side performance loss on accepting freshly generated cubes light updates.
-                // More info at  https://github.com/OpenCubicChunks/CubicChunks/pull/328
-                //lm.onHeightMapUpdate(column, x, z, oldHeight, height);
+                lm.updateLightBetween(column, x, oldHeight, height, z);
             }
         }
     }

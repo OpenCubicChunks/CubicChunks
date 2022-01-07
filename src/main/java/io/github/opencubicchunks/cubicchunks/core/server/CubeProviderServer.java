@@ -550,25 +550,7 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
      * @param cube The cube to light up
      */
     private void calculateDiffuseSkylight(Cube cube) {
-        if (LightingManager.NO_SUNLIGHT_PROPAGATION) {
-            cube.setInitialLightingDone(true);
-            return;
-        }
-        int cubeX = cube.getX();
-        int cubeY = cube.getY();
-        int cubeZ = cube.getZ();
-
-        // TODO: remove this loop; Does it break anything?
-        for (int x = -1; x <= 1; x++) {
-            for (int z = -1; z <= 1; z++) {
-                for (int y = 1; y >= -1; y--) {
-                    if (x != 0 || y != 0 || z != 0) {
-                        getCube(x + cubeX, y + cubeY, z + cubeZ);
-                    }
-                }
-            }
-        }
-        ((ICubicWorldInternal.Server) this.worldServer).getFirstLightProcessor().diffuseSkylight(cube);
+        ((ICubicWorldInternal) this.worldServer).getLightingManager().doFirstLight(cube);
         cube.setInitialLightingDone(true);
     }
 

@@ -77,7 +77,7 @@ public interface ICubicWorldInternal extends ICubicWorld {
      *
      * @return lighting manager instance for this world
      */
-    LightingManager getLightingManager();
+    ILightingManager getLightingManager();
 
     @Override
     Cube getCubeFromCubeCoords(int cubeX, int cubeY, int cubeZ);
@@ -117,8 +117,6 @@ public interface ICubicWorldInternal extends ICubicWorld {
 
         @Override
         CubeProviderServer getCubeCache();
-
-        FirstLightProcessor getFirstLightProcessor();
 
         void removeForcedCube(ICube cube);
 

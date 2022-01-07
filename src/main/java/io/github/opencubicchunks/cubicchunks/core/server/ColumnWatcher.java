@@ -24,6 +24,7 @@
  */
 package io.github.opencubicchunks.cubicchunks.core.server;
 
+import java.util.BitSet;
 import java.util.List;
 
 import javax.annotation.Nonnull;
@@ -56,7 +57,7 @@ import net.minecraft.world.chunk.Chunk;
 public class ColumnWatcher extends PlayerChunkMapEntry implements XZAddressable {
 
     @Nonnull private final PlayerCubeMap playerCubeMap;
-    @Nonnull private final TByteList dirtyColumns = new TByteArrayList(64);
+    @Nonnull private final BitSet dirtyColumns = new BitSet(256);
 
     ColumnWatcher(PlayerCubeMap playerCubeMap, ChunkPos pos) {
         super(playerCubeMap, pos.x, pos.z);
@@ -121,7 +122,7 @@ public class ColumnWatcher extends PlayerChunkMapEntry implements XZAddressable 
     // CHECKED: 1.10.2-12.18.1.2092//TODO: remove it, the only different line is sending packet
     @Override
     public void removePlayer(EntityPlayerMP player) {
-        assert this.getChunk() == playerCubeMap.getWorldServer().getChunkProvider().getLoadedChunk(getX(), getZ());
+        assert getChunk() == null || this.getChunk() == playerCubeMap.getWorldServer().getChunkProvider().getLoadedChunk(getX(), getZ());
         if (!self().getPlayerList().contains(player)) {
             return;
         }
@@ -240,7 +241,7 @@ public class ColumnWatcher extends PlayerChunkMapEntry implements XZAddressable 
         if (this.dirtyColumns.isEmpty()) {
             playerCubeMap.addToUpdateEntry(this);
         }
-        this.dirtyColumns.add((byte) AddressTools.getLocalAddress(localX, localZ));
+        this.dirtyColumns.set(AddressTools.getLocalAddress(localX, localZ));
     }
 
     // BetterPortals: keep compatibility

@@ -30,7 +30,6 @@ import static io.github.opencubicchunks.cubicchunks.api.util.Coords.blockToLocal
 import com.google.common.base.Predicate;
 import io.github.opencubicchunks.cubicchunks.api.util.Coords;
 import io.github.opencubicchunks.cubicchunks.api.util.CubePos;
-import io.github.opencubicchunks.cubicchunks.api.world.IColumn;
 import io.github.opencubicchunks.cubicchunks.api.world.ICube;
 import io.github.opencubicchunks.cubicchunks.api.world.ICubicWorld;
 import io.github.opencubicchunks.cubicchunks.api.world.IHeightMap;
@@ -69,6 +68,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Constant;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyConstant;
+import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.Slice;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -124,6 +124,8 @@ public abstract class MixinChunk_Cubes implements IColumnInternal {
 
     @SuppressWarnings({"deprecation", "RedundantSuppression"})
     @Shadow public abstract int getHeightValue(int x, int z);
+
+    @Shadow public abstract int getLightFor(EnumSkyBlock type, BlockPos pos);
 
     @SuppressWarnings("unchecked")
     public <T extends World & ICubicWorldInternal> T getWorld() {
@@ -320,6 +322,25 @@ public abstract class MixinChunk_Cubes implements IColumnInternal {
     //                 relightBlock
     // ==============================================
 
+    /**
+     * Modifies the flag variable so that the code always gets into the branch with Chunk.relightBlock redirected below
+     */
+    @ModifyVariable(
+            method = "setBlockState",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lnet/minecraft/world/chunk/storage/ExtendedBlockStorage;set(IIILnet/minecraft/block/state/IBlockState;)V"
+            ),
+            index = 13,
+            name = "flag"
+    )
+    private boolean setBlockStateInjectGenerateSkylightMapVanilla(boolean generateSkylight) {
+        if (!isColumn) {
+            return generateSkylight;
+        }
+        return false;
+    }
+
     @Inject(method = "setBlockState", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/chunk/Chunk;relightBlock(III)V"),
             locals = LocalCapture.CAPTURE_FAILHARD)
     private void setBlockState_CubicChunks_relightBlockReplace(BlockPos pos, IBlockState state, CallbackInfoReturnable<IBlockState> cir,
@@ -333,6 +354,15 @@ public abstract class MixinChunk_Cubes implements IColumnInternal {
                 getWorld().getLightingManager().doOnBlockSetLightUpdates((Chunk) (Object) this, localX, oldHeightValue, y, localZ);
             }
         }
+    }
+
+    @Redirect(method = "setBlockState", at = @At(value = "INVOKE",
+            target = "Lnet/minecraft/world/chunk/Chunk;getLightFor(Lnet/minecraft/world/EnumSkyBlock;Lnet/minecraft/util/math/BlockPos;)I"))
+    private int setBlockState_CubicChunks_noGetLightFor(Chunk instance, EnumSkyBlock type, BlockPos pos) {
+        if (!isColumn) {
+            return instance.getLightFor(type, pos);
+        }
+        return 0;
     }
     
     // make relightBlock no-op for cubic chunks, handles by injection above
@@ -397,9 +427,10 @@ public abstract class MixinChunk_Cubes implements IColumnInternal {
         if (!isColumn) {
             return;
         }
+        this.dirty = true;
         if (getCube(blockToCube(pos.getY())).isSurfaceTracked()) {
             opacityIndex.onOpacityChange(blockToLocal(pos.getX()), pos.getY(), blockToLocal(pos.getZ()), state.getLightOpacity(world, pos));
-            getWorld().getLightingManager().sendHeightMapUpdate(pos);
+            getWorld().getLightingManager().onHeightUpdate(pos);
         } else {
             stagingHeightMap.onOpacityChange(blockToLocal(pos.getX()), pos.getY(), blockToLocal(pos.getZ()), state.getLightOpacity(world, pos));
         }
@@ -448,6 +479,13 @@ public abstract class MixinChunk_Cubes implements IColumnInternal {
     //                 getLightFor
     // ==============================================
 
+    @Inject(method = "getLightFor", at = @At("HEAD"), cancellable = true)
+    private void replacedGetLightForCC(EnumSkyBlock type, BlockPos pos, CallbackInfoReturnable<Integer> cir) {
+        ((ICubicWorldInternal) world).getLightingManager().onGetLight(type, pos);
+        cir.setReturnValue(((Cube) getCube(blockToCube(pos.getY()))).getCachedLightFor(type, pos));
+    }
+
+    @Nullable
     @Redirect(method = "getLightFor", at = @At(
             value = "FIELD",
             target = "Lnet/minecraft/world/chunk/Chunk;storageArrays:[Lnet/minecraft/world/chunk/storage/ExtendedBlockStorage;",
@@ -458,6 +496,19 @@ public abstract class MixinChunk_Cubes implements IColumnInternal {
     }
 
     // ==============================================
+    //               LIGHTING HOOKS
+    // ==============================================
+
+    @Inject(method = "getLightSubtracted", at = @At("HEAD"))
+    private void onGetLightSubtracted(BlockPos pos, int amount, CallbackInfoReturnable<Integer> cir) {
+        if (!isColumn) {
+            return;
+        }
+        getWorld().getLightingManager().onGetLightSubtracted(pos);
+    }
+
+
+    // ==============================================
     //                 setLightFor
     // ==============================================
 
@@ -466,6 +517,7 @@ public abstract class MixinChunk_Cubes implements IColumnInternal {
             target = "Lnet/minecraft/world/chunk/Chunk;storageArrays:[Lnet/minecraft/world/chunk/storage/ExtendedBlockStorage;",
             args = "array=get"
     ))
+    @Nullable
     private ExtendedBlockStorage setLightFor_CubicChunks_EBSGetRedirect(ExtendedBlockStorage[] array, int index) {
         return getEBS_CubicChunks(index);
     }
@@ -478,7 +530,7 @@ public abstract class MixinChunk_Cubes implements IColumnInternal {
     private void setLightFor_CubicChunks_EBSSetRedirect(ExtendedBlockStorage[] array, int index, ExtendedBlockStorage ebs) {
         setEBS_CubicChunks(index, ebs);
     }
-    
+
     @Redirect(method = "setLightFor", at = @At(value = "FIELD", target = "Lnet/minecraft/world/chunk/Chunk;dirty:Z"))
     private void setIsModifiedFromSetLightFor_Field(Chunk chunk, boolean isModifiedIn, EnumSkyBlock type, BlockPos pos, int value) {
         if (isColumn) {
@@ -492,6 +544,7 @@ public abstract class MixinChunk_Cubes implements IColumnInternal {
     //             getLightSubtracted
     // ==============================================
 
+    @Nullable
     @Redirect(method = "getLightSubtracted", at = @At(
             value = "FIELD",
             target = "Lnet/minecraft/world/chunk/Chunk;storageArrays:[Lnet/minecraft/world/chunk/storage/ExtendedBlockStorage;",
@@ -846,7 +899,7 @@ public abstract class MixinChunk_Cubes implements IColumnInternal {
     @Inject(method = "checkLight()V", at = @At(value = "HEAD"), cancellable = true)
     private void checkLight_CubicChunks_NotSupported(CallbackInfo cbi) {
         if (isColumn) {
-            // todo: checkLight
+            // we use FirstLightProcessor instead
             cbi.cancel();
         }
     }
@@ -880,7 +933,7 @@ public abstract class MixinChunk_Cubes implements IColumnInternal {
             return;
         }
         cbi.cancel();
-        if (!world.isRemote || CubicChunksConfig.doClientLightFixes) {
+        if (CubicChunksConfig.relightChecksPerTickPerColumn > 0 && (!world.isRemote || CubicChunksConfig.doClientLightFixes)) {
             cubeMap.enqueueRelightChecks();
         }
     }

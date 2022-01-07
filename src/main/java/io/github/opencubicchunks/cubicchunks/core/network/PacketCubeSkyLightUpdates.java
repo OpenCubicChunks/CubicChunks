@@ -30,10 +30,10 @@ import gnu.trove.list.TShortList;
 import io.github.opencubicchunks.cubicchunks.api.util.Bits;
 import io.github.opencubicchunks.cubicchunks.api.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.core.client.CubeProviderClient;
-import io.github.opencubicchunks.cubicchunks.core.lighting.LightingManager;
 import io.github.opencubicchunks.cubicchunks.core.util.AddressTools;
 import io.github.opencubicchunks.cubicchunks.core.world.cube.Cube;
 import io.netty.buffer.ByteBuf;
+import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.world.World;
@@ -47,7 +47,11 @@ import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 import java.util.Arrays;
 
 import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
 
+// this class exists only for network compatibility with older servers
+@MethodsReturnNonnullByDefault
+@ParametersAreNonnullByDefault
 public class PacketCubeSkyLightUpdates implements IMessage {
 
     private CubePos cube;
@@ -125,7 +129,7 @@ public class PacketCubeSkyLightUpdates implements IMessage {
         return isFullRelight;
     }
 
-    byte[] getData() {
+    @Nullable byte[] getData() {
         return data;
     }
 
@@ -135,7 +139,7 @@ public class PacketCubeSkyLightUpdates implements IMessage {
 
     public static class Handler extends AbstractClientMessageHandler<PacketCubeSkyLightUpdates> {
 
-        @Nullable @Override
+        @Override
         public void handleClientMessage(World world, EntityPlayer player, PacketCubeSkyLightUpdates message, MessageContext ctx) {
             WorldClient worldClient = (WorldClient) world;
             CubeProviderClient cubeCache = (CubeProviderClient) worldClient.getChunkProvider();
@@ -161,10 +165,6 @@ public class PacketCubeSkyLightUpdates implements IMessage {
                     storage.setSkyLight(Bits.unpackUnsigned(packed1, 4, 0), Bits.unpackUnsigned(packed1, 4, 4),
                         Bits.unpackUnsigned(packed2, 4, 0), Bits.unpackUnsigned(packed2, 4, 4));
                 }
-            }
-            LightingManager.CubeLightUpdateInfo info = cube.getCubeLightUpdateInfo();
-            if (info != null) {
-                info.clear();
             }
             cube.markForRenderUpdate();
         }

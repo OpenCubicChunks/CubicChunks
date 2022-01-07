@@ -109,7 +109,7 @@ public class CubicChunksConfig {
     @Config.Comment("In an attempt to fix lighting glitches over time, cubic chunks will keep updating light in specified amount of blocks per "
             + "column (chunk) per tick. Default value of 1 doesn't cause noticeable performance drop, but still fixes most major issues relatively "
             + "quickly.")
-    public static int relightChecksPerTickPerColumn = 1;
+    public static int relightChecksPerTickPerColumn = 0;
 
     @Config.LangKey("cubicchunks.config.do_client_light_fixes")
     @Config.Comment("By default cubic chunks will attempt to go over all the blocks over time to fix lighting only on server. Enable this to also "
@@ -167,16 +167,6 @@ public class CubicChunksConfig {
     @Config.RangeInt(min = 16, max = CubicChunks.MAX_SUPPORTED_BLOCK_Y)
     public static int defaultMaxHeight = 1 << 30;
 
-    @Config.LangKey("cubicchunks.config.replace_light_recheck")
-    @Config.Comment("Replaces vanilla light check code with cubic chunks code for cubic chunks worlds.\n"
-            + "Cubic chunks version keeps track of light changes on the server and sends them to client\n"
-            + "and handles the edge of the world by scheduling chunk edge updates instead of failing.")
-    public static boolean replaceLightRecheck = false;
-
-    @Config.LangKey("cubicchunks.config.update_known_broken_lighting_on_load")
-    @Config.Comment("Attempts to detect worlds saved with cubic chunks versions with lighting glitches, and fix them on world load.")
-    public static boolean updateKnownBrokenLightingOnLoad = true;
-
     @Config.LangKey("cubicchunks.config.worldgen_watchdog_time_limit")
     @Config.Comment("Maximum amount of time (milliseconds) generating a single chunk can take in vanilla compatibility generator before forcing a "
             + "crash.")
@@ -187,11 +177,6 @@ public class CubicChunksConfig {
             + "THIS IS INTENDED FOR VANILLA CLIENTS. "
             + "This is VERY likely to break when used with other mods")
     public static boolean allowVanillaClients = false;
-
-    @Config.LangKey("cubicchunks.config.fast_simplified_sky_light")
-    @Config.Comment("Forces an MC-classic-like skylight propagation algorithm. It's much faster and doesn't look too bad. "
-            + "You can enable it if you don't need normal skylight values but want extra performance for worldgen and block updates")
-    public static boolean fastSimplifiedSkyLight = false;
 
     @Config.LangKey("cubicchunks.config.cubes_to_send_per_tick")
     @Config.Comment("Max amount of cubes sent to client per tick to players")

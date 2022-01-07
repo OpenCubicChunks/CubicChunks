@@ -102,7 +102,7 @@ public abstract class MixinWorld implements ICubicWorldInternal {
 
     @Shadow protected abstract boolean isChunkLoaded(int i, int i1, boolean allowEmpty);
 
-    @Nullable private LightingManager lightingManager;
+    @Nullable protected LightingManager lightingManager;
     protected boolean isCubicWorld;
     protected int minHeight = 0, maxHeight = 256, fakedMaxHeight = 0;
     private int minGenerationHeight = 0, maxGenerationHeight = 256;
@@ -152,9 +152,6 @@ public abstract class MixinWorld implements ICubicWorldInternal {
 
         this.minGenerationHeight = generationRange.getMin();
         this.maxGenerationHeight = generationRange.getMax();
-
-        //has to be created early so that creating BlankCube won't crash
-        this.lightingManager = new LightingManager((World) (Object) this);
     }
 
     @Override public boolean isCubicWorld() {
@@ -257,21 +254,7 @@ public abstract class MixinWorld implements ICubicWorldInternal {
 
     @Inject(method = "checkLightFor", at = @At("HEAD"), cancellable = true)
     public void checkLightFor(EnumSkyBlock lightType, BlockPos pos, CallbackInfoReturnable<Boolean> ci) {
-        if (CubicChunksConfig.fastSimplifiedSkyLight && lightType == EnumSkyBlock.SKY) {
-            if (!isAreaLoaded(pos, 1)) {
-                ci.setReturnValue(false);
-                return;
-            }
-            int max = canSeeSky(pos) ? 15 : 0;
-            int opacity = getBlockState(pos).getLightOpacity((World) (Object) this, pos);
-            for (EnumFacing value : EnumFacing.VALUES) {
-                max = Math.max(max, (canSeeSky(pos.offset(value)) ? 15 : 0) - Math.max(1, opacity) * 4);
-            }
-            setLightFor(EnumSkyBlock.SKY, pos, Math.max(7, max));
-            ci.setReturnValue(true);
-            return;
-        }
-        if (!CubicChunksConfig.replaceLightRecheck || !isCubicWorld()) {
+        if (!isCubicWorld()) {
             return;
         }
         ci.setReturnValue(getLightingManager().checkLightFor(lightType, pos));
