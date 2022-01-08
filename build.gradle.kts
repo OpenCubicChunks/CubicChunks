@@ -244,6 +244,7 @@ license {
     exclude("**/*.xml")
     exclude("assets/*")
     exclude("io/github/opencubicchunks/cubicchunks/core/server/chunkio/async/forge/*") // Taken from forge
+    exclude("io/github/opencubicchunks/cubicchunks/core/lighting/phosphor/*") // Taken from Phosphor
     exclude("net/optifine/**/*")
     header = file("HEADER.txt")
     ignoreFailures = false

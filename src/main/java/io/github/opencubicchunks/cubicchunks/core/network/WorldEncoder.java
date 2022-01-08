@@ -25,6 +25,9 @@
 package io.github.opencubicchunks.cubicchunks.core.network;
 
 import io.github.opencubicchunks.cubicchunks.api.util.Coords;
+import io.github.opencubicchunks.cubicchunks.core.asm.mixin.ICubicWorldInternal;
+import io.github.opencubicchunks.cubicchunks.core.lighting.ILightingManager;
+import io.github.opencubicchunks.cubicchunks.core.util.AddressTools;
 import io.github.opencubicchunks.cubicchunks.core.world.ClientHeightMap;
 import io.github.opencubicchunks.cubicchunks.core.world.ServerHeightMap;
 import io.github.opencubicchunks.cubicchunks.core.world.cube.Cube;
@@ -161,15 +164,30 @@ class WorldEncoder {
             }
         }
 
+        int[] oldHeights = new int[Cube.SIZE * Cube.SIZE];
         // 5. heightmaps and after all that - update ref counts
         for (int i = 0; i < cubes.size(); i++) {
             if (!isEmpty[i]) {
                 Cube cube = cubes.get(i);
+                ILightingManager lm = ((ICubicWorldInternal) cube.getWorld()).getLightingManager();
                 byte[] heightmaps = new byte[Cube.SIZE * Cube.SIZE * Integer.BYTES];
                 in.readBytes(heightmaps);
                 ClientHeightMap coi = ((ClientHeightMap) cube.getColumn().getOpacityIndex());
+                for (int dx = 0; dx < Cube.SIZE; dx++) {
+                    for (int dz = 0; dz < Cube.SIZE; dz++) {
+                        oldHeights[AddressTools.getLocalAddress(dx, dz)] = coi.getTopBlockY(dx, dz);
+                    }
+                }
                 coi.setData(heightmaps);
-
+                for (int dx = 0; dx < Cube.SIZE; dx++) {
+                    for (int dz = 0; dz < Cube.SIZE; dz++) {
+                        int oldY = oldHeights[AddressTools.getLocalAddress(dx, dz)];
+                        int newY = coi.getTopBlockY(dx, dz);
+                        if (oldY != newY) {
+                            lm.updateLightBetween(cube.getColumn(), dx, oldY, newY, dz);
+                        }
+                    }
+                }
                 //noinspection ConstantConditions
                 cube.getStorage().recalculateRefCounts();
             }

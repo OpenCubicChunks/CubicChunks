@@ -133,6 +133,7 @@ public class CubeProviderClient extends ChunkProviderClient implements ICubeProv
         cube = new Cube(column, pos.getY()); // auto added to column
         ((IColumn) column).addCube(cube);
         this.cubeMap.put(cube);
+        world.getLightingManager().onCubeLoad(cube);
         EVENT_BUS.post(new CubeEvent.Load(cube));
         cube.setCubeLoaded();
         return cube;

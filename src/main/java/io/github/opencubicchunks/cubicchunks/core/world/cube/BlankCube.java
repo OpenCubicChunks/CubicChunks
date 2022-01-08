@@ -24,8 +24,6 @@
  */
 package io.github.opencubicchunks.cubicchunks.core.world.cube;
 
-import io.github.opencubicchunks.cubicchunks.core.lighting.LightingManager;
-import io.github.opencubicchunks.cubicchunks.core.lighting.LightingManager;
 import io.github.opencubicchunks.cubicchunks.api.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.core.util.ticket.TicketList;
 import io.github.opencubicchunks.cubicchunks.core.world.BlankEntityContainer;
@@ -53,12 +51,7 @@ public class BlankCube extends Cube {
 
     public BlankCube(Chunk column) {
         super(new TicketList(null), column.getWorld(), column, new CubePos(0, 0, 0),
-                Cube.NULL_STORAGE, new BlankEntityContainer(), new HashMap<>(), new ConcurrentLinkedQueue<>(),
-                new LightingManager.CubeLightUpdateInfo(null, null) {
-                    @Override
-                    public void tick() {
-                    }
-                });
+                null, new BlankEntityContainer(), new HashMap<>(), new ConcurrentLinkedQueue<>(), null);
     }
 
     @Override

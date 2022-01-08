@@ -40,7 +40,7 @@ import io.github.opencubicchunks.cubicchunks.api.world.ICubicWorldServer;
 import io.github.opencubicchunks.cubicchunks.api.worldgen.ICubeGenerator;
 import io.github.opencubicchunks.cubicchunks.core.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.core.asm.mixin.ICubicWorldInternal;
-import io.github.opencubicchunks.cubicchunks.core.lighting.FirstLightProcessor;
+import io.github.opencubicchunks.cubicchunks.core.lighting.LightingManager;
 import io.github.opencubicchunks.cubicchunks.core.server.ChunkGc;
 import io.github.opencubicchunks.cubicchunks.core.server.CubeProviderServer;
 import io.github.opencubicchunks.cubicchunks.core.server.PlayerCubeMap;
@@ -126,8 +126,6 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
 
     @Shadow public abstract PlayerChunkMap getPlayerChunkMap();
 
-    @Nullable private FirstLightProcessor firstLightProcessor;
-
     @Override public void initCubicWorldServer(IntRange heightRange, IntRange generationRange) {
         super.initCubicWorld(heightRange, generationRange);
         this.isCubicWorld = true;
@@ -141,8 +139,6 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
         this.vanillaNetworkHandler = new VanillaNetworkHandler((WorldServer) (Object) this);
         this.playerChunkMap = new PlayerCubeMap((WorldServer) (Object) this);
 
-        this.firstLightProcessor = new FirstLightProcessor((WorldServer) (Object) this);
-
         this.forcedChunksCubes = new HashMap<>();
         this.forcedCubes = new XYZMap<>(0.75f, 64*1024);
         this.forcedColumns = new XZMap<>(0.75f, 2048);
@@ -150,6 +146,8 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
         this.pendingTickListEntriesHashSet = new CubeSplitTickSet();
         this.pendingTickListEntriesThisTick = new CubeSplitTickList();
         this.worldChunkGc = new ChunkGc(getCubeCache());
+
+        this.lightingManager = new LightingManager((World) (Object) this);
     }
 
     @Override public VanillaNetworkHandler getVanillaNetworkHandler() {
@@ -193,13 +191,6 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
         return getCubeCache().getCubeGenerator();
     }
 
-    @Override public FirstLightProcessor getFirstLightProcessor() {
-        if (!this.isCubicWorld()) {
-            throw new NotCubicChunksWorldException();
-        }
-        assert this.firstLightProcessor != null;
-        return this.firstLightProcessor;
-    }
     
     @Override public void removeForcedCube(ICube cube) {
         if (!forcedChunksCubes.get(cube.getColumn()).remove(cube)) {

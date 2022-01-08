@@ -30,6 +30,7 @@ import io.github.opencubicchunks.cubicchunks.api.world.IHeightMap;
 import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.BitSet;
 import java.util.Comparator;
 import java.util.List;
@@ -39,6 +40,10 @@ public class StagingHeightMap implements IHeightMap {
     private final List<ICube> stagedCubes = new ArrayList<>();
     private final int[] heightmap = new int[ICube.SIZE * ICube.SIZE];
     private final BitSet dirtyFlag = new BitSet(heightmap.length);
+
+    public StagingHeightMap() {
+        Arrays.fill(heightmap, Coords.NO_HEIGHT);
+    }
 
     public void addStagedCube(ICube cube) {
         stagedCubes.add(cube);

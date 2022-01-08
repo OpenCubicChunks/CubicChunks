@@ -93,7 +93,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
  */
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHeightChangeListener {
+public class PlayerCubeMap extends PlayerChunkMap {
 
     private static final Predicate<EntityPlayerMP> NOT_SPECTATOR = player -> player != null && !player.isSpectator();
     private static final Predicate<EntityPlayerMP> CAN_GENERATE_CHUNKS = player -> player != null &&
@@ -226,7 +226,6 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
         this.cubeCache = ((ICubicWorldInternal.Server) worldServer).getCubeCache();
         this.setPlayerViewDistance(worldServer.getMinecraftServer().getPlayerList().getViewDistance(),
                 ((ICubicPlayerList) worldServer.getMinecraftServer().getPlayerList()).getVerticalViewDistance());
-        ((ICubicWorldInternal) worldServer).getLightingManager().registerHeightChangeListener(this);
         this.chunkGc = new ChunkGc(((ICubicWorldInternal.Server) worldServer).getCubeCache());
         this.vanillaNetworkHandler = ((ICubicWorldInternal.Server) worldServer).getVanillaNetworkHandler();
     }
@@ -390,7 +389,7 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
                 if (watcher.isWaitingForColumn()) {
                     continue;
                 }
-                boolean success = !watcher.isWaitingForCube() && !watcher.isWaitingForLighting();
+                boolean success = !watcher.isWaitingForCube();
                 boolean alreadyLoaded = success;
                 if (!success) {
                     boolean canGenerate = watcher.hasPlayerMatching(CAN_GENERATE_CHUNKS);
@@ -444,10 +443,6 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
                 if (state == CubeWatcher.SendToPlayersResult.ALREADY_DONE || state == CubeWatcher.SendToPlayersResult.CUBE_SENT) {
                     it.remove();
                     --toSend;
-                } else if (state == CubeWatcher.SendToPlayersResult.WAITING_LIGHT) {
-                    if (!cubesToGenerate.contains(playerInstance)) {
-                        cubesToGenerate.appendToStart(playerInstance);
-                    }
                 }
             }
             getWorldServer().profiler.endSection(); // cubes
@@ -465,7 +460,7 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
                     watcher.addPlayer(entityPlayerMP);
                     changed = true;
                     CubeWatcher.SendToPlayersResult state = watcher.sendToPlayers();
-                    if (state == CubeWatcher.SendToPlayersResult.WAITING_LIGHT || state == CubeWatcher.SendToPlayersResult.WAITING) {
+                    if (state == CubeWatcher.SendToPlayersResult.WAITING) {
                         if (!cubesToGenerate.contains(watcher)) {
                             cubesToGenerate.appendToStart(watcher);
                         }
@@ -501,6 +496,7 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
                             " chunks to player " + player.getName() + " that is no longer in this world!");
                     continue;
                 }
+                ((ICubicWorldInternal) getWorldServer()).getLightingManager().onSendCubes(cubes);
                 if (vanillaNetworkHandler.hasCubicChunks(player)) {
                     PacketCubes packet = new PacketCubes(new ArrayList<>(cubes));
                     PacketDispatcher.sendTo(packet, player);
@@ -547,7 +543,7 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
             this.cubeWatchers.put(cubeWatcher);
 
 
-            if (cubeWatcher.isWaitingForColumn() || cubeWatcher.isWaitingForCube() || cubeWatcher.isWaitingForLighting()) {
+            if (cubeWatcher.isWaitingForColumn() || cubeWatcher.isWaitingForCube()) {
                 this.cubesToGenerate.appendToEnd(cubeWatcher);
             }
             // vanilla has the below check, which causes the cubes to be sent to client too early and sometimes in too big amounts
@@ -593,7 +589,6 @@ public class PlayerCubeMap extends PlayerChunkMap implements LightingManager.IHe
         }
     }
 
-    @Override
     public void heightUpdated(int blockX, int blockZ) {
         ColumnWatcher columnWatcher = this.columnWatchers.get(blockToCube(blockX), blockToCube(blockZ));
         if (columnWatcher != null) {

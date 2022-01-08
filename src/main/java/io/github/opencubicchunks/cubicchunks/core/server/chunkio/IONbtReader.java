@@ -28,8 +28,8 @@ import io.github.opencubicchunks.cubicchunks.api.util.Coords;
 import io.github.opencubicchunks.cubicchunks.api.world.IColumn;
 import io.github.opencubicchunks.cubicchunks.api.world.IHeightMap;
 import io.github.opencubicchunks.cubicchunks.core.CubicChunks;
-import io.github.opencubicchunks.cubicchunks.core.CubicChunksConfig;
-import io.github.opencubicchunks.cubicchunks.core.lighting.LightingManager;
+import io.github.opencubicchunks.cubicchunks.core.asm.mixin.ICubicWorldInternal;
+import io.github.opencubicchunks.cubicchunks.core.lighting.ILightingManager;
 import io.github.opencubicchunks.cubicchunks.core.world.ClientHeightMap;
 import io.github.opencubicchunks.cubicchunks.core.world.ServerHeightMap;
 import io.github.opencubicchunks.cubicchunks.core.world.cube.Cube;
@@ -170,11 +170,6 @@ public class IONbtReader {
         cube.setSurfaceTracked(nbt.getBoolean("isSurfaceTracked")); // previous versions will get their surface tracking redone. This is intended
         cube.setFullyPopulated(nbt.getBoolean("fullyPopulated"));
 
-        int lightVersion = nbt.getInteger("initLightVersion");
-        cube.setInitialLightingDone(
-                (!CubicChunksConfig.updateKnownBrokenLightingOnLoad || lightVersion >= 1)
-                && nbt.getBoolean("initLightDone"));
-
         if (cube.getCapabilities() != null && nbt.hasKey("ForgeCaps")) {
             cube.getCapabilities().deserializeNBT(nbt.getCompoundTag("ForgeCaps"));
         }
@@ -284,20 +279,16 @@ public class IONbtReader {
     }
 
     private static void readLightingInfo(Cube cube, NBTTagCompound nbt, World world) {
-        NBTTagCompound lightingInfo = nbt.getCompoundTag("LightingInfo");
-        int[] lastHeightMap = lightingInfo.getIntArray("LastHeightMap"); // NO NO NO! TODO: Why is hightmap being stored in Cube's data?! kill it!
-        byte edgeNeedSkyLightUpdate = 0x3F;
-        if (lightingInfo.hasKey("EdgeNeedSkyLightUpdate"))
-            edgeNeedSkyLightUpdate = lightingInfo.getByte("EdgeNeedSkyLightUpdate");
-        LightingManager.CubeLightUpdateInfo cubeLightUpdateInfo = cube.getCubeLightUpdateInfo();
-        if (cubeLightUpdateInfo != null) {
-            for (int i = 0; i < EnumFacing.VALUES.length; i++) {
-                if ((edgeNeedSkyLightUpdate >>> i & 1) != 0) {
-                    cubeLightUpdateInfo.markEdgeNeedSkyLightUpdate(EnumFacing.VALUES[i]);
-                }
-            }
+        ILightingManager lightingManager = ((ICubicWorldInternal) cube.getWorld()).getLightingManager();
+        String id = lightingManager.getId();
+        String savedId = nbt.getString("LightingInfoType");
+        if (!id.equals(savedId)) {
+            cube.setInitialLightingDone(false);
+            lightingManager.readFromNbt(cube, new NBTTagCompound());
+            return;
         }
-        cube.getCubeLightUpdateInfo().lastHeightMap = lastHeightMap;
+        NBTTagCompound lightingInfo = nbt.getCompoundTag("LightingInfo");
+        lightingManager.readFromNbt(cube, lightingInfo);
     }
 
     private static void readBiomes(Cube cube, NBTTagCompound nbt) {// biomes

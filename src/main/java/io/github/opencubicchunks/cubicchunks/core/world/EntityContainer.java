@@ -91,7 +91,7 @@ public class EntityContainer {
 
     public boolean needsSaving(boolean flag, long time, boolean isModified) {
         if (flag) {
-            if (this.hasActiveEntities && time != lastSaveTime || isModified) {
+            if ((this.hasActiveEntities && time != lastSaveTime) || isModified) {
                 return true;
             }
         } else if (this.hasActiveEntities && time >= this.lastSaveTime + 600) {

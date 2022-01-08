@@ -51,7 +51,7 @@ class SkyLightUpdateCubeSelector {
     }
 
     /**
-     * Returns Set of cube Y locations that can be updated for give light update.
+     * Returns Set of cube Y locations that can be updated for given light update.
      *
      * @param column Column to select cubes from
      * @param localX in-column X position

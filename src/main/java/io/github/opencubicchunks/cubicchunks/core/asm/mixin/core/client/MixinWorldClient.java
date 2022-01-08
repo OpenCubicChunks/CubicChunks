@@ -26,13 +26,13 @@ package io.github.opencubicchunks.cubicchunks.core.asm.mixin.core.client;
 
 import io.github.opencubicchunks.cubicchunks.core.asm.mixin.core.common.MixinWorld;
 import io.github.opencubicchunks.cubicchunks.core.client.CubeProviderClient;
-import io.github.opencubicchunks.cubicchunks.core.asm.mixin.core.common.MixinWorld;
-import io.github.opencubicchunks.cubicchunks.core.client.CubeProviderClient;
 import io.github.opencubicchunks.cubicchunks.api.util.IntRange;
 import io.github.opencubicchunks.cubicchunks.core.asm.mixin.ICubicWorldInternal;
+import io.github.opencubicchunks.cubicchunks.core.lighting.LightingManager;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.client.multiplayer.ChunkProviderClient;
 import net.minecraft.client.multiplayer.WorldClient;
+import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Implements;
 import org.spongepowered.asm.mixin.Interface;
 import org.spongepowered.asm.mixin.Mixin;
@@ -54,6 +54,7 @@ public abstract class MixinWorldClient extends MixinWorld implements ICubicWorld
         CubeProviderClient cubeProviderClient = new CubeProviderClient(this);
         this.chunkProvider = cubeProviderClient;
         this.clientChunkProvider = cubeProviderClient;
+        this.lightingManager = new LightingManager((World) (Object) this);
     }
 
     @Override public void tickCubicWorld() {

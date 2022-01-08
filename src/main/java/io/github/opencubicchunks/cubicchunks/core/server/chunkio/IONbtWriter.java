@@ -30,7 +30,7 @@ import io.github.opencubicchunks.cubicchunks.api.world.IColumn;
 import io.github.opencubicchunks.cubicchunks.api.world.IHeightMap;
 import io.github.opencubicchunks.cubicchunks.core.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.core.asm.mixin.ICubicWorldInternal;
-import io.github.opencubicchunks.cubicchunks.core.lighting.LightingManager;
+import io.github.opencubicchunks.cubicchunks.core.lighting.ILightingManager;
 import io.github.opencubicchunks.cubicchunks.core.world.ClientHeightMap;
 import io.github.opencubicchunks.cubicchunks.core.world.ServerHeightMap;
 import io.github.opencubicchunks.cubicchunks.core.world.cube.Cube;
@@ -40,7 +40,6 @@ import net.minecraft.nbt.CompressedStreamTools;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.NextTickListEntry;
 import net.minecraft.world.WorldServer;
@@ -143,8 +142,6 @@ class IONbtWriter {
         cubeNbt.setBoolean("isSurfaceTracked", cube.isSurfaceTracked());
         cubeNbt.setBoolean("fullyPopulated", cube.isFullyPopulated());
 
-        // this will allow to detect worlds with older versions of light propagation in CC
-        cubeNbt.setInteger("initLightVersion", 1);
         cubeNbt.setBoolean("initLightDone", cube.isInitialLightingDone());
 
         if (cube.getCapabilities() != null) {
@@ -263,19 +260,11 @@ class IONbtWriter {
     }
 
     private static void writeLightingInfo(Cube cube, NBTTagCompound cubeNbt) {
+        ILightingManager lightingManager = ((ICubicWorldInternal) cube.getWorld()).getLightingManager();
+        cubeNbt.setString("LightingInfoType", lightingManager.getId());
         NBTTagCompound lightingInfo = new NBTTagCompound();
         cubeNbt.setTag("LightingInfo", lightingInfo);
-
-        int[] lastHeightmap = cube.getColumn().getHeightMap();
-        lightingInfo.setIntArray("LastHeightMap", lastHeightmap); //TODO: why are we storing the height map on a Cube???
-        byte edgeNeedSkyLightUpdate = 0;
-        LightingManager.CubeLightUpdateInfo cubeLightUpdateInfo = cube.getCubeLightUpdateInfo();
-        if (cubeLightUpdateInfo != null) {
-            for (EnumFacing enumFacing : cubeLightUpdateInfo.edgeNeedSkyLightUpdate) {
-                edgeNeedSkyLightUpdate |= 1 << enumFacing.ordinal();
-            }
-        }
-        lightingInfo.setByte("EdgeNeedSkyLightUpdate", edgeNeedSkyLightUpdate);
+        lightingManager.writeToNbt(cube, lightingInfo);
     }
 
     private static void writeModData(Cube cube, NBTTagCompound level) {

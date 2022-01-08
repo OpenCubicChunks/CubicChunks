@@ -13,6 +13,7 @@
     "mixins": [
         "common.forge.MixinForgeChunkManager",
         "common.forge.MixinTicket",
+        "common.IBlockStateContainer",
         "common.IForgeChunkManager",
         "common.IGameRegistry",
         "common.IIntegratedServer",

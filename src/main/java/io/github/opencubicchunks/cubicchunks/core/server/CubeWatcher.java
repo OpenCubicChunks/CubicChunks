@@ -32,10 +32,8 @@ import io.github.opencubicchunks.cubicchunks.api.world.CubeUnWatchEvent;
 import io.github.opencubicchunks.cubicchunks.api.world.ICubeProviderServer;
 import io.github.opencubicchunks.cubicchunks.api.world.ICubeWatcher;
 import io.github.opencubicchunks.cubicchunks.core.CubicChunks;
-import io.github.opencubicchunks.cubicchunks.core.CubicChunksConfig;
 import io.github.opencubicchunks.cubicchunks.core.asm.mixin.ICubicWorldInternal;
 import io.github.opencubicchunks.cubicchunks.core.entity.ICubicEntityTracker;
-import io.github.opencubicchunks.cubicchunks.core.lighting.LightingManager;
 import io.github.opencubicchunks.cubicchunks.core.network.PacketCubeBlockChange;
 import io.github.opencubicchunks.cubicchunks.core.network.PacketDispatcher;
 import io.github.opencubicchunks.cubicchunks.core.network.PacketUnloadCube;
@@ -78,7 +76,6 @@ public class CubeWatcher implements ITicket, ICubeWatcher {
     private boolean sentToPlayers = false;
     private boolean loading = true;
     private boolean invalid = false;
-    private int lightGenerationAttempts = 0;
 
     // CHECKED: 1.10.2-12.18.1.2092
     CubeWatcher(PlayerCubeMap playerCubeMap, CubePos cubePos) {
@@ -167,7 +164,7 @@ public class CubeWatcher implements ITicket, ICubeWatcher {
         if (isWaitingForColumn()) {
             return false;
         }
-        if (this.cube != null && (!canGenerate || (!isWaitingForCube() && !isWaitingForLighting()))) {
+        if (this.cube != null && (!canGenerate || !isWaitingForCube())) {
             return true;
         }
         int cubeX = cubePos.getX();
@@ -192,20 +189,9 @@ public class CubeWatcher implements ITicket, ICubeWatcher {
             this.cube.getTickets().add(this);
         }
         playerCubeMap.getWorldServer().profiler.endStartSection("light");
-        if (this.cube != null) {
-            LightingManager.CubeLightUpdateInfo info = this.cube.getCubeLightUpdateInfo();
-            if (info != null) {
-                info.tick();
-                if (info.hasUpdates()) {
-                    lightGenerationAttempts++;
-                } else {
-                    lightGenerationAttempts = 0;
-                }
-            }
-        }
         playerCubeMap.getWorldServer().profiler.endSection();
 
-        return this.cube != null && !isWaitingForLighting();
+        return this.cube != null;
     }
 
     @Override public boolean isSentToPlayers() {
@@ -214,11 +200,6 @@ public class CubeWatcher implements ITicket, ICubeWatcher {
 
     boolean isWaitingForCube() {
         return this.cube == null || !this.cube.isFullyPopulated() || !this.cube.isInitialLightingDone() || !this.cube.isSurfaceTracked();
-    }
-
-    boolean isWaitingForLighting() {
-        // if lighting couldn't be updated 3 times in a row, give up and consider it done anyway
-        return this.cube == null || (this.cube.hasLightUpdates() && lightGenerationAttempts < 3);
     }
 
     boolean isWaitingForColumn() {
@@ -233,9 +214,6 @@ public class CubeWatcher implements ITicket, ICubeWatcher {
         }
         if (isWaitingForCube()) {
             return SendToPlayersResult.WAITING;
-        }
-        if (isWaitingForLighting()) {
-            return SendToPlayersResult.WAITING_LIGHT;
         }
         //can't send cubes before columns
         if (isWaitingForColumn()) {
@@ -462,6 +440,6 @@ public class CubeWatcher implements ITicket, ICubeWatcher {
     }
 
     public enum SendToPlayersResult {
-        ALREADY_DONE, CUBE_SENT, WAITING, WAITING_LIGHT
+        ALREADY_DONE, CUBE_SENT, WAITING
     }
 }

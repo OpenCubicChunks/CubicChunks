@@ -24,6 +24,13 @@
  */
 package io.github.opencubicchunks.cubicchunks.core.world.cube;
 
+import static io.github.opencubicchunks.cubicchunks.api.util.Coords.blockToCube;
+import static io.github.opencubicchunks.cubicchunks.api.util.Coords.blockToLocal;
+import static io.github.opencubicchunks.cubicchunks.api.util.Coords.cubeToMaxBlock;
+import static io.github.opencubicchunks.cubicchunks.api.util.Coords.cubeToMinBlock;
+import static io.github.opencubicchunks.cubicchunks.api.util.Coords.localToBlock;
+import static net.minecraftforge.common.MinecraftForge.EVENT_BUS;
+
 import io.github.opencubicchunks.cubicchunks.api.util.Coords;
 import io.github.opencubicchunks.cubicchunks.api.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.api.world.CubeEvent;
@@ -35,7 +42,6 @@ import io.github.opencubicchunks.cubicchunks.api.worldgen.CubePrimer;
 import io.github.opencubicchunks.cubicchunks.api.worldgen.ICubeGenerator;
 import io.github.opencubicchunks.cubicchunks.core.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.core.asm.mixin.ICubicWorldInternal;
-import io.github.opencubicchunks.cubicchunks.core.lighting.LightingManager;
 import io.github.opencubicchunks.cubicchunks.core.server.CubeWatcher;
 import io.github.opencubicchunks.cubicchunks.core.server.SpawnCubes;
 import io.github.opencubicchunks.cubicchunks.core.util.AddressTools;
@@ -66,9 +72,6 @@ import net.minecraftforge.common.capabilities.CapabilityDispatcher;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.event.world.ChunkEvent;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
@@ -76,8 +79,9 @@ import java.util.Random;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.function.BooleanSupplier;
 
-import static io.github.opencubicchunks.cubicchunks.api.util.Coords.*;
-import static net.minecraftforge.common.MinecraftForge.EVENT_BUS;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
 
 /**
  * A cube is our extension of minecraft's chunk system to three dimensions. Each cube encloses a cubic area in the world
@@ -152,7 +156,7 @@ public class Cube implements ICube {
     @Nonnull
     private final ConcurrentLinkedQueue<BlockPos> tileEntityPosQueue;
 
-    private final LightingManager.CubeLightUpdateInfo cubeLightUpdateInfo;
+    private final Object cubeLightData;
 
     /**
      * Is this cube loaded and not queued for unload
@@ -202,7 +206,7 @@ public class Cube implements ICube {
         this.tileEntityMap = new HashMap<>();
         this.tileEntityPosQueue = new ConcurrentLinkedQueue<>();
 
-        this.cubeLightUpdateInfo = ((ICubicWorldInternal) world).getLightingManager().createCubeLightUpdateInfo(this);
+        this.cubeLightData = ((ICubicWorldInternal) world).getLightingManager().createLightData(this);
 
         this.storage = NULL_STORAGE;
 
@@ -261,11 +265,10 @@ public class Cube implements ICube {
      * @param entities entity container
      * @param tileEntityMap tile entity storage
      * @param tileEntityPosQueue queue for updating tile entities
-     * @param lightInfo lighting info storage
      */
     protected Cube(TicketList tickets, World world, Chunk column, CubePos coords, ExtendedBlockStorage storage,
                    EntityContainer entities, Map<BlockPos, TileEntity> tileEntityMap,
-                   ConcurrentLinkedQueue<BlockPos> tileEntityPosQueue, LightingManager.CubeLightUpdateInfo lightInfo) {
+                   ConcurrentLinkedQueue<BlockPos> tileEntityPosQueue, Object cubeLightData) {
         this.tickets = tickets;
         this.world = world;
         this.column = column;
@@ -274,7 +277,7 @@ public class Cube implements ICube {
         this.entities = entities;
         this.tileEntityMap = tileEntityMap;
         this.tileEntityPosQueue = tileEntityPosQueue;
-        this.cubeLightUpdateInfo = lightInfo;
+        this.cubeLightData = cubeLightData;
 
         AttachCapabilitiesEvent<ICube> event = new AttachCapabilitiesEvent<>(ICube.class, this);
         MinecraftForge.EVENT_BUS.post(event);
@@ -306,8 +309,24 @@ public class Cube implements ICube {
     }
 
     @Override
-    public int getLightFor(EnumSkyBlock lightType, BlockPos pos) {
-        return column.getLightFor(lightType, pos);
+    public int getLightFor(EnumSkyBlock type, BlockPos pos) {
+        ((ICubicWorldInternal) world).getLightingManager().onGetLight(type, pos);
+        return getCachedLightFor(type, pos);
+    }
+
+    public int getCachedLightFor(EnumSkyBlock type, BlockPos pos) {
+        int x = blockToLocal(pos.getX());
+        int y = blockToLocal(pos.getY());
+        int z = blockToLocal(pos.getZ());
+        ExtendedBlockStorage storage = this.storage;
+
+        if (storage == null) {
+            return ((IColumnInternal) column).getHeightWithStaging(x, z) >= pos.getY() ? type.defaultLightValue : 0;
+        } else if (type == EnumSkyBlock.SKY) {
+            return !this.world.provider.hasSkyLight() ? 0 : storage.getSkyLight(x, y, z);
+        } else {
+            return type == EnumSkyBlock.BLOCK ? storage.getBlockLight(x, y, z) : type.defaultLightValue;
+        }
     }
 
     @Override
@@ -505,7 +524,11 @@ public class Cube implements ICube {
     @Nullable
     public ExtendedBlockStorage setStorage(@Nullable ExtendedBlockStorage ebs) {
         this.isModified = true;
-        return this.storage = ebs;
+        this.storage = ebs;
+        if (ebs != null) {
+            ((ICubicWorldInternal) world).getLightingManager().onCreateCubeStorage(this, ebs);
+        }
+        return ebs;
     }
 
     private void newStorage() {
@@ -563,6 +586,7 @@ public class Cube implements ICube {
         if (!isSurfaceTracked) {
             ((IColumnInternal) getColumn()).addToStagingHeightmap(this);
         }
+        ((ICubicWorldInternal) world).getLightingManager().onCubeLoad(this);
         CompatHandler.onCubeLoad(new ChunkEvent.Load(getColumn()));
         EVENT_BUS.post(new CubeEvent.Load(this));
     }
@@ -585,12 +609,15 @@ public class Cube implements ICube {
         }
         isSurfaceTracked = true;
         ((IColumnInternal) getColumn()).removeFromStagingHeightmap(this);
+        ((ICubicWorldInternal) world).getLightingManager().onTrackCubeSurface(this);
     }
 
     /**
      * Mark this cube as no longer part of this world
      */
     public void onUnload() {
+        ((ICubicWorldInternal) this.world).getLightingManager().onCubeUnload(this);
+
         if (!isCubeLoaded) {
             CubicChunks.LOGGER.error("Attempting to unload already unloaded cube at " + this.getCoords());
             return;
@@ -613,9 +640,6 @@ public class Cube implements ICube {
         // tell the world to forget about tile entities
         for (TileEntity blockEntity : this.tileEntityMap.values()) {
             this.world.markTileEntityForRemoval(blockEntity);
-        }
-        if (cubeLightUpdateInfo != null) {
-            cubeLightUpdateInfo.onUnload();
         }
         ((IColumnInternal) getColumn()).removeFromStagingHeightmap(this);
         EVENT_BUS.post(new CubeEvent.Unload(this));
@@ -657,9 +681,8 @@ public class Cube implements ICube {
         );
     }
 
-    @Nullable
-    public LightingManager.CubeLightUpdateInfo getCubeLightUpdateInfo() {
-        return this.cubeLightUpdateInfo;
+    public Object getCubeLightData() {
+        return this.cubeLightData;
     }
 
     /**
@@ -748,15 +771,7 @@ public class Cube implements ICube {
 
     @Override
     public boolean hasLightUpdates() {
-        LightingManager.CubeLightUpdateInfo info = this.getCubeLightUpdateInfo();
-        return info != null && info.hasUpdates();
-    }
-
-    public void markEdgeNeedSkyLightUpdate(EnumFacing side) {
-        LightingManager.CubeLightUpdateInfo cubeLightUpdateInfo = this.getCubeLightUpdateInfo();
-        if (cubeLightUpdateInfo != null) {
-            cubeLightUpdateInfo.markEdgeNeedSkyLightUpdate(side);
-        }
+        return ((ICubicWorldInternal) world).getLightingManager().hasPendingLightUpdates(this);
     }
 
     public boolean hasBeenTicked() {

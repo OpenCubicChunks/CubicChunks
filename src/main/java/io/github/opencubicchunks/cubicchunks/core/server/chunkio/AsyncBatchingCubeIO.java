@@ -28,6 +28,7 @@ import io.github.opencubicchunks.cubicchunks.api.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.api.world.ICube;
 import io.github.opencubicchunks.cubicchunks.api.world.storage.ICubicStorage;
 import io.github.opencubicchunks.cubicchunks.core.CubicChunks;
+import io.github.opencubicchunks.cubicchunks.core.asm.mixin.ICubicWorldInternal;
 import io.github.opencubicchunks.cubicchunks.core.world.cube.Cube;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.minecraft.nbt.NBTTagCompound;
@@ -175,6 +176,9 @@ public class AsyncBatchingCubeIO implements ICubeIO {
 
     @Override
     public void saveCube(Cube cube) {
+        // make sure all light updates are processed, even if someone calls this from the outside
+        ((ICubicWorldInternal) world).getLightingManager().processUpdates();
+
         this.lock.readLock().lock();
         try {
             this.ensureOpen();
