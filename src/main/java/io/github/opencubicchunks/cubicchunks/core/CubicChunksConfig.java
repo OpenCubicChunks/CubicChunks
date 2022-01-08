@@ -107,8 +107,8 @@ public class CubicChunksConfig {
 
     @Config.LangKey("cubicchunks.config.relight_checks_per_tick_per_column")
     @Config.Comment("In an attempt to fix lighting glitches over time, cubic chunks will keep updating light in specified amount of blocks per "
-            + "column (chunk) per tick. Default value of 1 doesn't cause noticeable performance drop, but still fixes most major issues relatively "
-            + "quickly.")
+            + "column (chunk) per tick. This option shouldn't be necessary but may be useful for old worlds where lighting is broken or when "
+            + "lighting bugs are encountered.")
     public static int relightChecksPerTickPerColumn = 0;
 
     @Config.LangKey("cubicchunks.config.do_client_light_fixes")
