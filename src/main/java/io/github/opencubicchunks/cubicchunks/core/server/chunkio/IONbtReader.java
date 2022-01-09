@@ -291,6 +291,7 @@ public class IONbtReader {
                 Arrays.fill(storage.getSkyLight().getData(), (byte) 0);
                 Arrays.fill(storage.getBlockLight().getData(), (byte) 0);
             }
+            cube.setSurfaceTracked(false);
             lightingManager.readFromNbt(cube, new NBTTagCompound());
             return;
         }
