@@ -22,6 +22,7 @@ package io.github.opencubicchunks.cubicchunks.core.server.chunkio.async.forge;
 import io.github.opencubicchunks.cubicchunks.api.world.CubeDataEvent;
 import io.github.opencubicchunks.cubicchunks.api.world.ICube;
 import io.github.opencubicchunks.cubicchunks.core.CubicChunks;
+import io.github.opencubicchunks.cubicchunks.core.CubicChunksConfig;
 import io.github.opencubicchunks.cubicchunks.core.server.chunkio.ICubeIO;
 import io.github.opencubicchunks.cubicchunks.core.world.cube.Cube;
 import mcp.MethodsReturnNonnullByDefault;
@@ -48,6 +49,7 @@ class AsyncCubeIOProvider extends AsyncIOProvider<Cube> {
 
     @Nonnull private final CompletableFuture<Chunk> futureColumn = new CompletableFuture<>();
     @Nullable private ICubeIO.PartialData<ICube> cubeData;
+    @Nullable private Exception exception;
 
     AsyncCubeIOProvider(QueuedCube cube, ICubeIO loader) {
         this.cubeInfo = cube;
@@ -63,12 +65,16 @@ class AsyncCubeIOProvider extends AsyncIOProvider<Cube> {
             } else {
                 cubeData = this.loader.loadCubeAsyncPart(column, this.cubeInfo.y);
             }
-        } catch (IOException e) {
-            CubicChunks.LOGGER.error("Could not load cube in {} @ ({}, {}, {})", this.cubeInfo.world, this.cubeInfo.x, this.cubeInfo.y, this.cubeInfo.z, e);
-        } catch (InterruptedException e) {
+        }  catch (InterruptedException e) {
             throw new Error(e);
         } catch (ExecutionException e) {
             throw new RuntimeException(e);
+        } catch (Exception e) {
+            if (CubicChunksConfig.ignoreCorruptedChunks) {
+                cubeData = new ICubeIO.PartialData<>(null, null);
+            }
+            exception = e;
+            CubicChunks.LOGGER.error("Could not load cube in {} @ ({}, {}, {})", this.cubeInfo.world, this.cubeInfo.x, this.cubeInfo.y, this.cubeInfo.z, e);
         } finally {
             synchronized (this) {
                 this.finished = true;
@@ -80,7 +86,9 @@ class AsyncCubeIOProvider extends AsyncIOProvider<Cube> {
     // sync stuff
     @Override
     public void runSynchronousPart() {
-        assert cubeData != null;
+        if (cubeData == null) {
+            throw new RuntimeException("Corrupted cube at " + cubeInfo.x + ", " + cubeInfo.y + ", " + cubeInfo.z, exception);
+        }
         if (cubeData.getObject() != null) {
             this.loader.loadCubeSyncPart(cubeData);
             ICube cube = this.cubeData.getObject();

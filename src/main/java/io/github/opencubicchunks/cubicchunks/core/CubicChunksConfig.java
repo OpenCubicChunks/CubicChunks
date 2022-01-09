@@ -192,6 +192,11 @@ public class CubicChunksConfig {
     @Config.RequiresWorldRestart
     public static boolean useShadowPagingIO = true;
 
+    @Config.LangKey("cubicchunks.config.ignore_corrupted_chunks")
+    @Config.Comment("Ignores and regenerates corrupted chunks instead of crashing the server")
+    @Config.RequiresWorldRestart
+    public static boolean ignoreCorruptedChunks = false;
+
     public static final class VanillaClients {
         @Config.LangKey("cubicchunks.config.vanilla_clients.horizontal_slices")
         @Config.Comment("Enables horizontal slices for vanilla clients. "

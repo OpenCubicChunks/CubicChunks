@@ -28,6 +28,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 import io.github.opencubicchunks.cubicchunks.api.worldgen.ICubeGenerator;
 import io.github.opencubicchunks.cubicchunks.core.CubicChunks;
+import io.github.opencubicchunks.cubicchunks.core.CubicChunksConfig;
 import io.github.opencubicchunks.cubicchunks.core.server.chunkio.ICubeIO;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraftforge.common.MinecraftForge;
@@ -44,6 +45,7 @@ class AsyncColumnIOProvider extends AsyncIOProvider<Chunk> {
 
     @Nonnull private final ICubeIO loader;
     @Nullable private ICubeIO.PartialData<Chunk> columnData; // The target
+    @Nullable private Exception exception;
     @Nonnull private final QueuedColumn colInfo;
     private ICubeGenerator generator;
     // some mods will try to access blocks in ChunkDataEvent.Load
@@ -61,7 +63,11 @@ class AsyncColumnIOProvider extends AsyncIOProvider<Chunk> {
     @Override public void run() {
         try {
             this.columnData = this.loader.loadColumnAsyncPart(this.colInfo.world, this.colInfo.x, this.colInfo.z);
-        } catch (IOException e) {
+        } catch (Exception e) {
+            if (CubicChunksConfig.ignoreCorruptedChunks) {
+                columnData = new ICubeIO.PartialData<>(null, null);
+            }
+            exception = e;
             CubicChunks.LOGGER.error("Could not load column in {} @ ({}, {})", this.colInfo.world, this.colInfo.x, this.colInfo.z, e);
         } finally {
             synchronized (this) {
@@ -72,7 +78,9 @@ class AsyncColumnIOProvider extends AsyncIOProvider<Chunk> {
     }
 
     @Override void runSynchronousPart() {
-        assert columnData != null;
+        if (columnData == null) {
+            throw new RuntimeException("Corrupted column at " + colInfo.x + ", " + colInfo.z, exception);
+        }
         if (columnData.getObject() != null) {
             this.loader.loadColumnSyncPart(columnData);
             Chunk column = this.columnData.getObject();
