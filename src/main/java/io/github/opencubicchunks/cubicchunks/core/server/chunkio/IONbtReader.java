@@ -47,6 +47,8 @@ import net.minecraft.world.chunk.NibbleArray;
 import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 import net.minecraftforge.common.util.Constants;
 
+import java.util.Arrays;
+
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -284,6 +286,11 @@ public class IONbtReader {
         String savedId = nbt.getString("LightingInfoType");
         if (!id.equals(savedId)) {
             cube.setInitialLightingDone(false);
+            ExtendedBlockStorage storage = cube.getStorage();
+            if (storage != null) {
+                Arrays.fill(storage.getSkyLight().getData(), (byte) 0);
+                Arrays.fill(storage.getBlockLight().getData(), (byte) 0);
+            }
             lightingManager.readFromNbt(cube, new NBTTagCompound());
             return;
         }
