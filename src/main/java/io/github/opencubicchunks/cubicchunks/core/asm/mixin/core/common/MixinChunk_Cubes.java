@@ -481,6 +481,9 @@ public abstract class MixinChunk_Cubes implements IColumnInternal {
 
     @Inject(method = "getLightFor", at = @At("HEAD"), cancellable = true)
     private void replacedGetLightForCC(EnumSkyBlock type, BlockPos pos, CallbackInfoReturnable<Integer> cir) {
+        if (!isColumn) {
+            return;
+        }
         ((ICubicWorldInternal) world).getLightingManager().onGetLight(type, pos);
         cir.setReturnValue(((Cube) getCube(blockToCube(pos.getY()))).getCachedLightFor(type, pos));
     }

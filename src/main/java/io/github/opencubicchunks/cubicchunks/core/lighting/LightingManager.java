@@ -114,7 +114,7 @@ public class LightingManager implements ILightingManager {
     }
 
     @Override public void readFromNbt(ICube cube, NBTTagCompound lightingInfo) {
-        getLightData(cube).lastHeightMap = lightingInfo.getIntArray("LastHeightMap");
+        getLightData(cube).lastHeightMap = lightingInfo.hasKey("LastHeightMap") ? lightingInfo.getIntArray("LastHeightMap") : null;
         LightingHooks.readNeighborLightChecksFromNBT(cube, lightingInfo);
     }
 
@@ -164,7 +164,7 @@ public class LightingManager implements ILightingManager {
         // In practice changes up to 15 blocks above can affect it,
         // but it will be fixed by lighting update in other cube anyway
         LightingManager lightManager = (LightingManager) ((ICubicWorldInternal) cube.getWorld()).getLightingManager();
-        for (int i = 0; i < 256; i++) {
+        for (int i = 0; i < data.lastHeightMap.length; i++) {
             int localX = i & 0xF;
             int localZ = i >> 4;
 
