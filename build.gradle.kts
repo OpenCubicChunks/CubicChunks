@@ -40,7 +40,6 @@ plugins {
     signing
     id("io.github.opencubicchunks.gradle.fg2fixed")
     id("io.github.opencubicchunks.gradle.mixingen")
-    id("io.github.opencubicchunks.gradle.remapper")
     id("io.github.opencubicchunks.gradle.mcGitVersion")
 }
 
