@@ -28,6 +28,7 @@ import static io.github.opencubicchunks.cubicchunks.api.util.Coords.blockToLocal
 import static io.github.opencubicchunks.cubicchunks.api.util.Coords.localToBlock;
 
 import io.github.opencubicchunks.cubicchunks.api.util.Coords;
+import io.github.opencubicchunks.cubicchunks.api.world.IColumn;
 import io.github.opencubicchunks.cubicchunks.api.world.ICube;
 import io.github.opencubicchunks.cubicchunks.core.asm.mixin.ICubicWorldInternal;
 import io.github.opencubicchunks.cubicchunks.core.lighting.phosphor.LightingHooks;
@@ -43,6 +44,8 @@ import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
+
+import java.util.Arrays;
 
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -61,7 +64,7 @@ public class LightingManager implements ILightingManager {
         this.world = world;
         this.lightEngine = new PhosphorLightEngine(world);
         if (!world.isRemote) {
-            this.firstLightProcessor = new FirstLightProcessor((WorldServer) world);
+            this.firstLightProcessor = new FirstLightProcessor();
         } else {
             this.firstLightProcessor = null;
         }
@@ -85,9 +88,6 @@ public class LightingManager implements ILightingManager {
     }
 
     @Override public boolean checkLightFor(EnumSkyBlock lightType, BlockPos pos) {
-        if (!world.isBlockLoaded(pos)) {
-            return false;
-        }
         lightEngine.scheduleLightUpdate(lightType, pos);
         return true;
     }
@@ -114,11 +114,30 @@ public class LightingManager implements ILightingManager {
     }
 
     @Override public void readFromNbt(ICube cube, NBTTagCompound lightingInfo) {
-        getLightData(cube).lastHeightMap = lightingInfo.hasKey("LastHeightMap") ? lightingInfo.getIntArray("LastHeightMap") : null;
+        CubeLightData lightData = getLightData(cube);
+        lightData.lastHeightMap = lightingInfo.hasKey("LastHeightMap") ? lightingInfo.getIntArray("LastHeightMap") : null;
+        if (lightData.lastHeightMap != null) {
+            Arrays.fill(lightData.lastSaveHeightMapInfo, 0L);
+            for (int i = 0; i < lightData.lastHeightMap.length; i++) {
+                int cy = Coords.blockToCube(lightData.lastHeightMap[i] - 1);
+                int flags = 0;
+                if (cy >= cube.getY()) {
+                    flags |= 1;
+                }
+                if (cy <= cube.getY()) {
+                    flags |= 2;
+                }
+                int idx = i >> 5;
+                int bit = (i & 31) << 1;
+                long v = lightData.lastSaveHeightMapInfo[idx];
+                v |= ((long) flags) << bit;
+                lightData.lastSaveHeightMapInfo[idx] = v;
+            }
+        }
         LightingHooks.readNeighborLightChecksFromNBT(cube, lightingInfo);
     }
 
-    @Override public Object createLightData(ICube cube) {
+    @Override public Cube.ICubeLightTrackingInfo createLightData(ICube cube) {
         return new CubeLightData();
     }
 
@@ -196,11 +215,61 @@ public class LightingManager implements ILightingManager {
         data.lastHeightMap = null;
     }
 
-    public static class CubeLightData {
+    public static class CubeLightData implements Cube.ICubeLightTrackingInfo {
         public long neighborLightChecksBlock, neighborLightChecksSky;
         /**
          * null value means no update from height change from last save
          */
         public int[] lastHeightMap = null;
+        // each position has 2 bits:
+        // 00 -> unknown, always save
+        // 01 -> height was above the current cube, save if flags changed
+        // 10 -> height was below the current cube, save if flags changed
+        // 11 -> height was in the current cube, no need to save, if saving is needed the cube will be modified
+        public long[] lastSaveHeightMapInfo = new long[8]; // xSize*zSize * 2 bits per entry / Long.SIZE
+
+        @Override public boolean needsSaving(ICube cube) {
+            int[] heightmap = cube.getColumn().getHeightMap();
+            for (int i = 0; i < heightmap.length; i++) {
+                int cy = Coords.blockToCube(heightmap[i] - 1);
+                int idx = i >> 5;
+                int bit = (i & 31) << 1;
+                int flags = (int) ((lastSaveHeightMapInfo[idx] >>> bit) & 3);
+                if (flags == 0) {
+                    return true;
+                }
+                int newFlags = 0;
+                if (cy >= cube.getY()) {
+                    newFlags |= 1;
+                }
+                if (cy <= cube.getY()) {
+                    newFlags |= 2;
+                }
+                if (flags != newFlags) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        @Override public void markSaved(ICube cube) {
+            Arrays.fill(lastSaveHeightMapInfo, 0L);
+            int[] heightmap = cube.getColumn().getHeightMap();
+            for (int i = 0; i < heightmap.length; i++) {
+                int cy = Coords.blockToCube(heightmap[i] - 1);
+                int flags = 0;
+                if (cy >= cube.getY()) {
+                    flags |= 1;
+                }
+                if (cy <= cube.getY()) {
+                    flags |= 2;
+                }
+                int idx = i >> 5;
+                int bit = (i & 31) << 1;
+                long v = lastSaveHeightMapInfo[idx];
+                v |= ((long) flags) << bit;
+                lastSaveHeightMapInfo[idx] = v;
+            }
+        }
     }
 }

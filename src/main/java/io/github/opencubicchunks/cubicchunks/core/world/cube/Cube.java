@@ -156,7 +156,7 @@ public class Cube implements ICube {
     @Nonnull
     private final ConcurrentLinkedQueue<BlockPos> tileEntityPosQueue;
 
-    private final Object cubeLightData;
+    private final ICubeLightTrackingInfo cubeLightData;
 
     /**
      * Is this cube loaded and not queued for unload
@@ -268,7 +268,7 @@ public class Cube implements ICube {
      */
     protected Cube(TicketList tickets, World world, Chunk column, CubePos coords, ExtendedBlockStorage storage,
                    EntityContainer entities, Map<BlockPos, TileEntity> tileEntityMap,
-                   ConcurrentLinkedQueue<BlockPos> tileEntityPosQueue, Object cubeLightData) {
+                   ConcurrentLinkedQueue<BlockPos> tileEntityPosQueue, ICubeLightTrackingInfo cubeLightData) {
         this.tickets = tickets;
         this.world = world;
         this.column = column;
@@ -647,7 +647,7 @@ public class Cube implements ICube {
 
     @Override
     public boolean needsSaving() {
-        return this.entities.needsSaving(true, this.world.getTotalWorldTime(), this.isModified);
+        return this.entities.needsSaving(true, this.world.getTotalWorldTime(), this.isModified) || cubeLightData.needsSaving(this);
     }
 
     /**
@@ -656,6 +656,7 @@ public class Cube implements ICube {
     public void markSaved() {
         this.entities.markSaved(this.world.getTotalWorldTime());
         this.isModified = false;
+        this.cubeLightData.markSaved(this);
     }
 
     /**
@@ -681,7 +682,7 @@ public class Cube implements ICube {
         );
     }
 
-    public Object getCubeLightData() {
+    public ICubeLightTrackingInfo getCubeLightData() {
         return this.cubeLightData;
     }
 
@@ -815,5 +816,10 @@ public class Cube implements ICube {
     @Nullable
     public <T> T getCapability(Capability<T> capability, @Nullable EnumFacing facing) {
         return this.capabilities == null ? null : this.capabilities.getCapability(capability, facing);
+    }
+
+    public interface ICubeLightTrackingInfo {
+        boolean needsSaving(ICube cube);
+        void markSaved(ICube cube);
     }
 }

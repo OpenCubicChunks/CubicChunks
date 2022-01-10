@@ -25,6 +25,7 @@
 package io.github.opencubicchunks.cubicchunks.core.lighting;
 
 import io.github.opencubicchunks.cubicchunks.api.world.ICube;
+import io.github.opencubicchunks.cubicchunks.core.world.cube.Cube;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.math.BlockPos;
@@ -81,7 +82,7 @@ public interface ILightingManager {
 
     void readFromNbt(ICube cube, NBTTagCompound lightingInfo);
 
-    Object createLightData(ICube cube);
+    Cube.ICubeLightTrackingInfo createLightData(ICube cube);
 
     boolean hasPendingLightUpdates(ICube cube);
 
