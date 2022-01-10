@@ -31,17 +31,14 @@ import static io.github.opencubicchunks.cubicchunks.api.util.Coords.cubeToMinBlo
 import io.github.opencubicchunks.cubicchunks.api.util.MathUtil;
 import io.github.opencubicchunks.cubicchunks.api.world.IColumn;
 import io.github.opencubicchunks.cubicchunks.api.world.ICube;
-import io.github.opencubicchunks.cubicchunks.api.world.ICubeProvider;
 import io.github.opencubicchunks.cubicchunks.core.asm.mixin.ICubicWorldInternal;
 import io.github.opencubicchunks.cubicchunks.core.world.IColumnInternal;
-import io.github.opencubicchunks.cubicchunks.core.world.ICubeProviderInternal;
 import io.github.opencubicchunks.cubicchunks.core.world.cube.Cube;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockPos.MutableBlockPos;
 import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.IBlockAccess;
-import net.minecraft.world.WorldServer;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -63,16 +60,6 @@ import javax.annotation.ParametersAreNonnullByDefault;
 public class FirstLightProcessor {
 
     private final MutableBlockPos mutablePos = new MutableBlockPos();
-    private final ICubeProviderInternal cache;
-
-    /**
-     * Creates a new FirstLightProcessor for the given world.
-     *
-     * @param world the world for which the FirstLightProcessor will be used
-     */
-    public FirstLightProcessor(WorldServer world) {
-        this.cache = (ICubeProviderInternal) world.getChunkProvider();
-    }
 
     /**
      * Diffuses skylight in the given cube and all cubes affected by this update.
@@ -111,15 +98,40 @@ public class FirstLightProcessor {
 
         // Determine the block columns that require updating. If there is nothing to update, store contradicting data so
         // we can skip the column later.
+
         IColumnInternal column = cube.getColumn();
         for (int localX = 0; localX < Cube.SIZE; ++localX) {
             for (int localZ = 0; localZ < Cube.SIZE; ++localZ) {
                 int height = column.getHeightWithStaging(localX, localZ) - 1;
                 int maxY = cube.getCoords().getMaxBlockY();
+                int maxCubeBlockY = cube.getCoords().getMaxBlockY();
+
+                int minCubeBlockX = cube.getCoords().getMinBlockX();
+                int minCubeBlockZ = cube.getCoords().getMinBlockZ();
+                mutablePos.setPos(minCubeBlockX + localX, 0, minCubeBlockZ + localZ);
+
+                int minInstantFill = Integer.MIN_VALUE, maxInstantFill = Integer.MIN_VALUE;
+                if (cube.getStorage() != null && localX != 0 && localX != 15 && localZ != 0 && localZ != 15 && maxCubeBlockY > height) {
+                    int h1 = column.getHeightWithStaging(localX + 1, localZ);
+                    int h2 = column.getHeightWithStaging(localX - 1, localZ);
+                    int h3 = column.getHeightWithStaging(localX, localZ + 1);
+                    int h4 = column.getHeightWithStaging(localX, localZ - 1);
+                    int maxNeighbor = MathUtil.max(h1, h2, h3, h4);
+                    int maxCurr = height + 2;
+                    minInstantFill = MathUtil.max(maxCurr, maxNeighbor, cube.getCoords().getMinBlockY());
+                    maxInstantFill = maxCubeBlockY;
+                }
                 if (height < maxY) {
                     int minCubeBlockY = cube.getCoords().getMinBlockY();
                     int minY = Math.max(height, minCubeBlockY);
-                    lm.updateLightBetween(cube.getColumn(), localX, minY, maxY, localZ);
+                    for (int yPos = minY; yPos <= maxY; yPos++) {
+                        mutablePos.setY(yPos);
+                        if (yPos >= minInstantFill && yPos <= maxInstantFill) {
+                            cube.setLightFor(EnumSkyBlock.SKY, mutablePos, 15);
+                        } else {
+                            lm.checkLightFor(EnumSkyBlock.SKY, mutablePos);
+                        }
+                    }
                 }
 
                 Pair<Integer, Integer> minMax = getMinMaxLightUpdateY(cube, localX, localZ);
@@ -185,7 +197,7 @@ public class FirstLightProcessor {
 
         for (int blockY = maxBlockYInCube; blockY >= minBlockYInCube; --blockY) {
             pos.setY(blockY);
-            if (needsSkylightUpdate(cache, pos)) {
+            if (needsSkylightUpdate(cube, pos)) {
                 lm.checkLightFor(EnumSkyBlock.SKY, pos);
             }
         }
@@ -201,33 +213,10 @@ public class FirstLightProcessor {
      *
      * @return true if the specified block needs a skylight update, false otherwise
      */
-    private static boolean needsSkylightUpdate(ICubeProvider cache, MutableBlockPos pos) {
-        ICube loadedCube = cache.getLoadedCube(blockToCube(pos.getX()), blockToCube(pos.getY()), blockToCube(pos.getZ()));
-        assert loadedCube != null;
+    private static boolean needsSkylightUpdate(ICube cube, MutableBlockPos pos) {
         // Opaque blocks don't need update. Nothing can emit skylight, and skylight can't get into them nor out of them.
-        IBlockAccess world = loadedCube.getWorld();
-        return loadedCube.getBlockState(pos).getLightOpacity(world, pos) < 15;
-
-        // TODO: do we actually need it?
-        // This is the logic that world.checkLightFor uses to determine if it should continue updating.
-        // This is done here to avoid isAreaLoaded call (a lot of them quickly add up to a lot of time).
-        // It first calculates the expected skylight value of this block and then it checks the neighbors' saved values,
-        // if the saved value matches the expected value, it will be updated.
-        //int computedLight = computeLightValue(cache, pos);
-        //int curLight = loadedCube.getLightFor(EnumSkyBlock.SKY, pos);
-        //if (computedLight != curLight) {
-        //    return true;
-        //}
-        //for (EnumFacing facing : EnumFacing.values()) {
-        //    pos.move(facing);
-        //    int currentLight = getLightFor(EnumSkyBlock.SKY, cache, pos);
-        //    int currentOpacity = Math.max(1, loadedCube.getBlockState(pos).getLightOpacity(world, pos));
-        //    pos.move(facing.getOpposite());
-        //    if (computedLight == currentLight - currentOpacity) {
-        //        return true;
-        //    }
-        //}
-        //return false;
+        IBlockAccess world = cube.getWorld();
+        return cube.getBlockState(pos).getLightOpacity(world, pos) < 15;
     }
 
     /**
