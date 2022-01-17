@@ -54,6 +54,7 @@ import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLServerAboutToStartEvent;
+import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.network.NetworkCheckHandler;
 import net.minecraftforge.fml.common.network.NetworkRegistry;
@@ -147,6 +148,11 @@ public class CubicChunks {
     }
 
     @EventHandler
+    public void serverStarting(FMLServerStartingEvent evt) {
+        CubicChunksConfig.registerCommands(evt);
+    }
+
+    @EventHandler
     public void onServerAboutToStart(FMLServerAboutToStartEvent event) {
         SideUtils.runForSide(
                 () -> () -> {
@@ -190,7 +196,7 @@ public class CubicChunks {
         }.setRegistryName(StorageFormatProviderBase.DEFAULT)
                 .setUnlocalizedName("cubicchunks.gui.storagefmt.anvil3d"));
     }
-    
+
     @NetworkCheckHandler
     public static boolean checkCanConnectWithMods(Map<String, String> modVersions, Side remoteSide) {
         String remoteFullVersion = modVersions.get(MODID);

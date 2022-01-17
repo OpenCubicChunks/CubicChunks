@@ -10,3 +10,18 @@ cubicchunks.gui.worldmenu.cc_default=CubicChunks: Default
 #################################
 
 cubicchunks.gui.vertical_cube_load_distance=Vertical Distance: %d cubes
+
+#################################
+###         commands          ###
+#################################
+
+cubicchunks.command.usage.cubicchunks=/cubicchunks subcommand
+cubicchunks.command.usage.config=/cubicchunks config subcommand
+cubicchunks.command.usage.config.set=/cubicchunks config set configOption value
+cubicchunks.command.usage.config.set_option=/cubicchunks config set %s value
+cubicchunks.command.usage.config.reload=/cubicchunks config reload
+cubicchunks.command.config.set.failed=Setting config option %s failed!
+cubicchunks.command.config.set.done=Config option %s has been set to "%s"
+cubicchunks.command.config.set.requires_restart=Changing config option %s requires world restart!
+cubicchunks.command.usage.config.set.primitive=Config option %s has type %s and requires 1 parameter
+cubicchunks.command.config.reload.done=Cubic Chunks config has been reloaded
