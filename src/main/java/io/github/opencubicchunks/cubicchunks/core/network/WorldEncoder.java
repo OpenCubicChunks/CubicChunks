@@ -134,7 +134,7 @@ class WorldEncoder {
                 Cube cube = cubes.get(i);
                 ExtendedBlockStorage storage = new ExtendedBlockStorage(Coords.cubeToMinBlock(cube.getY()),
                         cube.getWorld().provider.hasSkyLight());
-                cube.setStorage(storage);
+                cube.setStorageFromSave(storage);
             }
         }
 

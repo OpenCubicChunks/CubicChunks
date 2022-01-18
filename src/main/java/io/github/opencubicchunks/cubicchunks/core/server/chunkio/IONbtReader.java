@@ -209,7 +209,7 @@ public class IONbtReader {
             }
 
             ebs.recalculateRefCounts();
-            cube.setStorage(ebs);
+            cube.setStorageFromSave(ebs);
         }
     }
 

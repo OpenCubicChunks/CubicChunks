@@ -531,6 +531,10 @@ public class Cube implements ICube {
         return ebs;
     }
 
+    public void setStorageFromSave(@Nullable ExtendedBlockStorage ebs) {
+        this.storage = ebs;
+    }
+
     private void newStorage() {
         storage = new ExtendedBlockStorage(cubeToMinBlock(getY()), world.provider.hasSkyLight());
     }
