@@ -301,7 +301,7 @@ public class EmptyColumn extends Chunk implements IColumn, IColumnInternal {
 	}
 
 	@Override
-	public int getHeightWithStaging(int localX, int localZ) {
+	public int getTopYWithStaging(int localX, int localZ) {
 		return 0;
 	}
 }

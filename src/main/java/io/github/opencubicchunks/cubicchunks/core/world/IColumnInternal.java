@@ -39,13 +39,13 @@ public interface IColumnInternal extends IColumn {
     void addToStagingHeightmap(ICube cube);
 
     /**
-     * Returns Y coordinate of the block above the top non-transparent block
+     * Returns Y coordinate of the top non-transparent block
      */
-    int getHeightWithStaging(int localX, int localZ);
+    int getTopYWithStaging(int localX, int localZ);
 
     default void writeHeightmapDataForClient(PacketBuffer out) {
         for (int i = 0; i < Cube.SIZE * Cube.SIZE; i++) {
-            out.writeInt(getHeightWithStaging(AddressTools.getLocalX(i), AddressTools.getLocalZ(i)) - 1);
+            out.writeInt(getTopYWithStaging(AddressTools.getLocalX(i), AddressTools.getLocalZ(i)));
         }
     }
 

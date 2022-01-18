@@ -102,7 +102,7 @@ public class FirstLightProcessor {
         IColumnInternal column = cube.getColumn();
         for (int localX = 0; localX < Cube.SIZE; ++localX) {
             for (int localZ = 0; localZ < Cube.SIZE; ++localZ) {
-                int height = column.getHeightWithStaging(localX, localZ) - 1;
+                int height = column.getTopYWithStaging(localX, localZ);
                 int maxY = cube.getCoords().getMaxBlockY();
                 int maxCubeBlockY = cube.getCoords().getMaxBlockY();
 
@@ -112,11 +112,11 @@ public class FirstLightProcessor {
 
                 int minInstantFill = Integer.MIN_VALUE, maxInstantFill = Integer.MIN_VALUE;
                 if (cube.getStorage() != null && localX != 0 && localX != 15 && localZ != 0 && localZ != 15 && maxCubeBlockY > height) {
-                    int h1 = column.getHeightWithStaging(localX + 1, localZ);
-                    int h2 = column.getHeightWithStaging(localX - 1, localZ);
-                    int h3 = column.getHeightWithStaging(localX, localZ + 1);
-                    int h4 = column.getHeightWithStaging(localX, localZ - 1);
-                    int maxNeighbor = MathUtil.max(h1, h2, h3, h4);
+                    int h1 = column.getTopYWithStaging(localX + 1, localZ);
+                    int h2 = column.getTopYWithStaging(localX - 1, localZ);
+                    int h3 = column.getTopYWithStaging(localX, localZ + 1);
+                    int h4 = column.getTopYWithStaging(localX, localZ - 1);
+                    int maxNeighbor = MathUtil.max(h1, h2, h3, h4) + 1;
                     int maxCurr = height + 2;
                     minInstantFill = MathUtil.max(maxCurr, maxNeighbor, cube.getCoords().getMinBlockY());
                     maxInstantFill = maxCubeBlockY;
@@ -233,7 +233,7 @@ public class FirstLightProcessor {
     private static ImmutablePair<Integer, Integer> getMinMaxLightUpdateY(ICube cube, int localX, int localZ) {
 
         IColumn column = cube.getColumn();
-        int heightMax = ((IColumnInternal) column).getHeightWithStaging(localX, localZ) - 1;//==Y of the top block
+        int heightMax = ((IColumnInternal) column).getTopYWithStaging(localX, localZ);//==Y of the top block
 
         // If the given cube is above the highest occluding block in the column, everything is fully lit.
         int cubeY = cube.getY();

@@ -187,7 +187,7 @@ public class LightingManager implements ILightingManager {
             int localX = i & 0xF;
             int localZ = i >> 4;
 
-            int currentY = column.getHeightWithStaging(localX, localZ);
+            int currentY = column.getTopYWithStaging(localX, localZ) + 1;
             int lastY = data.lastHeightMap[i];
 
             if (currentY == lastY) {

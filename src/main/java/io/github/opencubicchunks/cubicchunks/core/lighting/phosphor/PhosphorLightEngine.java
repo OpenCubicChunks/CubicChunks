@@ -430,7 +430,7 @@ public class PhosphorLightEngine {
     }
 
     private static boolean canSeeSky(ICube cube, BlockPos pos) {
-        int topY = ((IColumnInternal) cube.getColumn()).getHeightWithStaging(blockToLocal(pos.getX()), blockToLocal(pos.getZ())) - 1;
+        int topY = ((IColumnInternal) cube.getColumn()).getTopYWithStaging(blockToLocal(pos.getX()), blockToLocal(pos.getZ()));
         return pos.getY() > topY;
     }
 

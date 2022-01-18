@@ -116,11 +116,11 @@ public abstract class MixinChunk_Column implements IColumn, IColumnInternal {
     }
 
     @Override
-    public int getHeightWithStaging(int localX, int localZ) {
+    public int getTopYWithStaging(int localX, int localZ) {
         if (!isColumn) {
             return heightMap[localZ << 4 | localX];
         }
-        return Math.max(opacityIndex.getTopBlockY(localX, localZ), stagingHeightMap.getTopBlockY(localX, localZ)) + 1;
+        return Math.max(opacityIndex.getTopBlockY(localX, localZ), stagingHeightMap.getTopBlockY(localX, localZ));
     }
 
     private void invalidateCachedCube() {
@@ -176,7 +176,7 @@ public abstract class MixinChunk_Column implements IColumn, IColumnInternal {
 
     @Override
     public int getHeightValue(int localX, int blockY, int localZ) {
-        return getHeightWithStaging(localX, localZ);
+        return getTopYWithStaging(localX, localZ) + 1;
     }
 
     /**
@@ -185,11 +185,11 @@ public abstract class MixinChunk_Column implements IColumn, IColumnInternal {
      */
     @Overwrite
     public int getHeightValue(int localX, int localZ) {
-        return getHeightWithStaging(localX, localZ);
+        return getTopYWithStaging(localX, localZ) + 1;
     }
 
     @Intrinsic
     public int chunk$getHeightValue(int localX, int localZ) {
-        return getHeightWithStaging(localX, localZ);
+        return getTopYWithStaging(localX, localZ) + 1;
     }
 }

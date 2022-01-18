@@ -321,7 +321,7 @@ public class Cube implements ICube {
         ExtendedBlockStorage storage = this.storage;
 
         if (storage == null) {
-            return ((IColumnInternal) column).getHeightWithStaging(x, z) >= pos.getY() ? type.defaultLightValue : 0;
+            return ((IColumnInternal) column).getTopYWithStaging(x, z) > pos.getY() ? type.defaultLightValue : 0;
         } else if (type == EnumSkyBlock.SKY) {
             return !this.world.provider.hasSkyLight() ? 0 : storage.getSkyLight(x, y, z);
         } else {

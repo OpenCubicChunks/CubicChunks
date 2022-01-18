@@ -69,7 +69,7 @@ public class PacketHeightMapUpdate implements IMessage {
         this.heights = new TIntArrayList();
         for (int i = updates.nextSetBit(0); i >= 0; i = updates.nextSetBit(i + 1)) {
             this.updates.add((byte) i);
-            this.heights.add(((IColumnInternal) chunk).getHeightWithStaging(AddressTools.getLocalX(i), AddressTools.getLocalZ(i)) - 1);
+            this.heights.add(((IColumnInternal) chunk).getTopYWithStaging(AddressTools.getLocalX(i), AddressTools.getLocalZ(i)));
         }
     }
 
