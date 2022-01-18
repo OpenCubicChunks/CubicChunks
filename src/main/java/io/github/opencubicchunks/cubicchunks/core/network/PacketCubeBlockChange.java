@@ -24,7 +24,6 @@
  */
 package io.github.opencubicchunks.cubicchunks.core.network;
 
-import static io.github.opencubicchunks.cubicchunks.api.util.Coords.blockToCube;
 import static io.github.opencubicchunks.cubicchunks.api.util.Coords.blockToLocal;
 import static net.minecraftforge.fml.common.network.ByteBufUtils.readVarInt;
 
@@ -37,6 +36,7 @@ import io.github.opencubicchunks.cubicchunks.core.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.core.client.CubeProviderClient;
 import io.github.opencubicchunks.cubicchunks.core.util.AddressTools;
 import io.github.opencubicchunks.cubicchunks.core.world.ClientHeightMap;
+import io.github.opencubicchunks.cubicchunks.core.world.IColumnInternal;
 import io.github.opencubicchunks.cubicchunks.core.world.cube.BlankCube;
 import io.github.opencubicchunks.cubicchunks.core.world.cube.Cube;
 import io.netty.buffer.ByteBuf;
@@ -86,7 +86,7 @@ public class PacketCubeBlockChange implements IMessage {
         TIntIterator it = xzAddresses.iterator();
         while (it.hasNext()) {
             int v = it.next();
-            int height = cube.getColumn().getOpacityIndex().getTopBlockY(blockToLocal(v), blockToLocal(v));
+            int height = ((IColumnInternal) cube.getColumn()).getHeightWithStaging(blockToLocal(v), blockToLocal(v)) - 1;
             v |= height << 8;
             heightValues[i] = v;
             i++;

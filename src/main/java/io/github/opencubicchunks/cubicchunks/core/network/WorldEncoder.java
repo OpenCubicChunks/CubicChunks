@@ -29,7 +29,7 @@ import io.github.opencubicchunks.cubicchunks.core.asm.mixin.ICubicWorldInternal;
 import io.github.opencubicchunks.cubicchunks.core.lighting.ILightingManager;
 import io.github.opencubicchunks.cubicchunks.core.util.AddressTools;
 import io.github.opencubicchunks.cubicchunks.core.world.ClientHeightMap;
-import io.github.opencubicchunks.cubicchunks.core.world.ServerHeightMap;
+import io.github.opencubicchunks.cubicchunks.core.world.IColumnInternal;
 import io.github.opencubicchunks.cubicchunks.core.world.cube.Cube;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
@@ -91,9 +91,7 @@ class WorldEncoder {
         // it wil all cubes
         cubes.forEach(cube -> {
             if (!cube.isEmpty()) {
-                byte[] heightmaps = ((ServerHeightMap) cube.getColumn().getOpacityIndex()).getDataForClient();
-                assert heightmaps.length == Cube.SIZE * Cube.SIZE * Integer.BYTES;
-                out.writeBytes(heightmaps);
+                ((IColumnInternal) cube.getColumn()).writeHeightmapDataForClient(out);
             }
         });
         
@@ -107,11 +105,15 @@ class WorldEncoder {
     static void encodeColumn(PacketBuffer out, Chunk column) {
         // 1. biomes
         out.writeBytes(column.getBiomeArray());
+        ((IColumnInternal) column).writeHeightmapDataForClient(out);
     }
 
     static void decodeColumn(PacketBuffer in, Chunk column) {
         // 1. biomes
         in.readBytes(column.getBiomeArray());
+        if (in.readableBytes() > 0) {
+            ((IColumnInternal) column).loadClientHeightmapData(in);
+        }
     }
 
     static void decodeCube(PacketBuffer in, List<Cube> cubes) {
@@ -170,15 +172,14 @@ class WorldEncoder {
             if (!isEmpty[i]) {
                 Cube cube = cubes.get(i);
                 ILightingManager lm = ((ICubicWorldInternal) cube.getWorld()).getLightingManager();
-                byte[] heightmaps = new byte[Cube.SIZE * Cube.SIZE * Integer.BYTES];
-                in.readBytes(heightmaps);
-                ClientHeightMap coi = ((ClientHeightMap) cube.getColumn().getOpacityIndex());
+                IColumnInternal column = cube.getColumn();
+                ClientHeightMap coi = (ClientHeightMap) column.getOpacityIndex();
                 for (int dx = 0; dx < Cube.SIZE; dx++) {
                     for (int dz = 0; dz < Cube.SIZE; dz++) {
                         oldHeights[AddressTools.getLocalAddress(dx, dz)] = coi.getTopBlockY(dx, dz);
                     }
                 }
-                coi.setData(heightmaps);
+                column.loadClientHeightmapData(in);
                 for (int dx = 0; dx < Cube.SIZE; dx++) {
                     for (int dz = 0; dz < Cube.SIZE; dz++) {
                         int oldY = oldHeights[AddressTools.getLocalAddress(dx, dz)];
@@ -205,7 +206,7 @@ class WorldEncoder {
     }
 
     static int getEncodedSize(Chunk column) {
-        return column.getBiomeArray().length;
+        return column.getBiomeArray().length + Cube.SIZE * Cube.SIZE * Integer.BYTES;
     }
 
     static int getEncodedSize(Collection<Cube> cubes) {

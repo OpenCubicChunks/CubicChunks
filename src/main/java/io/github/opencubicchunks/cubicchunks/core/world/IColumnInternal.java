@@ -26,6 +26,9 @@ package io.github.opencubicchunks.cubicchunks.core.world;
 
 import io.github.opencubicchunks.cubicchunks.api.world.IColumn;
 import io.github.opencubicchunks.cubicchunks.api.world.ICube;
+import io.github.opencubicchunks.cubicchunks.core.util.AddressTools;
+import io.github.opencubicchunks.cubicchunks.core.world.cube.Cube;
+import net.minecraft.network.PacketBuffer;
 import net.minecraft.world.chunk.ChunkPrimer;
 
 public interface IColumnInternal extends IColumn {
@@ -39,4 +42,14 @@ public interface IColumnInternal extends IColumn {
      * Returns Y coordinate of the block above the top non-transparent block
      */
     int getHeightWithStaging(int localX, int localZ);
+
+    default void writeHeightmapDataForClient(PacketBuffer out) {
+        for (int i = 0; i < Cube.SIZE * Cube.SIZE; i++) {
+            out.writeInt(getHeightWithStaging(AddressTools.getLocalX(i), AddressTools.getLocalZ(i)) - 1);
+        }
+    }
+
+    default void loadClientHeightmapData(PacketBuffer in) {
+        ((ClientHeightMap) getOpacityIndex()).loadData(in);
+    }
 }

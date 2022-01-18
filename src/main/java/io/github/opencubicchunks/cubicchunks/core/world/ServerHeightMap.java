@@ -736,22 +736,6 @@ public class ServerHeightMap implements IHeightMap {
         }
     }
 
-    public byte[] getDataForClient() {
-        try {
-            ByteArrayOutputStream buf = new ByteArrayOutputStream();
-            DataOutputStream out = new DataOutputStream(buf);
-
-            for (int i = 0; i < Cube.SIZE * Cube.SIZE; i++) {
-                out.writeInt(ymax.get(i));
-            }
-
-            out.close();
-            return buf.toByteArray();
-        } catch (IOException e) {
-            throw new Error(e);
-        }
-    }
-
     public void readData(byte[] data) {
         try {
             ByteArrayInputStream buf = new ByteArrayInputStream(data);

@@ -24,17 +24,8 @@
  */
 package io.github.opencubicchunks.cubicchunks.core.server;
 
-import java.util.BitSet;
-import java.util.List;
-
-import javax.annotation.Nonnull;
-import javax.annotation.ParametersAreNonnullByDefault;
-
-import gnu.trove.list.TByteList;
-import gnu.trove.list.array.TByteArrayList;
 import io.github.opencubicchunks.cubicchunks.api.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.api.util.XZAddressable;
-import io.github.opencubicchunks.cubicchunks.api.world.IColumn;
 import io.github.opencubicchunks.cubicchunks.core.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.core.asm.mixin.core.common.IPlayerChunkMapEntry;
 import io.github.opencubicchunks.cubicchunks.core.network.PacketColumn;
@@ -44,13 +35,18 @@ import io.github.opencubicchunks.cubicchunks.core.network.PacketUnloadColumn;
 import io.github.opencubicchunks.cubicchunks.core.server.chunkio.async.forge.AsyncWorldIOExecutor;
 import io.github.opencubicchunks.cubicchunks.core.util.AddressTools;
 import mcp.MethodsReturnNonnullByDefault;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.world.ChunkWatchEvent;
-
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.server.management.PlayerChunkMapEntry;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.chunk.Chunk;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.world.ChunkWatchEvent;
+
+import java.util.BitSet;
+import java.util.List;
+
+import javax.annotation.Nonnull;
+import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
@@ -217,7 +213,7 @@ public class ColumnWatcher extends PlayerChunkMapEntry implements XZAddressable 
         assert getChunk() != null;
         for (EntityPlayerMP player : self().getPlayerList()) {
             if (playerCubeMap.vanillaNetworkHandler.hasCubicChunks(player)) {
-                PacketDispatcher.sendTo(new PacketHeightMapUpdate(getPos(), dirtyColumns, ((IColumn) getChunk()).getOpacityIndex()), player);
+                PacketDispatcher.sendTo(new PacketHeightMapUpdate(dirtyColumns, getChunk()), player);
             }
         }
         this.dirtyColumns.clear();

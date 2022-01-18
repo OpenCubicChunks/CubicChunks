@@ -25,18 +25,18 @@
 package io.github.opencubicchunks.cubicchunks.core.network;
 
 import com.google.common.base.Preconditions;
+import gnu.trove.list.TByteList;
+import gnu.trove.list.TIntList;
+import gnu.trove.list.array.TByteArrayList;
+import gnu.trove.list.array.TIntArrayList;
 import io.github.opencubicchunks.cubicchunks.api.world.IColumn;
 import io.github.opencubicchunks.cubicchunks.core.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.core.asm.mixin.ICubicWorldInternal;
 import io.github.opencubicchunks.cubicchunks.core.client.CubeProviderClient;
 import io.github.opencubicchunks.cubicchunks.core.lighting.ILightingManager;
 import io.github.opencubicchunks.cubicchunks.core.util.AddressTools;
-import io.github.opencubicchunks.cubicchunks.api.world.IHeightMap;
-import gnu.trove.list.TByteList;
-import gnu.trove.list.TIntList;
-import gnu.trove.list.array.TByteArrayList;
-import gnu.trove.list.array.TIntArrayList;
 import io.github.opencubicchunks.cubicchunks.core.world.ClientHeightMap;
+import io.github.opencubicchunks.cubicchunks.core.world.IColumnInternal;
 import io.netty.buffer.ByteBuf;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.entity.player.EntityPlayer;
@@ -63,13 +63,13 @@ public class PacketHeightMapUpdate implements IMessage {
     public PacketHeightMapUpdate() {
     }
 
-    public PacketHeightMapUpdate(ChunkPos chunk, BitSet updates, IHeightMap heightMap) {
-        this.chunk = chunk;
+    public PacketHeightMapUpdate(BitSet updates, Chunk chunk) {
+        this.chunk = chunk.getPos();
         this.updates = new TByteArrayList();
         this.heights = new TIntArrayList();
         for (int i = updates.nextSetBit(0); i >= 0; i = updates.nextSetBit(i + 1)) {
             this.updates.add((byte) i);
-            this.heights.add(heightMap.getTopBlockY(AddressTools.getLocalX(i), AddressTools.getLocalZ(i)));
+            this.heights.add(((IColumnInternal) chunk).getHeightWithStaging(AddressTools.getLocalX(i), AddressTools.getLocalZ(i)) - 1);
         }
     }
 

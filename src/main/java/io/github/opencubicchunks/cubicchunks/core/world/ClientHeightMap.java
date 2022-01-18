@@ -30,6 +30,7 @@ import io.github.opencubicchunks.cubicchunks.api.world.IHeightMap;
 import io.github.opencubicchunks.cubicchunks.core.lighting.LightingManager;
 import io.github.opencubicchunks.cubicchunks.core.world.cube.Cube;
 import mcp.MethodsReturnNonnullByDefault;
+import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.chunk.Chunk;
 
@@ -135,19 +136,9 @@ public class ClientHeightMap implements IHeightMap {
         }
     }
 
-    public void setData(@Nonnull byte[] data) {
-        try {
-            ByteArrayInputStream buf = new ByteArrayInputStream(data);
-            DataInputStream in = new DataInputStream(buf);
-
-            for (int i = 0; i < Cube.SIZE * Cube.SIZE; i++) {
-                hmap.set(i, in.readInt());
-            }
-
-            in.close();
-        } catch (IOException e) {
-            Throwables.throwIfUnchecked(e);
-            throw new AssertionError();
+    public void loadData(PacketBuffer in) {
+        for (int i = 0; i < Cube.SIZE * Cube.SIZE; i++) {
+            hmap.set(i, in.readInt());
         }
     }
 
