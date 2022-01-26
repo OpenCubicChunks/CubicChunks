@@ -108,6 +108,10 @@ java {
     targetCompatibility = JavaVersion.VERSION_1_8
 }
 
+if (JavaVersion.current() != java.sourceCompatibility) {
+    throw GradleException("This project must be compiled with java ${java.sourceCompatibility} but current java version is ${JavaVersion.current()}")
+}
+
 minecraft {
     version = theForgeVersion
     runDir = "run"
