@@ -29,6 +29,7 @@ import io.github.opencubicchunks.cubicchunks.api.world.ICube;
 import io.github.opencubicchunks.cubicchunks.api.world.storage.ICubicStorage;
 import io.github.opencubicchunks.cubicchunks.core.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.core.asm.mixin.ICubicWorldInternal;
+import io.github.opencubicchunks.cubicchunks.core.server.chunkio.async.forge.AsyncWorldIOExecutor;
 import io.github.opencubicchunks.cubicchunks.core.world.cube.Cube;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.minecraft.nbt.NBTTagCompound;
@@ -239,6 +240,11 @@ public class AsyncBatchingCubeIO implements ICubeIO {
 
     @Override
     public void close() throws IOException {
+        // shutdown loading executor first
+        // has to be done before lock to avoid a deadlock
+        // this is a best-effort shutdown, at worst failure will cause a few exceptions in the log
+        AsyncWorldIOExecutor.shutdownNowBlocking();
+
         this.lock.writeLock().lock();
         try {
             this.ensureOpen();

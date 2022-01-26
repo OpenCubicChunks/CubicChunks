@@ -65,37 +65,40 @@ public class AsyncWorldIOExecutor {
     private static final Map<QueuedCube, AsyncCubeIOProvider> cubeTasks = new ConcurrentHashMap<>(20000, 0.8f, 1);
     private static final Map<QueuedColumn, AsyncColumnIOProvider> columnTasks = Maps.newConcurrentMap();
 
-    private static final AtomicInteger threadCounter = new AtomicInteger();
-    private static final ThreadPoolExecutor cubeThreadPool = new ThreadPoolExecutor(BASE_THREADS, Integer.MAX_VALUE, 60L, TimeUnit.SECONDS,
-            new LinkedBlockingQueue<>(),
-
-            // Sponge start: Use lambda
-            r -> {
-                Thread thread = new Thread(r, "Cube I/O Thread #" + threadCounter.incrementAndGet());
-                thread.setDaemon(true);
-                return thread;
-            }
-            // Sponge end
-    );
+    private static ThreadPoolExecutor cubeThreadPool;
 
     // use separate thread pool for cubes and columns to avoid situation where only cube tasks are being executed
     // all waiting for their columns
-    private static final ThreadPoolExecutor columnThreadPool = new ThreadPoolExecutor(BASE_THREADS, Integer.MAX_VALUE, 60L, TimeUnit.SECONDS,
-            new LinkedBlockingQueue<>(),
-
-            // Sponge start: Use lambda
-            r -> {
-                Thread thread = new Thread(r, "Column I/O Thread #" + threadCounter.incrementAndGet());
-                thread.setDaemon(true);
-                return thread;
-            }
-            // Sponge end
-    );
+    private static ThreadPoolExecutor columnThreadPool;
 
     // this keeps track of which columns need to be kept loaded for which currently being loaded cubes
     // this allows to avoid a column being unloaded while a cube that uses it is being loaded, which would lead to hard to debug errors
     private static final Multimap<QueuedColumn, QueuedCube> loadingCubesColumnMap =
             Multimaps.newMultimap(new ConcurrentHashMap<>(), Sets::newConcurrentHashSet);
+
+    static {
+        initExecutors();
+    }
+
+    private static void initExecutors() {
+        final AtomicInteger threadCounter = new AtomicInteger();
+        cubeThreadPool = new ThreadPoolExecutor(BASE_THREADS, Integer.MAX_VALUE, 60L, TimeUnit.SECONDS,
+                new LinkedBlockingQueue<>(),
+                r -> {
+                    Thread thread = new Thread(r, "Cube I/O Thread #" + threadCounter.incrementAndGet());
+                    thread.setDaemon(true);
+                    return thread;
+                }
+        );
+        columnThreadPool = new ThreadPoolExecutor(BASE_THREADS, Integer.MAX_VALUE, 60L, TimeUnit.SECONDS,
+                new LinkedBlockingQueue<>(),
+                r -> {
+                    Thread thread = new Thread(r, "Column I/O Thread #" + threadCounter.incrementAndGet());
+                    thread.setDaemon(true);
+                    return thread;
+                }
+        );
+    }
 
     /**
      * Load a cube, directly.
@@ -305,6 +308,25 @@ public class AsyncWorldIOExecutor {
         }
 
         //TODO: remove all queued cube tasks for that column
+    }
+
+    public static void shutdownNowBlocking() {
+        // best effort wait for up to 10 seconds each
+        // shut down cubes first to avoid a cube executor getting stuck waiting for it's column
+        cubeThreadPool.shutdownNow();
+        cubeTasks.clear();
+        try {
+            cubeThreadPool.awaitTermination(10, TimeUnit.SECONDS);
+        } catch (InterruptedException ignored) {
+        }
+        columnThreadPool.shutdownNow();
+        columnTasks.clear();
+        try {
+            columnThreadPool.awaitTermination(10, TimeUnit.SECONDS);
+        } catch (InterruptedException ignored) {
+        }
+        // initialize for next use
+        initExecutors();
     }
 
     /**
