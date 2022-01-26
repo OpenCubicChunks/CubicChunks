@@ -284,7 +284,10 @@ public class IONbtReader {
             cube.setInitialLightingDone(false);
             ExtendedBlockStorage storage = cube.getStorage();
             if (storage != null) {
-                Arrays.fill(storage.getSkyLight().getData(), (byte) 0);
+                //noinspection ConstantConditions
+                if (storage.getSkyLight() != null) {
+                    Arrays.fill(storage.getSkyLight().getData(), (byte) 0);
+                }
                 Arrays.fill(storage.getBlockLight().getData(), (byte) 0);
             }
             cube.setSurfaceTracked(false);
