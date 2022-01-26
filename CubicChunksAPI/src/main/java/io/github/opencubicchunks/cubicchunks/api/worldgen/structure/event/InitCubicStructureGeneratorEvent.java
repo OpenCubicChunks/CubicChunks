@@ -25,10 +25,13 @@
 package io.github.opencubicchunks.cubicchunks.api.worldgen.structure.event;
 
 import io.github.opencubicchunks.cubicchunks.api.worldgen.structure.ICubicStructureGenerator;
+import net.minecraft.world.World;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.terraingen.InitMapGenEvent.EventType;
 import net.minecraftforge.fml.common.eventhandler.Cancelable;
 import net.minecraftforge.fml.common.eventhandler.Event;
+
+import javax.annotation.Nullable;
 
 /**
  * This event is fired on initialization of cubic terrain generators during
@@ -41,11 +44,25 @@ public class InitCubicStructureGeneratorEvent extends Event {
     private final EventType type;
     private final ICubicStructureGenerator originalGen;
     private ICubicStructureGenerator newGen;
+    private World world;
 
+    @Deprecated // to be removed!
     public InitCubicStructureGeneratorEvent(EventType type, ICubicStructureGenerator original) {
         this.type = type;
         this.originalGen = original;
         this.setNewGen(original);
+    }
+
+    public InitCubicStructureGeneratorEvent(EventType type, ICubicStructureGenerator original, World world) {
+        this.type = type;
+        this.originalGen = original;
+        this.world = world;
+        this.setNewGen(original);
+    }
+
+    @Nullable
+    public World getWorld() {
+        return world;
     }
 
     public EventType getType() {
