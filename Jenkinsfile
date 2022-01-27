@@ -33,9 +33,6 @@ pipeline {
         git "Default"
         jdk "jdk8"
     }
-    options {
-        buildDiscarder(logRotator(artifactNumToKeepStr: '5'))
-    }
     stages {
         stage("Build") {
             steps {
