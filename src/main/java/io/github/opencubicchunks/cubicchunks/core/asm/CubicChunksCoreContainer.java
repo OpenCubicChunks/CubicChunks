@@ -25,22 +25,30 @@
 package io.github.opencubicchunks.cubicchunks.core.asm;
 
 import com.google.common.eventbus.EventBus;
+import io.github.opencubicchunks.cubicchunks.core.CubicChunks;
 import net.minecraftforge.fml.common.DummyModContainer;
 import net.minecraftforge.fml.common.LoadController;
 import net.minecraftforge.fml.common.ModMetadata;
 import net.minecraftforge.fml.common.versioning.ArtifactVersion;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.Collections;
 import java.util.List;
 
 public class CubicChunksCoreContainer extends DummyModContainer {
+    public static Logger LOGGER = LogManager.getLogger("CubicChunkcCore");
 
     public CubicChunksCoreContainer() {
         super(new ModMetadata());
         ModMetadata meta = getMetadata();
         meta.modId = "cubicchunkscore";
         meta.name = "Cubic Chunks Coremod";
-        meta.version = "0.0.9999.0";
+        meta.version = getClass().getPackage().getImplementationVersion();
+        if (meta.version == null) {
+            LOGGER.error("No implementation version! If this is dev environment, this is normal");
+            meta.version = "9999.9999.9999.9";
+        }
         meta.logoFile = "/assets/cubicchunks/logo.png";
         meta.parent = "cubicchunks";
     }

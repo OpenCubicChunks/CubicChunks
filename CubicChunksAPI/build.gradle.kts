@@ -1,46 +1,24 @@
-import net.minecraftforge.gradle.tasks.DeobfuscateJar
-import nl.javadude.gradle.plugins.license.LicensePlugin
-import org.gradle.api.internal.HasConvention
-import org.gradle.kotlin.dsl.creating
-import org.gradle.kotlin.dsl.extra
-
-import kotlin.apply
-
-// Gradle repositories and dependencies
-buildscript {
-    repositories {
-        mavenCentral()
-        maven {
-            setUrl("https://repo.spongepowered.org/maven")
-        }
-        maven {
-            setUrl("https://plugins.gradle.org/m2/")
-        }
-        maven {
-            setUrl("https://maven.minecraftforge.net/")
-        }
-    }
-    dependencies {
-        classpath("gradle.plugin.nl.javadude.gradle.plugins:license-gradle-plugin:0.14.0")
-        classpath("net.minecraftforge.gradle:ForgeGradle:2.3-SNAPSHOT")
-    }
-}
+import java.time.Instant
+import java.time.format.DateTimeFormatter
 
 plugins {
-    base
     java
-    idea
-    eclipse
     `maven-publish`
-    maven
     signing
-    id("io.github.opencubicchunks.gradle.fg2fixed")
-    id("io.github.opencubicchunks.gradle.remapper")
+    idea
+    id("net.minecraftforge.gradle").version("5.1.27")
     id("io.github.opencubicchunks.gradle.mcGitVersion")
+    id("com.github.hierynomus.license").version("0.16.1")
 }
 
-apply {
-    plugin<LicensePlugin>()
+val licenseYear: String by project
+val projectName: String by project
+val doRelease: String by project
+
+group = "io.github.opencubicchunks"
+
+base {
+    archivesName.set("CubicChunksAPI")
 }
 
 mcGitVersion {
@@ -48,47 +26,24 @@ mcGitVersion {
     setCommitVersion("tags/v0.0", "0.0")
 }
 
-// tasks
-val build by tasks
-val jar: Jar by tasks
-val sourceJar: Jar by tasks
-val javadoc: Javadoc by tasks
-val test: Test by tasks
-val processResources: ProcessResources by tasks
-val deobfMcSRG: DeobfuscateJar by tasks
-val deobfMcMCP: DeobfuscateJar by tasks
-val compileJava : JavaCompile by tasks
+java.toolchain.languageVersion.set(JavaLanguageVersion.of(8))
 
-defaultTasks = listOf("licenseFormat", "build")
-
-//it can't be named forgeVersion because ForgeExtension has property named forgeVersion
-val theForgeVersion: String by project
-val theMappingsVersion: String by project
-
-val licenseYear: String by project
-val projectName: String by project
-
-val versionSuffix: String by project
-val versionMinorFreeze: String by project
-val release: String by project
-
-val sourceSets = the<JavaPluginConvention>().sourceSets
-val mainSourceSet = sourceSets["main"]!!
-
-group = "io.github.opencubicchunks"
-(mainSourceSet as ExtensionAware).extra["refMap"] = "cubicchunks.mixins.refmap.json"
-
-sourceSets {
-    create("optifine_dummy")
+repositories {
+    mavenCentral()
+    maven {
+        setUrl("https://oss.sonatype.org/content/repositories/public/")
+    }
+    maven {
+        setUrl("https://repo.spongepowered.org/maven")
+    }
 }
 
-val compile by configurations
-val testCompile by configurations
-
 dependencies {
-    testCompile("junit:junit:4.11")
-    testCompile("org.hamcrest:hamcrest-junit:2.0.0.0")
-    testCompile("org.mockito:mockito-core:2.1.0-RC.2")
+    minecraft(group = "net.minecraftforge", name = "forge", version = "1.12.2-14.23.5.2860")
+}
+
+minecraft {
+    mappings("stable", "39-1.12")
 }
 
 idea {
@@ -99,106 +54,70 @@ idea {
     module.isDownloadSources = true
 }
 
-base {
-    archivesBaseName = "CubicChunks"
-}
+tasks {
+    publish {
+        dependsOn("reobfJar")
+    }
 
-java {
-    sourceCompatibility = JavaVersion.VERSION_1_8
-    targetCompatibility = JavaVersion.VERSION_1_8
-}
+    jar {
+        finalizedBy("reobfJar")
+        archiveClassifier.set("api")
+        from(sourceSets["main"].output)
+        exclude("LICENSE.txt")
+        manifest {
+            attributes(
+                    "Specification-Title" to project.name,
+                    "Specification-Version" to project.version,
+                    "Specification-Vendor" to "OpenCubicChunks",
+                    "Implementation-Title" to "${project.group}.${project.name.toLowerCase().replace(' ', '_')}",
+                    "Implementation-Version" to project.version,
+                    "Implementation-Vendor" to "OpenCubicChunks",
+                    "Implementation-Timestamp" to DateTimeFormatter.ISO_INSTANT.format(Instant.now())
+            )
+        }
+    }
 
-if (JavaVersion.current() != java.sourceCompatibility) {
-    throw GradleException("This project must be compiled with java ${java.sourceCompatibility} but current java version is ${JavaVersion.current()}")
-}
+    compileJava {
+        options.isDeprecation = true
+    }
 
-minecraft {
-    version = theForgeVersion
-    runDir = "run"
-    mappings = theMappingsVersion
-}
+    val deobfJar by creating(Jar::class) {
+        archiveClassifier.set("api-dev")
+        from(sourceSets.main.get().output)
+    }
 
-license {
-    val ext = (this as HasConvention).convention.extraProperties
-    ext["project"] = projectName
-    ext["year"] = licenseYear
-    exclude("**/*.info")
-    exclude("**/package-info.java")
-    exclude("**/*.json")
-    exclude("**/*.xml")
-    exclude("assets/*")
-    header = file("HEADER.txt")
-    ignoreFailures = false
-    strictCheck = true
-    mapping(mapOf("java" to "SLASHSTAR_STYLE"))
-}
+    val deobfSrcJar by creating(Jar::class) {
+        archiveClassifier.set("api-sources")
+        from(sourceSets.main.get().java.srcDirs)
+    }
 
-compileJava.apply {
-    options.isDeprecation = true
-}
-
-val deobfJar by tasks.creating(Jar::class) {
-    classifier = "api-dev"
-    from(sourceSets["main"].output)
-}
-
-val deobfSrcJar by tasks.creating(Jar::class) {
-    classifier = "api-sources"
-    from(sourceSets["main"].java.srcDirs)
-}
-
-val javadocJar by tasks.creating(Jar::class) {
-    classifier = "api-javadoc"
-    from(tasks["javadoc"])
-}
-
-sourceJar.apply {
-    classifier = "api-sources-srg"
-}
-
-jar.apply {
-    classifier = "api"
+    val javadocJar by creating(Jar::class) {
+        archiveClassifier.set("api-javadoc")
+        from(javadoc)
+    }
 }
 
 artifacts {
-    withGroovyBuilder {
-        "archives"(jar, deobfSrcJar, javadocJar, sourceJar, deobfSrcJar, deobfJar)
-    }
+    archives(tasks.jar)
+    archives(tasks["deobfSrcJar"])
+    archives(tasks["javadocJar"])
+    archives(tasks["deobfSrcJar"])
+    archives(tasks["deobfJar"])
 }
 
 publishing {
-    repositories {
-        maven {
-            val user = (project.properties["sonatypeUsername"] ?: System.getenv("sonatypeUsername")) as String?
-            val pass = (project.properties["sonatypePassword"] ?: System.getenv("sonatypePassword")) as String?
-            val local = user == null || pass == null
-            if (local) {
-                logger.warn("Username or password not set, publishing to local repository in build/mvnrepo/")
-            }
-            val localUrl = "$buildDir/mvnrepo"
-            val releasesRepoUrl = "https://oss.sonatype.org/service/local/staging/deploy/maven2"
-            val snapshotsRepoUrl =  "https://oss.sonatype.org/content/repositories/snapshots"
-
-            setUrl(if (local) localUrl else if (release.toBoolean()) releasesRepoUrl else snapshotsRepoUrl)
-            if (!local) {
-                credentials {
-                    username = user
-                    password = pass
-                }
-            }
-        }
-    }
-    (publications) {
-        "api"(MavenPublication::class) {
-            version = ext["mavenProjectVersion"]!!.toString()
+    publications {
+        create("mavenJava", MavenPublication::class) {
+            version = project.ext["mavenProjectVersion"]!!.toString()
             artifactId = "cubicchunks-api"
+            artifact(tasks.jar)
             from(components["java"])
             artifacts.clear()
-            artifact(deobfSrcJar) {
+            artifact(tasks["deobfSrcJar"]) {
                 classifier = "sources"
             }
-            artifact(jar)
-            artifact(javadocJar) {
+            artifact(tasks["jar"])
+            artifact(tasks["javadocJar"]) {
                 classifier = "javadoc"
             }
             pom {
@@ -236,36 +155,45 @@ publishing {
             }
         }
     }
+    repositories {
+        maven {
+            val user = (project.properties["sonatypeUsername"] ?: System.getenv("sonatypeUsername")) as String?
+            val pass = (project.properties["sonatypePassword"] ?: System.getenv("sonatypePassword")) as String?
+            val local = user == null || pass == null
+            if (local) {
+                logger.warn("Username or password not set, publishing to local repository in build/mvnrepo/")
+            }
+            val localUrl = "$buildDir/mvnrepo"
+            val releasesRepoUrl = "https://oss.sonatype.org/service/local/staging/deploy/maven2"
+            val snapshotsRepoUrl =  "https://oss.sonatype.org/content/repositories/snapshots"
+
+            setUrl(if (local) localUrl else if (doRelease.toBoolean()) releasesRepoUrl else snapshotsRepoUrl)
+            if (!local) {
+                credentials {
+                    username = user
+                    password = pass
+                }
+            }
+        }
+    }
 }
 
 signing {
     isRequired = false
     // isRequired = gradle.taskGraph.hasTask("uploadArchives")
-    sign(configurations.archives)
+    sign(configurations.archives.get())
 }
 
-repositories {
-    mavenLocal()
-    mavenCentral()
-    maven {
-        setUrl("https://oss.sonatype.org/content/repositories/public/")
-    }
-    maven {
-        setUrl("https://maven.minecraftforge.net")
-    }
-    maven {
-        setUrl("https://repo.spongepowered.org/maven")
-    }
-}
-repositories.removeIf { it is MavenArtifactRepository && it.url.toString().contains("files.minecraftforge") }
-
-jar.apply {
-    from(sourceSets["main"].output)
-    exclude("LICENSE.txt")
-}
-
-fun extractForgeMinorVersion(): String {
-    // version format: MC_VERSION-MAJOR.MINOR.?.BUILD
-    return theForgeVersion.split(Regex("-")).getOrNull(1)?.split(Regex("\\."))?.getOrNull(1) ?:
-    throw RuntimeException("Invalid forge version format: $theForgeVersion")
+license {
+    ext["project"] = projectName
+    ext["year"] = licenseYear
+    exclude("**/*.info")
+    exclude("**/package-info.java")
+    exclude("**/*.json")
+    exclude("**/*.xml")
+    exclude("assets/*")
+    header = file("HEADER.txt")
+    ignoreFailures = false
+    strictCheck = true
+    mapping(mapOf("java" to "SLASHSTAR_STYLE"))
 }

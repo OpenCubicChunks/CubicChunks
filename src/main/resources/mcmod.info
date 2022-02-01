@@ -3,8 +3,8 @@
         "modid": "cubicchunks",
         "name": "CubicChunks",
         "description": "Extends Minecraft height by changing chunk size to 16x16x16 blocks.",
-        "version": "${version}",
-        "mcversion": "${mcversion}",
+        "version": "%%VERSION%%",
+        "mcversion": "1.12.2",
         "url": "",
         "updateUrl": "",
         "authorList": [
@@ -15,6 +15,6 @@
         "credits": "Based on Cuchaz's TWM mod, initial idea and first implementation by Robinton. Notable contributors: Cyclonit, xcube16, Boreeas, Foghrye4. Special thanks to: jellusquid3 for allowinf Phosphor light engine to be used under the MIT license. MineCrak for help with 1.6.* CubicChunks. Calacbolg - the CubicChunks suggestion inspired me to start working on CubicChunks mod, and made the idea more well known",
         "logoFile": "/assets/cubicchunks/logo.png",
         "screenshots": [],
-        "dependencies": []
+        "dependencies": ["after:forge@[14.23.5.2859,]"]
     }
 ]

@@ -78,10 +78,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-@Mod(modid = CubicChunks.MODID,
-        name = "CubicChunks",
-        version = CubicChunks.VERSION,
-        dependencies = "after:forge@[14.23.3.2691,]")
+@Mod(modid = CubicChunks.MODID, useMetadata = true)
 @Mod.EventBusSubscriber
 public class CubicChunks {
 
@@ -104,11 +101,20 @@ public class CubicChunks {
 
     public static final boolean DEBUG_ENABLED = System.getProperty("cubicchunks.debug", "false").equalsIgnoreCase("true");
     public static final String MODID = "cubicchunks";
-    public static final String VERSION = "9999.9999.9999.9999"; // replaced by ForgeGradle
 
     @Nonnull
     public static Logger LOGGER = LogManager.getLogger("EarlyCubicChunks");//use some logger even before it's set. useful for unit tests
 
+    private static final String MOD_VERSION;
+
+    static {
+        String implementationVersion = CubicChunks.class.getPackage().getImplementationVersion();
+        if (implementationVersion == null) {
+            LOGGER.error("No implementation version! If this is dev environment, this is normal");
+            implementationVersion = "9999.9999.9999.9";
+        }
+        MOD_VERSION = implementationVersion;
+    }
     @EventHandler
     public void preInit(FMLPreInitializationEvent e) {
         LOGGER = e.getModLog();
@@ -206,7 +212,7 @@ public class CubicChunks {
             }
             return true; // allow connecting to server without CC
         }
-        if (!checkVersionFormat(VERSION, remoteSide.isClient() ? Side.SERVER : Side.CLIENT)) {
+        if (!checkVersionFormat(MOD_VERSION, remoteSide.isClient() ? Side.SERVER : Side.CLIENT)) {
             return true;
         }
         if (!checkVersionFormat(remoteFullVersion, remoteSide)) {
@@ -214,7 +220,7 @@ public class CubicChunks {
         }
 
         ArtifactVersion version = new DefaultArtifactVersion(remoteFullVersion);
-        ArtifactVersion currentVersion = new DefaultArtifactVersion(VERSION);
+        ArtifactVersion currentVersion = new DefaultArtifactVersion(MOD_VERSION);
         if (currentVersion.compareTo(version) < 0) {
             return true; // allow connection if this version is older, let newer one decide
         }
