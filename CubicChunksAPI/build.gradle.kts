@@ -110,9 +110,6 @@ publishing {
         create("mavenJava", MavenPublication::class) {
             version = project.ext["mavenProjectVersion"]!!.toString()
             artifactId = "cubicchunks-api"
-            artifact(tasks.jar)
-            from(components["java"])
-            artifacts.clear()
             artifact(tasks["deobfSrcJar"]) {
                 classifier = "sources"
             }

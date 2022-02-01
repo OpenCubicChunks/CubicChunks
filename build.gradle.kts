@@ -261,11 +261,6 @@ tasks {
         }
     }
 
-    val javadocJar by creating(Jar::class) {
-        archiveClassifier.set("javadoc")
-        from(getByName("javadoc"))
-    }
-
     val deobfApiJar by creating(Jar::class) {
         archiveClassifier.set("api-dev")
         from(sourceSets["api"].output)
@@ -278,10 +273,21 @@ tasks {
 
     val javadocApi by creating(Javadoc::class) {
         source = sourceSets["api"].allJava
-        classpath = javadoc.get().classpath
+        doFirst {
+            classpath = configurations.compileClasspath.get()
+        }
+    }
+
+    // gradle complains about using output of javadocApi in javadocJar and javadoc in javadocApiJar when not specifying dependencies on them
+    // I don't know why
+    val javadocJar by creating(Jar::class) {
+        dependsOn(javadoc, javadocApi)
+        archiveClassifier.set("javadoc")
+        from(javadoc)
     }
 
     val javadocApiJar by creating(Jar::class) {
+        dependsOn(javadocApi, javadoc)
         archiveClassifier.set("api-javadoc")
         from(javadocApi)
     }
@@ -363,13 +369,8 @@ publishing {
         create("api", MavenPublication::class) {
             version = project.ext["mavenProjectVersion"]!!.toString()
             artifactId = "cubicchunks-api"
-            from(components["java"])
-            artifacts.clear()
             artifact(tasks["deobfApiSrcJar"]) {
                 classifier = "sources"
-            }
-            artifact(tasks["apiJar"]) {
-                classifier = ""
             }
             artifact(tasks["javadocApiJar"]) {
                 classifier = "javadoc"
@@ -377,6 +378,7 @@ publishing {
             artifact(tasks["deobfApiJar"]) {
                 classifier = "dev"
             }
+            artifact(tasks["apiJar"])
             pom {
                 name.set("Cubic Chunks API")
                 description.set("API for the CubicChunks mod for Minecraft")
@@ -414,16 +416,17 @@ publishing {
         create("mod", MavenPublication::class) {
             version = project.ext["mavenProjectVersion"]!!.toString()
             artifactId = "cubicchunks"
-            from(components["java"])
-            artifacts.clear()
-            artifact(tasks["deobfSourcesJar"]) {
-                classifier = "sources"
-            }
             artifact(tasks["shadowJar"]) {
                 classifier = ""
             }
             artifact(tasks["devShadowJar"]) {
                 classifier = "dev"
+            }
+            artifact(tasks["deobfSourcesJar"]) {
+                classifier = "sources"
+            }
+            artifact(tasks["javadocJar"]) {
+                classifier = "javadoc"
             }
             pom {
                 name.set(projectName)
