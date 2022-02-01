@@ -117,6 +117,9 @@ publishing {
             artifact(tasks["javadocJar"]) {
                 classifier = "javadoc"
             }
+            artifact(tasks["deobfJar"]) {
+                classifier = "dev"
+            }
             pom {
                 name.set("Cubic Chunks API")
                 description.set("API for the CubicChunks mod for Minecraft")
