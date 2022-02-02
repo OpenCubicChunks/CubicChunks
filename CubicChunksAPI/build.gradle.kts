@@ -122,7 +122,6 @@ artifacts {
     archives(tasks["javadocJar"])
     archives(tasks["deobfSrcJar"])
     archives(tasks["allJar"])
-    //default(jar)
 }
 
 publishing {
@@ -133,7 +132,9 @@ publishing {
             artifact(tasks["deobfSrcJar"]) {
                 classifier = "sources"
             }
-            artifact(tasks["allJar"])
+            artifact(tasks["allJar"]) {
+                classifier = ""
+            }
             artifact(tasks["javadocJar"]) {
                 classifier = "javadoc"
             }

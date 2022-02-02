@@ -370,53 +370,6 @@ publishing {
         }
     }
     publications {
-        create("api", MavenPublication::class) {
-            version = project.ext["mavenProjectVersion"]!!.toString()
-            artifactId = "cubicchunks-api"
-            artifact(tasks["deobfApiSrcJar"]) {
-                classifier = "sources"
-            }
-            artifact(tasks["javadocApiJar"]) {
-                classifier = "javadoc"
-            }
-            artifact(tasks["deobfApiJar"]) {
-                classifier = "dev"
-            }
-            artifact(tasks["apiJar"])
-            pom {
-                name.set("Cubic Chunks API")
-                description.set("API for the CubicChunks mod for Minecraft")
-                packaging = "jar"
-                url.set("https://github.com/OpenCubicChunks/CubicChunks")
-                description.set("API for CubicChunks mod for Minecraft")
-                scm {
-                    connection.set("scm:git:git://github.com/OpenCubicChunks/CubicChunks.git")
-                    developerConnection.set("scm:git:ssh://git@github.com:OpenCubicChunks/CubicChunks.git")
-                    url.set("https://github.com/OpenCubicChunks/RegionLib")
-                }
-
-                licenses {
-                    license {
-                        name.set("The MIT License")
-                        url.set("http://www.tldrlegal.com/license/mit-license")
-                        distribution.set("repo")
-                    }
-                }
-
-                developers {
-                    developer {
-                        id.set("Barteks2x")
-                        name.set("Barteks2x")
-                    }
-                    // TODO: add more developers
-                }
-
-                issueManagement {
-                    system.set("github")
-                    url.set("https://github.com/OpenCubicChunks/CubicChunks/issues")
-                }
-            }
-        }
         create("mod", MavenPublication::class) {
             version = project.ext["mavenProjectVersion"]!!.toString()
             artifactId = "cubicchunks"
@@ -467,7 +420,6 @@ publishing {
         }
     }
     tasks["publishModPublicationToMavenRepository"].dependsOn("shadowJar", "devShadowJar")
-    tasks["publishApiPublicationToMavenRepository"].dependsOn("deobfApiSrcJar", "apiJar", "javadocApiJar", "deobfApiJar")
 }
 
 signing {
