@@ -1,10 +1,6 @@
 import java.time.Instant
 import java.time.format.DateTimeFormatter
 
-buildscript {
-    System.setProperty("net.minecraftforge.gradle.check.certs", "false")
-}
-
 plugins {
     java
     `maven-publish`
