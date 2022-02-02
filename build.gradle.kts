@@ -244,7 +244,6 @@ tasks {
     compileJava {
         options.isDeprecation = true
         options.compilerArgs.add("-Xlint:unchecked")
-        dependsOn(gradle.includedBuild("CubicChunksAPI").task(":reobfJar"))
     }
 
     javadoc {
