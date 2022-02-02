@@ -55,13 +55,32 @@ idea {
 }
 
 tasks {
-    publish {
-        dependsOn("reobfJar")
+    jar {
+        from(sourceSets.main.get().output)
+        exclude("LICENSE.txt")
+        manifest {
+            attributes(
+                    "Specification-Title" to project.name,
+                    "Specification-Version" to project.version,
+                    "Specification-Vendor" to "OpenCubicChunks",
+                    "Implementation-Title" to "${project.group}.${project.name.toLowerCase().replace(' ', '_')}",
+                    "Implementation-Version" to project.version,
+                    "Implementation-Vendor" to "OpenCubicChunks",
+                    "Implementation-Timestamp" to DateTimeFormatter.ISO_INSTANT.format(Instant.now())
+            )
+        }
     }
 
-    jar {
-        finalizedBy("reobfJar")
-        archiveClassifier.set("api")
+    afterEvaluate {
+        getByName("reobfJar").enabled = false;
+    }
+
+    compileJava {
+        options.isDeprecation = true
+    }
+
+    val allJar by creating(Jar::class) {
+        archiveClassifier.set("all")
         from(sourceSets["main"].output)
         exclude("LICENSE.txt")
         manifest {
@@ -77,22 +96,22 @@ tasks {
         }
     }
 
-    compileJava {
-        options.isDeprecation = true
+    reobf {
+        create("allJar")
     }
 
-    val deobfJar by creating(Jar::class) {
-        archiveClassifier.set("api-dev")
-        from(sourceSets.main.get().output)
+    publish {
+        dependsOn("reobfAllJar")
     }
+    allJar.finalizedBy("reobfAllJar")
 
     val deobfSrcJar by creating(Jar::class) {
-        archiveClassifier.set("api-sources")
+        archiveClassifier.set("sources")
         from(sourceSets.main.get().java.srcDirs)
     }
 
     val javadocJar by creating(Jar::class) {
-        archiveClassifier.set("api-javadoc")
+        archiveClassifier.set("javadoc")
         from(javadoc)
     }
 }
@@ -102,7 +121,8 @@ artifacts {
     archives(tasks["deobfSrcJar"])
     archives(tasks["javadocJar"])
     archives(tasks["deobfSrcJar"])
-    archives(tasks["deobfJar"])
+    archives(tasks["allJar"])
+    //default(jar)
 }
 
 publishing {
@@ -113,11 +133,11 @@ publishing {
             artifact(tasks["deobfSrcJar"]) {
                 classifier = "sources"
             }
-            artifact(tasks["jar"])
+            artifact(tasks["allJar"])
             artifact(tasks["javadocJar"]) {
                 classifier = "javadoc"
             }
-            artifact(tasks["deobfJar"]) {
+            artifact(tasks.jar) {
                 classifier = "dev"
             }
             pom {

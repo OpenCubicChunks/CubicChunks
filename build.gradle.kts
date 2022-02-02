@@ -226,12 +226,16 @@ tasks {
         configureManifest(task.manifest)
     }
 
+    afterEvaluate {
+        getByName("reobfJar").enabled = false;
+    }
+
     jar {
-        finalizedBy("reobfJar")
         from(sourceSets["main"].output)
         from(sourceSets["api"].output)
         exclude("LICENSE.txt", "log4j2.xml")
         configureManifest(manifest)
+        archiveClassifier.set("dev")
         doLast {
             substituteVersion(this as Jar)
         }
@@ -255,7 +259,7 @@ tasks {
     }
 
     val devShadowJar by creating(ShadowJar::class) {
-        configureShadowJar(this, "dev")
+        configureShadowJar(this, "dev-all")
         doLast {
             substituteVersion(this as Jar)
         }
