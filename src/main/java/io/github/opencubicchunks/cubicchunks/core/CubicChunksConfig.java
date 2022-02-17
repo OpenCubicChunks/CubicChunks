@@ -42,9 +42,11 @@ import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraftforge.common.config.Config;
 import net.minecraftforge.common.config.ConfigManager;
 import net.minecraftforge.fml.client.event.ConfigChangedEvent;
+import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.server.command.CommandTreeBase;
 import net.minecraftforge.server.permission.DefaultPermissionLevel;
 import net.minecraftforge.server.permission.PermissionAPI;
@@ -463,8 +465,16 @@ public class CubicChunksConfig {
             return name;
         }
 
+        @SuppressWarnings("deprecation")
         @Override public String getUsage(ICommandSender sender) {
-            return I18n.format("cubicchunks.command.usage.config.set_option", name);
+            if (FMLCommonHandler.instance().getSide() == Side.CLIENT) {
+                return I18n.format("cubicchunks.command.usage.config.set_option", name);
+            } else {
+                //we have to use this on the dedicated server, as the client I18n class isn't available there...
+                // unfortunately this could result in a client being sent a string in a language other than their configured locale, but i don't
+                // see any alternative other than adding separate translation keys for every single config option
+                return net.minecraft.util.text.translation.I18n.translateToLocalFormatted("cubicchunks.command.usage.config.set_option", name);
+            }
         }
 
         @Override
