@@ -135,6 +135,9 @@ public class PhosphorLightEngine {
     /**
      * Schedules a light update for the specified light type and position to be processed later by
      * {@link #processLightUpdatesForType(EnumSkyBlock)}
+     *
+     * @param lightType the type of light to update
+     * @param pos the position to update
      */
     public void scheduleLightUpdate(final EnumSkyBlock lightType, final BlockPos pos) {
         this.acquireLock();
@@ -175,6 +178,7 @@ public class PhosphorLightEngine {
 
     /**
      * Processes light updates of the given light type
+     * @param lightType light type
      */
     public void processLightUpdatesForType(final EnumSkyBlock lightType) {
         // We only want to perform updates if we're being called from a tick event on the client

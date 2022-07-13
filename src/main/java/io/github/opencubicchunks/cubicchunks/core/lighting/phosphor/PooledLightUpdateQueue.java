@@ -68,6 +68,9 @@ public class PooledLightUpdateQueue {
 
     /**
      * Not thread-safe! Adds an encoded long value into this queue.
+     * @param x x coordinate
+     * @param y y coordinate
+     * @param z z coordinate
      * @param val The encoded value to add
      */
     public void add(final int x, final int y, final int z, final int val) {

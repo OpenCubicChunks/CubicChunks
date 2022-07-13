@@ -76,7 +76,7 @@ public class NewServerHeightMap implements IHeightMap {
         return 0;
     }
 
-    @Override public int getTopBlockYBelow(int localX, int localZ, int blockY) {
+    @SuppressWarnings("deprecation") @Override public int getTopBlockYBelow(int localX, int localZ, int blockY) {
         return 0;
     }
 

@@ -129,6 +129,12 @@ public interface ICubeGenerator {
 
     /**
      * Checks whether the generator is ready to generate a given cube.
+     *
+     * @param cubeX X coordinate of the cube
+     * @param cubeY Y coordinate of the cube
+     * @param cubeZ Z coordinate of the cube
+     * @return The generator state. READY means that the asynchronous part of generation is done.
+     * WAITING means that async part is in progress. FAIL if cube cannot be generated
      */
     default GeneratorReadyState pollAsyncCubeGenerator(int cubeX, int cubeY, int cubeZ) {
         return GeneratorReadyState.READY;
@@ -136,6 +142,11 @@ public interface ICubeGenerator {
 
     /**
      * Checks whether the generator is ready to generate a given column.
+     *
+     * @param chunkX X coordinate of the column
+     * @param chunkZ Z coordinate of the column
+     * @return The generator state. READY means that the asynchronous part of generation is done.
+     * WAITING means that async part is in progress. FAIL if cube cannot be generated
      */
     default GeneratorReadyState pollAsyncColumnGenerator(int chunkX, int chunkZ) {
         return GeneratorReadyState.READY;
@@ -143,6 +154,12 @@ public interface ICubeGenerator {
 
     /**
      * Checks whether the generator is ready to generate a given column.
+     *
+     * @param cubeX X coordinate of the cube
+     * @param cubeY Y coordinate of the cube
+     * @param cubeZ Z coordinate of the cube
+     * @return The generator state. READY means that the asynchronous part of generation is done.
+     * WAITING means that async part is in progress. FAIL if cube cannot be generated
      */
     default GeneratorReadyState pollAsyncCubePopulator(int cubeX, int cubeY, int cubeZ) {
         return GeneratorReadyState.READY;

@@ -136,6 +136,7 @@ public class AsyncWorldIOExecutor {
      * @param loader The file loader for columns
      * @param x column x position
      * @param z column z position
+     * @param setLoadingColumnCallback callback to run just before and after the load event is posted
      *
      * @return The loaded column
      */
@@ -244,6 +245,7 @@ public class AsyncWorldIOExecutor {
      * @param x column x position
      * @param z column z position
      * @param runnable The callback
+     * @param setLoadingColumnCallback callback to run just before and after the load event is posted
      */
     public static void queueColumnLoad(World world, ICubeIO loader, int x, int z, Consumer<Chunk> runnable, Consumer<Chunk> setLoadingColumnCallback) {
         QueuedColumn key = new QueuedColumn(x, z, world);

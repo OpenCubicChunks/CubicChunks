@@ -266,6 +266,7 @@ public class AsyncBatchingCubeIO implements ICubeIO {
 
     /**
      * Blocks the calling thread until the write queues have been completely drained.
+     * @throws InterruptedException if the thread has been interrupted
      */
     protected void drainQueueBlocking() throws InterruptedException {
         //this has to submit itself to the I/O thread again, and also run in a loop, in order to avoid a potential race condition caused by the fact that ThreadedFileIOBase

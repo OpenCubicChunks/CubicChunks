@@ -110,6 +110,7 @@ public class ClientHeightMap implements IHeightMap {
         return heightMapLowest;
     }
 
+    @SuppressWarnings("deprecation")
     @Override
     public int getTopBlockYBelow(int localX, int localZ, int blockY) {
         throw new UnsupportedOperationException("Not implemented");

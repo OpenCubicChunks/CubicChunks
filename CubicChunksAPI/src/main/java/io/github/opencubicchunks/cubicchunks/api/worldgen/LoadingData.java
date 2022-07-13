@@ -45,6 +45,8 @@ public class LoadingData<POS> {
 
     /**
      * Returns chunk loading NBT data. Null if chunk not found.
+     *
+     * @return The chunk loading NBT data, or null
      */
     @Nullable public NBTTagCompound getNbt() {
         return nbt;

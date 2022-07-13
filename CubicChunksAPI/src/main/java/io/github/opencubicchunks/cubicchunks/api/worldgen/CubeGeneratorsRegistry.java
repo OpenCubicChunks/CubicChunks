@@ -101,6 +101,8 @@ public class CubeGeneratorsRegistry {
     /**
      * Registers a callback invoked after loading cube NBT from disk. This callback will get called even if no data is found, potentially allowing
      * to prepare data for world generation asynchronously in a cache.
+     *
+     * @param cubeCallback the callback to be registered
      */
     public static void registerCubeAsyncLoadingCallback(BiConsumer<? super World, ? super LoadingData<CubePos>> cubeCallback) {
         cubeLoadingCallbacks.add(cubeCallback);
@@ -109,6 +111,8 @@ public class CubeGeneratorsRegistry {
     /**
      * Registers a callback invoked after loading column NBT from disk. This callback will get called even if no data is found, potentially allowing
      * to prepare data for world generation asynchronously in a cache.
+     *
+     * @param columnCallback the callback to be registered
      */
     public static void registerColumnAsyncLoadingCallback(BiConsumer<? super World, ? super LoadingData<ChunkPos>> columnCallback) {
         columnLoadingCallbacks.add(columnCallback);

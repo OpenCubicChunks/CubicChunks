@@ -183,7 +183,7 @@ public abstract class MixinChunk_Column implements IColumn, IColumnInternal {
      * @author Barteks2x
      * @reason go through staging heightmap
      */
-    @Overwrite
+    @SuppressWarnings("deprecation") @Overwrite
     public int getHeightValue(int localX, int localZ) {
         return getTopYWithStaging(localX, localZ) + 1;
     }

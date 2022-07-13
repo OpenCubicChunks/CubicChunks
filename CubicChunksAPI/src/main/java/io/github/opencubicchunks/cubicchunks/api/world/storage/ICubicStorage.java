@@ -49,18 +49,20 @@ import java.util.stream.Collectors;
 @ParametersAreNonnullByDefault
 public interface ICubicStorage extends Flushable, AutoCloseable {
     /**
-     * Checks whether or not the column at the given position exists.
+     * Checks whether the column at the given position exists.
      *
      * @param pos the column's position
-     * @return whether or not the column at the given position exists
+     * @return whether the column at the given position exists
+     * @throws IOException if there is an IO error
      */
     boolean columnExists(ChunkPos pos) throws IOException;
 
     /**
-     * Checks whether or not the cube at the given position exists.
+     * Checks whether the cube at the given position exists.
      *
      * @param pos the cube's position
-     * @return whether or not the cube at the given position exists
+     * @return whether the cube at the given position exists
+     * @throws IOException if there is an IO error
      */
     boolean cubeExists(CubePos pos) throws IOException;
 
@@ -69,6 +71,7 @@ public interface ICubicStorage extends Flushable, AutoCloseable {
      *
      * @param positions a {@link PosBatch} containing the positions of all the cubes+columns to check for
      * @return a {@link PosBatch} containing the positions of all the cubes+columns that exist
+     * @throws IOException if there is an IO error
      */
     @Nonnull
     default PosBatch existsBatch(PosBatch positions) throws IOException {
@@ -99,6 +102,7 @@ public interface ICubicStorage extends Flushable, AutoCloseable {
      *
      * @param pos the column's position
      * @return the column's NBT data, or {@code null} if the column couldn't be found
+     * @throws IOException if there is an IO error
      */
     NBTTagCompound readColumn(ChunkPos pos) throws IOException;
 
@@ -107,6 +111,7 @@ public interface ICubicStorage extends Flushable, AutoCloseable {
      *
      * @param pos the cube's position
      * @return the cube's NBT data, or {@code null} if the cube couldn't be found
+     * @throws IOException if there is an IO error
      */
     NBTTagCompound readCube(CubePos pos) throws IOException;
 
@@ -115,6 +120,7 @@ public interface ICubicStorage extends Flushable, AutoCloseable {
      *
      * @param positions a {@link PosBatch} containing the positions of all the cubes+columns to read
      * @return a {@link NBTBatch} containing all the given cube+column positions mapped to their corresponding NBT data, or {@code null} for cubes/columns that can't be found
+     * @throws IOException if there is an IO error
      */
     @Nonnull
     default NBTBatch readBatch(PosBatch positions) throws IOException {
@@ -145,6 +151,7 @@ public interface ICubicStorage extends Flushable, AutoCloseable {
      *
      * @param pos the column's position
      * @param nbt the column's NBT data
+     * @throws IOException if there is an IO error
      */
     void writeColumn(ChunkPos pos, NBTTagCompound nbt) throws IOException;
 
@@ -153,6 +160,7 @@ public interface ICubicStorage extends Flushable, AutoCloseable {
      *
      * @param pos the cube's position
      * @param nbt the cube's NBT data
+     * @throws IOException if there is an IO error
      */
     void writeCube(CubePos pos, NBTTagCompound nbt) throws IOException;
 
@@ -160,6 +168,7 @@ public interface ICubicStorage extends Flushable, AutoCloseable {
      * Writes the NBT data for multiple cubes+columns at once.
      *
      * @param batch a {@link NBTBatch} containing the cube+column positions and the NBT data to write to each
+     * @throws IOException if there is an IO error
      */
     default void writeBatch(NBTBatch batch) throws IOException {
         //default implementation: issue writes individually, but in parallel
@@ -187,6 +196,7 @@ public interface ICubicStorage extends Flushable, AutoCloseable {
      * Iterates over all the columns that exist in the world.
      *
      * @param callback the callback function to run
+     * @throws IOException if there is an IO error
      */
     void forEachColumn(Consumer<ChunkPos> callback) throws IOException;
 
@@ -194,6 +204,7 @@ public interface ICubicStorage extends Flushable, AutoCloseable {
      * Iterates over all the cubes that exist in the world.
      *
      * @param callback the callback function to run
+     * @throws IOException if there is an IO error
      */
     void forEachCube(Consumer<CubePos> callback) throws IOException;
 
@@ -201,6 +212,8 @@ public interface ICubicStorage extends Flushable, AutoCloseable {
      * Forces any internally buffered data to be written to disk immediately, blocking until the action is completed.
      * <p>
      * Once this method returns, all writes issued at the time of this method's invocation are guaranteed to be present on disk.
+     *
+     * @throws IOException if there is an IO error
      */
     @Override
     void flush() throws IOException;
@@ -210,6 +223,8 @@ public interface ICubicStorage extends Flushable, AutoCloseable {
      * <p>
      * This method may only be called once for a given of {@link ICubicStorage}. Once called, the instance shall be considered to have been disposed, and the behavior of
      * all other methods is undefined.
+     *
+     * @throws IOException if there is an IO error
      */
     @Override
     void close() throws IOException;

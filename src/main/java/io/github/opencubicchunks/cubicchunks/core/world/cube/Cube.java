@@ -265,6 +265,7 @@ public class Cube implements ICube {
      * @param entities entity container
      * @param tileEntityMap tile entity storage
      * @param tileEntityPosQueue queue for updating tile entities
+     * @param cubeLightData cube light tracking data
      */
     protected Cube(TicketList tickets, World world, Chunk column, CubePos coords, ExtendedBlockStorage storage,
                    EntityContainer entities, Map<BlockPos, TileEntity> tileEntityMap,

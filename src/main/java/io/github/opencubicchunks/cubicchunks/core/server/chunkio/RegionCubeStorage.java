@@ -72,7 +72,7 @@ public class RegionCubeStorage implements ICubicStorage {
             Path part3d = path.resolve("region3d");
             Utils.createDirectories(part3d);
 
-            SaveSection2D section2d = new SaveSection2D(
+            @SuppressWarnings("unchecked") SaveSection2D section2d = new SaveSection2D(
                     new SharedCachedRegionProvider<>(
                             new SimpleRegionProvider<>(new EntryLocation2D.Provider(), part2d, (keyProv, r) ->
                                     ShadowPagingRegion.<EntryLocation2D>builder()
@@ -90,7 +90,7 @@ public class RegionCubeStorage implements ICubicStorage {
                                     (dir, key) -> Files.exists(dir.resolve(key.getRegionKey().getName() + ".ext"))
                             )
                     ));
-            SaveSection3D section3d = new SaveSection3D(
+            @SuppressWarnings("unchecked") SaveSection3D section3d = new SaveSection3D(
                     new SharedCachedRegionProvider<>(
                             new SimpleRegionProvider<>(new EntryLocation3D.Provider(), part3d, (keyProv, r) ->
                                     ShadowPagingRegion.<EntryLocation3D>builder()

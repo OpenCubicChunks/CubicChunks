@@ -40,6 +40,10 @@ public interface IColumnInternal extends IColumn {
 
     /**
      * Returns Y coordinate of the top non-transparent block
+     *
+     * @param localX column-local X coordinate
+     * @param localZ column-local Z coordinate
+     * @return the Y coordinate of the top non-transparent block
      */
     int getTopYWithStaging(int localX, int localZ);
 

@@ -68,6 +68,7 @@ public class EmptyColumn extends Chunk implements IColumn, IColumnInternal {
 	/**
 	 * Returns the value in the height map at this x, z coordinate in the chunk
 	 */
+	@SuppressWarnings("deprecation")
 	@Override
 	public int getHeightValue(int x, int z) {
 		return 0;
