@@ -323,6 +323,10 @@ tasks {
                 shadowJar, devShadowJar, javadocJar, deobfSourcesJar)
     }
 
+    afterEvaluate {
+        getByName("configureReobfTaskForReobfShadowJar").mustRunAfter("compileJava")
+    }
+
     publish {
         dependsOn(gradle.includedBuild("CubicChunksAPI").task(":publish"))
     }
