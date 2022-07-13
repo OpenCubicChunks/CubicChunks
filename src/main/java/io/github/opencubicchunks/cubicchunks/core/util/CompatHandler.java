@@ -24,6 +24,7 @@
  */
 package io.github.opencubicchunks.cubicchunks.core.util;
 
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.util.AbstractMap;
 import java.util.ArrayList;
@@ -42,6 +43,9 @@ import io.github.opencubicchunks.cubicchunks.core.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.core.asm.mixin.ICubicWorldInternal;
 import io.github.opencubicchunks.cubicchunks.core.asm.mixin.fixes.common.fakeheight.IASMEventHandler;
 import io.github.opencubicchunks.cubicchunks.core.asm.mixin.fixes.common.fakeheight.IEventBus;
+import net.minecraft.world.World;
+import net.minecraft.world.chunk.Chunk;
+import net.minecraft.world.gen.IChunkGenerator;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.terraingen.DecorateBiomeEvent;
 import net.minecraftforge.event.terraingen.PopulateChunkEvent;
@@ -52,11 +56,6 @@ import net.minecraftforge.fml.common.eventhandler.Event;
 import net.minecraftforge.fml.common.eventhandler.EventBus;
 import net.minecraftforge.fml.common.eventhandler.IEventListener;
 import net.minecraftforge.fml.common.eventhandler.ListenerList;
-import sun.misc.Unsafe;
-
-import net.minecraft.world.World;
-import net.minecraft.world.chunk.Chunk;
-import net.minecraft.world.gen.IChunkGenerator;
 
 public class CompatHandler {
 
@@ -94,10 +93,9 @@ public class CompatHandler {
     public static void init() {
         Chunk uninitializedChunk;
         try {
-            Field theUnsafe = Unsafe.class.getDeclaredField("theUnsafe");
-            theUnsafe.setAccessible(true);
-            Unsafe unsafe = (Unsafe) theUnsafe.get(null);
-            uninitializedChunk = (Chunk) unsafe.allocateInstance(Chunk.class);
+            @SuppressWarnings("JavaReflectionMemberAccess")
+            Constructor<Chunk> uninitializedConstructor = Chunk.class.getConstructor(CubicChunks.class);
+            uninitializedChunk = uninitializedConstructor.newInstance(new Object[]{null});
         } catch (ReflectiveOperationException e) {
             throw new RuntimeException(e);
         }

@@ -76,7 +76,10 @@ public class CubicChunksCoreMod implements IFMLLoadingPlugin {
 
     @Override
     public String[] getASMTransformerClass() {
-        return new String[]{"io.github.opencubicchunks.cubicchunks.core.asm.transformer.CubicChunksWorldEditTransformer"};
+        return new String[]{
+                "io.github.opencubicchunks.cubicchunks.core.asm.transformer.CubicChunksWorldEditTransformer",
+                "io.github.opencubicchunks.cubicchunks.core.asm.transformer.AddEmptyConstructorToChunk"
+        };
     }
 
     @Nullable @Override
