@@ -168,6 +168,9 @@ public class IONbtReader {
         cube.setSurfaceTracked(nbt.getBoolean("isSurfaceTracked")); // previous versions will get their surface tracking redone. This is intended
         cube.setFullyPopulated(nbt.getBoolean("fullyPopulated"));
 
+        //this status will get unset again in readLightingInfo() if the lighting engine is changed (LightingInfoType).
+        cube.setInitialLightingDone(nbt.getBoolean("initLightDone"));
+
         if (cube.getCapabilities() != null && nbt.hasKey("ForgeCaps")) {
             cube.getCapabilities().deserializeNBT(nbt.getCompoundTag("ForgeCaps"));
         }
