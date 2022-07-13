@@ -204,12 +204,15 @@ public class VanillaCompatibilityGenerator implements ICubeGenerator {
         return rand;
     }
 
+    @SuppressWarnings("deprecation") @Override public CubePrimer generateCube(int cubeX, int cubeY, int cubeZ) {
+        return generateCube(cubeX, cubeY, cubeZ, new CubePrimer());
+    }
+
     @Override
-    public CubePrimer generateCube(int cubeX, int cubeY, int cubeZ) {
+    public CubePrimer generateCube(int cubeX, int cubeY, int cubeZ, CubePrimer primer) {
         try {
             WorldgenHangWatchdog.startWorldGen();
             tryInit(vanilla, world);
-            CubePrimer primer = new CubePrimer();
 
             Random rand = new Random(world.getSeed());
             rand.setSeed(rand.nextInt() ^ cubeX);
