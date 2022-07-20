@@ -12,7 +12,7 @@ This MinecraftForge mod extends Minecraft height and depth. The only limitation 
 ### Cubic Chunks (CC) - Links:  
 
 Github - [Cubic Chunks - 1.12.2 and Lower](https://github.com/OpenCubicChunks/CubicChunks)  
-Github - [Cubic Chunks - After 1.12.2](https://github.com/OpenCubicChunks/CubicChunks2)  
+Github - [Cubic Chunks 2 - After 1.12.2](https://github.com/OpenCubicChunks/CubicChunks2)  
 CurseForge - [Main page](https://www.curseforge.com/minecraft/mc-mods/opencubicchunks)  
 CurseForge - [Downloads (All)](https://www.curseforge.com/minecraft/mc-mods/opencubicchunks/files/all)  
   
