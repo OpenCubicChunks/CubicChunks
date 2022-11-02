@@ -44,6 +44,7 @@ import net.minecraft.util.Tuple;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.ByteBuffer;
+import java.nio.channels.ByteChannel;
 import java.nio.channels.FileChannel;
 import java.nio.channels.SeekableByteChannel;
 import java.nio.file.Path;
@@ -55,6 +56,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Function;
 
 import static java.nio.file.StandardOpenOption.*;
@@ -72,6 +76,8 @@ public class ShadowPagingRegion<K extends IKey<K>> implements IRegion<K> {
 	private final int sectorSize;
 	private final SectorTracker<K> sectorTracker;
 
+	private final ReadWriteLock dataLock = new ReentrantReadWriteLock();
+	private final ReadWriteLock reserveSectorsLock = new ReentrantReadWriteLock();
 	private ShadowPagingRegion(FileChannel file, SectorTracker<K> sectorTracker, IHeaderDataEntryProvider<?, K> headerEntryProvider, RegionKey regionKey, IKeyProvider<K> keyProvider, int sectorSize) {
 		this.file = file;
 		this.headerEntryProvider = headerEntryProvider;
@@ -88,18 +94,50 @@ public class ShadowPagingRegion<K extends IKey<K>> implements IRegion<K> {
 	}
 
 	@Override
-	public synchronized void writeValues(Map<K, ByteBuffer> entries) throws IOException {
+	public void writeValues(Map<K, ByteBuffer> entries) throws IOException {
 		if (entries.isEmpty()) { //fast-path if there isn't anything to be written
 			return;
 		}
-
 		//calling file.force() is slow, so we want to minimize the number of times it needs to be called. the solution is simple: we write the data for ALL
 		//  entries at once, and don't update the headers until it's all been written to disk.
 		List<UnsupportedDataException.WithKey> exceptions = new ArrayList<>();
 		Map<K, Optional<RegionEntryLocation>> pendingHeaderUpdates = new HashMap<>(entries.size());
+		Map<K, RegionEntryLocation> entryLocationsToUse = new HashMap<>(entries.size());
 
-		//first pass: write all data
-		boolean shouldFlush = false;
+		Lock sectorLock = reserveSectorsLock.writeLock();
+		Lock mainLock = dataLock.writeLock();
+		sectorLock.lock();
+		mainLock.lock();
+		//entries.forEach((k, v) -> CubicChunks.LOGGER.error(this + ": WRITE: " + k + ", " + v.remaining()));
+		try {
+			// first pass: reserve header locations:
+			reserveHeaderEntriesPass(entries, exceptions, pendingHeaderUpdates, entryLocationsToUse);
+		} finally {
+			sectorLock.unlock();
+		}
+		try {
+			// second pass: write all data
+			boolean shouldFlush = writeDataPass(entries, exceptions, entryLocationsToUse);
+
+			//flush the file's contents if any of the entries modified the region data
+			if (shouldFlush) {
+				this.file.force(true);
+			}
+
+			// third pass: execute pending header updates
+			doPendingHeaderUpdatesPass(pendingHeaderUpdates);
+
+			//throw all pending exceptions at once if any occurred
+			if (!exceptions.isEmpty()) {
+				throw new MultiUnsupportedDataException(exceptions);
+			}
+		} finally {
+			 mainLock.unlock();
+		}
+	}
+
+	private void reserveHeaderEntriesPass(Map<K, ByteBuffer> entries, List<UnsupportedDataException.WithKey> exceptions,
+			Map<K, Optional<RegionEntryLocation>> pendingHeaderUpdates, Map<K, RegionEntryLocation> entryLocationsToUse) throws IOException {
 		for (Iterator<Map.Entry<K, ByteBuffer>> itr = entries.entrySet().iterator(); itr.hasNext(); ) {
 			Map.Entry<K, ByteBuffer> entry = itr.next();
 
@@ -122,13 +160,7 @@ public class ShadowPagingRegion<K extends IKey<K>> implements IRegion<K> {
 					// subsequent writes from the same batch.
 					Tuple<RegionEntryLocation, RegionEntryLocation> headerUpdate = this.sectorTracker.reserveForKey(key, numSectors);
 					prevLocation = Optional.ofNullable(headerUpdate.getFirst());
-
-					int bytesOffset = headerUpdate.getSecond().getOffset() * this.sectorSize;
-					Utils.writeFully(this.file.position(bytesOffset), ByteBuffer.allocate(Integer.BYTES).putInt(0, size));
-					Utils.writeFully(this.file, value);
-
-					//data has changed on disk, so we'll need to flush it before updating the headers
-					shouldFlush = true;
+					entryLocationsToUse.put(key, headerUpdate.getSecond());
 				}
 				pendingHeaderUpdates.put(key, prevLocation);
 			} catch (UnsupportedDataException e) {
@@ -136,13 +168,37 @@ public class ShadowPagingRegion<K extends IKey<K>> implements IRegion<K> {
 				exceptions.add(new UnsupportedDataException.WithKey(e, key));
 			}
 		}
+	}
 
-		//flush the file's contents if any of the entries modified the region data
-		if (shouldFlush) {
-			this.file.force(true);
+	private boolean writeDataPass(Map<K, ByteBuffer> entries, List<UnsupportedDataException.WithKey> exceptions,
+			Map<K, RegionEntryLocation> entryLocationsToUse) throws IOException {
+		boolean shouldFlush = false;
+		for (Iterator<Map.Entry<K, ByteBuffer>> itr = entries.entrySet().iterator(); itr.hasNext(); ) {
+			Map.Entry<K, ByteBuffer> entry = itr.next();
+
+			K key = entry.getKey();
+			ByteBuffer value = entry.getValue();
+
+			try {
+				//if deleting an entry, there's no need to change anything on disk! the only thing that needs
+				// to be changed is the headers.
+				if (value != null) {
+					int size = value.remaining();
+					int bytesOffset = entryLocationsToUse.get(key).getOffset() * this.sectorSize;
+					Utils.writeFully(this.file.position(bytesOffset), ByteBuffer.allocate(Integer.BYTES).putInt(0, size));
+					Utils.writeFully(this.file, value);
+					//data has changed on disk, so we'll need to flush it before updating the headers
+					shouldFlush = true;
+				}
+			} catch (UnsupportedDataException e) {
+				//save exception for later
+				exceptions.add(new UnsupportedDataException.WithKey(e, key));
+			}
 		}
+		return shouldFlush;
+	}
 
-		//second pass: execute pending header updates
+	private void doPendingHeaderUpdatesPass(Map<K, Optional<RegionEntryLocation>> pendingHeaderUpdates) throws IOException {
 		if (!pendingHeaderUpdates.isEmpty()) {
 			for (Iterator<Map.Entry<K, Optional<RegionEntryLocation>>> itr = pendingHeaderUpdates.entrySet().iterator(); itr.hasNext(); ) {
 				Map.Entry<K, Optional<RegionEntryLocation>> entry = itr.next();
@@ -164,17 +220,21 @@ public class ShadowPagingRegion<K extends IKey<K>> implements IRegion<K> {
 			//ensure all header modifications are present on disk before another batch runs
 			this.file.force(true);
 		}
-
-		//throw all pending exceptions at once if any occurred
-		if (!exceptions.isEmpty()) {
-			throw new MultiUnsupportedDataException(exceptions);
-		}
 	}
 
 	@Override public void writeSpecial(K key, Object marker) throws IOException {
-		this.sectorTracker.setSpecial(key, marker);
-		updateHeaders(key);
-		file.force(false);
+		Lock sectorLock = reserveSectorsLock.writeLock();
+		Lock mainLock = dataLock.writeLock();
+		sectorLock.lock();
+		mainLock.lock();
+		try {
+			this.sectorTracker.setSpecial(key, marker);
+			updateHeaders(key);
+			file.force(false);
+		} finally {
+			mainLock.unlock();
+			sectorLock.unlock();
+		}
 	}
 
 	private void updateHeaders(K key) throws IOException {
@@ -185,58 +245,97 @@ public class ShadowPagingRegion<K extends IKey<K>> implements IRegion<K> {
 		Utils.writeFully(file.position((long) key.getId() * entryByteCount), buf);
 	}
 
-	@Override public synchronized Optional<ByteBuffer> readValue(K key) throws IOException {
-		// a hack because Optional can't throw checked exceptions
+	@Override public Optional<ByteBuffer> readValue(K key) throws IOException {
+
+		Lock sectorLock = reserveSectorsLock.readLock();
+		Lock mainLock = dataLock.readLock();
+		boolean mainLocked = false;
 		try {
-			return sectorTracker.trySpecialValue(key)
-					.map(reader -> Optional.of(reader.apply(key)))
-					.orElseGet(() -> doReadKey(key));
+			sectorLock.lock();
+
+
+			//CubicChunks.LOGGER.error(this + ": READ: " + key);
+			Function<K, ByteBuffer> specialValue = sectorTracker.trySpecialValue(key).orElse(null);
+			if (specialValue != null) {
+				return Optional.of(specialValue.apply(key));
+			}
+			Optional<RegionEntryLocation> entryLocation = sectorTracker.getEntryLocation(key);
+			if (!entryLocation.isPresent()) {
+				return Optional.empty();
+			}
+			mainLock.lock();
+			mainLocked = true;
+			// get sector tracker entry again in case it got deleted in the meantime
+			return doReadKey(key);
 		} catch (UncheckedIOException e) {
 			throw e.getCause();
+		} finally {
+			sectorLock.unlock();
+			if (mainLocked) {
+				mainLock.unlock();
+			}
 		}
 	}
 
 	private Optional<ByteBuffer> doReadKey(K key) {
-		return sectorTracker.getEntryLocation(key).flatMap(loc -> {
-			try {
-				int sectorOffset = loc.getOffset();
-				int sectorCount = loc.getSize();
-
-				ByteBuffer buf = ByteBuffer.allocate(Integer.BYTES);
-
-				Utils.readFully(file.position((long) sectorOffset * sectorSize), buf);
-
-				int dataLength = buf.getInt(0);
-				if (dataLength > sectorCount * sectorSize) {
-					throw new CorruptedDataException(
-							"Expected data size max" + sectorCount * sectorSize + " but found " + dataLength);
-				}
-
-				ByteBuffer bytes = ByteBuffer.allocate(dataLength);
-				Utils.readFully(file, bytes);
-				bytes.flip();
-				return Optional.of(bytes);
-			} catch (IOException e) {
-				throw new UncheckedIOException(e);
+		try {
+			Optional<RegionEntryLocation> entryLocation = sectorTracker.getEntryLocation(key);
+			if (!entryLocation.isPresent()) {
+				return Optional.empty();
 			}
-		});
+			RegionEntryLocation loc = entryLocation.get();
+			int sectorOffset = loc.getOffset();
+			int sectorCount = loc.getSize();
+
+			// read data size (one int)
+			ByteBuffer buf = ByteBuffer.allocate(Integer.BYTES);
+			long position = (long) sectorOffset * sectorSize;
+			readFully(file, buf, position);
+
+			int dataLength = buf.getInt(0);
+			if (dataLength > sectorCount * sectorSize) {
+				throw new CorruptedDataException(
+						"Expected data size max " + sectorCount * sectorSize + " but found " + dataLength);
+			}
+
+			// read data
+			ByteBuffer bytes = ByteBuffer.allocate(dataLength);
+			readFully(file, bytes, position + Integer.BYTES);
+			bytes.flip();
+			return Optional.of(bytes);
+		} catch (IOException e) {
+			throw new UncheckedIOException(e);
+		}
 	}
 
 	/**
 	 * Returns true if something was stored there before within this region.
 	 */
-	@Override public synchronized boolean hasValue(K key) {
-		return sectorTracker.getEntryLocation(key).isPresent();
+	@Override public boolean hasValue(K key) {
+		reserveSectorsLock.readLock().lock();
+		try {
+			return sectorTracker.trySpecialValue(key).isPresent() || sectorTracker.getEntryLocation(key).isPresent();
+		} finally {
+			reserveSectorsLock.readLock().unlock();
+		}
 	}
 
 	@Override public void forEachKey(CheckedConsumer<? super K, IOException> cons) throws IOException {
-		int keyCount = this.keyProvider.getKeyCount(regionKey);
-		for (int id = 0; id < keyCount; id++) {
-			int idFinal = id; // because java is stupid
-			K key = sectorTracker.getEntryLocation(id).map(loc -> keyProvider.fromRegionAndId(this.regionKey, idFinal)).orElse(null);
-			if (key != null) {
-				cons.accept(key);
+		// acquire write locks even when we are "only" reading because callbacks may write
+		reserveSectorsLock.writeLock().lock();
+		dataLock.writeLock().lock();
+		try {
+			int keyCount = this.keyProvider.getKeyCount(regionKey);
+			for (int id = 0; id < keyCount; id++) {
+				int idFinal = id; // because java is stupid
+				K key = sectorTracker.getEntryLocation(id).map(loc -> keyProvider.fromRegionAndId(this.regionKey, idFinal)).orElse(null);
+				if (key != null) {
+					cons.accept(key);
+				}
 			}
+		} finally {
+			dataLock.writeLock().unlock();
+			reserveSectorsLock.writeLock().unlock();
 		}
 	}
 
@@ -247,13 +346,29 @@ public class ShadowPagingRegion<K extends IKey<K>> implements IRegion<K> {
 
 	@Override
 	public void flush() throws IOException {
-		this.ensureSectorSizeAligned();
-		this.file.force(false);
+		//CubicChunks.bigWarning(this + ": FLUSH!!!");
+		reserveSectorsLock.writeLock().lock();
+		dataLock.writeLock().lock();
+		try {
+			this.ensureSectorSizeAligned();
+			this.file.force(false);
+		} finally {
+			dataLock.writeLock().unlock();
+			reserveSectorsLock.writeLock().unlock();
+		}
 	}
 
 	@Override public void close() throws IOException {
-		this.ensureSectorSizeAligned();
-		this.file.close();
+		//CubicChunks.bigWarning(this + ": CLOSE!!!");
+		reserveSectorsLock.writeLock().lock();
+		dataLock.writeLock().lock();
+		try {
+			this.ensureSectorSizeAligned();
+			this.file.close();
+		} finally {
+			dataLock.writeLock().unlock();
+			reserveSectorsLock.writeLock().unlock();
+		}
 	}
 
 	private void ensureSectorSizeAligned() throws IOException {
@@ -272,6 +387,12 @@ public class ShadowPagingRegion<K extends IKey<K>> implements IRegion<K> {
 
 	public static <L extends IKey<L>> ShadowPagingRegion.Builder<L> builder() {
 		return new ShadowPagingRegion.Builder<>();
+	}
+
+	public static void readFully(FileChannel src, ByteBuffer data, long position) throws IOException {
+		while (data.hasRemaining()) {
+			src.read(data, position);
+		}
 	}
 
 	public static class Builder<K extends IKey<K>> {

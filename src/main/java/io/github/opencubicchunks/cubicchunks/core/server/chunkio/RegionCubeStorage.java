@@ -35,6 +35,7 @@ import cubicchunks.regionlib.lib.provider.SimpleRegionProvider;
 import cubicchunks.regionlib.util.Utils;
 import io.github.opencubicchunks.cubicchunks.api.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.api.world.storage.ICubicStorage;
+import io.github.opencubicchunks.cubicchunks.core.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.core.CubicChunksConfig;
 import io.github.opencubicchunks.cubicchunks.core.server.chunkio.region.ShadowPagingRegion;
 import io.netty.buffer.ByteBuf;
@@ -196,6 +197,7 @@ public class RegionCubeStorage implements ICubicStorage {
             if (!compressedCubes.isEmpty()) {
                 this.save.save3d(compressedCubes.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().nioBuffer())));
             }
+            CubicChunks.LOGGER.debug("Saved batch: {} columns and {} cubes", batch.columns.size(), batch.cubes.size());
         } finally {
             compressedColumns.values().forEach(ByteBuf::release);
             compressedCubes.values().forEach(ByteBuf::release);
