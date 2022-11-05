@@ -68,6 +68,39 @@ import static java.nio.file.StandardOpenOption.*;
  * that doesn't reallocate entries in place.
  */
 public class ShadowPagingRegion<K extends IKey<K>> implements IRegion<K> {
+	//a read-only global buffer containing zeroes, used as a read source when zeroing out sector contents
+	private static final int ZERO_BYTEBUFFER_CAPACITY = 4096;
+	private static final ByteBuffer ZERO_BYTEBUFFER = ByteBuffer.allocateDirect(ZERO_BYTEBUFFER_CAPACITY).asReadOnlyBuffer();
+
+	/**
+	 * Gets an array of read-only {@link ByteBuffer}(s) filled with zeroes, whose total {@link ByteBuffer#remaining() remaining} space is equal to
+	 * the given {@code length}.
+	 *
+	 * @param length the number of zero bytes
+	 * @return an array of read-only {@link ByteBuffer}(s) filled with zeroes
+	 */
+	private static ByteBuffer[] zeroes(int length) {
+		ByteBuffer[] arr = new ByteBuffer[Math.floorDiv(length - 1, ZERO_BYTEBUFFER_CAPACITY) + 1];
+		for (int i = 0; i < arr.length; i++) {
+			int remaining = length - i * ZERO_BYTEBUFFER_CAPACITY;
+			arr[i] = (ByteBuffer) ZERO_BYTEBUFFER.duplicate().clear().limit(Math.min(remaining, ZERO_BYTEBUFFER_CAPACITY));
+		}
+		return arr;
+	}
+
+	/**
+	 * Adds read-only {@link ByteBuffer}(s) filled with zeroes to the given {@link List}, whose total {@link ByteBuffer#remaining() remaining} space
+	 * is equal to the given {@code length}.
+	 *
+	 * @param length the number of zero bytes
+	 * @param target the {@link List} to add the {@link ByteBuffer}(s) to
+	 */
+	private static void zeroes(int length, List<ByteBuffer> target) {
+		for (int i = 0, count = Math.floorDiv(length - 1, ZERO_BYTEBUFFER_CAPACITY) + 1; i < count; i++) {
+			int remaining = length - i * ZERO_BYTEBUFFER_CAPACITY;
+			target.add((ByteBuffer) ZERO_BYTEBUFFER.duplicate().clear().limit(Math.min(remaining, ZERO_BYTEBUFFER_CAPACITY)));
+		}
+	}
 
 	private final FileChannel file;
 	private final IHeaderDataEntryProvider<?, K> headerEntryProvider;
@@ -173,6 +206,10 @@ public class ShadowPagingRegion<K extends IKey<K>> implements IRegion<K> {
 	private boolean writeDataPass(Map<K, ByteBuffer> entries, List<UnsupportedDataException.WithKey> exceptions,
 			Map<K, RegionEntryLocation> entryLocationsToUse) throws IOException {
 		boolean shouldFlush = false;
+
+		List<ByteBuffer> tempBuffers = new ArrayList<>();
+		ByteBuffer lengthPrefixBuffer = ByteBuffer.allocate(Integer.BYTES);
+
 		for (Iterator<Map.Entry<K, ByteBuffer>> itr = entries.entrySet().iterator(); itr.hasNext(); ) {
 			Map.Entry<K, ByteBuffer> entry = itr.next();
 
@@ -185,8 +222,19 @@ public class ShadowPagingRegion<K extends IKey<K>> implements IRegion<K> {
 				if (value != null) {
 					int size = value.remaining();
 					int bytesOffset = entryLocationsToUse.get(key).getOffset() * this.sectorSize;
-					Utils.writeFully(this.file.position(bytesOffset), ByteBuffer.allocate(Integer.BYTES).putInt(0, size));
-					Utils.writeFully(this.file, value);
+
+					//build sequence of buffers for vectored IO
+					tempBuffers.clear();
+					tempBuffers.add(((ByteBuffer) lengthPrefixBuffer.clear()).putInt(0, size));
+					tempBuffers.add(value);
+					if ((lengthPrefixBuffer.capacity() + value.remaining()) % this.sectorSize != 0) { //pad trailing sector with zeroes
+						zeroes(this.sectorSize - (lengthPrefixBuffer.capacity() + value.remaining()) % this.sectorSize, tempBuffers);
+					}
+					assert tempBuffers.stream().mapToInt(ByteBuffer::remaining).sum() == entryLocationsToUse.get(key).getSize() * this.sectorSize;
+
+					//write all data to the entry's new location
+					Utils.writeFully(this.file.position(bytesOffset), tempBuffers.toArray(new ByteBuffer[0]));
+
 					//data has changed on disk, so we'll need to flush it before updating the headers
 					shouldFlush = true;
 				}
@@ -339,7 +387,6 @@ public class ShadowPagingRegion<K extends IKey<K>> implements IRegion<K> {
 		}
 	}
 
-
 	private int getSectorNumber(int bytes) {
 		return ceilDiv(bytes, sectorSize);
 	}
@@ -350,8 +397,15 @@ public class ShadowPagingRegion<K extends IKey<K>> implements IRegion<K> {
 		reserveSectorsLock.writeLock().lock();
 		dataLock.writeLock().lock();
 		try {
-			this.ensureSectorSizeAligned();
-			this.file.force(false);
+			boolean fileLengthChanged = false;
+			fileLengthChanged |= this.ensureSectorSizeAligned();
+
+			//Flushable declares that flush() must ensure that "any buffered output" is written. IMO, erasing sectors (an action typically deferred
+			//  until the region file is closed) can be considered buffered output, so we'll deal with erasing them here
+			fileLengthChanged |= this.erasePendingSectors();
+
+			//if the file's length changed, we want to make sure we also force metadata updates to disk
+			this.file.force(fileLengthChanged);
 		} finally {
 			dataLock.writeLock().unlock();
 			reserveSectorsLock.writeLock().unlock();
@@ -362,23 +416,59 @@ public class ShadowPagingRegion<K extends IKey<K>> implements IRegion<K> {
 		//CubicChunks.bigWarning(this + ": CLOSE!!!");
 		reserveSectorsLock.writeLock().lock();
 		dataLock.writeLock().lock();
-		try {
+
+		//try-with-resources on file to ensure that the file gets closed, even if the other code throws an exception
+		try (FileChannel file = this.file) {
 			this.ensureSectorSizeAligned();
-			this.file.close();
+			this.erasePendingSectors();
 		} finally {
 			dataLock.writeLock().unlock();
 			reserveSectorsLock.writeLock().unlock();
 		}
 	}
 
-	private void ensureSectorSizeAligned() throws IOException {
-		if (file.size() % sectorSize != 0) {
-			int extra = (int) (sectorSize - (file.size() % sectorSize));
-			ByteBuffer buffer = ByteBuffer.allocateDirect(extra);
-			this.file.position(this.file.size());
-			Utils.writeFully(this.file, buffer);
+	/**
+	 * @return {@code true} if the file's length was changed as a result of this operation, {@code false} otherwise
+	 */
+	private boolean ensureSectorSizeAligned() throws IOException {
+		long fileSize = this.file.size();
+		if (fileSize % sectorSize != 0) {
+			//seek to EOF
+			this.file.position(fileSize);
+
+			//write enough zeroes to pad the file length to the next multiple of the sector size
+			int extra = (int) (sectorSize - (fileSize % sectorSize));
+			Utils.writeFully(this.file, zeroes(extra));
+
 			assert this.file.size() % sectorSize == 0;
+			return true; //the file's length changed
 		}
+		return false;
+	}
+
+	/**
+	 * @return {@code true} if the file's length was changed as a result of this operation, {@code false} otherwise
+	 */
+	private boolean erasePendingSectors() throws IOException {
+		//erase all the sectors which are pending erasure
+		for (RegionEntryLocation range : this.sectorTracker.getAllSectorsPendingErasure()) {
+			//seek to the beginning of the range, then fill it with zeroes
+			this.file.position(range.getOffset() * (long) this.sectorSize);
+			Utils.writeFully(this.file, zeroes(Math.multiplyExact(range.getSize(), this.sectorSize)));
+
+			//inform the sector tracker that the sectors have been erased
+			this.sectorTracker.markSectorsErased(range);
+		}
+
+		//consider truncating the file to trim unused sectors from the end
+		long expectedFileSize = this.sectorTracker.getSectorsLength() * (long) this.sectorSize;
+		long actualFileSize = this.file.size();
+		assert expectedFileSize <= actualFileSize : "region file is too short???";
+		if (actualFileSize > expectedFileSize) { //the file has unused sectors at the end, truncate it to save space
+			this.file.truncate(expectedFileSize);
+			return true; //the file's length changed
+		}
+		return false;
 	}
 
 	private static int ceilDiv(int x, int y) {
@@ -439,6 +529,11 @@ public class ShadowPagingRegion<K extends IKey<K>> implements IRegion<K> {
 		private final BitSet usedSectors;
 		private final IKeyIdToSectorMap<?, ?, K> sectorMap;
 
+		/**
+		 * Set of sectors which are queued to be zeroed out.
+		 */
+		private final BitSet sectorsPendingErasure = new BitSet();
+
 		private SectorTracker(BitSet usedSectors, IKeyIdToSectorMap<?, ?, K> sectorMap) {
 			this.usedSectors = usedSectors;
 			this.sectorMap = sectorMap;
@@ -498,11 +593,40 @@ public class ShadowPagingRegion<K extends IKey<K>> implements IRegion<K> {
 			if (oldSectorLocation != null) {
 				int oldOffset = oldSectorLocation.getOffset();
 				usedSectors.set(oldOffset, oldOffset + oldSectorLocation.getSize(), false);
+
+				//the sectors are no longer used, we can mark them as free in order to zero them out later
+				this.sectorsPendingErasure.set(oldOffset, oldOffset + oldSectorLocation.getSize(), true);
 			}
 			if (newSectorLocation != null) {
 				int newOffset = newSectorLocation.getOffset();
 				usedSectors.set(newOffset, newOffset + newSectorLocation.getSize(), true);
+
+				//the sectors are now used, so we want to make sure they don't get zeroed out later
+				this.sectorsPendingErasure.set(newOffset, newOffset + newSectorLocation.getSize(), false);
 			}
+		}
+
+		public List<RegionEntryLocation> getAllSectorsPendingErasure() {
+			List<RegionEntryLocation> out = new ArrayList<>();
+			for (int next = 0; (next = this.sectorsPendingErasure.nextSetBit(next)) >= 0; ) {
+				int rangeStart = next;
+				int rangeEnd = this.sectorsPendingErasure.nextClearBit(rangeStart);
+				out.add(new RegionEntryLocation(rangeStart, rangeEnd - rangeStart));
+
+				next = rangeEnd;
+			}
+			return out;
+		}
+
+		public void markSectorsErased(RegionEntryLocation range) {
+			assert this.sectorsPendingErasure.get(range.getOffset()) && this.sectorsPendingErasure.nextClearBit(range.getOffset()) == range.getSize() + range.getOffset()
+					: "the given range isn't pending erasure";
+
+			this.sectorsPendingErasure.clear(range.getOffset(), range.getOffset() + range.getSize());
+		}
+
+		public int getSectorsLength() {
+			return this.usedSectors.length();
 		}
 
 		private boolean isSectorFree(int sector) {
