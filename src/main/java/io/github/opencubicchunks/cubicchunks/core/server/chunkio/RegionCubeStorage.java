@@ -138,19 +138,29 @@ public class RegionCubeStorage implements ICubicStorage {
     public NBTTagCompound readColumn(ChunkPos pos) throws IOException {
         //we use a true here in order to force creation and caching of the new region, thus avoiding an expensive Files.exists() check for every cube/column (which
         // is really expensive on windows)
-        Optional<ByteBuffer> data = this.save.load(new EntryLocation2D(pos.x, pos.z), true);
-        return data.isPresent()
-                ? CompressedStreamTools.readCompressed(new ByteArrayInputStream(data.get().array())) //decompress and parse NBT
-                : null; //column doesn't exist
+        Optional<ByteBuffer> optionalData = this.save.load(new EntryLocation2D(pos.x, pos.z), true);
+        if (!optionalData.isPresent()) { //column doesn't exist
+            return null;
+        }
+
+        //decompress and parse NBT
+        ByteBuffer data = optionalData.get();
+        return CompressedStreamTools.readCompressed(
+                new ByteArrayInputStream(data.array(), data.arrayOffset() + data.position(), data.remaining()));
     }
 
     @Override
     public NBTTagCompound readCube(CubePos pos) throws IOException {
         //see comment in readColumn
-        Optional<ByteBuffer> data = this.save.load(new EntryLocation3D(pos.getX(), pos.getY(), pos.getZ()), true);
-        return data.isPresent()
-                ? CompressedStreamTools.readCompressed(new ByteArrayInputStream(data.get().array())) //decompress and parse NBT
-                : null; //cube doesn't exist
+        Optional<ByteBuffer> optionalData = this.save.load(new EntryLocation3D(pos.getX(), pos.getY(), pos.getZ()), true);
+        if (!optionalData.isPresent()) { //cube doesn't exist
+            return null;
+        }
+
+        //decompress and parse NBT
+        ByteBuffer data = optionalData.get();
+        return CompressedStreamTools.readCompressed(
+                new ByteArrayInputStream(data.array(), data.arrayOffset() + data.position(), data.remaining()));
     }
 
     @Override
