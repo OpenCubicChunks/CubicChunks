@@ -265,7 +265,12 @@ public class CubicChunkManager {
         if (!((ICubicWorld) world).isCubicWorld()) {
             return;
         }
-        for (int cubeY : ((ICubicTicketInternal) ticket).getAllForcedChunkCubes().get(event.getLocation())) {
+        IntSet forcedCubes = ((ICubicTicketInternal) ticket).getAllForcedChunkCubes().get(event.getLocation());
+        if (forcedCubes == null) {
+            CubicChunks.LOGGER.warn("CubicChunkManager: Unforcing chunk with no information about forced cubes at " + event.getLocation());
+            return;
+        }
+        for (int cubeY : forcedCubes) {
             Cube cube = (Cube) ((ICubicWorld) world).getCubeFromCubeCoords(event.getLocation().x, cubeY, event.getLocation().z);
             cube.getTickets().remove((ITicket) ticket);
         }
