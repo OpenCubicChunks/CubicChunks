@@ -36,6 +36,10 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @MethodsReturnNonnullByDefault
 public class MathUtil {
 
+    public static int ceilDiv(int a, int b) {
+        return -Math.floorDiv(-a, b);
+    }
+
     public static boolean isPowerOfN(int toTest, int n) { // works only for positive numbers
         while (toTest > n - 1 && toTest % n == 0) {
             toTest /= n;
@@ -45,7 +49,6 @@ public class MathUtil {
     public static double lerp(final double a, final double min, final double max) {
         return min + a * (max - min);
     }
-
     // reverse linear interpolation - unlerp(lerp(a, min, max), min, max) == a
     public static double unlerp(final double v, final double min, final double max) {
         return (v - min) / (max - min);
