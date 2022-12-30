@@ -118,7 +118,7 @@ public abstract class MixinChunk_Column implements IColumn, IColumnInternal {
     @Override
     public int getTopYWithStaging(int localX, int localZ) {
         if (!isColumn) {
-            return heightMap[localZ << 4 | localX];
+            return heightMap[localZ << 4 | localX] - 1;
         }
         return Math.max(opacityIndex.getTopBlockY(localX, localZ), stagingHeightMap.getTopBlockY(localX, localZ));
     }
