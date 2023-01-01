@@ -62,9 +62,30 @@ public class Coords {
     public static int blockCeilToCube(int val) {
         return -((-val) >> 4);
     }
-    
+
+
+    /**
+     * @deprecated Use {@link #blockToLocalBiome3d(int)}
+     */
+    @Deprecated
     public static int blockToBiome(int val) {
         return (val & 14) >> 1;
+    }
+
+    public static int blockToLocalBiome3d(int val) {
+        return (val & 15) >> 2;
+    }
+
+    public static int blockToBiome3d(int val) {
+        return val >> 2;
+    }
+
+    public static int biome3dToMinBlock(int val) {
+        return val << 2;
+    }
+
+    public static int biome3dToBlock(int val, int localBlock) {
+        return val << 2 | localBlock;
     }
 
     public static int localToBlock(int cubeVal, int localVal) {
@@ -94,9 +115,9 @@ public class Coords {
 
     public static BlockPos getCubeCenter(ICube cube) {
         return new BlockPos(
-                cubeToMinBlock(cube.getX()) + 8,
-                cubeToMinBlock(cube.getY()) + 8,
-                cubeToMinBlock(cube.getZ()) + 8
+                cubeToMinBlock(cube.getX()) | 8,
+                cubeToMinBlock(cube.getY()) | 8,
+                cubeToMinBlock(cube.getZ()) | 8
         );
     }
 

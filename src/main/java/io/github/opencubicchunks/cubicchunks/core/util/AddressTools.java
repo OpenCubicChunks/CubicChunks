@@ -79,7 +79,7 @@ public class AddressTools {
         return getLocalAddress(pos.getX(), pos.getY(), pos.getZ());
     }
 
-    public static int getBiomeAddress(int biomeX, int biomeZ) {
-        return biomeX << 3 | biomeZ;
+    public static int getBiomeAddress3d(int biomeLocalX, int biomeLocalY, int biomeLocalZ) {
+        return biomeLocalX | biomeLocalY << 2 | biomeLocalZ << 4;
     }
 }

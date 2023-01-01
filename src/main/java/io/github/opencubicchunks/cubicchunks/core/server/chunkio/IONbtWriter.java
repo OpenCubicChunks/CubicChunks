@@ -274,7 +274,7 @@ class IONbtWriter {
     private static void writeBiomes(Cube cube, NBTTagCompound nbt) {// biomes
         byte[] biomes = cube.getBiomeArray();
         if (biomes != null)
-            nbt.setByteArray("Biomes", biomes);
+            nbt.setByteArray("Biomes3D", biomes);
     }
 
     private static List<NextTickListEntry> getScheduledTicks(Cube cube) {

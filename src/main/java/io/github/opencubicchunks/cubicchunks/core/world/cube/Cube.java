@@ -242,11 +242,14 @@ public class Cube implements ICube {
             }
         }
         if (primer.hasBiomes()) {
-            for (int biomeX = 0; biomeX < 8; biomeX++) {
-                for (int biomeZ = 0; biomeZ < 8; biomeZ++) {
-                    int primerBiomeX = biomeX / 2;
-                    int primerBiomeZ = biomeZ / 2;
-                    setBiome(biomeX, biomeZ, primer.getBiome(primerBiomeX, 0, primerBiomeZ));
+            for (int biomeX = 0; biomeX < 4; biomeX++) {
+                for (int biomeY = 0; biomeY < 4; biomeY++) {
+                    for (int biomeZ = 0; biomeZ < 4; biomeZ++) {
+                        Biome biome = primer.getBiome(biomeX, biomeY, biomeZ);
+                        if (biome != null) {
+                            setBiome(biomeX, biomeY, biomeZ, biome);
+                        }
+                    }
                 }
             }
         }
@@ -430,20 +433,20 @@ public class Cube implements ICube {
     public Biome getBiome(BlockPos pos) {
         if (this.blockBiomeArray == null)
             return this.getColumn().getBiome(pos, world.getBiomeProvider());
-        int biomeX = Coords.blockToBiome(pos.getX());
-        int biomeZ = Coords.blockToBiome(pos.getZ());
-        int biomeId = this.blockBiomeArray[AddressTools.getBiomeAddress(biomeX, biomeZ)] & 255;
-        Biome biome = Biome.getBiome(biomeId);
-        return biome;
+        int biomeX = Coords.blockToLocalBiome3d(pos.getX());
+        int biomeY = Coords.blockToLocalBiome3d(pos.getY());
+        int biomeZ = Coords.blockToLocalBiome3d(pos.getZ());
+        int biomeId = this.blockBiomeArray[AddressTools.getBiomeAddress3d(biomeX, biomeY, biomeZ)] & 255;
+        return Biome.getBiome(biomeId);
     }
 
-    @SuppressWarnings({"deprecation", "RedundantSuppression"})
+    @Deprecated
     @Override
-    public void setBiome(int localBiomeX, int localBiomeZ, Biome biome) {
+    public void setBiome(int localBiomeX, int localBiomeY, int localBiomeZ, Biome biome) {
         if (this.blockBiomeArray == null)
-            this.blockBiomeArray = new byte[8 * 8];
+            this.blockBiomeArray = new byte[4 * 4 * 4];
 
-        this.blockBiomeArray[AddressTools.getBiomeAddress(localBiomeX, localBiomeZ)] = (byte) Biome.REGISTRY.getIDForObject(biome);
+        this.blockBiomeArray[AddressTools.getBiomeAddress3d(localBiomeX, localBiomeY, localBiomeZ)] = (byte) Biome.REGISTRY.getIDForObject(biome);
     }
 
     @Nullable

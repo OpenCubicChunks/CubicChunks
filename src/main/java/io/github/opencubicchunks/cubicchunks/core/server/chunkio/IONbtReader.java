@@ -30,7 +30,7 @@ import io.github.opencubicchunks.cubicchunks.api.world.IHeightMap;
 import io.github.opencubicchunks.cubicchunks.core.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.core.asm.mixin.ICubicWorldInternal;
 import io.github.opencubicchunks.cubicchunks.core.lighting.ILightingManager;
-import io.github.opencubicchunks.cubicchunks.core.world.ClientHeightMap;
+import io.github.opencubicchunks.cubicchunks.core.util.AddressTools;
 import io.github.opencubicchunks.cubicchunks.core.world.ServerHeightMap;
 import io.github.opencubicchunks.cubicchunks.core.world.cube.Cube;
 import mcp.MethodsReturnNonnullByDefault;
@@ -38,7 +38,6 @@ import net.minecraft.block.Block;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
@@ -302,7 +301,29 @@ public class IONbtReader {
     }
 
     private static void readBiomes(Cube cube, NBTTagCompound nbt) {// biomes
-        if (nbt.hasKey("Biomes"))
-            cube.setBiomeArray(nbt.getByteArray("Biomes"));
+        if (nbt.hasKey("Biomes3D")) {
+            cube.setBiomeArray(nbt.getByteArray("Biomes3D"));
+        }
+        if (nbt.hasKey("Biomes")) {
+            cube.setBiomeArray(convertFromOldCubeBiomes(nbt.getByteArray("Biomes")));
+        }
+    }
+
+    private static byte[] convertFromOldCubeBiomes(byte[] biomes) {
+        byte[] newBiomes = new byte[4 * 4 * 4];
+        for (int x = 0; x < 4; x++) {
+            for (int y = 0; y < 4; y++) {
+                for (int z = 0; z < 4; z++) {
+                    // NOTE: spread the biomes from 4 2x2 segments into the 4 vertical 4x4x4 segments
+                    // this ensures that no biome data has been lost, but some of it may get arranged weirdly
+                    newBiomes[AddressTools.getBiomeAddress3d(x, y, z)] = biomes[getOldBiomeAddress(x << 1 | (y & 1), z << 1 | ((y >> 1) & 1))];
+                }
+            }
+        }
+        return newBiomes;
+    }
+
+    public static int getOldBiomeAddress(int biomeX, int biomeZ) {
+        return biomeX << 3 | biomeZ;
     }
 }

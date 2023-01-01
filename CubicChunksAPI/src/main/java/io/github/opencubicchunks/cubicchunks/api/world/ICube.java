@@ -260,15 +260,30 @@ public interface ICube extends XYZAddressable, ICapabilityProvider {
     Biome getBiome(BlockPos pos);
 
     /**
+     * Set biome at a cube-local 4x4x4 block segment.
+     *
+     * @param localBiomeX cube-local X coordinate. One unit is 4 blocks
+     * @param localBiomeY cube-local Y coordinate. One unit is 4 blocks
+     * @param localBiomeZ cube-local Z coordinate. One unit is 4 blocks
+     * @param biome biome at the given cube coordinates
+     */
+    void setBiome(int localBiomeX, int localBiomeY, int localBiomeZ, Biome biome);
+
+
+    /**
      * Set biome at a cube-local 2x2 block column.
      *
      * @param localBiomeX cube-local X coordinate. One unit is 2 blocks
      * @param localBiomeZ cube-local Z coordinate. One unit is 2 blocks
      * @param biome biome at the given cube coordinates
-     * @deprecated Due to changes in Minecraft 1.15.x, biome storage will be changed to 1 biome per 4x4x4 blocks
+     * @deprecated Due to changes in Minecraft 1.15.x, biome storage will be changed to 1 biome per 4x4x4 blocks. Use {@link #setBiome(int, int, int, Biome)}
      */
     @Deprecated
-    void setBiome(int localBiomeX, int localBiomeZ, Biome biome);
+    default void setBiome(int localBiomeX, int localBiomeZ, Biome biome) {
+        for (int biomeY = 0; biomeY < 4; biomeY++) {
+            setBiome(localBiomeX >> 1, biomeY, localBiomeZ >> 1, biome);
+        }
+    }
 
     @Nullable
     CapabilityDispatcher getCapabilities();
