@@ -440,7 +440,6 @@ public class Cube implements ICube {
         return Biome.getBiome(biomeId);
     }
 
-    @Deprecated
     @Override
     public void setBiome(int localBiomeX, int localBiomeY, int localBiomeZ, Biome biome) {
         if (this.blockBiomeArray == null)
