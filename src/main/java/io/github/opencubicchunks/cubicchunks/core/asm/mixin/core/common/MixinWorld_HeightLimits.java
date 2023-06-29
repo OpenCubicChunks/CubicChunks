@@ -190,7 +190,6 @@ public abstract class MixinWorld_HeightLimits implements ICubicWorld {
                         xEnd, yEnd, zEnd,
                         Objects::nonNull);
 
-        cbi.cancel();
         cbi.setReturnValue(ret);
     }
 
@@ -205,7 +204,7 @@ public abstract class MixinWorld_HeightLimits implements ICubicWorld {
      * @reason CubicChunks needs to check if cube is loaded instead of chunk
      */
     @Inject(method = "isBlockLoaded(Lnet/minecraft/util/math/BlockPos;Z)Z", cancellable = true, at = @At(value = "HEAD"))
-    public void isBlockLoaded(BlockPos pos, boolean allowEmpty, CallbackInfoReturnable<Boolean> cbi) {
+    private void isBlockLoaded(BlockPos pos, boolean allowEmpty, CallbackInfoReturnable<Boolean> cbi) {
         if (!isCubicWorld()) {
             return;
         }
@@ -278,7 +277,7 @@ public abstract class MixinWorld_HeightLimits implements ICubicWorld {
     }
     
     @Inject(method = "getBiome", at = @At("HEAD"), cancellable = true)
-    public void getBiome(BlockPos pos, CallbackInfoReturnable<Biome> ci) {
+    private void getBiome(BlockPos pos, CallbackInfoReturnable<Biome> ci) {
         if (!this.isCubicWorld())
             return;
         ICube cube = this.getCubeCache().getLoadedCube(Coords.blockToCube(pos.getX()),Coords.blockToCube(pos.getY()),Coords.blockToCube(pos.getZ()));
@@ -292,7 +291,6 @@ public abstract class MixinWorld_HeightLimits implements ICubicWorld {
             return;
         Biome biome = cube.getBiome(pos);
         ci.setReturnValue(biome);
-        ci.cancel();
     }
 
     @ModifyConstant(method = {"canSnowAtBody", "canBlockFreezeBody"}, constant = @Constant(intValue = 256), remap = false)

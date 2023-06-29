@@ -45,7 +45,6 @@ public class MixinRenderChunkUtils {
         if (((IOptifineRenderChunk) renderChunk).isCubic()) {
             ExtendedBlockStorage ebs = ((IOptifineRenderChunk) renderChunk).getCube().getStorage();
             int ret = ebs == null ? 0 : ((IOptifineExtendedBlockStorage) ebs).getBlockRefCount();
-            cbi.cancel();
             cbi.setReturnValue(ret);
         }
     }

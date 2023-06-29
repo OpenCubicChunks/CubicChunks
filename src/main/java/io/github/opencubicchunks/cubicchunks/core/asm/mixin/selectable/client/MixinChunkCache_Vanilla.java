@@ -58,11 +58,10 @@ public abstract class MixinChunkCache_Vanilla {
     abstract boolean withinBounds(int x, int z);
 
     @Inject(method = "getBiome", at = @At("HEAD"), cancellable = true)
-    public void getBiome(BlockPos pos, CallbackInfoReturnable<Biome> cir) {
+    private void getBiome(BlockPos pos, CallbackInfoReturnable<Biome> cir) {
         ICubicWorld cworld = (ICubicWorld) world;
         if(!cworld.isCubicWorld())
             return;
-        cir.cancel();
         int chunkX = Coords.blockToCube(pos.getX()) - this.chunkX;
         int chunkZ = Coords.blockToCube(pos.getZ()) - this.chunkZ;
         if (!withinBounds(chunkX, chunkZ)) {

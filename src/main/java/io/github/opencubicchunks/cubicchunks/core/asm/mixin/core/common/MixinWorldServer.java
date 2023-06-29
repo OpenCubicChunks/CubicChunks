@@ -273,7 +273,7 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
      * @author Barteks2x
      */
     @Inject(method = "updateBlocks", at = @At("HEAD"), cancellable = true)
-    protected void updateBlocksCubicChunks(CallbackInfo cbi) {
+    private void updateBlocksCubicChunks(CallbackInfo cbi) {
         if (!isCubicWorld()) {
             return;
         }

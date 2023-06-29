@@ -74,7 +74,7 @@ public class MixinNetHandlerPlayServer {
             at = @At(value = "INVOKE", shift = At.Shift.AFTER,
                     target = "Lnet/minecraft/network/PacketThreadUtil;checkThreadAndEnqueue(Lnet/minecraft/network/Packet;"
                              + "Lnet/minecraft/network/INetHandler;Lnet/minecraft/util/IThreadListener;)V"))
-    public void preprocessPacket(CPacketCustomPayload packet, CallbackInfo ci) {
+    private void preprocessPacket(CPacketCustomPayload packet, CallbackInfo ci) {
         if (!CubicChunksConfig.allowVanillaClients || !"MC|Brand".equals(packet.getChannelName())) {
             return;
         }
@@ -101,7 +101,7 @@ public class MixinNetHandlerPlayServer {
             at = @At(value = "INVOKE", shift = At.Shift.AFTER,
                     target = "Lnet/minecraft/network/PacketThreadUtil;checkThreadAndEnqueue(Lnet/minecraft/network/Packet;"
                             + "Lnet/minecraft/network/INetHandler;Lnet/minecraft/util/IThreadListener;)V"))
-    public void preprocessPacket(CPacketPlayerDigging packetIn, CallbackInfo ci) {
+    private void preprocessPacket(CPacketPlayerDigging packetIn, CallbackInfo ci) {
         WorldServer world = (WorldServer) player.world;
         if (!((ICubicWorld) world).isCubicWorld()) {
             return;
@@ -118,7 +118,7 @@ public class MixinNetHandlerPlayServer {
             at = @At(value = "INVOKE", shift = At.Shift.AFTER,
                     target = "Lnet/minecraft/network/PacketThreadUtil;checkThreadAndEnqueue(Lnet/minecraft/network/Packet;"
                             + "Lnet/minecraft/network/INetHandler;Lnet/minecraft/util/IThreadListener;)V"))
-    public void preprocessPacket(CPacketPlayer packet, CallbackInfo ci) {
+    private void preprocessPacket(CPacketPlayer packet, CallbackInfo ci) {
         WorldServer world = (WorldServer) player.world;
         if (!((ICubicWorld) world).isCubicWorld()) {
             return;
@@ -213,7 +213,7 @@ public class MixinNetHandlerPlayServer {
             at = @At(value = "INVOKE", shift = At.Shift.AFTER,
             target = "Lnet/minecraft/network/PacketThreadUtil;checkThreadAndEnqueue(Lnet/minecraft/network/Packet;"
                     + "Lnet/minecraft/network/INetHandler;Lnet/minecraft/util/IThreadListener;)V"), cancellable = true)
-    public void preprocessTeleportConfirm(CPacketConfirmTeleport packetIn, CallbackInfo ci) {
+    private void preprocessTeleportConfirm(CPacketConfirmTeleport packetIn, CallbackInfo ci) {
         if (!CubicChunksConfig.allowVanillaClients) {
             return;
         }

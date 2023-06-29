@@ -53,7 +53,7 @@ public abstract class MixinWorld implements ICubicWorld {
     // note: markAndNotifyBlock has @Nullable on chunk, this will never be null here,
     // because this isgit lo the chunk on which isPopulated is called
     @Redirect(method = "markAndNotifyBlock", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/chunk/Chunk;isPopulated()Z"))
-    public boolean markNotifyBlock_CubeCheck(Chunk _this,
+    private boolean markNotifyBlock_CubeCheck(Chunk _this,
             BlockPos pos, Chunk chunk, IBlockState oldstate,
             IBlockState newState, int flags) {
         if (!this.isCubicWorld()) {

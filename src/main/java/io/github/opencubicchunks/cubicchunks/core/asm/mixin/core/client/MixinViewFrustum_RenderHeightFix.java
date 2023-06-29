@@ -131,7 +131,6 @@ public class MixinViewFrustum_RenderHeightFix {
         }
         final int index = (z * this.countChunksY + y) * this.countChunksX + x;
         RenderChunk renderChunk = this.renderChunks[index];
-        cbi.cancel();
         cbi.setReturnValue(renderChunk);
     }
 }

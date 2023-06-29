@@ -68,7 +68,7 @@ public class MixinChunkCache implements ICubicChunkCache {
     private IBlockState air = Blocks.AIR.getDefaultState();
 
     @Inject(method = "<init>", at = @At("RETURN"))
-    public void initChunkCache(World worldIn, BlockPos posFromIn, BlockPos posToIn, int subIn, CallbackInfo ci) {
+    private void initChunkCache(World worldIn, BlockPos posFromIn, BlockPos posToIn, int subIn, CallbackInfo ci) {
         if (worldIn == null || !((ICubicWorld) worldIn).isCubicWorld()
                 || !(worldIn.getWorldType() instanceof ICubicWorldType)) {
             return;
@@ -95,17 +95,15 @@ public class MixinChunkCache implements ICubicChunkCache {
     }
 
     @Inject(method = "getBlockState", at = @At("HEAD"), cancellable = true)
-    public void getBlockState(BlockPos pos, CallbackInfoReturnable<IBlockState> cir) {
+    private void getBlockState(BlockPos pos, CallbackInfoReturnable<IBlockState> cir) {
         if (!this.isCubic)
             return;
         Cube cube = this.getCube(pos);
         if (cube == null) {
             cir.setReturnValue(air);
-            cir.cancel();
             return;
         }
         cir.setReturnValue(cube.getBlockState(pos));
-        cir.cancel();
     }
     
     @Override

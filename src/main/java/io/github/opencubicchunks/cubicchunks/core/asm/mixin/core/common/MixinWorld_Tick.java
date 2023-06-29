@@ -101,7 +101,7 @@ public abstract class MixinWorld_Tick implements ICubicWorld {
     @Inject(method = "updateEntityWithOptionalForce",
             at = @At(value = "INVOKE", target = "Lnet/minecraft/world/World;getPersistentChunks()Lcom/google/common/collect/ImmutableSetMultimap;", remap = false),
             require = 1)
-    public void onIsAreaLoadedForUpdateEntityWithOptionalForce(Entity entity, boolean force, CallbackInfo ci) {
+    private void onIsAreaLoadedForUpdateEntityWithOptionalForce(Entity entity, boolean force, CallbackInfo ci) {
         updateEntity_entityPosY = MathHelper.floor(entity.posY);
         updateEntity_entityPosX = MathHelper.floor(entity.posX);
         updateEntity_entityPosZ = MathHelper.floor(entity.posZ);

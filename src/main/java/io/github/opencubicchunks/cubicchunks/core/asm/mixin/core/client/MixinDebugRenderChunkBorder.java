@@ -54,7 +54,7 @@ public class MixinDebugRenderChunkBorder {
      * @reason Change chunk border renderer to work at any Y value.
      */
     @Inject(method = "render", at = @At(value = "HEAD"), cancellable = true)
-    public void renderChunkBorder(float partialTicks, long finishTimeNano, CallbackInfo ci) {
+    private void renderChunkBorder(float partialTicks, long finishTimeNano, CallbackInfo ci) {
         if (!isCubicWorld())
             return;
 

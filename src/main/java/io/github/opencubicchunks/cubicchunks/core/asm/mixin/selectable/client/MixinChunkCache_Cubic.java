@@ -49,7 +49,7 @@ public abstract class MixinChunkCache_Cubic implements ICubicChunkCache {
     @Shadow public World world;
 
     @Inject(method = "getBiome", at = @At("HEAD"), cancellable = true)
-    public void getBiome(BlockPos pos, CallbackInfoReturnable<Biome> cir) {
+    private void getBiome(BlockPos pos, CallbackInfoReturnable<Biome> cir) {
         if (!this.isCubic())
             return;
         Cube cube = this.getCube(pos);
@@ -57,6 +57,5 @@ public abstract class MixinChunkCache_Cubic implements ICubicChunkCache {
             cir.setReturnValue(Biomes.PLAINS);
         else
             cir.setReturnValue(cube.getBiome(pos));
-        cir.cancel();
     }
 }

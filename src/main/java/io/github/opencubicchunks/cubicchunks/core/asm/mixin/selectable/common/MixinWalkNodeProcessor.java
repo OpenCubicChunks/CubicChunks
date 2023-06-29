@@ -79,7 +79,7 @@ public abstract class MixinWalkNodeProcessor extends NodeProcessor {
     }
 
     @ModifyVariable(method = "getPathNodeType", at = @At("HEAD"))
-    public IBlockAccess getPathNodeTypeFromOwnBlockAccess(IBlockAccess world) {
+    private IBlockAccess getPathNodeTypeFromOwnBlockAccess(IBlockAccess world) {
         return this.blockaccess;
     }
 }

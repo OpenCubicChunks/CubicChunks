@@ -52,7 +52,7 @@ public abstract class MixinEntityLivingBase extends Entity {
                             + "Lnet/minecraft/util/math/BlockPos$PooledMutableBlockPos;",
                     value = "INVOKE", ordinal = 1)
     )
-    public double moveEntityWithHeading_getReplacedY(double y) {
+    private double moveEntityWithHeading_getReplacedY(double y) {
         return this.posY;
     }
 

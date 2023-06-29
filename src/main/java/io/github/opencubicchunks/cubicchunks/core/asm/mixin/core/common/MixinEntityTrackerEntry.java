@@ -54,7 +54,6 @@ public class MixinEntityTrackerEntry implements ICubicEntityTracker.Entry {
             int rangeY = Math.min(this.range, this.maxVertRange);
             double dy = player.posY - this.encodedPosY / 4096.0D;
             cir.setReturnValue(dy >= -rangeY && dy <= rangeY);
-            cir.cancel();
         }
     }
 
@@ -65,7 +64,6 @@ public class MixinEntityTrackerEntry implements ICubicEntityTracker.Entry {
             boolean ret = ((PlayerCubeMap) player.getServerWorld().getPlayerChunkMap())
                     .isPlayerWatchingCube(player, this.trackedEntity.chunkCoordX, this.trackedEntity.chunkCoordY, this.trackedEntity.chunkCoordZ);
             cir.setReturnValue(ret);
-            cir.cancel();
         }
     }
 

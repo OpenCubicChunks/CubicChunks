@@ -49,13 +49,13 @@ public class MixinEntityPlayerSP extends AbstractClientPlayer {
     }
 
     @ModifyConstant(method = "onUpdate", constant = @Constant(doubleValue = 0.0D))
-    public double replaceEntityYForBlockPos(double value) {
+    private double replaceEntityYForBlockPos(double value) {
         return this.posY;
     }
 
     @Redirect(method = "onUpdate",
             at = @At(target = "Lnet/minecraft/world/World;isBlockLoaded(Lnet/minecraft/util/math/BlockPos;)Z", value = "INVOKE"))
-    public boolean canEntityUpdate_isBlockLoadedRedirect(World world, BlockPos pos) {
+    private boolean canEntityUpdate_isBlockLoadedRedirect(World world, BlockPos pos) {
         return MixinUtils.canTickPosition(world, pos);
     }
 }

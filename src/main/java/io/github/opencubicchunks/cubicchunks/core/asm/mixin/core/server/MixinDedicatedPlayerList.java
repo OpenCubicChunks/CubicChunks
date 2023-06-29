@@ -36,7 +36,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class MixinDedicatedPlayerList extends MixinPlayerList {
 
     @Inject(method = "<init>", at = @At(value = "RETURN"))
-    public void setVerticalViewDistance(DedicatedServer server, CallbackInfo cbi) {
+    private void setVerticalViewDistance(DedicatedServer server, CallbackInfo cbi) {
         this.setVerticalViewDistance(server.getIntProperty("vertical-view-distance", -1));
 
     }

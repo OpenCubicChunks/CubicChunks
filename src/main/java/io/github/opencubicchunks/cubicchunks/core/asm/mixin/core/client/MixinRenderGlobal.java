@@ -85,7 +85,7 @@ public class MixinRenderGlobal {
             at = @At(value = "INVOKE",
                     target = "Lnet/minecraft/client/multiplayer/WorldClient;getChunk(Lnet/minecraft/util/math/BlockPos;)Lnet/minecraft/world/chunk/Chunk;"),
             locals = LocalCapture.CAPTURE_FAILSOFT)
-    public void onGetPosition(Entity renderViewEntity, ICamera camera, float partialTicks,
+    private void onGetPosition(Entity renderViewEntity, ICamera camera, float partialTicks,
             CallbackInfo ci, int pass, double d0, double d1, double d2,
             Entity entity, double d3, double d4, double d5,
             List<Entity> list, List<Entity> list1, List<Entity> list2,
@@ -109,7 +109,7 @@ public class MixinRenderGlobal {
         at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/chunk/RenderChunk;getChunk()Lnet/minecraft/world/chunk/Chunk;",
             remap = false),
         locals = LocalCapture.CAPTURE_FAILSOFT, remap = true)
-    public void onGetPosition(Entity renderViewEntity, ICamera camera, float partialTicks,
+    private void onGetPosition(Entity renderViewEntity, ICamera camera, float partialTicks,
         CallbackInfo ci, int pass, double d0, double d1, double d2,
         Entity entity, double d3, double d4, double d5,
         List list, boolean forgeEntityPass, boolean forgeTileEntityPass, boolean isShaders, boolean oldFancyGraphics, List list1, List list2,
@@ -134,7 +134,7 @@ public class MixinRenderGlobal {
         at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/chunk/RenderChunk;getChunk()Lnet/minecraft/world/chunk/Chunk;",
             remap = false),
         locals = LocalCapture.CAPTURE_FAILSOFT, remap = true)
-    public void onGetPosition(Entity renderViewEntity, ICamera camera, float partialTicks,
+    private void onGetPosition(Entity renderViewEntity, ICamera camera, float partialTicks,
         CallbackInfo ci, int pass, double d0, double d1, double d2,
         Entity entity, double d3, double d4, double d5,
         List list, boolean forgeEntityPass, boolean forgeTileEntityPass, boolean isShaders, List list1, List list2,

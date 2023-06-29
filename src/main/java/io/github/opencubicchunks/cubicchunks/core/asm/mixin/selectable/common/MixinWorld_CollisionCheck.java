@@ -121,7 +121,6 @@ public abstract class MixinWorld_CollisionCheck implements ICubicWorldInternal {
             }
             pooledmutableblockpos.release();
             ci.setReturnValue(!aabbList.isEmpty());
-            ci.cancel();
         }
     }
 }

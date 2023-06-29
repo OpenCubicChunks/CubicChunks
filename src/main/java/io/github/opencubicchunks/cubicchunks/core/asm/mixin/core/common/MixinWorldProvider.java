@@ -114,7 +114,7 @@ public abstract class MixinWorldProvider implements ICubicWorldProvider {
     private void findRandomizedSpawnPoint(CallbackInfoReturnable<BlockPos> cir) {
         if (((ICubicWorld) world).isCubicWorld()) {
             cir.setReturnValue(SpawnPlaceFinder.getRandomizedSpawnPoint(world));
-            cir.cancel();
+
         }
     }
 
@@ -123,7 +123,6 @@ public abstract class MixinWorldProvider implements ICubicWorldProvider {
         if (!((ICubicWorld) world).isCubicWorld()) {
             return;
         }
-        cir.cancel();
         BlockPos blockpos = new BlockPos(x, 64, z);
 
         if (this.world.getBiome(blockpos).ignorePlayerSpawnSuitability()) {

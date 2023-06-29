@@ -53,7 +53,6 @@ public class MixinWorldEntitySpawner implements IWorldEntitySpawner.Handler {
         if (this.customSpawner != null) {
             int ret = this.customSpawner.findChunksForSpawning(world, hostileEnable, peacefulEnable, spawnOnSetTickRate);
             cir.setReturnValue(ret);
-            cir.cancel();
         }
     }
 }

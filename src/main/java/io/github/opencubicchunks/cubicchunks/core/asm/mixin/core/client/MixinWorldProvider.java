@@ -58,7 +58,6 @@ public abstract class MixinWorldProvider {
     private void getVoidFogYFactor_injectReplace(CallbackInfoReturnable<Double> cir) {
         if (cubicWorld().isCubicWorld()) {
             cir.setReturnValue(Double.NaN);
-            cir.cancel();
         }
     }
 

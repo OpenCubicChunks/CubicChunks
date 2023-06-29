@@ -253,7 +253,7 @@ public abstract class MixinWorld implements ICubicWorldInternal {
 
 
     @Inject(method = "checkLightFor", at = @At("HEAD"), cancellable = true)
-    public void checkLightFor(EnumSkyBlock lightType, BlockPos pos, CallbackInfoReturnable<Boolean> ci) {
+    private void checkLightFor(EnumSkyBlock lightType, BlockPos pos, CallbackInfoReturnable<Boolean> ci) {
         if (!isCubicWorld()) {
             return;
         }
@@ -273,7 +273,7 @@ public abstract class MixinWorld implements ICubicWorldInternal {
      *         Cubes to save themselves.
      */
     @Inject(method = "markChunkDirty", at = @At("HEAD"), cancellable = true)
-    public void onMarkChunkDirty(BlockPos pos, TileEntity unusedTileEntity, CallbackInfo ci) {
+    private void onMarkChunkDirty(BlockPos pos, TileEntity unusedTileEntity, CallbackInfo ci) {
         if (this.isCubicWorld()) {
             Cube cube = this.getCubeCache().getLoadedCube(CubePos.fromBlockCoords(pos));
             if (cube != null) {
@@ -284,7 +284,7 @@ public abstract class MixinWorld implements ICubicWorldInternal {
     }
 /*
     @Inject(method = "getBlockState", at = @At("HEAD"), cancellable = true)
-    public void onGetBlockState(BlockPos pos, CallbackInfoReturnable<IBlockState> ci) {
+    private void onGetBlockState(BlockPos pos, CallbackInfoReturnable<IBlockState> ci) {
         if (this.isCubicWorld()) {
             if (this.isValid(pos))
                 ci.setReturnValue(this.getCubeCache()
@@ -292,7 +292,6 @@ public abstract class MixinWorld implements ICubicWorldInternal {
                         .getBlockState(pos));
             else
                 ci.setReturnValue(Blocks.AIR.getDefaultState());
-            ci.cancel();
         }
     }
 */
@@ -322,7 +321,6 @@ public abstract class MixinWorld implements ICubicWorldInternal {
         if (!isCubicWorld()) {
             return;
         }
-        cir.cancel();
         Chunk chunk = this.getChunk(pos);
         BlockPos currentPos = getPrecipitationHeight(pos);
         int minY = currentPos.getY() - 64;

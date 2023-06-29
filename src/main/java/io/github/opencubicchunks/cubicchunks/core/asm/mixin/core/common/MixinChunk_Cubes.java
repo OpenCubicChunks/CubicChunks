@@ -229,7 +229,7 @@ public abstract class MixinChunk_Cubes implements IColumnInternal {
 
     // this method can't be saved by just redirecting EBS access
     @Inject(method = "getTopFilledSegment", at = @At(value = "HEAD"), cancellable = true)
-    public void getTopFilledSegment_CubicChunks(CallbackInfoReturnable<Integer> cbi) {
+    private void getTopFilledSegment_CubicChunks(CallbackInfoReturnable<Integer> cbi) {
         if (!isColumn) {
             return;
         }
@@ -252,12 +252,10 @@ public abstract class MixinChunk_Cubes implements IColumnInternal {
 
             int ret = Coords.cubeToMinBlock(Coords.blockToCube(this.getWorld().provider.getAverageGroundLevel()));
             cbi.setReturnValue(ret);
-            cbi.cancel();
             return;
         }
         int ret = Coords.cubeToMinBlock(Coords.blockToCube(blockY)); // return the lowest block in the Cube (kinda weird I know)
         cbi.setReturnValue(ret);
-        cbi.cancel();
     }
 
     /*
@@ -285,7 +283,7 @@ public abstract class MixinChunk_Cubes implements IColumnInternal {
     // ==============================================
 
     @Inject(method = "generateSkylightMap", at = @At(value = "HEAD"), cancellable = true)
-    public void generateSkylightMap_CubicChunks_Replace(CallbackInfo cbi) {
+    private void generateSkylightMap_CubicChunks_Replace(CallbackInfo cbi) {
         if (isColumn) {
             // TODO: update skylight in cubes marked for update
             cbi.cancel();
@@ -462,7 +460,6 @@ public abstract class MixinChunk_Cubes implements IColumnInternal {
     private void setBlockState_CubicChunks_EBSSetInject(BlockPos pos, IBlockState state, CallbackInfoReturnable<IBlockState> cir) {
         if (isColumn && getWorld().getCubeCache().getLoadedCube(CubePos.fromBlockCoords(pos)) == null) {
             cir.setReturnValue(null);
-            cir.cancel();
         }
     }
     
@@ -714,7 +711,7 @@ public abstract class MixinChunk_Cubes implements IColumnInternal {
     // ==============================================
 
     @Inject(method = "onLoad", at = @At("HEAD"), cancellable = true)
-    public void onChunkLoad_CubicChunks(CallbackInfo cbi) {
+    private void onChunkLoad_CubicChunks(CallbackInfo cbi) {
         if (!isColumn) {
             return;
         }
@@ -731,7 +728,7 @@ public abstract class MixinChunk_Cubes implements IColumnInternal {
     // ==============================================
 
     @Inject(method = "onUnload", at = @At("HEAD"), cancellable = true)
-    public void onChunkUnload_CubicChunks(CallbackInfo cbi) {
+    private void onChunkUnload_CubicChunks(CallbackInfo cbi) {
         if (!isColumn) {
             return;
         }
@@ -749,7 +746,7 @@ public abstract class MixinChunk_Cubes implements IColumnInternal {
     // ==============================================
 
     @Inject(method = "getEntitiesWithinAABBForEntity", at = @At("HEAD"), cancellable = true)
-    public void getEntitiesWithinAABBForEntity_CubicChunks(@Nullable Entity entityIn, AxisAlignedBB aabb,
+    private void getEntitiesWithinAABBForEntity_CubicChunks(@Nullable Entity entityIn, AxisAlignedBB aabb,
             List<Entity> listToFill, Predicate<? super Entity> filter, CallbackInfo cbi) {
         if (!isColumn) {
             return;
@@ -796,7 +793,7 @@ public abstract class MixinChunk_Cubes implements IColumnInternal {
     // ==============================================
 
     @Inject(method = "getEntitiesOfTypeWithinAABB", at = @At("HEAD"), cancellable = true)
-    public <T extends Entity> void getEntitiesOfTypeWithinAAAB_CubicChunks(Class<? extends T> entityClass,
+    private <T extends Entity> void getEntitiesOfTypeWithinAAAB_CubicChunks(Class<? extends T> entityClass,
             AxisAlignedBB aabb, List<T> listToFill, Predicate<? super T> filter, CallbackInfo cbi) {
         if (!isColumn) {
             return;
@@ -833,7 +830,6 @@ public abstract class MixinChunk_Cubes implements IColumnInternal {
             // TODO: precipitationHeightMap
             BlockPos ret = new BlockPos(pos.getX(), getHeightValue(blockToLocal(pos.getX()), pos.getY(), blockToLocal(pos.getZ())), pos.getZ());
             cbi.setReturnValue(ret);
-            cbi.cancel();
         }
     }
 

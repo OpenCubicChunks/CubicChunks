@@ -49,10 +49,9 @@ public class MixinRenderChunk {
     @Shadow private World world;
 
     @Inject(method = "createRegionRenderCache", at = @At(value = "HEAD"), remap = false, cancellable = true)
-    protected void createCubicChunkCache(World world, BlockPos from, BlockPos to, int subtract, CallbackInfoReturnable<ChunkCache> cbi) {
+    private void createCubicChunkCache(World world, BlockPos from, BlockPos to, int subtract, CallbackInfoReturnable<ChunkCache> cbi) {
         if (((ICubicWorld) world).isCubicWorld()) {
             cbi.setReturnValue(new RenderCubeCache(world, from, to, subtract));
-            cbi.cancel();
         }
     }
 }

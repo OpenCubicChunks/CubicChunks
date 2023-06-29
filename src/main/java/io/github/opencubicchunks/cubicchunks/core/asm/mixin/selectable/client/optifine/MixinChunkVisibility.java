@@ -76,7 +76,6 @@ public class MixinChunkVisibility {
         if (!((ICubicWorld) world).isCubicWorld()) {
             return;
         }
-        cbi.cancel();
         if (true) {
             cbi.setReturnValue(Integer.MAX_VALUE - 1);
             return;

@@ -72,7 +72,7 @@ public abstract class MixinChunk_Cubes implements IColumn {
     // ==============================================
 
     @Inject(method = "generateHeightMap", at = @At(value = "HEAD"), cancellable = true)
-    protected void generateHeightMap_CubicChunks_Cancel(CallbackInfo cbi) {
+    private void generateHeightMap_CubicChunks_Cancel(CallbackInfo cbi) {
         if (isColumn) {
             cbi.cancel();
         }
