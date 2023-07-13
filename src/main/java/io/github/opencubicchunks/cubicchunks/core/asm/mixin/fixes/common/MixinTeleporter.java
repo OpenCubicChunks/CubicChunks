@@ -55,7 +55,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-@Mixin(Teleporter.class)
+@Mixin(value = Teleporter.class, priority = 900) // priority for SecurityCraft
 public class MixinTeleporter {
     
     @Shadow
