@@ -12,7 +12,7 @@ plugins {
     `maven-publish`
     signing
     idea
-    id("net.minecraftforge.gradle").version("5.1.27")
+    id("net.minecraftforge.gradle").version("6.+")
     id("org.spongepowered.mixin").version("0.7-SNAPSHOT")
     id("com.github.johnrengelman.shadow").version("7.1.2")
     id("com.github.hierynomus.license").version("0.16.1")
@@ -120,7 +120,7 @@ dependencies {
     testImplementation("org.mockito:mockito-core:4.2.0")
     testImplementation("org.spongepowered:launchwrappertestsuite:1.0-SNAPSHOT")
 
-    coreShadow("org.spongepowered:mixin:0.8.1-SNAPSHOT") {
+    coreShadow("org.spongepowered:mixin:0.8.3-SNAPSHOT") {
         isTransitive = false
     }
 
