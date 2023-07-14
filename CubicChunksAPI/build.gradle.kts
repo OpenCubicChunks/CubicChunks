@@ -6,7 +6,7 @@ plugins {
     `maven-publish`
     signing
     idea
-    id("net.minecraftforge.gradle").version("5.1.27")
+    id("net.minecraftforge.gradle").version("6.+")
     id("io.github.opencubicchunks.gradle.mcGitVersion")
     id("com.github.hierynomus.license").version("0.16.1")
 }
