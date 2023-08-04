@@ -6,13 +6,14 @@ import java.nio.file.Files
 import java.nio.file.StandardOpenOption
 import java.time.Instant
 import java.time.format.DateTimeFormatter
+import java.util.*
 
 plugins {
     java
     `maven-publish`
     signing
     idea
-    id("net.minecraftforge.gradle").version("5.1.27")
+    id("net.neoforged.gradle").version("[6.0.18,6.2)")
     id("org.spongepowered.mixin").version("0.7-SNAPSHOT")
     id("com.github.johnrengelman.shadow").version("7.1.2")
     id("com.github.hierynomus.license").version("0.16.1")
@@ -25,6 +26,7 @@ val projectName: String by project
 val doRelease: String by project
 val theForgeVersion: String by project
 
+logger.error(project.gradle.gradleVersion)
 group = "io.github.opencubicchunks"
 
 base {
@@ -201,7 +203,7 @@ tasks {
                 "Specification-Title" to project.name,
                 "Specification-Version" to project.version,
                 "Specification-Vendor" to "OpenCubicChunks",
-                "Implementation-Title" to "${project.group}.${project.name.toLowerCase().replace(' ', '_')}",
+                "Implementation-Title" to "${project.group}.${project.name.lowercase(Locale.ROOT).replace(' ', '_')}",
                 "Implementation-Version" to project.version,
                 "Implementation-Vendor" to "OpenCubicChunks",
                 "Implementation-Timestamp" to DateTimeFormatter.ISO_INSTANT.format(Instant.now()),
@@ -226,9 +228,9 @@ tasks {
         configureManifest(task.manifest)
     }
 
-    afterEvaluate {
-        getByName("reobfJar").enabled = false;
-    }
+    //afterEvaluate {
+    //    getByName("reobfJar").enabled = false;
+    //}
 
     jar {
         from(sourceSets["main"].output)

@@ -1,17 +1,16 @@
 pluginManagement {
     repositories {
-        maven {
-            setUrl("https://maven.minecraftforge.net/")
-        }
         gradlePluginPortal()
-        mavenCentral()
-    }
-    resolutionStrategy {
-        eachPlugin {
-            if (requested.id.id == "net.minecraftforge.gradle") {
-                useModule("${requested.id}:ForgeGradle:${requested.version}")
-            }
+        maven {
+            name = "NeoForged"
+            setUrl("https://maven.neoforged.net/releases")
+        }
+        maven {
+            setUrl("https://repo.spongepowered.org/repository/maven-public/")
         }
     }
+}
+plugins {
+    id("org.gradle.toolchains.foojay-resolver-convention").version("0.5.0")
 }
 rootProject.name = "CubicChunksAPI"

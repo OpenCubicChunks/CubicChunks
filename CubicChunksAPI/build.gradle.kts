@@ -1,12 +1,13 @@
 import java.time.Instant
 import java.time.format.DateTimeFormatter
+import java.util.*
 
 plugins {
     java
     `maven-publish`
     signing
     idea
-    id("net.minecraftforge.gradle").version("5.1.27")
+    id("net.neoforged.gradle").version("[6.0.18,6.2)")
     id("io.github.opencubicchunks.gradle.mcGitVersion")
     id("com.github.hierynomus.license").version("0.16.1")
 }
@@ -63,7 +64,7 @@ tasks {
                     "Specification-Title" to project.name,
                     "Specification-Version" to project.version,
                     "Specification-Vendor" to "OpenCubicChunks",
-                    "Implementation-Title" to "${project.group}.${project.name.toLowerCase().replace(' ', '_')}",
+                    "Implementation-Title" to "${project.group}.${project.name.lowercase(Locale.ROOT).replace(' ', '_')}",
                     "Implementation-Version" to project.version,
                     "Implementation-Vendor" to "OpenCubicChunks",
                     "Implementation-Timestamp" to DateTimeFormatter.ISO_INSTANT.format(Instant.now())
@@ -88,7 +89,7 @@ tasks {
                     "Specification-Title" to project.name,
                     "Specification-Version" to project.version,
                     "Specification-Vendor" to "OpenCubicChunks",
-                    "Implementation-Title" to "${project.group}.${project.name.toLowerCase().replace(' ', '_')}",
+                    "Implementation-Title" to "${project.group}.${project.name.lowercase(Locale.ROOT).replace(' ', '_')}",
                     "Implementation-Version" to project.version,
                     "Implementation-Vendor" to "OpenCubicChunks",
                     "Implementation-Timestamp" to DateTimeFormatter.ISO_INSTANT.format(Instant.now())
