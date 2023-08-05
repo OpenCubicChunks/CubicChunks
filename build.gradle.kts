@@ -102,6 +102,9 @@ configurations {
 repositories {
     mavenCentral()
     maven {
+        setUrl("https://files.minecraftforge.net/maven/")
+    }
+    maven {
         setUrl("https://oss.sonatype.org/content/repositories/public/")
     }
     maven {
