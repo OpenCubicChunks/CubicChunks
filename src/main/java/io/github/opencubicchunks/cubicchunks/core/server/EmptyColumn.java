@@ -49,7 +49,7 @@ import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkPrimer;
 
-public class EmptyColumn extends Chunk implements IColumn, IColumnInternal {
+public class EmptyColumn extends Chunk /*implements IColumn, IColumnInternal*/ {
 	private final ICube emptyCube;
 
 	public EmptyColumn(World worldIn, int x, int z) {
@@ -68,67 +68,99 @@ public class EmptyColumn extends Chunk implements IColumn, IColumnInternal {
 	/**
 	 * Returns the value in the height map at this x, z coordinate in the chunk
 	 */
-	@SuppressWarnings("deprecation")
 	@Override
 	public int getHeightValue(int x, int z) {
 		return 0;
 	}
 
-	@Override
+	// overrides for IColumn and IColumnInternal
+	// we can't implement them directly as that causes FG6+ to reobfuscate IColumn#getHeightValue(int, int)
+	// into vanilla SRG name, which breaks API and mixins
+	//@Override
 	public int getHeightValue(int localX, int blockY, int localZ) {
 		return 0;
 	}
 
-	@Override
+	//@Override
 	public boolean shouldTick() {
 		return false;
 	}
 
-	@Override
+	//@Override
 	public IHeightMap getOpacityIndex() {
 		return null;
 	}
 
-	@Override
+	//@Override
 	public Collection<? extends ICube> getLoadedCubes() {
 		return Collections.emptyList();
 	}
 
-	@Override
+	//@Override
 	public Iterable<? extends ICube> getLoadedCubes(int startY, int endY) {
 		return Collections.emptyList();
 	}
 
 	@Nullable
-	@Override
+	//@Override
 	public ICube getLoadedCube(int cubeY) {
 		return null;
 	}
 
-	@Override
+	//@Override
 	public ICube getCube(int cubeY) {
 		return emptyCube;
 	}
 
-	@Override
+	//@Override
 	public void addCube(ICube cube) {
 		throw new RuntimeException("This should never be called!");
 	}
 
 	@Nullable
-	@Override
+	//@Override
 	public ICube removeCube(int cubeY) {
 		return null;
 	}
 
-	@Override
+	//@Override
 	public boolean hasLoadedCubes() {
 		return false;
 	}
 
-	@Override
+	//@Override
 	public void preCacheCube(ICube cube) {
 
+	}
+
+	//@Override
+	public int getX() {
+		return 0;
+	}
+
+	//@Override
+	public int getZ() {
+		return 0;
+	}
+
+	//@Override
+	public ChunkPrimer getCompatGenerationPrimer() {
+		return null;
+	}
+
+	//@Override
+	public void removeFromStagingHeightmap(ICube cube) {
+
+	}
+
+	//@Override
+	public void addToStagingHeightmap(ICube cube) {
+
+	}
+
+	//@Override
+	public int getTopYWithStaging(int localX, int localZ) {
+		return 0;
 	}
 
 	/**
@@ -274,35 +306,5 @@ public class EmptyColumn extends Chunk implements IColumn, IColumnInternal {
 	@Override
 	public boolean isEmptyBetween(int startY, int endY) {
 		return true;
-	}
-
-	@Override
-	public int getX() {
-		return 0;
-	}
-
-	@Override
-	public int getZ() {
-		return 0;
-	}
-
-	@Override
-	public ChunkPrimer getCompatGenerationPrimer() {
-		return null;
-	}
-
-	@Override
-	public void removeFromStagingHeightmap(ICube cube) {
-
-	}
-
-	@Override
-	public void addToStagingHeightmap(ICube cube) {
-
-	}
-
-	@Override
-	public int getTopYWithStaging(int localX, int localZ) {
-		return 0;
 	}
 }

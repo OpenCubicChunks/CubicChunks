@@ -30,6 +30,7 @@ import static io.github.opencubicchunks.cubicchunks.api.util.Coords.blockToLocal
 import com.google.common.base.Predicate;
 import io.github.opencubicchunks.cubicchunks.api.util.Coords;
 import io.github.opencubicchunks.cubicchunks.api.util.CubePos;
+import io.github.opencubicchunks.cubicchunks.api.world.IColumn;
 import io.github.opencubicchunks.cubicchunks.api.world.ICube;
 import io.github.opencubicchunks.cubicchunks.api.world.ICubicWorld;
 import io.github.opencubicchunks.cubicchunks.api.world.IHeightMap;
@@ -60,10 +61,13 @@ import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.world.ChunkEvent.Load;
 import org.spongepowered.asm.mixin.Final;
+import org.spongepowered.asm.mixin.Implements;
+import org.spongepowered.asm.mixin.Interface;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Mutable;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Constant;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -89,7 +93,14 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 @Mixin(value = Chunk.class, priority = 999)
-public abstract class MixinChunk_Cubes implements IColumnInternal {
+// soft implements for IColumn and IColumnInternal
+// we can't implement them directly as that causes FG6+ to reobfuscate IColumn#getHeightValue(int, int)
+// into vanilla SRG name, which breaks API and mixins
+@Implements({
+        @Interface(iface = IColumn.class, prefix = "chunk$"),
+        @Interface(iface = IColumnInternal.class, prefix = "chunk_internal$")
+})
+public abstract class MixinChunk_Cubes {
 
     @Shadow @Final private ExtendedBlockStorage[] storageArrays;
     @Shadow @Final public static ExtendedBlockStorage NULL_BLOCK_STORAGE;
@@ -127,14 +138,14 @@ public abstract class MixinChunk_Cubes implements IColumnInternal {
 
     @Shadow public abstract int getLightFor(EnumSkyBlock type, BlockPos pos);
 
-    @SuppressWarnings("unchecked")
+    @Unique @SuppressWarnings({"unchecked", "AddedMixinMembersNamePattern"})
     public <T extends World & ICubicWorldInternal> T getWorld() {
         return (T) this.world;
     }
 
     // TODO: make it go through cube raw access methods
     // TODO: make cube an interface, use the implementation only here
-    @Nullable
+    @Unique @Nullable
     private ExtendedBlockStorage getEBS_CubicChunks(int index) {
         if (!isColumn) {
             return storageArrays[index];
@@ -150,7 +161,7 @@ public abstract class MixinChunk_Cubes implements IColumnInternal {
     }
 
     // setEBS is unlikely to be used extremely frequently, no caching
-    private void setEBS_CubicChunks(int index, ExtendedBlockStorage ebs) {
+    @Unique private void setEBS_CubicChunks(int index, ExtendedBlockStorage ebs) {
         if (!isColumn) {
             storageArrays[index] = ebs;
             return;
@@ -202,7 +213,7 @@ public abstract class MixinChunk_Cubes implements IColumnInternal {
         }
         this.stagingHeightMap = new StagingHeightMap();
         // instead of redirecting access to this map, just make the map do the work
-        this.tileEntities = new ColumnTileEntityMap(this);
+        this.tileEntities = new ColumnTileEntityMap((IColumn) this);
 
         // this.chunkSections = null;
         // this.skylightUpdateMap = null;
@@ -220,8 +231,7 @@ public abstract class MixinChunk_Cubes implements IColumnInternal {
         return _16;
     }
 
-    @Override
-    public ChunkPrimer getCompatGenerationPrimer() {
+    public ChunkPrimer chunk_internal$getCompatGenerationPrimer() {
         return compatGenerationPrimer;
     }
 
@@ -345,7 +355,7 @@ public abstract class MixinChunk_Cubes implements IColumnInternal {
             int localX, int y, int localZ, int packedXZ, int oldHeightValue, IBlockState oldState, Block newBlock, Block oldBlock,
             int oldOpacity, ExtendedBlockStorage ebs, boolean createdNewEbsAboveTop, int newOpacity) {
 
-        if (isColumn && getCube(blockToCube(y)).isInitialLightingDone()) {
+        if (isColumn && ((IColumn) this).getCube(blockToCube(y)).isInitialLightingDone()) {
             if (oldHeightValue == y + 1) { // oldHeightValue is the previous block Y above the top block, so this is the "removing to block" case
                 getWorld().getLightingManager().doOnBlockSetLightUpdates((Chunk) (Object) this, localX, getHeightValue(localX, localZ), y, localZ);
             } else {
@@ -380,7 +390,7 @@ public abstract class MixinChunk_Cubes implements IColumnInternal {
         if (!isColumn) {
             return loaded;
         }
-        ICube cube = this.getLoadedCube(blockToCube(y));
+        ICube cube = ((IColumn) this).getLoadedCube(blockToCube(y));
         return cube != null && cube.isCubeLoaded();
     }
 
@@ -426,7 +436,7 @@ public abstract class MixinChunk_Cubes implements IColumnInternal {
             return;
         }
         this.dirty = true;
-        if (getCube(blockToCube(pos.getY())).isSurfaceTracked()) {
+        if (((IColumn) this).getCube(blockToCube(pos.getY())).isSurfaceTracked()) {
             opacityIndex.onOpacityChange(blockToLocal(pos.getX()), pos.getY(), blockToLocal(pos.getZ()), state.getLightOpacity(world, pos));
             getWorld().getLightingManager().onHeightUpdate(pos);
         } else {
@@ -482,7 +492,7 @@ public abstract class MixinChunk_Cubes implements IColumnInternal {
             return;
         }
         ((ICubicWorldInternal) world).getLightingManager().onGetLight(type, pos);
-        cir.setReturnValue(((Cube) getCube(blockToCube(pos.getY()))).getCachedLightFor(type, pos));
+        cir.setReturnValue(((Cube) ((IColumn) this).getCube(blockToCube(pos.getY()))).getCachedLightFor(type, pos));
     }
 
     @Nullable
@@ -689,7 +699,7 @@ public abstract class MixinChunk_Cubes implements IColumnInternal {
         if (!isColumn) {
             return loaded;
         }
-        ICube cube = this.getLoadedCube(blockToCube(te.getPos().getY()));
+        ICube cube = ((IColumn) this).getLoadedCube(blockToCube(te.getPos().getY()));
         return cube != null && cube.isCubeLoaded();
     }
 
@@ -702,7 +712,7 @@ public abstract class MixinChunk_Cubes implements IColumnInternal {
         if (!isColumn) {
             return loaded;
         }
-        ICube cube = this.getLoadedCube(blockToCube(pos.getY()));
+        ICube cube = ((IColumn) this).getLoadedCube(blockToCube(pos.getY()));
         return cube != null && cube.isCubeLoaded();
     }
 
@@ -828,7 +838,7 @@ public abstract class MixinChunk_Cubes implements IColumnInternal {
     private void getPrecipitationHeight_CubicChunks_Replace(BlockPos pos, CallbackInfoReturnable<BlockPos> cbi) {
         if (isColumn) {
             // TODO: precipitationHeightMap
-            BlockPos ret = new BlockPos(pos.getX(), getHeightValue(blockToLocal(pos.getX()), pos.getY(), blockToLocal(pos.getZ())), pos.getZ());
+            BlockPos ret = new BlockPos(pos.getX(), ((IColumn) this).getHeightValue(blockToLocal(pos.getX()), pos.getY(), blockToLocal(pos.getZ())), pos.getZ());
             cbi.setReturnValue(ret);
         }
     }
@@ -918,7 +928,7 @@ public abstract class MixinChunk_Cubes implements IColumnInternal {
         if (!isColumn) {
             return loaded;
         }
-        ICube cube = this.getLoadedCube(blockToCube(pos.getY()));
+        ICube cube = ((IColumn) this).getLoadedCube(blockToCube(pos.getY()));
         return cube != null && cube.isCubeLoaded();
     }
 

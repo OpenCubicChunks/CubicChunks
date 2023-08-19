@@ -42,6 +42,7 @@ import org.spongepowered.asm.mixin.Intrinsic;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Collection;
@@ -52,8 +53,14 @@ import java.util.Collection;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 @Mixin(value = Chunk.class, priority = 2000)
-@Implements(@Interface(iface = IColumn.class, prefix = "chunk$"))
-public abstract class MixinChunk_Column implements IColumn, IColumnInternal {
+// soft implements for IColumn and IColumnInternal
+// we can't implement them directly as that causes FG6+ to reobfuscate IColumn#getHeightValue(int, int)
+// into vanilla SRG name, which breaks API and mixins
+@Implements({
+        @Interface(iface = IColumn.class, prefix = "chunk$"),
+        @Interface(iface = IColumnInternal.class, prefix = "chunk_internal$")
+})
+public abstract class MixinChunk_Column {
 
     /*
      * WARNING: WHEN YOU RENAME ANY OF THESE 3 FIELDS RENAME CORRESPONDING
@@ -77,7 +84,7 @@ public abstract class MixinChunk_Column implements IColumn, IColumnInternal {
 
     @Shadow @Final private int[] heightMap;
 
-    @Override public Cube getLoadedCube(int cubeY) {
+    public ICube chunk$getLoadedCube(int cubeY) {
         if (cachedCube != null && cachedCube.getY() == cubeY) {
             return cachedCube;
         }
@@ -85,7 +92,7 @@ public abstract class MixinChunk_Column implements IColumn, IColumnInternal {
     }
 
 
-    @Override public Cube getCube(int cubeY) {
+    public ICube chunk$getCube(int cubeY) {
         if (cachedCube != null && cachedCube.getY() == cubeY) {
             return cachedCube;
         }
@@ -93,51 +100,49 @@ public abstract class MixinChunk_Column implements IColumn, IColumnInternal {
     }
 
 
-    @Override public void addCube(ICube cube) {
+    public void chunk$addCube(ICube cube) {
         this.cubeMap.put((Cube) cube);
     }
 
 
-    @Override public Cube removeCube(int cubeY) {
+    public ICube chunk$removeCube(int cubeY) {
         if (cachedCube != null && cachedCube.getY() == cubeY) {
-            invalidateCachedCube();
+            cubicChunks$invalidateCachedCube();
         }
         return this.cubeMap.remove(cubeY);
     }
 
-    @Override
-    public void removeFromStagingHeightmap(ICube cube) {
+    public void chunk_internal$removeFromStagingHeightmap(ICube cube) {
         stagingHeightMap.removeStagedCube(cube);
     }
 
-    @Override
-    public void addToStagingHeightmap(ICube cube) {
+    public void chunk_internal$addToStagingHeightmap(ICube cube) {
         stagingHeightMap.addStagedCube(cube);
     }
 
-    @Override
-    public int getTopYWithStaging(int localX, int localZ) {
+    public int chunk_internal$getTopYWithStaging(int localX, int localZ) {
         if (!isColumn) {
             return heightMap[localZ << 4 | localX] - 1;
         }
         return Math.max(opacityIndex.getTopBlockY(localX, localZ), stagingHeightMap.getTopBlockY(localX, localZ));
     }
 
-    private void invalidateCachedCube() {
+    @Unique
+    private void cubicChunks$invalidateCachedCube() {
         cachedCube = null;
     }
 
 
-    @Override public boolean hasLoadedCubes() {
+    public boolean chunk$hasLoadedCubes() {
         return !cubeMap.isEmpty();
     }
 
-    @SuppressWarnings("unchecked")
+    @Unique @SuppressWarnings({"unchecked", "AddedMixinMembersNamePattern"})
     public <T extends World & ICubicWorldInternal> T getWorld() {
         return (T) this.world;
     }
 
-    @Override public boolean shouldTick() {
+    public boolean chunk$shouldTick() {
         for (Cube cube : cubeMap) {
             if (cube.getTickets().shouldTick()) {
                 return true;
@@ -147,49 +152,47 @@ public abstract class MixinChunk_Column implements IColumn, IColumnInternal {
     }
 
 
-    @Override public IHeightMap getOpacityIndex() {
+    public IHeightMap chunk$getOpacityIndex() {
         return this.opacityIndex;
     }
 
-
-    @Override public Collection<? extends ICube> getLoadedCubes() {
+    public Collection<? extends ICube> chunk$getLoadedCubes() {
         return this.cubeMap.all();
     }
 
-
-    @Override public Iterable<? extends ICube> getLoadedCubes(int startY, int endY) {
+    public Iterable<? extends ICube> chunk$getLoadedCubes(int startY, int endY) {
         return this.cubeMap.cubes(startY, endY);
     }
 
 
-    @Override public void preCacheCube(ICube cube) {
+    public void chunk$preCacheCube(ICube cube) {
         this.cachedCube = (Cube) cube;
     }
 
-    @Override public int getX() {
+    @Intrinsic public int chunk$getX() {
         return x;
     }
 
-    @Override public int getZ() {
+    @Intrinsic public int chunk$getZ() {
         return z;
     }
 
-    @Override
-    public int getHeightValue(int localX, int blockY, int localZ) {
-        return getTopYWithStaging(localX, localZ) + 1;
+    public int chunk$getHeightValue(int localX, int blockY, int localZ) {
+        return chunk_internal$getTopYWithStaging(localX, localZ) + 1;
     }
 
     /**
      * @author Barteks2x
      * @reason go through staging heightmap
      */
-    @SuppressWarnings("deprecation") @Overwrite
-    public int getHeightValue(int localX, int localZ) {
-        return getTopYWithStaging(localX, localZ) + 1;
-    }
+   @SuppressWarnings("deprecation")
+   @Overwrite
+   public int getHeightValue(int localX, int localZ) {
+       return chunk_internal$getTopYWithStaging(localX, localZ) + 1;
+   }
 
     @Intrinsic
     public int chunk$getHeightValue(int localX, int localZ) {
-        return getTopYWithStaging(localX, localZ) + 1;
+        return chunk_internal$getTopYWithStaging(localX, localZ) + 1;
     }
 }

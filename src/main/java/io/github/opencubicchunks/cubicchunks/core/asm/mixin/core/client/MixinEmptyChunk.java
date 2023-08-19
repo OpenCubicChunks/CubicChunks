@@ -24,17 +24,18 @@
  */
 package io.github.opencubicchunks.cubicchunks.core.asm.mixin.core.client;
 
-import io.github.opencubicchunks.cubicchunks.core.asm.mixin.core.common.MixinChunk_Column;
-import io.github.opencubicchunks.cubicchunks.core.world.cube.BlankCube;
-import io.github.opencubicchunks.cubicchunks.core.world.cube.Cube;
+import io.github.opencubicchunks.cubicchunks.api.world.IColumn;
 import io.github.opencubicchunks.cubicchunks.api.world.ICube;
 import io.github.opencubicchunks.cubicchunks.api.world.ICubicWorld;
+import io.github.opencubicchunks.cubicchunks.core.asm.mixin.core.common.MixinChunk_Column;
 import io.github.opencubicchunks.cubicchunks.core.world.cube.BlankCube;
 import io.github.opencubicchunks.cubicchunks.core.world.cube.Cube;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.EmptyChunk;
+import org.spongepowered.asm.mixin.Implements;
+import org.spongepowered.asm.mixin.Interface;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -48,6 +49,10 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 @Mixin(EmptyChunk.class)
+// soft implements for IColumn
+// we can't implement them directly as that causes FG6+ to reobfuscate IColumn#getHeightValue(int, int)
+// into vanilla SRG name, which breaks API and mixins
+@Implements(@Interface(iface = IColumn.class, prefix = "chunk$"))
 public abstract class MixinEmptyChunk extends MixinChunk_Column {
 
     private Cube blankCube;
@@ -59,27 +64,22 @@ public abstract class MixinEmptyChunk extends MixinChunk_Column {
         }
     }
 
-    @Override
-    public Cube getCube(int cubeY) {
+    public ICube chunk$getCube(int cubeY) {
         return blankCube;
     }
 
-    @Override
-    public Cube removeCube(int cubeY) {
+    public ICube chunk$removeCube(int cubeY) {
         return blankCube;
     }
 
-    @Override
-    public void addCube(ICube cube) {
+    public void chunk$addCube(ICube cube) {
     }
 
-    @Override
-    public Collection<Cube> getLoadedCubes() {
+    public Collection<ICube> chunk$getLoadedCubes() {
         return Collections.emptySet();
     }
 
-    @Override
-    public Iterable<Cube> getLoadedCubes(int startY, int endY) {
+    public Iterable<ICube> chunk$getLoadedCubes(int startY, int endY) {
         return Collections.emptySet();
     }
 }
