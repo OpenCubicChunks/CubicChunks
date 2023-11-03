@@ -34,6 +34,7 @@ import io.github.opencubicchunks.cubicchunks.api.world.IColumn;
 import io.github.opencubicchunks.cubicchunks.api.world.ICube;
 import io.github.opencubicchunks.cubicchunks.api.world.ICubicWorld;
 import io.github.opencubicchunks.cubicchunks.api.world.IHeightMap;
+import io.github.opencubicchunks.cubicchunks.api.world.IMinMaxHeight;
 import io.github.opencubicchunks.cubicchunks.core.CubicChunksConfig;
 import io.github.opencubicchunks.cubicchunks.core.asm.mixin.ICubicWorldInternal;
 import io.github.opencubicchunks.cubicchunks.core.world.ClientHeightMap;
@@ -148,7 +149,7 @@ public abstract class MixinChunk_Cubes {
     @Unique @Nullable
     private ExtendedBlockStorage getEBS_CubicChunks(int index) {
         if (!isColumn) {
-            return storageArrays[index];
+            return storageArrays[index - Coords.blockToCube(getWorld().getMinHeight())];
         }
         if (cachedCube != null && cachedCube.getY() == index) {
             return cachedCube.getStorage();
@@ -163,7 +164,7 @@ public abstract class MixinChunk_Cubes {
     // setEBS is unlikely to be used extremely frequently, no caching
     @Unique private void setEBS_CubicChunks(int index, ExtendedBlockStorage ebs) {
         if (!isColumn) {
-            storageArrays[index] = ebs;
+            storageArrays[index - Coords.blockToCube(getWorld().getMinHeight())] = ebs;
             return;
         }
         if (index >= 0 && index < 16) {
@@ -221,6 +222,31 @@ public abstract class MixinChunk_Cubes {
         Arrays.fill(getBiomeArray(), (byte) -1);
     }
 
+    @ModifyConstant(method = "<init>(Lnet/minecraft/world/World;II)V", constant = @Constant(intValue = 16))
+    private int modifySectionArrayLength(int sixteen, World worldIn, int x, int z) {
+        IMinMaxHeight y = (IMinMaxHeight) worldIn;
+        return Coords.blockToCube(y.getMaxHeight()) - Coords.blockToCube(y.getMinHeight()) + 1;
+    }
+
+    @Redirect(method = "<init>(Lnet/minecraft/world/World;Lnet/minecraft/world/chunk/ChunkPrimer;II)V",
+            at = @At(
+                    value = "FIELD",
+                    args = "array=get",
+                    target = "Lnet/minecraft/world/chunk/Chunk;storageArrays:[Lnet/minecraft/world/chunk/storage/ExtendedBlockStorage;"
+            ))
+    private ExtendedBlockStorage init_getStorage(ExtendedBlockStorage[] ebs, int y) {
+        return ebs[y - Coords.blockToCube(((IMinMaxHeight) world).getMinHeight())];
+    }
+
+    @Redirect(method = "<init>(Lnet/minecraft/world/World;Lnet/minecraft/world/chunk/ChunkPrimer;II)V",
+            at = @At(
+                    value = "FIELD",
+                    args = "array=set",
+                    target = "Lnet/minecraft/world/chunk/Chunk;storageArrays:[Lnet/minecraft/world/chunk/storage/ExtendedBlockStorage;"
+            ))
+    private void getBlockState_getMaxHeight(ExtendedBlockStorage[] ebs, int y, ExtendedBlockStorage val) {
+        ebs[y - Coords.blockToCube(((IMinMaxHeight) world).getMinHeight())] = val;
+    }
     @ModifyConstant(method = "<init>(Lnet/minecraft/world/World;Lnet/minecraft/world/chunk/ChunkPrimer;II)V",
             constant = @Constant(intValue = 16, ordinal = 0), require = 1)
     private int getInitChunkLoopEnd(int _16, World world, ChunkPrimer primer, int x, int z) {
@@ -298,6 +324,17 @@ public abstract class MixinChunk_Cubes {
             // TODO: update skylight in cubes marked for update
             cbi.cancel();
         }
+    }
+
+
+    @Nullable
+    @Redirect(method = "generateSkylightMap", at = @At(
+            value = "FIELD",
+            target = "Lnet/minecraft/world/chunk/Chunk;storageArrays:[Lnet/minecraft/world/chunk/storage/ExtendedBlockStorage;",
+            args = "array=get"
+    ))
+    private ExtendedBlockStorage generateSkylightMapRedirectEBSAccess(ExtendedBlockStorage[] array, int index) {
+        return getEBS_CubicChunks(index);
     }
 
     // ==============================================
@@ -402,7 +439,7 @@ public abstract class MixinChunk_Cubes {
             constant = @Constant(expandZeroConditions = Constant.Condition.GREATER_THAN_OR_EQUAL_TO_ZERO),
             require = 1)
     private int getBlockState_getMinHeight(int zero) {
-        return isColumn ? Integer.MIN_VALUE : 0;
+        return isColumn ? Integer.MIN_VALUE : getWorld().getMinHeight(); // this one is in block coords, max is in cube coords. Mojang logic.
     }
 
     @Redirect(method = "getBlockState(III)Lnet/minecraft/block/state/IBlockState;",
@@ -412,7 +449,7 @@ public abstract class MixinChunk_Cubes {
                     target = "Lnet/minecraft/world/chunk/Chunk;storageArrays:[Lnet/minecraft/world/chunk/storage/ExtendedBlockStorage;"
             ))
     private int getBlockState_getMaxHeight(ExtendedBlockStorage[] ebs) {
-        return isColumn ? Integer.MAX_VALUE : ebs.length;
+        return isColumn ? Integer.MAX_VALUE : (ebs.length - Coords.blockToCube(getWorld().getMinHeight()));
     }
 
     @Redirect(method = "getBlockState(III)Lnet/minecraft/block/state/IBlockState;",
@@ -421,7 +458,7 @@ public abstract class MixinChunk_Cubes {
                     args = "array=get",
                     target = "Lnet/minecraft/world/chunk/Chunk;storageArrays:[Lnet/minecraft/world/chunk/storage/ExtendedBlockStorage;"
             ))
-    private ExtendedBlockStorage getBlockState_getMaxHeight(ExtendedBlockStorage[] ebs, int y) {
+    private ExtendedBlockStorage getBlockState_getStorage(ExtendedBlockStorage[] ebs, int y) {
         return getEBS_CubicChunks(y);
     }
 
@@ -592,7 +629,7 @@ public abstract class MixinChunk_Cubes {
             ),
             require = 2)
     private int addEntity_getMaxHeight(ClassInheritanceMultiMap<?>[] entityLists) {
-        return isColumn ? blockToCube(getWorld().getMaxHeight()) : entityLists.length;
+        return isColumn ? blockToCube(getWorld().getMaxHeight()) : (entityLists.length - Coords.blockToCube(getWorld().getMinHeight()));
     }
 
     @Redirect(method = "addEntity",
@@ -604,7 +641,7 @@ public abstract class MixinChunk_Cubes {
             require = 1)
     private ClassInheritanceMultiMap<?> addEntity_getEntityList(ClassInheritanceMultiMap<?>[] entityLists, int idx, Entity entity) {
         if (!isColumn) {
-            return entityLists[idx];
+            return entityLists[idx - Coords.blockToCube(getWorld().getMinHeight())];
         } else if (cachedCube != null && cachedCube.getY() == idx) {
             cachedCube.getEntityContainer().addEntity(entity);
             return null;
@@ -652,7 +689,7 @@ public abstract class MixinChunk_Cubes {
             ),
             require = 2)
     private int removeEntityAtIndex_getMaxHeight(ClassInheritanceMultiMap<?>[] entityLists) {
-        return isColumn ? blockToCube(getWorld().getMaxHeight()) : entityLists.length;
+        return isColumn ? blockToCube(getWorld().getMaxHeight()) : (entityLists.length - Coords.blockToCube(getWorld().getMinHeight()));
     }
 
     @Redirect(method = "removeEntityAtIndex",
@@ -665,7 +702,7 @@ public abstract class MixinChunk_Cubes {
     private ClassInheritanceMultiMap<?> removeEntityAtIndex_getEntityList(ClassInheritanceMultiMap<?>[] entityLists, int idx, Entity entity,
             int index) {
         if (!isColumn) {
-            return entityLists[idx];
+            return entityLists[idx - Coords.blockToCube(getWorld().getMinHeight())];
         } else if (cachedCube != null && cachedCube.getY() == idx) {
             cachedCube.getEntityContainer().remove(entity);
             return null;

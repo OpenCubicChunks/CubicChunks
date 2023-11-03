@@ -31,6 +31,7 @@ import io.github.opencubicchunks.cubicchunks.api.util.Coords;
 import io.github.opencubicchunks.cubicchunks.api.world.ICubicWorld;
 import io.github.opencubicchunks.cubicchunks.api.world.IColumn;
 import mcp.MethodsReturnNonnullByDefault;
+import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.client.renderer.RenderGlobal;
 import net.minecraft.client.renderer.ViewFrustum;
 import net.minecraft.client.renderer.chunk.RenderChunk;
@@ -75,6 +76,8 @@ public class MixinRenderGlobal {
     @Shadow private int renderDistanceChunks;
 
     @Shadow private ViewFrustum viewFrustum;
+
+    @Shadow private WorldClient world;
 
     /*
      * This allows to get the Y position of rendered entity by injecting itself directly before call to
@@ -163,7 +166,7 @@ public class MixinRenderGlobal {
         if (this.position != null) { // also set from optifine specific mixins
             return 0;//must be 0 (or anything between 0 and 15)
         }
-        return pos.getY();
+        return pos.getY() - ((ICubicWorld) world).getMinHeight();
     }
 
     /*
