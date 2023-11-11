@@ -225,7 +225,7 @@ public abstract class MixinChunk_Cubes {
     @ModifyConstant(method = "<init>(Lnet/minecraft/world/World;II)V", constant = @Constant(intValue = 16))
     private int modifySectionArrayLength(int sixteen, World worldIn, int x, int z) {
         IMinMaxHeight y = (IMinMaxHeight) worldIn;
-        return Coords.blockToCube(y.getMaxHeight()) - Coords.blockToCube(y.getMinHeight()) + 1;
+        return Coords.blockToCube(y.getMaxHeight()) - Coords.blockToCube(y.getMinHeight());
     }
 
     @Redirect(method = "<init>(Lnet/minecraft/world/World;Lnet/minecraft/world/chunk/ChunkPrimer;II)V",
