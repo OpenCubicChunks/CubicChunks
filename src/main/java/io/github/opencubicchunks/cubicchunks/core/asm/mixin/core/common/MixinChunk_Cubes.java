@@ -61,6 +61,7 @@ import net.minecraft.world.chunk.ChunkPrimer;
 import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.world.ChunkEvent.Load;
+import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Implements;
 import org.spongepowered.asm.mixin.Interface;
@@ -222,10 +223,23 @@ public abstract class MixinChunk_Cubes {
         Arrays.fill(getBiomeArray(), (byte) -1);
     }
 
-    @ModifyConstant(method = "<init>(Lnet/minecraft/world/World;II)V", constant = @Constant(intValue = 16))
+    @ModifyConstant(method = "<init>(Lnet/minecraft/world/World;II)V", constant = @Constant(intValue = 16),
+            slice = @Slice(to = @At(
+                    value = "FIELD",
+                    target = "Lnet/minecraft/world/chunk/Chunk;storageArrays:[Lnet/minecraft/world/chunk/storage/ExtendedBlockStorage;",
+                    opcode = Opcodes.PUTFIELD
+            )),
+            allow = 1, require = 1)
     private int modifySectionArrayLength(int sixteen, World worldIn, int x, int z) {
-        IMinMaxHeight y = (IMinMaxHeight) worldIn;
-        return Coords.blockToCube(y.getMaxHeight()) - Coords.blockToCube(y.getMinHeight());
+        if (worldIn == null) {
+            // Some mods construct chunks with null world, ignore them
+            return sixteen;
+        }
+        if (!((ICubicWorld) worldIn).isCubicWorld()) {
+            IMinMaxHeight y = (IMinMaxHeight) worldIn;
+            return Coords.blockToCube(y.getMaxHeight()) - Coords.blockToCube(y.getMinHeight());
+        }
+        return sixteen;
     }
 
     @Redirect(method = "<init>(Lnet/minecraft/world/World;Lnet/minecraft/world/chunk/ChunkPrimer;II)V",
@@ -235,7 +249,7 @@ public abstract class MixinChunk_Cubes {
                     target = "Lnet/minecraft/world/chunk/Chunk;storageArrays:[Lnet/minecraft/world/chunk/storage/ExtendedBlockStorage;"
             ))
     private ExtendedBlockStorage init_getStorage(ExtendedBlockStorage[] ebs, int y) {
-        return ebs[y - Coords.blockToCube(((IMinMaxHeight) world).getMinHeight())];
+        return ebs[y - (this.isColumn ? 0 : Coords.blockToCube(((IMinMaxHeight) world).getMinHeight()))];
     }
 
     @Redirect(method = "<init>(Lnet/minecraft/world/World;Lnet/minecraft/world/chunk/ChunkPrimer;II)V",
@@ -245,8 +259,9 @@ public abstract class MixinChunk_Cubes {
                     target = "Lnet/minecraft/world/chunk/Chunk;storageArrays:[Lnet/minecraft/world/chunk/storage/ExtendedBlockStorage;"
             ))
     private void getBlockState_getMaxHeight(ExtendedBlockStorage[] ebs, int y, ExtendedBlockStorage val) {
-        ebs[y - Coords.blockToCube(((IMinMaxHeight) world).getMinHeight())] = val;
+        ebs[y - (this.isColumn ? 0 : Coords.blockToCube(((IMinMaxHeight) world).getMinHeight()))] = val;
     }
+
     @ModifyConstant(method = "<init>(Lnet/minecraft/world/World;Lnet/minecraft/world/chunk/ChunkPrimer;II)V",
             constant = @Constant(intValue = 16, ordinal = 0), require = 1)
     private int getInitChunkLoopEnd(int _16, World world, ChunkPrimer primer, int x, int z) {
