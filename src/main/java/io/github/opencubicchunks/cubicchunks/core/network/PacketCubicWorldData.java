@@ -123,14 +123,8 @@ public class PacketCubicWorldData implements IMessage {
                         new IntRange(message.getMinHeight(), message.getMaxHeight()),
                         new IntRange(message.getMinGenerationHeight(), message.getMaxGenerationHeight())
                 );
-                if (FMLClientHandler.instance().hasOptifine()) {
-                    // OptiFine optimizes RenderChunk to contain references to it's neighbors
-                    // These references are first updated before the world is marked as cubic chunks world
-                    // This means there are going to be null values in unexpected places
-                    // after making the world CubicChunks world without updating that
-                    // This updates the renderers to avoid the issue
-                    Minecraft.getMinecraft().renderGlobal.setWorldAndLoadRenderers((WorldClient) world);
-                }
+                // Update stale ViewFrustum/RenderChunk-related state, as it was previously set for non-CC world
+                Minecraft.getMinecraft().renderGlobal.setWorldAndLoadRenderers((WorldClient) world);
             }
 
         }
