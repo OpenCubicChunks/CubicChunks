@@ -251,12 +251,20 @@ public class CubicChunksConfig {
 
     private static void validateConfigValues() {
         if (!VanillaCompatibilityGeneratorProviderBase.REGISTRY.containsKey(new ResourceLocation(compatibilityGeneratorType))) {
-            CubicChunks.LOGGER.error("Compatibility generator type {} doesn't exist, resetting config to default", compatibilityGeneratorType);
+            CubicChunks.LOGGER.error("CubicChunksConfig: Compatibility generator type {} doesn't exist, resetting config to default", compatibilityGeneratorType);
             compatibilityGeneratorType = VanillaCompatibilityGeneratorProviderBase.DEFAULT.toString();
         }
         if (!storageFormat.isEmpty() && !StorageFormatProviderBase.REGISTRY.containsKey(new ResourceLocation(storageFormat))) {
-            CubicChunks.LOGGER.error("Storage format {} doesn't exist, resetting config to default", storageFormat);
+            CubicChunks.LOGGER.error("CubicChunksConfig: Storage format {} doesn't exist, resetting config to default", storageFormat);
             storageFormat = "";
+        }
+        if ((defaultMinHeight & 0xF) != 0) {
+            CubicChunks.LOGGER.error("CubicChunksConfig: defaultMinHeight not a multiple of 16, got {}, setting to {}", defaultMinHeight, defaultMinHeight & ~0xF);
+            defaultMinHeight &= ~0xF;
+        }
+        if ((defaultMaxHeight & 0xF) != 0) {
+            CubicChunks.LOGGER.error("CubicChunksConfig: defaultMaxHeight not a multiple of 16, got {}, setting to {}", defaultMaxHeight, defaultMaxHeight & ~0xF);
+            defaultMaxHeight &= ~0xF;
         }
     }
 

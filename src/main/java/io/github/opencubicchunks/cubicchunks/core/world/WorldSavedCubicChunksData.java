@@ -55,8 +55,8 @@ public class WorldSavedCubicChunksData extends WorldSavedData {
 
     @Override
     public void readFromNBT(NBTTagCompound nbt) {
-        minHeight = nbt.getInteger("minHeight");
-        maxHeight = nbt.getInteger("maxHeight");
+        minHeight = nbt.getInteger("minHeight") & ~0xF; // set 4 least significant bits to zero to ensure they are always multiples of 16
+        maxHeight = nbt.getInteger("maxHeight") & ~0xF;
         isCubicChunks = !nbt.hasKey("isCubicChunks") || nbt.getBoolean("isCubicChunks");
         if(nbt.hasKey("compatibilityGeneratorType"))
             compatibilityGeneratorType = new ResourceLocation(nbt.getString("compatibilityGeneratorType"));
