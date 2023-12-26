@@ -13,7 +13,8 @@ plugins {
     `maven-publish`
     signing
     idea
-    id("net.neoforged.gradle").version("[6.0.18,6.2)")
+    id("net.minecraftforge.gradle").version("6.0.18")
+    id("wtf.gofancy.fancygradle").version("1.1.3-0")
     id("org.spongepowered.mixin").version("0.7-SNAPSHOT")
     id("com.github.johnrengelman.shadow").version("7.1.2")
     id("com.github.hierynomus.license").version("0.16.1")
@@ -39,6 +40,16 @@ mcGitVersion {
 }
 
 java.toolchain.languageVersion.set(JavaLanguageVersion.of(8))
+
+fancyGradle {
+    patches {
+        resources
+        coremods
+        codeChickenLib
+        asm
+        mergetool
+    }
+}
 
 minecraft {
     mappings("stable", "39-1.12")

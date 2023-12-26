@@ -7,7 +7,8 @@ plugins {
     `maven-publish`
     signing
     idea
-    id("net.neoforged.gradle").version("[6.0.18,6.2)")
+    id("net.minecraftforge.gradle").version("6.0.18")
+    id("wtf.gofancy.fancygradle").version("1.1.3-0")
     id("io.github.opencubicchunks.gradle.mcGitVersion")
     id("com.github.hierynomus.license").version("0.16.1")
 }
@@ -41,6 +42,16 @@ repositories {
 
 dependencies {
     minecraft(group = "net.minecraftforge", name = "forge", version = "1.12.2-14.23.5.2860")
+}
+
+fancyGradle {
+    patches {
+        resources
+        coremods
+        codeChickenLib
+        asm
+        mergetool
+    }
 }
 
 minecraft {

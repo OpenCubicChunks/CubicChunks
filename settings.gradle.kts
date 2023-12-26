@@ -8,6 +8,10 @@ pluginManagement {
         maven {
             setUrl("https://repo.spongepowered.org/repository/maven-public/")
         }
+        maven {
+            name = "Garden of Fancy"
+            setUrl("https://maven.gofancy.wtf/releases")
+        }
     }
     resolutionStrategy {
         eachPlugin {
