@@ -150,6 +150,7 @@ public abstract class MixinChunk_Cubes {
     @Unique @Nullable
     private ExtendedBlockStorage getEBS_CubicChunks(int index) {
         if (!isColumn) {
+            // vanilla case, subtract minHeight for extended height support
             return storageArrays[index - Coords.blockToCube(getWorld().getMinHeight())];
         }
         if (cachedCube != null && cachedCube.getY() == index) {
@@ -165,6 +166,7 @@ public abstract class MixinChunk_Cubes {
     // setEBS is unlikely to be used extremely frequently, no caching
     @Unique private void setEBS_CubicChunks(int index, ExtendedBlockStorage ebs) {
         if (!isColumn) {
+            // vanilla case, subtract minHeight for extended height support
             storageArrays[index - Coords.blockToCube(getWorld().getMinHeight())] = ebs;
             return;
         }

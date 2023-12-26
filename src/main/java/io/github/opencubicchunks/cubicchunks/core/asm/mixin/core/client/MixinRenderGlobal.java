@@ -166,6 +166,7 @@ public class MixinRenderGlobal {
         if (this.position != null) { // also set from optifine specific mixins
             return 0;//must be 0 (or anything between 0 and 15)
         }
+        // vanilla case: minHeight is zero normally, subtracting minHeight for extended height support
         return pos.getY() - ((ICubicWorld) world).getMinHeight();
     }
 
