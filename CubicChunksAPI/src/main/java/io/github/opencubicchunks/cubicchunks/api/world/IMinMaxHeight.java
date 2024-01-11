@@ -32,7 +32,8 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @MethodsReturnNonnullByDefault
 public interface IMinMaxHeight {
     /**
-     * Returns Y position of the bottom block in the world
+     * Returns Y position of the bottom block in the world,
+     * inclusive
      *
      * @return the bottom of the world
      */
@@ -42,6 +43,7 @@ public interface IMinMaxHeight {
 
     /**
      * Returns Y position of block above the top block in the world,
+     * exclusive
      *
      * @return the top of the world
      */
