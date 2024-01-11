@@ -67,28 +67,42 @@ public class MixinViewFrustum_VertViewDistance {
                     CubicChunksConfig.verticalCubeLoadDistance : renderDistance) * 2 + 1;
         } else {
             ICubicWorld world = (ICubicWorld) this.world;
-            this.renderDistance = Coords.blockToCube(world.getMaxHeight()) - Coords.blockToCube(world.getMinHeight()) + 1;
+            // vanilla case: support extended height
+            this.renderDistance = Coords.blockToCube(world.getMaxHeight()) - Coords.blockToCube(world.getMinHeight());
         }
     }
 
     @ModifyArg(method = "updateChunkPositions", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/chunk/RenderChunk;setPosition"
             + "(III)V"), index = 1)
     private int modifyRenderChunkPosWhenUpdatingPositions(int y) {
+        // extended height support on vanilla worlds, no need to handle CC case - MixinViewFrustum_RenderHeightFix replaces this implementation
         return y + ((ICubicWorld) world).getMinHeight();
     }
 
     @ModifyVariable(method = "markBlocksForUpdate", at = @At("HEAD"), argsOnly = true, index = 2)
     private int modifyMinYForUpdate(int minY) {
+        if (((ICubicWorld) world).isCubicWorld()) {
+            return minY;
+        }
+        // vanilla case: support extended height
         return minY - ((ICubicWorld) world).getMinHeight();
     }
 
     @ModifyVariable(method = "markBlocksForUpdate", at = @At("HEAD"), argsOnly = true, index = 5)
     private int modifyMaxYForUpdate(int maxY) {
+        if (((ICubicWorld) world).isCubicWorld()) {
+            return maxY;
+        }
+        // vanilla case: support extended height
         return maxY - ((ICubicWorld) world).getMinHeight();
     }
 
     @Redirect(method = "getRenderChunk", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/math/BlockPos;getY()I"))
     private int modifyMaxYForUpdate(BlockPos instance) {
+        if (((ICubicWorld) world).isCubicWorld()) {
+            return instance.getY();
+        }
+        // vanilla case: support extended height
         return instance.getY() - ((ICubicWorld) world).getMinHeight();
     }
 
