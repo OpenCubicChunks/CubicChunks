@@ -239,7 +239,9 @@ public abstract class MixinChunk_Cubes {
         }
         if (!((ICubicWorld) worldIn).isCubicWorld()) {
             IMinMaxHeight y = (IMinMaxHeight) worldIn;
-            return Coords.blockToCube(y.getMaxHeight()) - Coords.blockToCube(y.getMinHeight());
+            int firstInclusiveY = y.getMinHeight();
+            int lastInclusiveY = y.getMaxHeight() - 1;
+            return Coords.blockToCube(lastInclusiveY) - Coords.blockToCube(firstInclusiveY) + 1;
         }
         return sixteen;
     }
