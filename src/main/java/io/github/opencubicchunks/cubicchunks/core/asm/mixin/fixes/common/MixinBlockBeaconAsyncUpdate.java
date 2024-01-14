@@ -51,7 +51,7 @@ public class MixinBlockBeaconAsyncUpdate {
     @Shadow(remap = false, aliases = "field_180358_a") @Final World val$worldIn;
     @Shadow(remap = false, aliases = "field_180357_b") @Final BlockPos val$glassPos;
 
-    @Inject(method = "run", at = @At("HEAD"))
+    @Inject(method = "run", at = @At("HEAD"), cancellable = true)
     private void runCubicChunks(CallbackInfo ci) {
         if (!((ICubicWorld) val$worldIn).isCubicWorld()) {
             return;
