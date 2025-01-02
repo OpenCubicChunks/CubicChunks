@@ -8,8 +8,8 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v1
-    - uses: actions/cache@v2
+    - uses: actions/checkout@v4
+    - uses: actions/cache@v4
       with:
         path: |
           ~/.gradle/caches
@@ -20,7 +20,7 @@ jobs:
     - name: Set up git submodules
       run: git submodule init && git submodule update
     - name: Set up JDK 1.8
-      uses: actions/setup-java@v1
+      uses: actions/setup-java@v4
       with:
         java-version: 1.8
     - name: Build with Gradle
@@ -28,7 +28,7 @@ jobs:
         sonatypeUsername: ${{ secrets.OSSRH_USERNAME }}
         sonatypePassword: ${{ secrets.OSSRH_PASSWORD }}
       run: ./gradlew build publish
-    - uses: actions/upload-artifact@v2
+    - uses: actions/upload-artifact@v4
       with:
         name: Compiled jars
         path: build/libs/*

@@ -121,6 +121,9 @@ repositories {
     maven {
         setUrl("https://repo.spongepowered.org/maven")
     }
+    maven {
+        setUrl("https://hub.spigotmc.org/nexus/content/repositories/snapshots/")
+    }
 }
 
 dependencies {
@@ -130,6 +133,7 @@ dependencies {
 
     compileOnly(sourceSets["optifine_dummy"].output)
 
+    compileOnly("org.spigotmc:spigot-api:1.12.2-R0.1-SNAPSHOT") // Spigot API - used for Bukkit sided mixins
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.hamcrest:hamcrest-junit:2.0.0.0")
     testImplementation("it.ozimov:java7-hamcrest-matchers:1.3.0")

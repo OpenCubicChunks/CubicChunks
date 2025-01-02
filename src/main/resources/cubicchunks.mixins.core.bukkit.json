@@ -1,0 +1,19 @@
+{
+    "required": false,
+    "package": "io.github.opencubicchunks.cubicchunks.core.asm.mixin.core",
+    "refmap": "cubicchunks.mixins.refmap.json",
+    "compatibilityLevel": "JAVA_8",
+    "minVersion": "0.7.10",
+    "overwrites": {
+        "conformVisibility": true
+    },
+    "mixins": [],
+    "client": [],
+    "server": [
+        "common.MixinWorld_HeightLimits_Bukkit_Sided",
+        "common.MixinPlayerList_Bukkit",
+        "common.MixinChunk_Cubes_Bukkit",
+        "server.MixinDedicatedPlayerList_Bukkit",
+        "common.MixinWorldServer_Bukkit"
+    ]
+}
