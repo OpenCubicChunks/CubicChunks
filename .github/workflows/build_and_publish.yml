@@ -23,7 +23,7 @@ jobs:
       uses: actions/setup-java@v4
       with:
         distribution: 'temurin'
-        java-version: 1.8
+        java-version: '8'
     - name: Build with Gradle
       env:
         sonatypeUsername: ${{ secrets.OSSRH_USERNAME }}
