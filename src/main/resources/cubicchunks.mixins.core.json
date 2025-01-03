@@ -20,6 +20,7 @@
         "common.IPlayerChunkMapEntry",
         "common.MixinAnvilSaveHandler",
         "common.MixinChunk_Column",
+        "common.MixinChunk_Cubes",
         "common.MixinChunkCache_HeightLimits",
         "common.MixinDerivedWorldInfo",
         "common.MixinEntity_DeathFix",

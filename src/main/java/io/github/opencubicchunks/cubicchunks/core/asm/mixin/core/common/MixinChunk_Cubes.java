@@ -225,6 +225,7 @@ public abstract class MixinChunk_Cubes {
         Arrays.fill(getBiomeArray(), (byte) -1);
     }
 
+    /*
     @ModifyConstant(method = "<init>(Lnet/minecraft/world/World;II)V", constant = @Constant(intValue = 16),
             slice = @Slice(to = @At(
                     value = "FIELD",
@@ -243,6 +244,7 @@ public abstract class MixinChunk_Cubes {
         }
         return sixteen;
     }
+     */ // Now moved to MixinChunk_Cubes_Vanilla_Sided
 
     @Redirect(method = "<init>(Lnet/minecraft/world/World;Lnet/minecraft/world/chunk/ChunkPrimer;II)V",
             at = @At(
