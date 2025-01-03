@@ -11,9 +11,8 @@
     "client": [],
     "server": [
         "common.MixinWorld_HeightLimits_Bukkit_Sided",
-        "common.MixinPlayerList_Bukkit",
+        "common.MixinPlayerList_Bukkit_Sided",
         "common.MixinChunk_Cubes_Bukkit_Sided",
-        "server.MixinDedicatedPlayerList_Bukkit",
         "common.MixinWorldServer_Bukkit"
     ]
 }
