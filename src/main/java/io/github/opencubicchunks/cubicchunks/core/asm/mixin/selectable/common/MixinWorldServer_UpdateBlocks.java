@@ -36,7 +36,7 @@ import net.minecraft.world.WorldServer;
 @Mixin(value = WorldServer.class, priority = 1001)
 public abstract class MixinWorldServer_UpdateBlocks implements ICubicWorldServer {
 
-    /*
+    /**
      * This redirection (if selected by {@link io.github.opencubicchunks.cubicchunks.core.asm.CubicChunksMixinConfig})
      * will return value {@code 0} instead of {@code getGameRules().getInt("randomTickSpeed")} for cubic type worlds.
      * Redirected function is located inside WorldServer.updateBlocks() function at a line 404.
