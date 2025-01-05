@@ -24,7 +24,6 @@
  */
 package io.github.opencubicchunks.cubicchunks.core.util;
 
-import java.lang.invoke.MethodHandle;
 import java.lang.reflect.Constructor;
 import java.util.AbstractMap;
 import java.util.ArrayList;
@@ -43,9 +42,7 @@ import io.github.opencubicchunks.cubicchunks.core.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.core.asm.mixin.ICubicWorldInternal;
 import io.github.opencubicchunks.cubicchunks.core.asm.mixin.fixes.common.fakeheight.IASMEventHandler;
 import io.github.opencubicchunks.cubicchunks.core.asm.mixin.fixes.common.fakeheight.IEventBus;
-import net.minecraft.entity.Entity;
 import net.minecraft.world.World;
-import net.minecraft.world.WorldServer;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.gen.IChunkGenerator;
 import net.minecraftforge.common.MinecraftForge;
@@ -58,7 +55,6 @@ import net.minecraftforge.fml.common.eventhandler.Event;
 import net.minecraftforge.fml.common.eventhandler.EventBus;
 import net.minecraftforge.fml.common.eventhandler.IEventListener;
 import net.minecraftforge.fml.common.eventhandler.ListenerList;
-import org.bukkit.event.entity.CreatureSpawnEvent;
 
 public class CompatHandler {
 
@@ -91,11 +87,6 @@ public class CompatHandler {
     );
 
     private static final Map<String, String> packageToModId = getPackageToModId();
-
-    // MethodHandle for WorldServer#addEntity(Entity, CreatureSpawnEvent.SpawnReason) method in CraftBukkit
-    private static final MethodHandle MH_WorldServer_Bukkit_addEntity = ReflectionUtil.methodHandle(true, WorldServer.class, "addEntity",
-            Entity.class,
-            ReflectionUtil.getClass("org.bukkit.event.entity.CreatureSpawnEvent$SpawnReason"));
 
     private static IEventListener[] fakeChunkLoadListeners;
 
@@ -297,20 +288,5 @@ public class CompatHandler {
         }
 
         return newList.toArray(new IEventListener[0]);
-    }
-
-    /*
-     * Hybrid servers do have this method in World class, but not in WorldServer.
-     */
-    public static boolean spawnEntity(Entity entity, WorldServer world) {
-        if (PlatformCompatUtils.isHybridEnv() && MH_WorldServer_Bukkit_addEntity != null) {
-            try {
-                return (boolean) MH_WorldServer_Bukkit_addEntity.invokeExact(world, entity, CreatureSpawnEvent.SpawnReason.DEFAULT);
-            } catch (Throwable th) {
-                CubicChunks.LOGGER.error("Failed to invoke WorldServer#addEntity", th);
-                return false;
-            }
-        }
-        return world.spawnEntity(entity);
     }
 }

@@ -30,8 +30,6 @@ import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Constructor;
 
-import javax.annotation.CheckForNull;
-import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
@@ -65,38 +63,6 @@ public class ReflectionUtil {
         } catch (IllegalAccessException | NoSuchMethodException e) {
             //if it happens - either something has gone horribly wrong or the JVM is blocking access
             throw new Error(e);
-        }
-    }
-
-    /**
-     * Returns a method handle for a method of a class.
-     *
-     * @param suppressException if true, returns null if the method is not found instead of throwing error
-     * @param owner the class
-     * @param name the method name
-     * @param args the method arguments
-     * @return the method handle, or null if not found and suppressException is true
-     */
-    @CheckForNull
-    public static MethodHandle methodHandle(boolean suppressException, Class<?> owner, String name, Class<?>... args) {
-        for (Class<?> clazz : args) {
-            if (clazz == null) return null;
-        }
-        try {
-            return MethodHandles.lookup().unreflect(owner.getDeclaredMethod(name, args));
-        } catch (IllegalAccessException | NoSuchMethodException e) {
-            if (suppressException) return null;
-            //if it happens - either something has gone horribly wrong or the JVM is blocking access
-            throw new Error(e);
-        }
-    }
-
-    @Nullable
-    public static Class<?> getClass(String className) {
-        try {
-            return Class.forName(className);
-        } catch (ClassNotFoundException e) {
-            return null;
         }
     }
 }

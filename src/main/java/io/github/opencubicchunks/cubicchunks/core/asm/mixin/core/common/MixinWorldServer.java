@@ -124,6 +124,10 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
 
     @Shadow public abstract PlayerChunkMap getPlayerChunkMap();
 
+    @Shadow protected abstract boolean canAddEntity(Entity entityIn);
+
+    @Shadow public abstract boolean spawnEntity(Entity entityIn);
+
     @Override public void initCubicWorldServer(IntRange heightRange, IntRange generationRange) {
         super.initCubicWorld(heightRange, generationRange);
         this.isCubicWorld = true;
@@ -366,7 +370,9 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
                     skeletonHorse.setTrap(true);
                     skeletonHorse.setGrowingAge(0);
                     skeletonHorse.setPosition((double) strikePos.getX(), (double) strikePos.getY(), (double) strikePos.getZ());
-                    CompatHandler.spawnEntity(skeletonHorse, (WorldServer) (Object) this);
+                    if (this.canAddEntity(skeletonHorse)) {
+                        this.spawnEntity(skeletonHorse);
+                    }
                     this.addWeatherEffect(new EntityLightningBolt((World) (Object) this,
                             (double) strikePos.getX(), (double) strikePos.getY(), (double) strikePos.getZ(), true));
                 } else {
