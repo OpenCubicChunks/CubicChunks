@@ -84,7 +84,7 @@ public class ReflectionUtil {
         }
         try {
             return MethodHandles.lookup().unreflect(owner.getDeclaredMethod(name, args));
-        } catch (Exception e) {
+        } catch (IllegalAccessException | NoSuchMethodException e) {
             if (suppressException) return null;
             //if it happens - either something has gone horribly wrong or the JVM is blocking access
             throw new Error(e);

@@ -92,6 +92,11 @@ public class CompatHandler {
 
     private static final Map<String, String> packageToModId = getPackageToModId();
 
+    // MethodHandle for WorldServer#addEntity(Entity, CreatureSpawnEvent.SpawnReason) method in CraftBukkit
+    private static final MethodHandle MH_WorldServer_Bukkit_addEntity = ReflectionUtil.methodHandle(true, WorldServer.class, "addEntity",
+            Entity.class,
+            ReflectionUtil.getClass("org.bukkit.event.entity.CreatureSpawnEvent$SpawnReason"));
+
     private static IEventListener[] fakeChunkLoadListeners;
 
     public static void init() {
@@ -302,15 +307,10 @@ public class CompatHandler {
             try {
                 return (boolean) MH_WorldServer_Bukkit_addEntity.invokeExact(world, entity, CreatureSpawnEvent.SpawnReason.DEFAULT);
             } catch (Throwable th) {
-                CubicChunks.LOGGER.error("Failed to call WorldServer.addEntity", th);
+                CubicChunks.LOGGER.error("Failed to invoke WorldServer#addEntity", th);
                 return false;
             }
         }
         return world.spawnEntity(entity);
     }
-
-    // MethodHandle for WorldServer#addEntity(Entity, CreatureSpawnEvent.SpawnReason) method in CraftBukkit
-    private static final MethodHandle MH_WorldServer_Bukkit_addEntity = ReflectionUtil.methodHandle(true, WorldServer.class, "addEntity",
-            Entity.class,
-            ReflectionUtil.getClass("org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason"));
 }
