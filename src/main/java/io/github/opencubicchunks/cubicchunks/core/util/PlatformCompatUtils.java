@@ -28,15 +28,20 @@ public class PlatformCompatUtils {
     private PlatformCompatUtils() {
     }
 
-    private static final boolean isHybridEnv = isClassLoaded("org.bukkit.Bukkit");
+    private static final boolean isHybridEnv = isClassExists("org.bukkit.Bukkit");
 
-    public static boolean isClassLoaded(String name) {
+    public static boolean isClassLoaded(String className) {
         try {
-            Class.forName(name);
+            Class.forName(className);
             return true;
         } catch (ClassNotFoundException e) {
             return false;
         }
+    }
+
+    public static boolean isClassExists(String className) {
+        String classPath = className.replace('.', '/') + ".class";
+        return Thread.currentThread().getContextClassLoader().getResource(classPath) != null;
     }
 
     public static boolean isHybridEnv() {

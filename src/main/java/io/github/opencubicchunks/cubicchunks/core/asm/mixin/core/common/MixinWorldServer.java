@@ -46,6 +46,7 @@ import io.github.opencubicchunks.cubicchunks.core.server.CubeProviderServer;
 import io.github.opencubicchunks.cubicchunks.core.server.PlayerCubeMap;
 import io.github.opencubicchunks.cubicchunks.core.server.SpawnCubes;
 import io.github.opencubicchunks.cubicchunks.core.server.VanillaNetworkHandler;
+import io.github.opencubicchunks.cubicchunks.core.util.CompatHandler;
 import io.github.opencubicchunks.cubicchunks.core.util.world.CubeSplitTickList;
 import io.github.opencubicchunks.cubicchunks.core.util.world.CubeSplitTickSet;
 import io.github.opencubicchunks.cubicchunks.core.world.CubeWorldEntitySpawner;
@@ -116,8 +117,6 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
     private VanillaNetworkHandler vanillaNetworkHandler;
 
     @Shadow protected abstract void playerCheckLight();
-
-    @Shadow public abstract boolean spawnEntity(Entity entityIn);
 
     @Shadow public abstract boolean addWeatherEffect(Entity entityIn);
 
@@ -368,7 +367,7 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
                     skeletonHorse.setTrap(true);
                     skeletonHorse.setGrowingAge(0);
                     skeletonHorse.setPosition((double) strikePos.getX(), (double) strikePos.getY(), (double) strikePos.getZ());
-                    this.spawnEntity(skeletonHorse);
+                    CompatHandler.spawnEntity(skeletonHorse, (WorldServer) (Object) this);
                     this.addWeatherEffect(new EntityLightningBolt((World) (Object) this,
                             (double) strikePos.getX(), (double) strikePos.getY(), (double) strikePos.getZ(), true));
                 } else {

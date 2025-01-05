@@ -10,7 +10,6 @@
     "mixins": [
         "common.MixinChunk_Cubes_Vanilla_Sided",
         "common.MixinWorld_HeightLimits_Vanilla_Sided",
-        "common.MixinWorldServer",
         "common.MixinPlayerList_Vanilla_Sided"
     ],
     "client": [],

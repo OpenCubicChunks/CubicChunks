@@ -37,6 +37,7 @@
         "common.MixinWorldEntitySpawner",
         "common.MixinWorldInfo",
         "common.MixinWorldProvider",
+        "common.MixinWorldServer",
         "common.MixinWorldSettings",
         "common.vanillaclient.ICPacketPlayer",
         "common.vanillaclient.ICPacketPlayerDigging",

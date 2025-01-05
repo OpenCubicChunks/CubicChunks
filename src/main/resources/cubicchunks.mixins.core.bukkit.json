@@ -12,7 +12,6 @@
     "server": [
         "common.MixinWorld_HeightLimits_Bukkit_Sided",
         "common.MixinPlayerList_Bukkit_Sided",
-        "common.MixinChunk_Cubes_Bukkit_Sided",
-        "common.MixinWorldServer_Bukkit"
+        "common.MixinChunk_Cubes_Bukkit_Sided"
     ]
 }
