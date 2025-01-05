@@ -176,6 +176,14 @@ mixinGen {
     defaultCompatibilityLevel = "JAVA_8"
     defaultMinVersion = "0.7.10"
 
+    config("core_sided.bukkit") {
+        required = false
+        conformVisibility = true
+    }
+    config("core_sided.vanilla") {
+        required = false
+        conformVisibility = true
+    }
     config("core") {
         required = true
         conformVisibility = true

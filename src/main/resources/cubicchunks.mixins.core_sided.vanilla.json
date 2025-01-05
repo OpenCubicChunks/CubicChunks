@@ -1,6 +1,6 @@
 {
     "required": false,
-    "package": "io.github.opencubicchunks.cubicchunks.core.asm.mixin.core",
+    "package": "io.github.opencubicchunks.cubicchunks.core.asm.mixin.core_sided.vanilla",
     "refmap": "cubicchunks.mixins.refmap.json",
     "compatibilityLevel": "JAVA_8",
     "minVersion": "0.7.10",

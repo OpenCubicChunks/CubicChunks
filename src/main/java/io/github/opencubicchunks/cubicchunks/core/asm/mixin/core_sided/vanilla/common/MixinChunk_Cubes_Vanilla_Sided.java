@@ -22,7 +22,7 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package io.github.opencubicchunks.cubicchunks.core.asm.mixin.core.common;
+package io.github.opencubicchunks.cubicchunks.core.asm.mixin.core_sided.vanilla.common;
 
 import io.github.opencubicchunks.cubicchunks.api.util.Coords;
 import io.github.opencubicchunks.cubicchunks.api.world.ICubicWorld;
@@ -37,25 +37,14 @@ import org.spongepowered.asm.mixin.injection.ModifyConstant;
 import org.spongepowered.asm.mixin.injection.Slice;
 
 @Mixin(value = Chunk.class, priority = 999)
-public abstract class MixinChunk_Cubes_Bukkit_Sided {
-
-    /*
-     * Spigot added some more constants before the storageArrays array is set, so we need to adjust the slice.
-     */
+public abstract class MixinChunk_Cubes_Vanilla_Sided {
     @ModifyConstant(method = "<init>(Lnet/minecraft/world/World;II)V", constant = @Constant(intValue = 16),
-            slice = @Slice(
-                    from = @At(
-                            value = "FIELD",
-                            target = "Lnet/minecraft/world/chunk/Chunk;neighbors:I", // Add from to avoid expected changes
-                            remap = false
-                    ),
-                    to = @At(
-                            value = "FIELD",
-                            target = "Lnet/minecraft/world/chunk/Chunk;storageArrays:[Lnet/minecraft/world/chunk/storage/ExtendedBlockStorage;",
-                            opcode = Opcodes.PUTFIELD
-                    )
-            )
-    )
+            slice = @Slice(to = @At(
+                    value = "FIELD",
+                    target = "Lnet/minecraft/world/chunk/Chunk;storageArrays:[Lnet/minecraft/world/chunk/storage/ExtendedBlockStorage;",
+                    opcode = Opcodes.PUTFIELD
+            )),
+            allow = 1, require = 1)
     private int modifySectionArrayLength(int sixteen, World worldIn, int x, int z) {
         if (worldIn == null) {
             // Some mods construct chunks with null world, ignore them
