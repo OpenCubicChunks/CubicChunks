@@ -38,6 +38,10 @@ import org.spongepowered.asm.mixin.injection.Slice;
 
 @Mixin(value = Chunk.class, priority = 999)
 public abstract class MixinChunk_Cubes_Bukkit_Sided {
+
+    /*
+     * Spigot added some more constants before the storageArrays array is set, so we need to adjust the slice.
+     */
     @ModifyConstant(method = "<init>(Lnet/minecraft/world/World;II)V", constant = @Constant(intValue = 16),
             slice = @Slice(
                     from = @At(

@@ -45,6 +45,10 @@ public abstract class MixinWorld_HeightLimits_Bukkit_Sided implements ICubicWorl
 
     @Shadow public abstract boolean isBlockLoaded(BlockPos pos, boolean allowEmpty);
 
+    /*
+     * CraftBukkit moved the vanilla spawnEntity method logic to addEntity.
+     * And now in Spigot calling spawnEntity will be redirected to addEntity.
+     */
     // Error is fine here, disabled remap as it's a CB method.
     @Redirect(method = "addEntity", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/World;isChunkLoaded(IIZ)Z"), remap = false)
     private boolean addEntity_isChunkLoaded(World world, int chunkX, int chunkZ, boolean allowEmpty, Entity ent) {

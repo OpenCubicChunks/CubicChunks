@@ -225,27 +225,6 @@ public abstract class MixinChunk_Cubes {
         Arrays.fill(getBiomeArray(), (byte) -1);
     }
 
-    /*
-    @ModifyConstant(method = "<init>(Lnet/minecraft/world/World;II)V", constant = @Constant(intValue = 16),
-            slice = @Slice(to = @At(
-                    value = "FIELD",
-                    target = "Lnet/minecraft/world/chunk/Chunk;storageArrays:[Lnet/minecraft/world/chunk/storage/ExtendedBlockStorage;",
-                    opcode = Opcodes.PUTFIELD
-            )),
-            allow = 1, require = 1)
-    private int modifySectionArrayLength(int sixteen, World worldIn, int x, int z) {
-        if (worldIn == null) {
-            // Some mods construct chunks with null world, ignore them
-            return sixteen;
-        }
-        if (!((ICubicWorld) worldIn).isCubicWorld()) {
-            IMinMaxHeight y = (IMinMaxHeight) worldIn;
-            return Coords.blockToCube(y.getMaxHeight()) - Coords.blockToCube(y.getMinHeight());
-        }
-        return sixteen;
-    }
-     */ // Now moved to MixinChunk_Cubes_Vanilla_Sided
-
     @Redirect(method = "<init>(Lnet/minecraft/world/World;Lnet/minecraft/world/chunk/ChunkPrimer;II)V",
             at = @At(
                     value = "FIELD",

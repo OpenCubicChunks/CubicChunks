@@ -44,9 +44,15 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 @Mixin(PlayerList.class)
 public abstract class MixinPlayerList_Bukkit_Sided {
+
+    /*
+     * CraftBukkit has a different return value for this method comparing to vanilla.
+     * CB: String playerLoggedOut(EntityPlayerMP);
+     * Vanilla: void playerLoggedOut(EntityPlayerMP);
+     */
     @Redirect(method = "playerLoggedOut(Lnet/minecraft/entity/player/EntityPlayerMP;)Ljava/lang/String;",
             at = @At(value = "INVOKE", target = "Lnet/minecraft/world/chunk/Chunk;markDirty()V", ordinal = 0),
-            require = 1) // CB method has a different return value
+            require = 1)
     private void setChunkModifiedOnPlayerLoggedOut(Chunk chunkIn, EntityPlayerMP playerIn) {
         ICubicWorldInternal world = (ICubicWorldInternal) playerIn.getServerWorld();
         if (world.isCubicWorld()) {
@@ -56,6 +62,12 @@ public abstract class MixinPlayerList_Bukkit_Sided {
         }
     }
 
+    /*
+     * CraftBukkit changed the logic of how Vanilla "respawns" a player.
+     * In vanilla, the player instance will be recreated and the player's inventory will be copied over,
+     * while in CB, player instance is always same while the referenced player is online,
+     * and they offer another method "moveToWorld" to handle this.
+     */
     @Inject(method = "moveToWorld(Lnet/minecraft/entity/player/EntityPlayerMP;IZLorg/bukkit/Location;Z)Lnet/minecraft/entity/player/EntityPlayerMP;", at = @At(value = "INVOKE",
             target = "Lnet/minecraft/world/gen/ChunkProviderServer;provideChunk(II)Lnet/minecraft/world/chunk/Chunk;"))
     private void createPlayerChunk(EntityPlayerMP playerIn, int dimension, boolean conqueredEnd,
