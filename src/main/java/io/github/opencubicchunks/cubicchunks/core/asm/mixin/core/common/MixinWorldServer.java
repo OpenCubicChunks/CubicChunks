@@ -46,6 +46,7 @@ import io.github.opencubicchunks.cubicchunks.core.server.CubeProviderServer;
 import io.github.opencubicchunks.cubicchunks.core.server.PlayerCubeMap;
 import io.github.opencubicchunks.cubicchunks.core.server.SpawnCubes;
 import io.github.opencubicchunks.cubicchunks.core.server.VanillaNetworkHandler;
+import io.github.opencubicchunks.cubicchunks.core.util.CompatHandler;
 import io.github.opencubicchunks.cubicchunks.core.util.world.CubeSplitTickList;
 import io.github.opencubicchunks.cubicchunks.core.util.world.CubeSplitTickSet;
 import io.github.opencubicchunks.cubicchunks.core.world.CubeWorldEntitySpawner;
@@ -90,7 +91,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 
 /**
@@ -117,14 +117,14 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
 
     @Shadow protected abstract void playerCheckLight();
 
-    @Shadow public abstract boolean spawnEntity(Entity entityIn);
-
     @Shadow public abstract boolean addWeatherEffect(Entity entityIn);
 
     @Shadow @Mutable @Final private Set<NextTickListEntry> pendingTickListEntriesHashSet;
     @Shadow @Mutable @Final private List<NextTickListEntry> pendingTickListEntriesThisTick;
 
     @Shadow public abstract PlayerChunkMap getPlayerChunkMap();
+
+    @Shadow protected abstract boolean canAddEntity(Entity entityIn);
 
     @Override public void initCubicWorldServer(IntRange heightRange, IntRange generationRange) {
         super.initCubicWorld(heightRange, generationRange);
@@ -368,7 +368,9 @@ public abstract class MixinWorldServer extends MixinWorld implements ICubicWorld
                     skeletonHorse.setTrap(true);
                     skeletonHorse.setGrowingAge(0);
                     skeletonHorse.setPosition((double) strikePos.getX(), (double) strikePos.getY(), (double) strikePos.getZ());
-                    this.spawnEntity(skeletonHorse);
+                    if (this.canAddEntity(skeletonHorse)) {
+                        this.spawnEntity(skeletonHorse);
+                    }
                     this.addWeatherEffect(new EntityLightningBolt((World) (Object) this,
                             (double) strikePos.getX(), (double) strikePos.getY(), (double) strikePos.getZ(), true));
                 } else {

@@ -25,7 +25,6 @@
 package io.github.opencubicchunks.cubicchunks.core.util;
 
 import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Collections;

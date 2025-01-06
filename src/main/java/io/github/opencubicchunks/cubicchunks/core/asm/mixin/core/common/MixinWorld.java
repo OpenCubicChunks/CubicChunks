@@ -41,6 +41,7 @@ import io.github.opencubicchunks.cubicchunks.core.world.ICubeProviderInternal;
 import io.github.opencubicchunks.cubicchunks.core.world.cube.Cube;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.entity.Entity;
 import net.minecraft.init.Blocks;
 import net.minecraft.profiler.Profiler;
 import net.minecraft.tileentity.TileEntity;
@@ -142,6 +143,13 @@ public abstract class MixinWorld implements ICubicWorldInternal {
     @Shadow public abstract boolean canSeeSky(BlockPos pos);
 
     @Shadow public abstract void setLightFor(EnumSkyBlock type, BlockPos pos, int lightValue);
+
+    /*
+     * This shadow method is used by MixinWorldServer, place in here for Bukkit compatibility.
+     * As World#spawnEntity method is not getting overridden in CraftBukkit WorldServer class,
+     * shadowing spawnEntity in WorldServer will break Bukkit compatibility.
+     */
+    @Shadow public abstract boolean spawnEntity(Entity entityIn);
 
     protected void initCubicWorld(IntRange heightRange, IntRange generationRange) {
         ((ICubicWorldSettings) worldInfo).setCubic(true);

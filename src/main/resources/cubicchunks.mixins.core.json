@@ -67,7 +67,7 @@
         "client.MixinWorldProvider"
     ],
     "server": [
-        "server.MixinDedicatedPlayerList",
-        "server.MixinDedicatedServer_HeightLimits"
+        "server.MixinDedicatedServer_HeightLimits",
+        "server.MixinDedicatedPlayerList"
     ]
 }

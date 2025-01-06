@@ -88,7 +88,7 @@ public abstract class MixinChunk_Column {
         if (cachedCube != null && cachedCube.getY() == cubeY) {
             return cachedCube;
         }
-        return getWorld().getCubeCache().getLoadedCube(x, cubeY, z);
+        return getCubicWorld().getCubeCache().getLoadedCube(x, cubeY, z);
     }
 
 
@@ -96,7 +96,7 @@ public abstract class MixinChunk_Column {
         if (cachedCube != null && cachedCube.getY() == cubeY) {
             return cachedCube;
         }
-        return getWorld().getCubeCache().getCube(x, cubeY, z);
+        return getCubicWorld().getCubeCache().getCube(x, cubeY, z);
     }
 
 
@@ -138,7 +138,7 @@ public abstract class MixinChunk_Column {
     }
 
     @Unique @SuppressWarnings({"unchecked", "AddedMixinMembersNamePattern"})
-    public <T extends World & ICubicWorldInternal> T getWorld() {
+    public <T extends World & ICubicWorldInternal> T getCubicWorld() {
         return (T) this.world;
     }
 

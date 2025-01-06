@@ -22,29 +22,37 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-package io.github.opencubicchunks.cubicchunks.core.asm.mixin.selectable.common;
+package io.github.opencubicchunks.cubicchunks.core.asm.mixin.core_sided.vanilla.common;
 
-import io.github.opencubicchunks.cubicchunks.core.world.cube.Cube;
+import static io.github.opencubicchunks.cubicchunks.api.util.Coords.cubeToMinBlock;
+
+import io.github.opencubicchunks.cubicchunks.api.world.ICubicWorld;
+import io.github.opencubicchunks.cubicchunks.core.asm.mixin.core.common.MixinWorld_HeightLimits;
+import net.minecraft.entity.Entity;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
-import io.github.opencubicchunks.cubicchunks.api.world.ICubicWorldServer;
-import net.minecraft.world.GameRules;
-import net.minecraft.world.WorldServer;
+/**
+ * Split from {@link MixinWorld_HeightLimits} for compatibility.
+ */
+@Mixin(World.class)
+public abstract class MixinWorld_HeightLimits_Vanilla_Sided implements ICubicWorld {
 
-@Mixin(value = WorldServer.class, priority = 1001)
-public abstract class MixinWorldServer_UpdateBlocks implements ICubicWorldServer {
+    @Shadow protected abstract boolean isChunkLoaded(int x, int z, boolean allowEmpty);
 
-    /**
-     * This redirection (if selected by {@link io.github.opencubicchunks.cubicchunks.core.asm.CubicChunksMixinConfig})
-     * will return value {@code 0} instead of {@code getGameRules().getInt("randomTickSpeed")} for cubic type worlds.
-     * Redirected function is located inside WorldServer.updateBlocks() function at a line 404.
-     * Returned zero will cause {@code if (i > 0)} check at a line 474 to fail and random block ticks skipped.
-     * For cubic worlds random block ticks handled inside {@link Cube} class.
-     */
-    @Redirect(method = "updateBlocks", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/GameRules;getInt(Ljava/lang/String;)I"), require = 1)
-    public int redirectGetRandomTickSpeed(GameRules gameRules, String ruleName) {
-        return this.isCubicWorld() ? 0 : gameRules.getInt(ruleName);
+    @Shadow public abstract boolean isBlockLoaded(BlockPos pos, boolean allowEmpty);
+
+    @Redirect(method = "spawnEntity", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/World;isChunkLoaded(IIZ)Z"))
+    private boolean spawnEntity_isChunkLoaded(World world, int chunkX, int chunkZ, boolean allowEmpty, Entity ent) {
+        assert this == (Object) world;
+        if (isCubicWorld()) {
+            return this.isBlockLoaded(new BlockPos(cubeToMinBlock(chunkX), ent.posY, cubeToMinBlock(chunkZ)), allowEmpty);
+        } else {
+            return this.isChunkLoaded(chunkX, chunkZ, allowEmpty);
+        }
     }
 }
