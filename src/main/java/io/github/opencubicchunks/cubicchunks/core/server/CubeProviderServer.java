@@ -65,7 +65,9 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
+import java.util.Random;
 import java.util.Set;
+import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 
 import javax.annotation.Detainted;
@@ -225,6 +227,17 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
 
     @Override
     public boolean tick() {
+        // NOTE: the return value is completely ignored
+        profiler.startSection("providerTick");
+        long i = System.currentTimeMillis();
+        Random rand = this.world.rand;
+        PlayerCubeMap playerCubeMap = ((PlayerCubeMap) this.world.getPlayerChunkMap());
+        Iterator<Cube> watchersIterator = playerCubeMap.getCubeIterator();
+        BooleanSupplier tickFaster = () -> System.currentTimeMillis() - i > 40;
+        while (watchersIterator.hasNext()) {
+            watchersIterator.next().tickCubeServer(tickFaster, rand);
+        }
+        profiler.endSection();
         return false;
     }
 
