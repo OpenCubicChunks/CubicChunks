@@ -24,9 +24,9 @@
  */
 package io.github.opencubicchunks.cubicchunks.core.server;
 
+import io.github.opencubicchunks.cubicchunks.api.world.ICubicWorld;
 import io.github.opencubicchunks.cubicchunks.api.world.storage.StorageFormatProviderBase;
 import io.github.opencubicchunks.cubicchunks.core.CubicChunksConfig;
-import io.github.opencubicchunks.cubicchunks.core.lighting.LightingManager;
 import io.github.opencubicchunks.cubicchunks.core.server.chunkio.AsyncBatchingCubeIO;
 import io.github.opencubicchunks.cubicchunks.core.server.chunkio.ICubeIO;
 import io.github.opencubicchunks.cubicchunks.core.server.chunkio.async.forge.AsyncWorldIOExecutor;
@@ -61,11 +61,11 @@ import net.minecraftforge.fml.common.registry.GameRegistry;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Path;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
-import java.util.Random;
-import java.util.function.BooleanSupplier;
+import java.util.Set;
 import java.util.function.Consumer;
 
 import javax.annotation.Detainted;
@@ -225,17 +225,6 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
 
     @Override
     public boolean tick() {
-        // NOTE: the return value is completely ignored
-        profiler.startSection("providerTick");
-        long i = System.currentTimeMillis();
-        Random rand = this.world.rand;
-        PlayerCubeMap playerCubeMap = ((PlayerCubeMap) this.world.getPlayerChunkMap());
-        Iterator<Cube> watchersIterator = playerCubeMap.getCubeIterator();
-        BooleanSupplier tickFaster = () -> System.currentTimeMillis() - i > 40;
-        while (watchersIterator.hasNext()) {
-            watchersIterator.next().tickCubeServer(tickFaster, rand);
-        }
-        profiler.endSection();
         return false;
     }
 
@@ -493,25 +482,25 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
 
         // for all cubes needed for full population - generate their population requirements
         Box fullPopulation = cubeGen.getFullPopulationRequirements(cube);
-        if (CubicChunksConfig.useVanillaChunkWorldGenerators) {
-            if (cube.getY() >= 0 && cube.getY() < 16) {
-                fullPopulation = new Box(
-                        0, -cube.getY(), 0,
-                        0, 16 - cube.getY() - 1, 0
-                ).add(fullPopulation);
-            }
+        boolean useVanillaGenerators = ((ICubicWorld) worldServer).isCubicWorld()
+                && CubicChunksConfig.useVanillaChunkWorldGenerators
+                && cube.getY() >= 0 && cube.getY() < 16;
+        if (useVanillaGenerators) {
+            fullPopulation = new Box(
+                    0, -cube.getY(), 0,
+                    0, 16 - cube.getY() - 1, 0
+            ).add(fullPopulation);
         }
+        Set<Cube> newlyPopulatedCubes = new HashSet<>();
         boolean success = fullPopulation.allMatch((x, y, z) -> {
             // this also generates the cube
             Cube fullPopulationCube = getCube(x + cubeX, y + cubeY, z + cubeZ);
             Box newBox = cubeGen.getPopulationPregenerationRequirements(fullPopulationCube);
-            if (CubicChunksConfig.useVanillaChunkWorldGenerators) {
-                if (cube.getY() >= 0 && cube.getY() < 16) {
-                    newBox = new Box(
-                            0, -cube.getY(), 0,
-                            0, 16 - cube.getY() - 1, 0
-                    ).add(newBox);
-                }
+            if (useVanillaGenerators) {
+                newBox = new Box(
+                        0, -cube.getY(), 0,
+                        0, 16 - cube.getY() - 1, 0
+                ).add(newBox);
             }
             boolean generated = newBox.allMatch((nx, ny, nz) -> {
                 int genX = cubeX + x + nx;
@@ -525,20 +514,30 @@ public class CubeProviderServer extends ChunkProviderServer implements ICubeProv
             // a check for populators that populate more than one cube (vanilla compatibility generator)
             if (!fullPopulationCube.isPopulated()) {
                 cubeGen.populate(fullPopulationCube);
-                fullPopulationCube.setPopulated(true);
+                newlyPopulatedCubes.add(fullPopulationCube);
             }
             return true;
         });
         if (!success) {
+            for (Cube newlyPopulatedCube : newlyPopulatedCubes) {
+                newlyPopulatedCube.setPopulated(true);
+            }
             return false;
         }
-        if (CubicChunksConfig.useVanillaChunkWorldGenerators) {
+        if (useVanillaGenerators) {
             Box.Mutable box = fullPopulation.asMutable();
             box.setY1(0);
             box.setY2(0);
             box.forEachPoint((x, y, z) -> {
-                GameRegistry.generateWorld(cube.getX() + x, cube.getZ() + z, world, chunkGenerator, world.getChunkProvider());
+                Cube columnCube = getCube(cubeX + x, 0, cubeZ + z);
+                if (!columnCube.isPopulated()) {
+                    GameRegistry.generateWorld(cubeX + x, cubeZ + z, world, chunkGenerator, world.getChunkProvider());
+                    columnCube.setFullyPopulated(true);
+                }
             });
+        }
+        for (Cube newlyPopulatedCube : newlyPopulatedCubes) {
+            newlyPopulatedCube.setPopulated(true);
         }
         cube.setFullyPopulated(true);
         return true;
