@@ -9,12 +9,6 @@
     },
     "mixins": [
         "common.EntityBat_AiHeightLimit",
-        "common.fakeheight.IASMEventHandler",
-        "common.fakeheight.IEventBus",
-        "common.fakeheight.MixinBiomeDecorator",
-        "common.fakeheight.MixinForgeEventFactory",
-        "common.fakeheight.MixinTerrainGen",
-        "common.isblockloaded.MixinEntity",
         "common.MixinBiomeTemperatureConfig",
         "common.MixinBlockBeaconAsyncUpdate",
         "common.MixinBlockChorusFlower",
@@ -31,6 +25,7 @@
         "common.MixinEntityLivingBase",
         "common.MixinEntityMinecart_KillFix",
         "common.MixinItemChorusFruit",
+        "common.MixinItemMap",
         "common.MixinNetHandlerPlayServer",
         "common.MixinPacketBufferBlockPosWrite",
         "common.MixinPathNavigateGround",
@@ -39,6 +34,12 @@
         "common.MixinTileEntityEndGateway",
         "common.MixinWalkNodeProcessor_HeightLimit",
         "common.MixinWorld",
+        "common.fakeheight.IASMEventHandler",
+        "common.fakeheight.IEventBus",
+        "common.fakeheight.MixinBiomeDecorator",
+        "common.fakeheight.MixinForgeEventFactory",
+        "common.fakeheight.MixinTerrainGen",
+        "common.isblockloaded.MixinEntity",
         "common.vanillaclient.INetHandlerPlayServer",
         "common.vanillaclient.MixinNetHandlerPlayServer",
         "common.vanillaclient.MixinSPacketBlockAction",
@@ -88,9 +89,9 @@
         "common.worldgen.tree.MixinWorldGenTrees"
     ],
     "client": [
-        "client.isblockloaded.MixinEntity",
         "client.MixinEntity_PrepareSpawn",
-        "client.MixinEntityPlayerSP"
+        "client.MixinEntityPlayerSP",
+        "client.isblockloaded.MixinEntity"
     ],
     "server": []
 }
