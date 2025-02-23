@@ -24,9 +24,8 @@
  */
 package io.github.opencubicchunks.cubicchunks.core.asm.mixin.core.client;
 
-import io.github.opencubicchunks.cubicchunks.core.world.cube.Cube;
+import io.github.opencubicchunks.cubicchunks.api.util.Coords;
 import io.github.opencubicchunks.cubicchunks.api.world.ICubicWorld;
-import io.github.opencubicchunks.cubicchunks.core.world.cube.Cube;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.ViewFrustum;
@@ -38,10 +37,14 @@ import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -54,15 +57,18 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @Mixin(ViewFrustum.class)
 public class MixinViewFrustum_RenderHeightFix {
 
+    @Unique private static final ExecutorService BACKGROUND_EXECUTOR = Executors.newSingleThreadExecutor((runnable) -> {
+        Thread t = new Thread(runnable);
+        t.setDaemon(true);
+        t.setName("ViewFrustum RenderChunk position updater (CubicChunks)");
+        return t;
+    });
+
     @Shadow @Final protected World world;
     @SuppressWarnings("MismatchedReadAndWriteOfArray") @Shadow public RenderChunk[] renderChunks;
     @Shadow protected int countChunksX;
     @Shadow protected int countChunksY;
     @Shadow protected int countChunksZ;
-
-    @Shadow private int getBaseCoordinate(int arg1, int arg2, int arg3) {
-        throw new Error();
-    }
 
     @Inject(method = "updateChunkPositions", at = @At(value = "HEAD"), cancellable = true, require = 1)
     private void updateChunkPositionsInject(double viewEntityX, double viewEntityZ, CallbackInfo cbi) {
@@ -70,41 +76,50 @@ public class MixinViewFrustum_RenderHeightFix {
             return;
         }
         Entity view = Minecraft.getMinecraft().getRenderViewEntity();
-        double x = view.posX;
-        double y = view.posY;
-        double z = view.posZ;
 
-        // treat the y dimension the same as all the rest
-        int viewX = MathHelper.floor(x) - Cube.SIZE / 2;
-        int viewY = MathHelper.floor(y) - Cube.SIZE / 2;
-        int viewZ = MathHelper.floor(z) - Cube.SIZE / 2;
+        int viewX = Coords.blockToCube(view.posX);
+        int viewY = Coords.blockToCube(view.posY);
+        int viewZ = Coords.blockToCube(view.posZ);
+        int dx = countChunksX;
+        int dy = countChunksY;
+        int dz = countChunksZ;
+        RenderChunk[] chunks = this.renderChunks;
 
-        int xSizeInBlocks = this.countChunksX * Cube.SIZE;
-        int ySizeInBlocks = this.countChunksY * Cube.SIZE;
-        int zSizeInBlocks = this.countChunksZ * Cube.SIZE;
+        BACKGROUND_EXECUTOR.submit(() -> {
+            int minX = viewX - (dx >> 1);
+            int minY = viewY - (dy >> 1);
+            int minZ = viewZ - (dz >> 1);
+            int px = MathHelper.intFloorDiv(minX, dx) * dx;
+            int py = MathHelper.intFloorDiv(minY, dy) * dy;
+            int pz = MathHelper.intFloorDiv(minZ, dz) * dz;
 
-        for (int xIndex = 0; xIndex < this.countChunksX; xIndex++) {
-            //getRendererBlockCoord
-            int blockX = this.getBaseCoordinate(viewX, xSizeInBlocks, xIndex);
+            for (int zIndex = 0; zIndex < this.countChunksZ; zIndex++) {
+                int blockZ = pz + zIndex;
+                if (blockZ < minZ) {
+                    blockZ += dz;
+                }
+                blockZ <<= 4;
+                int idxZ = zIndex * this.countChunksY * this.countChunksX;
 
-            for (int yIndex = 0; yIndex < this.countChunksY; yIndex++) {
-                int blockY = this.getBaseCoordinate(viewY, ySizeInBlocks, yIndex);
-
-                for (int zIndex = 0; zIndex < this.countChunksZ; zIndex++) {
-                    int blockZ = this.getBaseCoordinate(viewZ, zSizeInBlocks, zIndex);
-
-                    // get the renderer
-                    int rendererIndex = (zIndex * this.countChunksY + yIndex) * this.countChunksX + xIndex;
-                    RenderChunk renderer = this.renderChunks[rendererIndex];
-
-                    // update the position if needed
-                    BlockPos oldPos = renderer.getPosition();
-                    if (oldPos.getX() != blockX || oldPos.getY() != blockY || oldPos.getZ() != blockZ) {
+                for (int yIndex = 0; yIndex < this.countChunksY; yIndex++) {
+                    int blockY = py + yIndex;
+                    if (blockY < minY) {
+                        blockY += dy;
+                    }
+                    blockY <<= 4;
+                    int idxYZ = idxZ + yIndex * this.countChunksX;
+                    for (int xIndex = 0; xIndex < this.countChunksX; xIndex++) {
+                        int blockX = px + xIndex;
+                        if (blockX < minX) {
+                            blockX += dx;
+                        }
+                        blockX <<= 4;
+                        RenderChunk renderer = chunks[idxYZ + xIndex];
                         renderer.setPosition(blockX, blockY, blockZ);
                     }
                 }
             }
-        }
+        });
         cbi.cancel();
     }
 
@@ -114,9 +129,9 @@ public class MixinViewFrustum_RenderHeightFix {
             return;
         }
         // treat the y dimension the same as all the rest
-        int x = MathHelper.intFloorDiv(pos.getX(), Cube.SIZE);
-        int y = MathHelper.intFloorDiv(pos.getY(), Cube.SIZE);
-        int z = MathHelper.intFloorDiv(pos.getZ(), Cube.SIZE);
+        int x = Coords.blockToCube(pos.getX());
+        int y = Coords.blockToCube(pos.getY());
+        int z = Coords.blockToCube(pos.getZ());
         x %= this.countChunksX;
         if (x < 0) {
             x += this.countChunksX;

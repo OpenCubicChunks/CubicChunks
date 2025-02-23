@@ -25,18 +25,19 @@
 package io.github.opencubicchunks.cubicchunks.core.asm.mixin.noncritical.client;
 
 import io.github.opencubicchunks.cubicchunks.core.client.RenderCubeCache;
-import io.github.opencubicchunks.cubicchunks.core.client.RenderCubeCache;
 import io.github.opencubicchunks.cubicchunks.api.world.ICubicWorld;
 import mcp.MethodsReturnNonnullByDefault;
+import net.minecraft.client.renderer.RenderGlobal;
 import net.minecraft.client.renderer.chunk.RenderChunk;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.ChunkCache;
 import net.minecraft.world.World;
-import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -44,9 +45,19 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
 @Mixin(RenderChunk.class)
-public class MixinRenderChunk {
+public abstract class MixinRenderChunk {
 
     @Shadow private World world;
+
+    @Shadow protected abstract void initModelviewMatrix();
+
+    @Inject(method = "<init>", at = @At("RETURN"))
+    private void onConstruct(World worldIn, RenderGlobal renderGlobalIn, int indexIn, CallbackInfo ci) {
+        this.initModelviewMatrix();
+    }
+    @Redirect(method = "setPosition", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/chunk/RenderChunk;initModelviewMatrix()V"))
+    private void noop(RenderChunk instance) {
+    }
 
     @Inject(method = "createRegionRenderCache", at = @At(value = "HEAD"), remap = false, cancellable = true)
     private void createCubicChunkCache(World world, BlockPos from, BlockPos to, int subtract, CallbackInfoReturnable<ChunkCache> cbi) {
