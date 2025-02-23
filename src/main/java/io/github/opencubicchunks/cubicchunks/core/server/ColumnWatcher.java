@@ -34,6 +34,7 @@ import io.github.opencubicchunks.cubicchunks.core.network.PacketHeightMapUpdate;
 import io.github.opencubicchunks.cubicchunks.core.network.PacketUnloadColumn;
 import io.github.opencubicchunks.cubicchunks.core.server.chunkio.async.forge.AsyncWorldIOExecutor;
 import io.github.opencubicchunks.cubicchunks.core.util.AddressTools;
+import io.github.opencubicchunks.cubicchunks.core.util.BucketSorterEntry;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.server.management.PlayerChunkMapEntry;
@@ -50,7 +51,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class ColumnWatcher extends PlayerChunkMapEntry implements XZAddressable {
+public class ColumnWatcher extends PlayerChunkMapEntry implements XZAddressable, BucketSorterEntry {
 
     @Nonnull private final PlayerCubeMap playerCubeMap;
     @Nonnull private final BitSet dirtyColumns = new BitSet(256);
@@ -243,5 +244,15 @@ public class ColumnWatcher extends PlayerChunkMapEntry implements XZAddressable 
     // BetterPortals: keep compatibility
     @Deprecated private List<EntityPlayerMP> getPlayers() {
         return self().getPlayerList();
+    }
+
+    private long[] bucketDataEntry = null;
+
+    @Override public long[] getBucketEntryData() {
+        return bucketDataEntry;
+    }
+
+    @Override public void setBucketEntryData(long[] data) {
+        bucketDataEntry = data;
     }
 }

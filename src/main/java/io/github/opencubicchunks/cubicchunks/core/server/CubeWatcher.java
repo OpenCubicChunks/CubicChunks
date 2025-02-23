@@ -39,6 +39,7 @@ import io.github.opencubicchunks.cubicchunks.core.network.PacketDispatcher;
 import io.github.opencubicchunks.cubicchunks.core.network.PacketUnloadCube;
 import io.github.opencubicchunks.cubicchunks.core.server.chunkio.async.forge.AsyncWorldIOExecutor;
 import io.github.opencubicchunks.cubicchunks.core.util.AddressTools;
+import io.github.opencubicchunks.cubicchunks.core.util.BucketSorterEntry;
 import io.github.opencubicchunks.cubicchunks.core.util.ticket.ITicket;
 import io.github.opencubicchunks.cubicchunks.core.world.cube.BlankCube;
 import io.github.opencubicchunks.cubicchunks.core.world.cube.Cube;
@@ -62,14 +63,17 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class CubeWatcher implements ITicket, ICubeWatcher {
+public class CubeWatcher implements ITicket, ICubeWatcher, BucketSorterEntry {
 
     private final Consumer<Cube> consumer;
 
     private final CubeProviderServer cubeCache;
     private PlayerCubeMap playerCubeMap;
     @Nullable private Cube cube;
+    // Note: using wrap() so that the internal array is not Object[], and can be safely cast to EntityPlayerMP[]
     private final ObjectArrayList<EntityPlayerMP> players = ObjectArrayList.wrap(new EntityPlayerMP[0]);
+    private final ObjectArrayList<EntityPlayerMP> playersToAdd = ObjectArrayList.wrap(new EntityPlayerMP[1], 0);
+
     private final TShortList dirtyBlocks = new TShortArrayList(64);
     private final CubePos cubePos;
     private long previousWorldTime = 0;
@@ -98,6 +102,28 @@ public class CubeWatcher implements ITicket, ICubeWatcher {
                 consumer);
     }
 
+    void scheduleAddPlayer(EntityPlayerMP player) {
+        if (!playersToAdd.contains(player)) {
+            playersToAdd.add(player);
+        }
+    }
+
+    void removeScheduledAddPlayer(EntityPlayerMP player) {
+        playersToAdd.rem(player); // TODO: why does rem() and remove() exist separately?
+    }
+
+    void addScheduledPlayers() {
+        if (!playersToAdd.isEmpty()) {
+            for (EntityPlayerMP player : playersToAdd.elements()) {
+                if (player == null) {
+                    break;
+                }
+                addPlayer(player);
+            }
+            playersToAdd.clear();
+        }
+    }
+
     // CHECKED: 1.10.2-12.18.1.2092
     void addPlayer(EntityPlayerMP player) {
         if (this.players.contains(player)) {
@@ -119,6 +145,7 @@ public class CubeWatcher implements ITicket, ICubeWatcher {
     // CHECKED: 1.10.2-12.18.1.2092
     void removePlayer(EntityPlayerMP player) {
         if (!this.players.contains(player)) {
+            removeScheduledAddPlayer(player);
             if (this.players.isEmpty()) {
                 playerCubeMap.removeEntry(this);
             }
@@ -154,6 +181,7 @@ public class CubeWatcher implements ITicket, ICubeWatcher {
                     c -> this.cube = c);
         }
         invalid = true;
+        playersToAdd.clear();
     }
 
     // CHECKED: 1.10.2-12.18.1.2092
@@ -436,7 +464,17 @@ public class CubeWatcher implements ITicket, ICubeWatcher {
     }
 
     @Override public boolean shouldTick() {
-        return true; // Cubes that players can see should tick
+        return false; // player seeing a cube is not enough to force ticking from the ticket system
+    }
+
+    private long[] bucketDataEntry = null;
+
+    @Override public long[] getBucketEntryData() {
+        return bucketDataEntry;
+    }
+
+    @Override public void setBucketEntryData(long[] data) {
+        bucketDataEntry = data;
     }
 
     public enum SendToPlayersResult {

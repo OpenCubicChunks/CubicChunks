@@ -218,6 +218,10 @@ public class CubicChunksConfig {
     @Config.Comment("Ignores and regenerates corrupted chunks instead of crashing the server")
     public static boolean ignoreCorruptedChunks = false;
 
+    @Config.LangKey("cubicchunks.config.disable_lighting")
+    @Config.Comment("Disables all light propagation")
+    public static boolean disableLighting = false;
+
     public static final class VanillaClients {
 
         @Config.LangKey("cubicchunks.config.vanilla_clients.horizontal_slices")

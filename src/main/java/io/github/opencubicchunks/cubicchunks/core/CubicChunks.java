@@ -81,7 +81,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @Mod(modid = CubicChunks.MODID, useMetadata = true)
 @Mod.EventBusSubscriber
 public class CubicChunks {
-
+    public static final int MAX_RENDER_DISTANCE = 64;
     public static final VersionRange SUPPORTED_SERVER_VERSIONS;
     public static final VersionRange SUPPORTED_CLIENT_VERSIONS;
 

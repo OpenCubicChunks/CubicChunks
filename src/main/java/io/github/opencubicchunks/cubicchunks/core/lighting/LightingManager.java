@@ -28,8 +28,8 @@ import static io.github.opencubicchunks.cubicchunks.api.util.Coords.blockToLocal
 import static io.github.opencubicchunks.cubicchunks.api.util.Coords.localToBlock;
 
 import io.github.opencubicchunks.cubicchunks.api.util.Coords;
-import io.github.opencubicchunks.cubicchunks.api.world.IColumn;
 import io.github.opencubicchunks.cubicchunks.api.world.ICube;
+import io.github.opencubicchunks.cubicchunks.core.CubicChunksConfig;
 import io.github.opencubicchunks.cubicchunks.core.asm.mixin.ICubicWorldInternal;
 import io.github.opencubicchunks.cubicchunks.core.lighting.phosphor.LightingHooks;
 import io.github.opencubicchunks.cubicchunks.core.lighting.phosphor.PhosphorLightEngine;
@@ -75,10 +75,16 @@ public class LightingManager implements ILightingManager {
     }
 
     @Override public void updateLightBetween(Chunk column, int localX, int y1, int y2, int localZ) {
+        if (CubicChunksConfig.disableLighting) {
+            return;
+        }
         LightingHooks.relightSkylightColumn(this.world, column, localX, localZ, y1, y2);
     }
 
     @Override public void onCubeLoad(ICube cube) {
+        if (CubicChunksConfig.disableLighting) {
+            return;
+        }
         LightingHooks.scheduleRelightChecksForCubeBoundaries(world, cube);
         tryScheduleOnLoadHeightChangeRelight(cube);
     }
@@ -88,11 +94,17 @@ public class LightingManager implements ILightingManager {
     }
 
     @Override public boolean checkLightFor(EnumSkyBlock lightType, BlockPos pos) {
+        if (CubicChunksConfig.disableLighting) {
+            return true;
+        }
         lightEngine.scheduleLightUpdate(lightType, pos);
         return true;
     }
 
     @Override public void processUpdates() {
+        if (CubicChunksConfig.disableLighting) {
+            return;
+        }
         lightEngine.processLightUpdates();
     }
 
@@ -142,6 +154,9 @@ public class LightingManager implements ILightingManager {
     }
 
     @Override public boolean hasPendingLightUpdates(ICube cube) {
+        if (CubicChunksConfig.disableLighting) {
+            return false;
+        }
         return lightEngine.hasLightUpdates();
     }
 
@@ -163,6 +178,9 @@ public class LightingManager implements ILightingManager {
     }
 
     @Override public void doFirstLight(ICube cube) {
+        if (CubicChunksConfig.disableLighting) {
+            return;
+        }
         assert firstLightProcessor != null;
         firstLightProcessor.diffuseSkylight(cube);
     }
