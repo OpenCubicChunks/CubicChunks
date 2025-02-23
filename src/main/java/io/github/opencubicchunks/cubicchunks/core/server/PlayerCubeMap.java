@@ -28,6 +28,7 @@ import static io.github.opencubicchunks.cubicchunks.api.util.Coords.blockToCube;
 import static io.github.opencubicchunks.cubicchunks.api.util.Coords.blockToLocal;
 import io.github.opencubicchunks.cubicchunks.core.util.WatchersSortingList2D;
 import io.github.opencubicchunks.cubicchunks.core.util.WatchersSortingList3D;
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import static net.minecraft.util.math.MathHelper.clamp;
 
 import com.google.common.base.Predicate;
@@ -95,8 +96,6 @@ import javax.annotation.ParametersAreNonnullByDefault;
 public class PlayerCubeMap extends PlayerChunkMap {
 
     private static final Predicate<EntityPlayerMP> NOT_SPECTATOR = player -> player != null && !player.isSpectator();
-    private static final Predicate<EntityPlayerMP> CAN_GENERATE_CHUNKS = player -> player != null &&
-            (!player.isSpectator() || player.getServerWorld().getGameRules().getBoolean("spectatorsGenerateChunks"));
 
     /**
      * Cube selector is used to find which cube positions need to be loaded/unloaded
@@ -189,7 +188,7 @@ public class PlayerCubeMap extends PlayerChunkMap {
 
     private final CubeProviderServer cubeCache;
 
-    private final Multimap<EntityPlayerMP, Cube> cubesToSend = Multimaps.newSetMultimap(new HashMap<>(), HashSet::new);
+    private final Object2ObjectOpenHashMap<EntityPlayerMP, ObjectOpenHashSet<Cube>> cubesToSend = new Object2ObjectOpenHashMap<>(2);
 
     // these player adds will be processed on the next tick
     // this exists as temporary workaround to player respawn code calling addPlayer() before spawning
@@ -287,6 +286,9 @@ public class PlayerCubeMap extends PlayerChunkMap {
     @Override
     public void tick() {
         getWorldServer().profiler.startSection("playerCubeMapTick");
+        boolean spectatorsGenerateChunks = getWorldServer().getGameRules().getBoolean("spectatorsGenerateChunks");
+        Predicate<EntityPlayerMP> canGenerateChunkPredicate = player -> player != null && (spectatorsGenerateChunks ||!player.isSpectator());
+
         long currentTime = this.getWorldServer().getTotalWorldTime();
 
         getWorldServer().profiler.startSection("addPendingPlayers");
@@ -320,7 +322,6 @@ public class PlayerCubeMap extends PlayerChunkMap {
             this.columnWatchersToUpdate.forEach(ColumnWatcher::update);
             this.columnWatchersToUpdate.clear();
         }
-
         getWorldServer().profiler.endStartSection("sortTickableTracker");
         tickableCubeTracker.tick();
 
@@ -329,7 +330,6 @@ public class PlayerCubeMap extends PlayerChunkMap {
         this.columnsToGenerate.tick();
 
         getWorldServer().profiler.endStartSection("sortToSend");
-        //sort cubesToSendToClients every other 4 ticks
         this.cubesToSendToClients.tick();
         this.columnsToSendToClients.tick();
         this.watchersToAddPlayersTo.tick();
@@ -343,7 +343,7 @@ public class PlayerCubeMap extends PlayerChunkMap {
 
                 boolean success = entry.getChunk() != null;
                 if (!success) {
-                    boolean canGenerate = entry.hasPlayerMatching(CAN_GENERATE_CHUNKS);
+                    boolean canGenerate = entry.hasPlayerMatching(canGenerateChunkPredicate);
                     getWorldServer().profiler.startSection("generate");
                     success = entry.providePlayerChunk(canGenerate);
                     getWorldServer().profiler.endSection(); // generate
@@ -375,7 +375,7 @@ public class PlayerCubeMap extends PlayerChunkMap {
                 boolean success = !watcher.isWaitingForCube();
                 boolean alreadyLoaded = success;
                 if (!success) {
-                    boolean canGenerate = watcher.hasPlayerMatching(CAN_GENERATE_CHUNKS);
+                    boolean canGenerate = watcher.hasPlayerMatching(canGenerateChunkPredicate);
                     getWorldServer().profiler.startSection("generate");
                     success = watcher.providePlayerCube(canGenerate);
                     getWorldServer().profiler.endSection();
@@ -894,7 +894,8 @@ public class PlayerCubeMap extends PlayerChunkMap {
     }
 
     public void scheduleSendCubeToPlayer(Cube cube, EntityPlayerMP player) {
-        cubesToSend.put(player, cube);
+        ObjectOpenHashSet<Cube> cubes = cubesToSend.computeIfAbsent(player, k -> new ObjectOpenHashSet<>(1024));
+        cubes.add(cube);
     }
 
     public void removeSchedulesSendCubeToPlayer(Cube cube, EntityPlayerMP player) {

@@ -738,30 +738,38 @@ public class ServerHeightMap implements IHeightMap {
     }
 
     public void readData(byte[] data) {
-        try {
-            ByteArrayInputStream buf = new ByteArrayInputStream(data);
-            DataInputStream in = new DataInputStream(buf);
-            readData(in);
-            in.close();
-        } catch (IOException ex) {
-            throw new Error(ex);
-        }
-    }
-
-    private void readData(DataInputStream in) throws IOException {
+        int pos = 0;
         for (int i = 0; i < this.segments.length; i++) {
-            this.ymin[i] = in.readInt();
-            this.ymax.set(i, in.readInt());
-            int[] segments = new int[in.readUnsignedShort()];
+            this.ymin[i] = readIntBigEndian(data, pos);
+            pos += Integer.BYTES;
+            this.ymax.set(i, readIntBigEndian(data, pos));
+            pos += Integer.BYTES;
+            int[] segments = new int[readUShortBigEndian(data, pos)];
+            pos += Short.BYTES;
             if (segments.length == 0) {
                 continue;
             }
             for (int j = 0; j < segments.length; j++) {
-                segments[j] = in.readInt();
+                segments[j] = readIntBigEndian(data, pos);
+                pos += Integer.BYTES;
             }
             this.segments[i] = segments;
             assert parityCheck(i) : "The number of segments was wrong!";
         }
+    }
+
+    private int readIntBigEndian(byte[] arr, int pos) {
+        int ch1 = arr[pos] & 0xFF;
+        int ch2 = arr[pos+1] & 0xFF;
+        int ch3 = arr[pos+2] & 0xFF;
+        int ch4 = arr[pos+3] & 0xFF;
+        return (ch1 << 24) | (ch2 << 16) | (ch3 << 8) | ch4;
+    }
+
+    private int readUShortBigEndian(byte[] arr, int pos) {
+        int ch1 = arr[pos] & 0xFF;
+        int ch2 = arr[pos+1] & 0xFF;
+        return (ch1 << 8) | ch2;
     }
 
     private void writeData(DataOutputStream out) throws IOException {
