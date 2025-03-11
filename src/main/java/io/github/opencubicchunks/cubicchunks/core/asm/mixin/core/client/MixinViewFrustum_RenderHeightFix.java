@@ -43,8 +43,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.function.BooleanSupplier;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -57,18 +56,15 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @Mixin(ViewFrustum.class)
 public class MixinViewFrustum_RenderHeightFix {
 
-    @Unique private static final ExecutorService BACKGROUND_EXECUTOR = Executors.newSingleThreadExecutor((runnable) -> {
-        Thread t = new Thread(runnable);
-        t.setDaemon(true);
-        t.setName("ViewFrustum RenderChunk position updater (CubicChunks)");
-        return t;
-    });
-
     @Shadow @Final protected World world;
     @SuppressWarnings("MismatchedReadAndWriteOfArray") @Shadow public RenderChunk[] renderChunks;
     @Shadow protected int countChunksX;
     @Shadow protected int countChunksY;
     @Shadow protected int countChunksZ;
+
+    @Unique private int cubicchunks_oldViewX = Integer.MAX_VALUE; //sufficiently large default value that it can never intersect with real values
+    @Unique private int cubicchunks_oldViewY = Integer.MAX_VALUE;
+    @Unique private int cubicchunks_oldViewZ = Integer.MAX_VALUE;
 
     @Inject(method = "updateChunkPositions", at = @At(value = "HEAD"), cancellable = true, require = 1)
     private void updateChunkPositionsInject(double viewEntityX, double viewEntityZ, CallbackInfo cbi) {
@@ -85,42 +81,146 @@ public class MixinViewFrustum_RenderHeightFix {
         int dz = countChunksZ;
         RenderChunk[] chunks = this.renderChunks;
 
-        BACKGROUND_EXECUTOR.submit(() -> {
-            int minX = viewX - (dx >> 1);
-            int minY = viewY - (dy >> 1);
-            int minZ = viewZ - (dz >> 1);
-            int px = MathHelper.intFloorDiv(minX, dx) * dx;
-            int py = MathHelper.intFloorDiv(minY, dy) * dy;
-            int pz = MathHelper.intFloorDiv(minZ, dz) * dz;
+        //the coordinate of the RenderChunk in the lowest corner
+        int minX = viewX - (dx >> 1);
+        int minY = viewY - (dy >> 1);
+        int minZ = viewZ - (dz >> 1);
 
-            for (int zIndex = 0; zIndex < this.countChunksZ; zIndex++) {
-                int blockZ = pz + zIndex;
-                if (blockZ < minZ) {
-                    blockZ += dz;
-                }
-                blockZ <<= 4;
-                int idxZ = zIndex * this.countChunksY * this.countChunksX;
+        //the coordinate of a RenderChunk which sits at the origin. Wraps around within the min/max range
+        int px = MathHelper.intFloorDiv(minX, dx) * dx;
+        int py = MathHelper.intFloorDiv(minY, dy) * dy;
+        int pz = MathHelper.intFloorDiv(minZ, dz) * dz;
 
-                for (int yIndex = 0; yIndex < this.countChunksY; yIndex++) {
-                    int blockY = py + yIndex;
-                    if (blockY < minY) {
-                        blockY += dy;
-                    }
-                    blockY <<= 4;
-                    int idxYZ = idxZ + yIndex * this.countChunksX;
-                    for (int xIndex = 0; xIndex < this.countChunksX; xIndex++) {
-                        int blockX = px + xIndex;
-                        if (blockX < minX) {
-                            blockX += dx;
-                        }
-                        blockX <<= 4;
-                        RenderChunk renderer = chunks[idxYZ + xIndex];
-                        renderer.setPosition(blockX, blockY, blockZ);
+        //use longs here just in case the int values overflow (they shouldn't ever, but i want to play it safe)
+        long changeX = (long) viewX - this.cubicchunks_oldViewX;
+        long changeY = (long) viewY - this.cubicchunks_oldViewY;
+        long changeZ = (long) viewZ - this.cubicchunks_oldViewZ;
+        this.cubicchunks_oldViewX = viewX;
+        this.cubicchunks_oldViewY = viewY;
+        this.cubicchunks_oldViewZ = viewZ;
+
+        if (Math.abs(changeX) <= 1 && Math.abs(changeY) <= 1 && Math.abs(changeZ) <= 1) {
+            //fast-path: the camera has moved by at most one cube so we only need to perform updates along a 2d plane
+
+            /*
+             * d: 4
+             *
+             *      0123456789           0123456789           0123456789           0123456789           0123456789      .
+             * min: #               min:  #              min:   #             min:    #            min:     #           .
+             * p:   #               p:   #               p:   #               p:   #               p:       #           .
+             * 0+p: #               0+p: *   #           0+p: *   #           0+p: *   #           0+p:     #           .
+             * 1+p:  #              1+p:  #              1+p:  *   #          1+p:  *   #          1+p:      #          .
+             * 2+p:   #             2+p:   #             2+p:   #             2+p:   *   #         2+p:       #         .
+             * 3+p:    #            3+p:    #            3+p:    #            3+p:    #            3+p:        #        .
+             */
+
+            if (changeX != 0) { //we'll need to update one layer of RenderChunks perpendicular to the YZ plane
+                int xIndex = Math.floorMod(changeX < 0 ? minX - px : minX - px - 1, dx);
+                int blockX = cubicchunks_getBlockCoord(xIndex, dx, px, minX);
+
+                for (int zIndex = 0; zIndex < dz; zIndex++) {
+                    int blockZ = cubicchunks_getBlockCoord(zIndex, dz, pz, minZ);
+                    int idxZ = zIndex * dy * dx;
+
+                    for (int yIndex = 0; yIndex < dy; yIndex++) {
+                        int blockY = cubicchunks_getBlockCoord(yIndex, dy, py, minY);
+                        int idxYZ = idxZ + yIndex * dx;
+
+                        chunks[idxYZ + xIndex].setPosition(blockX, blockY, blockZ);
                     }
                 }
             }
-        });
+
+            if (changeY != 0) { //we'll need to update one layer of RenderChunks perpendicular to the XZ plane
+                int yIndex = Math.floorMod(changeY < 0 ? minY - py : minY - py - 1, dy);
+                int blockY = cubicchunks_getBlockCoord(yIndex, dy, py, minY);
+
+                for (int zIndex = 0; zIndex < dz; zIndex++) {
+                    int blockZ = cubicchunks_getBlockCoord(zIndex, dz, pz, minZ);
+                    int idxZ = zIndex * dy * dx;
+
+                    int idxYZ = idxZ + yIndex * dx;
+
+                    for (int xIndex = 0; xIndex < dx; xIndex++) {
+                        int blockX = cubicchunks_getBlockCoord(xIndex, dx, px, minX);
+
+                        chunks[idxYZ + xIndex].setPosition(blockX, blockY, blockZ);
+                    }
+                }
+            }
+
+            if (changeZ != 0) { //we'll need to update one layer of RenderChunks perpendicular to the XY plane
+                int zIndex = Math.floorMod(changeZ < 0 ? minZ - pz : minZ - pz - 1, dz);
+                int blockZ = cubicchunks_getBlockCoord(zIndex, dz, pz, minZ);
+                int idxZ = zIndex * dy * dx;
+
+                for (int yIndex = 0; yIndex < dy; yIndex++) {
+                    int blockY = cubicchunks_getBlockCoord(yIndex, dy, py, minY);
+                    int idxYZ = idxZ + yIndex * dx;
+
+                    for (int xIndex = 0; xIndex < dx; xIndex++) {
+                        int blockX = cubicchunks_getBlockCoord(xIndex, dx, px, minX);
+
+                        chunks[idxYZ + xIndex].setPosition(blockX, blockY, blockZ);
+                    }
+                }
+            }
+
+            //run the original loop to double-check that all RenderChunks are in the correct position
+            //  (doing this cancels out any benefits from skipping unchanged RenderChunks, but only runs with assertions enabled)
+            assert ((BooleanSupplier) () -> {
+                for (int zIndex = 0; zIndex < dz; zIndex++) {
+                    int blockZ = cubicchunks_getBlockCoord(zIndex, dz, pz, minZ);
+                    int idxZ = zIndex * dy * dx;
+
+                    for (int yIndex = 0; yIndex < dy; yIndex++) {
+                        int blockY = cubicchunks_getBlockCoord(yIndex, dy, py, minY);
+                        int idxYZ = idxZ + yIndex * dx;
+
+                        for (int xIndex = 0; xIndex < dx; xIndex++) {
+                            int blockX = cubicchunks_getBlockCoord(xIndex, dx, px, minX);
+                            BlockPos pos = chunks[idxYZ + xIndex].getPosition();
+
+                            if (pos.getX() != blockX || pos.getY() != blockY || pos.getZ() != blockZ) {
+                                return false;
+                            }
+                        }
+                    }
+                }
+                return true;
+            }).getAsBoolean() : "Not all RenderChunks are in the correct position!";
+        } else {
+            //slow path, this behaves like the original vanilla code.
+            //loop over all RenderChunks and set their position.
+
+            //original loop, cleaned up:
+            for (int zIndex = 0; zIndex < dz; zIndex++) {
+                int blockZ = cubicchunks_getBlockCoord(zIndex, dz, pz, minZ);
+                int idxZ = zIndex * dy * dx;
+
+                for (int yIndex = 0; yIndex < dy; yIndex++) {
+                    int blockY = cubicchunks_getBlockCoord(yIndex, dy, py, minY);
+                    int idxYZ = idxZ + yIndex * dx;
+
+                    for (int xIndex = 0; xIndex < dx; xIndex++) {
+                        int blockX = cubicchunks_getBlockCoord(xIndex, dx, px, minX);
+
+                        chunks[idxYZ + xIndex].setPosition(blockX, blockY, blockZ);
+                    }
+                }
+            }
+        }
+
         cbi.cancel();
+    }
+
+    @Unique
+    private static int cubicchunks_getBlockCoord(int index, int d, int p, int min) {
+        int coord = p + index;
+        if (coord < min) {
+            coord += d;
+        }
+        return coord << 4;
     }
 
     @Inject(method = "getRenderChunk", at = @At(value = "HEAD"), cancellable = true, require = 1)
