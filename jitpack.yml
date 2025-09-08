@@ -2,4 +2,4 @@ jdk:
   - openjdk8
 install:
    - ./gradlew setupCiWorkspace
-   - ./gradlew build publishToMavenLocal
+   - ./gradlew build publishVersionedModPublicationToMavenLocal

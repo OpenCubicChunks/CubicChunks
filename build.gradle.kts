@@ -381,6 +381,8 @@ artifacts {
 publishing {
     repositories {
         maven {
+            name = "Sonatype"
+
             val user = (project.properties["sonatypeUsername"] ?: System.getenv("sonatypeUsername")) as String?
             val pass = (project.properties["sonatypePassword"] ?: System.getenv("sonatypePassword")) as String?
             val local = user == null || pass == null
@@ -399,24 +401,43 @@ publishing {
                 }
             }
         }
+
+        //only register maven.daporkchop.net repository if these environment variables are set
+        val daporkchopMavenUsername = (project.properties["daporkchopMavenUsername"] ?: System.getenv("daporkchopMavenUsername")) as String?
+        val daporkchopMavenPassword = (project.properties["daporkchopMavenPassword"] ?: System.getenv("daporkchopMavenPassword")) as String?
+        if (daporkchopMavenUsername != null && daporkchopMavenPassword != null) {
+            maven {
+                name = "DaPorkchop_"
+
+                val releasesRepoUrl = "https://maven.daporkchop.net/release/"
+                val snapshotsRepoUrl = "https://maven.daporkchop.net/snapshot/"
+
+                setUrl(if (doRelease.toBoolean()) releasesRepoUrl else snapshotsRepoUrl)
+                credentials {
+                    username = daporkchopMavenUsername
+                    password = daporkchopMavenPassword
+                }
+            }
+        }
     }
     publications {
-        create("mod", MavenPublication::class) {
-            version = project.ext["mavenProjectVersion"]!!.toString()
-            artifactId = "cubicchunks"
-            artifact(tasks["shadowJar"]) {
+        fun configureArtifacts(publication: MavenPublication) {
+            publication.artifact(tasks["shadowJar"]) {
                 classifier = ""
             }
-            artifact(tasks["devShadowJar"]) {
+            publication.artifact(tasks["devShadowJar"]) {
                 classifier = "dev"
             }
-            artifact(tasks["deobfSourcesJar"]) {
+            publication.artifact(tasks["deobfSourcesJar"]) {
                 classifier = "sources"
             }
-            artifact(tasks["javadocJar"]) {
+            publication.artifact(tasks["javadocJar"]) {
                 classifier = "javadoc"
             }
-            pom {
+        }
+
+        fun configurePom(publication: MavenPublication) {
+            publication.pom {
                 name.set(projectName)
                 description.set("Unlimited world height mod for Minecraft")
                 packaging = "jar"
@@ -449,8 +470,41 @@ publishing {
                 }
             }
         }
+
+        create<MavenPublication>("mod") {
+            version = project.ext["mavenProjectVersion"]!!.toString()
+            artifactId = "cubicchunks"
+
+            configureArtifacts(this)
+            configurePom(this)
+        }
+
+        //same as "mod", but using the full project version from mcGitVersion instead of mavenProjectVersion.
+        create<MavenPublication>("versionedMod") {
+            version = project.version.toString()
+            artifactId = "cubicchunks"
+
+            configureArtifacts(this)
+            configurePom(this)
+        }
     }
-    tasks["publishModPublicationToMavenRepository"].dependsOn("shadowJar", "devShadowJar")
+
+    //all publish tasks should depend on all of the tasks which generate the artifacts being published
+    tasks.withType<AbstractPublishToMaven>().configureEach {
+        dependsOn("shadowJar", "devShadowJar", "deobfSourcesJar", "javadocJar")
+    }
+
+    //this is kinda gross, but is apparently the recommended way to conditionally publish specific publications to specific repositories:
+    //  see https://docs.gradle.org/current/userguide/publishing_customization.html#sec:publishing_maven:conditional_publishing
+    tasks.withType<PublishToMavenRepository>().configureEach {
+        val predicate = provider {
+            (publication == publications["mod"] && repository == repositories["Sonatype"]) ||
+            (publication == publications["versionedMod"] && repository == repositories["DaPorkchop_"])
+        }
+        onlyIf("publishing mod to Sonatype repository, and versioned mod to DaPorkchop_ repository") {
+            predicate.get()
+        }
+    }
 }
 
 signing {

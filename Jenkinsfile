@@ -54,6 +54,11 @@ pipeline {
                 }
             }
         }
+        stage("Publish") {
+            steps {
+                sh "./gradlew publish -x test"
+            }
+        }
     }
 
     post {
