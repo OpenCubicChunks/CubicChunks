@@ -55,6 +55,11 @@ pipeline {
             }
         }
         stage("Publish") {
+            when {
+                anyOf {
+                    branch "MC_1.12"
+                }
+            }
             steps {
                 sh "./gradlew publish -x test"
             }
