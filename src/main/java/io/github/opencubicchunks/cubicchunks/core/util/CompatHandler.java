@@ -64,7 +64,8 @@ public class CompatHandler {
             "fossil",
             "realistictorches",
             "iceandfire",
-            "tg" // ThaumicGadgets
+            "tg", // ThaumicGadgets
+            "industrialupgrade"
     );
 
     private static final Set<String> POPULATE_EVENT_PRE_FAKE_HEIGHT = ImmutableSet.of(
