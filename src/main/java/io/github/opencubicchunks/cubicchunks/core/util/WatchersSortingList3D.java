@@ -52,7 +52,7 @@ public class WatchersSortingList3D<T extends BucketSorterEntry & XYZAddressable>
 
     private final int intrusiveCollectionId;
     private final Supplier<Collection<EntityPlayer>> playersSupplier;
-    private int[] playerPositions = new int[0];
+    private long[] playerPositions = new long[0];
     private int distributingBucket = 0;
 
     public WatchersSortingList3D(int intrusiveCollectionId, Supplier<Collection<EntityPlayer>> playersSupplier) {
@@ -86,7 +86,7 @@ public class WatchersSortingList3D<T extends BucketSorterEntry & XYZAddressable>
         Collection<EntityPlayer> players = playersSupplier.get();
         int newSize = players.size() * 3;
         if (playerPositions.length != newSize) {
-            playerPositions = new int[newSize];
+            playerPositions = new long[newSize];
         }
         int i = 0;
         for (EntityPlayer player : players) {
@@ -253,36 +253,39 @@ public class WatchersSortingList3D<T extends BucketSorterEntry & XYZAddressable>
         if (playerPositions.length == 0) {
             return BUCKET_COUNT - 1;
         }
-        int x = element.getX();
-        int y = element.getY();
-        int z = element.getZ();
+        // Note: don't care about performance on 32-bit JVM, nobody should be using that in 2025+
+        long x = element.getX();
+        long y = element.getY();
+        long z = element.getZ();
 
-        int dx = x - playerPositions[0];
-        int dy = y - playerPositions[1];
-        int dz = z - playerPositions[2];
-        long dx2 = (long) dx * (long) dx;
-        long dy2 = (long) dy * (long) dy;
-        long dz2 = (long) dz * (long) dz;
+        long dx = x - playerPositions[0];
+        long dy = y - playerPositions[1];
+        long dz = z - playerPositions[2];
+        long dx2 = dx * dx;
+        long dy2 = dy * dy;
+        long dz2 = dz * dz;
         long masked = dx2 | dy2 | dz2;
-        int distSqMin = masked > (long) Integer.MAX_VALUE ? Integer.MAX_VALUE : dx*dx + dy*dy + dz*dz;
+        // Note: we can't just rely on this being long here, Integer.MAX_VALUE * Integer.MAX_VALUE * 3 still overflows a long
+        long distSqMin = masked > (long) Integer.MAX_VALUE ? Integer.MAX_VALUE : dx2 + dy2 + dz2;
+
         for (int i = 3; i < playerPositions.length; i += 3) {
             dx = x - playerPositions[i];
             dy = y - playerPositions[i+1];
             dz = z - playerPositions[i+2];
-            dx2 = (long) dx * (long) dx;
-            dy2 = (long) dy * (long) dy;
-            dz2 = (long) dz * (long) dz;
+            dx2 = dx * dx;
+            dy2 = dy * dy;
+            dz2 = dz * dz;
             masked = dx2 | dy2 | dz2;
-            int distSq = masked > (long) Integer.MAX_VALUE ? Integer.MAX_VALUE : dx*dx + dy*dy + dz*dz;
+            long distSq = masked > (long) Integer.MAX_VALUE ? Integer.MAX_VALUE : dx2 + dy2 + dz2;
             if (distSq < distSqMin) {
                 distSqMin = distSq;
             }
         }
         // fast very approximate square root
-        int log2dist = 32 - Integer.numberOfLeadingZeros(distSqMin);
+        int log2dist = 64 - Long.numberOfLeadingZeros(distSqMin);
         int bitsToCutOff = log2dist >> 1;
-        int approxDist = distSqMin >> bitsToCutOff;
-        int min = Math.min(approxDist, BUCKET_COUNT - 1);
+        long approxDist = distSqMin >> bitsToCutOff;
+        int min = (int) Math.min(approxDist, BUCKET_COUNT - 1);
         return min;
     }
 

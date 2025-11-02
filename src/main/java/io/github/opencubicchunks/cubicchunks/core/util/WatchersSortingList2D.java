@@ -52,7 +52,7 @@ public class WatchersSortingList2D<T extends BucketSorterEntry & XZAddressable> 
 
     private final int intrusiveCollectionId;
     private final Supplier<Collection<EntityPlayer>> playersSupplier;
-    private int[] playerPositions = new int[0];
+    private long[] playerPositions = new long[0];
     private int distributingBucket = 0;
 
     public WatchersSortingList2D(int intrusiveCollectionId, Supplier<Collection<EntityPlayer>> playersSupplier) {
@@ -86,7 +86,7 @@ public class WatchersSortingList2D<T extends BucketSorterEntry & XZAddressable> 
         Collection<EntityPlayer> players = playersSupplier.get();
         int newSize = players.size() * 2;
         if (playerPositions.length != newSize) {
-            playerPositions = new int[newSize];
+            playerPositions = new long[newSize];
         }
         int i = 0;
         for (EntityPlayer player : players) {
@@ -253,25 +253,28 @@ public class WatchersSortingList2D<T extends BucketSorterEntry & XZAddressable> 
         if (playerPositions.length == 0) {
             return BUCKET_COUNT - 1;
         }
-        int x = element.getX();
-        int z = element.getZ();
+        // Note: don't care about performance on 32-bit JVM, nobody should be using that in 2025+
+        long x = element.getX();
+        long z = element.getZ();
 
-        int dx = x - playerPositions[0];
-        int dz = z - playerPositions[1];
-        int distSqMin = dx*dx + dz*dz;
+        long dx = x - playerPositions[0];
+        long dz = z - playerPositions[1];
+        // Note: for the specific case of 2d we can just about ignore large deltas triggering an overflow -
+        // only happens when both deltas are Integer.MIN_VALUE which is not a case we support
+        long distSqMin = dx*dx + dz*dz;
         for (int i = 2; i < playerPositions.length; i += 2) {
             dx = x - playerPositions[i];
             dz = z - playerPositions[i+1];
-            int distSq = dx*dx + dz*dz;
+            long distSq = dx*dx + dz*dz;
             if (distSq < distSqMin) {
                 distSqMin = distSq;
             }
         }
         // fast very approximate square root
-        int log2dist = 32 - Integer.numberOfLeadingZeros(distSqMin);
+        int log2dist = 64 - Long.numberOfLeadingZeros(distSqMin);
         int bitsToCutOff = log2dist >> 1;
-        int approxDist = distSqMin >> bitsToCutOff;
-        return Math.min(approxDist, BUCKET_COUNT - 1);
+        long approxDist = distSqMin >> bitsToCutOff;
+        return (int) Math.min(approxDist, BUCKET_COUNT - 1);
     }
 
     /**
