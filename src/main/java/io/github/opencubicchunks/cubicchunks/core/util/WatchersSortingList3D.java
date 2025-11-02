@@ -260,12 +260,20 @@ public class WatchersSortingList3D<T extends BucketSorterEntry & XYZAddressable>
         int dx = x - playerPositions[0];
         int dy = y - playerPositions[1];
         int dz = z - playerPositions[2];
-        int distSqMin = dx*dx + dy*dy + dz*dz;
+        long dx2 = (long) dx * (long) dx;
+        long dy2 = (long) dy * (long) dy;
+        long dz2 = (long) dz * (long) dz;
+        long masked = dx2 | dy2 | dz2;
+        int distSqMin = masked > (long) Integer.MAX_VALUE ? Integer.MAX_VALUE : dx*dx + dy*dy + dz*dz;
         for (int i = 3; i < playerPositions.length; i += 3) {
             dx = x - playerPositions[i];
             dy = y - playerPositions[i+1];
             dz = z - playerPositions[i+2];
-            int distSq = dx*dx + dy*dy + dz*dz;
+            dx2 = (long) dx * (long) dx;
+            dy2 = (long) dy * (long) dy;
+            dz2 = (long) dz * (long) dz;
+            masked = dx2 | dy2 | dz2;
+            int distSq = masked > (long) Integer.MAX_VALUE ? Integer.MAX_VALUE : dx*dx + dy*dy + dz*dz;
             if (distSq < distSqMin) {
                 distSqMin = distSq;
             }
@@ -274,7 +282,8 @@ public class WatchersSortingList3D<T extends BucketSorterEntry & XYZAddressable>
         int log2dist = 32 - Integer.numberOfLeadingZeros(distSqMin);
         int bitsToCutOff = log2dist >> 1;
         int approxDist = distSqMin >> bitsToCutOff;
-        return Math.min(approxDist, BUCKET_COUNT - 1);
+        int min = Math.min(approxDist, BUCKET_COUNT - 1);
+        return min;
     }
 
     /**
