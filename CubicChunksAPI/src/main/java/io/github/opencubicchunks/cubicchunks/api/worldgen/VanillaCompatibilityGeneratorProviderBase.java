@@ -26,6 +26,7 @@ package io.github.opencubicchunks.cubicchunks.api.worldgen;
 
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
+import net.minecraft.world.WorldType;
 import net.minecraft.world.gen.IChunkGenerator;
 import net.minecraftforge.registries.IForgeRegistry;
 import net.minecraftforge.registries.IForgeRegistryEntry;
@@ -75,6 +76,10 @@ public abstract class VanillaCompatibilityGeneratorProviderBase implements IForg
     }
 
     public abstract ICubeGenerator provideGenerator(IChunkGenerator vanillaChunkGenerator, World world);
+
+    public boolean supportsWorldType(WorldType type) {
+        return true;
+    }
 
     private static class VanillaCompatibilityGeneratorCallbacks implements IForgeRegistry.MissingFactory<VanillaCompatibilityGeneratorProviderBase> {
         private static final VanillaCompatibilityGeneratorCallbacks INSTANCE = new VanillaCompatibilityGeneratorCallbacks();

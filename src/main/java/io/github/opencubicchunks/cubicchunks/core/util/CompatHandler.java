@@ -136,6 +136,20 @@ public class CompatHandler {
         }
         return mods;
     }
+    
+    public static String getModForStacktraceElement(StackTraceElement traceElement) {
+        try {
+            Class<?> cl = Class.forName(traceElement.getClassName());
+            if (cl != null) {
+                String modid = packageToModId.get(getPackageName(cl));
+                if (modid != null) {
+                    return modid;
+                }
+            }
+        } catch (ClassNotFoundException ignored) {
+        }
+        return "(no mod)";
+    }
 
     public static void beforePopulate(World world, IChunkGenerator vanilla) {
         String modid = packageToModId.get(getPackageName(vanilla.getClass()));

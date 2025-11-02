@@ -230,7 +230,7 @@ public class ClientEventHandler {
         private static final int MORE_WORLD_OPTIONS = 3;
 
         private static final int CC_ENABLE_BUTTON_ID = 11;
-        private static final List<ResourceLocation> LIST_OF_GEN_OPTIONS = new ArrayList<ResourceLocation>();
+        private static final List<VanillaCompatibilityGeneratorProviderBase> LIST_OF_GEN_OPTIONS = new ArrayList<>();
         private static int CURRENT_GEN_OPTION = 0;
 
         @SubscribeEvent
@@ -261,8 +261,19 @@ public class ClientEventHandler {
 
                 refreshText(gui, enableCC);
             }));
-            LIST_OF_GEN_OPTIONS.addAll(VanillaCompatibilityGeneratorProviderBase.REGISTRY.getKeys());
-            CURRENT_GEN_OPTION = LIST_OF_GEN_OPTIONS.indexOf(new ResourceLocation(CubicChunksConfig.compatibilityGeneratorType));
+            LIST_OF_GEN_OPTIONS.addAll(VanillaCompatibilityGeneratorProviderBase.REGISTRY.getValuesCollection());
+            VanillaCompatibilityGeneratorProviderBase initialCompatGen =
+                    VanillaCompatibilityGeneratorProviderBase.REGISTRY.getValue(new ResourceLocation(CubicChunksConfig.compatibilityGeneratorType));
+            CURRENT_GEN_OPTION = LIST_OF_GEN_OPTIONS.indexOf(initialCompatGen);
+            WorldType worldType = WorldType.WORLD_TYPES[((IGuiCreateWorld) gui).getSelectedIndex()];
+            if (CURRENT_GEN_OPTION == -1 || !LIST_OF_GEN_OPTIONS.get(CURRENT_GEN_OPTION).supportsWorldType(worldType)) {
+                setNextGenOption(gui);
+            }
+            // try again if we circled back to "no CC" option - we may have started in the middle of the list
+            if (CURRENT_GEN_OPTION == -1) {
+                setNextGenOption(gui);
+            }
+            assert CURRENT_GEN_OPTION != -1; // if it's still -1, things went very wrong - the builtin one supports all WorldTypes
         }
         
         private static void refreshText(GuiCreateWorld gui, GuiButton enableBtn) {
@@ -302,18 +313,35 @@ public class ClientEventHandler {
                         break;
                     }
                     case CC_ENABLE_BUTTON_ID: {
-                        CURRENT_GEN_OPTION++;
-                        if (CURRENT_GEN_OPTION >= LIST_OF_GEN_OPTIONS.size()) {
-                            CubicChunksConfig.disableCubicChunks();
-                            CURRENT_GEN_OPTION = -1;
-                        } else {
-                            CubicChunksConfig.setGenerator(LIST_OF_GEN_OPTIONS.get(CURRENT_GEN_OPTION));
-                        }
+                        setNextGenOption((GuiCreateWorld) gui);
                         refreshText((GuiCreateWorld) gui, button);
                         break;
                     }
                 }
             }
+        }
+
+        private static void setNextGenOption(GuiCreateWorld gui) {
+            CURRENT_GEN_OPTION++;
+            if (CURRENT_GEN_OPTION >= LIST_OF_GEN_OPTIONS.size()) {
+                CubicChunksConfig.disableCubicChunks();
+                CURRENT_GEN_OPTION = -1;
+                return;
+            } else {
+                CubicChunksConfig.setGenerator(LIST_OF_GEN_OPTIONS.get(CURRENT_GEN_OPTION).getRegistryName());
+            }
+
+            WorldType worldType = WorldType.WORLD_TYPES[((IGuiCreateWorld) gui).getSelectedIndex()];
+            while (CURRENT_GEN_OPTION != -1 && !LIST_OF_GEN_OPTIONS.get(CURRENT_GEN_OPTION).supportsWorldType(worldType)) {
+                CURRENT_GEN_OPTION++;
+                if (CURRENT_GEN_OPTION >= LIST_OF_GEN_OPTIONS.size()) {
+                    CubicChunksConfig.disableCubicChunks();
+                    CURRENT_GEN_OPTION = -1;
+                } else {
+                    CubicChunksConfig.setGenerator(LIST_OF_GEN_OPTIONS.get(CURRENT_GEN_OPTION).getRegistryName());
+                }
+            }
+
         }
 
         private static boolean isCreateWorldGui(GuiScreen gui) {

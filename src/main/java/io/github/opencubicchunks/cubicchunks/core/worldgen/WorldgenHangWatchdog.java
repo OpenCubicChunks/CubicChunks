@@ -128,7 +128,8 @@ public class WorldgenHangWatchdog {
                             sb.append("SAMPLE #").append(i).append(", likely mods involved: ").append(String.join(", ", likelyModsInvolved))
                                     .append('\n');
                             for (StackTraceElement traceElement : stacktrace) {
-                                sb.append("\tat ").append(traceElement).append('\n');
+                                String modid = CompatHandler.getModForStacktraceElement(traceElement);
+                                sb.append("\tat ").append(traceElement).append(" [Likely mod: ").append(modid).append("]\n");
                             }
                             i++;
                         }
