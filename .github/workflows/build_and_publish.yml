@@ -27,8 +27,7 @@ jobs:
         java-version: '8'
     - name: Build with Gradle
       env:
-        sonatypeUsername: ${{ secrets.OSSRH_USERNAME }}
-        sonatypePassword: ${{ secrets.OSSRH_PASSWORD }}
+        centralAuthHeaderName: ${{ secrets.CENTRAL_AUTH_TOKEN }}
       run: ./gradlew build publish
     - uses: actions/upload-artifact@v4
       with:

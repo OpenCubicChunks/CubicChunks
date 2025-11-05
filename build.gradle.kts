@@ -378,26 +378,33 @@ artifacts {
     add("apiArchives", tasks["deobfApiJar"])
 }
 
+repositories {
+    maven {
+        name = "centralManualTesting"
+        url ""
+
+    }
+    mavenCentral()
+}
+
 publishing {
     repositories {
         maven {
-            name = "Sonatype"
+            name = "central"
 
-            val user = (project.properties["sonatypeUsername"] ?: System.getenv("sonatypeUsername")) as String?
-            val pass = (project.properties["sonatypePassword"] ?: System.getenv("sonatypePassword")) as String?
-            val local = user == null || pass == null
+            val local = properties["centralAuthHeaderName"] == null
             if (local) {
                 logger.warn("Username or password not set, publishing to local repository in build/mvnrepo/")
             }
             val localUrl = "$buildDir/mvnrepo"
-            val releasesRepoUrl = "https://oss.sonatype.org/service/local/staging/deploy/maven2"
-            val snapshotsRepoUrl = "https://oss.sonatype.org/content/repositories/snapshots"
+            val releasesRepoUrl = "https://central.sonatype.com/api/v1/publisher/deployments/download/"
+            val snapshotsRepoUrl = "https://central.sonatype.com/api/v1/publisher/deployments/download/"
 
             setUrl(if (local) localUrl else if (doRelease.toBoolean()) releasesRepoUrl else snapshotsRepoUrl)
             if (!local) {
-                credentials {
-                    username = user
-                    password = pass
+                credentials(HttpHeaderCredentials::class)
+                authentication {
+                    create<HttpHeaderAuthentication>("header")
                 }
             }
         }
