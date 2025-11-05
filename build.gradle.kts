@@ -378,15 +378,6 @@ artifacts {
     add("apiArchives", tasks["deobfApiJar"])
 }
 
-repositories {
-    maven {
-        name = "centralManualTesting"
-        url ""
-
-    }
-    mavenCentral()
-}
-
 publishing {
     repositories {
         maven {
