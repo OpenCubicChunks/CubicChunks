@@ -215,8 +215,8 @@ publishing {
                 logger.warn("Username or password not set, publishing to local repository in build/mvnrepo/")
             }
             val localUrl = "$buildDir/mvnrepo"
-            val releasesRepoUrl = "https://central.sonatype.com/api/v1/publisher/deployments/download/"
-            val snapshotsRepoUrl = "https://central.sonatype.com/api/v1/publisher/deployments/download/"
+            val releasesRepoUrl = "https://central.sonatype.com/api/v1/publisher/deployments"
+            val snapshotsRepoUrl = "https://central.sonatype.com/api/v1/publisher/deployments"
 
             setUrl(if (local) localUrl else if (doRelease.toBoolean()) releasesRepoUrl else snapshotsRepoUrl)
             if (!local) {
@@ -255,7 +255,7 @@ publishing {
     //  see https://docs.gradle.org/current/userguide/publishing_customization.html#sec:publishing_maven:conditional_publishing
     tasks.withType<PublishToMavenRepository>().configureEach {
         val predicate = provider {
-            (publication == publications["mavenJava"] && repository == repositories.findByName("Sonatype")) ||
+            (publication == publications["mavenJava"] && repository == repositories.findByName("central")) ||
             (publication == publications["versionedMavenJava"] && repository == repositories.findByName("DaPorkchop_"))
         }
         onlyIf("publishing API to Sonatype repository, and versioned API to DaPorkchop_ repository") {

@@ -388,8 +388,8 @@ publishing {
                 logger.warn("Username or password not set, publishing to local repository in build/mvnrepo/")
             }
             val localUrl = "$buildDir/mvnrepo"
-            val releasesRepoUrl = "https://central.sonatype.com/api/v1/publisher/deployments/download/"
-            val snapshotsRepoUrl = "https://central.sonatype.com/api/v1/publisher/deployments/download/"
+            val releasesRepoUrl = "https://central.sonatype.com/api/v1/publisher/deployments"
+            val snapshotsRepoUrl = "https://central.sonatype.com/api/v1/publisher/deployments"
 
             setUrl(if (local) localUrl else if (doRelease.toBoolean()) releasesRepoUrl else snapshotsRepoUrl)
             if (!local) {
