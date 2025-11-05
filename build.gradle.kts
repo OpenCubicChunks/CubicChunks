@@ -496,7 +496,7 @@ publishing {
     //  see https://docs.gradle.org/current/userguide/publishing_customization.html#sec:publishing_maven:conditional_publishing
     tasks.withType<PublishToMavenRepository>().configureEach {
         val predicate = provider {
-            (publication == publications["mod"] && repository == repositories["Sonatype"]) ||
+            (publication == publications["mod"] && repository == repositories["central"]) ||
             (publication == publications["versionedMod"] && repository == repositories["DaPorkchop_"])
         }
         onlyIf("publishing mod to Sonatype repository, and versioned mod to DaPorkchop_ repository") {
