@@ -28,7 +28,7 @@ jobs:
     - name: Build with Gradle
       env:
         ORG_GRADLE_PROJECT_centralAuthHeaderName: Authorization
-        ORG_GRADLE_PROJECT_centralAuthHeaderValue: ${{ secrets.CENTRAL_AUTH_TOKEN }}
+        ORG_GRADLE_PROJECT_centralAuthHeaderValue: Bearer ${{ secrets.CENTRAL_AUTH_TOKEN }}
       run: ./gradlew build publish
     - uses: actions/upload-artifact@v4
       with:
