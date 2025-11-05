@@ -208,23 +208,21 @@ publishing {
     }
     repositories {
         maven {
-            name = "Sonatype"
+            name = "central"
 
-            val user = (project.properties["sonatypeUsername"] ?: System.getenv("sonatypeUsername")) as String?
-            val pass = (project.properties["sonatypePassword"] ?: System.getenv("sonatypePassword")) as String?
-            val local = user == null || pass == null
+            val local = properties["centralAuthHeaderName"] == null
             if (local) {
                 logger.warn("Username or password not set, publishing to local repository in build/mvnrepo/")
             }
             val localUrl = "$buildDir/mvnrepo"
-            val releasesRepoUrl = "https://oss.sonatype.org/service/local/staging/deploy/maven2"
-            val snapshotsRepoUrl =  "https://oss.sonatype.org/content/repositories/snapshots"
+            val releasesRepoUrl = "https://central.sonatype.com/api/v1/publisher/deployments/download/"
+            val snapshotsRepoUrl = "https://central.sonatype.com/api/v1/publisher/deployments/download/"
 
             setUrl(if (local) localUrl else if (doRelease.toBoolean()) releasesRepoUrl else snapshotsRepoUrl)
             if (!local) {
-                credentials {
-                    username = user
-                    password = pass
+                credentials(HttpHeaderCredentials::class)
+                authentication {
+                    create<HttpHeaderAuthentication>("header")
                 }
             }
         }
@@ -257,8 +255,8 @@ publishing {
     //  see https://docs.gradle.org/current/userguide/publishing_customization.html#sec:publishing_maven:conditional_publishing
     tasks.withType<PublishToMavenRepository>().configureEach {
         val predicate = provider {
-            (publication == publications["mavenJava"] && repository == repositories["Sonatype"]) ||
-            (publication == publications["versionedMavenJava"] && repository == repositories["DaPorkchop_"])
+            (publication == publications["mavenJava"] && repository == repositories.findByName("Sonatype")) ||
+            (publication == publications["versionedMavenJava"] && repository == repositories.findByName("DaPorkchop_"))
         }
         onlyIf("publishing API to Sonatype repository, and versioned API to DaPorkchop_ repository") {
             predicate.get()
