@@ -380,22 +380,43 @@ artifacts {
 
 publishing {
     repositories {
+        //only register maven.daporkchop.net repository if these environment variables are set
+        val ossrhMavenUsername = (project.properties["OSSRH_USERNAME"] ?: System.getenv("OSSRH_USERNAME")) as String?
+        val ossrhMavenPassword = (project.properties["OSSRH_PASSWORD"] ?: System.getenv("OSSRH_PASSWORD")) as String?
         maven {
-            name = "central"
+            name = "ossrh-staging-api"
 
-            val local = properties["centralAuthHeaderName"] == null
+            val local = ossrhMavenUsername == null || ossrhMavenPassword == null
             if (local) {
                 logger.warn("Username or password not set, publishing to local repository in build/mvnrepo/")
             }
             val localUrl = "$buildDir/mvnrepo"
-            val releasesRepoUrl = "https://central.sonatype.com/api/v1/publisher/upload"
-            val snapshotsRepoUrl = "https://central.sonatype.com/api/v1/publisher/upload"
+            val releasesRepoUrl = "https://ossrh-staging-api.central.sonatype.com/service/local/staging/deploy/maven2/"
+            //NOTE:
+            //
+            //Consuming Via Gradle⚓︎
+            //
+            //Configure your build.gradle file with the following:
+            //
+            //repositories {
+            //  maven {
+            //    name = 'Central Portal Snapshots'
+            //    url = 'https://central.sonatype.com/repository/maven-snapshots/'
+            //
+            //    // Only search this repository for the specific dependency
+            //    content {
+            //      includeModule("<the snapshot's groupId>", "<the snapshot's artifactId>")
+            //    }
+            //  }
+            //  mavenCentral()
+            //}
+            val snapshotsRepoUrl = "https://central.sonatype.com/repository/maven-snapshots/"
 
             setUrl(if (local) localUrl else if (doRelease.toBoolean()) releasesRepoUrl else snapshotsRepoUrl)
             if (!local) {
-                credentials(HttpHeaderCredentials::class)
-                authentication {
-                    create<HttpHeaderAuthentication>("header")
+                credentials {
+                    username = ossrhMavenUsername
+                    password = ossrhMavenPassword
                 }
             }
         }
@@ -496,7 +517,7 @@ publishing {
     //  see https://docs.gradle.org/current/userguide/publishing_customization.html#sec:publishing_maven:conditional_publishing
     tasks.withType<PublishToMavenRepository>().configureEach {
         val predicate = provider {
-            (publication == publications["mod"] && repository == repositories.findByName("central")) ||
+            (publication == publications["mod"] && repository == repositories.findByName("ossrh-staging-api")) ||
             (publication == publications["versionedMod"] && repository == repositories.findByName("DaPorkchop_"))
         }
         onlyIf("publishing mod to Sonatype repository, and versioned mod to DaPorkchop_ repository") {
