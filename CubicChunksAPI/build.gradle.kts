@@ -211,7 +211,7 @@ publishing {
         val ossrhMavenUsername = (project.properties["OSSRH_USERNAME"] ?: System.getenv("OSSRH_USERNAME")) as String?
         val ossrhMavenPassword = (project.properties["OSSRH_PASSWORD"] ?: System.getenv("OSSRH_PASSWORD")) as String?
         maven {
-            name = "ossrh-staging-api"
+            name = "main"
 
             val local = ossrhMavenUsername == null || ossrhMavenPassword == null
             if (local) {
@@ -282,7 +282,7 @@ publishing {
     //  see https://docs.gradle.org/current/userguide/publishing_customization.html#sec:publishing_maven:conditional_publishing
     tasks.withType<PublishToMavenRepository>().configureEach {
         val predicate = provider {
-            (publication == publications["mavenJava"] && repository == repositories.findByName("ossrh-staging-api")) ||
+            (publication == publications["mavenJava"] && repository == repositories.findByName("main")) ||
             (publication == publications["versionedMavenJava"] && repository == repositories.findByName("DaPorkchop_"))
         }
         onlyIf("publishing API to Sonatype repository, and versioned API to DaPorkchop_ repository") {
