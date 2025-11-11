@@ -414,16 +414,9 @@ publishing {
 
             setUrl(if (local) localUrl else if (doRelease.toBoolean()) releasesRepoUrl else snapshotsRepoUrl)
             if (!local) {
-                if (doRelease.toBoolean()) {
-                    credentials {
-                        username = ossrhMavenUsername
-                        password = ossrhMavenPassword
-                    }
-                } else {
-                    credentials(HttpHeaderCredentials::class)
-                    authentication {
-                        create<HttpHeaderAuthentication>("header")
-                    }
+                credentials {
+                    username = ossrhMavenUsername
+                    password = ossrhMavenPassword
                 }
             }
         }
