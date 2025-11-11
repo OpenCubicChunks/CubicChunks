@@ -241,13 +241,19 @@ publishing {
 
             setUrl(if (local) localUrl else if (doRelease.toBoolean()) releasesRepoUrl else snapshotsRepoUrl)
             if (!local) {
-                credentials {
-                    username = ossrhMavenUsername
-                    password = ossrhMavenPassword
+                if (doRelease.toBoolean()) {
+                    credentials {
+                        username = ossrhMavenUsername
+                        password = ossrhMavenPassword
+                    }
+                } else {
+                    credentials(HttpHeaderCredentials::class)
+                    authentication {
+                        create<HttpHeaderAuthentication>("header")
+                    }
                 }
             }
         }
-
         //only register maven.daporkchop.net repository if these environment variables are set
         val daporkchopMavenUsername = (project.properties["daporkchopMavenUsername"] ?: System.getenv("daporkchopMavenUsername")) as String?
         val daporkchopMavenPassword = (project.properties["daporkchopMavenPassword"] ?: System.getenv("daporkchopMavenPassword")) as String?
