@@ -113,11 +113,19 @@ public class CompatHandler {
     }
 
     private static String getPackageName(Class<?> clazz) {
-        String canonicalName = clazz.getCanonicalName();
-        int dot = canonicalName.lastIndexOf('.'); //cannot occur anywhere in the class name itself
+        String name = clazz.getCanonicalName();
+        if(name == null) {
+            Class<?> enclosingClass = clazz.getEnclosingClass();
+            if (enclosingClass != null) {
+                return getPackageName(enclosingClass);
+            } else {
+                name = clazz.getName();
+            }
+        }
+        int dot = name.lastIndexOf('.'); //cannot occur anywhere in the class name itself
         return dot < 0
                 ? "" //default package
-                : canonicalName.substring(0, dot);
+                : name.substring(0, dot);
     }
 
     public static Set<String> getModsForStacktrace(StackTraceElement[] stacktrace) {
