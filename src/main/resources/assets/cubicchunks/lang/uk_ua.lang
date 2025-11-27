@@ -1,0 +1,27 @@
+#################################
+###        general gui        ###
+#################################
+
+cubicchunks.gui.worldmenu.cc_disable=CubicChunks: Ні
+cubicchunks.gui.worldmenu.cc_default=CubicChunks: За замовчуванням
+
+#################################
+###          options          ###
+#################################
+
+cubicchunks.gui.vertical_cube_load_distance=Vertical Distance: %d кубів
+
+#################################
+###         commands          ###
+#################################
+
+cubicchunks.command.usage.cubicchunks=/cubicchunks subcommand
+cubicchunks.command.usage.config=/cubicchunks config subcommand
+cubicchunks.command.usage.config.set=/cubicchunks config set configOption value
+cubicchunks.command.usage.config.set_option=/cubicchunks config set %s value
+cubicchunks.command.usage.config.reload=/cubicchunks config reload
+cubicchunks.command.config.set.failed=Не вдалося встановити параметр конфігурації %s!
+cubicchunks.command.config.set.done=Параметр конфігурації %s встановлено на "%s" 
+cubicchunks.command.config.set.requires_restart=Зміна параметра конфігурації %s вимагає перезавантаження світу!
+cubicchunks.command.usage.config.set.primitive=Параметр конфігурації %s має тип %s і вимагає 1 параметр
+cubicchunks.command.config.reload.done=Конфігурацію Cubic Chunks перезавантажено
