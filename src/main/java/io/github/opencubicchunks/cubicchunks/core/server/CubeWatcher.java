@@ -109,7 +109,7 @@ public class CubeWatcher implements ITicket, ICubeWatcher, BucketSorterEntry {
     }
 
     void removeScheduledAddPlayer(EntityPlayerMP player) {
-        playersToAdd.rem(player); // TODO: why does rem() and remove() exist separately?
+        playersToAdd.remove(player); // TODO: why does rem() and remove() exist separately?
     }
 
     void addScheduledPlayers() {
@@ -368,7 +368,7 @@ public class CubeWatcher implements ITicket, ICubeWatcher, BucketSorterEntry {
         }
         return false;
     }
-    
+
     boolean hasPlayerMatchingInRange(Predicate<EntityPlayerMP> predicate, int range) {
         double d = range*range;
         double cx = cubePos.getXCenter();
