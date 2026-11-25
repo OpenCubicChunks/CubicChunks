@@ -43,7 +43,7 @@ public abstract class VanillaCompatibilityGeneratorProviderBase implements IForg
                 .setIDRange(0, 256)
                 .setName(new ResourceLocation("cubicchunks", "vanilla_compatibility_generators_registry"))
                 .setDefaultKey(DEFAULT)
-                .addCallback(VanillaCompatibilityGeneratorCallbacks.INSTANCE)
+                .addCallback(new VanillaCompatibilityGeneratorCallbacks())
                 .create();
     }
 
@@ -82,8 +82,6 @@ public abstract class VanillaCompatibilityGeneratorProviderBase implements IForg
     }
 
     private static class VanillaCompatibilityGeneratorCallbacks implements IForgeRegistry.MissingFactory<VanillaCompatibilityGeneratorProviderBase> {
-        private static final VanillaCompatibilityGeneratorCallbacks INSTANCE = new VanillaCompatibilityGeneratorCallbacks();
-
         @Override
         public VanillaCompatibilityGeneratorProviderBase createMissing(ResourceLocation key, boolean isNetwork) {
             //allow players without a storage format to connect to a server with the storage format (which is perfectly fine, because the storage format
