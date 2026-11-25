@@ -220,6 +220,14 @@ public class ShadowPagingRegion<K extends IKey<K>> implements IRegion<K> {
 				//if deleting an entry, there's no need to change anything on disk! the only thing that needs
 				// to be changed is the headers.
 				if (value != null) {
+					if (!entryLocationsToUse.containsKey(key)) {
+						assert exceptions.stream().anyMatch(e -> e.getKey().equals(key)) : "a key has no location and didn't throw an exception";
+
+						//reserveHeaderEntriesPass() threw an exception for this key, we should skip it since we don't know where the data should be
+						// written. the exception will be rethrown later, once all the other keys have been written
+						continue;
+					}
+
 					int size = value.remaining();
 					int bytesOffset = entryLocationsToUse.get(key).getOffset() * this.sectorSize;
 
